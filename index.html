@@ -1,4 +1,4 @@
-<!-- build:2026-06-10T23:30 -->
+<!-- build:2026-06-11T00:10 -->
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -561,11 +561,11 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
 </div>
 
 <!-- CLOSE CROP MODAL -->
-<div id="cropModal" class="modal">
-  <div class="modal-box" style="max-width:640px">
-    <div class="modal-hdr">
-      <span>🌾 ปิดรอบเลี้ยง — บ่อ <span id="cm-name"></span></span>
-      <button onclick="closeCropModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#fff">×</button>
+<div id="cropModal" class="modal-bg">
+  <div class="modal" style="max-width:640px;width:95vw;padding:0;overflow:hidden">
+    <div style="background:var(--p);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;border-radius:10px 10px 0 0">
+      <span style="font-weight:700;font-size:15px">🌾 ปิดรอบเลี้ยง — บ่อ <span id="cm-name"></span></span>
+      <button onclick="closeCropModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#fff;line-height:1">×</button>
     </div>
     <div style="padding:20px;max-height:75vh;overflow-y:auto">
       <input type="hidden" id="cm-pond-id">
@@ -1454,7 +1454,4 @@ function saveWaterLog(){
   const pid=document.getElementById('wl-pond').value,d=document.getElementById('wl-date').value;
   if(!pid||!d){showMsg('wl-msg','warn','กรุณาเลือกบ่อและวันที่');return}
   const p=pond(pid);if(!p)return;if(!p.waterLog)p.waterLog=[];
-  const rec={date:d,age:parseInt(document.getElementById('wl-age').value)||0,
-    action:document.getElementById('wl-action').value,vol:parseFloat(document.getElementById('wl-vol').value)||null,
-    notes:document.getElementById('wl-notes').value};
-  p.wate
+  const rec={date:d,age:parseInt(docume
