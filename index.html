@@ -1,4 +1,4 @@
-<!-- build:2026-06-11T00:10 -->
+<!-- build:2026-06-11T10:30 -->
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -1454,4 +1454,949 @@ function saveWaterLog(){
   const pid=document.getElementById('wl-pond').value,d=document.getElementById('wl-date').value;
   if(!pid||!d){showMsg('wl-msg','warn','กรุณาเลือกบ่อและวันที่');return}
   const p=pond(pid);if(!p)return;if(!p.waterLog)p.waterLog=[];
-  const rec={date:d,age:parseInt(docume
+  const rec={date:d,age:parseInt(document.getElementById('wl-age').value)||0,
+    action:document.getElementById('wl-action').value,vol:parseFloat(document.getElementById('wl-vol').value)||null,
+    notes:document.getElementById('wl-notes').value};
+  p.waterLog.push(rec);p.waterLog.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  showMsg('wl-msg','ok',`✅ ${WL_ACT[rec.action]||rec.action} ${rec.vol||'-'} ซม. บ่อ ${p.name}`);
+  save();renderWaterTable();renderWaterSummary();
+}
+function clearWaterLog(){
+  document.getElementById('wl-date').value=today();
+  ['wl-vol','wl-notes'].forEach(id=>{document.getElementById(id).value=''});
+  document.getElementById('wl-msg').innerHTML='';calcAge('wl');
+}
+function renderWaterSummary(){
+  const el=document.getElementById('wl-summary');if(!el)return;
+  const allLogs=D.ponds.flatMap(p=>(p.waterLog||[]).map(r=>({...r,pondName:p.name})));
+  const last7=allLogs.filter(r=>(new Date()-new Date(r.date))/86400000<=7).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
+  el.innerHTML=last7.length>0?`<div style="font-size:13px;font-weight:600;color:var(--tx2);margin-bottom:8px">กิจกรรมใน 7 วันล่าสุด:</div>${last7.map(r=>`<div style="padding:8px 12px;background:var(--sf2);border-radius:7px;margin-bottom:6px;font-size:13px"><span class="badge b-info" style="margin-right:6px">บ่อ ${r.pondName}</span>${fD(r.date)} — ${WL_ACT[r.action]||r.action} <strong>${r.vol?r.vol+' ซม.':''}</strong>${r.notes?' · '+r.notes:''}</div>`).join('')}`:'<div style="color:var(--tx3);text-align:center;padding:20px;font-size:13px">ยังไม่มีกิจกรรมใน 7 วันล่าสุด</div>';
+}
+function renderWaterTable(){
+  const pid=document.getElementById('wl-tbl-pond')?.value;
+  const wrap=document.getElementById('wl-tbl-wrap');if(!wrap)return;
+  if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
+  const p=pond(pid);const rows=(p?.waterLog||[]).slice().reverse().slice(0,30);
+  if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
+  wrap.innerHTML=`<table class="tbl"><thead><tr><th>วันที่</th><th>อายุ</th><th>การดำเนินการ</th><th>ปริมาณ (ซม.)</th><th>หมายเหตุ</th></tr></thead><tbody>${
+    rows.map((r,i)=>`<tr class="${i===0?'hi':''}"><td>${fD(r.date)}</td><td>${r.age}</td><td><span class="badge b-info">${WL_ACT[r.action]||r.action}</span></td><td>${r.vol?r.vol+' ซม.':'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')}</tbody></table>`;
+}
+// ===== CHEMICAL LOG =====
+function initChem(){
+  populateAll();
+  document.getElementById('ch-date').value=today();
+  const sumSel=document.getElementById('ch-sum-pond');
+  if(sumSel){sumSel.innerHTML='<option value="">-- เลือกบ่อ --</option>'+D.ponds.map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');}
+  renderChCatSelect();renderChemTable();renderChemSummary();
+}
+function toggleCatPanel(){
+  const p=document.getElementById('cat-panel');if(p)p.style.display=p.style.display==='none'?'block':'none';
+}
+function renderCatList(){
+  const el=document.getElementById('cat-tag-list');if(!el)return;
+  const cats=D.categories||DEFAULT_CATS;
+  el.innerHTML=cats.map(c=>`<span class="cat-tag">${c}<span class="cat-del" onclick="removeCategory('${c}')">✕</span></span>`).join('');
+}
+function addCategory(){
+  const inp=document.getElementById('new-cat-input');if(!inp)return;
+  const v=inp.value.trim();if(!v)return;
+  if(!D.categories)D.categories=[...DEFAULT_CATS];
+  if(D.categories.includes(v)){inp.value='';return}
+  D.categories.push(v);save();inp.value='';renderCatList();renderChCatSelect();
+}
+function removeCategory(v){
+  if(!D.categories)return;
+  D.categories=D.categories.filter(c=>c!==v);save();renderCatList();renderChCatSelect();
+}
+function renderChCatSelect(){
+  const cats=D.categories||DEFAULT_CATS;
+  const chCat=document.getElementById('ch-cat');
+  if(chCat){const cur=chCat.value;chCat.innerHTML=cats.map(c=>`<option value="${c}">${c}</option>`).join('');if(cats.includes(cur))chCat.value=cur;}
+  const tblCat=document.getElementById('ch-tbl-cat');
+  if(tblCat){const cur=tblCat.value;tblCat.innerHTML='<option value="">ทุกหมวด</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');if(cur)tblCat.value=cur;}
+  renderCatList();
+}
+function saveChem(){
+  const pid=document.getElementById('ch-pond').value,d=document.getElementById('ch-date').value;
+  if(!d){showMsg('ch-msg','warn','กรุณาเลือกวันที่');return}
+  const product=document.getElementById('ch-product').value,amount=parseFloat(document.getElementById('ch-amount').value)||null;
+  if(!product&&!amount){showMsg('ch-msg','warn','กรุณากรอกชื่อผลิตภัณฑ์หรือปริมาณ');return}
+  const rec={date:d,pondId:pid,category:document.getElementById('ch-cat').value,product,amount,
+    unit:document.getElementById('ch-unit').value,
+    reason:document.getElementById('ch-reason').value,notes:document.getElementById('ch-notes').value};
+  const ponds=pid==='all'?D.ponds:[pond(pid)].filter(Boolean);
+  ponds.forEach(p=>{if(!p.chemLog)p.chemLog=[];p.chemLog.push({...rec,pondId:p.id});p.chemLog.sort((a,b)=>new Date(a.date)-new Date(b.date))});
+  showMsg('ch-msg','ok',`✅ ${getCatLabel(rec.category)} ${rec.product||''} ${rec.amount||''} ${rec.unit} ${pid==='all'?'ทุกบ่อ':'บ่อ '+ponds[0]?.name}`);
+  save();renderChemTable();renderChemSummary();
+}
+function clearChem(){
+  document.getElementById('ch-date').value=today();
+  ['ch-product','ch-amount','ch-reason','ch-notes'].forEach(id=>{document.getElementById(id).value=''});
+  document.getElementById('ch-msg').innerHTML='';
+}
+let _chemPieChart=null;
+function renderChemSummary(){
+  const el=document.getElementById('ch-summary');if(!el)return;
+  const pid=document.getElementById('ch-sum-pond')?.value||'';
+  const wrap=document.getElementById('ch-pie-wrap');
+  if(!pid){el.innerHTML='<div style="color:var(--tx3);text-align:center;padding:20px;font-size:13px">เลือกบ่อเพื่อดูสรุป</div>';if(wrap)wrap.style.display='none';return}
+  const p=pond(pid);const logs=(p?.chemLog||[]);
+  const byCat={};logs.forEach(r=>{const k=r.category||'อื่นๆ';if(!byCat[k])byCat[k]=0;byCat[k]++});
+  const cats=Object.entries(byCat);
+  if(!cats.length){el.innerHTML='<div style="color:var(--tx3);text-align:center;padding:20px;font-size:13px">ยังไม่มีข้อมูลสำหรับบ่อนี้</div>';if(wrap)wrap.style.display='none';return}
+  const total=cats.reduce((s,[,v])=>s+v,0);
+  el.innerHTML=`<div class="g3" style="margin-bottom:8px">${cats.map(([k,v])=>`<div class="cat-card"><div style="font-size:13px;font-weight:700">${getCatLabel(k)}</div><div style="font-size:22px;font-weight:800;color:var(--p)">${v}</div><div style="font-size:11px;color:var(--tx3)">ครั้ง (${Math.round(v/total*100)}%)</div></div>`).join('')}</div>`;
+  if(wrap){wrap.style.display='block';const colors=['#EA580C','#F59F00','#2f9e44','#1971c2','#ae3ec9','#f03e3e','#74b816','#0ca678','#3bc9db','#748ffc'];
+  const ctx=document.getElementById('ch-pie-chart');if(!ctx)return;
+  if(_chemPieChart){_chemPieChart.destroy();}
+  _chemPieChart=new Chart(ctx,{type:'doughnut',data:{labels:cats.map(([k])=>getCatLabel(k)),datasets:[{data:cats.map(([,v])=>v),backgroundColor:cats.map((_,i)=>colors[i%colors.length]),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12}}}}});}
+}
+function renderChemTable(){
+  const pid=document.getElementById('ch-tbl-pond')?.value||'all';
+  const cat=document.getElementById('ch-tbl-cat')?.value||'';
+  const wrap=document.getElementById('ch-tbl-wrap');if(!wrap)return;
+  const allLogs=D.ponds.filter(p=>pid==='all'||p.id===pid).flatMap(p=>(p.chemLog||[]).filter(r=>!cat||r.category===cat).map(r=>({...r,pondName:p.name})));
+  allLogs.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(!allLogs.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
+  wrap.innerHTML=`<table class="tbl"><thead><tr><th>วันที่</th><th>บ่อ</th><th>หมวด</th><th>ผลิตภัณฑ์</th><th>ปริมาณ</th><th>จุดประสงค์</th><th>หมายเหตุ</th></tr></thead><tbody>${
+    allLogs.slice(0,50).map((r,i)=>`<tr class="${i===0?'hi':''}"><td>${fD(r.date)}</td><td><span class="badge b-info">บ่อ ${r.pondName}</span></td><td>${getCatLabel(r.category)}</td><td>${r.product||'-'}</td><td>${r.amount?r.amount+' '+r.unit:'-'}</td><td>${r.reason||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')}</tbody></table>`;
+}
+// ===== LAB RESULTS =====
+function initLab(){populateAll();document.getElementById('lb-date').value=today();calcAge('lb')}
+function updateLabStatus(){
+  const tg=parseFloat(document.getElementById('lb-tcbs-g').value)||null;
+  const ty=parseFloat(document.getElementById('lb-tcbs-y').value)||null;
+  const tvc=parseFloat(document.getElementById('lb-tvc').value)||null;
+  const el=document.getElementById('lb-status-display');const msgs=[];
+  if(tg!==null){const s=tg>1000?'danger':tg>100?'warn':'ok';msgs.push({s,m:`🟢 เชื้อเขียว: ${tg.toLocaleString()} CFU/mL — ${s==='ok'?'ปลอดภัย':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย AHPND!'}`})}
+  if(ty!==null){const s=ty>1000?'warn':'ok';msgs.push({s,m:`🟡 เชื้อเหลือง: ${ty.toLocaleString()} CFU/mL — ${s==='ok'?'ปกติ':'เฝ้าระวัง'}`})}
+  if(tvc!==null){const s=tvc>1e7?'danger':tvc>1e5?'warn':'ok';msgs.push({s,m:`TVC: ${tvc.toExponential(1)} CFU/mL — ${s==='ok'?'ปกติ':s==='warn'?'เริ่มสูง':'สูงมาก'}`})}
+  el.innerHTML=msgs.map(m=>`<div class="ai ${m.s}" style="margin-bottom:5px"><span>${m.s==='danger'?'🔴':m.s==='warn'?'🟡':'✅'}</span><span>${m.m}</span></div>`).join('');
+}
+function saveLab(){
+  const pid=document.getElementById('lb-pond').value,d=document.getElementById('lb-date').value;
+  if(!pid||!d){showMsg('lb-msg','warn','กรุณาเลือกบ่อและวันที่');return}
+  const p=pond(pid);if(!p)return;if(!p.labResults)p.labResults=[];
+  const tg=parseFloat(document.getElementById('lb-tcbs-g').value)||null;
+  const ty=parseFloat(document.getElementById('lb-tcbs-y').value)||null;
+  const rec={date:d,age:parseInt(document.getElementById('lb-age').value)||0,
+    labName:document.getElementById('lb-lab').value,tcbsGreen:tg,tcbsYellow:ty,
+    tvc:parseFloat(document.getElementById('lb-tvc').value)||null,
+    ehp:document.getElementById('lb-ehp').value,hepato:document.getElementById('lb-hepato').value,
+    notes:document.getElementById('lb-notes').value};
+  const idx=p.labResults.findIndex(r=>r.date===d);
+  const sg=tg!==null?(tg>1000?'danger':tg>100?'warn':'ok'):'ok';
+  if(idx>=0){p.labResults[idx]=rec;showMsg('lb-msg','warn',`อัปเดต ${fD(d)}`)}
+  else{p.labResults.push(rec);p.labResults.sort((a,b)=>new Date(a.date)-new Date(b.date));showMsg('lb-msg',sg==='danger'?'danger':sg==='warn'?'warn':'ok',`✅ บันทึกผลแล็บ บ่อ ${p.name} 🟢${tg||'-'} 🟡${ty||'-'} CFU/mL`)}
+  save();renderLabTable();renderOv();
+}
+function clearLab(){
+  document.getElementById('lb-date').value=today();
+  ['lb-lab','lb-tcbs-g','lb-tcbs-y','lb-tvc','lb-notes'].forEach(id=>{document.getElementById(id).value=''});
+  document.getElementById('lb-ehp').value='nd';document.getElementById('lb-hepato').value='normal';
+  document.getElementById('lb-status-display').innerHTML='';document.getElementById('lb-msg').innerHTML='';calcAge('lb');
+}
+function renderLabTable(){
+  const pid=document.getElementById('lb-tbl-pond')?.value;
+  const wrap=document.getElementById('lb-tbl-wrap');if(!wrap)return;
+  if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
+  const p=pond(pid);const rows=(p?.labResults||[]).slice().reverse().slice(0,20);
+  if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีผลแล็บ</p>';return}
+  wrap.innerHTML=`<table class="tbl"><thead><tr><th>วันที่</th><th>อายุ</th><th>แล็บ</th><th>🟢 เชื้อเขียว</th><th>🟡 เชื้อเหลือง</th><th>TVC</th><th>EHP</th><th>ตับอ่อน</th><th>หมายเหตุ</th></tr></thead><tbody>${
+    rows.map((r,i)=>{
+      const sg=r.tcbsGreen!=null?(r.tcbsGreen>1000?'danger':r.tcbsGreen>100?'warn':'ok'):'ok';
+      return`<tr class="${i===0?'hi':''}"><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.labName||'-'}</td><td style="font-weight:700;color:${sc(sg)}">${r.tcbsGreen!=null?r.tcbsGreen.toLocaleString():'-'}</td><td>${r.tcbsYellow!=null?r.tcbsYellow.toLocaleString():'-'}</td><td>${r.tvc?r.tvc.toExponential(1):'-'}</td><td><span class="badge ${r.ehp==='nd'?'b-ok':r.ehp==='trace'?'b-na':r.ehp==='low'?'b-warn':'b-danger'}">${EHP_LBL[r.ehp]||r.ehp}</span></td><td><span class="badge ${r.hepato==='normal'?'b-ok':r.hepato==='pale'?'b-warn':'b-danger'}">${HEPATO_LBL[r.hepato]||r.hepato}</span></td><td>${r.notes||'-'}</td></tr>`;
+    }).join('')}</tbody></table>`;
+}
+// ===== TRENDS =====
+function initTrends(){
+  populateAll();
+  document.getElementById('pb-group').innerHTML=PARAMS.map(p=>`<button class="pb${p.key===actPrm?' on':''}" onclick="setPrm('${p.key}',this)">${p.lbl}</button>`).join('');
+  renderTrend();
+}
+function setPrm(key,btn){actPrm=key;document.querySelectorAll('.pb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderTrend()}
+function renderTrend(){
+  const pid=document.getElementById('tr-pond').value;const pm=PARAMS.find(p=>p.key===actPrm);if(!pm)return;
+  document.getElementById('tr-title').textContent=`${pm.lbl}${pm.unit?' ('+pm.unit+')':''} ตามอายุกุ้ง`;
+  if(trCh){trCh.destroy();trCh=null;}
+  const ponds=pid?[pond(pid)].filter(Boolean):D.ponds;
+  const datasets=ponds.map((p,i)=>{const col=COLORS[i%COLORS.length];const pts=p.records.filter(r=>r[pm.key]!==null&&r[pm.key]!==undefined).map(r=>({x:r.age,y:r[pm.key]}));return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'22',tension:.3,pointRadius:4,fill:!!pid}});
+  const allAges=[...new Set(D.ponds.flatMap(p=>p.records.map(r=>r.age)))].sort((a,b)=>a-b);
+  if(allAges.length>1){
+    const ax=[allAges[0],allAges[allAges.length-1]];
+    [{v:pm.min,c:'#2f855a'},{v:pm.max,c:'#2f855a'},{v:pm.dMin,c:'#e53e3e',d:[4,4]},{v:pm.dMax,c:'#e53e3e',d:[4,4]}].forEach(l=>{
+      datasets.push({label:'ref',data:ax.map(x=>({x,y:l.v})),borderColor:l.c,borderWidth:1.5,borderDash:l.d||[6,4],pointRadius:0,fill:false,spanGaps:true});
+    });
+  }
+  trCh=new Chart(document.getElementById('trChart'),{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,interaction:{mode:'index',intersect:false},scales:{x:{type:'linear',title:{display:true,text:'อายุ (วัน)'}},y:{title:{display:true,text:pm.lbl+(pm.unit?' ('+pm.unit+')':'')}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:12,filter:i=>i.text!=='ref'}}}}});
+}
+// ===== COMPARE =====
+function initCompare(){
+  document.getElementById('cmp-sel').innerHTML=D.ponds.map(p=>`<span class="pond-chk${cmpP.has(p.id)?' on':''}" onclick="tglCmp('${p.id}',this)"><input type="checkbox"${cmpP.has(p.id)?' checked':''}>บ่อ ${p.name}</span>`).join('');
+  document.getElementById('cmp-param').innerHTML=PARAMS.map(p=>`<option value="${p.key}">${p.lbl}</option>`).join('');
+  renderCompare();
+}
+function tglCmp(id,el){cmpP.has(id)?cmpP.delete(id):cmpP.add(id);el.classList.toggle('on');renderCompare()}
+function renderCompare(){
+  const key=document.getElementById('cmp-param')?.value;const pm=PARAMS.find(p=>p.key===key);if(!pm)return;
+  document.getElementById('cmp-title').textContent=`เปรียบเทียบ ${pm.lbl}${pm.unit?' ('+pm.unit+')':''} ระหว่างบ่อ`;
+  if(cmpCh){cmpCh.destroy();cmpCh=null;}
+  const ponds=cmpP.size>0?D.ponds.filter(p=>cmpP.has(p.id)):D.ponds;
+  const datasets=ponds.map((p,i)=>{const col=COLORS[i%COLORS.length];const pts=p.records.filter(r=>r[pm.key]!==null&&r[pm.key]!==undefined).map(r=>({x:r.age,y:r[pm.key]}));return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'33',tension:.3,pointRadius:4,fill:false}});
+  cmpCh=new Chart(document.getElementById('cmpChart'),{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,scales:{x:{type:'linear',title:{display:true,text:'อายุ (วัน)'}},y:{title:{display:true,text:pm.lbl+(pm.unit?' ('+pm.unit+')':'')}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:12}}}}});
+}
+// ===== WEATHER & RISK =====
+async function fetchWx(){
+  document.getElementById('wx-cards').innerHTML=`<div style="text-align:center;padding:40px;grid-column:1/-1;color:var(--tx3)"><div class="spin" style="margin:0 auto 12px"></div><div>โหลดข้อมูลสภาพอากาศ...</div><div style="font-size:11px;margin-top:4px">Open-Meteo · ต.นาพญา อ.หลังสวน จ.ชุมพร</div></div>`;
+  try{
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),10000); // 10s timeout
+    // ── Forecast 4 days (วันนี้ + 3 วันข้างหน้า) ──
+    const dailyParams=[
+      'temperature_2m_max','temperature_2m_min',
+      'precipitation_sum','precipitation_probability_max',
+      'wind_speed_10m_max','wind_gusts_10m_max',
+      'relative_humidity_2m_max','uv_index_max',
+      'weathercode','sunrise','sunset'
+    ].join(',');
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}`
+      +`&daily=${dailyParams}`
+      +`&current_weather=true`
+      +`&wind_speed_unit=kmh`
+      +`&forecast_days=4&timezone=Asia%2FBangkok`;
+    const r=await fetch(url,{signal:controller.signal});
+    clearTimeout(timer);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    renderWx(data);renderRisk(data.daily);
+    document.getElementById('wx-ts').textContent=`· อัปเดต ${new Date().toLocaleTimeString('th-TH')}`;
+  }catch(e){
+    const msg=e.name==='AbortError'?'หมดเวลาเชื่อมต่อ (>10 วินาที)':e.message;
+    document.getElementById('wx-cards').innerHTML=`<div style="text-align:center;padding:24px;grid-column:1/-1;color:var(--d)">⚠️ โหลดข้อมูลสภาพอากาศไม่ได้: ${msg}<br><button class="btn btn-s btn-sm" style="margin-top:10px" onclick="fetchWx()">🔄 ลองใหม่</button></div>`;
+  }
+}
+function wmoIco(c){
+  if(c==0)return'☀️';
+  if(c<=2)return'🌤️';
+  if(c<=3)return'⛅';
+  if(c<=9)return'🌫️';
+  if(c<=19)return'🌦️';
+  if(c<=29)return'🌧️';
+  if(c<=39)return'🌨️';
+  if(c<=49)return'🌫️';
+  if(c<=59)return'🌦️';
+  if(c<=69)return'🌧️';
+  if(c<=79)return'🌨️';
+  if(c<=84)return'🌧️';
+  return'⛈️';
+}
+function wmoDesc(c){
+  if(c==0)return'แดดจัด';
+  if(c<=2)return'แดดมีเมฆบางส่วน';
+  if(c<=3)return'มีเมฆมาก';
+  if(c<=9)return'หมอก';
+  if(c<=49)return'หมอก/ฝอยน้ำ';
+  if(c<=59)return'ฝนเบา';
+  if(c<=69)return'ฝน';
+  if(c<=79)return'หิมะ';
+  if(c<=84)return'ฝนหนัก';
+  return'พายุฝนฟ้าคะนอง';
+}
+function renderWx(data){
+  const d=data.daily;
+  const cur=data.current_weather;
+  // ── Current weather banner ──
+  const curEl=document.getElementById('wx-current');
+  if(curEl&&cur){
+    curEl.innerHTML=`<div class="card" style="margin-bottom:12px;background:linear-gradient(135deg,var(--p) 0%,var(--pd) 100%);color:#fff;border:none">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div style="font-size:48px">${wmoIco(cur.weathercode)}</div>
+        <div>
+          <div style="font-size:13px;opacity:.8">🕐 สภาพอากาศปัจจุบัน · ต.นาพญา อ.หลังสวน</div>
+          <div style="font-size:30px;font-weight:900;line-height:1.1">${cur.temperature.toFixed(1)}°C</div>
+          <div style="font-size:13px;opacity:.9">${wmoDesc(cur.weathercode)} · 💨 ${cur.windspeed.toFixed(0)} กม/ชม</div>
+        </div>
+      </div>
+    </div>`;
+  }
+  // ── 4-day forecast cards ──
+  const lbls=['วันนี้','พรุ่งนี้','มะรืนนี้','3 วันข้างหน้า'];
+  document.getElementById('wx-cards').innerHTML=d.time.slice(0,4).map((dt,i)=>{
+    const tMax=d.temperature_2m_max[i],tMin=d.temperature_2m_min[i];
+    const rain=d.precipitation_sum[i],rainProb=d.precipitation_probability_max[i];
+    const wind=d.wind_speed_10m_max[i],gust=d.wind_gusts_10m_max[i];
+    const humid=d.relative_humidity_2m_max[i],uv=d.uv_index_max[i];
+    const sr=d.sunrise[i]?.split('T')[1]?.substring(0,5)||'';
+    const ss=d.sunset[i]?.split('T')[1]?.substring(0,5)||'';
+    const isToday=i===0;
+    // Risk tags
+    const tags=[];
+    if(rain>50)tags.push({bg:'var(--db)',c:'var(--d)',t:'⛈️ ฝนหนักมาก — pH/ALK จะตก'});
+    else if(rain>20)tags.push({bg:'var(--wb)',c:'var(--w)',t:'🌧️ ฝนหนัก'});
+    if(tMax>35)tags.push({bg:'var(--db)',c:'var(--d)',t:'🌡️ ร้อนจัด — DO วิกฤต'});
+    else if(tMax>33)tags.push({bg:'var(--wb)',c:'var(--w)',t:'🌡️ ร้อน ลด feed 20%'});
+    if(tMin<24)tags.push({bg:'var(--wb)',c:'var(--w)',t:'🌙 คืนเย็น ระวัง DO'});
+    if(uv&&uv>8)tags.push({bg:'var(--wb)',c:'var(--w)',t:`☀️ UV สูง (${uv.toFixed(0)})`});
+    if(rainProb>70)tags.push({bg:'var(--ib)',c:'var(--in)',t:`🌂 โอกาสฝน ${rainProb}%`});
+    return`<div class="wx-day" style="${isToday?'border:2px solid var(--p);':''}">
+      <div style="font-size:11px;color:${isToday?'var(--p)':'var(--tx3)'};font-weight:${isToday?700:400};margin-bottom:4px">${lbls[i]}${isToday?' ·วันนี้':''} (${new Date(dt).toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short'})})</div>
+      <div style="font-size:32px;margin-bottom:5px">${wmoIco(d.weathercode[i])}</div>
+      <div style="font-size:13px;color:var(--tx3);margin-bottom:6px">${wmoDesc(d.weathercode[i])}</div>
+      <div style="font-size:18px;font-weight:800">${tMax.toFixed(1)}° / ${tMin.toFixed(1)}°C</div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:6px;display:flex;flex-direction:column;gap:3px">
+        <span>🌧️ ฝน ${rain.toFixed(1)}มม. (โอกาส ${rainProb}%)</span>
+        <span>💨 ${wind.toFixed(0)} กม/ชม. (กระโชก ${gust.toFixed(0)})</span>
+        <span>💧 ความชื้น ${humid}% · ☀️ UV ${uv?.toFixed(0)||'-'}</span>
+        ${sr?`<span>🌅 ${sr} · 🌇 ${ss}</span>`:''}
+      </div>
+      ${tags.map(t=>`<span style="display:block;margin-top:5px;font-size:10px;background:${t.bg};color:${t.c};padding:2px 7px;border-radius:10px;font-weight:700">${t.t}</span>`).join('')}
+    </div>`;
+  }).join('');
+}
+function calcRisk(d,ix,p){
+  let score=0;const rs=[];
+  const tMax=d.temperature_2m_max[ix],tMin=d.temperature_2m_min[ix],rain=d.precipitation_sum[ix],wind=d.wind_speed_10m_max[ix];
+  if(tMax>35){score+=3;rs.push({l:'danger',m:`อุณหภูมิสูงมาก ${tMax}°C — DO วิกฤต`})}else if(tMax>33){score+=2;rs.push({l:'warn',m:`อุณหภูมิสูง ${tMax}°C`})}
+  if(tMin<24){score+=2;rs.push({l:'warn',m:`อุณหภูมิคืนต่ำ ${tMin}°C`})}
+  if(rain>50){score+=3;rs.push({l:'danger',m:`ฝนหนักมาก ${rain.toFixed(0)}มม — ALK/pH จะตก`})}else if(rain>20){score+=2;rs.push({l:'warn',m:`ฝนหนัก ${rain.toFixed(0)}มม`})}else if(rain>5){score+=1;rs.push({l:'ok',m:`ฝน ${rain.toFixed(0)}มม`})}
+  if(wind<5&&tMax>31){score+=2;rs.push({l:'warn',m:`ลมอ่อน+ร้อน เสี่ยง DO ชั้นล่างต่ำ`})}
+  const last=p.records[p.records.length-1];
+  if(last){if(last.alk&&last.alk<120){score+=1;rs.push({l:'warn',m:`ALK ต่ำ (${last.alk}) เสี่ยงฝน`})}if(last.doM&&last.doM<5.5){score+=1;rs.push({l:'warn',m:`DO เช้าต่ำ (${last.doM})`})}}
+  const latLab=(p.labResults||[]).slice(-1)[0];
+  if(latLab&&latLab.vibP>500){score+=1;rs.push({l:'warn',m:`Vibrio สูง (${latLab.vibP.toLocaleString()}) ระวังความเครียด`})}
+  return{score,reasons:rs};
+}
+function renderRisk(d){
+  const allR=[];
+  document.getElementById('risk-grid').innerHTML=D.ponds.map(p=>{
+    const days=d.time.slice(1,4).map((_,i)=>calcRisk(d,i+1,p));
+    const maxS=Math.max(...days.map(r=>r.score));const rc=maxS>=6?'rh':maxS>=3?'rm':'rl';
+    days.forEach(r=>r.reasons.forEach(x=>allR.push(x)));
+    return`<div class="card"><div style="display:flex;align-items:center;gap:12px;margin-bottom:10px"><div class="risk-ring ${rc}">${maxS}</div><div><div style="font-weight:800;font-size:15px">บ่อ ${p.name}</div><div style="font-size:12px;font-weight:700;color:${maxS>=6?'var(--d)':maxS>=3?'var(--w)':'var(--ok)'}">ความเสี่ยง${maxS>=6?'สูง':maxS>=3?'ปานกลาง':'ต่ำ'}</div></div></div>
+      ${days.map((r,i)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="font-size:11px;color:var(--tx3);width:48px">วันที่ ${i+1}</div><div style="flex:1;height:7px;background:var(--bd);border-radius:4px;overflow:hidden"><div style="height:100%;width:${Math.min(100,r.score/8*100)}%;background:${r.score>=6?'#e53e3e':r.score>=3?'#dd6b20':'#2f855a'};border-radius:4px"></div></div><div style="font-size:11px;font-weight:700;width:14px">${r.score}</div></div>`).join('')}
+      <div style="margin-top:8px;border-top:1px solid var(--bd);padding-top:8px">${days.flatMap(r=>r.reasons).slice(0,3).map(r=>`<div style="font-size:11px;padding:2px 0;color:${r.l==='danger'?'var(--d)':r.l==='warn'?'var(--w)':'var(--tx3)'}">${r.l==='danger'?'🔴':r.l==='warn'?'🟡':'⚪'} ${r.m}</div>`).join('')}</div>
+    </div>`;
+  }).join('');
+  const recList=[
+    {t:rs=>rs.some(r=>r.m.includes('ALK')||r.m.includes('ฝน')),a:'🪨 เติมปูน/โดโลไมต์ รักษา ALK ≥ 120 mg/L ก่อนฝนตกหนัก'},
+    {t:rs=>rs.some(r=>r.m.includes('DO')),a:'🌊 เพิ่มกำลังเครื่องตีน้ำ โดยเฉพาะช่วง 01.00–06.00 น.'},
+    {t:rs=>rs.some(r=>r.m.includes('อุณหภูมิสูง')),a:'🌡️ ลดอาหาร 20% ตรวจ DO ทุก 2 ชม.'},
+    {t:rs=>rs.some(r=>r.m.includes('ลมอ่อน')),a:'⚡ ลมสงบ+ร้อน เพิ่ม paddle wheel ตรวจ DO ชั้นล่าง'},
+    {t:rs=>rs.some(r=>r.m.includes('Vibrio')),a:'🦠 Vibrio สูง ลดความเครียด เพิ่มโปรไบโอติก ลดอาหาร'},
+  ];
+  const recs=recList.filter(r=>r.t(allR));
+  document.getElementById('risk-recs').innerHTML=recs.length>0?recs.map(r=>`<div class="ai warn" style="margin-bottom:7px"><span>💡</span><div style="font-size:13px">${r.a}</div></div>`).join(''):'<p style="color:var(--ok);font-size:13px;padding:10px">✅ ไม่พบความเสี่ยงสูงใน 3 วัน</p>';
+}
+// ===== EXPORT =====
+function initExport(){
+  populateAll();
+  const total=D.ponds.reduce((s,p)=>s+p.records.length,0);
+  const totFeed=D.ponds.reduce((s,p)=>s+(p.feedLog||[]).length,0);
+  const exInfo=document.getElementById('ex-info');
+  if(exInfo)exInfo.innerHTML=`<div class="badge b-info">${D.ponds.length} บ่อ · ${total} ค่าน้ำ · ${totFeed} อาหาร</div>`;
+}
+function genPDF(){
+  const pid=document.getElementById('ex-pond').value;
+  const{jsPDF}=window.jspdf;
+  const ponds=pid==='all'?D.ponds:D.ponds.filter(p=>p.id===pid);
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,ML=14,MR=196,TW=MR-ML;
+  const green=[15,110,86],white=[255,255,255],dark=[30,30,30],gray=[120,120,120],light=[240,248,244];
+  function hdr(pg){
+    if(pg>1)doc.addPage();
+    doc.setFillColor(...green);doc.rect(0,0,W,18,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(...white);
+    doc.text('ตะวันฟาร์ม — สรุปปิดบ่อ',W/2,8,{align:'center'});
+    doc.setFontSize(8);doc.setFont('helvetica','normal');
+    doc.text(`สร้างเมื่อ: ${new Date().toLocaleDateString('th-TH')}  |  หน้า ${pg}/2`,W/2,14,{align:'center'});
+    return 24;
+  }
+  let y=hdr(1);
+  ponds.forEach((p,pi)=>{
+    if(pi>0&&y>240){y=hdr(2)}
+    const lastRec=p.records[p.records.length-1];
+    const latSamp=(p.samples||[]).slice(-1)[0];
+    const cumF=getCumFeed(p);const fcr=getFCR(p);
+    const age=lastRec?lastRec.age:dDiff(p.startDate,today());
+    doc.setFillColor(...light);doc.roundedRect(ML,y,TW,8,1,1,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(...green);
+    doc.text(`บ่อ ${p.name}`,ML+3,y+5.5);
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...gray);
+    doc.text(`ปล่อย ${p.stock.toLocaleString()} ตัว | ${p.size} ไร่ | วันที่ปล่อย: ${fD(p.startDate)} | อายุ: ${age} วัน`,ML+28,y+5.5);
+    y+=11;
+    const kpis=[['ABW',latSamp?latSamp.abw+'g':'–'],['ไซส์',latSamp&&latSamp.plCount?latSamp.plCount+' ตัว/กก.':'–'],['Biomass',latSamp&&latSamp.biomass?latSamp.biomass.toFixed(0)+' kg':'–'],['Survival',latSamp&&latSamp.survivalRate?latSamp.survivalRate+'%':'–'],['อาหารสะสม',cumF.toFixed(0)+' กก.'],['FCR',fcr||'–']];
+    const kw=TW/kpis.length;
+    kpis.forEach(([lbl,val],ki)=>{
+      const kx=ML+ki*kw;
+      doc.setFillColor(248,252,250);doc.rect(kx,y,kw-1,14,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(...green);
+      doc.text(String(val),kx+kw/2-0.5,y+7,{align:'center'});
+      doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...gray);
+      doc.text(lbl,kx+kw/2-0.5,y+12,{align:'center'});
+    });
+    y+=18;
+    const recs=p.records.slice(-8);
+    if(recs.length){
+      const cols=['วันที่','อายุ','pH ม.','pH บ.','T ม.','DO ม.','DO บ.','ALK','Sal','NH4+','NO2'];
+      const cw=[22,10,12,12,12,12,12,13,10,12,12];
+      let x=ML;
+      doc.setFillColor(...green);doc.rect(ML,y,TW,6,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...white);
+      cols.forEach((c,ci)=>{doc.text(c,x+cw[ci]/2,y+4,{align:'center'});x+=cw[ci]});y+=6;
+      recs.forEach((r,ri)=>{
+        if(ri%2===0){doc.setFillColor(248,252,250);doc.rect(ML,y,TW,5.5,'F')}
+        doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...dark);x=ML;
+        [fD(r.date),r.age,r.phM??'-',r.phA??'-',r.tM??'-',r.doM??'-',r.doA??'-',r.alk??'-',r.sal??'-',r.nh4??'-',r.no2??'-'].forEach((v,ci)=>{doc.text(String(v),x+cw[ci]/2,y+3.8,{align:'center'});x+=cw[ci]});y+=5.5;
+      });
+    }
+    const feeds=(p.feedLog||[]).slice(-5);
+    if(feeds.length){
+      y+=4;
+      const fc=['วันที่','อายุ','ยี่ห้อ','เบอร์','รวม (กก.)','Feed Rate'];
+      const fw=[22,12,35,20,30,27];
+      let fx=ML;
+      doc.setFillColor(200,230,220);doc.rect(ML,y,TW,5.5,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...dark);
+      fc.forEach((c,ci)=>{doc.text(c,fx+fw[ci]/2,y+3.8,{align:'center'});fx+=fw[ci]});y+=5.5;
+      feeds.forEach((r,ri)=>{
+        if(ri%2===0){doc.setFillColor(248,252,250);doc.rect(ML,y,TW,5.5,'F')}
+        doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...dark);fx=ML;
+        [fD(r.date),r.age||'-',r.feedBrand||'-',r.feedGrade||'-',r.totalFeed?.toFixed(1)||'-',r.feedRate?r.feedRate+'%':'-'].forEach((v,ci)=>{doc.text(String(v),fx+fw[ci]/2,y+3.8,{align:'center'});fx+=fw[ci]});y+=5.5;
+      });
+    }
+    y+=10;
+  });
+  /* PAGE 2 */
+  y=hdr(2);
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...green);
+  doc.text('บันทึกการสุ่มตัวอย่าง (ABW & ไซส์)',ML,y);y+=5;
+  const sCols=['บ่อ','วันที่','อายุ','ABW (g)','ไซส์ (ตัว/กก.)','Biomass (kg)','Survival%','PDG'];
+  const sW=[16,22,12,18,26,22,18,18];
+  let sx=ML;
+  doc.setFillColor(...green);doc.rect(ML,y,TW,5.5,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...white);
+  sCols.forEach((c,ci)=>{doc.text(c,sx+sW[ci]/2,y+3.8,{align:'center'});sx+=sW[ci]});y+=5.5;
+  ponds.forEach(p=>{
+    (p.samples||[]).slice(-6).forEach((r,ri)=>{
+      if(y>270){doc.addPage();y=15}
+      if(ri%2===0){doc.setFillColor(248,252,250);doc.rect(ML,y,TW,5.5,'F')}
+      doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...dark);sx=ML;
+      [p.name,fD(r.date),r.age,r.abw?.toFixed(2)||'-',r.plCount||'-',r.biomass?.toFixed(0)||'-',r.survivalRate?r.survivalRate+'%':'-',r.pdg||'-'].forEach((v,ci)=>{doc.text(String(v),sx+sW[ci]/2,y+3.8,{align:'center'});sx+=sW[ci]});y+=5.5;
+    });
+  });
+  y+=8;
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...green);
+  doc.text('สรุปการใช้สารเคมี/สารปรับปรุง',ML,y);y+=5;
+  const allChem=D.ponds.flatMap(p=>(p.chemLog||[]).map(r=>({...r,pondName:p.name})));
+  if(allChem.length){
+    const byCat={};
+    allChem.forEach(r=>{if(!byCat[r.category])byCat[r.category]={count:0,products:[]};byCat[r.category].count++;if(r.product&&!byCat[r.category].products.includes(r.product))byCat[r.category].products.push(r.product)});
+    const cCols=['หมวดหมู่','ครั้ง','ผลิตภัณฑ์ที่ใช้'];
+    const cW=[40,18,TW-58];
+    let cx=ML;
+    doc.setFillColor(200,230,220);doc.rect(ML,y,TW,5.5,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...dark);
+    cCols.forEach((c,ci)=>{doc.text(c,cx+(ci===2?3:cW[ci]/2),y+3.8,ci===2?{}:{align:'center'});cx+=cW[ci]});y+=5.5;
+    Object.entries(byCat).forEach(([cat,v],ri)=>{
+      if(ri%2===0){doc.setFillColor(248,252,250);doc.rect(ML,y,TW,5.5,'F')}
+      doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...dark);cx=ML;
+      [getCatLabel(cat),String(v.count),v.products.slice(0,4).join(', ')].forEach((vv,ci)=>{doc.text(vv,cx+(ci===2?3:cW[ci]/2),y+3.8,ci===2?{}:{align:'center'});cx+=cW[ci]});y+=5.5;
+    });
+  }
+  doc.setFont('helvetica','italic');doc.setFontSize(7);doc.setTextColor(...gray);
+  doc.text(`ตะวันฟาร์ม · พิมพ์: ${new Date().toLocaleString('th-TH')}`,W/2,287,{align:'center'});
+  doc.save(`TawanFarm_ปิดบ่อ_${today()}.pdf`);
+}
+// CSV exports removed
+function dl(content,type,filename){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=filename;a.click()}
+function exportJSON(){dl(JSON.stringify(D,null,2),'application/json',`TawanFarm_Backup_${today()}.json`)}
+function importJSON(inp){
+  const f=inp.files[0];if(!f)return;
+  const reader=new FileReader();
+  reader.onload=e=>{try{const data=JSON.parse(e.target.result);if(data.ponds){data.ponds.forEach(p=>{['feedLog','samples','plankton','waterLog','chemLog','labResults'].forEach(k=>{if(!p[k])p[k]=[]})});D=data;save();alert(`นำเข้าสำเร็จ! ${data.ponds.length} บ่อ`);populateAll();renderOv()}}catch{alert('ไฟล์ JSON ไม่ถูกต้อง')}};
+  reader.readAsText(f);
+}
+// ===== POND MANAGEMENT =====
+function renderManage(){
+  document.getElementById('mg-tbody').innerHTML=D.ponds.map(p=>{
+    const age=dDiff(p.startDate,today());
+    return`<tr><td><strong style="color:var(--p)">${p.name}</strong></td><td>${p.stock.toLocaleString()}</td><td>${p.size}</td><td>${dens(p)} ตัว/ตรม.</td><td>${fD(p.startDate)}</td><td>${age} วัน</td><td>${p.records.length}</td><td>${(p.feedLog||[]).length}</td><td>${(p.samples||[]).length}</td><td>${(p.labResults||[]).length}</td><td style="display:flex;gap:6px"><button class="btn btn-s btn-sm" onclick="editPond('${p.id}')">✏️</button><button class="btn btn-d btn-sm" onclick="delPond('${p.id}')">🗑️</button></td></tr>`;
+  }).join('');
+}
+function openAddPond(){
+  document.getElementById('mdl-title').textContent='➕ เพิ่มบ่อใหม่';
+  ['mdl-id','mdl-name','mdl-stock','mdl-size','mdl-hatchery','mdl-plWeight'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mdl-plType').value='';
+  document.getElementById('mdl-start').value=today();
+  document.getElementById('pondModal').classList.add('on');
+}
+function editPond(id){
+  const p=pond(id);if(!p)return;
+  document.getElementById('mdl-title').textContent=`✏️ แก้ไขบ่อ ${p.name}`;
+  document.getElementById('mdl-id').value=id;document.getElementById('mdl-name').value=p.name;
+  document.getElementById('mdl-stock').value=p.stock;document.getElementById('mdl-size').value=p.size;
+  document.getElementById('mdl-start').value=p.startDate;
+  document.getElementById('mdl-hatchery').value=p.hatchery||'';
+  document.getElementById('mdl-plType').value=p.plType||'';
+  document.getElementById('mdl-plWeight').value=p.plWeight||'';
+  document.getElementById('pondModal').classList.add('on');
+}
+function closePond(){document.getElementById('pondModal').classList.remove('on')}
+function savePond(){
+  const id=document.getElementById('mdl-id').value,name=document.getElementById('mdl-name').value.trim(),stock=parseInt(document.getElementById('mdl-stock').value),size=parseFloat(document.getElementById('mdl-size').value),startDate=document.getElementById('mdl-start').value;
+  const hatchery=document.getElementById('mdl-hatchery').value.trim();
+  const plType=document.getElementById('mdl-plType').value;
+  const plWeight=document.getElementById('mdl-plWeight').value?parseFloat(document.getElementById('mdl-plWeight').value):null;
+  if(!name||!stock||!size||!startDate){alert('กรุณากรอกข้อมูลให้ครบ');return}
+  if(id){const p=pond(id);Object.assign(p,{name,stock,size,startDate,hatchery,plType,plWeight})}
+  else D.ponds.push({id:'P'+Date.now(),name,stock,size,startDate,hatchery,plType,plWeight,records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[]});
+  save();closePond();renderManage();populateAll();renderOv();
+}
+function delPond(id){
+  const p=pond(id);if(!confirm(`ลบบ่อ ${p.name} และข้อมูลทั้งหมด?`))return;
+  D.ponds=D.ponds.filter(x=>x.id!==id);save();renderManage();populateAll();renderOv();
+}
+// ===== CROP CYCLES =====
+const PREP_STEPS = [
+  {key:'drain',    label:'ตากบ่อ',            detail:'ตากบ่อ 2 เดือน',                   daysBeforeStock:-60},
+  {key:'fill',     label:'เข้าน้ำ',            detail:'เข้าน้ำ 30 วันก่อนลงกุ้ง',          daysBeforeStock:-30},
+  {key:'soda',     label:'โซดาไฟ',            detail:'ปรับ pH ≥ 10 รอ pH ลง 8.5 ก่อนลง', daysBeforeStock:-28},
+  {key:'copper',   label:'คอปเปอร์ซัลเฟต',   detail:'1 กระสอบ/บ่อ กำจัดตะไคร่+ปลา',     daysBeforeStock:-25},
+  {key:'dichlo',   label:'ไดโครวอส',          detail:'25 ลิตร/บ่อ กำจัดแมลง',             daysBeforeStock:-21},
+  {key:'chain',    label:'ลากโซ่',            detail:'คลุกเคล้าสารอินทรีย์ก้นบ่อ',        daysBeforeStock:-14},
+  {key:'chlorine', label:'คลอรีน',            detail:'30 ppm — 4 วันสุดท้าย',             daysBeforeStock:-4},
+  {key:'bacillus', label:'บาซิลัส',           detail:'3 วันก่อนลง ปรับสมดุลจุลินทรีย์',   daysBeforeStock:-3},
+  {key:'blue',     label:'สีน้ำเงิน',         detail:'1 กก./ไร่ 2 วันก่อนลง',             daysBeforeStock:-2},
+  {key:'micro',    label:'จุลินทรีย์',        detail:'วันลงกุ้ง',                          daysBeforeStock:0},
+];
+
+function renderCrops(){
+  const selYear=parseInt(document.getElementById('cr-year')?.value)||new Date().getFullYear();
+  // fill year dropdown
+  const years=new Set();const curY=new Date().getFullYear();
+  [curY-1,curY,curY+1].forEach(y=>years.add(y));
+  D.ponds.forEach(p=>{(p.cropHistory||[]).forEach(c=>{years.add(c.cropYear||c.year||curY);});years.add(p.cropYear||curY);});
+  const yrEl=document.getElementById('cr-year');
+  if(yrEl){const cv=yrEl.value||curY;yrEl.innerHTML=[...years].sort((a,b)=>b-a).map(y=>`<option value="${y}"${y==cv?' selected':''}>${y}</option>`).join('');}
+  // metrics
+  let totalClosed=0,onTrack=0,behindTrack=0;
+  D.ponds.forEach(p=>{
+    const closed=(p.cropHistory||[]).filter(c=>(c.cropYear||c.year||curY)==selYear).length;
+    totalClosed+=closed;
+    const curIsThisYear=(p.cropYear||curY)==selYear;
+    if(curIsThisYear){
+      const age=p.startDate?dDiff(p.startDate,today()):0;
+      const total=closed+(age>0?1:0);
+      if(total>=2)onTrack++;else if(closed+(age>=90?1:0)>=1)onTrack++;else behindTrack++;
+    }
+  });
+  document.getElementById('cr-metrics').innerHTML=`
+    <div class="metric-card metric-card-accent"><div class="mv">${D.ponds.length}</div><div class="ml">บ่อทั้งหมด</div></div>
+    <div class="metric-card metric-card-accent"><div class="mv">${totalClosed}</div><div class="ml">รอบปิดแล้ว (${selYear})</div></div>
+    <div class="metric-card metric-card-accent"><div class="mv" style="color:var(--ok)">${onTrack}</div><div class="ml">บ่อทันเป้า</div></div>
+    <div class="metric-card metric-card-accent"><div class="mv" style="color:${behindTrack>0?'var(--d)':'var(--tx3)'}">${behindTrack}</div><div class="ml">บ่อล่าช้า</div></div>
+    <div class="metric-card metric-card-accent"><div class="mv">${D.ponds.length*2}</div><div class="ml">เป้ารวม (รอบ)</div></div>`;
+  // table body
+  const tbody=document.getElementById('cr-tbody');if(!tbody)return;
+  tbody.innerHTML=D.ponds.map(p=>{
+    const history=(p.cropHistory||[]).filter(c=>(c.cropYear||c.year||curY)==selYear).sort((a,b)=>(a.cropNum||1)-(b.cropNum||1));
+    const c1=history[0]||null;const c2=history[1]||null;
+    const isCurYear=(p.cropYear||curY)==selYear;
+    const curAge=p.startDate?dDiff(p.startDate,today()):0;
+    const onTrackNow=isCurYear&&p.startDate;
+    const totalClosed=history.length;
+    const prog=totalClosed+(isCurYear&&p.startDate?1:0);
+    const progColor=prog>=2?'var(--ok)':prog>=1?'var(--w)':'var(--d)';
+    function cropCells(c,isCurrent){
+      if(isCurrent&&onTrackNow){
+        return`<td style="padding:8px 10px;text-align:center;font-size:12px">${fD(p.startDate)}</td>
+               <td style="padding:8px 10px;text-align:center;color:var(--in);font-size:12px">กำลังเลี้ยง</td>
+               <td style="padding:8px 10px;text-align:center;font-weight:700;color:var(--p)">${curAge} วัน</td>`;
+      }
+      if(c){
+        const days=c.startDate&&c.closeDate?dDiff(c.startDate,c.closeDate):'-';
+        const dClr=days!=='-'?(days>=90&&days<=120?'var(--ok)':days>120?'var(--w)':'var(--d)'):'var(--tx3)';
+        return`<td style="padding:8px 10px;text-align:center;font-size:12px">${fD(c.startDate||'')}</td>
+               <td style="padding:8px 10px;text-align:center;font-size:12px">${fD(c.closeDate||'')}</td>
+               <td style="padding:8px 10px;text-align:center;font-weight:700;color:${dClr}">${days}</td>`;
+      }
+      return`<td style="padding:8px 10px;text-align:center;color:var(--tx3)">-</td><td style="padding:8px 10px;text-align:center;color:var(--tx3)">-</td><td style="padding:8px 10px;text-align:center;color:var(--tx3)">-</td>`;
+    }
+    // which slot is current?
+    const c1slot=(c1||(!c2&&isCurYear))?c1:null;
+    const c2slot=c2||(c1&&isCurYear?null:null);
+    const showCurAt=totalClosed==0?1:totalClosed==1?2:null;
+    return`<tr style="border-bottom:1px solid var(--bd);${isCurYear?'background:var(--pl)':''}">
+      <td style="padding:8px 12px;font-weight:800">บ่อ ${p.name}</td>
+      ${cropCells(c1,showCurAt===1)}
+      ${cropCells(c2,showCurAt===2)}
+      <td style="padding:8px 10px;text-align:center;font-size:20px;font-weight:800;color:${progColor}">${totalClosed}/2</td>
+      <td style="padding:8px 10px;text-align:center"><span class="badge ${prog>=2?'b-ok':prog>=1?'b-warn':'b-danger'}">${prog>=2?'✅ ครบ':prog>=1?'⏳ 1/2':'⚠️ ยังไม่มี'}</span></td>
+      <td style="padding:8px 6px;text-align:center">${isCurYear&&p.startDate?`<button class="btn btn-sm" style="background:var(--p);color:#fff;border:none;font-size:12px" onclick="openCropModal('${p.id}')">ปิดรอบ</button>`:''}</td>
+    </tr>`;
+  }).join('');
+  // history section
+  const histEl=document.getElementById('cr-history');if(!histEl)return;
+  const allHistory=[];D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>allHistory.push({...c,pondName:p.name})));
+  allHistory.sort((a,b)=>(b.closeDate||'').localeCompare(a.closeDate||''));
+  if(allHistory.length===0){histEl.innerHTML='<p style="color:var(--tx3);padding:10px">ยังไม่มีประวัติรอบเลี้ยง</p>';return;}
+  histEl.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="background:var(--sf2);border-bottom:2px solid var(--bd)">
+      <th style="text-align:left;padding:8px 10px;font-size:12px;color:var(--tx2)">บ่อ</th>
+      <th style="text-align:center;padding:8px;font-size:12px;color:var(--tx2)">รอบ</th>
+      <th style="text-align:center;padding:8px;font-size:12px;color:var(--tx2)">ปี</th>
+      <th style="text-align:center;padding:8px;font-size:12px;color:var(--tx2)">วันลง</th>
+      <th style="text-align:center;padding:8px;font-size:12px;color:var(--tx2)">วันปิด</th>
+      <th style="text-align:center;padding:8px;font-size:12px;color:var(--tx2)">ระยะ(วัน)</th>
+      <th style="text-align:right;padding:8px;font-size:12px;color:var(--tx2)">ผลผลิต(กก.)</th>
+      <th style="text-align:right;padding:8px;font-size:12px;color:var(--tx2)">ไซส์</th>
+      <th style="text-align:right;padding:8px;font-size:12px;color:var(--tx2)">อัตรารอด(%)</th>
+      <th style="text-align:right;padding:8px;font-size:12px;color:var(--tx2)">FCR</th>
+      <th style="text-align:right;padding:8px;font-size:12px;color:var(--tx2)">กำไร(บาท)</th>
+    </tr></thead>
+    <tbody>${allHistory.map(c=>{
+      const hr=c.harvestResult||{};
+      const days=c.startDate&&c.closeDate?dDiff(c.startDate,c.closeDate):'-';
+      const dClr=days!=='-'?(days>=90&&days<=120?'var(--ok)':days>120?'var(--w)':'var(--d)'):'var(--tx3)';
+      return`<tr style="border-bottom:1px solid var(--bd)">
+        <td style="padding:8px 10px;font-weight:700">บ่อ ${c.pondName}</td>
+        <td style="padding:8px;text-align:center">${c.cropNum}</td>
+        <td style="padding:8px;text-align:center">${c.cropYear||c.year||'-'}</td>
+        <td style="padding:8px;text-align:center;font-size:12px">${fD(c.startDate||'')}</td>
+        <td style="padding:8px;text-align:center;font-size:12px">${fD(c.closeDate||'')}</td>
+        <td style="padding:8px;text-align:center;font-weight:700;color:${dClr}">${days}</td>
+        <td style="padding:8px;text-align:right;font-weight:700">${hr.totalWeight?hr.totalWeight.toLocaleString():'-'}</td>
+        <td style="padding:8px;text-align:right">${hr.size||'-'}</td>
+        <td style="padding:8px;text-align:right">${hr.survivalRate?hr.survivalRate.toFixed(1):'-'}</td>
+        <td style="padding:8px;text-align:right">${hr.fcr||'-'}</td>
+        <td style="padding:8px;text-align:right;font-weight:700;color:${(hr.netProfit||0)>=0?'var(--ok)':'var(--d)'}">${hr.netProfit!=null?Math.round(hr.netProfit).toLocaleString():'-'}</td>
+      </tr>`;}).join('')}
+    </tbody></table></div>`;
+}
+
+// ===== PREP CHECKLIST =====
+function renderPrep(){
+  const pid=document.getElementById('prep-pond')?.value||'';
+  const wrap=document.getElementById('prep-checklist-wrap');
+  const sumEl=document.getElementById('prep-summary');
+  const infoEl=document.getElementById('prep-crop-info');
+  if(!pid){if(wrap)wrap.innerHTML='';if(sumEl)sumEl.textContent='เลือกบ่อเพื่อดูสถานะ';return;}
+  const p=pond(pid);if(!p)return;
+  // init checklist
+  if(!p.prepChecklist){p.prepChecklist={steps:{},stockDate:p.startDate||'',notes:''};}
+  const cl=p.prepChecklist;
+  const stockDate=cl.stockDate||p.startDate||'';
+  if(infoEl)infoEl.innerHTML=`<span style="color:var(--p);font-weight:700">บ่อ ${p.name}</span> · รอบที่ ${p.cropNum||1} ปี ${p.cropYear||new Date().getFullYear()} · วันลงกุ้ง: <strong>${fD(stockDate)||'ยังไม่กำหนด'}</strong>`;
+  // summary
+  const checked=PREP_STEPS.filter(s=>cl.steps[s.key]?.done).length;
+  const pct=Math.round(checked/PREP_STEPS.length*100);
+  if(sumEl)sumEl.innerHTML=`
+    <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:13px;font-weight:700">ความคืบหน้า</span><span style="font-size:13px;font-weight:700;color:${pct===100?'var(--ok)':pct>=50?'var(--w)':'var(--d)'}">${checked}/${PREP_STEPS.length} (${pct}%)</span></div>
+    <div style="background:var(--bd);border-radius:4px;height:8px"><div style="background:${pct===100?'var(--ok)':pct>=50?'var(--w)':'var(--p)'};height:8px;border-radius:4px;width:${pct}%;transition:width .3s"></div></div></div>
+    ${pct===100?'<div style="color:var(--ok);font-weight:700;font-size:13px">✅ เตรียมบ่อครบทุกขั้นตอน</div>':'<div style="font-size:12px;color:var(--tx3)">ยังเหลืออีก '+(PREP_STEPS.length-checked)+' ขั้นตอน</div>'}`;
+  // checklist cards
+  if(wrap)wrap.innerHTML=`
+    <div class="card">
+      <div class="card-t" style="justify-content:space-between">
+        <span>📋 เช็คลิสต์เตรียมบ่อ</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <label class="fl" style="margin:0;font-size:12px">วันลงกุ้ง:</label>
+          <input type="date" class="fi" id="prep-stock-date" value="${stockDate}" onchange="updatePrepStockDate('${pid}')" style="width:140px;padding:4px 8px;font-size:12px">
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${PREP_STEPS.map((s,i)=>{
+          const step=cl.steps[s.key]||{done:false,date:'',notes:''};
+          const targetDate=stockDate&&s.daysBeforeStock!==undefined?addDays(stockDate,s.daysBeforeStock):'';
+          const isDone=step.done;
+          return`<div style="display:flex;align-items:flex-start;gap:12px;padding:12px;background:${isDone?'var(--ob)':'var(--sf2)'};border-radius:8px;border:1px solid ${isDone?'var(--ok)':'var(--bd)'}">
+            <input type="checkbox" ${isDone?'checked':''} onchange="togglePrepStep('${pid}','${s.key}',this.checked)" style="width:18px;height:18px;margin-top:2px;cursor:pointer;accent-color:var(--ok)">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                <span style="font-weight:700;font-size:13px;${isDone?'text-decoration:line-through;color:var(--tx3)':''}">${i+1}. ${s.label}</span>
+                ${targetDate?`<span style="font-size:11px;background:var(--ib);color:var(--in);padding:2px 6px;border-radius:4px">เป้า: ${fD(targetDate)}</span>`:''}
+              </div>
+              <div style="font-size:12px;color:var(--tx3);margin-bottom:6px">${s.detail}</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="date" class="fi" value="${step.date||''}" onchange="updatePrepStepDate('${pid}','${s.key}',this.value)" style="width:140px;padding:4px 8px;font-size:12px" placeholder="วันที่ทำจริง">
+                <input type="text" class="fi" value="${step.notes||''}" onchange="updatePrepStepNotes('${pid}','${s.key}',this.value)" style="flex:1;padding:4px 8px;font-size:12px" placeholder="หมายเหตุ/โดส">
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+function addDays(dateStr,days){
+  if(!dateStr)return'';
+  const d=new Date(dateStr);d.setDate(d.getDate()+days);return d.toISOString().split('T')[0];
+}
+function updatePrepStockDate(pid){
+  const p=pond(pid);if(!p)return;
+  const d=document.getElementById('prep-stock-date')?.value;
+  if(!p.prepChecklist)p.prepChecklist={steps:{},stockDate:'',notes:''};
+  p.prepChecklist.stockDate=d||'';
+  save();fbSave();renderPrep();
+}
+function togglePrepStep(pid,key,checked){
+  const p=pond(pid);if(!p)return;
+  if(!p.prepChecklist)p.prepChecklist={steps:{},stockDate:p.startDate||'',notes:''};
+  if(!p.prepChecklist.steps[key])p.prepChecklist.steps[key]={done:false,date:'',notes:''};
+  p.prepChecklist.steps[key].done=checked;
+  if(checked&&!p.prepChecklist.steps[key].date)p.prepChecklist.steps[key].date=today();
+  save();fbSave();renderPrep();
+}
+function updatePrepStepDate(pid,key,val){
+  const p=pond(pid);if(!p||!p.prepChecklist)return;
+  if(!p.prepChecklist.steps[key])p.prepChecklist.steps[key]={done:false,date:'',notes:''};
+  p.prepChecklist.steps[key].date=val;
+  save();fbSave();
+}
+function updatePrepStepNotes(pid,key,val){
+  const p=pond(pid);if(!p||!p.prepChecklist)return;
+  if(!p.prepChecklist.steps[key])p.prepChecklist.steps[key]={done:false,date:'',notes:''};
+  p.prepChecklist.steps[key].notes=val;
+  save();fbSave();
+}
+
+// ===== CLOSE CROP MODAL =====
+function openCropModal(pid){
+  const p=pond(pid);if(!p)return;
+  document.getElementById('cm-pond-id').value=pid;
+  document.getElementById('cm-name').textContent=p.name;
+  document.getElementById('cm-close-date').value=today();
+  // auto-fill FCR
+  const cumFeed=getCumFeed(p);
+  document.getElementById('cm-cost-feed').value=0;
+  // auto-calc FCR if possible
+  document.getElementById('cm-fcr').value='';
+  // auto-fill revenue when price+weight change
+  ['cm-weight','cm-price','cm-caught','cm-cost-fry','cm-cost-chem','cm-cost-other'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  document.getElementById('cm-survival').value='';
+  document.getElementById('cm-revenue').value='';
+  document.getElementById('cm-profit').value='';
+  document.getElementById('cm-notes').value='';
+  // show modal
+  document.getElementById('cropModal').classList.add('on');
+  // wire up auto-calc
+  ['cm-weight','cm-size','cm-price','cm-cost-fry','cm-cost-chem','cm-cost-other'].forEach(id=>{
+    document.getElementById(id).oninput=calcCropEcon;
+  });
+  calcCropEcon();
+}
+function calcCropEcon(){
+  const pid=document.getElementById('cm-pond-id').value;
+  const p=pond(pid);if(!p)return;
+  const w=parseFloat(document.getElementById('cm-weight').value)||0;
+  const sz=parseFloat(document.getElementById('cm-size').value)||0;
+  const price=parseFloat(document.getElementById('cm-price').value)||0;
+  const costFry=parseFloat(document.getElementById('cm-cost-fry').value)||0;
+  const costChem=parseFloat(document.getElementById('cm-cost-chem').value)||0;
+  const costOther=parseFloat(document.getElementById('cm-cost-other').value)||0;
+  // caught
+  const caught=w&&sz?Math.round(w*sz):0;
+  if(caught)document.getElementById('cm-caught').value=caught;
+  // survival rate
+  const survival=caught&&p.stock?(caught/p.stock*100):0;
+  if(survival)document.getElementById('cm-survival').value=survival.toFixed(1);
+  // fcr
+  const cumFeed=getCumFeed(p);
+  const fcr=cumFeed&&w?( cumFeed/w).toFixed(2):'';
+  if(fcr)document.getElementById('cm-fcr').value=fcr;
+  // revenue
+  const revenue=w*price;
+  if(revenue)document.getElementById('cm-revenue').value=Math.round(revenue);
+  // feed cost (estimate from feed log — just show sum×price, for now 0 unless user fills)
+  // profit
+  const costFeed=parseFloat(document.getElementById('cm-cost-feed').value)||0;
+  const totalCost=costFry+costFeed+costChem+costOther;
+  const profit=revenue-totalCost;
+  if(revenue||totalCost)document.getElementById('cm-profit').value=Math.round(profit);
+}
+function closeCropModal(){
+  document.getElementById('cropModal').classList.remove('on');
+}
+function confirmCloseCrop(){
+  const pid=document.getElementById('cm-pond-id').value;
+  const p=pond(pid);if(!p)return;
+  const closeDate=document.getElementById('cm-close-date').value;
+  if(!closeDate){alert('กรุณาระบุวันที่ปิดบ่อ');return;}
+  // collect harvest result
+  const hr={
+    totalWeight:parseFloat(document.getElementById('cm-weight').value)||null,
+    size:parseInt(document.getElementById('cm-size').value)||null,
+    caught:parseInt(document.getElementById('cm-caught').value)||null,
+    survivalRate:parseFloat(document.getElementById('cm-survival').value)||null,
+    fcr:parseFloat(document.getElementById('cm-fcr').value)||null,
+    price:parseFloat(document.getElementById('cm-price').value)||null,
+    revenue:parseFloat(document.getElementById('cm-revenue').value)||null,
+    costFry:parseFloat(document.getElementById('cm-cost-fry').value)||null,
+    costFeed:parseFloat(document.getElementById('cm-cost-feed').value)||null,
+    costChem:parseFloat(document.getElementById('cm-cost-chem').value)||null,
+    costOther:parseFloat(document.getElementById('cm-cost-other').value)||null,
+    netProfit:parseFloat(document.getElementById('cm-profit').value)||null,
+  };
+  const notes=document.getElementById('cm-notes').value;
+  // archive current crop
+  const archived={
+    cropNum:p.cropNum||1,
+    cropYear:p.cropYear||new Date().getFullYear(),
+    year:p.cropYear||new Date().getFullYear(),
+    startDate:p.startDate,
+    closeDate,
+    stock:p.stock,
+    hatchery:p.hatchery||'',
+    plType:p.plType||'',
+    plWeight:p.plWeight||null,
+    records:[...(p.records||[])],
+    feedLog:[...(p.feedLog||[])],
+    samples:[...(p.samples||[])],
+    plankton:[...(p.plankton||[])],
+    waterLog:[...(p.waterLog||[])],
+    chemLog:[...(p.chemLog||[])],
+    labResults:[...(p.labResults||[])],
+    prepChecklist:p.prepChecklist?JSON.parse(JSON.stringify(p.prepChecklist)):null,
+    harvestResult:hr,
+    notes,
+  };
+  if(!p.cropHistory)p.cropHistory=[];
+  p.cropHistory.push(archived);
+  // reset for new crop
+  const nextCropNum=(p.cropNum||1)+1;
+  const nextCropYear=nextCropNum>2?p.cropYear+1:p.cropYear||new Date().getFullYear();
+  p.cropNum=nextCropNum>2?1:nextCropNum;
+  p.cropYear=nextCropYear;
+  p.startDate='';
+  p.stock=0;
+  p.hatchery='';p.plType='';p.plWeight=null;
+  p.records=[];p.feedLog=[];p.samples=[];p.plankton=[];
+  p.waterLog=[];p.chemLog=[];p.labResults=[];
+  p.prepChecklist=null;
+  save();fbSave();
+  closeCropModal();
+  populateAll();renderOv();renderManage();
+  alert(`✅ ปิดรอบที่ ${archived.cropNum} บ่อ ${p.name} สำเร็จ\nข้อมูลถูกเก็บเข้าประวัติแล้ว`);
+}
+
+// ===== HARVEST =====
+function saveHarvest(){
+  const date=document.getElementById('hv-date').value;
+  const pondId=document.getElementById('hv-pond').value;
+  const type=document.getElementById('hv-type').value;
+  const buyer=document.getElementById('hv-buyer').value.trim();
+  const live=document.getElementById('hv-live').value;
+  const size=document.getElementById('hv-size').value?parseInt(document.getElementById('hv-size').value):null;
+  const weight=document.getElementById('hv-weight').value?parseFloat(document.getElementById('hv-weight').value):null;
+  const price=document.getElementById('hv-price').value?parseFloat(document.getElementById('hv-price').value):null;
+  const notes=document.getElementById('hv-notes').value.trim();
+  if(!date||!pondId){alert('กรุณาระบุวันที่และบ่อ');return;}
+  if(!D.harvestLog)D.harvestLog=[];
+  const p=pond(pondId);
+  D.harvestLog.push({id:'HV'+Date.now(),date,pondId,pondName:p?p.name:pondId,type,buyer,live,size,weight,price,notes});
+  D.harvestLog.sort((a,b)=>b.date.localeCompare(a.date));
+  save();fbSave();
+  showMsg('hv-msg','ok',`✅ บันทึกการจับกุ้งบ่อ ${p?p.name:pondId} สำเร็จ`);
+  // clear form except date & pond
+  ['hv-type','hv-buyer','hv-live','hv-notes'].forEach(id=>{document.getElementById(id).value='';});
+  ['hv-size','hv-weight','hv-price'].forEach(id=>{document.getElementById(id).value='';});
+  renderHarvest();
+}
+function deleteHarvest(id){
+  if(!confirm('ลบรายการนี้?'))return;
+  D.harvestLog=(D.harvestLog||[]).filter(r=>r.id!==id);
+  save();fbSave();renderHarvest();
+}
+function renderHarvest(){
+  if(!D.harvestLog)D.harvestLog=[];
+  const filterPond=document.getElementById('hv-filter-pond')?.value||'';
+  const rows=D.harvestLog.filter(r=>!filterPond||r.pondId===filterPond);
+  const tbody=document.getElementById('hv-tbody');
+  if(!tbody)return;
+  if(rows.length===0){
+    tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--tx3)">ยังไม่มีข้อมูลการจับกุ้ง</td></tr>';
+  } else {
+    tbody.innerHTML=rows.map(r=>{
+      const total=(r.weight&&r.price)?Math.round(r.weight*r.price):null;
+      const typeClr=r.type==='ปิดบ่อ'?'var(--d)':'var(--in)';
+      const liveClr=r.live==='กุ้งตาย'?'var(--tx3)':'var(--ok)';
+      return`<tr style="border-bottom:1px solid var(--bd)">
+        <td style="padding:8px 10px">${fD(r.date)}</td>
+        <td style="padding:8px 10px;font-weight:700">บ่อ ${r.pondName||r.pondId}</td>
+        <td style="padding:8px 10px"><span style="color:${typeClr};font-weight:700">${r.type||'-'}</span></td>
+        <td style="padding:8px 10px">${r.buyer||'-'}</td>
+        <td style="padding:8px 10px"><span style="color:${liveClr}">${r.live||'-'}</span></td>
+        <td style="padding:8px 10px;text-align:right">${r.size||'-'}</td>
+        <td style="padding:8px 10px;text-align:right;font-weight:700">${r.weight?r.weight.toLocaleString():'-'}</td>
+        <td style="padding:8px 10px;text-align:right">${r.price?r.price.toLocaleString():'-'}</td>
+        <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--ok)">${total?total.toLocaleString():'-'}</td>
+        <td style="padding:8px 10px;color:var(--tx3);font-size:12px">${r.notes||''}</td>
+        <td style="padding:8px 6px;text-align:center"><button onclick="deleteHarvest('${r.id}')" style="background:none;border:none;cursor:pointer;color:var(--d);font-size:14px" title="ลบ">🗑️</button></td>
+      </tr>`;
+    }).join('');
+  }
+  // summary
+  const sumEl=document.getElementById('hv-summary');
+  if(sumEl){
+    const all=D.harvestLog;
+    if(all.length===0){sumEl.innerHTML='<p style="color:var(--tx3)">ยังไม่มีข้อมูลการจับกุ้ง</p>';return;}
+    const totalKg=all.reduce((s,r)=>s+(r.weight||0),0);
+    const totalBaht=all.reduce((s,r)=>s+(r.weight&&r.price?r.weight*r.price:0),0);
+    const avgPrice=totalKg>0?totalBaht/totalKg:0;
+    const countClose=all.filter(r=>r.type==='ปิดบ่อ').length;
+    const countPartial=all.filter(r=>r.type==='พาเชียล').length;
+    sumEl.innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div style="background:var(--pl);border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--p)">${totalKg.toLocaleString()}</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:3px">น้ำหนักรวม (กก.)</div>
+        </div>
+        <div style="background:var(--ob);border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--ok)">${Math.round(totalBaht).toLocaleString()}</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:3px">มูลค่ารวม (บาท)</div>
+        </div>
+        <div style="background:var(--sf2);border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--in)">${avgPrice.toFixed(2)}</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:3px">ราคาเฉลี่ย (บาท/กก.)</div>
+        </div>
+        <div style="background:var(--sf2);border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--tx)">${all.length}</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:3px">ครั้งทั้งหมด (ปิดบ่อ ${countClose} / พาเชียล ${countPartial})</div>
+        </div>
+      </div>`;
+  }
+}
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded',()=>{
+  const _hdrDate=document.getElementById('hdr-date');if(_hdrDate)_hdrDate.textContent=new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  populateAll();renderOv();
+  document.getElementById('pondModal').addEventListener('click',e=>{if(e.target===document.getElementById('pondModal'))closePond()});
+  fetchWx().catch(()=>{});
+  initFirebase();
+});
+
+// ── PWA Service Worker ────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE = 'tawan-v1';
+    self.addEventListener('install', e => e.waitUntil(
+      caches.open(CACHE).then(c => c.addAll([self.location.pathname]))
+    ));
+    self.addEventListener('fetch', e => {
+      if (!e.request.url.includes('firebasedatabase') && !e.request.url.includes('googleapis') && !e.request.url.includes('gstatic') && !e.request.url.includes('open-meteo')) {
+        e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+      }
+    });
+  `;
+  const blob = new Blob([swCode], {type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+</script>
+  <div id="sync-bar" class="sync-bar sync-load">
+    <div class="sync-dot"></div>
+    <span id="sync-msg">กำลังเชื่อมต่อ Firebase...</span>
+    <span style="margin-left:auto;color:var(--tx3);font-size:11px" id="sync-time"></span>
+  </div>
+</body>
+</html>
