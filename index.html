@@ -1185,11 +1185,7 @@ function goTab(t,btn){
     renderHarvest();
   }
   if(t==='crops')renderCrops();
-  if(t==='prep'){
-    const sel=document.getElementById('prep-pond');
-    if(sel&&!sel.value&&D.ponds.length>0)sel.value=D.ponds[0].id;
-    renderPrep();
-  }
+  if(t==='prep'){initPrep();}
 }
 function renderOv(){
   const alerts=allAlerts();
@@ -2082,13 +2078,31 @@ function renderCrops(){
 
 // ===== PREP CHECKLIST =====
 let _prepPonds=[];
+function initPrep(){
+  populateAll();
+  // Auto-populate: บ่อที่มี prepChecklist และยังไม่ได้ปล่อยกุ้ง
+  const auto=D.ponds.filter(p=>{
+    const cl=p.prepChecklist;
+    if(!cl)return false;
+    const hasData=cl.stockDate||(cl.steps&&Object.keys(cl.steps).length>0);
+    if(!hasData)return false;
+    // ถ้า startDate ตรงกับ stockDate = ปล่อยกุ้งแล้ว → ซ่อน
+    if(cl.stockDate&&p.startDate&&p.startDate===cl.stockDate)return false;
+    return true;
+  }).map(p=>p.id);
+  // merge auto + manually added, no duplicates
+  _prepPonds=[...new Set([...auto,..._prepPonds])];
+  renderPrep();
+}
 function addPrepPond(){
   const pid=document.getElementById('prep-pond').value;
   if(!pid){showMsg('prep-msg','warn','กรุณาเลือกบ่อก่อน');return}
   if(_prepPonds.includes(pid)){showMsg('prep-msg','warn','บ่อนี้อยู่ในรายการแล้ว');return}
-  _prepPonds.push(pid);
+  const p=pond(pid);
+  if(!p.prepChecklist)p.prepChecklist={steps:{},stockDate:p.startDate||'',notes:''};
+  _prepPonds=[..._prepPonds.filter(id=>id!==pid),pid];
   document.getElementById('prep-msg').innerHTML='';
-  renderPrep();
+  save();renderPrep();
 }
 function removePrepPond(pid){
   _prepPonds=_prepPonds.filter(id=>id!==pid);
@@ -2096,7 +2110,7 @@ function removePrepPond(pid){
 }
 function renderPrep(){
   const wrap=document.getElementById('prep-checklist-wrap');if(!wrap)return;
-  if(!_prepPonds.length){wrap.innerHTML='<div style="color:var(--tx3);text-align:center;padding:40px;font-size:14px">คลิก "+ เพิ่มบ่อ" เพื่อเริ่มเตรียมบ่อ</div>';return}
+  if(!_prepPonds.length){wrap.innerHTML='<div style="color:var(--tx3);text-align:center;padding:40px;font-size:14px">ยังไม่มีบ่อที่กำลังเตรียม · คลิก "+ เพิ่มบ่อ" เพื่อเริ่ม</div>';return}
   wrap.innerHTML=_prepPonds.map(pid=>renderPrepCard(pid)).join('');
 }
 function renderPrepCard(pid){
@@ -2106,43 +2120,42 @@ function renderPrepCard(pid){
   const stockDate=cl.stockDate||p.startDate||'';
   const checked=PREP_STEPS.filter(s=>cl.steps[s.key]?.done).length;
   const pct=Math.round(checked/PREP_STEPS.length*100);
-  return`<div class="card" style="margin-bottom:16px">
-    <div class="card-t" style="justify-content:space-between">
-      <span>🧹 บ่อ ${p.name} · รอบที่ ${p.cropNum||1} ปี ${(p.cropYear||new Date().getFullYear()+(543))}</span>
-      <button onclick="removePrepPond('${pid}')" style="background:none;border:1px solid var(--bd);border-radius:6px;padding:2px 8px;font-size:18px;cursor:pointer;color:var(--tx3);line-height:1.2">×</button>
-    </div>
-    <div style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <span style="font-size:13px;font-weight:700;color:${pct===100?'var(--ok)':pct>=50?'var(--w)':'var(--d)'}">${checked}/${PREP_STEPS.length} ขั้นตอน (${pct}%)</span>
-        <div style="display:flex;align-items:center;gap:6px">
-          <label style="font-size:12px;color:var(--tx2)">วันลงกุ้ง:</label>
-          <input type="date" class="fi" id="prep-stock-date-${pid}" value="${stockDate}" onchange="updatePrepStockDate('${pid}')" style="width:130px;padding:4px 8px;font-size:12px">
-        </div>
+  return`<div class="card" style="margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-weight:700;font-size:14px">🧹 บ่อ ${p.name}</span>
+        <span style="font-size:12px;color:var(--tx3)">รอบ ${p.cropNum||1}</span>
+        <span style="font-size:12px;font-weight:700;color:${pct===100?'var(--ok)':pct>=50?'var(--w)':'var(--d)'}">${checked}/${PREP_STEPS.length} (${pct}%)${pct===100?' ✅':''}</span>
       </div>
-      <div style="background:var(--bd);border-radius:4px;height:8px"><div style="background:${pct===100?'var(--ok)':pct>=50?'var(--w)':'var(--p)'};height:8px;border-radius:4px;width:${pct}%;transition:width .3s"></div></div>
-      ${pct===100?'<div style="color:var(--ok);font-weight:600;font-size:12px;margin-top:4px">✅ เตรียมบ่อครบทุกขั้นตอน</div>':''}
+      <div style="display:flex;align-items:center;gap:8px">
+        <label style="font-size:11px;color:var(--tx3)">วันลงกุ้ง:</label>
+        <input type="date" class="fi" id="prep-stock-date-${pid}" value="${stockDate}" onchange="updatePrepStockDate('${pid}')" style="width:120px;padding:3px 7px;font-size:11px">
+        <button onclick="removePrepPond('${pid}')" style="background:none;border:1px solid var(--bd);border-radius:5px;padding:2px 7px;font-size:15px;cursor:pointer;color:var(--tx3);line-height:1.2">×</button>
+      </div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      ${PREP_STEPS.map((s,i)=>{
+    <div style="background:var(--bd);border-radius:3px;height:5px;margin-bottom:8px"><div style="background:${pct===100?'var(--ok)':pct>=50?'var(--w)':'var(--p)'};height:5px;border-radius:3px;width:${pct}%;transition:width .3s"></div></div>
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:var(--sf2)">
+        <th style="padding:5px 8px;text-align:center;width:24px;border-bottom:1px solid var(--bd)">✓</th>
+        <th style="padding:5px 8px;text-align:left;border-bottom:1px solid var(--bd)">ขั้นตอน</th>
+        <th style="padding:5px 8px;text-align:center;width:90px;border-bottom:1px solid var(--bd);white-space:nowrap">เป้าหมาย</th>
+        <th style="padding:5px 8px;text-align:center;width:120px;border-bottom:1px solid var(--bd);white-space:nowrap">วันที่ทำ</th>
+        <th style="padding:5px 8px;text-align:left;border-bottom:1px solid var(--bd)">หมายเหตุ/โดส</th>
+      </tr></thead>
+      <tbody>${PREP_STEPS.map((s,i)=>{
         const step=cl.steps[s.key]||{done:false,date:'',notes:''};
         const targetDate=stockDate&&s.daysBeforeStock!==undefined?addDays(stockDate,s.daysBeforeStock):'';
         const isDone=step.done;
-        return`<div style="display:flex;align-items:flex-start;gap:12px;padding:12px;background:${isDone?'var(--ob)':'var(--sf2)'};border-radius:8px;border:1px solid ${isDone?'var(--ok)':'var(--bd)'}">
-          <input type="checkbox" ${isDone?'checked':''} onchange="togglePrepStep('${pid}','${s.key}',this.checked)" style="width:18px;height:18px;margin-top:2px;cursor:pointer;accent-color:var(--ok)">
-          <div style="flex:1">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-              <span style="font-weight:700;font-size:13px;${isDone?'text-decoration:line-through;color:var(--tx3)':''}">${i+1}. ${s.label}</span>
-              ${targetDate?`<span style="font-size:11px;background:var(--ib);color:var(--in);padding:2px 6px;border-radius:4px">เป้า: ${fD(targetDate)}</span>`:''}
-            </div>
-            <div style="font-size:12px;color:var(--tx3);margin-bottom:6px">${s.detail}</div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <input type="date" class="fi" value="${step.date||''}" onchange="updatePrepStepDate('${pid}','${s.key}',this.value)" style="width:140px;padding:4px 8px;font-size:12px">
-              <input type="text" class="fi" value="${step.notes||''}" onchange="updatePrepStepNotes('${pid}','${s.key}',this.value)" style="flex:1;padding:4px 8px;font-size:12px" placeholder="หมายเหตุ/โดส">
-            </div>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>
+        return`<tr style="background:${isDone?'var(--ob)':'transparent'};border-bottom:1px solid var(--bd)">
+          <td style="padding:5px 8px;text-align:center"><input type="checkbox" ${isDone?'checked':''} onchange="togglePrepStep('${pid}','${s.key}',this.checked)" style="width:14px;height:14px;cursor:pointer;accent-color:var(--ok)"></td>
+          <td style="padding:5px 8px;${isDone?'text-decoration:line-through;color:var(--tx3)':''}"><span style="font-weight:600">${i+1}. ${s.label}</span><br><span style="font-size:11px;color:var(--tx3)">${s.detail}</span></td>
+          <td style="padding:5px 8px;text-align:center;color:var(--in);font-size:11px">${targetDate?fD(targetDate):'-'}</td>
+          <td style="padding:3px 6px"><input type="date" class="fi" value="${step.date||''}" onchange="updatePrepStepDate('${pid}','${s.key}',this.value)" style="width:112px;padding:3px 5px;font-size:11px"></td>
+          <td style="padding:3px 6px"><input type="text" class="fi" value="${step.notes||''}" onchange="updatePrepStepNotes('${pid}','${s.key}',this.value)" style="width:100%;padding:3px 5px;font-size:11px" placeholder="หมายเหตุ"></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>
   </div>`;
 }
 function addDays(dateStr,days){
@@ -2394,27 +2407,13 @@ document.addEventListener('DOMContentLoaded',()=>{
   initFirebase();
 });
 
-// ── PWA Service Worker ───────────────────────────────────────────────────────────────────
-if ('serviceWorker' in navigator) {
-  const swCode = `
-    const CACHE = 'tawan-v1';
-    self.addEventListener('install', e => e.waitUntil(
-      caches.open(CACHE).then(c => c.addAll([self.location.pathname]))
-    ));
-    self.addEventListener('fetch', e => {
-      if (!e.request.url.includes('firebasedatabase') && !e.request.url.includes('googleapis') && !e.request.url.includes('gstatic') && !e.request.url.includes('open-meteo')) {
-        e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
-      }
-    });
-  `;
-  const blob = new Blob([swCode], {type:'application/javascript'});
-  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+// ── PWA Service Worker ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('data:text/javascript,').catch(()=>{});
+  });
 }
 </script>
-  <div id="sync-bar" class="sync-bar sync-load">
-    <div class="sync-dot"></div>
-    <span id="sync-msg">กำลังเชื่อมต่อ Firebase...</span>
-    <span style="margin-left:auto;color:var(--tx3);font-size:11px" id="sync-time"></span>
-  </div>
+<div id="sync-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--p);color:#fff;text-align:center;padding:6px;font-size:12px;z-index:9999"></div>
 </body>
 </html>
