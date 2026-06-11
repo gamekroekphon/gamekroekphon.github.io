@@ -1378,12 +1378,26 @@ function renderFeedMetrics(pid){
 function renderFeedChart(){
   const pid=document.getElementById('fd-chart-pond').value;if(!pid)return;
   const p=pond(pid);if(fdCh){fdCh.destroy();fdCh=null;}
-  const pts=p.feedLog.map(r=>({x:r.age,y:r.totalFeed}));if(!pts.length)return;
-  fdCh=new Chart(document.getElementById('feedChart'),{type:'bar',data:{datasets:[
-    {label:'อาหารต่อวัน (กก.)',data:pts,backgroundColor:'#1D9E7588',borderColor:'#1D9E75',borderWidth:1.5,borderRadius:3},
+  const logs=p.feedLog.slice().sort((a,b)=>a.age-b.age);
+  if(!logs.length)return;
+  const daily=logs.map(r=>({x:r.age,y:r.totalFeed}));
+  let cum=0;const cumul=logs.map(r=>{cum+=r.totalFeed;return{x:r.age,y:parseFloat(cum.toFixed(1))};});
+  fdCh=new Chart(document.getElementById('feedChart'),{type:'line',data:{datasets:[
+    {label:'อาหารต่อวัน (กก.)',data:daily,borderColor:'#1D9E75',backgroundColor:'#1D9E7520',
+      pointBackgroundColor:'#1D9E75',pointRadius:3,pointHoverRadius:5,
+      borderWidth:2,tension:0.3,fill:true,yAxisID:'y'},
+    {label:'อาหารสะสม (กก.)',data:cumul,borderColor:'#EA580C',backgroundColor:'transparent',
+      pointBackgroundColor:'#EA580C',pointRadius:2,pointHoverRadius:4,
+      borderWidth:2,tension:0.3,fill:false,borderDash:[4,3],yAxisID:'y2'},
   ]},options:{responsive:true,maintainAspectRatio:false,parsing:false,
-    scales:{x:{type:'linear',title:{display:true,text:'อายุกุ้ง (วัน)'}},y:{title:{display:true,text:'อาหาร (กก.)'}}},
-    plugins:{legend:{display:false}}}});
+    scales:{
+      x:{type:'linear',title:{display:true,text:'อายุกุ้ง (วัน)'},grid:{color:'#0001'}},
+      y:{position:'left',title:{display:true,text:'อาหาร/วัน (กก.)'},grid:{color:'#0001'}},
+      y2:{position:'right',title:{display:true,text:'สะสม (กก.)'},grid:{drawOnChartArea:false}}
+    },
+    plugins:{legend:{display:true,position:'top',labels:{boxWidth:12,font:{size:11}}},
+      tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+' กก.'}}}
+  }});
 }
 function renderFeedTable(){
   const pid=document.getElementById('fd-tbl-pond')?.value;
