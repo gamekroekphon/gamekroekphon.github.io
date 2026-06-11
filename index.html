@@ -1211,16 +1211,49 @@ function renderOv(){
   });
   document.getElementById('ov-cards').innerHTML=sortedPonds.map(p=>{
     const last=p.records[p.records.length-1];
+    const age=last?last.age:dDiff(p.startDate,today());
+    const isPrep=age<=0;
+    const latFeed=(p.feedLog||[]).slice(-1)[0];
+    const todayFeedKg=latFeed?latFeed.totalFeed:null;
+    const per100k=latFeed?feedPer100k(latFeed.totalFeed,p.stock):null;
+    if(isPrep){
+      const daysLeft=p.startDate?Math.abs(dDiff(p.startDate,today())):null;
+      const cl=p.prepChecklist;
+      const prepDone=cl?PREP_STEPS.filter(s=>cl.steps&&cl.steps[s.key]?.done).length:0;
+      const prepPct=cl?Math.round(prepDone/PREP_STEPS.length*100):0;
+      return`<div class="pond-card" style="border-left:4px solid var(--in);cursor:default;opacity:0.9">
+        <div style="display:flex;justify-content:space-between;align-items:start;gap:10px">
+          <div style="flex:1;min-width:0">
+            <div class="pn">บ่อ ${p.name}</div>
+            <div class="pm">${p.stock?p.stock.toLocaleString()+' ตัว · ':''} ${p.size} ไร่</div>
+            <div style="font-size:11px;color:var(--tx2);margin-top:3px">📅 วันลงกุ้ง: <strong>${p.startDate?fD(p.startDate):'ยังไม่กำหนด'}</strong></div>
+          </div>
+          <div class="age-badge" style="background:var(--ib)">
+            <div class="age-num" style="color:var(--in)">${daysLeft!==null?daysLeft:'-'}</div>
+            <div class="age-lbl" style="color:var(--in)">วันที่เหลือ</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;padding:8px;background:var(--ib);border-radius:6px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px">🧹</span>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:700;color:var(--in)">กำลังเตรียมบ่อ</div>
+            <div style="font-size:11px;color:var(--tx2);margin-top:2px">เตรียมแล้ว ${prepDone}/${PREP_STEPS.length} ขั้นตอน (${prepPct}%)</div>
+            <div style="background:var(--bd);border-radius:3px;height:4px;margin-top:4px"><div style="background:var(--in);height:4px;border-radius:3px;width:${prepPct}%;transition:width .3s"></div></div>
+          </div>
+        </div>
+      </div>`;
+    }
     const pa=getAlerts(p);const dc2=pa.filter(a=>a.level==='danger').length,wc2=pa.filter(a=>a.level==='warn').length;
     const cls=dc2>0?'danger':wc2>0?'warn':'ok';
-    const age=last?last.age:dDiff(p.startDate,today());
     const latSample=(p.samples||[]).slice(-1)[0];const fcr=getFCR(p);
     const ph=`<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:10px">${KEY.map(k=>{const pm=PARAMS.find(x=>x.key===k);const v=last?last[k]:null;const s=st(k,v);return`<div class="pp"><div class="pp-v" style="color:${sc(s)}">${v!==null&&v!==undefined?v:'-'}</div><div class="pp-l">${pm.lbl}</div></div>`}).join('')}</div>`;
-    const kpi=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--bd)">
+    const kpi=`<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--bd)">
       <div class="pp"><div class="pp-v" style="color:var(--p)">${latSample?latSample.abw+'g':'-'}</div><div class="pp-l">ABW</div></div>
       <div class="pp"><div class="pp-v">${latSample&&latSample.biomass?latSample.biomass.toFixed(0)+'kg':'-'}</div><div class="pp-l">Biomass</div></div>
       <div class="pp"><div class="pp-v" style="color:${fcr&&fcr<1.5?'var(--ok)':fcr&&fcr<2?'var(--w)':'var(--d)'}">${fcr||'-'}</div><div class="pp-l">FCR</div></div>
       <div class="pp"><div class="pp-v" style="color:var(--in)">${latSample&&latSample.plCount?latSample.plCount+' ตัว/กก.':'-'}</div><div class="pp-l">ไซส์</div></div>
+      <div class="pp"><div class="pp-v" style="color:var(--ok)">${todayFeedKg!==null?todayFeedKg.toFixed(1)+'kg':'-'}</div><div class="pp-l">อาหาร/วัน</div></div>
+      <div class="pp"><div class="pp-v" style="color:var(--w)">${per100k!==null?per100k.toFixed(1):'-'}</div><div class="pp-l">กก./แสน</div></div>
     </div>`;
     return`<div class="pond-card ${cls}" onclick="jumpEntry('${p.id}')">
       <div style="display:flex;justify-content:space-between;align-items:start;gap:10px">
