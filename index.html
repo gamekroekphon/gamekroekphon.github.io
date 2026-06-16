@@ -155,6 +155,7 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
 </div>
 <div class="tabs">
   <button class="tab on"  onclick="goTab('overview',this)">🏠 ภาพรวม</button>
+  <button class="tab"     onclick="goTab('tide',this)">🌊 น้ำขึ้นน้ำลง</button>
   <button class="tab"     onclick="goTab('entry',this)">💧 คุณภาพน้ำ</button>
   <button class="tab"     onclick="goTab('feed',this)">🍖 อาหาร &amp; FCR</button>
   <button class="tab"     onclick="goTab('sample',this)">⚖️ สุ่มตัวอย่าง</button>
@@ -173,26 +174,26 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
 <div class="main">
 <!-- OVERVIEW -->
 <div id="sec-overview" class="sec on">
-  <div class="g2" style="margin-bottom:16px;align-items:start">
-    <div style="position:sticky;top:16px;display:flex;flex-direction:column;gap:14px">
-      <div class="card">
-        <div class="card-t" style="display:flex;justify-content:space-between;align-items:center">
-          <span>🌊 ระดับน้ำตอนนี้</span>
-          <button class="btn btn-p btn-sm" onclick="renderTide()">🔄</button>
-        </div>
-        <div style="font-size:11px;color:var(--tx3);margin:-8px 0 12px">📍 เกาะมัตโพน จ.ชุมพร</div>
-        <div id="tide-now"><p style="color:var(--tx3);padding:12px 0;text-align:center">กำลังโหลด...</p></div>
-      </div>
-      <div class="card">
-        <div class="card-t">📅 น้ำขึ้นน้ำลง 7 วัน</div>
-        <div id="tide-card"></div>
-      </div>
-    </div>
-    <div>
       <div class="g5" id="ov-metrics" style="margin-bottom:20px"></div>
       <div class="sec-hdr"><div class="sec-title">สถานะบ่อทั้งหมด</div><div style="font-size:12px;color:var(--tx3)">อัปเดต: <span id="ov-ts"></span></div></div>
       <div class="g3" id="ov-cards" style="margin-bottom:20px"></div>
       <div id="ov-alerts"></div>
+</div>
+<!-- TIDE -->
+<div id="sec-tide" class="sec">
+  <div class="sec-hdr"><div class="sec-title">🌊 น้ำขึ้นน้ำลง 7 วัน</div></div>
+  <div class="g2" style="margin-bottom:16px;align-items:start">
+    <div class="card">
+      <div class="card-t" style="display:flex;justify-content:space-between;align-items:center">
+        <span>🌊 ระดับน้ำตอนนี้</span>
+        <button class="btn btn-p btn-sm" onclick="renderTide()">🔄</button>
+      </div>
+      <div style="font-size:11px;color:var(--tx3);margin:-8px 0 12px">📍 เกาะมัตโพน จ.ชุมพร</div>
+      <div id="tide-now"><p style="color:var(--tx3);padding:12px 0;text-align:center">กำลังโหลด...</p></div>
+    </div>
+    <div class="card">
+      <div class="card-t">📅 น้ำขึ้นน้ำลง 7 วัน</div>
+      <div id="tide-card"></div>
     </div>
   </div>
 </div>
@@ -1410,7 +1411,7 @@ function populateAll(){
 function goTab(t,btn){
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));document.getElementById('sec-'+t).classList.add('on');
-  if(t==='overview')renderOv();if(t==='entry')initEntry();if(t==='feed')initFeed();
+  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='feed')initFeed();
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
   if(t==='chem')initChem();if(t==='lab')initLab();if(t==='trends')initTrends();
   if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();
@@ -1593,7 +1594,6 @@ function renderOv(){
     </div>`;
   }).join('');
   document.getElementById('ov-ts').textContent=new Date().toLocaleString('th-TH');
-  renderTide();
 }
 function jumpEntry(id){document.querySelectorAll('.tab')[1].click();setTimeout(()=>{document.getElementById('ep-pond').value=id;onEPond();},80)}
 function initEntry(){
