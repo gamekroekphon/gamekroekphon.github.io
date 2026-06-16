@@ -173,16 +173,21 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
 <div class="main">
 <!-- OVERVIEW -->
 <div id="sec-overview" class="sec on">
-  <div class="g5" id="ov-metrics" style="margin-bottom:20px"></div>
-  <div class="sec-hdr"><div class="sec-title">สถานะบ่อทั้งหมด</div><div style="font-size:12px;color:var(--tx3)">อัปเดต: <span id="ov-ts"></span></div></div>
-  <div class="g3" id="ov-cards" style="margin-bottom:20px"></div>
-  <div id="ov-alerts"></div>
-  <div class="card" style="margin-top:16px">
-    <div class="card-t" style="display:flex;justify-content:space-between;align-items:center">
-      <span>🌊 น้ำขึ้นน้ำลง 7 วัน — เกาะมัตโพน จ.ชุมพร</span>
-      <button class="btn btn-p btn-sm" onclick="renderTide()">🔄</button>
+  <div class="g2" style="margin-bottom:16px;align-items:start">
+    <div class="card" style="position:sticky;top:16px">
+      <div class="card-t" style="display:flex;justify-content:space-between;align-items:center">
+        <span>🌊 น้ำขึ้นน้ำลง 7 วัน</span>
+        <button class="btn btn-p btn-sm" onclick="renderTide()">🔄</button>
+      </div>
+      <div style="font-size:11px;color:var(--tx3);margin:-8px 0 12px">📍 เกาะมัตโพน จ.ชุมพร</div>
+      <div id="tide-card"><p style="color:var(--tx3);padding:12px 0;text-align:center">กำลังโหลด...</p></div>
     </div>
-    <div id="tide-card"><p style="color:var(--tx3);padding:12px 0;text-align:center">กำลังโหลด...</p></div>
+    <div>
+      <div class="g5" id="ov-metrics" style="margin-bottom:20px"></div>
+      <div class="sec-hdr"><div class="sec-title">สถานะบ่อทั้งหมด</div><div style="font-size:12px;color:var(--tx3)">อัปเดต: <span id="ov-ts"></span></div></div>
+      <div class="g3" id="ov-cards" style="margin-bottom:20px"></div>
+      <div id="ov-alerts"></div>
+    </div>
   </div>
 </div>
 <!-- WATER QUALITY -->
@@ -1465,36 +1470,39 @@ function renderTide(){
   const THM=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   const fT=ms=>{const d=new Date(ms+TZ);return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0');};
   const todayKey=new Date(now+TZ).toISOString().slice(0,10);
-  let tbl='';
+  let cards='';
   for(const k of Object.keys(dm).sort()){
     const{date:d,ev}=dm[k];
-    const hi=ev.filter(e=>e.type==='high').sort((a,b)=>b.h-a.h);
-    const lo=ev.filter(e=>e.type==='low').sort((a,b)=>a.h-b.h);
-    const hc=hi.slice(0,2).map(e=>`<div><b style="color:var(--p)">${fT(e.ms)}</b> <span style="font-size:11px;color:var(--tx2)">${e.h.toFixed(2)}ม.</span></div>`).join('')||'<span style="color:var(--tx3)">—</span>';
-    const lc=lo.slice(0,2).map(e=>`<div><b style="color:#e67e22">${fT(e.ms)}</b> <span style="font-size:11px;color:var(--tx2)">${e.h.toFixed(2)}ม.</span></div>`).join('')||'<span style="color:var(--tx3)">—</span>';
-    const hl=k===todayKey?'background:rgba(var(--pr,33,150,243),0.07)':'';
-    tbl+=`<tr style="border-top:1px solid var(--bd);${hl}">
-      <td style="padding:7px 10px;white-space:nowrap"><b style="${k===todayKey?'color:var(--p)':''}">${THD[d.getUTCDay()]}</b><br><span style="font-size:11px;color:var(--tx2)">${d.getUTCDate()} ${THM[d.getUTCMonth()]}</span></td>
-      <td style="padding:7px 10px;text-align:center">💙 ${hc}</td>
-      <td style="padding:7px 10px;text-align:center">🟠 ${lc}</td>
-    </tr>`;
+    const hi=ev.filter(e=>e.type==='high').sort((a,b)=>a.ms-b.ms);
+    const lo=ev.filter(e=>e.type==='low').sort((a,b)=>a.ms-b.ms);
+    const isToday=k===todayKey;
+    const chip=(e,col,bg,arrow)=>`<div style="background:${bg};border-radius:9px;padding:7px 11px;flex:1;min-width:78px">
+        <div style="font-size:10px;font-weight:700;color:${col}">${arrow}</div>
+        <div style="font-size:15px;font-weight:800;color:var(--tx)">${fT(e.ms)}</div>
+        <div style="font-size:11px;color:var(--tx2)">${e.h.toFixed(2)} ม.</div>
+      </div>`;
+    const empty='<span style="font-size:11px;color:var(--tx3)">—</span>';
+    cards+=`<div style="padding:11px 0;border-top:1px solid var(--bd);${isToday?'background:rgba(33,150,243,0.06);border-radius:10px;padding:11px 8px;margin:2px 0':''}">
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+        <span style="${isToday?'color:var(--p)':''}">${THD[d.getUTCDay()]} ${d.getUTCDate()} ${THM[d.getUTCMonth()]}</span>
+        ${isToday?'<span style="background:var(--p);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">วันนี้</span>':''}
+      </div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        ${hi.length?hi.slice(0,2).map(e=>chip(e,'#2196f3','rgba(33,150,243,0.12)','⬆ น้ำขึ้น')).join(''):''}
+        ${lo.length?lo.slice(0,2).map(e=>chip(e,'#e67e22','rgba(230,126,34,0.12)','⬇ น้ำลง')).join(''):''}
+        ${!hi.length&&!lo.length?empty:''}
+      </div>
+    </div>`;
   }
-  el.innerHTML=`<div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap">
-    <div style="min-width:120px">
+  el.innerHTML=`
+    <div style="text-align:center;padding-bottom:12px;border-bottom:1px solid var(--bd);margin-bottom:6px">
       <div style="font-size:12px;color:var(--tx3)">ระดับน้ำตอนนี้</div>
-      <div style="font-size:30px;font-weight:800;color:var(--p);line-height:1.1">${nowH.toFixed(2)}<span style="font-size:14px;font-weight:500"> ม.</span></div>
-      <div style="font-size:13px;font-weight:700;color:${rising?'#2196f3':'#e67e22'};margin-top:2px">${rising?'↑ น้ำขึ้น':'↓ น้ำลง'}</div>
+      <div style="font-size:34px;font-weight:800;color:var(--p);line-height:1.15">${nowH.toFixed(2)}<span style="font-size:14px;font-weight:500"> ม.</span></div>
+      <div style="display:inline-block;margin-top:4px;font-size:12px;font-weight:700;padding:3px 12px;border-radius:14px;background:${rising?'rgba(33,150,243,0.12)':'rgba(230,126,34,0.12)'};color:${rising?'#2196f3':'#e67e22'}">${rising?'↑ น้ำขึ้น':'↓ น้ำลง'}</div>
+      <div style="height:56px;margin-top:10px;position:relative"><canvas id="tideMinC"></canvas></div>
     </div>
-    <div style="flex:1;min-width:200px;height:72px;position:relative"><canvas id="tideMinC"></canvas></div>
-  </div>
-  <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
-    <thead><tr style="background:var(--sf2)">
-      <th style="padding:7px 10px;text-align:left">วัน</th>
-      <th style="padding:7px 10px;text-align:center">💙 น้ำขึ้น</th>
-      <th style="padding:7px 10px;text-align:center">🟠 น้ำลง</th>
-    </tr></thead><tbody>${tbl}</tbody>
-  </table></div>
-  <div style="font-size:10px;color:var(--tx3);margin-top:8px">⚠️ ค่าโดยประมาณจากการคำนวณ Harmonic Tide — เกาะมัตโพน จ.ชุมพร</div>`;
+    <div style="max-height:440px;overflow-y:auto">${cards}</div>
+    <div style="font-size:10px;color:var(--tx3);margin-top:10px;text-align:center">⚠️ ค่าโดยประมาณจากการคำนวณ Harmonic Tide</div>`;
   // Mini chart
   const cv=document.getElementById('tideMinC');if(!cv)return;
   if(window._tC){window._tC.destroy();window._tC=null;}
