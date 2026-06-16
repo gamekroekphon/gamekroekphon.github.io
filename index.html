@@ -91,7 +91,7 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
 .btn-p{background:var(--p);color:#fff}.btn-p:hover{background:var(--pd)}
 .btn-s{background:var(--sf);color:var(--tx2);border:1px solid var(--bd)}.btn-s:hover{background:var(--sf2);border-color:var(--tx3)}
 .btn-d{background:var(--d);color:#fff}.btn-d:hover{background:#b02a37}
-.btn-sm{padding:4px 10px;font-size:11px;border-radius:5px}
+.btn-sm{padding:4px 10px;font-size:11px;border-radius:5px}.cmp-cat-btn{background:var(--sf2);color:var(--tx2);border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:13px;padding:6px 14px;font-weight:600;transition:all .18s}.cmp-cat-btn.on{background:var(--p);color:#fff;border-color:var(--p)}
 
 /* ── Tables ── */
 .tbl{width:100%;border-collapse:collapse;font-size:12px}
@@ -199,8 +199,7 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
   <div class="card">
     <div class="card-t">📋 ข้อมูลย้อนหลัง</div>
     <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-      <select class="fi" id="tbl-pond" onchange="renderWQTable()" style="width:200px"><option value="">-- เลือกบ่อ --</option></select>
-      <select class="fi" id="tbl-rows" onchange="renderWQTable()" style="width:120px"><option value="7">7 วัน</option><option value="14">14 วัน</option><option value="30">30 วัน</option><option value="999">ทั้งหมด</option></select>
+      <select class="fi" id="tbl-rows" onchange="renderWQTable()" style="width:120px"><option value="999">ทั้งหมด</option><option value="30">30 วัน</option><option value="14">14 วัน</option><option value="7">7 วัน</option></select>
     </div>
     <div class="tbl-wrap" id="tbl-wrap"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อเพื่อดูข้อมูล</p></div>
   </div>
@@ -213,7 +212,7 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
       <div class="card-t">📝 บันทึกการให้อาหาร</div>
       <div style="display:flex;flex-direction:column;gap:12px">
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="fd-pond" onchange="clearFeed();updateFeedRate()"><option value="">-- เลือกบ่อ --</option></select></div>
+          <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="fd-pond" onchange="onFdPond()"><option value="">-- เลือกบ่อ --</option></select></div>
           <div class="fg"><label class="fl">วันที่ *</label><input type="date" class="fi" id="fd-date" onchange="calcAge('fd');updateFeedRate()"></div>
         </div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
@@ -240,14 +239,12 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
       <div class="g2" id="fd-metrics" style="margin-bottom:14px"></div>
       <div class="card">
         <div class="card-t">📊 อาหารรายวัน</div>
-        <div style="margin-bottom:10px"><select class="fi" id="fd-chart-pond" onchange="renderFeedChart()" style="width:180px"><option value="">-- เลือกบ่อ --</option></select></div>
         <div class="chart-wrap"><canvas id="feedChart"></canvas></div>
       </div>
     </div>
   </div>
   <div class="card">
     <div class="card-t">📋 ประวัติการให้อาหาร</div>
-    <div style="margin-bottom:10px"><select class="fi" id="fd-tbl-pond" onchange="renderFeedTable()" style="width:200px"><option value="">-- เลือกบ่อ --</option></select></div>
     <div class="tbl-wrap" id="fd-tbl-wrap"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อเพื่อดูข้อมูล</p></div>
   </div>
 </div>
@@ -259,7 +256,7 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
       <div class="card-t">📝 บันทึกการสุ่ม</div>
       <div style="display:flex;flex-direction:column;gap:12px">
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="sp-pond" onchange="clearSample()"><option value="">-- เลือกบ่อ --</option></select></div>
+          <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="sp-pond" onchange="onSpPond()"><option value="">-- เลือกบ่อ --</option></select></div>
           <div class="fg"><label class="fl">วันที่ *</label><input type="date" class="fi" id="sp-date" onchange="calcAge('sp')"></div>
         </div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
@@ -300,7 +297,6 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
       <div class="g2" id="sp-metrics" style="margin-bottom:14px"></div>
       <div class="card">
         <div class="card-t">📈 กราฟไซส์ (ตัว/กก.)</div>
-        <div style="margin-bottom:10px"><select class="fi" id="sp-chart-pond" onchange="renderSampleChart()" style="width:180px"><option value="">-- เลือกบ่อ --</option></select></div>
         <div class="chart-wrap"><canvas id="sampleChart"></canvas></div>
         <div style="font-size:11px;color:var(--tx3);margin-top:8px">เส้นประ = มาตรฐาน vannamei อ้างอิง | แนวโน้มลดลง = กุ้งโตขึ้น</div>
       </div>
@@ -308,7 +304,6 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
   </div>
   <div class="card">
     <div class="card-t">📋 ประวัติการสุ่ม</div>
-    <div style="margin-bottom:10px"><select class="fi" id="sp-tbl-pond" onchange="renderSampleTable()" style="width:200px"><option value="">-- เลือกบ่อ --</option></select></div>
     <div class="tbl-wrap" id="sp-tbl-wrap"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อเพื่อดูข้อมูล</p></div>
   </div>
 </div>
@@ -320,7 +315,7 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
       <div class="card-t">📝 บันทึกการเปลี่ยน/เติมน้ำ</div>
       <div style="display:flex;flex-direction:column;gap:12px">
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="wl-pond" onchange="clearWaterLog()"><option value="">-- เลือกบ่อ --</option></select></div>
+          <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="wl-pond" onchange="onWlPond()"><option value="">-- เลือกบ่อ --</option></select></div>
           <div class="fg"><label class="fl">วันที่ *</label><input type="date" class="fi" id="wl-date" onchange="calcAge('wl')"></div>
         </div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
@@ -339,7 +334,6 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
   </div>
   <div class="card">
     <div class="card-t">📋 ประวัติ</div>
-    <div style="margin-bottom:10px"><select class="fi" id="wl-tbl-pond" onchange="renderWaterTable()" style="width:200px"><option value="">-- เลือกบ่อ --</option></select></div>
     <div class="tbl-wrap" id="wl-tbl-wrap"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อเพื่อดูข้อมูล</p></div>
   </div>
 </div>
@@ -351,7 +345,7 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
       <div class="card-t">📝 บันทึกการใช้</div>
       <div style="display:flex;flex-direction:column;gap:12px">
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">บ่อ * (หรือทุกบ่อ)</label><select class="fi" id="ch-pond" onchange="clearChem()"><option value="all">ทุกบ่อ</option></select></div>
+          <div class="fg"><label class="fl">บ่อ * (หรือทุกบ่อ)</label><select class="fi" id="ch-pond" onchange="onChPond()"><option value="all">ทุกบ่อ</option></select></div>
           <div class="fg"><label class="fl">วันที่ *</label><input type="date" class="fi" id="ch-date"></div>
         </div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
@@ -392,7 +386,6 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
   <div class="card">
     <div class="card-t">📋 ประวัติการใช้</div>
     <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-      <select class="fi" id="ch-tbl-pond" onchange="renderChemTable()" style="width:200px"><option value="all">ทุกบ่อ</option></select>
       <select class="fi" id="ch-tbl-cat" onchange="renderChemTable()" style="width:160px"><option value="">ทุกหมวด</option></select>
     </div>
     <div class="tbl-wrap" id="ch-tbl-wrap"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p></div>
@@ -406,7 +399,7 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
       <div class="card-t">📝 บันทึกผลแล็บ</div>
       <div style="display:flex;flex-direction:column;gap:12px">
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="lb-pond" onchange="clearLab()"><option value="">-- เลือกบ่อ --</option></select></div>
+          <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="lb-pond" onchange="onLbPond()"><option value="">-- เลือกบ่อ --</option></select></div>
           <div class="fg"><label class="fl">วันที่ส่งตรวจ *</label><input type="date" class="fi" id="lb-date" onchange="calcAge('lb')"></div>
         </div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
@@ -460,7 +453,6 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
   </div>
   <div class="card">
     <div class="card-t">📋 ประวัติผลแล็บ</div>
-    <div style="margin-bottom:10px"><select class="fi" id="lb-tbl-pond" onchange="renderLabTable()" style="width:200px"><option value="">-- เลือกบ่อ --</option></select></div>
     <div class="tbl-wrap" id="lb-tbl-wrap"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อเพื่อดูข้อมูล</p></div>
   </div>
 </div>
@@ -483,10 +475,20 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
 <div id="sec-compare" class="sec">
   <div class="sec-hdr"><div class="sec-title">🔄 เปรียบเทียบระหว่างบ่อ</div></div>
   <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="cmp-cat-btn on" id="cmp-cat-wq" onclick="setCmpCat('wq',this)">💧 คุณภาพน้ำ</button>
+      <button class="cmp-cat-btn" id="cmp-cat-feed" onclick="setCmpCat('feed',this)">🍖 เปรียบเทียบอาหาร</button>
+      <button class="cmp-cat-btn" id="cmp-cat-size" onclick="setCmpCat('size',this)">⚖️ ไซส์</button>
+      <button class="cmp-cat-btn" id="cmp-cat-lab" onclick="setCmpCat('lab',this)">🔬 ผลแล็บ</button>
+      <button class="cmp-cat-btn" id="cmp-cat-water" onclick="setCmpCat('water',this)">💦 การจัดการน้ำ</button>
+    </div>
     <div id="cmp-sel" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
-    <div class="fg" style="max-width:250px"><label class="fl">พารามิเตอร์</label><select class="fi" id="cmp-param" onchange="renderCompare()"></select></div>
+    <div id="cmp-param-row" class="fg" style="max-width:250px"><label class="fl">พารามิเตอร์</label><select class="fi" id="cmp-param" onchange="renderCompare()"></select></div>
+    <div id="cmp-feed-row" class="fg" style="max-width:280px;display:none"><label class="fl">ชนิดข้อมูล</label><select class="fi" id="cmp-feed-param" onchange="renderCompare()"><option value="per100k">การกิน (กก./แสน)</option><option value="daily">อาหารต่อวัน (กก.)</option><option value="cumulative">อาหารสะสม (กก.)</option></select></div>
+    <div id="cmp-lab-row" class="fg" style="max-width:280px;display:none"><label class="fl">ผลตรวจ</label><select class="fi" id="cmp-lab-param" onchange="renderCompare()"><option value="tcbsGreen">🟢 เชื้อเขียว (CFU/mL)</option><option value="tcbsYellow">🟡 เชื้อเหลือง (CFU/mL)</option><option value="tvc">TVC (CFU/mL)</option></select></div>
+    <div id="cmp-water-row" class="fg" style="max-width:280px;display:none"><label class="fl">ชนิดกิจกรรม</label><select class="fi" id="cmp-water-param" onchange="renderCompare()"><option value="all">ทุกกิจกรรม</option><option value="exchange">เปลี่ยนถ่ายน้ำ</option><option value="add">เติมน้ำ</option><option value="drain">ระบายน้ำ</option></select></div>
   </div>
-  <div class="card"><div class="card-t" id="cmp-title">เปรียบเทียบ</div><div class="chart-wrap"><canvas id="cmpChart"></canvas></div></div>
+  <div class="card"><div class="card-t" id="cmp-title">เปรียบเทียบ</div><div class="chart-wrap" style="height:380px"><canvas id="cmpChart"></canvas></div></div>
 </div>
 <!-- RISK -->
 <div id="sec-risk" class="sec">
@@ -1267,7 +1269,7 @@ const A23rec=[
 let D=loadData();
 seedPonds();
 let trCh=null,cmpCh=null,fdCh=null,spCh=null,secCh=null;
-let actPrm='doM';let cmpP=new Set(['B1','B2']);let selWC='';
+let actPrm='doM';let cmpP=new Set(['B1','B2']);let cmpCat='wq';let selWC='';
 function loadData(){
   try{const s=localStorage.getItem(SK);if(s){
     const d=JSON.parse(s);
@@ -1353,10 +1355,7 @@ function projHarvest(p,target=22){
 }
 function populateAll(){
   const simple={
-    'ep-pond':'','tbl-pond':'','fd-pond':'','fd-chart-pond':'','fd-tbl-pond':'',
-    'sp-pond':'','sp-chart-pond':'','sp-tbl-pond':'',
-    'wl-pond':'','wl-tbl-pond':'','lb-pond':'','lb-tbl-pond':'',
-    'tr-pond':'','ex-pond':'all',
+    'ep-pond':'','fd-pond':'','sp-pond':'','wl-pond':'','lb-pond':'','tr-pond':'','ex-pond':'all',
   };
   Object.entries(simple).forEach(([id,def])=>{
     const el=document.getElementById(id);if(!el)return;const cur=el.value;
@@ -1491,7 +1490,7 @@ function initEntry(){
   document.getElementById('ep-fields').innerHTML=PARAMS.map(p=>`<div class="fg"><label class="fl">${p.lbl}${p.unit?' ('+p.unit+')':''}</label><input type="number" step="any" class="fi" id="ef-${p.key}" placeholder="—" oninput="onFI('${p.key}',this)"><span class="lbl-std">${p.inv?'ต่ำกว่า '+p.max:p.min+'–'+p.max} ${p.unit}</span></div>`).join('');
   calcAge('ep');
 }
-function onEPond(){const v=document.getElementById('ep-pond').value;clearWQ();if(document.getElementById('tbl-pond'))document.getElementById('tbl-pond').value=v;renderWQTable();prefillWQ()}
+function onEPond(){clearWQ();renderWQTable();prefillWQ()}
 function prefillWQ(){
   const pid=document.getElementById('ep-pond').value;
   const d=document.getElementById('ep-date').value;
@@ -1526,7 +1525,7 @@ function clearWQ(){
   document.getElementById('ep-notes').value='';document.getElementById('ep-msg').innerHTML='';calcAge('ep');
 }
 function renderWQTable(){
-  const pid=document.getElementById('tbl-pond')?.value,rows=parseInt(document.getElementById('tbl-rows')?.value||7);
+  const pid=document.getElementById('ep-pond')?.value,rows=parseInt(document.getElementById('tbl-rows')?.value||999);
   const wrap=document.getElementById('tbl-wrap');if(!wrap)return;
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
   const p=pond(pid);if(!p||!p.records.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
@@ -1618,7 +1617,7 @@ function editLab(pid,d){
   const el=document.getElementById('lb-pond');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
 }
 // ===== FEEDING =====
-function initFeed(){populateAll();document.getElementById('fd-date').value=today();calcAge('fd')}
+function initFeed(){populateAll();document.getElementById('fd-date').value=today();calcAge('fd');renderFeedTable();renderFeedChart();}
 function updateFeedRate(){
   const pid=document.getElementById('fd-pond').value;
   const total=parseFloat(document.getElementById('fd-total').value)||0;
@@ -1645,6 +1644,12 @@ function saveFeed(){
   else{p.feedLog.push(rec);p.feedLog.sort((a,b)=>new Date(a.date)-new Date(b.date));showMsg('fd-msg','ok',`✅ อาหาร ${total.toFixed(1)} กก. บ่อ ${p.name}`)}
   save();renderFeedTable();renderFeedMetrics(pid);renderFeedChart();renderOv();
 }
+// ===== POND CHANGE HANDLERS =====
+function onFdPond(){clearFeed();updateFeedRate();renderFeedTable();renderFeedChart();const pid=document.getElementById('fd-pond').value;if(pid)renderFeedMetrics(pid);}
+function onSpPond(){clearSample();renderSampleTable();renderSampleChart();const pid=document.getElementById('sp-pond').value;if(pid)renderSampleMetrics(pid);}
+function onWlPond(){clearWaterLog();renderWaterTable();}
+function onChPond(){clearChem();renderChemTable();}
+function onLbPond(){clearLab();renderLabTable();}
 function clearFeed(){
   document.getElementById('fd-date').value=today();
   ['fd-brand','fd-grade','fd-total','fd-rate','fd-notes'].forEach(id=>{document.getElementById(id).value=''});
@@ -1668,7 +1673,7 @@ function renderFeedMetrics(pid){
   `;
 }
 function renderFeedChart(){
-  const pid=document.getElementById('fd-chart-pond').value;if(!pid)return;
+  const pid=document.getElementById('fd-pond').value;if(!pid)return;
   const p=pond(pid);if(fdCh){fdCh.destroy();fdCh=null;}
   const logs=p.feedLog.slice().sort((a,b)=>a.age-b.age);
   if(!logs.length)return;
@@ -1692,17 +1697,17 @@ function renderFeedChart(){
   }});
 }
 function renderFeedTable(){
-  const pid=document.getElementById('fd-tbl-pond')?.value;
+  const pid=document.getElementById('fd-pond')?.value;
   const wrap=document.getElementById('fd-tbl-wrap');if(!wrap)return;
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
-  const p=pond(pid);const rows=(p?.feedLog||[]).slice().reverse().slice(0,30);
+  const p=pond(pid);const rows=(p?.feedLog||[]).slice().reverse();
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
   const pk=feedPer100k;
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ยี่ห้อ</th><th>เบอร์</th><th>รวม (กก.)</th><th>กก./แสน</th><th>Feed Rate</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rows.map((r,i)=>{const v=pk(r.totalFeed,p.stock);return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editFeed('${pid}','${r.date}')">✏️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.feedBrand||'-'}</td><td>${r.feedGrade||'-'}</td><td><strong>${r.totalFeed?.toFixed(1)||'-'}</strong></td><td style="color:var(--p);font-weight:600">${v!=null?v.toFixed(2):'-'}</td><td>${r.feedRate?r.feedRate+'%':'-'}</td><td>${r.notes||'-'}</td></tr>`}).join('')}</tbody></table>`;
 }
 // ===== SAMPLING =====
-function initSample(){populateAll();document.getElementById('sp-date').value=today();calcAge('sp')}
+function initSample(){populateAll();document.getElementById('sp-date').value=today();calcAge('sp');renderSampleTable();renderSampleChart();}
 function calcSampleABW(){
   const cnt=parseFloat(document.getElementById('sp-count').value)||0;
   const wt_kg=parseFloat(document.getElementById('sp-weight').value)||0;
@@ -1768,7 +1773,7 @@ function renderSampleMetrics(pid){
   `;
 }
 function renderSampleChart(){
-  const pid=document.getElementById('sp-chart-pond').value;if(!pid)return;
+  const pid=document.getElementById('sp-pond').value;if(!pid)return;
   const p=pond(pid);if(spCh){spCh.destroy();spCh=null;}
   const sizePts=(p.samples||[]).filter(r=>r.plCount).map(r=>({x:r.age,y:r.plCount}));
   const feedPts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.age!=null).map(r=>{const v=feedPer100k(r.totalFeed,p.stock);return v!=null?{x:r.age,y:parseFloat(v.toFixed(2))}:null}).filter(Boolean);
@@ -1785,17 +1790,17 @@ function renderSampleChart(){
       tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+ctx.parsed.y}}}}});
 }
 function renderSampleTable(){
-  const pid=document.getElementById('sp-tbl-pond')?.value;
+  const pid=document.getElementById('sp-pond')?.value;
   const wrap=document.getElementById('sp-tbl-wrap');if(!wrap)return;
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
-  const p=pond(pid);const rows=(p?.samples||[]).slice().reverse().slice(0,20);
+  const p=pond(pid);const rows=(p?.samples||[]).slice().reverse();
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ตัวอย่าง</th><th>น้ำหนักรวม (กก.)</th><th>ABW (g)</th><th>ไซส์ (ตัว/กก.)</th><th>Survival%</th><th>Biomass (kg)</th><th>PDG (g/วัน)</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rows.map((r,i)=>`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editSample('${pid}','${r.date}')">✏️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.sampleCount||'-'}</td><td>${r.sampleWeight!=null?r.sampleWeight+' กก.':'-'}</td><td><strong style="color:var(--p)">${r.abw?.toFixed(2)||'-'}</strong></td><td><strong style="color:var(--in)">${r.plCount||'-'}</strong></td><td>${r.survivalRate?r.survivalRate+'%':'-'}</td><td>${r.biomass?.toFixed(0)||'-'}</td><td>${r.pdg||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')}</tbody></table>`;
 }
 // plankton section removed
 // ===== WATER LOG =====
-function initWaterLog(){populateAll();document.getElementById('wl-date').value=today();calcAge('wl');renderWaterSummary()}
+function initWaterLog(){populateAll();document.getElementById('wl-date').value=today();calcAge('wl');renderWaterSummary();renderWaterTable();}
 function saveWaterLog(){
   const pid=document.getElementById('wl-pond').value,d=document.getElementById('wl-date').value;
   if(!pid||!d){showMsg('wl-msg','warn','กรุณาเลือกบ่อและวันที่');return}
@@ -1819,12 +1824,12 @@ function renderWaterSummary(){
   el.innerHTML=last7.length>0?`<div style="font-size:13px;font-weight:600;color:var(--tx2);margin-bottom:8px">กิจกรรมใน 7 วันล่าสุด:</div>${last7.map(r=>`<div style="padding:8px 12px;background:var(--sf2);border-radius:7px;margin-bottom:6px;font-size:13px"><span class="badge b-info" style="margin-right:6px">บ่อ ${r.pondName}</span>${fD(r.date)} — ${WL_ACT[r.action]||r.action} <strong>${r.vol?r.vol+' ซม.':''}</strong>${r.notes?' · '+r.notes:''}</div>`).join('')}`:'<div style="color:var(--tx3);text-align:center;padding:20px;font-size:13px">ยังไม่มีกิจกรรมใน 7 วันล่าสุด</div>';
 }
 function renderWaterTable(){
-  const pid=document.getElementById('wl-tbl-pond')?.value;
+  const pid=document.getElementById('wl-pond')?.value;
   const wrap=document.getElementById('wl-tbl-wrap');if(!wrap)return;
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
-  const p=pond(pid);const rows=(p?.waterLog||[]).slice().reverse().slice(0,30);
+  const p=pond(pid);const rows=(p?.waterLog||[]).slice().reverse();
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
-  const wlPond=pond(pid);const wlFull=(wlPond?.waterLog||[]).slice().reverse().slice(0,30);
+  const wlPond=pond(pid);const wlFull=(wlPond?.waterLog||[]).slice().reverse();
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>การดำเนินการ</th><th>ปริมาณ (ซม.)</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rows.map((r,i)=>{const origIdx=(wlPond?.waterLog||[]).indexOf(r);return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editWaterLog('${pid}',${origIdx})">✏️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td><span class="badge b-info">${WL_ACT[r.action]||r.action}</span></td><td>${r.vol?r.vol+' ซม.':'-'}</td><td>${r.notes||'-'}</td></tr>`}).join('')}</tbody></table>`;
 }
@@ -1899,7 +1904,7 @@ function renderChemSummary(){
   _chemPieChart=new Chart(ctx,{type:'doughnut',data:{labels:cats.map(([k])=>getCatLabel(k)),datasets:[{data:cats.map(([,v])=>v),backgroundColor:cats.map((_,i)=>colors[i%colors.length]),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12}}}}});}
 }
 function renderChemTable(){
-  const pid=document.getElementById('ch-tbl-pond')?.value||'all';
+  const pid=document.getElementById('ch-pond')?.value||'all';
   const cat=document.getElementById('ch-tbl-cat')?.value||'';
   const wrap=document.getElementById('ch-tbl-wrap');if(!wrap)return;
   const allLogs=D.ponds.filter(p=>pid==='all'||p.id===pid).flatMap(p=>(p.chemLog||[]).filter(r=>!cat||r.category===cat).map(r=>({...r,pondName:p.name})));
@@ -1909,7 +1914,7 @@ function renderChemTable(){
     allLogs.slice(0,50).map((r,i)=>`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editChem('${r.pondId||''}','${r.date}','${r.product||''}','${r.category||''}')">✏️</button></td><td>${fD(r.date)}</td><td><span class="badge b-info">บ่อ ${r.pondName}</span></td><td>${getCatLabel(r.category)}</td><td>${r.product||'-'}</td><td>${r.amount?r.amount+' '+r.unit:'-'}</td><td>${r.reason||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')}</tbody></table>`;
 }
 // ===== LAB RESULTS =====
-function initLab(){populateAll();document.getElementById('lb-date').value=today();calcAge('lb')}
+function initLab(){populateAll();document.getElementById('lb-date').value=today();calcAge('lb');renderLabTable();}
 function updateLabStatus(){
   const tg=parseFloat(document.getElementById('lb-tcbs-g').value)||null;
   const ty=parseFloat(document.getElementById('lb-tcbs-y').value)||null;
@@ -1944,10 +1949,10 @@ function clearLab(){
   document.getElementById('lb-status-display').innerHTML='';document.getElementById('lb-msg').innerHTML='';calcAge('lb');
 }
 function renderLabTable(){
-  const pid=document.getElementById('lb-tbl-pond')?.value;
+  const pid=document.getElementById('lb-pond')?.value;
   const wrap=document.getElementById('lb-tbl-wrap');if(!wrap)return;
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
-  const p=pond(pid);const rows=(p?.labResults||[]).slice().reverse().slice(0,20);
+  const p=pond(pid);const rows=(p?.labResults||[]).slice().reverse();
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีผลแล็บ</p>';return}
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>แล็บ</th><th>🟢 เชื้อเขียว</th><th>🟡 เชื้อเหลือง</th><th>TVC</th><th>EHP</th><th>ตับอ่อน</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rows.map((r,i)=>{
@@ -1978,6 +1983,15 @@ function renderTrend(){
   trCh=new Chart(document.getElementById('trChart'),{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,interaction:{mode:'index',intersect:false},scales:{x:{type:'linear',title:{display:true,text:'อายุ (วัน)'}},y:{title:{display:true,text:pm.lbl+(pm.unit?' ('+pm.unit+')':'')}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:12,filter:i=>i.text!=='ref'}}}}});
 }
 // ===== COMPARE =====
+function setCmpCat(cat,btn){
+  cmpCat=cat;
+  document.querySelectorAll('.cmp-cat-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  document.getElementById('cmp-param-row').style.display=cat==='wq'?'':'none';
+  document.getElementById('cmp-feed-row').style.display=cat==='feed'?'':'none';
+  document.getElementById('cmp-lab-row').style.display=cat==='lab'?'':'none';
+  document.getElementById('cmp-water-row').style.display=cat==='water'?'':'none';
+  renderCompare();
+}
 function initCompare(){
   document.getElementById('cmp-sel').innerHTML=D.ponds.map(p=>`<span class="pond-chk${cmpP.has(p.id)?' on':''}" onclick="tglCmp('${p.id}',this)"><input type="checkbox"${cmpP.has(p.id)?' checked':''}>บ่อ ${p.name}</span>`).join('');
   document.getElementById('cmp-param').innerHTML=PARAMS.map(p=>`<option value="${p.key}">${p.lbl}</option>`).join('');
@@ -1985,12 +1999,54 @@ function initCompare(){
 }
 function tglCmp(id,el){cmpP.has(id)?cmpP.delete(id):cmpP.add(id);el.classList.toggle('on');renderCompare()}
 function renderCompare(){
+  if(cmpCat==='feed')return renderCmpFeed();
+  if(cmpCat==='size')return renderCmpSize();
+  if(cmpCat==='lab')return renderCmpLab();
+  if(cmpCat==='water')return renderCmpWater();
+  renderCmpWQ();
+}
+function getSelPonds(){return cmpP.size>0?D.ponds.filter(p=>cmpP.has(p.id)):D.ponds;}
+function renderCmpWQ(){
   const key=document.getElementById('cmp-param')?.value;const pm=PARAMS.find(p=>p.key===key);if(!pm)return;
   document.getElementById('cmp-title').textContent=`เปรียบเทียบ ${pm.lbl}${pm.unit?' ('+pm.unit+')':''} ระหว่างบ่อ`;
   if(cmpCh){cmpCh.destroy();cmpCh=null;}
-  const ponds=cmpP.size>0?D.ponds.filter(p=>cmpP.has(p.id)):D.ponds;
-  const datasets=ponds.map((p,i)=>{const col=COLORS[i%COLORS.length];const pts=p.records.filter(r=>r[pm.key]!==null&&r[pm.key]!==undefined).map(r=>({x:r.age,y:r[pm.key]}));return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'33',tension:.3,pointRadius:4,fill:false}});
+  const datasets=getSelPonds().map((p,i)=>{const col=COLORS[i%COLORS.length];const pts=p.records.filter(r=>r[pm.key]!==null&&r[pm.key]!==undefined).map(r=>({x:r.age,y:r[pm.key]}));return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'33',tension:.3,pointRadius:4,fill:false}});
   cmpCh=new Chart(document.getElementById('cmpChart'),{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,scales:{x:{type:'linear',title:{display:true,text:'อายุ (วัน)'}},y:{title:{display:true,text:pm.lbl+(pm.unit?' ('+pm.unit+')':'')}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:12}}}}});
+}
+function renderCmpFeed(){
+  const metric=document.getElementById('cmp-feed-param')?.value||'per100k';
+  if(cmpCh){cmpCh.destroy();cmpCh=null;}
+  const lblMap={per100k:'การกิน (กก./แสน)',daily:'อาหารต่อวัน (กก.)',cumulative:'อาหารสะสม (กก.)'};
+  const datasets=getSelPonds().map((p,i)=>{
+    const col=COLORS[i%COLORS.length];let pts=[];
+    if(metric==='per100k'){pts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.age!=null).map(r=>{const v=feedPer100k(r.totalFeed,p.stock);return v!=null?{x:r.age,y:parseFloat(v.toFixed(2))}:null}).filter(Boolean);}
+    else if(metric==='daily'){pts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.age!=null).map(r=>({x:r.age,y:r.totalFeed}));}
+    else{let cum=0;pts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.age!=null).sort((a,b)=>a.age-b.age).map(r=>{cum+=r.totalFeed;return{x:r.age,y:parseFloat(cum.toFixed(1))};});}
+    return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'33',tension:.3,pointRadius:3,fill:false};
+  });
+  document.getElementById('cmp-title').textContent=`เปรียบเทียบ${lblMap[metric]} ระหว่างบ่อ`;
+  cmpCh=new Chart(document.getElementById('cmpChart'),{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,scales:{x:{type:'linear',title:{display:true,text:'อายุ (วัน)'}},y:{title:{display:true,text:lblMap[metric]}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:12}}}}});
+}
+function renderCmpSize(){
+  if(cmpCh){cmpCh.destroy();cmpCh=null;}
+  const datasets=getSelPonds().map((p,i)=>{const col=COLORS[i%COLORS.length];const pts=(p.samples||[]).filter(r=>r.plCount&&r.age!=null).map(r=>({x:r.age,y:r.plCount}));return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'33',tension:.3,pointRadius:4,fill:false};});
+  document.getElementById('cmp-title').textContent='เปรียบเทียบไซส์ (ตัว/กก.) ระหว่างบ่อ';
+  cmpCh=new Chart(document.getElementById('cmpChart'),{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,scales:{x:{type:'linear',title:{display:true,text:'อายุ (วัน)'}},y:{title:{display:true,text:'ตัว/กก.'},reverse:true}},plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:12}}}}});
+}
+function renderCmpLab(){
+  const metric=document.getElementById('cmp-lab-param')?.value||'tcbsGreen';
+  if(cmpCh){cmpCh.destroy();cmpCh=null;}
+  const labLbls={tcbsGreen:'🟢 เชื้อเขียว (CFU/mL)',tcbsYellow:'🟡 เชื้อเหลือง (CFU/mL)',tvc:'TVC (CFU/mL)'};
+  const datasets=getSelPonds().map((p,i)=>{const col=COLORS[i%COLORS.length];const pts=(p.labResults||[]).filter(r=>r[metric]!=null&&r.age!=null).map(r=>({x:r.age,y:r[metric]}));return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'33',tension:.3,pointRadius:4,fill:false};});
+  document.getElementById('cmp-title').textContent=`เปรียบเทียบ ${labLbls[metric]||metric} ระหว่างบ่อ`;
+  cmpCh=new Chart(document.getElementById('cmpChart'),{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,scales:{x:{type:'linear',title:{display:true,text:'อายุ (วัน)'}},y:{title:{display:true,text:labLbls[metric]||metric}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:12}}}}});
+}
+function renderCmpWater(){
+  const action=document.getElementById('cmp-water-param')?.value||'all';
+  if(cmpCh){cmpCh.destroy();cmpCh=null;}
+  const datasets=getSelPonds().map((p,i)=>{const col=COLORS[i%COLORS.length];const logs=(p.waterLog||[]).filter(r=>r.vol&&r.age!=null&&(action==='all'||r.action===action)).sort((a,b)=>a.age-b.age);const pts=logs.map(r=>({x:r.age,y:r.vol}));return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'55',tension:.2,pointRadius:4,fill:false};});
+  document.getElementById('cmp-title').textContent='เปรียบเทียบการจัดการน้ำ (ซม.) ระหว่างบ่อ';
+  cmpCh=new Chart(document.getElementById('cmpChart'),{type:'bar',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,scales:{x:{type:'linear',title:{display:true,text:'อายุ (วัน)'}},y:{title:{display:true,text:'ปริมาณน้ำ (ซม.)'}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:12}}}}});
 }
 // ===== WEATHER & RISK =====
 async function fetchWx(){
