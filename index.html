@@ -1498,12 +1498,63 @@ function renderTide(){
       </div>
     </div>`;
   }
+  // ---- wave chart (today) ----
+  const dayStart=new Date(now+TZ);dayStart.setUTCHours(0,0,0,0);
+  const dayStartMs=dayStart.getTime()-TZ;
+  const dayEndMs=dayStartMs+24*3600*1000;
+  const NPTS=96;
+  let wpts=[];let wMin=Infinity,wMax=-Infinity;
+  for(let i=0;i<=NPTS;i++){
+    const ms=dayStartMs+i*(dayEndMs-dayStartMs)/NPTS;
+    const h=_tAt(ms);
+    wpts.push({ms,h});
+    if(h<wMin)wMin=h;if(h>wMax)wMax=h;
+  }
+  const todayEv=dm[todayKey]?dm[todayKey].ev.slice().sort((a,b)=>a.ms-b.ms):[];
+  const WW=600,WH=180,padL=16,padR=16,padT=36,padB=40;
+  const innerW=WW-padL-padR,innerH=WH-padT-padB;
+  const rng=(wMax-wMin)||1;
+  const wx=ms=>padL+(ms-dayStartMs)/(dayEndMs-dayStartMs)*innerW;
+  const wy=h=>padT+(1-(h-wMin)/rng)*innerH;
+  const linePath=wpts.map((p,i)=>`${i===0?'M':'L'}${wx(p.ms).toFixed(1)},${wy(p.h).toFixed(1)}`).join(' ');
+  const areaPath=linePath+` L${wx(wpts[wpts.length-1].ms).toFixed(1)},${(padT+innerH).toFixed(1)} L${wx(wpts[0].ms).toFixed(1)},${(padT+innerH).toFixed(1)} Z`;
+  const nowMsClamp=Math.min(Math.max(now,dayStartMs),dayEndMs);
+  const nowX=wx(nowMsClamp);
+  const nowY=wy(Math.min(Math.max(nowH,wMin),wMax));
+  const markers=todayEv.map(e=>{
+    const mx=wx(e.ms),my=wy(e.h);
+    const isHi=e.type==='high';
+    const col=isHi?'#2196f3':'#e67e22';
+    const labelY=isHi?Math.max(my-16,12):Math.min(my+24,WH-6);
+    return `<g>
+      <circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="4.5" fill="${col}" stroke="#fff" stroke-width="1.5"/>
+      <text x="${mx.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-size="10" font-weight="700" fill="${col}">${isHi?'▲':'▼'} ${fT(e.ms)}</text>
+      <text x="${mx.toFixed(1)}" y="${(labelY+(isHi?11:11)).toFixed(1)}" text-anchor="middle" font-size="9" fill="#9aa3ad">${e.h.toFixed(2)}ม.</text>
+    </g>`;
+  }).join('');
+  const waveSvg=`
+    <div style="font-size:11px;font-weight:700;color:var(--tx2);margin:14px 0 2px;text-align:center">🌊 กราฟคลื่นน้ำวันนี้</div>
+    <svg viewBox="0 0 ${WW} ${WH}" style="width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="waveGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2196f3" stop-opacity="0.28"/>
+          <stop offset="100%" stop-color="#2196f3" stop-opacity="0.02"/>
+        </linearGradient>
+      </defs>
+      <path d="${areaPath}" fill="url(#waveGrad)"/>
+      <path d="${linePath}" fill="none" stroke="#2196f3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="${nowX.toFixed(1)}" y1="${padT}" x2="${nowX.toFixed(1)}" y2="${(padT+innerH).toFixed(1)}" stroke="#9aa3ad" stroke-width="1" stroke-dasharray="3,3" opacity="0.7"/>
+      <circle cx="${nowX.toFixed(1)}" cy="${nowY.toFixed(1)}" r="5" fill="#fff" stroke="${rising?'#2196f3':'#e67e22'}" stroke-width="2.5"/>
+      <text x="${nowX.toFixed(1)}" y="${(padT-10).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--tx2)">ตอนนี้</text>
+      ${markers}
+    </svg>`;
   nowEl.innerHTML=`
     <div style="text-align:center">
       <div style="font-size:12px;color:var(--tx3)">ระดับน้ำตอนนี้</div>
       <div style="font-size:34px;font-weight:800;color:var(--p);line-height:1.15">${nowH.toFixed(2)}<span style="font-size:14px;font-weight:500"> ม.</span></div>
       <div style="display:inline-block;margin-top:4px;font-size:12px;font-weight:700;padding:3px 12px;border-radius:14px;background:${rising?'rgba(33,150,243,0.12)':'rgba(230,126,34,0.12)'};color:${rising?'#2196f3':'#e67e22'}">${rising?'↑ น้ำขึ้น':'↓ น้ำลง'}</div>
-    </div>`;
+    </div>
+    ${waveSvg}`;
   el.innerHTML=`
     <div style="max-height:440px;overflow-y:auto">${cards}</div>
     <div style="font-size:10px;color:var(--tx3);margin-top:10px;text-align:center">⚠️ ค่าโดยประมาณจากการคำนวณ Harmonic Tide</div>`;
