@@ -177,6 +177,13 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
   <div class="sec-hdr"><div class="sec-title">สถานะบ่อทั้งหมด</div><div style="font-size:12px;color:var(--tx3)">อัปเดต: <span id="ov-ts"></span></div></div>
   <div class="g3" id="ov-cards" style="margin-bottom:20px"></div>
   <div id="ov-alerts"></div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-t" style="display:flex;justify-content:space-between;align-items:center">
+      <span>🌊 น้ำขึ้นน้ำลง 7 วัน — เกาะมัตโพน จ.ชุมพร</span>
+      <button class="btn btn-p btn-sm" onclick="renderTide()">🔄</button>
+    </div>
+    <div id="tide-card"><p style="color:var(--tx3);padding:12px 0;text-align:center">กำลังโหลด...</p></div>
+  </div>
 </div>
 <!-- WATER QUALITY -->
 <div id="sec-entry" class="sec">
@@ -643,7 +650,12 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
       </div>
     </div>
     <div class="card">
-      <div class="card-t">📊 สรุปการจับกุ้ง</div>
+      <div class="card-t" style="justify-content:space-between">
+        <span>📊 สรุปการจับกุ้ง</span>
+        <select class="fi" id="hv-sum-pond" onchange="renderHarvest()" style="width:150px;font-size:12px;padding:4px 8px">
+          <option value="">ทุกบ่อ (รวม)</option>
+        </select>
+      </div>
       <div id="hv-summary" style="color:var(--tx3);font-size:13px">ยังไม่มีข้อมูลการจับกุ้ง</div>
     </div>
   </div>
@@ -1378,6 +1390,8 @@ function populateAll(){
     el.innerHTML='<option value="">ทุกบ่อ</option>'+D.ponds.map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');
     if(cur)el.value=cur;
   });
+  const hvSumEl=document.getElementById('hv-sum-pond');
+  if(hvSumEl){const cur=hvSumEl.value;hvSumEl.innerHTML='<option value="">ทุกบ่อ (รวม)</option>'+D.ponds.map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');if(cur)hvSumEl.value=cur;}
   // prep checklist pond selector
   const prepSel=document.getElementById('prep-pond');
   if(prepSel){const cur=prepSel.value;prepSel.innerHTML='<option value="">-- เลือกบ่อ --</option>'+D.ponds.map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');if(cur)prepSel.value=cur;}
@@ -1396,6 +1410,102 @@ function goTab(t,btn){
   }
   if(t==='crops')renderCrops();
   if(t==='prep'){initPrep();}
+}
+// ===== TIDE PREDICTION: เกาะมัตโพน (Ko Matpol), จ.ชุมพร =====
+// Harmonic constituent model — approximate, Gulf of Thailand / Chumphon area
+// ประมาณ ±30–60 นาทีสำหรับเวลาน้ำขึ้น/ลง และ ±0.15ม. สำหรับระดับ
+const _TJ=Date.UTC(2000,0,1);
+const _TZ0=1.20;
+const _TD=Math.PI/180;
+// [speed°/hr, amplitude_m, epoch_phase°]  epoch_phase=V0(J2000 midnight)−kappa(Ko Matpol)
+const _TC=[
+  [28.9841042,0.22,-57.7],   // M2 principal lunar semi-diurnal
+  [30.0000000,0.09,152.0],   // S2 principal solar semi-diurnal
+  [28.4397295,0.04,187.3],   // N2 larger lunar elliptic
+  [15.0410686,0.24,180.5],   // K1 lunar-solar diurnal
+  [13.9430356,0.18,305.8],   // O1 principal lunar diurnal
+  [14.9589314,0.07,159.5],   // P1 principal solar diurnal
+  [30.0821373,0.02,352.9],   // K2 lunisolar semi-diurnal
+];
+function _tAt(ms){
+  const t=(ms-_TJ)/3600000;
+  let h=_TZ0;
+  for(const[spd,amp,ph] of _TC) h+=amp*Math.cos((spd*t+ph)*_TD);
+  return Math.max(0,h);
+}
+function _tExtrema(s0,s1){
+  const step=10*60*1000,ex=[];
+  let p=_tAt(s0-step),c=_tAt(s0);
+  for(let ms=s0;ms<=s1;ms+=step){
+    const n=_tAt(ms+step);
+    if(c>p&&c>=n) ex.push({ms,h:parseFloat(c.toFixed(2)),type:'high'});
+    else if(c<p&&c<=n) ex.push({ms,h:parseFloat(c.toFixed(2)),type:'low'});
+    p=c;c=n;
+  }
+  return ex;
+}
+function renderTide(){
+  const el=document.getElementById('tide-card');if(!el)return;
+  const now=Date.now(),TZ=7*3600000,D7=7*24*3600*1000;
+  const nowH=_tAt(now),prevH=_tAt(now-600000);
+  const rising=nowH>=prevH;
+  // Chart data every 30 min
+  const STEP=30*60*1000,vals=[],labs=[];
+  for(let t=now;t<=now+D7;t+=STEP){vals.push(parseFloat(_tAt(t).toFixed(3)));labs.push(t);}
+  // Extrema
+  const ex=_tExtrema(now,now+D7);
+  const dm={};
+  for(const e of ex){
+    const d=new Date(e.ms+TZ);
+    const k=d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
+    if(!dm[k]) dm[k]={date:d,ev:[]};
+    dm[k].ev.push(e);
+  }
+  const THD=['อา','จ','อ','พ','พฤ','ศ','ส'];
+  const THM=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const fT=ms=>{const d=new Date(ms+TZ);return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0');};
+  const todayKey=new Date(now+TZ).toISOString().slice(0,10);
+  let tbl='';
+  for(const k of Object.keys(dm).sort()){
+    const{date:d,ev}=dm[k];
+    const hi=ev.filter(e=>e.type==='high').sort((a,b)=>b.h-a.h);
+    const lo=ev.filter(e=>e.type==='low').sort((a,b)=>a.h-b.h);
+    const hc=hi.slice(0,2).map(e=>`<div><b style="color:var(--p)">${fT(e.ms)}</b> <span style="font-size:11px;color:var(--tx2)">${e.h.toFixed(2)}ม.</span></div>`).join('')||'<span style="color:var(--tx3)">—</span>';
+    const lc=lo.slice(0,2).map(e=>`<div><b style="color:#e67e22">${fT(e.ms)}</b> <span style="font-size:11px;color:var(--tx2)">${e.h.toFixed(2)}ม.</span></div>`).join('')||'<span style="color:var(--tx3)">—</span>';
+    const hl=k===todayKey?'background:rgba(var(--pr,33,150,243),0.07)':'';
+    tbl+=`<tr style="border-top:1px solid var(--bd);${hl}">
+      <td style="padding:7px 10px;white-space:nowrap"><b style="${k===todayKey?'color:var(--p)':''}">${THD[d.getUTCDay()]}</b><br><span style="font-size:11px;color:var(--tx2)">${d.getUTCDate()} ${THM[d.getUTCMonth()]}</span></td>
+      <td style="padding:7px 10px;text-align:center">💙 ${hc}</td>
+      <td style="padding:7px 10px;text-align:center">🟠 ${lc}</td>
+    </tr>`;
+  }
+  el.innerHTML=`<div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap">
+    <div style="min-width:120px">
+      <div style="font-size:12px;color:var(--tx3)">ระดับน้ำตอนนี้</div>
+      <div style="font-size:30px;font-weight:800;color:var(--p);line-height:1.1">${nowH.toFixed(2)}<span style="font-size:14px;font-weight:500"> ม.</span></div>
+      <div style="font-size:13px;font-weight:700;color:${rising?'#2196f3':'#e67e22'};margin-top:2px">${rising?'↑ น้ำขึ้น':'↓ น้ำลง'}</div>
+    </div>
+    <div style="flex:1;min-width:200px;height:72px;position:relative"><canvas id="tideMinC"></canvas></div>
+  </div>
+  <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="background:var(--sf2)">
+      <th style="padding:7px 10px;text-align:left">วัน</th>
+      <th style="padding:7px 10px;text-align:center">💙 น้ำขึ้น</th>
+      <th style="padding:7px 10px;text-align:center">🟠 น้ำลง</th>
+    </tr></thead><tbody>${tbl}</tbody>
+  </table></div>
+  <div style="font-size:10px;color:var(--tx3);margin-top:8px">⚠️ ค่าโดยประมาณจากการคำนวณ Harmonic Tide — เกาะมัตโพน จ.ชุมพร</div>`;
+  // Mini chart
+  const cv=document.getElementById('tideMinC');if(!cv)return;
+  if(window._tC){window._tC.destroy();window._tC=null;}
+  const sk=Math.max(1,Math.floor(vals.length/200));
+  window._tC=new Chart(cv.getContext('2d'),{type:'line',
+    data:{labels:labs.filter((_,i)=>i%sk===0).map(ms=>fT(ms)),
+      datasets:[{data:vals.filter((_,i)=>i%sk===0),borderColor:'#2196f3',
+      backgroundColor:'rgba(33,150,243,0.13)',borderWidth:1.5,pointRadius:0,fill:true,tension:0.4}]},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      scales:{x:{display:false},y:{display:false,min:0,max:2.5}}}});
 }
 function renderOv(){
   const alerts=allAlerts();
@@ -1483,6 +1593,7 @@ function renderOv(){
     </div>`;
   }).join('');
   document.getElementById('ov-ts').textContent=new Date().toLocaleString('th-TH');
+  renderTide();
 }
 function jumpEntry(id){document.querySelectorAll('.tab')[1].click();setTimeout(()=>{document.getElementById('ep-pond').value=id;onEPond();},80)}
 function initEntry(){
@@ -2771,6 +2882,11 @@ function renderHarvest(){
   // summary
   const sumEl=document.getElementById('hv-summary');
   if(sumEl){
+    const sumPid=document.getElementById('hv-sum-pond')?.value||'';
+    if(sumPid){
+      renderPondCloseSummary(sumPid,sumEl);
+      return;
+    }
     const all=D.harvestLog;
     if(all.length===0){sumEl.innerHTML='<p style="color:var(--tx3)">ยังไม่มีข้อมูลการจับกุ้ง</p>';return;}
     const totalKg=all.reduce((s,r)=>s+(r.weight||0),0);
@@ -2798,6 +2914,57 @@ function renderHarvest(){
         </div>
       </div>`;
   }
+}
+// ===== PER-POND CLOSE SUMMARY (หมวดปิดบ่อ — สรุปรายบ่อ) =====
+function renderPondCloseSummary(pid,sumEl){
+  const p=pond(pid);
+  if(!p){sumEl.innerHTML='<p style="color:var(--tx3)">ไม่พบบ่อนี้</p>';return;}
+  // ใช้รอบล่าสุดที่ปิดแล้ว (cropHistory) ถ้ามี ไม่งั้นใช้รอบที่กำลังเลี้ยงอยู่
+  const lastCrop=(p.cropHistory&&p.cropHistory.length)?p.cropHistory[p.cropHistory.length-1]:null;
+  const hatchery=lastCrop?lastCrop.hatchery:(p.hatchery||'');
+  const stock=lastCrop?lastCrop.stock:(p.stock||null);
+  const startDate=lastCrop?lastCrop.startDate:(p.startDate||'');
+  const closeDate=lastCrop?lastCrop.closeDate:null;
+  const plWeight=lastCrop?lastCrop.plWeight:(p.plWeight||null);
+  const feedLog=lastCrop?lastCrop.feedLog:(p.feedLog||[]);
+  const harvestResult=lastCrop?lastCrop.harvestResult:null;
+  const notesCrop=lastCrop?lastCrop.notes:'';
+  // ดึงรายการ "บันทึกการจับกุ้ง" ของบ่อนี้ในช่วงรอบเลี้ยงนี้ (จากตารางบันทึกการจับกุ้งเดิม)
+  const rows=(D.harvestLog||[]).filter(r=>r.pondId===pid&&(!startDate||r.date>=startDate)&&(!closeDate||r.date<=closeDate));
+  const closeRows=rows.filter(r=>r.type==='ปิดบ่อ');
+  const partialRows=rows.filter(r=>r.type==='พาเชียล');
+  const totalWeight=rows.reduce((s,r)=>s+(r.weight||0),0)||(harvestResult?harvestResult.totalWeight:null);
+  const totalBaht=rows.reduce((s,r)=>s+(r.weight&&r.price?r.weight*r.price:0),0);
+  const lastCloseRow=closeRows.length?closeRows[closeRows.length-1]:(rows.length?rows[rows.length-1]:null);
+  const buyer=lastCloseRow?lastCloseRow.buyer:'';
+  const price=lastCloseRow?lastCloseRow.price:(totalWeight?Math.round((totalBaht/totalWeight)*100)/100:(harvestResult?harvestResult.price:null));
+  const partialCount=partialRows.length;
+  const ageDays=startDate?dDiff(startDate,closeDate||today()):null;
+  const totalFeed=(feedLog||[]).reduce((s,r)=>s+(r.totalFeed||0),0);
+  const fcr=harvestResult&&harvestResult.fcr?harvestResult.fcr:(totalFeed&&totalWeight?+(totalFeed/totalWeight).toFixed(2):null);
+  const closeSize=lastCloseRow?lastCloseRow.size:(harvestResult?harvestResult.size:null);
+  const finalWeightG=closeSize?1000/closeSize:null;
+  const adg=(finalWeightG!=null&&ageDays)?+(((finalWeightG-(plWeight||0))/ageDays).toFixed(3)):null;
+  const survivalRate=harvestResult&&harvestResult.survivalRate?harvestResult.survivalRate:null;
+  const yieldPerRai=(totalWeight&&p.size)?+(totalWeight/p.size).toFixed(1):null;
+  const notesAll=[notesCrop,...rows.map(r=>r.notes).filter(Boolean)].filter(Boolean).join(' / ');
+  const row=(label,val)=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd)"><span style="color:var(--tx3)">${label}</span><span style="font-weight:700">${val!=null&&val!==''?val:'-'}</span></div>`;
+  sumEl.innerHTML=`
+    <div style="margin-bottom:8px;font-weight:700;color:var(--p)">บ่อ ${p.name}${lastCrop?` — รอบที่ ${lastCrop.cropNum}/${lastCrop.cropYear}`:' (รอบปัจจุบัน ยังไม่ปิด)'}</div>
+    ${row('ลูกกุ้งจากที่ไหน',hatchery)}
+    ${row('จำนวนปล่อย (ตัว)',stock?stock.toLocaleString():null)}
+    ${row('ปิดบ่อกับแพ',buyer)}
+    ${row('ราคา (บาท/กก.)',price)}
+    ${row('น้ำหนักรวม (กก.)',totalWeight?totalWeight.toLocaleString():null)}
+    ${row('จำนวนพาเชียล (รอบ)',partialCount)}
+    ${row('อายุกุ้งตอนปิดบ่อ (วัน)',ageDays)}
+    ${row('อาหารรวม (กก.)',totalFeed?totalFeed.toLocaleString():null)}
+    ${row('FCR',fcr)}
+    ${row('ADG (กรัม/วัน)',adg)}
+    ${row('อัตรารอด (%)',survivalRate)}
+    ${row('Yield (กก./ไร่)',yieldPerRai)}
+    ${row('หมายเหตุ',notesAll)}
+  `;
 }
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded',()=>{
