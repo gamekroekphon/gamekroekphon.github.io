@@ -454,6 +454,7 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
             <span class="lbl-std">ปกติ: &lt;10^5</span>
           </div>
           <div class="fg"><label class="fl">EHP / Microsporidian (% พบเชื้อ)</label><input type="number" class="fi" id="lb-ehp" placeholder="0" min="0" max="100" step="0.1" oninput="updateLabStatus()"><span class="lbl-std">ปลอดภัย: 0% | เฝ้าระวัง: 0–5% | อันตราย: &gt;5%</span></div>
+          <div class="fg"><label class="fl">ตัวอ่อน EHP (% พบเชื้อ)</label><input type="number" class="fi" id="lb-ehp-larva" placeholder="0" min="0" max="100" step="0.1" oninput="updateLabStatus()"><span class="lbl-std">ปลอดภัย: 0% | เฝ้าระวัง: 0–25% | อันตราย: &gt;25%</span></div>
         </div>
         <div class="fg">
           <label class="fl">ลักษณะตับอ่อน (Hepatopancreas)</label>
@@ -1780,6 +1781,7 @@ function editLab(pid,d){
     document.getElementById('lb-tcbs-y').value=r.tcbsYellow!=null?r.tcbsYellow:'';
     document.getElementById('lb-tvc').value=r.tvc!=null?r.tvc:'';
     const ehpEl=document.getElementById('lb-ehp');if(ehpEl)ehpEl.value=(typeof r.ehp==='number')?r.ehp:'';
+    const ehpLarvaEl=document.getElementById('lb-ehp-larva');if(ehpLarvaEl)ehpLarvaEl.value=(typeof r.ehpLarva==='number')?r.ehpLarva:'';
     const hpEl=document.getElementById('lb-hepato');if(hpEl)hpEl.value=r.hepato||'normal';
     document.getElementById('lb-notes').value=r.notes||'';
     updateLabStatus();
@@ -2120,6 +2122,8 @@ function updateLabStatus(){
   if(tvc!==null){const s=tvc>1e7?'danger':tvc>1e5?'warn':'ok';msgs.push({s,m:`TVC: ${tvc.toExponential(1)} CFU/mL — ${s==='ok'?'ปกติ':s==='warn'?'เริ่มสูง':'สูงมาก'}`})}
   const ehpRaw=document.getElementById('lb-ehp')?.value;const ehp=ehpRaw!==''&&ehpRaw!=null?parseFloat(ehpRaw):null;
   if(ehp!==null&&!isNaN(ehp)){const s=ehp>5?'danger':ehp>0?'warn':'ok';msgs.push({s,m:`EHP: พบ ${ehp}% — ${s==='ok'?'ไม่พบเชื้อ':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย เสี่ยง stunted growth'}`})}
+  const ehpLarvaRaw=document.getElementById('lb-ehp-larva')?.value;const ehpLarva=ehpLarvaRaw!==''&&ehpLarvaRaw!=null?parseFloat(ehpLarvaRaw):null;
+  if(ehpLarva!==null&&!isNaN(ehpLarva)){const s=ehpLarva>25?'danger':ehpLarva>0?'warn':'ok';msgs.push({s,m:`ตัวอ่อน EHP: พบ ${ehpLarva}% — ${s==='ok'?'ไม่พบเชื้อ':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย เสี่ยง stunted growth'}`})}
   el.innerHTML=msgs.map(m=>`<div class="ai ${m.s}" style="margin-bottom:5px"><span>${m.s==='danger'?'🔴':m.s==='warn'?'🟡':'✅'}</span><span>${m.m}</span></div>`).join('');
 }
 function saveLab(){
@@ -2131,7 +2135,9 @@ function saveLab(){
   const rec={date:d,age:parseInt(document.getElementById('lb-age').value)||0,
     labName:document.getElementById('lb-lab').value,tcbsGreen:tg,tcbsYellow:ty,
     tvc:parseFloat(document.getElementById('lb-tvc').value)||null,
-    ehp:document.getElementById('lb-ehp').value!==''?parseFloat(document.getElementById('lb-ehp').value):null,hepato:document.getElementById('lb-hepato').value,
+    ehp:document.getElementById('lb-ehp').value!==''?parseFloat(document.getElementById('lb-ehp').value):null,
+    ehpLarva:document.getElementById('lb-ehp-larva').value!==''?parseFloat(document.getElementById('lb-ehp-larva').value):null,
+    hepato:document.getElementById('lb-hepato').value,
     notes:document.getElementById('lb-notes').value};
   const idx=p.labResults.findIndex(r=>r.date===d);
   const sg=tg!==null?(tg>1000?'danger':tg>100?'warn':'ok'):'ok';
@@ -2142,7 +2148,7 @@ function saveLab(){
 function clearLab(){
   document.getElementById('lb-date').value=today();
   ['lb-lab','lb-tcbs-g','lb-tcbs-y','lb-tvc','lb-notes'].forEach(id=>{document.getElementById(id).value=''});
-  document.getElementById('lb-ehp').value='';document.getElementById('lb-hepato').value='normal';
+  document.getElementById('lb-ehp').value='';document.getElementById('lb-ehp-larva').value='';document.getElementById('lb-hepato').value='normal';
   document.getElementById('lb-status-display').innerHTML='';document.getElementById('lb-msg').innerHTML='';calcAge('lb');
 }
 function renderLabTable(){
@@ -2151,12 +2157,14 @@ function renderLabTable(){
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
   const p=pond(pid);const rows=(p?.labResults||[]).slice().reverse();
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีผลแล็บ</p>';return}
-  wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>แล็บ</th><th>🟢 เชื้อเขียว</th><th>🟡 เชื้อเหลือง</th><th>TVC</th><th>EHP</th><th>ตับอ่อน</th><th>หมายเหตุ</th></tr></thead><tbody>${
+  wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>แล็บ</th><th>🟢 เชื้อเขียว</th><th>🟡 เชื้อเหลือง</th><th>TVC</th><th>EHP</th><th>ตัวอ่อน EHP</th><th>ตับอ่อน</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rows.map((r,i)=>{
       const sg=r.tcbsGreen!=null?(r.tcbsGreen>1000?'danger':r.tcbsGreen>100?'warn':'ok'):'ok';
       const ehpDisp=(typeof r.ehp==='number')?`${r.ehp}%`:(r.ehp?(EHP_LBL[r.ehp]||r.ehp):'-');
       const ehpCls=(typeof r.ehp==='number')?(r.ehp>5?'b-danger':r.ehp>0?'b-warn':'b-ok'):(r.ehp==='nd'?'b-ok':r.ehp==='trace'?'b-na':r.ehp==='low'?'b-warn':r.ehp==='high'?'b-danger':'b-na');
-      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editLab('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteLab('${pid}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.labName||'-'}</td><td style="font-weight:700;color:${sc(sg)}">${r.tcbsGreen!=null?r.tcbsGreen.toLocaleString():'-'}</td><td>${r.tcbsYellow!=null?r.tcbsYellow.toLocaleString():'-'}</td><td>${r.tvc?r.tvc.toExponential(1):'-'}</td><td><span class="badge ${ehpCls}">${ehpDisp}</span></td><td><span class="badge ${r.hepato==='normal'?'b-ok':r.hepato==='pale'?'b-warn':'b-danger'}">${HEPATO_LBL[r.hepato]||r.hepato}</span></td><td>${r.notes||'-'}</td></tr>`;
+      const ehpLarvaDisp=(typeof r.ehpLarva==='number')?`${r.ehpLarva}%`:'-';
+      const ehpLarvaCls=(typeof r.ehpLarva==='number')?(r.ehpLarva>25?'b-danger':r.ehpLarva>0?'b-warn':'b-ok'):'b-na';
+      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editLab('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteLab('${pid}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.labName||'-'}</td><td style="font-weight:700;color:${sc(sg)}">${r.tcbsGreen!=null?r.tcbsGreen.toLocaleString():'-'}</td><td>${r.tcbsYellow!=null?r.tcbsYellow.toLocaleString():'-'}</td><td>${r.tvc?r.tvc.toExponential(1):'-'}</td><td><span class="badge ${ehpCls}">${ehpDisp}</span></td><td><span class="badge ${ehpLarvaCls}">${ehpLarvaDisp}</span></td><td><span class="badge ${r.hepato==='normal'?'b-ok':r.hepato==='pale'?'b-warn':'b-danger'}">${HEPATO_LBL[r.hepato]||r.hepato}</span></td><td>${r.notes||'-'}</td></tr>`;
     }).join('')}</tbody></table>`;
 }
 function deleteLab(pid,d){
