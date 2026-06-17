@@ -170,7 +170,6 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
   <button class="tab"     onclick="goTab('watlog',this)">💦 จัดการน้ำ</button>
   <button class="tab"     onclick="goTab('chem',this)">🧪 สารเคมี</button>
   <button class="tab"     onclick="goTab('lab',this)">🔬 ผลแล็บ</button>
-  <button class="tab"     onclick="goTab('trends',this)">📈 กราฟ</button>
   <button class="tab"     onclick="goTab('compare',this)">🔄 เปรียบเทียบ</button>
   <button class="tab"     onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
   <button class="tab"     onclick="goTab('crops',this)">🌾 รอบเลี้ยง</button>
@@ -483,21 +482,6 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
   <div class="card">
     <div class="card-t">📋 ประวัติผลแล็บ</div>
     <div class="tbl-wrap" id="lb-tbl-wrap"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อเพื่อดูข้อมูล</p></div>
-  </div>
-</div>
-<!-- TRENDS -->
-<div id="sec-trends" class="sec">
-  <div class="sec-hdr"><div class="sec-title">📈 กราฟ Trend คุณภาพน้ำ</div></div>
-  <div class="card" style="margin-bottom:16px">
-    <div class="row"><div class="fg"><label class="fl">บ่อ (ว่าง=ทุกบ่อ)</label><select class="fi" id="tr-pond" onchange="renderTrend()" style="width:200px"><option value="">— ทุกบ่อ —</option></select></div></div>
-    <div style="margin-top:12px"><div class="fl" style="margin-bottom:6px">พารามิเตอร์</div><div class="pbg" id="pb-group"></div></div>
-  </div>
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
-      <div class="card-t" id="tr-title" style="margin-bottom:0">กราฟ</div>
-      <div class="cl"><span style="display:flex;align-items:center;gap:5px"><span class="cl-dot" style="background:#2f855a"></span>มาตรฐาน</span></div>
-    </div>
-    <div class="chart-wrap"><canvas id="trChart"></canvas></div>
   </div>
 </div>
 <!-- COMPARE -->
@@ -1302,8 +1286,8 @@ const A23rec=[
 }
 let D=loadData();
 seedPonds();
-let trCh=null,cmpCh=null,fdCh=null,spCh=null,secCh=null;
-let actPrm='doM';let cmpP=new Set(['B1','B2']);let cmpCat='wq';let selWC='';
+let cmpCh=null,fdCh=null,spCh=null,secCh=null;
+let cmpP=new Set(['B1','B2']);let cmpCat='wq';let selWC='';
 function loadData(){
   try{const s=localStorage.getItem(SK);if(s){
     const d=JSON.parse(s);
@@ -1389,7 +1373,7 @@ function projHarvest(p,target=22){
 }
 function populateAll(){
   const simple={
-    'ep-pond':'','fd-pond':'','sp-pond':'','wl-pond':'','lb-pond':'','tr-pond':'','ex-pond':'all',
+    'ep-pond':'','fd-pond':'','sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all',
   };
   Object.entries(simple).forEach(([id,def])=>{
     const el=document.getElementById(id);if(!el)return;const cur=el.value;
@@ -1423,7 +1407,7 @@ function goTab(t,btn){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));document.getElementById('sec-'+t).classList.add('on');
   if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='feed')initFeed();
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
-  if(t==='chem')initChem();if(t==='lab')initLab();if(t==='trends')initTrends();
+  if(t==='chem')initChem();if(t==='lab')initLab();
   if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();
   if(t==='manage')renderManage();
   if(t==='harvest'){
@@ -2139,28 +2123,6 @@ function renderLabTable(){
       const sg=r.tcbsGreen!=null?(r.tcbsGreen>1000?'danger':r.tcbsGreen>100?'warn':'ok'):'ok';
       return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editLab('${pid}','${r.date}')">✏️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.labName||'-'}</td><td style="font-weight:700;color:${sc(sg)}">${r.tcbsGreen!=null?r.tcbsGreen.toLocaleString():'-'}</td><td>${r.tcbsYellow!=null?r.tcbsYellow.toLocaleString():'-'}</td><td>${r.tvc?r.tvc.toExponential(1):'-'}</td><td><span class="badge ${r.ehp==='nd'?'b-ok':r.ehp==='trace'?'b-na':r.ehp==='low'?'b-warn':'b-danger'}">${EHP_LBL[r.ehp]||r.ehp}</span></td><td><span class="badge ${r.hepato==='normal'?'b-ok':r.hepato==='pale'?'b-warn':'b-danger'}">${HEPATO_LBL[r.hepato]||r.hepato}</span></td><td>${r.notes||'-'}</td></tr>`;
     }).join('')}</tbody></table>`;
-}
-// ===== TRENDS =====
-function initTrends(){
-  populateAll();
-  document.getElementById('pb-group').innerHTML=PARAMS.map(p=>`<button class="pb${p.key===actPrm?' on':''}" onclick="setPrm('${p.key}',this)">${p.lbl}</button>`).join('');
-  renderTrend();
-}
-function setPrm(key,btn){actPrm=key;document.querySelectorAll('.pb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderTrend()}
-function renderTrend(){
-  const pid=document.getElementById('tr-pond').value;const pm=PARAMS.find(p=>p.key===actPrm);if(!pm)return;
-  document.getElementById('tr-title').textContent=`${pm.lbl}${pm.unit?' ('+pm.unit+')':''} ตามอายุกุ้ง`;
-  if(trCh){trCh.destroy();trCh=null;}
-  const ponds=pid?[pond(pid)].filter(Boolean):D.ponds;
-  const datasets=ponds.map((p,i)=>{const col=COLORS[i%COLORS.length];const pts=p.records.filter(r=>r[pm.key]!==null&&r[pm.key]!==undefined).map(r=>({x:r.age,y:r[pm.key]}));return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'22',tension:.3,pointRadius:4,fill:!!pid}});
-  const allAges=[...new Set(D.ponds.flatMap(p=>p.records.map(r=>r.age)))].sort((a,b)=>a-b);
-  if(allAges.length>1){
-    const ax=[allAges[0],allAges[allAges.length-1]];
-    [{v:pm.min,c:'#2f855a'},{v:pm.max,c:'#2f855a'},{v:pm.dMin,c:'#e53e3e',d:[4,4]},{v:pm.dMax,c:'#e53e3e',d:[4,4]}].forEach(l=>{
-      datasets.push({label:'ref',data:ax.map(x=>({x,y:l.v})),borderColor:l.c,borderWidth:1.5,borderDash:l.d||[6,4],pointRadius:0,fill:false,spanGaps:true});
-    });
-  }
-  trCh=new Chart(document.getElementById('trChart'),{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,interaction:{mode:'index',intersect:false},scales:{x:{type:'linear',title:{display:true,text:'อายุ (วัน)'}},y:{title:{display:true,text:pm.lbl+(pm.unit?' ('+pm.unit+')':'')}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:12,filter:i=>i.text!=='ref'}}}}});
 }
 // ===== COMPARE =====
 function setCmpCat(cat,btn){
