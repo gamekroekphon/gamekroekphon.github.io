@@ -702,11 +702,10 @@ body{font-family:'Segoe UI','Sarabun',system-ui,sans-serif;background:var(--bg);
   <div class="card" style="max-width:520px">
     <div class="card-t">📋 สร้างรายงานสรุปปิดบ่อ</div>
     <p style="font-size:13px;color:var(--tx2);margin-bottom:16px;line-height:1.8">
-      รายงานสรุปผลการเลี้ยงตลอดรอบบ่อ ครอบคลุม:<br>
-      ✔ ผลการเลี้ยงรายบ่อ (ABW, ไซส์, Biomass, FCR)<br>
-      ✔ ค่าน้ำล่าสุด &amp; สารเคมีที่ใช้<br>
-      ✔ ผลแล็บล่าสุด<br>
-      ไม่เกิน 2 หน้า A4
+      รายงานสรุปผลการเลี้ยงเมื่อปิดบ่อ ครอบคลุม:<br>
+      ✔ ลูกกุ้ง/จำนวนปล่อย/แพที่จับ/ราคา<br>
+      ✔ ไซส์, อายุกุ้ง, น้ำหนักรวม, อัตรารอด<br>
+      ✔ อาหารรวม, FCR, ADG, หมายเหตุ
     </p>
     <div class="fg" style="margin-bottom:16px">
       <label class="fl">เลือกบ่อ</label>
@@ -1310,6 +1309,7 @@ function save() {
       .catch(e => setSyncStatus('sync-err', '⚠️ บันทึกไม่ได้: ' + e.message));
   }
 }
+function fbSave(){} // save() ซิงค์ Firebase อยู่แล้ว — ฟังก์ชันนี้กันพังจาก legacy calls
 function cln(x){return JSON.parse(JSON.stringify(x))}
 function pond(id){return D.ponds.find(p=>p.id===id)}
 function today(){return new Date().toISOString().split('T')[0]}
@@ -2340,6 +2340,38 @@ function initExport(){
   const exInfo=document.getElementById('ex-info');
   if(exInfo)exInfo.innerHTML=`<div class="badge b-info">${D.ponds.length} บ่อ · ${total} ค่าน้ำ · ${totFeed} อาหาร</div>`;
 }
+// ===== CLOSE-SUMMARY DATA (ใช้ร่วมกันโดย renderPondCloseSummary และ genPDF) =====
+function getCloseSummary(p){
+  if(!p)return null;
+  const lastCrop=(p.cropHistory&&p.cropHistory.length)?p.cropHistory[p.cropHistory.length-1]:null;
+  const hatchery=lastCrop?lastCrop.hatchery:(p.hatchery||'');
+  const stock=lastCrop?lastCrop.stock:(p.stock||null);
+  const startDate=lastCrop?lastCrop.startDate:(p.startDate||'');
+  const closeDate=lastCrop?lastCrop.closeDate:null;
+  const plWeight=lastCrop?lastCrop.plWeight:(p.plWeight||null);
+  const feedLog=lastCrop?lastCrop.feedLog:(p.feedLog||[]);
+  const harvestResult=lastCrop?lastCrop.harvestResult:null;
+  const notesCrop=lastCrop?lastCrop.notes:'';
+  const rows=(D.harvestLog||[]).filter(r=>r.pondId===p.id&&(!startDate||r.date>=startDate)&&(!closeDate||r.date<=closeDate));
+  const closeRows=rows.filter(r=>r.type==='ปิดบ่อ');
+  const partialRows=rows.filter(r=>r.type==='พาเชียล');
+  const totalWeight=rows.reduce((s,r)=>s+(r.weight||0),0)||(harvestResult?harvestResult.totalWeight:null);
+  const totalBaht=rows.reduce((s,r)=>s+(r.weight&&r.price?r.weight*r.price:0),0);
+  const lastCloseRow=closeRows.length?closeRows[closeRows.length-1]:(rows.length?rows[rows.length-1]:null);
+  const buyer=lastCloseRow?lastCloseRow.buyer:'';
+  const price=lastCloseRow?lastCloseRow.price:(totalWeight?Math.round((totalBaht/totalWeight)*100)/100:(harvestResult?harvestResult.price:null));
+  const partialCount=partialRows.length;
+  const ageDays=startDate?dDiff(startDate,closeDate||today()):null;
+  const totalFeed=(feedLog||[]).reduce((s,r)=>s+(r.totalFeed||0),0);
+  const fcr=harvestResult&&harvestResult.fcr?harvestResult.fcr:(totalFeed&&totalWeight?+(totalFeed/totalWeight).toFixed(2):null);
+  const closeSize=lastCloseRow?lastCloseRow.size:(harvestResult?harvestResult.size:null);
+  const finalWeightG=closeSize?1000/closeSize:null;
+  const adg=(finalWeightG!=null&&ageDays)?+(((finalWeightG-(plWeight||0))/ageDays).toFixed(3)):null;
+  const survivalRate=harvestResult&&harvestResult.survivalRate?harvestResult.survivalRate:null;
+  const yieldPerRai=(totalWeight&&p.size)?+(totalWeight/p.size).toFixed(1):null;
+  const notesAll=[notesCrop,...rows.map(r=>r.notes).filter(Boolean)].filter(Boolean).join(' / ');
+  return{pondName:p.name,cropLabel:lastCrop?`รอบที่ ${lastCrop.cropNum}/${lastCrop.cropYear}`:'(รอบปัจจุบัน ยังไม่ปิด)',hatchery,stock,buyer,price,totalWeight,partialCount,ageDays,totalFeed,fcr,closeSize,adg,survivalRate,yieldPerRai,notesAll,closeDate,startDate};
+}
 function genPDF(){
   const pid=document.getElementById('ex-pond').value;
   const{jsPDF}=window.jspdf;
@@ -2347,107 +2379,66 @@ function genPDF(){
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   const W=210,ML=14,MR=196,TW=MR-ML;
   const green=[15,110,86],white=[255,255,255],dark=[30,30,30],gray=[120,120,120],light=[240,248,244];
-  function hdr(pg){
-    if(pg>1)doc.addPage();
+  let pg=1;
+  function hdr(){
     doc.setFillColor(...green);doc.rect(0,0,W,18,'F');
     doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(...white);
     doc.text('ตะวันฟาร์ม — สรุปปิดบ่อ',W/2,8,{align:'center'});
     doc.setFontSize(8);doc.setFont('helvetica','normal');
-    doc.text(`สร้างเมื่อ: ${new Date().toLocaleDateString('th-TH')}  |  หน้า ${pg}/2`,W/2,14,{align:'center'});
+    doc.text(`สร้างเมื่อ: ${new Date().toLocaleDateString('th-TH')}  |  หน้า ${pg}`,W/2,14,{align:'center'});
     return 24;
   }
-  let y=hdr(1);
-  ponds.forEach((p,pi)=>{
-    if(pi>0&&y>240){y=hdr(2)}
-    const lastRec=p.records[p.records.length-1];
-    const latSamp=(p.samples||[]).slice(-1)[0];
-    const cumF=getCumFeed(p);const fcr=getFCR(p);
-    const age=lastRec?lastRec.age:dDiff(p.startDate,today());
+  function newPage(){doc.addPage();pg++;return hdr();}
+  const fRow=(label,val,x,w,yy)=>{
+    doc.setFillColor(248,252,250);doc.rect(x,yy,w,6.2,'F');
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...gray);
+    doc.text(label,x+2,yy+4.2);
+    doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(...dark);
+    doc.text(String(val??'-'),x+w-2,yy+4.2,{align:'right'});
+  };
+  let y=hdr();
+  ponds.forEach(p=>{
+    const s=getCloseSummary(p);
+    const fields=[
+      ['ลูกกุ้งจากที่ไหน',s.hatchery||'-'],
+      ['จำนวนปล่อย (ตัว)',s.stock?s.stock.toLocaleString():'-'],
+      ['ปิดบ่อกับแพ',s.buyer||'-'],
+      ['ไซส์ปิดบ่อ (ตัว/กก.)',s.closeSize??'-'],
+      ['ราคา (บาท/กก.)',s.price??'-'],
+      ['น้ำหนักรวม (กก.)',s.totalWeight?s.totalWeight.toLocaleString():'-'],
+      ['จำนวนพาเชียล (รอบ)',s.partialCount],
+      ['อายุกุ้งตอนปิดบ่อ (วัน)',s.ageDays??'-'],
+      ['อาหารรวม (กก.)',s.totalFeed?s.totalFeed.toLocaleString():'-'],
+      ['FCR',s.fcr??'-'],
+      ['ADG (กรัม/วัน)',s.adg??'-'],
+      ['อัตรารอด (%)',s.survivalRate??'-'],
+      ['Yield (กก./ไร่)',s.yieldPerRai??'-'],
+    ];
+    const noteLines=doc.splitTextToSize(s.notesAll||'-',TW-20);
+    const rowsCount=Math.ceil(fields.length/2);
+    const estH=11+rowsCount*6.2+6+noteLines.length*4.6+10;
+    if(y+estH>280)y=newPage();
     doc.setFillColor(...light);doc.roundedRect(ML,y,TW,8,1,1,'F');
     doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(...green);
     doc.text(`บ่อ ${p.name}`,ML+3,y+5.5);
     doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...gray);
-    doc.text(`ปล่อย ${p.stock.toLocaleString()} ตัว | ${p.size} ไร่ | วันที่ปล่อย: ${fD(p.startDate)} | อายุ: ${age} วัน`,ML+28,y+5.5);
+    doc.text(s.cropLabel,MR-3,y+5.5,{align:'right'});
     y+=11;
-    const kpis=[['ABW',latSamp?latSamp.abw+'g':'–'],['ไซส์',latSamp&&latSamp.plCount?latSamp.plCount+' ตัว/กก.':'–'],['Biomass',latSamp&&latSamp.biomass?latSamp.biomass.toFixed(0)+' kg':'–'],['Survival',latSamp&&latSamp.survivalRate?latSamp.survivalRate+'%':'–'],['อาหารสะสม',cumF.toFixed(0)+' กก.'],['FCR',fcr||'–']];
-    const kw=TW/kpis.length;
-    kpis.forEach(([lbl,val],ki)=>{
-      const kx=ML+ki*kw;
-      doc.setFillColor(248,252,250);doc.rect(kx,y,kw-1,14,'F');
-      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(...green);
-      doc.text(String(val),kx+kw/2-0.5,y+7,{align:'center'});
-      doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...gray);
-      doc.text(lbl,kx+kw/2-0.5,y+12,{align:'center'});
-    });
-    y+=18;
-    const recs=p.records.slice(-8);
-    if(recs.length){
-      const cols=['วันที่','อายุ','pH ม.','pH บ.','T ม.','DO ม.','DO บ.','ALK','Sal','NH4+','NO2'];
-      const cw=[22,10,12,12,12,12,12,13,10,12,12];
-      let x=ML;
-      doc.setFillColor(...green);doc.rect(ML,y,TW,6,'F');
-      doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...white);
-      cols.forEach((c,ci)=>{doc.text(c,x+cw[ci]/2,y+4,{align:'center'});x+=cw[ci]});y+=6;
-      recs.forEach((r,ri)=>{
-        if(ri%2===0){doc.setFillColor(248,252,250);doc.rect(ML,y,TW,5.5,'F')}
-        doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...dark);x=ML;
-        [fD(r.date),r.age,r.phM??'-',r.phA??'-',r.tM??'-',r.doM??'-',r.doA??'-',r.alk??'-',r.sal??'-',r.nh4??'-',r.no2??'-'].forEach((v,ci)=>{doc.text(String(v),x+cw[ci]/2,y+3.8,{align:'center'});x+=cw[ci]});y+=5.5;
-      });
+    const colW=TW/2-1;
+    for(let i=0;i<fields.length;i+=2){
+      fRow(fields[i][0],fields[i][1],ML,colW,y);
+      if(fields[i+1])fRow(fields[i+1][0],fields[i+1][1],ML+colW+2,colW,y);
+      y+=6.2;
     }
-    const feeds=(p.feedLog||[]).slice(-5);
-    if(feeds.length){
-      y+=4;
-      const fc=['วันที่','อายุ','ยี่ห้อ','เบอร์','รวม (กก.)','Feed Rate'];
-      const fw=[22,12,35,20,30,27];
-      let fx=ML;
-      doc.setFillColor(200,230,220);doc.rect(ML,y,TW,5.5,'F');
-      doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...dark);
-      fc.forEach((c,ci)=>{doc.text(c,fx+fw[ci]/2,y+3.8,{align:'center'});fx+=fw[ci]});y+=5.5;
-      feeds.forEach((r,ri)=>{
-        if(ri%2===0){doc.setFillColor(248,252,250);doc.rect(ML,y,TW,5.5,'F')}
-        doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...dark);fx=ML;
-        [fD(r.date),r.age||'-',r.feedBrand||'-',r.feedGrade||'-',r.totalFeed?.toFixed(1)||'-',r.feedRate?r.feedRate+'%':'-'].forEach((v,ci)=>{doc.text(String(v),fx+fw[ci]/2,y+3.8,{align:'center'});fx+=fw[ci]});y+=5.5;
-      });
-    }
-    y+=10;
+    y+=2;
+    const noteH=noteLines.length*4.6+4;
+    doc.setFillColor(255,251,235);doc.rect(ML,y,TW,noteH,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...gray);
+    doc.text('หมายเหตุ:',ML+2,y+4);
+    doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...dark);
+    doc.text(noteLines,ML+18,y+4);
+    y+=noteH+8;
   });
-  /* PAGE 2 */
-  y=hdr(2);
-  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...green);
-  doc.text('บันทึกการสุ่มตัวอย่าง (ABW & ไซส์)',ML,y);y+=5;
-  const sCols=['บ่อ','วันที่','อายุ','ABW (g)','ไซส์ (ตัว/กก.)','Biomass (kg)','Survival%','PDG'];
-  const sW=[16,22,12,18,26,22,18,18];
-  let sx=ML;
-  doc.setFillColor(...green);doc.rect(ML,y,TW,5.5,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...white);
-  sCols.forEach((c,ci)=>{doc.text(c,sx+sW[ci]/2,y+3.8,{align:'center'});sx+=sW[ci]});y+=5.5;
-  ponds.forEach(p=>{
-    (p.samples||[]).slice(-6).forEach((r,ri)=>{
-      if(y>270){doc.addPage();y=15}
-      if(ri%2===0){doc.setFillColor(248,252,250);doc.rect(ML,y,TW,5.5,'F')}
-      doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...dark);sx=ML;
-      [p.name,fD(r.date),r.age,r.abw?.toFixed(2)||'-',r.plCount||'-',r.biomass?.toFixed(0)||'-',r.survivalRate?r.survivalRate+'%':'-',r.pdg||'-'].forEach((v,ci)=>{doc.text(String(v),sx+sW[ci]/2,y+3.8,{align:'center'});sx+=sW[ci]});y+=5.5;
-    });
-  });
-  y+=8;
-  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...green);
-  doc.text('สรุปการใช้สารเคมี/สารปรับปรุง',ML,y);y+=5;
-  const allChem=D.ponds.flatMap(p=>(p.chemLog||[]).map(r=>({...r,pondName:p.name})));
-  if(allChem.length){
-    const byCat={};
-    allChem.forEach(r=>{if(!byCat[r.category])byCat[r.category]={count:0,products:[]};byCat[r.category].count++;if(r.product&&!byCat[r.category].products.includes(r.product))byCat[r.category].products.push(r.product)});
-    const cCols=['หมวดหมู่','ครั้ง','ผลิตภัณฑ์ที่ใช้'];
-    const cW=[40,18,TW-58];
-    let cx=ML;
-    doc.setFillColor(200,230,220);doc.rect(ML,y,TW,5.5,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...dark);
-    cCols.forEach((c,ci)=>{doc.text(c,cx+(ci===2?3:cW[ci]/2),y+3.8,ci===2?{}:{align:'center'});cx+=cW[ci]});y+=5.5;
-    Object.entries(byCat).forEach(([cat,v],ri)=>{
-      if(ri%2===0){doc.setFillColor(248,252,250);doc.rect(ML,y,TW,5.5,'F')}
-      doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...dark);cx=ML;
-      [getCatLabel(cat),String(v.count),v.products.slice(0,4).join(', ')].forEach((vv,ci)=>{doc.text(vv,cx+(ci===2?3:cW[ci]/2),y+3.8,ci===2?{}:{align:'center'});cx+=cW[ci]});y+=5.5;
-    });
-  }
   doc.setFont('helvetica','italic');doc.setFontSize(7);doc.setTextColor(...gray);
   doc.text(`ตะวันฟาร์ม · พิมพ์: ${new Date().toLocaleString('th-TH')}`,W/2,287,{align:'center'});
   doc.save(`TawanFarm_ปิดบ่อ_${today()}.pdf`);
@@ -2970,51 +2961,24 @@ function renderHarvest(){
 function renderPondCloseSummary(pid,sumEl){
   const p=pond(pid);
   if(!p){sumEl.innerHTML='<p style="color:var(--tx3)">ไม่พบบ่อนี้</p>';return;}
-  // ใช้รอบล่าสุดที่ปิดแล้ว (cropHistory) ถ้ามี ไม่งั้นใช้รอบที่กำลังเลี้ยงอยู่
-  const lastCrop=(p.cropHistory&&p.cropHistory.length)?p.cropHistory[p.cropHistory.length-1]:null;
-  const hatchery=lastCrop?lastCrop.hatchery:(p.hatchery||'');
-  const stock=lastCrop?lastCrop.stock:(p.stock||null);
-  const startDate=lastCrop?lastCrop.startDate:(p.startDate||'');
-  const closeDate=lastCrop?lastCrop.closeDate:null;
-  const plWeight=lastCrop?lastCrop.plWeight:(p.plWeight||null);
-  const feedLog=lastCrop?lastCrop.feedLog:(p.feedLog||[]);
-  const harvestResult=lastCrop?lastCrop.harvestResult:null;
-  const notesCrop=lastCrop?lastCrop.notes:'';
-  // ดึงรายการ "บันทึกการจับกุ้ง" ของบ่อนี้ในช่วงรอบเลี้ยงนี้ (จากตารางบันทึกการจับกุ้งเดิม)
-  const rows=(D.harvestLog||[]).filter(r=>r.pondId===pid&&(!startDate||r.date>=startDate)&&(!closeDate||r.date<=closeDate));
-  const closeRows=rows.filter(r=>r.type==='ปิดบ่อ');
-  const partialRows=rows.filter(r=>r.type==='พาเชียล');
-  const totalWeight=rows.reduce((s,r)=>s+(r.weight||0),0)||(harvestResult?harvestResult.totalWeight:null);
-  const totalBaht=rows.reduce((s,r)=>s+(r.weight&&r.price?r.weight*r.price:0),0);
-  const lastCloseRow=closeRows.length?closeRows[closeRows.length-1]:(rows.length?rows[rows.length-1]:null);
-  const buyer=lastCloseRow?lastCloseRow.buyer:'';
-  const price=lastCloseRow?lastCloseRow.price:(totalWeight?Math.round((totalBaht/totalWeight)*100)/100:(harvestResult?harvestResult.price:null));
-  const partialCount=partialRows.length;
-  const ageDays=startDate?dDiff(startDate,closeDate||today()):null;
-  const totalFeed=(feedLog||[]).reduce((s,r)=>s+(r.totalFeed||0),0);
-  const fcr=harvestResult&&harvestResult.fcr?harvestResult.fcr:(totalFeed&&totalWeight?+(totalFeed/totalWeight).toFixed(2):null);
-  const closeSize=lastCloseRow?lastCloseRow.size:(harvestResult?harvestResult.size:null);
-  const finalWeightG=closeSize?1000/closeSize:null;
-  const adg=(finalWeightG!=null&&ageDays)?+(((finalWeightG-(plWeight||0))/ageDays).toFixed(3)):null;
-  const survivalRate=harvestResult&&harvestResult.survivalRate?harvestResult.survivalRate:null;
-  const yieldPerRai=(totalWeight&&p.size)?+(totalWeight/p.size).toFixed(1):null;
-  const notesAll=[notesCrop,...rows.map(r=>r.notes).filter(Boolean)].filter(Boolean).join(' / ');
+  const s=getCloseSummary(p);
   const row=(label,val)=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd)"><span style="color:var(--tx3)">${label}</span><span style="font-weight:700">${val!=null&&val!==''?val:'-'}</span></div>`;
   sumEl.innerHTML=`
-    <div style="margin-bottom:8px;font-weight:700;color:var(--p)">บ่อ ${p.name}${lastCrop?` — รอบที่ ${lastCrop.cropNum}/${lastCrop.cropYear}`:' (รอบปัจจุบัน ยังไม่ปิด)'}</div>
-    ${row('ลูกกุ้งจากที่ไหน',hatchery)}
-    ${row('จำนวนปล่อย (ตัว)',stock?stock.toLocaleString():null)}
-    ${row('ปิดบ่อกับแพ',buyer)}
-    ${row('ราคา (บาท/กก.)',price)}
-    ${row('น้ำหนักรวม (กก.)',totalWeight?totalWeight.toLocaleString():null)}
-    ${row('จำนวนพาเชียล (รอบ)',partialCount)}
-    ${row('อายุกุ้งตอนปิดบ่อ (วัน)',ageDays)}
-    ${row('อาหารรวม (กก.)',totalFeed?totalFeed.toLocaleString():null)}
-    ${row('FCR',fcr)}
-    ${row('ADG (กรัม/วัน)',adg)}
-    ${row('อัตรารอด (%)',survivalRate)}
-    ${row('Yield (กก./ไร่)',yieldPerRai)}
-    ${row('หมายเหตุ',notesAll)}
+    <div style="margin-bottom:8px;font-weight:700;color:var(--p)">บ่อ ${p.name} — ${s.cropLabel}</div>
+    ${row('ลูกกุ้งจากที่ไหน',s.hatchery)}
+    ${row('จำนวนปล่อย (ตัว)',s.stock?s.stock.toLocaleString():null)}
+    ${row('ปิดบ่อกับแพ',s.buyer)}
+    ${row('ไซส์ปิดบ่อ (ตัว/กก.)',s.closeSize)}
+    ${row('ราคา (บาท/กก.)',s.price)}
+    ${row('น้ำหนักรวม (กก.)',s.totalWeight?s.totalWeight.toLocaleString():null)}
+    ${row('จำนวนพาเชียล (รอบ)',s.partialCount)}
+    ${row('อายุกุ้งตอนปิดบ่อ (วัน)',s.ageDays)}
+    ${row('อาหารรวม (กก.)',s.totalFeed?s.totalFeed.toLocaleString():null)}
+    ${row('FCR',s.fcr)}
+    ${row('ADG (กรัม/วัน)',s.adg)}
+    ${row('อัตรารอด (%)',s.survivalRate)}
+    ${row('Yield (กก./ไร่)',s.yieldPerRai)}
+    ${row('หมายเหตุ',s.notesAll)}
   `;
 }
 // ===== INIT =====
@@ -3037,4 +3001,4 @@ if('serviceWorker' in navigator){
 </script>
 <div id="sync-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--p);color:#fff;text-align:center;padding:6px;font-size:12px;z-index:9999"></div>
 </body>
-</html>
+</html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
