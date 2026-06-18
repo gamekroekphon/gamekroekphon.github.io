@@ -73,15 +73,36 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .mv{font-size:26px;font-weight:800;color:var(--p)}.ml{font-size:11px;color:var(--tx3);margin-top:3px;font-weight:500;text-transform:uppercase;letter-spacing:.4px}
 
 /* ── Pond Cards ── */
-.pond-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:16px;cursor:pointer;transition:box-shadow .15s,border-color .15s;position:relative;overflow:hidden;box-shadow:var(--sh)}
-.pond-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px}
-.pond-card.ok::before{background:var(--ok)}.pond-card.warn::before{background:var(--w)}.pond-card.danger::before{background:var(--d)}
+.pond-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:16px 18px;cursor:pointer;transition:box-shadow .15s,border-color .15s;position:relative;overflow:hidden;box-shadow:var(--sh)}
+.pond-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.pond-card.ok::before{background:var(--ok)}.pond-card.warn::before{background:var(--w)}.pond-card.danger::before{background:var(--d)}.pond-card.prep::before{background:var(--in)}
 .pond-card:hover{box-shadow:0 4px 16px rgba(234,88,12,.12);border-color:var(--p)}
 .pn{font-size:15px;font-weight:800;color:var(--tx)}.pm{font-size:11px;color:var(--tx3);margin-top:2px}
 .pp{text-align:center}.pp-v{font-size:13px;font-weight:700}.pp-l{font-size:10px;color:var(--tx3);margin-top:1px}
 .age-badge{background:var(--pl);color:var(--p);border-radius:8px;padding:4px 10px;text-align:center;min-width:48px}
 .age-num{font-size:22px;font-weight:800;line-height:1}
 .age-lbl{font-size:10px;font-weight:600;color:var(--tx3);margin-top:1px}
+
+/* ── Overview card anatomy (v2 spec, 2026-06-16) ── */
+.ov-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.ov-name{font-size:18px;font-weight:500;color:var(--tx)}
+.ov-sub{font-size:12px;color:var(--tx3);margin-top:3px}
+.ov-life{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:12px;font-size:13px;color:var(--tx2);flex-wrap:wrap}
+.ov-life b{font-weight:500;color:var(--tx)}
+.ov-bar-track{background:var(--sf2);border-radius:99px;height:6px;margin-top:10px;overflow:hidden}
+.ov-bar-fill{height:6px;border-radius:99px;transition:width .3s}
+.ov-bar-hint{font-size:11px;color:var(--tx3);margin-top:5px}
+.ov-metrics4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+.ov-m-l{font-size:11px;color:var(--tx3)}
+.ov-m-v{font-size:17px;font-weight:500;color:var(--tx);margin-top:3px}
+.ov-divider{border-top:.5px solid var(--bd);margin-top:14px;padding-top:10px}
+.ov-water-line{font-size:13px;color:var(--tx2);line-height:1.6}
+.ov-prep-list{margin-top:10px;display:flex;flex-direction:column;gap:7px}
+.ov-prep-step{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx3);min-height:18px}
+.ov-prep-step.done{color:var(--tx2)}
+.ov-prep-dot{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;background:var(--sf2);color:var(--tx3)}
+.ov-prep-step.done .ov-prep-dot{background:var(--ok);color:#06210f}
+.ov-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
 
 /* ── Badges & Alerts ── */
 .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
@@ -189,7 +210,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 <div id="sec-overview" class="sec on">
       <div class="g5" id="ov-metrics" style="margin-bottom:20px"></div>
       <div class="sec-hdr"><div class="sec-title">สถานะบ่อทั้งหมด</div><div style="font-size:12px;color:var(--tx3)">อัปเดต: <span id="ov-ts"></span></div></div>
-      <div class="g3" id="ov-cards" style="margin-bottom:20px"></div>
+      <div class="ov-grid" id="ov-cards" style="margin-bottom:20px"></div>
       <div id="ov-alerts"></div>
 </div>
 <!-- TIDE -->
@@ -1337,6 +1358,70 @@ function st(key,v){
   if(v<p.dMin||v>p.dMax)return'danger';if(v<p.min||v>p.max)return'warn';return'ok';
 }
 function sc(s){return s==='danger'?'var(--d)':s==='warn'?'var(--w)':s==='ok'?'var(--ok)':'var(--tx3)'}
+function classifyOv(key,v){
+  if(v===null||v===undefined||v==='')return'na';
+  switch(key){
+    case'nh4':return v>0.5?'danger':v>=0.25?'warn':'ok';
+    case'no2':return v>4?'danger':v>=1?'warn':'ok';
+    case'phM':if(v<7.5||v>8.6)return'danger';if(v<7.8||v>8.3)return'warn';return'ok';
+    case'phSwing':return v>0.5?'danger':v>=0.3?'warn':'ok';
+    case'doM':case'doA':return v<3?'danger':v<4?'warn':'ok';
+    case'tM':case'tA':if(v>33||v<26)return'danger';if(v>32||v<28)return'warn';return'ok';
+    case'alk':if(v<80||v>250)return'danger';if(v<100||v>200)return'warn';return'ok';
+    case'sal':return v>35?'danger':v>30?'warn':'ok';
+    case'tcbsGreen':return v>1000?'danger':v>100?'warn':'ok';
+    case'tcbsYellow':return v>1000?'warn':'ok';
+    case'tvc':return v>1e7?'danger':v>=1e5?'warn':'ok';
+    case'ehp':return v>5?'danger':v>0?'warn':'ok';
+    case'ehpLarva':return v>25?'danger':v>0?'warn':'ok';
+    case'hepato':return v==='normal'?'ok':v==='swollen'?'warn':(v?'danger':'ok');
+    default:return'ok';
+  }
+}
+function worstOv(a,b){const o={ok:0,warn:1,danger:2};return(o[b]||0)>(o[a]||0)?b:a}
+function pondStatusOv(p){
+  const last=p.records[p.records.length-1];
+  const age=last?last.age:dDiff(p.startDate,today());
+  if(age<=0)return'prep';
+  let level='ok';
+  if(last){
+    [['nh4',last.nh4],['no2',last.no2],['phM',last.phM],['doM',last.doM],['doA',last.doA],
+     ['alk',last.alk],['sal',last.sal],['tM',last.tM],['tA',last.tA]].forEach(([k,v])=>{
+      if(v===null||v===undefined||v==='')return;
+      level=worstOv(level,classifyOv(k,v));
+    });
+    if(last.phM!=null&&last.phA!=null&&last.phM!==''&&last.phA!=='')
+      level=worstOv(level,classifyOv('phSwing',Math.abs(last.phM-last.phA)));
+  }
+  const lab=(p.labResults||[]).slice(-1)[0];
+  if(lab){
+    [['tcbsGreen',lab.tcbsGreen],['tcbsYellow',lab.tcbsYellow],['tvc',lab.tvc],
+     ['ehp',lab.ehp],['ehpLarva',lab.ehpLarva],['hepato',lab.hepato]].forEach(([k,v])=>{
+      if(v===null||v===undefined||v==='')return;
+      level=worstOv(level,classifyOv(k,v));
+    });
+  }
+  if(age>120)level=worstOv(level,'danger');else if(age>=110)level=worstOv(level,'warn');
+  return level;
+}
+function waterLineOv(last){
+  if(!last)return'<span style="color:var(--tx3)">ยังไม่มีข้อมูลคุณภาพน้ำ</span>';
+  const seg=(lbl,v,key)=>{
+    if(v===null||v===undefined||v==='')return`${lbl} -`;
+    const s=classifyOv(key,v);const col=s==='danger'?'var(--d)':s==='warn'?'var(--w)':'var(--tx)';
+    return`${lbl} <b style="color:${col};font-weight:500">${v}</b>`;
+  };
+  let line=[seg('pH',last.phM,'phM'),seg('DO',last.doM,'doM'),seg('ALK',last.alk,'alk')].join(' · ');
+  const extra=[];
+  const chk=(key,lbl,unit)=>{const v=last[key];if(v===null||v===undefined||v==='')return;const s=classifyOv(key,v);if(s==='warn'||s==='danger')extra.push(`<span style="color:${s==='danger'?'var(--d)':'var(--w)'}">${lbl} ${v}${unit} เกินเกณฑ์</span>`)};
+  chk('nh4','NH4','');chk('no2','NO2','');chk('sal','ความเค็ม',' ppt');
+  if(last.phM!=null&&last.phA!=null&&last.phM!==''&&last.phA!==''){
+    const sw=Math.abs(last.phM-last.phA);const s=classifyOv('phSwing',sw);
+    if(s!=='ok')extra.push(`<span style="color:${s==='danger'?'var(--d)':'var(--w)'}">สวิง pH ${sw.toFixed(2)} เกินเกณฑ์</span>`);
+  }
+  [['tM','Temp เช้า'],['tA','Temp บ่าย']].forEach(([k,lbl])=>{const v=last[k];if(v===null||v===undefined||v==='')return;const s=classifyOv(k,v);if(s!=='ok')extra.push(`<span style="color:${s==='danger'?'var(--d)':'var(--w)'}">${lbl} ${v}°C ${s==='danger'?'ผิดเกณฑ์':'เฝ้าระวัง'}</span>`)});
+  return line+(extra.length?' · '+extra.join(' · '):'');
+}
 function bcl(s){return s==='danger'?'b-danger':s==='warn'?'b-warn':s==='ok'?'b-ok':'b-na'}
 function showMsg(id,type,msg){
   const el=document.getElementById(id);if(!el)return;
@@ -1609,9 +1694,16 @@ function renderTide(){
     <div style="font-size:10px;color:var(--tx3);margin-top:10px;text-align:center">⚠️ ค่าโดยประมาณจากการคำนวณ Harmonic Tide</div>`;
 }
 function renderOv(){
-  const alerts=allAlerts();
-  const dc=alerts.filter(a=>a.level==='danger').length,wc=alerts.filter(a=>a.level==='warn').length;
-  document.getElementById('hdr-alert').textContent=dc>0?`🔴 ${dc} Danger · 🟡 ${wc} Warning`:wc>0?`🟡 ${wc} Warning`:'✅ ทุกบ่อปกติ';
+  // ===== สถานะการ์ดแต่ละบ่อ (เกณฑ์ vannamei ใหม่ — เฉพาะหน้าภาพรวม) =====
+  const meta=D.ponds.map(p=>{
+    const last=p.records[p.records.length-1];
+    const age=last?last.age:dDiff(p.startDate,today());
+    return{p,last,age,cls:pondStatusOv(p)};
+  });
+  const rank={danger:0,warn:1,ok:2,prep:3};
+  meta.sort((a,b)=>rank[a.cls]-rank[b.cls]||b.age-a.age);
+  const dcP=meta.filter(m=>m.cls==='danger').length,wcP=meta.filter(m=>m.cls==='warn').length;
+  document.getElementById('hdr-alert').textContent=dcP>0&&wcP>0?`🔴 ${dcP} ต้องดู · 🟡 ${wcP} เฝ้าระวัง`:dcP>0?`🔴 ${dcP} ต้องดู`:wcP>0?`🟡 ${wcP} เฝ้าระวัง`:'✅ ทุกบ่อปกติ';
   const totS=D.ponds.reduce((s,p)=>s+(p.stock||0),0);
   const totFeed=D.ponds.reduce((s,p)=>s+getCumFeed(p),0);
   const totBM=D.ponds.reduce((s,p)=>s+(getLatestBiomass(p)||0),0);
@@ -1620,78 +1712,56 @@ function renderOv(){
     <div class="metric-card metric-card-accent"><div class="mv">${(totS/1e6).toFixed(2)}M</div><div class="ml">ยอดปล่อยรวม (ตัว)</div></div>
     <div class="metric-card metric-card-accent"><div class="mv">${totBM.toFixed(0)}</div><div class="ml">น้ำหนักกุ้งรวม (กก.)</div></div>
     <div class="metric-card metric-card-accent"><div class="mv">${totFeed.toFixed(0)}</div><div class="ml">อาหารสะสม (กก.)</div></div>
-    <div class="metric-card metric-card-accent"><div class="mv" style="color:${dc>0?'var(--d)':wc>0?'var(--w)':'var(--ok)'}">${dc+wc}</div><div class="ml">การแจ้งเตือน</div></div>
+    <div class="metric-card metric-card-accent"><div class="mv" style="color:${dcP>0?'var(--d)':wcP>0?'var(--w)':'var(--ok)'}">${dcP+wcP}</div><div class="ml">บ่อที่ต้องดู</div></div>
   `;
+  const alerts=allAlerts();
   const ael=document.getElementById('ov-alerts');
   ael.innerHTML=alerts.length>0?`<div class="card"><div class="card-t">🔔 การแจ้งเตือน</div>${alerts.slice(0,8).map(a=>`<div class="ai ${a.level}"><span>${a.level==='danger'?'🔴':'🟡'}</span><div><strong>บ่อ ${a.pond}</strong> · ${a.param}: <strong>${a.val!==null?a.val+a.unit:'-'}</strong></div></div>`).join('')}</div>`:'';
-  const KEY=['phM','doM','alk','nh4'];
-  const sortedPonds=[...D.ponds].sort((a,b)=>{
-    const ageA=a.records.length?a.records[a.records.length-1].age:dDiff(a.startDate,today());
-    const ageB=b.records.length?b.records[b.records.length-1].age:dDiff(b.startDate,today());
-    return ageB-ageA;
-  });
-  document.getElementById('ov-cards').innerHTML=sortedPonds.map(p=>{
-    const last=p.records[p.records.length-1];
-    const age=last?last.age:dDiff(p.startDate,today());
-    const isPrep=age<=0;
-    const latFeed=(p.feedLog||[]).slice(-1)[0];
-    const todayFeedKg=latFeed?latFeed.totalFeed:null;
-    const per100k=latFeed?feedPer100k(latFeed.totalFeed,p.stock):null;
-    if(isPrep){
+  document.getElementById('ov-cards').innerHTML=meta.map(({p,last,age,cls})=>{
+    if(cls==='prep'){
       const daysLeft=p.startDate?Math.abs(dDiff(p.startDate,today())):null;
       const cl=p.prepChecklist;
       const prepDone=cl?PREP_STEPS.filter(s=>cl.steps&&cl.steps[s.key]?.done).length:0;
       const prepPct=cl?Math.round(prepDone/PREP_STEPS.length*100):0;
-      return`<div class="pond-card" style="border-left:4px solid var(--in);cursor:default;opacity:0.9">
-        <div style="display:flex;justify-content:space-between;align-items:start;gap:10px">
+      return`<div class="pond-card prep" onclick="jumpEntry('${p.id}')">
+        <div class="ov-head">
           <div style="flex:1;min-width:0">
-            <div class="pn">บ่อ ${p.name}</div>
-            <div class="pm">${p.stock?p.stock.toLocaleString()+' ตัว · ':''} ${p.size} ไร่</div>
-            <div style="font-size:11px;color:var(--tx2);margin-top:3px">📅 วันลงกุ้ง: <strong>${p.startDate?fD(p.startDate):'ยังไม่กำหนด'}</strong></div>
+            <div class="ov-name">บ่อ ${p.name}</div>
+            <div class="ov-sub">${p.stock?p.stock.toLocaleString()+' ตัว · ':''}${p.size} ไร่${p.startDate?' · กำหนดลงกุ้ง '+fD(p.startDate):''}</div>
           </div>
-          <div class="age-badge" style="background:var(--ib)">
-            <div class="age-num" style="color:var(--in)">${daysLeft!==null?daysLeft:'-'}</div>
-            <div class="age-lbl" style="color:var(--in)">วันที่เหลือ</div>
-          </div>
+          <span class="badge b-info">🔵 เตรียมบ่อ</span>
         </div>
-        <div style="margin-top:10px;padding:8px;background:var(--ib);border-radius:6px;display:flex;align-items:center;gap:10px">
-          <span style="font-size:18px">🧹</span>
-          <div style="flex:1">
-            <div style="font-size:12px;font-weight:700;color:var(--in)">กำลังเตรียมบ่อ</div>
-            <div style="font-size:11px;color:var(--tx2);margin-top:2px">เตรียมแล้ว ${prepDone}/${PREP_STEPS.length} ขั้นตอน (${prepPct}%)</div>
-            <div style="background:var(--bd);border-radius:3px;height:4px;margin-top:4px"><div style="background:var(--in);height:4px;border-radius:3px;width:${prepPct}%;transition:width .3s"></div></div>
-          </div>
-        </div>
+        <div class="ov-bar-track"><div class="ov-bar-fill" style="width:${prepPct}%;background:var(--in)"></div></div>
+        <div class="ov-bar-hint">เตรียมแล้ว ${prepDone}/${PREP_STEPS.length} ขั้นตอน (${prepPct}%)${daysLeft!==null?' · เหลือ '+daysLeft+' วันก่อนลงกุ้ง':''}</div>
+        <div class="ov-prep-list">${PREP_STEPS.map(s=>{const done=!!(cl&&cl.steps&&cl.steps[s.key]&&cl.steps[s.key].done);return`<div class="ov-prep-step ${done?'done':''}"><span class="ov-prep-dot">${done?'✓':''}</span><span>${s.label}</span></div>`}).join('')}</div>
       </div>`;
     }
-    const pa=getAlerts(p);const dc2=pa.filter(a=>a.level==='danger').length,wc2=pa.filter(a=>a.level==='warn').length;
-    const cls=dc2>0?'danger':wc2>0?'warn':'ok';
     const latSample=(p.samples||[]).slice(-1)[0];const fcr=getFCR(p);
-    const cumFeed=getCumFeed(p);
-    const ph=`<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:10px">${KEY.map(k=>{const pm=PARAMS.find(x=>x.key===k);const v=last?last[k]:null;const s=st(k,v);return`<div class="pp"><div class="pp-v" style="color:${sc(s)}">${v!==null&&v!==undefined?v:'-'}</div><div class="pp-l">${pm.lbl}</div></div>`}).join('')}<div class="pp"><div class="pp-v" style="color:var(--ok)">${cumFeed?cumFeed.toLocaleString(undefined,{maximumFractionDigits:0}):'-'}</div><div class="pp-l">อาหารรวม (กก.)</div></div></div>`;
-    const kpi=`<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--bd)">
-      <div class="pp"><div class="pp-v" style="color:var(--p)">${latSample?latSample.abw+'g':'-'}</div><div class="pp-l">กรัม/ตัว</div></div>
-      <div class="pp"><div class="pp-v" style="color:var(--in)">${latSample&&latSample.plCount?latSample.plCount:'-'}</div><div class="pp-l">ไซส์</div></div>
-      <div class="pp"><div class="pp-v">${latSample&&latSample.biomass?latSample.biomass.toFixed(0)+'kg':'-'}</div><div class="pp-l">Biomass</div></div>
-      <div class="pp"><div class="pp-v" style="color:${fcr&&fcr<1.5?'var(--ok)':fcr&&fcr<2?'var(--w)':'var(--d)'}">${fcr||'-'}</div><div class="pp-l">FCR</div></div>
-      <div class="pp"><div class="pp-v" style="color:var(--ok)">${todayFeedKg!==null?todayFeedKg.toFixed(1)+'kg':'-'}</div><div class="pp-l">อาหาร/วัน</div></div>
-      <div class="pp"><div class="pp-v" style="color:var(--w)">${per100k!==null?per100k.toFixed(1):'-'}</div><div class="pp-l">กก./แสน</div></div>
-    </div>`;
+    const pct=Math.max(0,Math.min(100,Math.round(age/120*100)));
+    const ready=age>=90;
+    const badgeCls=cls==='danger'?'b-danger':cls==='warn'?'b-warn':'b-ok';
+    const badgeLbl=cls==='danger'?'🔴 ต้องดู':cls==='warn'?'🟡 เฝ้าระวัง':'✅ ปกติ';
     return`<div class="pond-card ${cls}" onclick="jumpEntry('${p.id}')">
-      <div style="display:flex;justify-content:space-between;align-items:start;gap:10px">
+      <div class="ov-head">
         <div style="flex:1;min-width:0">
-          <div class="pn">บ่อ ${p.name}</div>
-          <div class="pm">${p.stock.toLocaleString()} ตัว · ${p.size} ไร่ · ${dens(p)} ตัว/ตรม.</div>
-          <div style="font-size:11px;color:var(--tx2);margin-top:3px">📅 ปล่อย: <strong>${fD(p.startDate)}</strong></div>
-          ${(p.hatchery||p.plType||p.plWeight)?`<div style="font-size:10px;color:var(--tx3);margin-top:2px">${[p.hatchery,p.plType,p.plWeight?p.plWeight+'g/ตัว':null].filter(Boolean).join(' · ')}</div>`:''}
+          <div class="ov-name">บ่อ ${p.name}</div>
+          <div class="ov-sub">${p.stock.toLocaleString()} ตัว · ${p.size} ไร่ · ${dens(p)} ตัว/ตร.ม.</div>
         </div>
-        <div class="age-badge"><div class="age-num" style="color:var(--p)">${age}</div><div class="age-lbl">วัน</div></div>
+        <span class="badge ${badgeCls}">${badgeLbl}</span>
       </div>
-      ${ph}${kpi}
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--bd)">
-        <div style="font-size:10px;color:var(--tx3)">${last?`ข้อมูลล่าสุด: ${fD(last.date)}`:'ยังไม่มีข้อมูล'}</div>
-        ${dc2>0?`<span class="badge b-danger">🔴 ${dc2} แจ้งเตือน</span>`:wc2>0?`<span class="badge b-warn">🟡 ${wc2} เฝ้าระวัง</span>`:`<span class="badge b-ok">✅ ปกติ</span>`}
+      <div class="ov-life">
+        <span>ปล่อย <b>${fD(p.startDate)}</b>${p.hatchery?' · '+p.hatchery:''}</span>
+        <span>วันที่ <b>${age}</b> · เป้า 90–120</span>
       </div>
+      <div class="ov-bar-track"><div class="ov-bar-fill" style="width:${pct}%;background:${ready?'var(--ok)':'var(--tx3)'}"></div></div>
+      ${ready?`<div class="ov-bar-hint" style="color:var(--ok)">✅ พร้อมจับ</div>`:''}
+      <div class="ov-metrics4">
+        <div><div class="ov-m-l">ABW</div><div class="ov-m-v">${latSample&&latSample.abw?latSample.abw+'g':'-'}</div></div>
+        <div><div class="ov-m-l">ไซส์ (ตัว/กก.)</div><div class="ov-m-v">${latSample&&latSample.plCount?latSample.plCount:'-'}</div></div>
+        <div><div class="ov-m-l">FCR</div><div class="ov-m-v">${fcr||'-'}</div></div>
+        <div><div class="ov-m-l">Biomass</div><div class="ov-m-v">${latSample&&latSample.biomass?latSample.biomass.toFixed(0)+'kg':'-'}</div></div>
+      </div>
+      <div class="ov-divider ov-water-line">${waterLineOv(last)}</div>
     </div>`;
   }).join('');
   document.getElementById('ov-ts').textContent=new Date().toLocaleString('th-TH');
