@@ -92,7 +92,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .ov-bar-track{background:var(--sf2);border-radius:99px;height:6px;margin-top:10px;overflow:hidden}
 .ov-bar-fill{height:6px;border-radius:99px;transition:width .3s}
 .ov-bar-hint{font-size:11px;color:var(--tx3);margin-top:5px}
-.ov-metrics4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+.ov-metrics4{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 10px;margin-top:14px}
 .ov-m-l{font-size:11px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
 .ov-m-v{font-size:18px;font-weight:700;color:var(--tx);margin-top:4px;letter-spacing:-.2px}
 .ov-divider{border-top:.5px solid var(--bd);margin-top:14px;padding-top:10px}
@@ -1768,6 +1768,7 @@ function renderOv(){
       </div>`;
     }
     const latSample=(p.samples||[]).slice(-1)[0];const fcr=getFCR(p);
+    const cumF=getCumFeed(p);const latFeed=(p.feedLog||[]).slice(-1)[0];const per100k=latFeed?feedPer100k(latFeed.totalFeed,p.stock):null;
     const pct=Math.max(0,Math.min(100,Math.round(age/120*100)));
     const ready=age>=90;
     const badgeCls=cls==='danger'?'b-danger':cls==='warn'?'b-warn':'b-ok';
@@ -1791,6 +1792,8 @@ function renderOv(){
         <div><div class="ov-m-l">ไซส์ (ตัว/กก.)</div><div class="ov-m-v">${latSample&&latSample.plCount?latSample.plCount:'-'}</div></div>
         <div><div class="ov-m-l">FCR</div><div class="ov-m-v">${fcr||'-'}</div></div>
         <div><div class="ov-m-l">Biomass</div><div class="ov-m-v">${latSample&&latSample.biomass?latSample.biomass.toFixed(0)+'kg':'-'}</div></div>
+        <div><div class="ov-m-l">อาหารรวม</div><div class="ov-m-v">${cumF?cumF.toFixed(0)+'kg':'-'}</div></div>
+        <div><div class="ov-m-l">กก./แสน</div><div class="ov-m-v">${per100k!=null?per100k.toFixed(2):'-'}</div></div>
       </div>
       <div class="ov-divider ov-water-line">${waterLineOv(last)}</div>
     </div>`;
