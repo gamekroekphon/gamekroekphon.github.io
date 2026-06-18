@@ -1627,10 +1627,10 @@ function renderOv(){
     const latSample=(p.samples||[]).slice(-1)[0];const fcr=getFCR(p);
     const ph=`<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:10px">${KEY.map(k=>{const pm=PARAMS.find(x=>x.key===k);const v=last?last[k]:null;const s=st(k,v);return`<div class="pp"><div class="pp-v" style="color:${sc(s)}">${v!==null&&v!==undefined?v:'-'}</div><div class="pp-l">${pm.lbl}</div></div>`}).join('')}</div>`;
     const kpi=`<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--bd)">
-      <div class="pp"><div class="pp-v" style="color:var(--p)">${latSample?latSample.abw+'g':'-'}</div><div class="pp-l">ABW</div></div>
+      <div class="pp"><div class="pp-v" style="color:var(--p)">${latSample?latSample.abw+'g':'-'}</div><div class="pp-l">กรัม/ตัว</div></div>
+      <div class="pp"><div class="pp-v" style="color:var(--in)">${latSample&&latSample.plCount?latSample.plCount+' ตัว/กก.':'-'}</div><div class="pp-l">ไซส์</div></div>
       <div class="pp"><div class="pp-v">${latSample&&latSample.biomass?latSample.biomass.toFixed(0)+'kg':'-'}</div><div class="pp-l">Biomass</div></div>
       <div class="pp"><div class="pp-v" style="color:${fcr&&fcr<1.5?'var(--ok)':fcr&&fcr<2?'var(--w)':'var(--d)'}">${fcr||'-'}</div><div class="pp-l">FCR</div></div>
-      <div class="pp"><div class="pp-v" style="color:var(--in)">${latSample&&latSample.plCount?latSample.plCount+' ตัว/กก.':'-'}</div><div class="pp-l">ไซส์</div></div>
       <div class="pp"><div class="pp-v" style="color:var(--ok)">${todayFeedKg!==null?todayFeedKg.toFixed(1)+'kg':'-'}</div><div class="pp-l">อาหาร/วัน</div></div>
       <div class="pp"><div class="pp-v" style="color:var(--w)">${per100k!==null?per100k.toFixed(1):'-'}</div><div class="pp-l">กก./แสน</div></div>
     </div>`;

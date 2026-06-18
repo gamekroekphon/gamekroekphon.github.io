@@ -1627,10 +1627,10 @@ function renderOv(){
     const latSample=(p.samples||[]).slice(-1)[0];const fcr=getFCR(p);
     const ph=`<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:10px">${KEY.map(k=>{const pm=PARAMS.find(x=>x.key===k);const v=last?last[k]:null;const s=st(k,v);return`<div class="pp"><div class="pp-v" style="color:${sc(s)}">${v!==null&&v!==undefined?v:'-'}</div><div class="pp-l">${pm.lbl}</div></div>`}).join('')}</div>`;
     const kpi=`<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--bd)">
-      <div class="pp"><div class="pp-v" style="color:var(--p)">${latSample?latSample.abw+'g':'-'}</div><div class="pp-l">ABW</div></div>
+      <div class="pp"><div class="pp-v" style="color:var(--p)">${latSample?latSample.abw+'g':'-'}</div><div class="pp-l">กรัม/ตัว</div></div>
+      <div class="pp"><div class="pp-v" style="color:var(--in)">${latSample&&latSample.plCount?latSample.plCount+' ตัว/กก.':'-'}</div><div class="pp-l">ไซส์</div></div>
       <div class="pp"><div class="pp-v">${latSample&&latSample.biomass?latSample.biomass.toFixed(0)+'kg':'-'}</div><div class="pp-l">Biomass</div></div>
       <div class="pp"><div class="pp-v" style="color:${fcr&&fcr<1.5?'var(--ok)':fcr&&fcr<2?'var(--w)':'var(--d)'}">${fcr||'-'}</div><div class="pp-l">FCR</div></div>
-      <div class="pp"><div class="pp-v" style="color:var(--in)">${latSample&&latSample.plCount?latSample.plCount+' ตัว/กก.':'-'}</div><div class="pp-l">ไซส์</div></div>
       <div class="pp"><div class="pp-v" style="color:var(--ok)">${todayFeedKg!==null?todayFeedKg.toFixed(1)+'kg':'-'}</div><div class="pp-l">อาหาร/วัน</div></div>
       <div class="pp"><div class="pp-v" style="color:var(--w)">${per100k!==null?per100k.toFixed(1):'-'}</div><div class="pp-l">กก./แสน</div></div>
     </div>`;
@@ -3010,4 +3010,43 @@ function renderPondCloseSummary(pid,sumEl){
   const p=pond(pid);
   if(!p){sumEl.innerHTML='<p style="color:var(--tx3)">ไม่พบบ่อนี้</p>';return;}
   const s=getCloseSummary(p);
-  const row=(label,val)=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd)"><span style="colo
+  const row=(label,val)=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd)"><span style="color:var(--tx3)">${label}</span><span style="font-weight:700">${val!=null&&val!==''?val:'-'}</span></div>`;
+  sumEl.innerHTML=`
+    <div style="margin-bottom:8px;font-weight:700;color:var(--p)">บ่อ ${p.name} — ${s.cropLabel}</div>
+    ${row('ลูกกุ้งจากที่ไหน',s.hatchery)}
+    ${row('จำนวนปล่อย (ตัว)',s.stock?s.stock.toLocaleString():null)}
+    ${row('ปิดบ่อกับแพ',s.buyer)}
+    ${row('ไซส์ปิดบ่อ (ตัว/กก.)',s.closeSize)}
+    ${row('ราคา (บาท/กก.)',s.price)}
+    ${row('น้ำหนักรวม (กก.)',s.totalWeight?s.totalWeight.toLocaleString():null)}
+    ${row('จำนวนพาเชียล (รอบ)',s.partialCount)}
+    ${row('อายุกุ้งตอนปิดบ่อ (วัน)',s.ageDays)}
+    ${row('อาหารรวม (กก.)',s.totalFeed?s.totalFeed.toLocaleString():null)}
+    ${row('FCR',s.fcr)}
+    ${row('ADG (กรัม/วัน)',s.adg)}
+    ${row('อัตรารอด (%)',s.survivalRate)}
+    ${row('Yield (กก./ไร่)',s.yieldPerRai)}
+    ${row('หมายเหตุ',s.notesAll)}
+  `;
+}
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded',()=>{
+  const _hdrDate=document.getElementById('hdr-date');if(_hdrDate)_hdrDate.textContent=new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  populateAll();renderOv();
+  document.getElementById('pondModal').addEventListener('click',e=>{if(e.target===document.getElementById('pondModal'))closePond()});
+  fetchWx().catch(()=>{});
+  initFirebase();
+  const _mt=document.getElementById('mainTabs');
+  if(_mt){_mt.addEventListener('scroll',updateTabsArrows);window.addEventListener('resize',updateTabsArrows);setTimeout(updateTabsArrows,200);}
+});
+
+// ── PWA Service Worker ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('data:text/javascript,').catch(()=>{});
+  });
+}
+</script>
+<div id="sync-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--p);color:#fff;text-align:center;padding:6px;font-size:12px;z-index:9999"></div>
+</body>
+</html>
