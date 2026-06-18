@@ -216,6 +216,22 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .sync-ind-time{color:rgba(255,255,255,.55);font-size:10px}
 @media(max-width:600px){.sync-ind-txt{display:none}.sync-ind-time{display:none}.sync-ind{padding:6px 8px}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+/* ── Bottom nav มือถือ (ข้อ 6) ── */
+.bnav{display:none}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;color:var(--tx3);font-size:10px;font-weight:600;padding:6px 2px;cursor:pointer;position:relative;min-height:54px}
+.bnav-btn .bnav-ic{font-size:18px;line-height:1}
+.bnav-btn.on{color:var(--p)}
+.bnav-badge{display:none;position:absolute;top:2px;right:18%;background:var(--d);color:#fff;font-size:9px;font-weight:700;border-radius:8px;padding:1px 5px;min-width:14px;line-height:14px;text-align:center}
+.bnav-badge.show{display:block}
+@media(max-width:600px){
+  .tabs-wrap{display:none}
+  .tabs-wrap.mob-open{display:block;position:fixed;top:52px;left:0;right:0;z-index:140;max-height:calc(100vh - 116px);overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  .tabs-wrap.mob-open .tabs{flex-wrap:wrap;overflow-x:visible}
+  .tabs-wrap.mob-open .tab-grp{flex-shrink:1}
+  .tabs-wrap.mob-open .tab-dropdown{position:static;box-shadow:none;border:none;padding:0 0 0 10px}
+  .bnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--sf);border-top:1px solid var(--bd);z-index:150;padding:2px 0 max(2px,env(safe-area-inset-bottom))}
+  body{padding-bottom:60px}
+}
 .cat-tag{display:inline-flex;align-items:center;gap:4px;background:var(--sf2);border:1px solid var(--bd);border-radius:20px;padding:3px 10px;font-size:12px;margin:3px;}
 .cat-del{cursor:pointer;color:var(--d);font-weight:700;padding:0 2px;}
 </style>
@@ -280,6 +296,13 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 </div>
 <button class="tabs-arrow right" id="tabs-arrow-r" onclick="document.getElementById('mainTabs').scrollBy({left:200,behavior:'smooth'})">›</button>
 </div>
+<nav class="bnav" id="bnav">
+  <button class="bnav-btn on" id="bnav-overview" onclick="bnavGo('overview',this)"><span class="bnav-ic">🏠</span>ภาพรวม</button>
+  <button class="bnav-btn" id="bnav-entry" onclick="bnavGo('entry',this)"><span class="bnav-ic">💧</span>กรอกน้ำ</button>
+  <button class="bnav-btn" id="bnav-feed" onclick="bnavGo('feed',this)"><span class="bnav-ic">🍖</span>กรอกอาหาร</button>
+  <button class="bnav-btn" id="bnav-alerts" onclick="bnavAlerts(this)"><span class="bnav-ic">🔔<span class="bnav-badge" id="bnav-alert-badge"></span></span>เตือน</button>
+  <button class="bnav-btn" id="bnav-more" onclick="toggleMobMenu(this)"><span class="bnav-ic">☰</span>เพิ่มเติม</button>
+</nav>
 <div class="main">
 <!-- OVERVIEW -->
 <div id="sec-overview" class="sec on">
@@ -1588,6 +1611,34 @@ function toggleGrp(g){
 document.addEventListener('click',function(e){
   if(!e.target.closest('.tab-grp'))document.querySelectorAll('.tab-grp').forEach(x=>x.classList.remove('grp-open'));
 });
+// ── Bottom nav มือถือ (ข้อ 6) ──
+function bnavGo(t,btn){
+  const tabBtn=document.getElementById('tab-'+t);
+  if(tabBtn)tabBtn.click();
+}
+function bnavAlerts(btn){
+  const tabBtn=document.getElementById('tab-overview');
+  if(tabBtn)tabBtn.click();
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  setTimeout(()=>{
+    const ael=document.getElementById('ov-alerts');
+    if(ael)ael.scrollIntoView({behavior:'smooth',block:'start'});
+  },80);
+}
+function toggleMobMenu(btn){
+  const tw=document.querySelector('.tabs-wrap');
+  const wasOpen=tw.classList.contains('mob-open');
+  tw.classList.toggle('mob-open');
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
+  if(!wasOpen)btn.classList.add('on');
+}
+function updateAlertBadge(n){
+  const b=document.getElementById('bnav-alert-badge');
+  if(!b)return;
+  if(n>0){b.textContent=n>99?'99+':n;b.classList.add('show');}
+  else{b.textContent='';b.classList.remove('show');}
+}
 function goTab(t,btn){
   document.querySelectorAll('.tab,.tab-item').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
   document.querySelectorAll('.tab-grp').forEach(g=>g.classList.remove('grp-on','grp-open'));
@@ -1604,6 +1655,11 @@ function goTab(t,btn){
   }
   if(t==='crops')renderCrops();
   if(t==='prep'){initPrep();}
+  // ── sync bottom nav (ข้อ 6) ──
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
+  const bnavMap={overview:'bnav-overview',entry:'bnav-entry',feed:'bnav-feed'};
+  if(bnavMap[t]){const bb=document.getElementById(bnavMap[t]);if(bb)bb.classList.add('on');}
+  const tw=document.querySelector('.tabs-wrap');if(tw)tw.classList.remove('mob-open');
 }
 function updateTabsArrows(){
   const el=document.getElementById('mainTabs');
@@ -1805,6 +1861,7 @@ function renderOv(){
     <div class="metric-card metric-card-accent"><div class="mv" style="color:${dcP>0?'var(--d)':wcP>0?'var(--w)':'var(--ok)'}">${dcP+wcP}</div><div class="ml">บ่อที่ต้องดู</div></div>
   `;
   const alerts=allAlerts();
+  updateAlertBadge(alerts.length);
   const ael=document.getElementById('ov-alerts');
   ael.innerHTML=alerts.length>0?`<div class="card"><div class="card-t">🔔 การแจ้งเตือน</div>${alerts.slice(0,8).map(a=>`<div class="ai ${a.level}"><span>${a.level==='danger'?'🔴':'🟡'}</span><div><strong>บ่อ ${a.pond}</strong> · ${a.param}: <strong>${a.val!==null?a.val+a.unit:'-'}</strong></div></div>`).join('')}</div>`:'';
   document.getElementById('ov-cards').innerHTML=meta.map(({p,last,age,cls})=>{
