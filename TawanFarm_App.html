@@ -1563,11 +1563,22 @@ function renderTide(){
       <text x="${nowX.toFixed(1)}" y="${(padT-10).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--tx2)">ตอนนี้</text>
       ${markers}
     </svg>`;
+  const nextHigh=ex.filter(e=>e.type==='high'&&e.ms>now).sort((a,b)=>a.ms-b.ms)[0];
+  const TIDE_ALERT_M=2.0;
+  const tideAlert=(nextHigh&&nextHigh.h>=TIDE_ALERT_M)?`
+    <div style="margin-top:8px;padding:8px 14px;background:rgba(244,67,54,0.12);border:1px solid rgba(244,67,54,0.3);border-radius:10px;display:inline-flex;align-items:center;gap:8px;text-align:left">
+      <span style="font-size:16px">⚠️</span>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#f44336">น้ำขึ้นสูง ${nextHigh.h.toFixed(2)} ม. รอบต่อไป</div>
+        <div style="font-size:11px;color:var(--tx2)">${fT(nextHigh.ms)} น.</div>
+      </div>
+    </div>`:'';
   nowEl.innerHTML=`
     <div style="text-align:center">
       <div style="font-size:12px;color:var(--tx3)">ระดับน้ำตอนนี้</div>
       <div style="font-size:34px;font-weight:800;color:var(--p);line-height:1.15">${nowH.toFixed(2)}<span style="font-size:14px;font-weight:500"> ม.</span></div>
       <div style="display:inline-block;margin-top:4px;font-size:12px;font-weight:700;padding:3px 12px;border-radius:14px;background:${rising?'rgba(33,150,243,0.12)':'rgba(230,126,34,0.12)'};color:${rising?'#2196f3':'#e67e22'}">${rising?'↑ น้ำขึ้น':'↓ น้ำลง'}</div>
+      <div>${tideAlert}</div>
     </div>
     ${waveSvg}`;
   el.innerHTML=`
