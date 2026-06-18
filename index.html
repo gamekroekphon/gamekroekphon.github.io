@@ -270,7 +270,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
   <div class="card" style="margin-bottom:16px">
     <div class="fgrid" style="margin-bottom:16px">
       <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="ep-pond" onchange="onEPond()"><option value="">-- เลือกบ่อ --</option></select></div>
-      <div class="fg"><label class="fl">วันที่ *</label><input type="date" class="fi" id="ep-date" onchange="calcAge('ep');prefillWQ()"></div>
+      <div class="fg"><label class="fl">วันที่ *</label><input type="date" class="fi" id="ep-date" onchange="calcAge('ep');prefillWQ();saveLastEntry()"></div>
       <div class="fg"><label class="fl">อายุ (วัน)</label><input type="number" class="fi" id="ep-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
     </div>
     <div class="card-t">💧 ค่าน้ำ 16 พารามิเตอร์</div>
@@ -1807,10 +1807,24 @@ function renderOv(){
 function jumpEntry(id){document.querySelectorAll('.tab')[1].click();setTimeout(()=>{document.getElementById('ep-pond').value=id;onEPond();},80)}
 function initEntry(){
   populateAll();document.getElementById('ep-date').value=today();
-  document.getElementById('ep-fields').innerHTML=PARAMS.map(p=>`<div class="fg"><label class="fl">${p.lbl}${p.unit?' ('+p.unit+')':''}</label><input type="number" step="any" class="fi" id="ef-${p.key}" placeholder="—" oninput="onFI('${p.key}',this)"><span class="lbl-std" id="std-${p.key}">${stdText(p)}</span></div>`).join('');
+  document.getElementById('ep-fields').innerHTML=PARAMS.map(p=>`<div class="fg"><label class="fl">${p.lbl}${p.unit?' ('+p.unit+')':''}</label><input type="number" step="any" inputmode="decimal" class="fi" id="ef-${p.key}" placeholder="—" oninput="onFI('${p.key}',this)"><span class="lbl-std" id="std-${p.key}">${stdText(p)}</span></div>`).join('');
+  restoreLastEntry();
   calcAge('ep');
+  if(document.getElementById('ep-pond').value){renderWQTable();prefillWQ()}
 }
-function onEPond(){clearWQ();renderWQTable();prefillWQ()}
+function saveLastEntry(){
+  const pid=document.getElementById('ep-pond')?.value,d=document.getElementById('ep-date')?.value;
+  if(pid)localStorage.setItem('tf_lastPondId',pid);
+  if(d)localStorage.setItem('tf_lastEpDate',d);
+}
+function restoreLastEntry(){
+  const sel=document.getElementById('ep-pond');if(!sel)return;
+  const lastPid=localStorage.getItem('tf_lastPondId');
+  const lastDate=localStorage.getItem('tf_lastEpDate');
+  if(lastDate)document.getElementById('ep-date').value=lastDate;
+  if(lastPid&&[...sel.options].some(o=>o.value===lastPid)){sel.value=lastPid}
+}
+function onEPond(){saveLastEntry();clearWQ();renderWQTable();prefillWQ()}
 function prefillWQ(){
   const pid=document.getElementById('ep-pond').value;
   const d=document.getElementById('ep-date').value;
