@@ -146,6 +146,8 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--sf2)}::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
 .hint{font-size:11px;color:var(--tx3);font-style:italic;margin-top:3px}
 .lbl-std{font-size:10px;color:var(--tx3);margin-top:1px}
+.lbl-std-warn{font-size:10px;color:var(--w);margin-top:1px;font-weight:700}
+.lbl-std-danger{font-size:10px;color:var(--d);margin-top:1px;font-weight:700}
 .pond-chk{display:flex;align-items:center;gap:6px;padding:5px 12px;border:1.5px solid var(--bd);border-radius:20px;cursor:pointer;font-size:13px;user-select:none;transition:all .15s}
 .pond-chk input{display:none}.pond-chk.on{background:var(--p);color:#fff;border-color:var(--p)}
 .cl{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px;font-size:12px;color:var(--tx2)}
@@ -1803,7 +1805,7 @@ function renderOv(){
 function jumpEntry(id){document.querySelectorAll('.tab')[1].click();setTimeout(()=>{document.getElementById('ep-pond').value=id;onEPond();},80)}
 function initEntry(){
   populateAll();document.getElementById('ep-date').value=today();
-  document.getElementById('ep-fields').innerHTML=PARAMS.map(p=>`<div class="fg"><label class="fl">${p.lbl}${p.unit?' ('+p.unit+')':''}</label><input type="number" step="any" class="fi" id="ef-${p.key}" placeholder="—" oninput="onFI('${p.key}',this)"><span class="lbl-std">${p.inv?'ต่ำกว่า '+p.max:p.min+'–'+p.max} ${p.unit}</span></div>`).join('');
+  document.getElementById('ep-fields').innerHTML=PARAMS.map(p=>`<div class="fg"><label class="fl">${p.lbl}${p.unit?' ('+p.unit+')':''}</label><input type="number" step="any" class="fi" id="ef-${p.key}" placeholder="—" oninput="onFI('${p.key}',this)"><span class="lbl-std" id="std-${p.key}">${stdText(p)}</span></div>`).join('');
   calcAge('ep');
 }
 function onEPond(){clearWQ();renderWQTable();prefillWQ()}
@@ -1814,7 +1816,7 @@ function prefillWQ(){
   const p=pond(pid);if(!p)return;
   const rec=p.records.find(r=>r.date===d);
   if(!rec)return;
-  PARAMS.forEach(pm=>{const e=document.getElementById('ef-'+pm.key);if(e){e.value=rec[pm.key]!==null&&rec[pm.key]!==undefined?rec[pm.key]:''}});
+  PARAMS.forEach(pm=>{const e=document.getElementById('ef-'+pm.key);if(e){e.value=rec[pm.key]!==null&&rec[pm.key]!==undefined?rec[pm.key]:'';onFI(pm.key,e)}});
   document.getElementById('ep-notes').value=rec.notes||'';
   // แสดงข้อความว่ามีข้อมูลวันนี้แล้ว
   const hasM=rec.phM!==null||rec.doM!==null;
@@ -1822,7 +1824,26 @@ function prefillWQ(){
   const hint=hasM&&!hasA?'🌅 พบข้อมูลเช้า — กรอกค่าบ่ายเพิ่มได้เลย':hasA&&!hasM?'🌆 พบข้อมูลบ่าย — กรอกค่าเช้าเพิ่มได้เลย':'📋 โหลดข้อมูลวันนี้แล้ว';
   showMsg('ep-msg','warn',hint);
 }
-function onFI(key,inp){const v=inp.value===''?null:parseFloat(inp.value);if(v===null){inp.className='fi';return}const s=st(key,v);inp.className='fi'+(s!=='na'?' fi-'+s:'')}
+function stdText(p){return(p.inv?'ต่ำกว่า '+p.max:p.min+'–'+p.max)+(p.unit?' '+p.unit:'')}
+function fiWarnMsg(p,v){
+  if(p.inv){return v>=p.dMax?`${v} — เกินเกณฑ์อันตราย (>${p.dMax})`:`${v} — เกินเกณฑ์ (>${p.max})`}
+  if(v<p.dMin)return`${v} — ต่ำกว่าเกณฑ์อันตราย (<${p.dMin})`;
+  if(v>p.dMax)return`${v} — เกินเกณฑ์อันตราย (>${p.dMax})`;
+  if(v<p.min)return`${v} — ต่ำกว่าเกณฑ์ (<${p.min})`;
+  return`${v} — เกินเกณฑ์ (>${p.max})`;
+}
+function onFI(key,inp){
+  const v=inp.value===''?null:parseFloat(inp.value);
+  const p=PARAMS.find(x=>x.key===key);
+  const std=document.getElementById('std-'+key);
+  if(v===null){inp.className='fi';if(std){std.textContent=stdText(p);std.className='lbl-std'}return}
+  const s=st(key,v);
+  inp.className='fi'+(s!=='na'?' fi-'+s:'');
+  if(std){
+    if(s==='warn'||s==='danger'){std.textContent=fiWarnMsg(p,v);std.className='lbl-std-'+s}
+    else{std.textContent=stdText(p);std.className='lbl-std'}
+  }
+}
 function saveWQ(){
   const pid=document.getElementById('ep-pond').value,d=document.getElementById('ep-date').value;
   if(!pid||!d){showMsg('ep-msg','warn','กรุณาเลือกบ่อและวันที่');return}
@@ -1837,7 +1858,7 @@ function saveWQ(){
 }
 function clearWQ(){
   document.getElementById('ep-date').value=today();
-  PARAMS.forEach(p=>{const e=document.getElementById('ef-'+p.key);if(e){e.value='';e.className='fi'}});
+  PARAMS.forEach(p=>{const e=document.getElementById('ef-'+p.key);if(e){e.value='';e.className='fi'}const std=document.getElementById('std-'+p.key);if(std){std.textContent=stdText(p);std.className='lbl-std'}});
   document.getElementById('ep-notes').value='';document.getElementById('ep-msg').innerHTML='';calcAge('ep');
 }
 function renderWQTable(){
