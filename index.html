@@ -1570,12 +1570,12 @@ function renderOv(){
   const dc=alerts.filter(a=>a.level==='danger').length,wc=alerts.filter(a=>a.level==='warn').length;
   document.getElementById('hdr-alert').textContent=dc>0?`🔴 ${dc} Danger · 🟡 ${wc} Warning`:wc>0?`🟡 ${wc} Warning`:'✅ ทุกบ่อปกติ';
   const totS=D.ponds.reduce((s,p)=>s+(p.stock||0),0);
-  const totA=D.ponds.reduce((s,p)=>s+(p.size||0),0);
   const totFeed=D.ponds.reduce((s,p)=>s+getCumFeed(p),0);
+  const totBM=D.ponds.reduce((s,p)=>s+(getLatestBiomass(p)||0),0);
   document.getElementById('ov-metrics').innerHTML=`
     <div class="metric-card metric-card-accent"><div class="mv">${D.ponds.length}</div><div class="ml">บ่อทั้งหมด</div></div>
     <div class="metric-card metric-card-accent"><div class="mv">${(totS/1e6).toFixed(2)}M</div><div class="ml">ยอดปล่อยรวม (ตัว)</div></div>
-    <div class="metric-card metric-card-accent"><div class="mv">${totA.toFixed(1)}</div><div class="ml">พื้นที่รวม (ไร่)</div></div>
+    <div class="metric-card metric-card-accent"><div class="mv">${totBM.toFixed(0)}</div><div class="ml">น้ำหนักกุ้งรวม (กก.)</div></div>
     <div class="metric-card metric-card-accent"><div class="mv">${totFeed.toFixed(0)}</div><div class="ml">อาหารสะสม (กก.)</div></div>
     <div class="metric-card metric-card-accent"><div class="mv" style="color:${dc>0?'var(--d)':wc>0?'var(--w)':'var(--ok)'}">${dc+wc}</div><div class="ml">การแจ้งเตือน</div></div>
   `;
