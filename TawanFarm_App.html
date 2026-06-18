@@ -1576,12 +1576,32 @@ function renderTide(){
       </div>
     </div>`;
   })():'';
+  const tideNextField=(()=>{
+    if(nextBigHigh){
+      const bd=new Date(nextBigHigh.ms+TZ);
+      const dateLbl=`${THD[bd.getUTCDay()]} ${bd.getUTCDate()} ${THM[bd.getUTCMonth()]}`;
+      return`<div style="margin-top:8px;padding:8px 14px;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;display:inline-flex;align-items:center;gap:8px;text-align:left">
+        <span style="font-size:16px">📌</span>
+        <div>
+          <div style="font-size:11px;color:var(--tx3)">น้ำขึ้นถึง ${TIDE_ALERT_M.toFixed(2)} ม. ครั้งต่อไป</div>
+          <div style="font-size:13px;font-weight:700;color:var(--tx)">วัน${dateLbl} เวลา ${fT(nextBigHigh.ms)} น. (${nextBigHigh.h.toFixed(2)} ม.)</div>
+        </div>
+      </div>`;
+    }
+    return`<div style="margin-top:8px;padding:8px 14px;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;display:inline-flex;align-items:center;gap:8px;text-align:left">
+      <span style="font-size:16px">📌</span>
+      <div>
+        <div style="font-size:11px;color:var(--tx3)">น้ำขึ้นถึง ${TIDE_ALERT_M.toFixed(2)} ม. ครั้งต่อไป</div>
+        <div style="font-size:13px;font-weight:700;color:var(--tx2)">ไม่มีในช่วง 7 วันนี้</div>
+      </div>
+    </div>`;
+  })();
   nowEl.innerHTML=`
     <div style="text-align:center">
       <div style="font-size:12px;color:var(--tx3)">ระดับน้ำตอนนี้</div>
       <div style="font-size:34px;font-weight:800;color:var(--p);line-height:1.15">${nowH.toFixed(2)}<span style="font-size:14px;font-weight:500"> ม.</span></div>
       <div style="display:inline-block;margin-top:4px;font-size:12px;font-weight:700;padding:3px 12px;border-radius:14px;background:${rising?'rgba(33,150,243,0.12)':'rgba(230,126,34,0.12)'};color:${rising?'#2196f3':'#e67e22'}">${rising?'↑ น้ำขึ้น':'↓ น้ำลง'}</div>
-      <div>${tideAlert}</div>
+      <div>${tideNextField}</div>
     </div>
     ${waveSvg}`;
   el.innerHTML=`
