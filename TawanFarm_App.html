@@ -207,11 +207,14 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
   .tbl th,.tbl td{padding:8px 8px}
   .chart-wrap{height:240px}
 }
-.sync-bar{position:fixed;bottom:0;left:0;right:0;padding:5px 16px;font-size:12px;display:flex;align-items:center;gap:8px;z-index:9999;transition:all .3s;background:var(--sf);border-top:1px solid var(--bd);}
-.sync-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.sync-ok .sync-dot{background:#2f9e44;}
-.sync-err .sync-dot{background:#dc3545;animation:pulse 1.5s infinite;}
-.sync-load .sync-dot{background:#f59f00;animation:pulse 1s infinite;}
+/* ── Sync indicator (ข้อ 5) ── */
+.sync-ind{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:5px 10px;border-radius:20px;font-size:11px;color:rgba(255,255,255,.85);white-space:nowrap;cursor:default;transition:opacity .3s}
+.sync-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:#7d86ad}
+.sync-ind.sync-ok .sync-dot{background:#33d17a}
+.sync-ind.sync-err .sync-dot{background:#ff5470;animation:pulse 1.5s infinite}
+.sync-ind.sync-load .sync-dot{background:#ffb84f;animation:pulse 1s infinite}
+.sync-ind-time{color:rgba(255,255,255,.55);font-size:10px}
+@media(max-width:600px){.sync-ind-txt{display:none}.sync-ind-time{display:none}.sync-ind{padding:6px 8px}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .cat-tag{display:inline-flex;align-items:center;gap:4px;background:var(--sf2);border:1px solid var(--bd);border-radius:20px;padding:3px 10px;font-size:12px;margin:3px;}
 .cat-del{cursor:pointer;color:var(--d);font-weight:700;padding:0 2px;}
@@ -227,6 +230,11 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
     <div><div class="hdr-brand">ตะวันฟาร์ม</div><div class="hdr-sub">Aquaculture Management System</div></div>
   </div>
   <div class="hdr-right">
+    <span class="sync-ind" id="sync-ind" title="">
+      <span class="sync-dot"></span>
+      <span class="sync-ind-txt" id="sync-msg"></span>
+      <span class="sync-ind-time" id="sync-time"></span>
+    </span>
     <span class="hdr-badge" id="hdr-alert"></span>
     <button class="btn btn-sm" style="background:var(--hdr-accent);color:#fff;border:none;font-weight:700" onclick="openAddPond()">+ เพิ่มบ่อ</button>
   </div>
@@ -866,17 +874,19 @@ let _lastSaveTime = 0;
 let _remoteIgnoreUntil = 0;  // ms — ignore remote update right after local save
 
 function setSyncStatus(type, msg) {
-  const bar = document.getElementById('sync-bar');
+  const ind = document.getElementById('sync-ind');
   const txt = document.getElementById('sync-msg');
   const tm  = document.getElementById('sync-time');
-  if (!bar || !txt) return;
-  bar.className = 'sync-bar ' + type;
+  if (!ind || !txt) return;
+  ind.className = 'sync-ind ' + type;
   txt.textContent = msg;
   if (type === 'sync-ok') {
-    tm.textContent = new Date().toLocaleTimeString('th-TH');
-    setTimeout(() => { if(bar.className.includes('sync-ok')) bar.style.opacity='0.4'; }, 3000);
+    const t = new Date().toLocaleTimeString('th-TH');
+    if (tm) tm.textContent = '· ' + t;
+    ind.title = msg + ' · อัปเดตล่าสุด ' + t;
   } else {
-    bar.style.opacity = '1';
+    if (tm) tm.textContent = '';
+    ind.title = msg;
   }
 }
 
@@ -3392,7 +3402,5 @@ if('serviceWorker' in navigator){
     navigator.serviceWorker.register('data:text/javascript,').catch(()=>{});
   });
 }
-</script>
-<div id="sync-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--p);color:#fff;text-align:center;padding:6px;font-size:12px;z-index:9999"></div>
-</body>
+</script></body>
 </html>
