@@ -1590,7 +1590,7 @@ function renderOv(){
   `;
   const ael=document.getElementById('ov-alerts');
   ael.innerHTML=alerts.length>0?`<div class="card"><div class="card-t">🔔 การแจ้งเตือน</div>${alerts.slice(0,8).map(a=>`<div class="ai ${a.level}"><span>${a.level==='danger'?'🔴':'🟡'}</span><div><strong>บ่อ ${a.pond}</strong> · ${a.param}: <strong>${a.val!==null?a.val+a.unit:'-'}</strong></div></div>`).join('')}</div>`:'';
-  const KEY=['phM','doM','alk','nh4','sal'];
+  const KEY=['phM','doM','alk','nh4'];
   const sortedPonds=[...D.ponds].sort((a,b)=>{
     const ageA=a.records.length?a.records[a.records.length-1].age:dDiff(a.startDate,today());
     const ageB=b.records.length?b.records[b.records.length-1].age:dDiff(b.startDate,today());
@@ -1633,7 +1633,8 @@ function renderOv(){
     const pa=getAlerts(p);const dc2=pa.filter(a=>a.level==='danger').length,wc2=pa.filter(a=>a.level==='warn').length;
     const cls=dc2>0?'danger':wc2>0?'warn':'ok';
     const latSample=(p.samples||[]).slice(-1)[0];const fcr=getFCR(p);
-    const ph=`<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:10px">${KEY.map(k=>{const pm=PARAMS.find(x=>x.key===k);const v=last?last[k]:null;const s=st(k,v);return`<div class="pp"><div class="pp-v" style="color:${sc(s)}">${v!==null&&v!==undefined?v:'-'}</div><div class="pp-l">${pm.lbl}</div></div>`}).join('')}</div>`;
+    const cumFeed=getCumFeed(p);
+    const ph=`<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:10px">${KEY.map(k=>{const pm=PARAMS.find(x=>x.key===k);const v=last?last[k]:null;const s=st(k,v);return`<div class="pp"><div class="pp-v" style="color:${sc(s)}">${v!==null&&v!==undefined?v:'-'}</div><div class="pp-l">${pm.lbl}</div></div>`}).join('')}<div class="pp"><div class="pp-v" style="color:var(--ok)">${cumFeed?cumFeed.toLocaleString(undefined,{maximumFractionDigits:0}):'-'}</div><div class="pp-l">อาหารรวม (กก.)</div></div></div>`;
     const kpi=`<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--bd)">
       <div class="pp"><div class="pp-v" style="color:var(--p)">${latSample?latSample.abw+'g':'-'}</div><div class="pp-l">กรัม/ตัว</div></div>
       <div class="pp"><div class="pp-v" style="color:var(--in)">${latSample&&latSample.plCount?latSample.plCount+' ตัว/กก.':'-'}</div><div class="pp-l">ไซส์</div></div>
