@@ -1563,16 +1563,19 @@ function renderTide(){
       <text x="${nowX.toFixed(1)}" y="${(padT-10).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--tx2)">ตอนนี้</text>
       ${markers}
     </svg>`;
-  const nextHigh=ex.filter(e=>e.type==='high'&&e.ms>now).sort((a,b)=>a.ms-b.ms)[0];
   const TIDE_ALERT_M=2.0;
-  const tideAlert=(nextHigh&&nextHigh.h>=TIDE_ALERT_M)?`
-    <div style="margin-top:8px;padding:8px 14px;background:rgba(244,67,54,0.12);border:1px solid rgba(244,67,54,0.3);border-radius:10px;display:inline-flex;align-items:center;gap:8px;text-align:left">
+  const nextBigHigh=ex.filter(e=>e.type==='high'&&e.ms>now&&e.h>=TIDE_ALERT_M).sort((a,b)=>a.ms-b.ms)[0];
+  const tideAlert=nextBigHigh?(()=>{
+    const bd=new Date(nextBigHigh.ms+TZ);
+    const dateLbl=`${THD[bd.getUTCDay()]} ${bd.getUTCDate()} ${THM[bd.getUTCMonth()]}`;
+    return`<div style="margin-top:8px;padding:8px 14px;background:rgba(244,67,54,0.12);border:1px solid rgba(244,67,54,0.3);border-radius:10px;display:inline-flex;align-items:center;gap:8px;text-align:left">
       <span style="font-size:16px">⚠️</span>
       <div>
-        <div style="font-size:12px;font-weight:700;color:#f44336">น้ำขึ้นสูง ${nextHigh.h.toFixed(2)} ม. รอบต่อไป</div>
-        <div style="font-size:11px;color:var(--tx2)">${fT(nextHigh.ms)} น.</div>
+        <div style="font-size:12px;font-weight:700;color:#f44336">น้ำขึ้นสูง ${nextBigHigh.h.toFixed(2)} ม. วัน${dateLbl}</div>
+        <div style="font-size:11px;color:var(--tx2)">เวลา ${fT(nextBigHigh.ms)} น. — เตรียมแผนสูบน้ำ</div>
       </div>
-    </div>`:'';
+    </div>`;
+  })():'';
   nowEl.innerHTML=`
     <div style="text-align:center">
       <div style="font-size:12px;color:var(--tx3)">ระดับน้ำตอนนี้</div>
