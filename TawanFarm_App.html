@@ -44,7 +44,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 
 /* ── Tabs ── */
 .tabs-wrap{position:sticky;top:60px;z-index:99;background:var(--sf);border-bottom:2px solid var(--bd)}
-.tabs{background:var(--sf);display:flex;padding:0 20px;gap:0;overflow-x:auto;scrollbar-width:thin}
+.tabs{background:var(--sf);display:flex;padding:0 20px;gap:0;overflow-x:auto;scrollbar-width:thin;position:relative}
 .tabs::-webkit-scrollbar{height:6px}
 .tabs::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
 .tab{padding:13px 14px;border:none;background:none;cursor:pointer;color:var(--tx3);font-size:12px;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .15s;letter-spacing:.2px}
@@ -53,6 +53,18 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .tabs-arrow.show{opacity:1;pointer-events:auto}
 .tabs-arrow.right{right:0;background:linear-gradient(to left,var(--sf) 40%,transparent)}
 .tabs-arrow.left{left:0}
+/* ── Grouped nav (ข้อ 1) ── */
+.tab-grp{position:relative;flex-shrink:0}
+.tab-grp>.grp-btn{padding:13px 14px;border:none;background:none;cursor:pointer;color:var(--tx3);font-size:12px;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .15s;letter-spacing:.2px;display:flex;align-items:center;gap:3px}
+.tab-grp>.grp-btn:hover{color:var(--tx2);background:var(--sf2)}
+.tab-grp.grp-on>.grp-btn{color:var(--p);border-bottom-color:var(--p)}
+.grp-caret{font-size:9px;transition:transform .15s}
+.tab-grp.grp-open .grp-caret{transform:rotate(180deg)}
+.tab-dropdown{position:absolute;top:100%;left:0;background:var(--sf);border:1px solid var(--bd);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:6px;min-width:190px;z-index:200;display:none;flex-direction:column;gap:2px}
+.tab-grp.grp-open .tab-dropdown{display:flex}
+.tab-item{padding:10px 12px;border:none;background:none;cursor:pointer;color:var(--tx2);font-size:13px;font-weight:600;text-align:left;border-radius:7px;white-space:nowrap;min-height:44px;display:flex;align-items:center;transition:all .15s}
+.tab-item:hover{background:var(--sf2);color:var(--tx)}
+.tab-item.on{background:var(--pl);color:var(--p)}
 
 /* ── Layout ── */
 .main{padding:20px 24px;max-width:1440px;margin:0 auto}
@@ -174,6 +186,8 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
   .hdr-badge{font-size:11px;padding:4px 9px}
   .tabs-wrap{top:52px}
   .tab{padding:13px 12px;font-size:12px;min-height:44px;display:flex;align-items:center}
+  .tab-grp>.grp-btn{padding:13px 12px;font-size:12px;min-height:44px}
+  .tab-dropdown{left:auto;right:0}
   .main{padding:10px 12px}
   .g2,.g3,.g4,.g5,.ov-grid{grid-template-columns:1fr}
   .sec-title{font-size:14px}
@@ -220,21 +234,41 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 <div class="tabs-wrap">
 <button class="tabs-arrow left" id="tabs-arrow-l" onclick="document.getElementById('mainTabs').scrollBy({left:-200,behavior:'smooth'})">‹</button>
 <div class="tabs" id="mainTabs">
-  <button class="tab on"  onclick="goTab('overview',this)">🏠 ภาพรวม</button>
-  <button class="tab"     onclick="goTab('tide',this)">🌊 น้ำขึ้นน้ำลง</button>
-  <button class="tab"     onclick="goTab('entry',this)">💧 คุณภาพน้ำ</button>
-  <button class="tab"     onclick="goTab('feed',this)">🍖 อาหาร &amp; FCR</button>
-  <button class="tab"     onclick="goTab('sample',this)">⚖️ สุ่มตัวอย่าง</button>
-  <button class="tab"     onclick="goTab('watlog',this)">💦 จัดการน้ำ</button>
-  <button class="tab"     onclick="goTab('chem',this)">🧪 สารเคมี</button>
-  <button class="tab"     onclick="goTab('lab',this)">🔬 ผลแล็บ</button>
-  <button class="tab"     onclick="goTab('compare',this)">🔄 เปรียบเทียบ</button>
-  <button class="tab"     onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
-  <button class="tab"     onclick="goTab('crops',this)">🌾 รอบเลี้ยง</button>
-  <button class="tab"     onclick="goTab('prep',this)">🧹 เตรียมบ่อ</button>
-  <button class="tab"     onclick="goTab('harvest',this)">🦐 จับกุ้ง</button>
-  <button class="tab"     onclick="goTab('export',this)">📄 PDF ปิดบ่อ</button>
-  <button class="tab"     onclick="goTab('manage',this)">⚙️ จัดการบ่อ</button>
+  <button class="tab on" id="tab-overview" onclick="goTab('overview',this)">🏠 ภาพรวม</button>
+  <div class="tab-grp" id="grp-daily">
+    <button class="grp-btn" onclick="toggleGrp('daily')">📅 รายวัน <span class="grp-caret">▾</span></button>
+    <div class="tab-dropdown">
+      <button class="tab-item" id="tab-tide" onclick="goTab('tide',this)">🌊 น้ำขึ้นน้ำลง</button>
+      <button class="tab-item" id="tab-entry" onclick="goTab('entry',this)">💧 คุณภาพน้ำ</button>
+      <button class="tab-item" id="tab-feed" onclick="goTab('feed',this)">🍖 อาหาร &amp; FCR</button>
+      <button class="tab-item" id="tab-sample" onclick="goTab('sample',this)">⚖️ สุ่มตัวอย่าง</button>
+      <button class="tab-item" id="tab-watlog" onclick="goTab('watlog',this)">💦 จัดการน้ำ</button>
+      <button class="tab-item" id="tab-chem" onclick="goTab('chem',this)">🧪 สารเคมี</button>
+    </div>
+  </div>
+  <div class="tab-grp" id="grp-crop">
+    <button class="grp-btn" onclick="toggleGrp('crop')">🌾 รอบเลี้ยง <span class="grp-caret">▾</span></button>
+    <div class="tab-dropdown">
+      <button class="tab-item" id="tab-crops" onclick="goTab('crops',this)">🌾 รอบเลี้ยง</button>
+      <button class="tab-item" id="tab-prep" onclick="goTab('prep',this)">🧹 เตรียมบ่อ</button>
+      <button class="tab-item" id="tab-harvest" onclick="goTab('harvest',this)">🦐 จับกุ้ง</button>
+      <button class="tab-item" id="tab-export" onclick="goTab('export',this)">📄 PDF ปิดบ่อ</button>
+    </div>
+  </div>
+  <div class="tab-grp" id="grp-analyze">
+    <button class="grp-btn" onclick="toggleGrp('analyze')">📊 วิเคราะห์ <span class="grp-caret">▾</span></button>
+    <div class="tab-dropdown">
+      <button class="tab-item" id="tab-lab" onclick="goTab('lab',this)">🔬 ผลแล็บ</button>
+      <button class="tab-item" id="tab-compare" onclick="goTab('compare',this)">🔄 เปรียบเทียบ</button>
+      <button class="tab-item" id="tab-risk" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
+    </div>
+  </div>
+  <div class="tab-grp" id="grp-settings">
+    <button class="grp-btn" onclick="toggleGrp('settings')">⚙️ ตั้งค่า <span class="grp-caret">▾</span></button>
+    <div class="tab-dropdown">
+      <button class="tab-item" id="tab-manage" onclick="goTab('manage',this)">⚙️ จัดการบ่อ</button>
+    </div>
+  </div>
 </div>
 <button class="tabs-arrow right" id="tabs-arrow-r" onclick="document.getElementById('mainTabs').scrollBy({left:200,behavior:'smooth'})">›</button>
 </div>
@@ -1533,8 +1567,19 @@ function populateAll(){
   const prepSel=document.getElementById('prep-pond');
   if(prepSel){const cur=prepSel.value;prepSel.innerHTML='<option value="">-- เลือกบ่อ --</option>'+D.ponds.map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');if(cur)prepSel.value=cur;}
 }
+function toggleGrp(g){
+  const el=document.getElementById('grp-'+g);
+  const wasOpen=el.classList.contains('grp-open');
+  document.querySelectorAll('.tab-grp').forEach(x=>x.classList.remove('grp-open'));
+  if(!wasOpen)el.classList.add('grp-open');
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.tab-grp'))document.querySelectorAll('.tab-grp').forEach(x=>x.classList.remove('grp-open'));
+});
 function goTab(t,btn){
-  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  document.querySelectorAll('.tab,.tab-item').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  document.querySelectorAll('.tab-grp').forEach(g=>g.classList.remove('grp-on','grp-open'));
+  const grp=btn.closest('.tab-grp');if(grp)grp.classList.add('grp-on');
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));document.getElementById('sec-'+t).classList.add('on');
   if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='feed')initFeed();
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
@@ -1802,7 +1847,7 @@ function renderOv(){
   }).join('');
   document.getElementById('ov-ts').textContent=new Date().toLocaleString('th-TH');
 }
-function jumpEntry(id){document.querySelectorAll('.tab')[1].click();setTimeout(()=>{document.getElementById('ep-pond').value=id;onEPond();},80)}
+function jumpEntry(id){document.getElementById('tab-entry').click();setTimeout(()=>{document.getElementById('ep-pond').value=id;onEPond();},80)}
 function initEntry(){
   populateAll();document.getElementById('ep-date').value=today();
   document.getElementById('ep-fields').innerHTML=PARAMS.map(p=>`<div class="fg"><label class="fl">${p.lbl}${p.unit?' ('+p.unit+')':''}</label><input type="number" step="any" inputmode="decimal" class="fi" id="ef-${p.key}" placeholder="—" oninput="onFI('${p.key}',this)"><span class="lbl-std" id="std-${p.key}">${stdText(p)}</span></div>`).join('');
