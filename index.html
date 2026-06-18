@@ -714,12 +714,20 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
     </p>
     <div class="fg" style="margin-bottom:16px">
       <label class="fl">เลือกบ่อ</label>
-      <select class="fi" id="ex-pond"><option value="all">ทุกบ่อ (สรุปรวม)</option></select>
+      <select class="fi" id="ex-pond" onchange="onExPondChange()"><option value="all">ทุกบ่อ (สรุปรวม)</option></select>
+    </div>
+    <div class="fg" id="ex-crop-wrap" style="margin-bottom:16px;display:none">
+      <label class="fl">เลือกรอบที่ปิด (ประวัติ)</label>
+      <select class="fi" id="ex-crop" onchange="renderExPreview()"></select>
     </div>
     <button class="btn btn-p" id="ex-pdf-btn" onclick="genPDF()" style="width:100%;justify-content:center;padding:13px;font-size:14px">
       📄 สร้าง PDF สรุปปิดบ่อ
     </button>
     <div id="ex-info" style="margin-top:12px"></div>
+  </div>
+  <div class="card" id="ex-chart-wrap" style="max-width:520px;margin-top:16px;display:none">
+    <div class="card-t">📊 เปรียบเทียบรอบเลี้ยงที่ปิดแล้ว</div>
+    <canvas id="ex-chart" height="200"></canvas>
   </div>
 </div>
 <!-- MANAGE -->
@@ -2388,15 +2396,108 @@ function renderRisk(d){
 // ===== EXPORT =====
 function initExport(){
   populateAll();
-  const total=D.ponds.reduce((s,p)=>s+p.records.length,0);
-  const totFeed=D.ponds.reduce((s,p)=>s+(p.feedLog||[]).length,0);
+  onExPondChange();
+}
+// เมื่อเปลี่ยนบ่อในการ์ด PDF ปิดบ่อ — โชว์ dropdown ประวัติรอบที่ปิดแล้ว (ถ้ามี) + preview
+function onExPondChange(){
+  const pid=document.getElementById('ex-pond').value;
+  const cropWrap=document.getElementById('ex-crop-wrap');
+  const cropSel=document.getElementById('ex-crop');
   const exInfo=document.getElementById('ex-info');
-  if(exInfo)exInfo.innerHTML=`<div class="badge b-info">${D.ponds.length} บ่อ · ${total} ค่าน้ำ · ${totFeed} อาหาร</div>`;
+  const chartWrap=document.getElementById('ex-chart-wrap');
+  if(pid==='all'){
+    if(cropWrap)cropWrap.style.display='none';
+    const total=D.ponds.reduce((s,p)=>s+p.records.length,0);
+    const totFeed=D.ponds.reduce((s,p)=>s+(p.feedLog||[]).length,0);
+    if(exInfo)exInfo.innerHTML=`<div class="badge b-info">${D.ponds.length} บ่อ · ${total} ค่าน้ำ · ${totFeed} อาหาร</div>`;
+    if(chartWrap)chartWrap.style.display='none';
+    return;
+  }
+  const p=pond(pid);
+  const hist=(p&&p.cropHistory)||[];
+  if(!hist.length){
+    if(cropWrap)cropWrap.style.display='none';
+    if(exInfo)exInfo.innerHTML='<p style="color:var(--tx3);font-size:13px">บ่อนี้ยังไม่มีประวัติปิดบ่อ</p>';
+    if(chartWrap)chartWrap.style.display='none';
+    return;
+  }
+  if(cropWrap)cropWrap.style.display='';
+  if(cropSel){
+    cropSel.innerHTML=hist.map((c,i)=>`<option value="${i}">รอบที่ ${c.cropNum}/${c.cropYear} (ปิด ${c.closeDate?fD(c.closeDate):'-'})</option>`).join('');
+    cropSel.value=String(hist.length-1);
+  }
+  renderExPreview();
+}
+// แสดง preview ของรอบที่เลือก + กราฟเปรียบเทียบ
+function renderExPreview(){
+  const pid=document.getElementById('ex-pond').value;
+  const exInfo=document.getElementById('ex-info');
+  if(pid==='all'){return;}
+  const p=pond(pid);if(!p){if(exInfo)exInfo.innerHTML='';return;}
+  const cropSel=document.getElementById('ex-crop');
+  const idx=cropSel&&cropSel.value!==''?parseInt(cropSel.value):null;
+  const s=getCloseSummary(p,idx);
+  if(!s){if(exInfo)exInfo.innerHTML='';return;}
+  const row=(label,val)=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bd);font-size:12.5px"><span style="color:var(--tx3)">${label}</span><span style="font-weight:700">${val!=null&&val!==''?val:'-'}</span></div>`;
+  if(exInfo)exInfo.innerHTML=`
+    <div style="margin-bottom:6px;font-weight:700;color:var(--p);font-size:13px">บ่อ ${p.name} — ${s.cropLabel}</div>
+    ${row('ลูกกุ้งจากที่ไหน',s.hatchery)}
+    ${row('จำนวนปล่อย (ตัว)',s.stock?s.stock.toLocaleString():null)}
+    ${row('ปิดบ่อกับแพ',s.buyer)}
+    ${row('ไซส์ปิดบ่อ (ตัว/กก.)',s.closeSize)}
+    ${row('ราคา (บาท/กก.)',s.price)}
+    ${row('น้ำหนักรวม (กก.)',s.totalWeight?s.totalWeight.toLocaleString():null)}
+    ${row('อายุกุ้งตอนปิดบ่อ (วัน)',s.ageDays)}
+    ${row('FCR',s.fcr)}
+    ${row('ADG (กรัม/วัน)',s.adg)}
+    ${row('อัตรารอด (%)',s.survivalRate)}
+    ${row('Yield (กก./ไร่)',s.yieldPerRai)}
+  `;
+  renderExChart(p);
+}
+let _exChartInst=null;
+// กราฟเปรียบเทียบ FCR / อัตรารอด ทุกรอบที่ปิดไปแล้วของบ่อนี้
+function renderExChart(p){
+  const wrap=document.getElementById('ex-chart-wrap');
+  const canvas=document.getElementById('ex-chart');
+  if(!wrap||!canvas)return;
+  const hist=(p.cropHistory||[]).filter(c=>c.harvestResult);
+  if(hist.length<1){wrap.style.display='none';return;}
+  wrap.style.display='';
+  const labels=hist.map(c=>`รอบ ${c.cropNum}/${c.cropYear}`);
+  const fcrData=hist.map(c=>c.harvestResult&&c.harvestResult.fcr!=null?c.harvestResult.fcr:null);
+  const survData=hist.map(c=>c.harvestResult&&c.harvestResult.survivalRate!=null?c.harvestResult.survivalRate:null);
+  const yieldData=hist.map(c=>{
+    const tw=c.harvestResult?c.harvestResult.totalWeight:null;
+    return(tw&&p.size)?+(tw/p.size).toFixed(1):null;
+  });
+  if(_exChartInst){_exChartInst.destroy();_exChartInst=null;}
+  if(typeof Chart==='undefined')return;
+  _exChartInst=new Chart(canvas.getContext('2d'),{
+    data:{labels,datasets:[
+      {type:'bar',label:'FCR',data:fcrData,backgroundColor:'#3b82f6',yAxisID:'y1',order:2},
+      {type:'bar',label:'Yield (กก./ไร่)',data:yieldData,backgroundColor:'#f59e0b',yAxisID:'y3',order:3,hidden:true},
+      {type:'line',label:'อัตรารอด (%)',data:survData,borderColor:'#22c55e',backgroundColor:'#22c55e',yAxisID:'y2',tension:.3,order:1},
+    ]},
+    options:{
+      responsive:true,
+      plugins:{legend:{position:'bottom',labels:{font:{family:'Kanit'}}}},
+      scales:{
+        y1:{type:'linear',position:'left',title:{display:true,text:'FCR'}},
+        y2:{type:'linear',position:'right',title:{display:true,text:'อัตรารอด (%)'},min:0,max:100,grid:{drawOnChartArea:false}},
+        y3:{type:'linear',display:false},
+      }
+    }
+  });
 }
 // ===== CLOSE-SUMMARY DATA (ใช้ร่วมกันโดย renderPondCloseSummary และ genPDF) =====
-function getCloseSummary(p){
+// cropIdx: index ของ p.cropHistory ที่ต้องการดู (ไม่ระบุ = รอบล่าสุดที่ปิด)
+function getCloseSummary(p,cropIdx){
   if(!p)return null;
-  const lastCrop=(p.cropHistory&&p.cropHistory.length)?p.cropHistory[p.cropHistory.length-1]:null;
+  let lastCrop=null;
+  if(p.cropHistory&&p.cropHistory.length){
+    lastCrop=(cropIdx!=null&&p.cropHistory[cropIdx])?p.cropHistory[cropIdx]:p.cropHistory[p.cropHistory.length-1];
+  }
   const hatchery=lastCrop?lastCrop.hatchery:(p.hatchery||'');
   const stock=lastCrop?lastCrop.stock:(p.stock||null);
   const startDate=lastCrop?lastCrop.startDate:(p.startDate||'');
@@ -2442,8 +2543,11 @@ async function genPDF(){
       <div style="font-size:19px;font-weight:700">ตะวันฟาร์ม — สรุปปิดบ่อ</div>
       <div style="font-size:11px;opacity:.85;margin-top:3px">สร้างเมื่อ: ${esc(new Date().toLocaleDateString('th-TH'))}</div>
     </div><div style="padding:14px">`;
+    const cropSel=document.getElementById('ex-crop');
+    const cropWrapEl=document.getElementById('ex-crop-wrap');
+    const selIdx=(pid!=='all'&&cropWrapEl&&cropWrapEl.style.display!=='none'&&cropSel&&cropSel.value!=='')?parseInt(cropSel.value):null;
     ponds.forEach(p=>{
-      const s=getCloseSummary(p);
+      const s=getCloseSummary(p,pid==='all'?null:selIdx);
       const fields=[
         ['ลูกกุ้งจากที่ไหน',s.hatchery],
         ['จำนวนปล่อย (ตัว)',s.stock?s.stock.toLocaleString():null],
@@ -2474,17 +2578,40 @@ async function genPDF(){
     wrap.innerHTML=html;
     wrap.style.cssText='position:fixed;left:-9999px;top:0;width:760px;background:#fff;font-family:"Kanit","Sarabun","Segoe UI",sans-serif;color:#1e1e1e;';
     document.body.appendChild(wrap);
+    // วาด wrap เป็นภาพ (html2canvas) แล้วฝังลง PDF ด้วย addImage แทน doc.html()
+    // เพราะ doc.html() ของ jsPDF วาดตัวอักษรด้วยฟอนต์มาตรฐาน (ไม่มีภาษาไทย) ทำให้ข้อความหายไปจาก PDF
+    const canvas=await html2canvas(wrap,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
     const{jsPDF}=window.jspdf;
     const doc=new jsPDF({unit:'pt',format:'a4'});
-    await doc.html(wrap,{
-      x:20,y:20,width:555,windowWidth:760,
-      html2canvas:{scale:2,useCORS:true},
-      callback:(doc)=>{
-        doc.save(`TawanFarm_ปิดบ่อ_${today()}.pdf`);
-        wrap.remove();
-        if(btn){btn.disabled=false;btn.innerHTML=btnTxt}
+    const pageW=doc.internal.pageSize.getWidth();
+    const pageH=doc.internal.pageSize.getHeight();
+    const margin=20;
+    const imgW=pageW-margin*2;
+    const imgH=canvas.height*(imgW/canvas.width);
+    const pageContentH=pageH-margin*2;
+    if(imgH<=pageContentH){
+      doc.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',margin,margin,imgW,imgH);
+    }else{
+      // ตัดภาพเป็นหน้าๆ ตามความสูงที่พอดีกับ A4
+      const sliceHpx=Math.floor(pageContentH*(canvas.width/imgW));
+      let yPx=0,first=true;
+      while(yPx<canvas.height){
+        const hPx=Math.min(sliceHpx,canvas.height-yPx);
+        const sliceCanvas=document.createElement('canvas');
+        sliceCanvas.width=canvas.width;
+        sliceCanvas.height=hPx;
+        const ctx=sliceCanvas.getContext('2d');
+        ctx.drawImage(canvas,0,yPx,canvas.width,hPx,0,0,canvas.width,hPx);
+        const sliceImgH=hPx*(imgW/canvas.width);
+        if(!first)doc.addPage();
+        doc.addImage(sliceCanvas.toDataURL('image/jpeg',0.92),'JPEG',margin,margin,imgW,sliceImgH);
+        yPx+=hPx;
+        first=false;
       }
-    });
+    }
+    doc.save(`TawanFarm_ปิดบ่อ_${today()}.pdf`);
+    wrap.remove();
+    if(btn){btn.disabled=false;btn.innerHTML=btnTxt}
   }catch(e){
     wrap.remove();
     alert('เกิดข้อผิดพลาดในการสร้าง PDF: '+(e?.message||e));
