@@ -61,7 +61,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .tab-grp.grp-on>.grp-btn{color:var(--p);border-bottom-color:var(--p)}
 .grp-caret{font-size:9px;transition:transform .15s}
 .tab-grp.grp-open .grp-caret{transform:rotate(180deg)}
-.tab-dropdown{position:absolute;top:100%;left:0;background:var(--sf);border:1px solid var(--bd);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:6px;min-width:190px;z-index:200;display:none;flex-direction:column;gap:2px}
+.tab-dropdown{position:fixed;background:var(--sf);border:1px solid var(--bd);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:6px;min-width:190px;z-index:200;display:none;flex-direction:column;gap:2px}
 .tab-grp.grp-open .tab-dropdown{display:flex}
 .tab-item{padding:10px 12px;border:none;background:none;cursor:pointer;color:var(--tx2);font-size:13px;font-weight:600;text-align:left;border-radius:7px;white-space:nowrap;min-height:44px;display:flex;align-items:center;transition:all .15s}
 .tab-item:hover{background:var(--sf2);color:var(--tx)}
@@ -1605,7 +1605,22 @@ function toggleGrp(g){
   const el=document.getElementById('grp-'+g);
   const wasOpen=el.classList.contains('grp-open');
   document.querySelectorAll('.tab-grp').forEach(x=>x.classList.remove('grp-open'));
-  if(!wasOpen)el.classList.add('grp-open');
+  if(!wasOpen){
+    el.classList.add('grp-open');
+    // วาง dropdown ด้วย position:fixed คำนวณตำแหน่งจริงของปุ่ม เพื่อไม่ให้ถูกตัดโดย overflow ของแถบแท็บ (เกิดบั๊กกดแล้วไม่เห็นเมนู)
+    if(window.innerWidth>600){
+      const btn=el.querySelector('.grp-btn');
+      const dd=el.querySelector('.tab-dropdown');
+      if(btn&&dd){
+        const r=btn.getBoundingClientRect();
+        let left=r.left;
+        const ddWidth=dd.offsetWidth||190;
+        if(left+ddWidth>window.innerWidth-8)left=window.innerWidth-ddWidth-8;
+        dd.style.top=r.bottom+'px';
+        dd.style.left=left+'px';
+      }
+    }
+  }
 }
 document.addEventListener('click',function(e){
   if(!e.target.closest('.tab-grp'))document.querySelectorAll('.tab-grp').forEach(x=>x.classList.remove('grp-open'));
