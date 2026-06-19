@@ -853,6 +853,18 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 <!-- MANAGE -->
 <div id="sec-manage" class="sec">
   <div class="sec-hdr"><div class="sec-title">⚙️ จัดการบ่อ</div><button class="btn btn-p" onclick="openAddPond()">+ เพิ่มบ่อใหม่</button></div>
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <label class="fl" style="margin:0">จำนวนรอบเลี้ยงต่อปี</label>
+      <select class="fi" id="settings-crops-per-year" style="width:100px" onchange="updateCropsPerYear(this.value)">
+        <option value="1">1 รอบ</option>
+        <option value="2">2 รอบ</option>
+        <option value="3">3 รอบ</option>
+        <option value="4">4 รอบ</option>
+      </select>
+      <span style="font-size:11px;color:var(--tx3)">ใช้คำนวณการขึ้นรอบใหม่/ปี ของแต่ละบ่อ</span>
+    </div>
+  </div>
   <div class="card">
     <div class="tbl-wrap">
       <table class="tbl"><thead><tr><th>ชื่อบ่อ</th><th>ยอดปล่อย</th><th>ขนาด (ไร่)</th><th>ความหนาแน่น</th><th>วันปล่อย</th><th>อายุ</th><th>น้ำ</th><th>อาหาร</th><th>สุ่ม</th><th>แล็บ</th><th>จัดการ</th></tr></thead><tbody id="mg-tbody"></tbody></table>
@@ -927,8 +939,27 @@ function normalizeD(d) {
   });
   if (!d.categories) d.categories = [...DEFAULT_CATS];
   if (!d.harvestLog) d.harvestLog = [];
+  if (!d.settings) d.settings = {};
+  if (!d.settings.cropsPerYear) d.settings.cropsPerYear = 2;
   return d;
 }
+
+let _pendingRerender = false; // มี remote update เข้ามาตอนกำลังกรอกฟอร์ม รอ re-render จนกว่าจะเสร็จ
+function isEditingField(){
+  const el = document.activeElement;
+  if (!el) return false;
+  const tag = el.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+}
+document.addEventListener('focusout', () => {
+  if (!_pendingRerender) return;
+  setTimeout(() => {
+    if (_pendingRerender && !isEditingField()) {
+      _pendingRerender = false;
+      populateAll(); renderOv();
+    }
+  }, 50);
+});
 
 async function initFirebase() {
   try {
@@ -986,7 +1017,11 @@ async function initFirebase() {
       const remote = normalizeD(JSON.parse(v.json));
       D = remote;
       localStorage.setItem(SK, v.json);
-      populateAll(); renderOv();
+      if (isEditingField()) {
+        _pendingRerender = true;
+      } else {
+        populateAll(); renderOv();
+      }
       setSyncStatus('sync-ok', '🔄 ซิงค์แล้ว · ' + new Date().toLocaleTimeString('th-TH'));
     }, err => {
       setSyncStatus('sync-err', '⚠️ ขาดการเชื่อมต่อ — บันทึกในเครื่องเท่านั้น');
@@ -995,7 +1030,11 @@ async function initFirebase() {
 
     // ── Connection state monitor ──────────────────────────
     firebase.database().ref('.info/connected').on('value', snap => {
-      if (!snap.val()) setSyncStatus('sync-err', '🔴 ออฟไลน์ — ข้อมูลจะ sync เมื่อออนไลน์');
+      if (!snap.val()) {
+        setSyncStatus('sync-err', '🔴 ออฟไลน์ — ข้อมูลจะ sync เมื่อออนไลน์');
+      } else {
+        setSyncStatus('sync-ok', '🟢 ออนไลน์ · ' + new Date().toLocaleTimeString('th-TH'));
+      }
     });
 
   } catch(e) {
@@ -1429,25 +1468,62 @@ function loadData(){
     d.ponds.forEach(p=>{['feedLog','samples','plankton','waterLog','chemLog','labResults'].forEach(k=>{if(!p[k])p[k]=[]});if(!p.cropHistory)p.cropHistory=[];if(!p.cropNum)p.cropNum=1;if(!p.cropYear)p.cropYear=_cy;if(p.prepChecklist===undefined)p.prepChecklist=null;});
     if(!d.categories)d.categories=[...DEFAULT_CATS];
     if(!d.harvestLog)d.harvestLog=[];
+    if(!d.settings)d.settings={};
+    if(!d.settings.cropsPerYear)d.settings.cropsPerYear=2;
     return d;
-  }const d=cln(DEFAULT);d.categories=[...DEFAULT_CATS];d.harvestLog=[];return d}catch{const d=cln(DEFAULT);d.categories=[...DEFAULT_CATS];d.harvestLog=[];return d}
+  }const d=cln(DEFAULT);d.categories=[...DEFAULT_CATS];d.harvestLog=[];d.settings={cropsPerYear:2};return d}catch{const d=cln(DEFAULT);d.categories=[...DEFAULT_CATS];d.harvestLog=[];d.settings={cropsPerYear:2};return d}
 }
-function save() {
-  const json = JSON.stringify(D);
-  localStorage.setItem(SK, json);
-  if (firebase.apps.length) {
-    _remoteIgnoreUntil = Date.now() + 4000;
-    setSyncStatus('sync-load', 'กำลังบันทึก...');
-    firebase.database().ref(RTDB_PATH)
-      .set({ json, updated: new Date().toISOString() })
-      .then(() => setSyncStatus('sync-ok', '✅ บันทึกสำเร็จ · ' + new Date().toLocaleTimeString('th-TH')))
-      .catch(e => setSyncStatus('sync-err', '⚠️ บันทึกไม่ได้: ' + e.message));
+function mergeArr(localArr, remoteArr) {
+  if (!Array.isArray(remoteArr)) return localArr || [];
+  if (!Array.isArray(localArr)) return remoteArr || [];
+  const seen = new Set();
+  const out = [];
+  [...remoteArr, ...localArr].forEach(item => {
+    const key = (item && item.id !== undefined) ? ('id:' + item.id) : JSON.stringify(item);
+    if (!seen.has(key)) { seen.add(key); out.push(item); }
+  });
+  return out;
+}
+function mergeRemote(local, remote) {
+  const merged = cln(local);
+  const LOG_KEYS = ['feedLog','samples','plankton','waterLog','chemLog','labResults','cropHistory'];
+  const remotePonds = {};
+  (remote.ponds||[]).forEach(p => { remotePonds[p.id] = p; });
+  merged.ponds.forEach(p => {
+    const rp = remotePonds[p.id];
+    if (!rp) return;
+    LOG_KEYS.forEach(k => { p[k] = mergeArr(p[k], rp[k]); });
+  });
+  const localIds = new Set(merged.ponds.map(p=>p.id));
+  (remote.ponds||[]).forEach(rp => { if (!localIds.has(rp.id)) merged.ponds.push(rp); });
+  merged.harvestLog = mergeArr(merged.harvestLog, remote.harvestLog);
+  return merged;
+}
+async function save() {
+  localStorage.setItem(SK, JSON.stringify(D));
+  if (!firebase.apps.length) return;
+  _remoteIgnoreUntil = Date.now() + 4000;
+  setSyncStatus('sync-load', 'กำลังบันทึก...');
+  try {
+    const dbRef = firebase.database().ref(RTDB_PATH);
+    const snap = await dbRef.once('value');
+    const val = snap.val();
+    if (val && val.json) {
+      const remote = normalizeD(JSON.parse(val.json));
+      D = mergeRemote(D, remote);
+    }
+    const json = JSON.stringify(D);
+    localStorage.setItem(SK, json);
+    await dbRef.set({ json, updated: new Date().toISOString() });
+    setSyncStatus('sync-ok', '✅ บันทึกสำเร็จ · ' + new Date().toLocaleTimeString('th-TH'));
+  } catch(e) {
+    setSyncStatus('sync-err', '⚠️ บันทึกไม่ได้: ' + e.message);
   }
 }
 function fbSave(){} // save() ซิงค์ Firebase อยู่แล้ว — ฟังก์ชันนี้กันพังจาก legacy calls
 function cln(x){return JSON.parse(JSON.stringify(x))}
 function pond(id){return D.ponds.find(p=>p.id===id)}
-function today(){return new Date().toISOString().split('T')[0]}
+function today(){return new Date(Date.now()+7*3600000).toISOString().split('T')[0]}
 function dDiff(a,b){return Math.floor((new Date(b)-new Date(a))/86400000)}
 function fD(d){if(!d)return'-';return new Date(d).toLocaleDateString('th-TH',{year:'2-digit',month:'short',day:'numeric'})}
 function fN(v,d){return v!==null&&v!==undefined&&v!==''?parseFloat(v).toFixed(d):'-'}
@@ -1484,7 +1560,7 @@ function classifyOv(key,v){
 function worstOv(a,b){const o={ok:0,warn:1,danger:2};return(o[b]||0)>(o[a]||0)?b:a}
 function pondStatusOv(p){
   const last=p.records[p.records.length-1];
-  const age=last?last.age:dDiff(p.startDate,today());
+  const age=p.startDate?dDiff(p.startDate,today()):(last?last.age:0);
   if(age<=0)return'prep';
   let level='ok';
   if(last){
@@ -1573,6 +1649,8 @@ function projHarvest(p,target=22){
   return{days,age:lat.age+days,date:hDate.toISOString().split('T')[0]};
 }
 function populateAll(){
+  const cpyEl=document.getElementById('settings-crops-per-year');
+  if(cpyEl)cpyEl.value=String(D.settings?.cropsPerYear||2);
   const simple={
     'ep-pond':'','fd-pond':'','sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all',
   };
@@ -1743,15 +1821,15 @@ function renderTide(){
     const lo=ev.filter(e=>e.type==='low').sort((a,b)=>a.ms-b.ms);
     const isToday=k===todayKey;
     const chip=(e,col,bg,arrow)=>`<div style="background:${bg};border-radius:9px;padding:7px 11px;flex:1;min-width:78px">
-        <div style="font-size:10px;font-weight:700;color:${col}">${arrow}</div>
-        <div style="font-size:15px;font-weight:800;color:var(--tx)">${fT(e.ms)}</div>
+        <div style="font-size:10px;font-weight:500;color:${col}">${arrow}</div>
+        <div style="font-size:15px;font-weight:500;color:var(--tx)">${fT(e.ms)}</div>
         <div style="font-size:11px;color:var(--tx2)">${e.h.toFixed(2)} ม.</div>
       </div>`;
     const empty='<span style="font-size:11px;color:var(--tx3)">—</span>';
     cards+=`<div style="padding:11px 0;border-top:1px solid var(--bd);${isToday?'background:rgba(33,150,243,0.06);border-radius:10px;padding:11px 8px;margin:2px 0':''}">
-      <div style="font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+      <div style="font-size:13px;font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:6px">
         <span style="${isToday?'color:var(--p)':''}">${THD[d.getUTCDay()]} ${d.getUTCDate()} ${THM[d.getUTCMonth()]}</span>
-        ${isToday?'<span style="background:var(--p);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">วันนี้</span>':''}
+        ${isToday?'<span style="background:var(--p);color:#fff;font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px">วันนี้</span>':''}
       </div>
       <div style="display:flex;gap:7px;flex-wrap:wrap">
         ${hi.length?hi.slice(0,2).map(e=>chip(e,'#2196f3','rgba(33,150,243,0.12)','⬆ น้ำขึ้น')).join(''):''}
@@ -1790,12 +1868,12 @@ function renderTide(){
     const labelY=isHi?Math.max(my-16,12):Math.min(my+24,WH-6);
     return `<g>
       <circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="4.5" fill="${col}" stroke="#fff" stroke-width="1.5"/>
-      <text x="${mx.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-size="10" font-weight="700" fill="${col}">${isHi?'▲':'▼'} ${fT(e.ms)}</text>
+      <text x="${mx.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-size="10" font-weight="500" fill="${col}">${isHi?'▲':'▼'} ${fT(e.ms)}</text>
       <text x="${mx.toFixed(1)}" y="${(labelY+(isHi?11:11)).toFixed(1)}" text-anchor="middle" font-size="9" fill="#9aa3ad">${e.h.toFixed(2)}ม.</text>
     </g>`;
   }).join('');
   const waveSvg=`
-    <div style="font-size:11px;font-weight:700;color:var(--tx2);margin:14px 0 2px;text-align:center">🌊 กราฟคลื่นน้ำวันนี้</div>
+    <div style="font-size:11px;font-weight:500;color:var(--tx2);margin:14px 0 2px;text-align:center">🌊 กราฟคลื่นน้ำวันนี้</div>
     <svg viewBox="0 0 ${WW} ${WH}" style="width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="waveGrad" x1="0" y1="0" x2="0" y2="1">
@@ -1807,7 +1885,7 @@ function renderTide(){
       <path d="${linePath}" fill="none" stroke="#2196f3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
       <line x1="${nowX.toFixed(1)}" y1="${padT}" x2="${nowX.toFixed(1)}" y2="${(padT+innerH).toFixed(1)}" stroke="#9aa3ad" stroke-width="1" stroke-dasharray="3,3" opacity="0.7"/>
       <circle cx="${nowX.toFixed(1)}" cy="${nowY.toFixed(1)}" r="5" fill="#fff" stroke="${rising?'#2196f3':'#e67e22'}" stroke-width="2.5"/>
-      <text x="${nowX.toFixed(1)}" y="${(padT-10).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--tx2)">ตอนนี้</text>
+      <text x="${nowX.toFixed(1)}" y="${(padT-10).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="500" fill="var(--tx2)">ตอนนี้</text>
       ${markers}
     </svg>`;
   const TIDE_ALERT_M=2.0;
@@ -1818,7 +1896,7 @@ function renderTide(){
     return`<div style="margin-top:8px;padding:8px 14px;background:rgba(244,67,54,0.12);border:1px solid rgba(244,67,54,0.3);border-radius:10px;display:inline-flex;align-items:center;gap:8px;text-align:left">
       <span style="font-size:16px">⚠️</span>
       <div>
-        <div style="font-size:12px;font-weight:700;color:#f44336">น้ำขึ้นสูง ${nextBigHigh.h.toFixed(2)} ม. วัน${dateLbl}</div>
+        <div style="font-size:12px;font-weight:500;color:#f44336">น้ำขึ้นสูง ${nextBigHigh.h.toFixed(2)} ม. วัน${dateLbl}</div>
         <div style="font-size:11px;color:var(--tx2)">เวลา ${fT(nextBigHigh.ms)} น. — เตรียมแผนสูบน้ำ</div>
       </div>
     </div>`;
@@ -1831,7 +1909,7 @@ function renderTide(){
         <span style="font-size:16px">📌</span>
         <div>
           <div style="font-size:11px;color:var(--tx3)">น้ำขึ้นถึง ${TIDE_ALERT_M.toFixed(2)} ม. ครั้งต่อไป</div>
-          <div style="font-size:13px;font-weight:700;color:var(--tx)">วัน${dateLbl} เวลา ${fT(nextBigHigh.ms)} น. (${nextBigHigh.h.toFixed(2)} ม.)</div>
+          <div style="font-size:13px;font-weight:500;color:var(--tx)">วัน${dateLbl} เวลา ${fT(nextBigHigh.ms)} น. (${nextBigHigh.h.toFixed(2)} ม.)</div>
         </div>
       </div>`;
     }
@@ -1839,15 +1917,15 @@ function renderTide(){
       <span style="font-size:16px">📌</span>
       <div>
         <div style="font-size:11px;color:var(--tx3)">น้ำขึ้นถึง ${TIDE_ALERT_M.toFixed(2)} ม. ครั้งต่อไป</div>
-        <div style="font-size:13px;font-weight:700;color:var(--tx2)">ไม่มีในช่วง 7 วันนี้</div>
+        <div style="font-size:13px;font-weight:500;color:var(--tx2)">ไม่มีในช่วง 7 วันนี้</div>
       </div>
     </div>`;
   })();
   nowEl.innerHTML=`
     <div style="text-align:center">
       <div style="font-size:12px;color:var(--tx3)">ระดับน้ำตอนนี้</div>
-      <div style="font-size:34px;font-weight:800;color:var(--p);line-height:1.15">${nowH.toFixed(2)}<span style="font-size:14px;font-weight:500"> ม.</span></div>
-      <div style="display:inline-block;margin-top:4px;font-size:12px;font-weight:700;padding:3px 12px;border-radius:14px;background:${rising?'rgba(33,150,243,0.12)':'rgba(230,126,34,0.12)'};color:${rising?'#2196f3':'#e67e22'}">${rising?'↑ น้ำขึ้น':'↓ น้ำลง'}</div>
+      <div style="font-size:34px;font-weight:500;color:var(--p);line-height:1.15">${nowH.toFixed(2)}<span style="font-size:14px;font-weight:500"> ม.</span></div>
+      <div style="display:inline-block;margin-top:4px;font-size:12px;font-weight:500;padding:3px 12px;border-radius:14px;background:${rising?'rgba(33,150,243,0.12)':'rgba(230,126,34,0.12)'};color:${rising?'#2196f3':'#e67e22'}">${rising?'↑ น้ำขึ้น':'↓ น้ำลง'}</div>
       <div>${tideNextField}</div>
     </div>
     ${waveSvg}`;
@@ -1859,7 +1937,7 @@ function renderOv(){
   // ===== สถานะการ์ดแต่ละบ่อ (เกณฑ์ vannamei ใหม่ — เฉพาะหน้าภาพรวม) =====
   const meta=D.ponds.map(p=>{
     const last=p.records[p.records.length-1];
-    const age=last?last.age:dDiff(p.startDate,today());
+    const age=p.startDate?dDiff(p.startDate,today()):(last?last.age:0);
     return{p,last,age,cls:pondStatusOv(p)};
   });
   const rank={danger:0,warn:1,ok:2,prep:3};
@@ -2623,7 +2701,7 @@ function renderWx(data){
         <div style="font-size:48px">${wmoIco(cur.weathercode)}</div>
         <div>
           <div style="font-size:13px;opacity:.8">🕐 สภาพอากาศปัจจุบัน · ต.นาพญา อ.หลังสวน</div>
-          <div style="font-size:30px;font-weight:900;line-height:1.1">${cur.temperature.toFixed(1)}°C</div>
+          <div style="font-size:30px;font-weight:500;line-height:1.1">${cur.temperature.toFixed(1)}°C</div>
           <div style="font-size:13px;opacity:.9">${wmoDesc(cur.weathercode)} · 💨 ${cur.windspeed.toFixed(0)} กม/ชม</div>
         </div>
       </div>
@@ -2649,17 +2727,17 @@ function renderWx(data){
     if(uv&&uv>8)tags.push({bg:'var(--wb)',c:'var(--w)',t:`☀️ UV สูง (${uv.toFixed(0)})`});
     if(rainProb>70)tags.push({bg:'var(--ib)',c:'var(--in)',t:`🌂 โอกาสฝน ${rainProb}%`});
     return`<div class="wx-day" style="${isToday?'border:2px solid var(--p);':''}">
-      <div style="font-size:11px;color:${isToday?'var(--p)':'var(--tx3)'};font-weight:${isToday?700:400};margin-bottom:4px">${lbls[i]}${isToday?' ·วันนี้':''} (${new Date(dt).toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short'})})</div>
+      <div style="font-size:11px;color:${isToday?'var(--p)':'var(--tx3)'};font-weight:500;margin-bottom:4px">${lbls[i]} (${new Date(dt).toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short'})})</div>
       <div style="font-size:32px;margin-bottom:5px">${wmoIco(d.weathercode[i])}</div>
       <div style="font-size:13px;color:var(--tx3);margin-bottom:6px">${wmoDesc(d.weathercode[i])}</div>
-      <div style="font-size:18px;font-weight:800">${tMax.toFixed(1)}° / ${tMin.toFixed(1)}°C</div>
+      <div style="font-size:18px;font-weight:500">${tMax.toFixed(1)}° / ${tMin.toFixed(1)}°C</div>
       <div style="font-size:11px;color:var(--tx3);margin-top:6px;display:flex;flex-direction:column;gap:3px">
         <span>🌧️ ฝน ${rain.toFixed(1)}มม. (โอกาส ${rainProb}%)</span>
         <span>💨 ${wind.toFixed(0)} กม/ชม. (กระโชก ${gust.toFixed(0)})</span>
         <span>💧 ความชื้น ${humid}% · ☀️ UV ${uv?.toFixed(0)||'-'}</span>
         ${sr?`<span>🌅 ${sr} · 🌇 ${ss}</span>`:''}
       </div>
-      ${tags.map(t=>`<span style="display:block;margin-top:5px;font-size:10px;background:${t.bg};color:${t.c};padding:2px 7px;border-radius:10px;font-weight:700">${t.t}</span>`).join('')}
+      ${tags.map(t=>`<span style="display:block;margin-top:5px;font-size:10px;background:${t.bg};color:${t.c};padding:2px 7px;border-radius:10px;font-weight:500">${t.t}</span>`).join('')}
     </div>`;
   }).join('');
 }
@@ -2673,7 +2751,10 @@ function calcRisk(d,ix,p){
   const last=p.records[p.records.length-1];
   if(last){if(last.alk&&last.alk<120){score+=1;rs.push({l:'warn',m:`ALK ต่ำ (${last.alk}) เสี่ยงฝน`})}if(last.doM&&last.doM<5.5){score+=1;rs.push({l:'warn',m:`DO เช้าต่ำ (${last.doM})`})}}
   const latLab=(p.labResults||[]).slice(-1)[0];
-  if(latLab&&latLab.vibP>500){score+=1;rs.push({l:'warn',m:`Vibrio สูง (${latLab.vibP.toLocaleString()}) ระวังความเครียด`})}
+  if(latLab){
+    const tcbsTotal=(latLab.tcbsGreen||0)+(latLab.tcbsYellow||0);
+    if(tcbsTotal>1000){score+=1;rs.push({l:'warn',m:`TCBS รวมสูง (${tcbsTotal.toLocaleString()}) ระวังความเครียด`})}
+  }
   return{score,reasons:rs};
 }
 function renderRisk(d){
@@ -3144,9 +3225,9 @@ function renderPrepCard(pid){
   return`<div class="card" style="margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-weight:700;font-size:14px">🧹 บ่อ ${p.name}</span>
+        <span style="font-weight:500;font-size:14px">🧹 บ่อ ${p.name}</span>
         <span style="font-size:12px;color:var(--tx3)">รอบ ${p.cropNum||1}</span>
-        <span style="font-size:12px;font-weight:700;color:${pct===100?'var(--ok)':pct>=50?'var(--w)':'var(--d)'}">${checked}/${PREP_STEPS.length} (${pct}%)${pct===100?' ✅':''}</span>
+        <span style="font-size:12px;font-weight:500;color:${pct===100?'var(--ok)':pct>=50?'var(--w)':'var(--d)'}">${checked}/${PREP_STEPS.length} (${pct}%)${pct===100?' ✅':''}</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <label style="font-size:11px;color:var(--tx3)">วันลงกุ้ง:</label>
@@ -3249,26 +3330,31 @@ function calcCropEcon(){
   const costOther=parseFloat(document.getElementById('cm-cost-other').value)||0;
   // caught
   const caught=w&&sz?Math.round(w*sz):0;
-  if(caught)document.getElementById('cm-caught').value=caught;
+  document.getElementById('cm-caught').value=caught||'';
   // survival rate
   const survival=caught&&p.stock?(caught/p.stock*100):0;
-  if(survival)document.getElementById('cm-survival').value=survival.toFixed(1);
+  document.getElementById('cm-survival').value=survival?survival.toFixed(1):'';
   // fcr
   const cumFeed=getCumFeed(p);
   const fcr=cumFeed&&w?( cumFeed/w).toFixed(2):'';
-  if(fcr)document.getElementById('cm-fcr').value=fcr;
+  document.getElementById('cm-fcr').value=fcr||'';
   // revenue
   const revenue=w*price;
-  if(revenue)document.getElementById('cm-revenue').value=Math.round(revenue);
+  document.getElementById('cm-revenue').value=revenue?Math.round(revenue):'';
   // feed cost (estimate from feed log — just show sum×price, for now 0 unless user fills)
   // profit
   const costFeed=parseFloat(document.getElementById('cm-cost-feed').value)||0;
   const totalCost=costFry+costFeed+costChem+costOther;
   const profit=revenue-totalCost;
-  if(revenue||totalCost)document.getElementById('cm-profit').value=Math.round(profit);
+  document.getElementById('cm-profit').value=(revenue||totalCost)?Math.round(profit):'';
 }
 function closeCropModal(){
   document.getElementById('cropModal').classList.remove('on');
+}
+function updateCropsPerYear(val){
+  if(!D.settings)D.settings={};
+  D.settings.cropsPerYear=parseInt(val)||2;
+  save();fbSave();
 }
 function confirmCloseCrop(){
   const pid=document.getElementById('cm-pond-id').value;
@@ -3316,9 +3402,10 @@ function confirmCloseCrop(){
   if(!p.cropHistory)p.cropHistory=[];
   p.cropHistory.push(archived);
   // reset for new crop
+  const cropsPerYear=D.settings?.cropsPerYear||2;
   const nextCropNum=(p.cropNum||1)+1;
-  const nextCropYear=nextCropNum>2?p.cropYear+1:p.cropYear||new Date().getFullYear();
-  p.cropNum=nextCropNum>2?1:nextCropNum;
+  const nextCropYear=nextCropNum>cropsPerYear?p.cropYear+1:p.cropYear||new Date().getFullYear();
+  p.cropNum=nextCropNum>cropsPerYear?1:nextCropNum;
   p.cropYear=nextCropYear;
   p.startDate='';
   p.stock=0;
