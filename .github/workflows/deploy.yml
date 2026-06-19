@@ -1,0 +1,40 @@
+name: Validate HTML before Pages publish
+
+on:
+  push:
+    branches: [main, master]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check required files exist
+        run: |
+          test -f index.html
+          test -f TawanFarm_App.html
+          echo "Required files present."
+
+      - name: Check balanced <html>/<script>/<div> tags
+        run: |
+          for f in index.html TawanFarm_App.html; do
+            echo "Checking $f ..."
+            open_html=$(grep -o '<html' "$f" | wc -l)
+            close_html=$(grep -o '</html>' "$f" | wc -l)
+            if [ "$open_html" -ne "$close_html" ]; then
+              echo "::error file=$f::Mismatched <html> tags ($open_html open vs $close_html close)"
+              exit 1
+            fi
+            open_script=$(grep -o '<script' "$f" | wc -l)
+            close_script=$(grep -o '</script>' "$f" | wc -l)
+            if [ "$open_script" -ne "$close_script" ]; then
+              echo "::error file=$f::Mismatched <script> tags ($open_script open vs $close_script close)"
+              exit 1
+            fi
+            echo "$f OK"
+          done
+
+      - name: Done
+        run: echo "Validation passed — GitHub Pages will publish this commit automatically."
