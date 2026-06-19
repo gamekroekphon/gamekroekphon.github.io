@@ -145,6 +145,16 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .home-quick button:hover{color:var(--tx)}
 .home-quick .qi{font-size:20px;color:var(--tx)}
 @media(max-width:600px){.home-big{font-size:24px}}
+.pd-back{display:inline-block;font-size:14px;font-weight:500;color:var(--p);cursor:pointer;margin-bottom:14px;padding:6px 2px}
+.pd-back:hover{text-decoration:underline}
+.pd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:4px}
+.pd-name{font-size:22px;font-weight:700;color:var(--tx)}
+.pd-sub{font-size:12px;color:var(--tx3);margin-top:4px;line-height:1.5}
+.pd-alert{margin-top:14px}
+.pd-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.pd-water-row{display:flex;justify-content:space-between;padding:7px 0;border-top:.5px solid var(--bd);font-size:13px}
+.pd-actions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+@media(max-width:600px){.pd-metrics{grid-template-columns:repeat(2,1fr)}}
 
 /* ── Badges & Alerts ── */
 .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
@@ -354,6 +364,11 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
       <div style="font-size:11px;color:var(--tx3);text-align:right;margin-top:18px">อัปเดต: <span id="ov-ts"></span></div>
 </div>
 <!-- TIDE -->
+<!-- POND DETAIL (read-only) -->
+<div id="sec-ponddetail" class="sec">
+  <div class="pd-back" onclick="document.getElementById('tab-overview').click()">‹ ภาพรวม</div>
+  <div id="pd-body"></div>
+</div>
 <div id="sec-tide" class="sec">
   <div class="sec-hdr"><div class="sec-title">🌊 น้ำขึ้นน้ำลง 7 วัน</div></div>
   <div class="g2" style="margin-bottom:16px;align-items:start">
@@ -2004,12 +2019,89 @@ function reasonOv(p,last,age){
 }
 function homeRow(p,age,cls,reason){
   const dot=cls==='danger'?'var(--d)':cls==='warn'?'var(--w)':cls==='prep'?'var(--in)':'var(--ok)';
-  return`<div class="home-row" onclick="jumpEntry('${p.id}')">
+  return`<div class="home-row" onclick="openPondDetail('${p.id}')">
     <span class="dot" style="background:${dot}"></span>
     <div class="grow"><div class="name">บ่อ ${p.name}</div>${reason?`<div class="reason">${reason}</div>`:''}</div>
     ${age!==null&&age!==undefined?`<span class="age">${age} วัน</span>`:''}<span class="chev">›</span>
   </div>`;
 }
+function openPondDetail(id){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.getElementById('sec-ponddetail').classList.add('on');
+  renderPondDetail(id);
+  window.scrollTo({top:0,behavior:'instant'});
+}
+function renderPondDetail(id){
+  const p=pond(id);const el=document.getElementById('pd-body');
+  if(!el)return;
+  if(!p){el.innerHTML='<div class="card">ไม่พบข้อมูลบ่อ</div>';return}
+  const last=p.records[p.records.length-1];
+  const age=p.startDate?dDiff(p.startDate,today()):(last?last.age:0);
+  const cls=pondStatusOv(p);
+  const reason=reasonOv(p,last,age);
+  const badgeTxt={danger:'ต้องดู',warn:'เฝ้าระวัง',ok:'ปกติ',prep:'กำลังเตรียม'}[cls]||'ปกติ';
+  const samples=p.samples||[];const lat=samples.length?samples[samples.length-1]:null;
+  const fcr=getFCR(p);const biomass=getLatestBiomass(p);
+  const feedLog=p.feedLog||[];const latFeed=feedLog.length?feedLog[feedLog.length-1]:null;
+  const per100k=latFeed&&latFeed.totalFeed?feedPer100k(latFeed.totalFeed,p.stock):null;
+
+  const subParts=[];
+  if(p.stock)subParts.push(p.stock.toLocaleString()+' ตัว');
+  if(p.size)subParts.push(p.size+' ไร่');
+  if(p.size&&p.stock)subParts.push(dens(p)+' ตัว/ตร.ม.');
+  if(p.hatchery)subParts.push(p.hatchery);
+  if(p.startDate)subParts.push('ลงกุ้ง '+fD(p.startDate));
+
+  const metrics=[
+    {lbl:'ABW ล่าสุด',v:lat&&lat.abw?lat.abw+' g':'-'},
+    {lbl:'ไซส์ (ตัว/กก.)',v:lat&&lat.plCount?lat.plCount:'-'},
+    {lbl:'FCR',v:fcr||'-'},
+    {lbl:'Biomass',v:biomass?biomass.toFixed(0)+' kg':'-'},
+    {lbl:'อาหารล่าสุด',v:latFeed&&latFeed.totalFeed?latFeed.totalFeed+' กก.'+(per100k!=null?' ('+per100k.toFixed(1)+' กก./แสน)':''):'-'},
+    {lbl:'อายุ',v:age!=null&&age!==undefined?age+' วัน':'-'},
+  ];
+  const metricsHtml=metrics.map(m=>`<div class="metric-card"><div class="mv" style="font-size:18px">${m.v}</div><div class="ml">${m.lbl}</div></div>`).join('');
+
+  let waterHtml='';
+  if(last){
+    const rows=[];
+    PARAMS.forEach(pm=>{
+      const v=last[pm.key];
+      if(v===null||v===undefined||v==='')return;
+      const s=classifyOv(pm.key,v);
+      const col=s==='danger'?'var(--d)':s==='warn'?'var(--w)':'var(--tx)';
+      rows.push(`<div class="pd-water-row"><span style="color:var(--tx2)">${pm.lbl}</span><span style="font-weight:600;color:${col}">${v}${pm.unit?' '+pm.unit:''}</span></div>`);
+    });
+    if(last.phM!=null&&last.phA!=null&&last.phM!==''&&last.phA!==''){
+      const sw=Math.abs(last.phM-last.phA);const s=classifyOv('phSwing',sw);
+      const col=s==='danger'?'var(--d)':s==='warn'?'var(--w)':'var(--tx)';
+      rows.push(`<div class="pd-water-row"><span style="color:var(--tx2)">สวิง pH</span><span style="font-weight:600;color:${col}">${sw.toFixed(2)}</span></div>`);
+    }
+    waterHtml=rows.length?rows.join(''):'<div style="color:var(--tx3);font-size:13px;padding:7px 0">ไม่มีข้อมูล</div>';
+  }else{
+    waterHtml='<div style="color:var(--tx3);font-size:13px;padding:7px 0">ยังไม่มีข้อมูลคุณภาพน้ำ</div>';
+  }
+
+  el.innerHTML=`
+    <div class="pd-head">
+      <div>
+        <div class="pd-name">บ่อ ${p.name}</div>
+        <div class="pd-sub">${subParts.join(' · ')}</div>
+      </div>
+      <span class="b-${cls==='prep'?'info':cls}" style="padding:5px 12px;border-radius:14px;font-size:12px;font-weight:600;flex:none">${badgeTxt}</span>
+    </div>
+    ${reason?`<div class="pd-alert"><div class="ai ${cls==='prep'?'ok':cls}"><span>${cls==='danger'?'🔴':cls==='warn'?'🟡':'ℹ️'}</span><div>${reason}</div></div></div>`:''}
+    <div class="pd-metrics">${metricsHtml}</div>
+    <div class="card" style="margin-top:20px">
+      <div class="card-t">💧 คุณภาพน้ำล่าสุด${last&&last.date?` · ${fD(last.date)}`:''}</div>
+      ${waterHtml}
+    </div>
+    <div class="pd-actions">
+      <button class="btn btn-p" onclick="jumpEntry('${p.id}')">📝 กรอกข้อมูลใหม่</button>
+      <button class="btn" onclick="jumpFeed('${p.id}')">🍖 กรอกอาหาร</button>
+    </div>`;
+}
+function jumpFeed(id){document.getElementById('tab-feed').click();setTimeout(()=>{document.getElementById('fd-pond').value=id;onFdPond();},80)}
 let homeAttnExpanded=false;
 function homeToggleAttn(){homeAttnExpanded=true;renderOv()}
 function homeToggleGroup(id){
