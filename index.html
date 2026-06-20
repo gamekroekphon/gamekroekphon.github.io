@@ -2135,18 +2135,32 @@ function renderPondDetail(id){
 
   let waterHtml='';
   if(last){
+    // เทียบกับค่าที่กรอกครั้งก่อนหน้า (ไม่ใช่เมื่อวานตามปฏิทินเสมอไป เพราะอาจไม่ได้กรอกทุกวัน)
+    const prev=p.records.length>1?p.records[p.records.length-2]:null;
+    const trendArrow=(v,pv)=>{
+      if(pv===null||pv===undefined||pv===''||isNaN(parseFloat(pv))||isNaN(parseFloat(v)))return'';
+      const diff=parseFloat(v)-parseFloat(pv);
+      if(Math.abs(diff)<0.005)return'';
+      return diff>0?`<span style="font-size:11px;color:var(--tx3);margin-left:4px">▲</span>`:`<span style="font-size:11px;color:var(--tx3);margin-left:4px">▼</span>`;
+    };
     const rows=[];
     PARAMS.forEach(pm=>{
       const v=last[pm.key];
       if(v===null||v===undefined||v==='')return;
       const s=classifyOv(pm.key,v);
       const col=s==='danger'?'var(--d)':s==='warn'?'var(--w)':'var(--tx)';
-      rows.push(`<div class="pd-water-row"><span style="color:var(--tx2)">${pm.lbl}</span><span style="font-weight:600;color:${col}">${v}${pm.unit?' '+pm.unit:''}</span></div>`);
+      const arrow=trendArrow(v,prev?prev[pm.key]:null);
+      rows.push(`<div class="pd-water-row"><span style="color:var(--tx2)">${pm.lbl}</span><span style="font-weight:600;color:${col}">${v}${pm.unit?' '+pm.unit:''}${arrow}</span></div>`);
     });
     if(last.phM!=null&&last.phA!=null&&last.phM!==''&&last.phA!==''){
       const sw=Math.abs(last.phM-last.phA);const s=classifyOv('phSwing',sw);
       const col=s==='danger'?'var(--d)':s==='warn'?'var(--w)':'var(--tx)';
-      rows.push(`<div class="pd-water-row"><span style="color:var(--tx2)">สวิง pH</span><span style="font-weight:600;color:${col}">${sw.toFixed(2)}</span></div>`);
+      let swArrow='';
+      if(prev&&prev.phM!=null&&prev.phA!=null&&prev.phM!==''&&prev.phA!==''){
+        const prevSw=Math.abs(prev.phM-prev.phA);
+        swArrow=trendArrow(sw,prevSw);
+      }
+      rows.push(`<div class="pd-water-row"><span style="color:var(--tx2)">สวิง pH</span><span style="font-weight:600;color:${col}">${sw.toFixed(2)}${swArrow}</span></div>`);
     }
     waterHtml=rows.length?rows.join(''):'<div style="color:var(--tx3);font-size:13px;padding:7px 0">ไม่มีข้อมูล</div>';
   }else{
