@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="ตะวันฟาร์ม">
-  <meta name="theme-color" content="#0a0e27">
+  <meta name="theme-color" content="#F6F7F9">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%234f9dff'/><text y='.9em' font-size='80' x='10'>🦐</text></svg>">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>ตะวันฟาร์ม · Dashboard v2 Online</title>
@@ -25,26 +25,38 @@ if(window.Chart){Chart.defaults.animation=false;Chart.defaults.responsiveAnimati
 <style>
 /* ═══ TAWAN FARM — THEME: PS5 COSMIC ═══ */
 :root{
-  --bg:linear-gradient(160deg,#0a0e27 0%,#161b3d 45%,#0d1b3a 100%);--sf:#131830;--sf2:#1a2142;--bd:#2b3358;
-  --tx:#eef1f8;--tx2:#aab4cc;--tx3:#7d86ad;
-  --p:#4f9dff;--pl:#1b2a4d;--pd:#2f7fe0;
-  --d:#ff5470;--db:#2f1320;--w:#ffb84f;--wb:#2f2310;
-  --ok:#33d17a;--ob:#0f2a1d;--in:#b14aff;--ib:#251a3d;
-  --hdr-bg:linear-gradient(135deg,#0a0e27,#161b3d);--hdr-accent:#4f9dff;
-  --r:8px;--sh:0 1px 3px rgba(0,0,0,.4),0 1px 2px rgba(79,157,255,.08);
-  --w-tx:#b45309;--ok-tx:#06210f;--d-hov:#b02a37
+  /* ── ธีม Light/Yellow (สเปก P Preaw 19 มิ.ย. 2569) — คงชื่อตัวแปรเดิม ผูกค่าสีใหม่ ── */
+  --bg:#F6F7F9;--sf:#FFFFFF;--sf2:#F1F3F5;--bd:#E2E5EA;
+  --tx:#1F2937;--tx2:#5F6670;--tx3:#9AA1AB;
+  --p:#9A6A04;--pl:#FEF6E0;--pd:#7A5503;
+  --d:#DC2626;--db:#FDECEC;--w:#B45309;--wb:#FEF9E7;
+  --ok:#15803D;--ob:#F4FBF6;--in:#185FA5;--ib:#E6F1FB;
+  --hdr-bg:#FFFFFF;--hdr-accent:#FEF6E0;
+  --r:10px;--sh:0 1px 2px rgba(16,24,40,.05);
+  --w-tx:#B45309;--ok-tx:#14532D;--d-hov:#B91C1C;
+
+  /* ── ชื่อตัวแปรตามสเปกใหม่ (ใช้กับส่วนที่เพิ่ม/แก้ใหม่) ── */
+  --bg-page:#F6F7F9;--bg-surface:#FFFFFF;--bg-muted:#F1F3F5;
+  --border:#E2E5EA;--border-input:#D5D9E0;
+  --brand:#E0A106;--brand-strong:#F2B705;--brand-strong-border:#D9A404;
+  --on-brand:#3A2D06;--brand-soft:#FEF6E0;--brand-tint:#FFFCF2;--brand-text:#9A6A04;
+  --text:#1F2937;--text-2:#5F6670;--text-3:#9AA1AB;
+  --ok-border:#BFE5C9;--warn:#B45309;--warn-bg:#FEF9E7;--warn-border:#E0A106;
+  --danger:#DC2626;--danger-bg:#FDECEC;--danger-border:#DC2626;
+  --info:#185FA5;--info-bg:#E6F1FB;--info-border:#85B7EB;
+  --grid:#EEF0F3;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:var(--bg);background-attachment:fixed;color:var(--tx);font-size:14px;min-height:100vh}
 
 /* ── Header ── */
-.hdr{background:var(--hdr-bg);color:#fff;padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+.hdr{background:var(--hdr-bg);color:var(--text);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:3px solid var(--brand);box-shadow:0 1px 2px rgba(16,24,40,.04)}
 .hdr-left{display:flex;align-items:center;gap:14px}
 .hdr-logo{width:36px;height:36px;background:var(--hdr-accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-.hdr-brand{font-size:16px;font-weight:800;letter-spacing:.3px;color:#fff}
-.hdr-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:1px;letter-spacing:.5px;text-transform:uppercase}
+.hdr-brand{font-size:16px;font-weight:800;letter-spacing:.3px;color:var(--text)}
+.hdr-sub{font-size:11px;color:var(--text-3);margin-top:1px;letter-spacing:.5px;text-transform:uppercase}
 .hdr-right{display:flex;gap:8px;align-items:center}
-.hdr-badge{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:4px 12px;border-radius:6px;font-size:12px;white-space:nowrap}
+.hdr-badge{background:var(--bg-page);border:1px solid var(--border);color:var(--text-2);padding:4px 12px;border-radius:6px;font-size:12px;white-space:nowrap}
 .hdr-meta{display:none}
 
 /* ── Tabs ── */
@@ -93,7 +105,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .pond-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:16px 18px;cursor:pointer;transition:box-shadow .15s,border-color .15s;position:relative;overflow:hidden;box-shadow:var(--sh)}
 .pond-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
 .pond-card.ok::before{background:var(--ok)}.pond-card.warn::before{background:var(--w)}.pond-card.danger::before{background:var(--d)}.pond-card.prep::before{background:var(--in)}
-.pond-card:hover{box-shadow:0 4px 16px rgba(234,88,12,.12);border-color:var(--p)}
+.pond-card:hover{box-shadow:0 4px 16px rgba(224,161,6,.15);border-color:var(--p)}
 .pn{font-size:15px;font-weight:800;color:var(--tx)}.pm{font-size:11px;color:var(--tx3);margin-top:2px}
 .pp{text-align:center}.pp-v{font-size:13px;font-weight:700}.pp-l{font-size:10px;color:var(--tx3);margin-top:1px}
 .age-badge{background:var(--pl);color:var(--p);border-radius:8px;padding:4px 10px;text-align:center;min-width:48px}
@@ -169,7 +181,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 /* ── Forms ── */
 .fg{display:flex;flex-direction:column;gap:4px}.fl{font-size:12px;color:var(--tx2);font-weight:600}
 .fi{padding:8px 10px;border:1.5px solid var(--bd);border-radius:6px;font-size:13px;color:var(--tx);background:var(--sf);transition:border-color .15s;width:100%}
-.fi:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px rgba(234,88,12,.08)}
+.fi:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px rgba(224,161,6,.12)}
 .fi.fi-ok{border-color:var(--ok);background:var(--ob)}.fi.fi-warn{border-color:var(--w);background:var(--wb)}.fi.fi-danger{border-color:var(--d);background:var(--db)}
 .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:11px}
 
@@ -184,7 +196,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .tbl{width:100%;border-collapse:collapse;font-size:12px}
 .tbl th{background:var(--sf2);padding:10px 12px;text-align:left;font-weight:700;color:var(--tx2);border-bottom:2px solid var(--bd);white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:.4px;position:sticky;top:0}
 .tbl td{padding:9px 12px;border-bottom:1px solid var(--bd)}
-.tbl tbody tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+.tbl tbody tr:nth-child(even) td{background:#FBFBFC}
 .tbl tr:hover td{background:var(--pl)}.tbl tr.hi td{background:var(--pl)}
 .tbl-wrap{overflow-x:auto;max-height:380px;overflow-y:auto}
 .chart-wrap{position:relative;height:300px}
@@ -214,7 +226,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .rl{background:var(--ob);color:var(--ok)}.rm{background:var(--wb);color:var(--w-tx)}.rh{background:var(--db);color:var(--d)}
 .wc-sel{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .wc-opt{display:flex;align-items:center;gap:6px;padding:5px 10px;border:1.5px solid var(--bd);border-radius:20px;cursor:pointer;font-size:12px;user-select:none;transition:all .15s}
-.wc-opt.on{border-width:2px;box-shadow:0 0 0 2px rgba(234,88,12,.2)}
+.wc-opt.on{border-width:2px;box-shadow:0 0 0 2px rgba(224,161,6,.25)}
 .wc-swatch{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:1px solid var(--bd)}
 .secchi-vis{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;border:3px solid;flex-shrink:0;transition:all .3s}
 .vib-status{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;display:inline-block;margin-top:4px}
@@ -256,12 +268,12 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
   .chart-wrap{height:240px}
 }
 /* ── Sync indicator (ข้อ 5) ── */
-.sync-ind{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:5px 10px;border-radius:20px;font-size:11px;color:rgba(255,255,255,.85);white-space:nowrap;cursor:default;transition:opacity .3s}
+.sync-ind{display:flex;align-items:center;gap:6px;background:var(--bg-page);border:1px solid var(--border);padding:5px 10px;border-radius:20px;font-size:11px;color:var(--text-2);white-space:nowrap;cursor:default;transition:opacity .3s}
 .sync-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--tx3)}
 .sync-ind.sync-ok .sync-dot{background:var(--ok)}
 .sync-ind.sync-err .sync-dot{background:var(--d);animation:pulse 1.5s infinite}
 .sync-ind.sync-load .sync-dot{background:var(--w);animation:pulse 1s infinite}
-.sync-ind-time{color:rgba(255,255,255,.55);font-size:10px}
+.sync-ind-time{color:var(--text-3);font-size:10px}
 @media(max-width:600px){.sync-ind-txt{display:none}.sync-ind-time{display:none}.sync-ind{padding:6px 8px}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 /* ── Bottom nav มือถือ (ข้อ 6) ── */
@@ -300,7 +312,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
       <span class="sync-ind-time" id="sync-time"></span>
     </span>
     <span class="hdr-badge" id="hdr-alert"></span>
-    <button class="btn btn-sm" style="background:var(--hdr-accent);color:#fff;border:none;font-weight:700" onclick="openAddPond()">+ เพิ่มบ่อ</button>
+    <button class="btn btn-sm" style="background:var(--brand-strong);color:var(--on-brand);border:1px solid var(--brand-strong-border);font-weight:700" onclick="openAddPond()">+ เพิ่มบ่อ</button>
   </div>
 </div>
 <div class="tabs-wrap">
