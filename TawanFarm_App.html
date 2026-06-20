@@ -657,8 +657,8 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
           <div class="fg"><label class="fl">ตัวอ่อน EHP (% พบเชื้อ)</label><input type="number" class="fi" id="lb-ehp-larva" placeholder="0" min="0" max="100" step="0.1" oninput="updateLabStatus()"><span class="lbl-std">ปลอดภัย: 0% | เฝ้าระวัง: 0–25% | อันตราย: &gt;25%</span></div>
         </div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">ลำไส้อักเสบ (%)</label><input type="number" class="fi" id="lb-gut" placeholder="0" min="0" max="100" step="0.1" oninput="updateLabStatus()"></div>
-          <div class="fg"><label class="fl">เม็ดไขมันรวม (%)</label><input type="number" class="fi" id="lb-lipid" placeholder="0" min="0" max="100" step="0.1" oninput="updateLabStatus()"></div>
+          <div class="fg"><label class="fl">ลำไส้อักเสบ (%)</label><input type="number" class="fi" id="lb-gut" placeholder="0" min="0" max="100" step="0.1" oninput="updateLabStatus()"><span class="lbl-std">ปกติ: 0–10% | เฝ้าระวัง: 10–30% | อันตราย: &gt;30%</span></div>
+          <div class="fg"><label class="fl">เม็ดไขมันรวม (%)</label><input type="number" class="fi" id="lb-lipid" placeholder="0" min="0" max="100" step="0.1" oninput="updateLabStatus()"><span class="lbl-std">ดี: &gt;70% | เฝ้าระวัง: 50–70% | อันตราย: &lt;50%</span></div>
         </div>
         <div class="fg">
           <label class="fl">ลักษณะตับอ่อน (Hepatopancreas)</label>
@@ -2770,6 +2770,10 @@ function updateLabStatus(){
   if(ehp!==null&&!isNaN(ehp)){const s=ehp>5?'danger':ehp>0?'warn':'ok';msgs.push({s,m:`EHP: พบ ${ehp}% — ${s==='ok'?'ไม่พบเชื้อ':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย เสี่ยง stunted growth'}`})}
   const ehpLarvaRaw=document.getElementById('lb-ehp-larva')?.value;const ehpLarva=ehpLarvaRaw!==''&&ehpLarvaRaw!=null?parseFloat(ehpLarvaRaw):null;
   if(ehpLarva!==null&&!isNaN(ehpLarva)){const s=ehpLarva>25?'danger':ehpLarva>0?'warn':'ok';msgs.push({s,m:`ตัวอ่อน EHP: พบ ${ehpLarva}% — ${s==='ok'?'ไม่พบเชื้อ':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย เสี่ยง stunted growth'}`})}
+  const gutRaw=document.getElementById('lb-gut')?.value;const gut=gutRaw!==''&&gutRaw!=null?parseFloat(gutRaw):null;
+  if(gut!==null&&!isNaN(gut)){const s=gut>30?'danger':gut>10?'warn':'ok';msgs.push({s,m:`ลำไส้อักเสบ: ${gut}% — ${s==='ok'?'ปกติ':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย'}`})}
+  const lipidRaw=document.getElementById('lb-lipid')?.value;const lipid=lipidRaw!==''&&lipidRaw!=null?parseFloat(lipidRaw):null;
+  if(lipid!==null&&!isNaN(lipid)){const s=lipid>=70?'ok':lipid>=50?'warn':'danger';msgs.push({s,m:`เม็ดไขมันรวม: ${lipid}% — ${s==='ok'?'ยังดีอยู่':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย'}`})}
   el.innerHTML=msgs.map(m=>`<div class="ai ${m.s}" style="margin-bottom:5px"><span>${m.s==='danger'?'🔴':m.s==='warn'?'🟡':'✅'}</span><span>${m.m}</span></div>`).join('');
 }
 function saveLab(){
@@ -2815,8 +2819,10 @@ function renderLabTable(){
       const ehpLarvaDisp=(typeof r.ehpLarva==='number')?`${r.ehpLarva}%`:'-';
       const ehpLarvaCls=(typeof r.ehpLarva==='number')?(r.ehpLarva>25?'b-danger':r.ehpLarva>0?'b-warn':'b-ok'):'b-na';
       const gutDisp=(typeof r.gutInflam==='number')?`${r.gutInflam}%`:'-';
+      const gutCls=(typeof r.gutInflam==='number')?(r.gutInflam>30?'b-danger':r.gutInflam>10?'b-warn':'b-ok'):'b-na';
       const lipidDisp=(typeof r.lipidDroplet==='number')?`${r.lipidDroplet}%`:'-';
-      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editLab('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteLab('${pid}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.labName||'-'}</td><td style="font-weight:700;color:${sc(sg)}">${r.tcbsGreen!=null?r.tcbsGreen.toLocaleString():'-'}</td><td>${r.tcbsYellow!=null?r.tcbsYellow.toLocaleString():'-'}</td><td>${r.tvc?r.tvc.toExponential(1):'-'}</td><td><span class="badge ${ehpCls}">${ehpDisp}</span></td><td><span class="badge ${ehpLarvaCls}">${ehpLarvaDisp}</span></td><td>${gutDisp}</td><td>${lipidDisp}</td><td><span class="badge ${r.hepato==='normal'?'b-ok':r.hepato==='pale'?'b-warn':'b-danger'}">${HEPATO_LBL[r.hepato]||r.hepato}</span></td><td>${r.notes||'-'}</td></tr>`;
+      const lipidCls=(typeof r.lipidDroplet==='number')?(r.lipidDroplet>=70?'b-ok':r.lipidDroplet>=50?'b-warn':'b-danger'):'b-na';
+      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editLab('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteLab('${pid}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.labName||'-'}</td><td style="font-weight:700;color:${sc(sg)}">${r.tcbsGreen!=null?r.tcbsGreen.toLocaleString():'-'}</td><td>${r.tcbsYellow!=null?r.tcbsYellow.toLocaleString():'-'}</td><td>${r.tvc?r.tvc.toExponential(1):'-'}</td><td><span class="badge ${ehpCls}">${ehpDisp}</span></td><td><span class="badge ${ehpLarvaCls}">${ehpLarvaDisp}</span></td><td><span class="badge ${gutCls}">${gutDisp}</span></td><td><span class="badge ${lipidCls}">${lipidDisp}</span></td><td><span class="badge ${r.hepato==='normal'?'b-ok':r.hepato==='pale'?'b-warn':'b-danger'}">${HEPATO_LBL[r.hepato]||r.hepato}</span></td><td>${r.notes||'-'}</td></tr>`;
     }).join('')}</tbody></table>`;
 }
 function deleteLab(pid,d){
