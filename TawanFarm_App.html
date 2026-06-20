@@ -3198,7 +3198,7 @@ function getCloseSummary(p,cropIdx){
   const survivalRate=harvestResult&&harvestResult.survivalRate?harvestResult.survivalRate:null;
   const yieldPerRai=(totalWeight&&p.size)?+(totalWeight/p.size).toFixed(1):null;
   const notesAll=[notesCrop,...rows.map(r=>r.notes).filter(Boolean)].filter(Boolean).join(' / ');
-  return{pondName:p.name,cropLabel:lastCrop?`รอบที่ ${lastCrop.cropNum}/${lastCrop.cropYear}`:'(รอบปัจจุบัน ยังไม่ปิด)',hatchery,stock,buyer,price,totalWeight,partialCount,ageDays,totalFeed,fcr,closeSize,adg,survivalRate,yieldPerRai,notesAll,closeDate,startDate};
+  return{pondName:p.name,cropLabel:lastCrop?`รอบที่ ${lastCrop.cropNum}/${lastCrop.cropYear}`:'(รอบปัจจุบัน ยังไม่ปิด)',hatchery,stock,buyer,price,totalWeight,totalBaht,partialCount,ageDays,totalFeed,fcr,closeSize,adg,survivalRate,yieldPerRai,notesAll,closeDate,startDate,rows,feedLog};
 }
 async function genPDF(){
   const pid=document.getElementById('ex-pond').value;
@@ -3220,7 +3220,9 @@ async function genPDF(){
     const cropSel=document.getElementById('ex-crop');
     const cropWrapEl=document.getElementById('ex-crop-wrap');
     const selIdx=(pid!=='all'&&cropWrapEl&&cropWrapEl.style.display!=='none'&&cropSel&&cropSel.value!=='')?parseInt(cropSel.value):null;
-    ponds.forEach(p=>{
+    const typeLabel={'พาเชียล':'พาเชียล','ปิดบ่อ':'ปิดบ่อ'};
+    const chartJobs=[]; // {canvasId, kind, s} — สร้างกราฟจริงหลังจากแปะ HTML ลง DOM แล้ว (ต้องมี canvas element ก่อน)
+    ponds.forEach((p,pIdx)=>{
       const s=getCloseSummary(p,pid==='all'?null:selIdx);
       const fields=[
         ['ลูกกุ้งจากที่ไหน',s.hatchery],
@@ -3229,6 +3231,7 @@ async function genPDF(){
         ['ไซส์ปิดบ่อ (ตัว/กก.)',s.closeSize],
         ['ราคา (บาท/กก.)',s.price],
         ['น้ำหนักรวม (กก.)',s.totalWeight?s.totalWeight.toLocaleString():null],
+        ['รวมเงินทั้งหมด (บาท)',s.totalBaht?Math.round(s.totalBaht).toLocaleString():null],
         ['จำนวนพาเชียล (รอบ)',s.partialCount],
         ['อายุกุ้งตอนปิดบ่อ (วัน)',s.ageDays],
         ['อาหารรวม (กก.)',s.totalFeed?s.totalFeed.toLocaleString():null],
@@ -3237,12 +3240,45 @@ async function genPDF(){
         ['อัตรารอด (%)',s.survivalRate],
         ['Yield/ผลผลิตต่อไร่ (กก./ไร่)',s.yieldPerRai],
       ];
-      html+=`<div style="margin-bottom:14px;border:1px solid #e0e0e0;border-radius:6px;overflow:hidden">
+      // ── ตารางรายละเอียดพาเชียล/ปิดบ่อแต่ละครั้ง ──
+      const harvestRows=(s.rows||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+      let harvestTableHtml='';
+      if(harvestRows.length){
+        const th=(t,al)=>`<th style="padding:5px 7px;text-align:${al||'center'};font-size:10.5px;color:#fff;background:#0f6e56">${t}</th>`;
+        const td=(t,al)=>`<td style="padding:5px 7px;text-align:${al||'center'};font-size:11px;border-bottom:1px solid #eef3f0">${t}</td>`;
+        const bodyRows=harvestRows.map(r=>{
+          const wt=r.weight||0,pr=r.price||0,tot=wt*pr;
+          return `<tr>${td(esc(fD(r.date)),'left')}${td(`<span style="padding:1px 6px;border-radius:8px;font-size:9.5px;background:${r.type==='ปิดบ่อ'?'#fde6e6;color:#b91c1c':'#e8f6f0;color:#0f6e56'}">${esc(typeLabel[r.type]||r.type)}</span>`)}${td(r.size?esc(r.size):'-')}${td(wt?wt.toLocaleString():'-')}${td(pr?pr.toLocaleString():'-')}${td(tot?Math.round(tot).toLocaleString():'-')}${td(esc(r.buyer||'-'),'left')}</tr>`;
+        }).join('');
+        const sumW=harvestRows.reduce((a,r)=>a+(r.weight||0),0);
+        const sumT=harvestRows.reduce((a,r)=>a+((r.weight||0)*(r.price||0)),0);
+        harvestTableHtml=`<div style="margin-top:8px">
+          <div style="font-size:11.5px;font-weight:700;color:#0f6e56;margin-bottom:4px">📋 รายละเอียดการจับ/พาเชียลแต่ละครั้ง</div>
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr>${th('วันที่','left')}${th('ประเภท')}${th('ไซส์(ตัว/กก.)')}${th('น้ำหนัก(กก.)')}${th('ราคา(บาท/กก.)')}${th('รวมเงิน(บาท)')}${th('แพ/ผู้ซื้อ','left')}</tr></thead>
+            <tbody>${bodyRows}</tbody>
+            <tfoot><tr style="background:#f8fcfa">${td('รวม','left')}${td('')}${td('')}<td style="padding:5px 7px;text-align:center;font-size:11px;font-weight:700;border-top:2px solid #0f6e56">${sumW.toLocaleString()}</td><td style="border-top:2px solid #0f6e56"></td><td style="padding:5px 7px;text-align:center;font-size:11px;font-weight:700;border-top:2px solid #0f6e56">${Math.round(sumT).toLocaleString()}</td><td style="border-top:2px solid #0f6e56"></td></tr></tfoot>
+          </table>
+        </div>`;
+      }
+      // ── กราฟ: น้ำหนัก/ราคารวมต่อพาเชียล + อาหารสะสม ──
+      let chartsHtml='';
+      const wChartId=`pdf-w-${pIdx}`,fChartId=`pdf-f-${pIdx}`;
+      if(harvestRows.length){
+        chartJobs.push({canvasId:wChartId,kind:'harvest',rows:harvestRows});
+        chartsHtml+=`<div style="margin-top:10px"><canvas id="${wChartId}" width="680" height="220"></canvas></div>`;
+      }
+      if((s.feedLog||[]).length){
+        chartJobs.push({canvasId:fChartId,kind:'feed',feedLog:s.feedLog});
+        chartsHtml+=`<div style="margin-top:10px"><canvas id="${fChartId}" width="680" height="220"></canvas></div>`;
+      }
+      html+=`<div style="margin-bottom:16px;border:1px solid #e0e0e0;border-radius:6px;overflow:hidden;page-break-inside:avoid">
         <div style="background:#e8f6f0;padding:7px 10px;display:flex;justify-content:space-between;align-items:center">
           <strong style="color:#0f6e56;font-size:13px">บ่อ ${esc(p.name)}</strong>
           <span style="font-size:11px;color:#787878">${esc(s.cropLabel)}</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr">${fields.map(f=>fRow(f[0],f[1])).join('')}</div>
+        <div style="padding:8px 10px">${harvestTableHtml}${chartsHtml}</div>
         <div style="background:#fffbeb;padding:7px 10px;font-size:11px;line-height:1.5">
           <strong style="color:#787878">หมายเหตุ: </strong><span style="color:#1e1e1e">${esc(s.notesAll||'-')}</span>
         </div>
@@ -3250,8 +3286,39 @@ async function genPDF(){
     });
     html+=`<div style="text-align:center;font-size:10px;color:#999;margin-top:6px">ตะวันฟาร์ม · พิมพ์: ${esc(new Date().toLocaleString('th-TH'))}</div></div>`;
     wrap.innerHTML=html;
-    wrap.style.cssText='position:fixed;left:-9999px;top:0;width:760px;background:#fff;font-family:"Kanit","Sarabun","Segoe UI",sans-serif;color:#1e1e1e;';
+    wrap.style.cssText='position:fixed;left:-9999px;top:0;width:800px;background:#fff;font-family:"Kanit","Sarabun","Segoe UI",sans-serif;color:#1e1e1e;';
     document.body.appendChild(wrap);
+    // วาดกราฟลงบน canvas ที่แปะไว้ใน wrap (ต้อง animation:false แล้วรอ tick ก่อน html2canvas ถ่ายภาพ)
+    const pdfCharts=[];
+    chartJobs.forEach(job=>{
+      const cv=wrap.querySelector('#'+job.canvasId);
+      if(!cv)return;
+      if(job.kind==='harvest'){
+        const labels=job.rows.map(r=>fD(r.date));
+        const weights=job.rows.map(r=>r.weight||0);
+        const totals=job.rows.map(r=>Math.round((r.weight||0)*(r.price||0)));
+        pdfCharts.push(new Chart(cv.getContext('2d'),{
+          data:{labels,datasets:[
+            {type:'bar',label:'น้ำหนัก (กก.)',data:weights,backgroundColor:'#0f6e56',yAxisID:'y1'},
+            {type:'bar',label:'รวมเงิน (บาท)',data:totals,backgroundColor:'#f59e0b',yAxisID:'y2'},
+          ]},
+          options:{responsive:false,animation:false,plugins:{title:{display:true,text:'น้ำหนัก/ราคาแต่ละพาเชียล',font:{family:'Kanit',size:13}},legend:{position:'bottom',labels:{font:{family:'Kanit',size:10}}}},
+            scales:{y1:{type:'linear',position:'left',title:{display:true,text:'กก.'}},y2:{type:'linear',position:'right',title:{display:true,text:'บาท'},grid:{drawOnChartArea:false}}}}
+        }));
+      }else if(job.kind==='feed'){
+        const sorted=(job.feedLog||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+        let cum=0;
+        const labels=sorted.map(r=>fD(r.date));
+        const cumData=sorted.map(r=>{cum+=(r.totalFeed||0);return Math.round(cum)});
+        pdfCharts.push(new Chart(cv.getContext('2d'),{
+          data:{labels,datasets:[{type:'line',label:'อาหารสะสม (กก.)',data:cumData,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.15)',fill:true,tension:.25}]},
+          options:{responsive:false,animation:false,plugins:{title:{display:true,text:'อาหารสะสมตลอดรอบ',font:{family:'Kanit',size:13}},legend:{position:'bottom',labels:{font:{family:'Kanit',size:10}}}},
+            scales:{y:{title:{display:true,text:'กก.'}}}}
+        }));
+      }
+    });
+    // รอ Chart.js วาดเฟรมจริงให้เสร็จก่อนถ่ายภาพ
+    await new Promise(r=>setTimeout(r,120));
     // วาด wrap เป็นภาพ (html2canvas) แล้วฝังลง PDF ด้วย addImage แทน doc.html()
     // เพราะ doc.html() ของ jsPDF วาดตัวอักษรด้วยฟอนต์มาตรฐาน (ไม่มีภาษาไทย) ทำให้ข้อความหายไปจาก PDF
     const canvas=await html2canvas(wrap,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
@@ -3284,9 +3351,11 @@ async function genPDF(){
       }
     }
     doc.save(`TawanFarm_ปิดบ่อ_${today()}.pdf`);
+    pdfCharts.forEach(c=>c.destroy());
     wrap.remove();
     if(btn){btn.disabled=false;btn.innerHTML=btnTxt}
   }catch(e){
+    if(typeof pdfCharts!=='undefined')pdfCharts.forEach(c=>c.destroy());
     wrap.remove();
     alert('เกิดข้อผิดพลาดในการสร้าง PDF: '+(e?.message||e));
     if(btn){btn.disabled=false;btn.innerHTML=btnTxt}
