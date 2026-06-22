@@ -3652,7 +3652,7 @@ function renderCrops(){
   }).join('');
   // history section
   const histEl=document.getElementById('cr-history');if(!histEl)return;
-  const allHistory=[];D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>allHistory.push({...c,pondName:p.name})));
+  const allHistory=[];D.ponds.forEach(p=>(p.cropHistory||[]).forEach((c,_idx)=>allHistory.push({...c,pondName:p.name,_pondId:p.id,_idx})));
   allHistory.sort((a,b)=>(b.closeDate||'').localeCompare(a.closeDate||''));
   if(allHistory.length===0){histEl.innerHTML='<p style="color:var(--tx3);padding:10px">ยังไม่มีประวัติรอบเลี้ยง</p>';return;}
   histEl.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -3668,6 +3668,7 @@ function renderCrops(){
       <th style="text-align:right;padding:8px;font-size:12px;color:var(--tx2)">อัตรารอด(%)</th>
       <th style="text-align:right;padding:8px;font-size:12px;color:var(--tx2)">FCR</th>
       <th style="text-align:right;padding:8px;font-size:12px;color:var(--tx2)">กำไร(บาท)</th>
+      <th style="text-align:left;padding:8px;font-size:12px;color:var(--tx2)">สาเหตุปิดบ่อ/หมายเหตุ</th>
     </tr></thead>
     <tbody>${allHistory.map(c=>{
       const hr=c.harvestResult||{};
@@ -3685,8 +3686,22 @@ function renderCrops(){
         <td style="padding:8px;text-align:right">${hr.survivalRate?hr.survivalRate.toFixed(1):'-'}</td>
         <td style="padding:8px;text-align:right">${hr.fcr||'-'}</td>
         <td style="padding:8px;text-align:right;font-weight:700;color:${(hr.netProfit||0)>=0?'var(--ok)':'var(--d)'}">${hr.netProfit!=null?Math.round(hr.netProfit).toLocaleString():'-'}</td>
+        <td style="padding:6px 8px">
+          <div style="display:flex;gap:4px;align-items:center;min-width:180px">
+            <input type="text" id="cnote-${c._pondId}-${c._idx}" value="${c.notes?String(c.notes).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'):''}" placeholder="เช่น โรคตัวแดง, ท่อแตก..." style="flex:1;border:1px solid var(--bd);border-radius:6px;padding:4px 6px;font-size:12px">
+            <button onclick="editCycleNote('${c._pondId}',${c._idx})" style="background:var(--p);color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap" title="บันทึกสาเหตุปิดบ่อ/หมายเหตุ">💾 บันทึก</button>
+          </div>
+        </td>
       </tr>`;}).join('')}
     </tbody></table></div>`;
+}
+function editCycleNote(pondId,idx){
+  const p=pond(pondId);if(!p||!p.cropHistory||!p.cropHistory[idx])return;
+  const inp=document.getElementById(`cnote-${pondId}-${idx}`);if(!inp)return;
+  p.cropHistory[idx].notes=inp.value;
+  save();fbSave();
+  inp.style.background='var(--ob)';
+  setTimeout(()=>{inp.style.background='';},600);
 }
 
 // ===== PREP CHECKLIST =====
