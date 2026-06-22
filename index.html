@@ -1569,6 +1569,33 @@ function mergeArr(localArr, remoteArr) {
   });
   return out;
 }
+function mergeChecklist(local, remote) {
+  if (!remote) return local || null;
+  if (!local) return remote;
+  const steps = {};
+  const keys = new Set([...Object.keys(local.steps||{}), ...Object.keys(remote.steps||{})]);
+  keys.forEach(k => {
+    const l = local.steps && local.steps[k];
+    const r = remote.steps && remote.steps[k];
+    if (!l) { steps[k] = r; return; }
+    if (!r) { steps[k] = l; return; }
+    if (l.done !== r.done) {
+      // ถ้าฝั่งใดฝั่งหนึ่งติ๊กเสร็จแล้ว ให้ถือว่าเสร็จ (ไม่เสียงานที่ทำไปแล้ว)
+      steps[k] = l.done ? l : r;
+    } else {
+      steps[k] = {
+        done: l.done,
+        date: l.date || r.date || '',
+        notes: (l.notes||'').length >= (r.notes||'').length ? (l.notes||r.notes||'') : (r.notes||l.notes||'')
+      };
+    }
+  });
+  return {
+    steps,
+    stockDate: local.stockDate || remote.stockDate || '',
+    notes: local.notes || remote.notes || ''
+  };
+}
 function mergeRemote(local, remote) {
   const merged = cln(local);
   const LOG_KEYS = ['feedLog','samples','plankton','waterLog','chemLog','labResults','cropHistory'];
@@ -1578,6 +1605,7 @@ function mergeRemote(local, remote) {
     const rp = remotePonds[p.id];
     if (!rp) return;
     LOG_KEYS.forEach(k => { p[k] = mergeArr(p[k], rp[k]); });
+    p.prepChecklist = mergeChecklist(p.prepChecklist, rp.prepChecklist);
   });
   const localIds = new Set(merged.ponds.map(p=>p.id));
   (remote.ponds||[]).forEach(rp => { if (!localIds.has(rp.id)) merged.ponds.push(rp); });
