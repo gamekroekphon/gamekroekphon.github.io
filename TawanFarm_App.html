@@ -415,7 +415,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
       <div class="fg"><label class="fl">วันที่ *</label><input type="date" class="fi" id="ep-date" onchange="calcAge('ep');checkExistingWQ();saveLastEntry()"></div>
       <div class="fg"><label class="fl">อายุ (วัน)</label><input type="number" class="fi" id="ep-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
     </div>
-    <div class="card-t">💧 ค่าน้ำ 16 พารามิเตอร์</div>
+    <div class="card-t">💧 ค่าน้ำ 14 พารามิเตอร์</div>
     <div class="fgrid" id="ep-fields"></div>
     <div style="margin-top:12px"><div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="ep-notes" placeholder="สังเกตการณ์..."></div></div>
     <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
@@ -713,6 +713,8 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
   <div class="sec-hdr"><div class="sec-title">⚠️ ประเมินความเสี่ยง (พยากรณ์ 4 วัน)</div><button class="btn btn-p btn-sm" onclick="fetchWx()">🔄 อัปเดต</button></div>
   <div style="font-size:12px;color:var(--tx3);margin-bottom:12px">📍 ต.นาพญา อ.หลังสวน จ.ชุมพร · Open-Meteo <span id="wx-ts"></span></div>
   <div id="wx-current"></div>
+  <!-- ── เพิ่ม: แยกความเสี่ยงระดับฟาร์ม (อากาศ — เหมือนกันทุกบ่อ) ออกจากความเสี่ยงรายบ่อ ── -->
+  <div id="risk-weather-banner" style="margin-bottom:10px"></div>
   <!-- ── เพิ่ม: สรุปรวมทั้งฟาร์ม ให้ผู้บริหารเห็นภาพรวมความเสี่ยงก่อนไล่ดูทีละบ่อ ── -->
   <div id="risk-farm-summary" style="margin-bottom:16px"></div>
   <div class="card" style="margin-bottom:16px"><div class="card-t">🌤️ พยากรณ์อากาศ 4 วัน</div><div id="wx-cards" class="g4"><div style="text-align:center;padding:40px;grid-column:1/-1;color:var(--tx3)"><div class="spin" style="margin:0 auto 12px"></div>โหลด...</div></div></div>
@@ -1128,6 +1130,8 @@ async function initFirebase() {
   }
 }
 const LAT=9.97,LON=99.08;
+// ── จำนวนบ่อทั้งหมดของฟาร์ม (รวมบ่อที่ปิด/พักบ่อ ยังไม่ได้กรอกข้อมูลในระบบ) — ตามรายงาน UX พีแพรว ข้อ 5-6 ──
+const TOTAL_PONDS=27;
 const PARAMS=[
   {key:'phM',lbl:'pH เช้า',    unit:'',    min:7.5,max:8.5,dMin:7.0,dMax:9.0,dec:2,color:'#2b6cb0'},
   {key:'phA',lbl:'pH บ่าย',    unit:'',    min:7.8,max:9.0,dMin:7.0,dMax:9.5,dec:2,color:'#3182ce',note:'เกณฑ์บ่ายสูงกว่าเช้าโดยตั้งใจ (สังเคราะห์แสงช่วงบ่ายดัน pH ขึ้น)'},
@@ -2245,7 +2249,8 @@ function renderOv(){
   // ── Hero ──
   document.getElementById('home-date').textContent='วันนี้ '+new Date(today()).toLocaleDateString('th-TH',{day:'numeric',month:'long'});
   document.getElementById('home-big').innerHTML=attention.length>0?`${attention.length} บ่อ<span style="color:var(--d)"> ต้องดู</span>`:`ทุกบ่อ<span style="color:var(--ok)"> ปกติ</span>`;
-  document.getElementById('home-sub').textContent=`${normal.length} บ่อปกติ · ${prep.length} บ่อกำลังเตรียม`;
+  const closedCount=Math.max(0,TOTAL_PONDS-D.ponds.length);
+  document.getElementById('home-sub').textContent=`${normal.length} บ่อปกติ · ${prep.length} บ่อกำลังเตรียม${closedCount>0?' · '+closedCount+' บ่อปิด/พักบ่อ':''}`;
 
   // ── ต้องดูก่อน (progressive disclosure 3 อันดับแรก) ──
   const attnLabel=document.getElementById('home-attn-label');
@@ -2274,6 +2279,9 @@ function renderOv(){
       const daysLeft=p.startDate?Math.abs(dDiff(p.startDate,today())):null;
       return homeRow(p,null,'prep',`เตรียมแล้ว ${prepDone}/${PREP_STEPS.length} ขั้นตอน${daysLeft!==null?' · เหลือ '+daysLeft+' วันก่อนลงกุ้ง':''}`);
     }).join('')}</div>`;
+  }
+  if(closedCount>0){
+    groupsHtml+=`<div class="home-group" style="cursor:default" title="บ่อปิด/พักบ่อ — ยังไม่ได้เริ่มรอบเลี้ยง จึงไม่มีข้อมูลให้กรอกในระบบ"><span class="dot" style="background:var(--tx3)"></span><div class="grow">${closedCount} บ่อปิด/พักบ่อ</div></div>`;
   }
   document.getElementById('home-groups').innerHTML=groupsHtml;
 
@@ -2367,7 +2375,10 @@ function saveWQ(){
 function clearWQ(){
   document.getElementById('ep-date').value=today();
   PARAMS.forEach(p=>{const e=document.getElementById('ef-'+p.key);if(e){e.value='';e.className='fi'}const std=document.getElementById('std-'+p.key);if(std){std.textContent=stdText(p);std.className='lbl-std'}});
-  document.getElementById('ep-notes').value='';document.getElementById('ep-msg').innerHTML='';calcAge('ep');
+  document.getElementById('ep-notes').value='';calcAge('ep');
+  // ── ตั้งใจไม่รีเซ็ตช่องเลือกบ่อ (เผื่อกรอกต่อบ่อเดิม) แต่โชว์ชัดว่ากำลังกรอกบ่อไหนอยู่ กันกรอกผิดบ่อ (ตามรายงาน UX พีแพรว ข้อ 7) ──
+  const pid=document.getElementById('ep-pond')?.value;const p=pid?pond(pid):null;
+  showMsg('ep-msg','ok',p?`🧹 ล้างฟอร์มแล้ว — ยังเลือกบ่อ <strong>${p.name}</strong> ค้างอยู่ (ถ้าจะกรอกบ่ออื่น กรุณาเปลี่ยนบ่อก่อนบันทึก)`:'🧹 ล้างฟอร์มแล้ว');
 }
 function renderWQTable(){
   const pid=document.getElementById('ep-pond')?.value,rows=parseInt(document.getElementById('tbl-rows')?.value||999);
@@ -3074,21 +3085,54 @@ function renderWx(data){
     </div>`;
   }).join('');
 }
-function calcRisk(d,ix,p){
-  let score=0;const rs=[];
+// ── สภาพอากาศ (ระดับฟาร์ม — เหมือนกันทุกบ่อในวันเดียวกัน) แยกออกจากความเสี่ยงเฉพาะบ่อ เพื่อไม่ให้ alert จมกัน (ตามรายงาน UX พีแพรว ข้อ 2) ──
+function calcWeatherRisk(d,ix){
+  let score=0;const reasons=[];
   const tMax=d.temperature_2m_max[ix],tMin=d.temperature_2m_min[ix],rain=d.precipitation_sum[ix],wind=d.wind_speed_10m_max[ix];
-  if(tMax>35){score+=3;rs.push({l:'danger',m:`อุณหภูมิสูงมาก ${tMax}°C — DO วิกฤต`})}else if(tMax>33){score+=2;rs.push({l:'warn',m:`อุณหภูมิสูง ${tMax}°C`})}
-  if(tMin<24){score+=2;rs.push({l:'warn',m:`อุณหภูมิคืนต่ำ ${tMin}°C`})}
-  if(rain>50){score+=3;rs.push({l:'danger',m:`ฝนหนักมาก ${rain.toFixed(0)}มม — ALK/pH จะตก`})}else if(rain>20){score+=2;rs.push({l:'warn',m:`ฝนหนัก ${rain.toFixed(0)}มม`})}else if(rain>5){score+=1;rs.push({l:'ok',m:`ฝน ${rain.toFixed(0)}มม`})}
-  if(wind<5&&tMax>31){score+=2;rs.push({l:'warn',m:`ลมอ่อน+ร้อน เสี่ยง DO ชั้นล่างต่ำ`})}
+  if(tMax>35){score+=3;reasons.push({l:'danger',m:`อุณหภูมิสูงมาก ${tMax}°C — DO วิกฤต`})}else if(tMax>33){score+=2;reasons.push({l:'warn',m:`อุณหภูมิสูง ${tMax}°C`})}
+  if(tMin<24){score+=2;reasons.push({l:'warn',m:`อุณหภูมิคืนต่ำ ${tMin}°C`})}
+  if(rain>50){score+=3;reasons.push({l:'danger',m:`ฝนหนักมาก ${rain.toFixed(0)}มม — ALK/pH จะตก`})}else if(rain>20){score+=2;reasons.push({l:'warn',m:`ฝนหนัก ${rain.toFixed(0)}มม`})}else if(rain>5){score+=1;reasons.push({l:'ok',m:`ฝน ${rain.toFixed(0)}มม`})}
+  if(wind<5&&tMax>31){score+=2;reasons.push({l:'warn',m:`ลมอ่อน+ร้อน เสี่ยง DO ชั้นล่างต่ำ`})}
+  return{score,reasons};
+}
+// ── ความเสี่ยงรายบ่อ: รวมอากาศ + ค่าน้ำ/แล็บที่วัดจริงของบ่อนั้น (เพิ่ม nh4/no2 ตามรายงาน UX พีแพรว ข้อ 1 — เดิมไม่เคยเช็กแอมโมเนีย/ไนไตรท์เลย) ──
+function calcRisk(d,ix,p){
+  const w=calcWeatherRisk(d,ix);
+  let score=w.score;const pondReasons=[];
   const last=p.records[p.records.length-1];
-  if(last){if(last.alk&&last.alk<120){score+=1;rs.push({l:'warn',m:`ALK ต่ำ (${last.alk}) เสี่ยงฝน`})}if(last.doM&&last.doM<5.5){score+=1;rs.push({l:'warn',m:`DO เช้าต่ำ (${last.doM})`})}}
+  if(last){
+    if(last.alk&&last.alk<120){score+=1;pondReasons.push({l:'warn',m:`ALK ต่ำ (${last.alk}) เสี่ยงฝน`})}
+    if(last.doM&&last.doM<5.5){score+=1;pondReasons.push({l:'warn',m:`DO เช้าต่ำ (${last.doM})`})}
+    if(last.nh4!=null&&last.nh4!==''){
+      if(last.nh4>0.5){score+=3;pondReasons.push({l:'danger',m:`แอมโมเนีย (NH4+) เกินเกณฑ์อันตราย (${last.nh4})`})}
+      else if(last.nh4>=0.25){score+=1;pondReasons.push({l:'warn',m:`แอมโมเนีย (NH4+) เริ่มสูง (${last.nh4})`})}
+    }
+    if(last.no2!=null&&last.no2!==''){
+      if(last.no2>4){score+=3;pondReasons.push({l:'danger',m:`ไนไตรท์ (NO2) เกินเกณฑ์อันตราย (${last.no2})`})}
+      else if(last.no2>=1){score+=1;pondReasons.push({l:'warn',m:`ไนไตรท์ (NO2) เริ่มสูง (${last.no2})`})}
+    }
+  }
   const latLab=(p.labResults||[]).slice(-1)[0];
   if(latLab){
     const tcbsTotal=(latLab.tcbsGreen||0)+(latLab.tcbsYellow||0);
-    if(tcbsTotal>1000){score+=1;rs.push({l:'warn',m:`TCBS รวมสูง (${tcbsTotal.toLocaleString()}) ระวังความเครียด`})}
+    if(tcbsTotal>1000){score+=1;pondReasons.push({l:'warn',m:`TCBS รวมสูง (${tcbsTotal.toLocaleString()}) ระวังความเครียด`})}
   }
-  return{score,reasons:rs};
+  return{score,weatherReasons:w.reasons,pondReasons,reasons:[...w.reasons,...pondReasons]};
+}
+// ── แบนเนอร์ความเสี่ยงระดับฟาร์ม (อากาศ) — โชว์ครั้งเดียวด้านบน ไม่ซ้ำในการ์ดรายบ่อ ──
+function renderRiskWeatherBanner(weatherDays){
+  const el=document.getElementById('risk-weather-banner');if(!el)return;
+  const maxW=Math.max(...weatherDays.map(w=>w.score));
+  const msgs=[];weatherDays.forEach(w=>w.reasons.forEach(r=>{if(!msgs.some(x=>x.m===r.m))msgs.push(r)}));
+  if(msgs.length===0){
+    el.innerHTML=`<div class="card" style="background:var(--ob);border:1px solid var(--ok)"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">🌤️</span><div style="font-weight:700;color:var(--ok);font-size:13px">สภาพอากาศ 3 วันข้างหน้าปกติ — ไม่มีปัจจัยเสี่ยงระดับฟาร์ม</div></div></div>`;
+    return;
+  }
+  const bg=maxW>=5?'var(--db)':'var(--wb)',bd=maxW>=5?'var(--d)':'var(--w)';
+  el.innerHTML=`<div class="card" style="background:${bg};border:1px solid ${bd}">
+    <div style="font-weight:800;font-size:13px;color:${bd};margin-bottom:4px">🌤️ ความเสี่ยงระดับฟาร์ม (สภาพอากาศ — เหมือนกันทุกบ่อ)</div>
+    ${msgs.map(r=>`<div style="font-size:12px;padding:1px 0;color:${r.l==='danger'?'var(--d)':r.l==='warn'?'var(--w)':'var(--tx3)'}">${r.l==='danger'?'🔴':r.l==='warn'?'🟡':'⚪'} ${r.m}</div>`).join('')}
+  </div>`;
 }
 function renderRiskFarmSummary(pondMax){
   const el=document.getElementById('risk-farm-summary');if(!el)return;
@@ -3117,24 +3161,31 @@ function renderRiskFarmSummary(pondMax){
 function renderRisk(d){
   const allR=[];
   const pondMax=[]; // เก็บ maxS ต่อบ่อไว้สรุปรวมทั้งฟาร์ม
+  // ── อากาศ 3 วันข้างหน้า — คำนวณครั้งเดียว ใช้ร่วมกันทุกบ่อ (ไม่ใช่ของรายบ่อ) ──
+  const weatherDays=d.time.slice(1,4).map((_,i)=>calcWeatherRisk(d,i+1));
   document.getElementById('risk-grid').innerHTML=D.ponds.map(p=>{
     const days=d.time.slice(1,4).map((_,i)=>calcRisk(d,i+1,p));
     const maxS=Math.max(...days.map(r=>r.score));const rc=maxS>=6?'rh':maxS>=3?'rm':'rl';
     days.forEach(r=>r.reasons.forEach(x=>allR.push(x)));
     pondMax.push({p,maxS,reasons:days.flatMap(r=>r.reasons)});
+    // ── โชว์เฉพาะความเสี่ยง "ของบ่อนี้เอง" ในการ์ด (ALK/DO/แอมโมเนีย/ไนไตรท์/TCBS) — อากาศไปอยู่แบนเนอร์ด้านบนแทน (ตามรายงาน UX พีแพรว ข้อ 2) ──
+    const pondOnly=[];days.forEach(r=>r.pondReasons.forEach(x=>{if(!pondOnly.some(y=>y.m===x.m))pondOnly.push(x)}));
     return`<div class="card"><div style="display:flex;align-items:center;gap:12px;margin-bottom:10px"><div class="risk-ring ${rc}">${maxS}</div><div><div style="font-weight:800;font-size:15px">บ่อ ${p.name}</div><div style="font-size:12px;font-weight:700;color:${maxS>=6?'var(--d)':maxS>=3?'var(--w)':'var(--ok)'}">ความเสี่ยง${maxS>=6?'สูง':maxS>=3?'ปานกลาง':'ต่ำ'}</div></div></div>
       ${days.map((r,i)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="font-size:11px;color:var(--tx3);width:48px">วันที่ ${i+1}</div><div style="flex:1;height:7px;background:var(--bd);border-radius:4px;overflow:hidden"><div style="height:100%;width:${Math.min(100,r.score/8*100)}%;background:${r.score>=6?'#e53e3e':r.score>=3?'#dd6b20':'#2f855a'};border-radius:4px"></div></div><div style="font-size:11px;font-weight:700;width:14px">${r.score}</div></div>`).join('')}
-      <div style="margin-top:8px;border-top:1px solid var(--bd);padding-top:8px">${days.flatMap(r=>r.reasons).slice(0,3).map(r=>`<div style="font-size:11px;padding:2px 0;color:${r.l==='danger'?'var(--d)':r.l==='warn'?'var(--w)':'var(--tx3)'}">${r.l==='danger'?'🔴':r.l==='warn'?'🟡':'⚪'} ${r.m}</div>`).join('')}</div>
+      <div style="margin-top:8px;border-top:1px solid var(--bd);padding-top:8px">${pondOnly.length>0?pondOnly.slice(0,3).map(r=>`<div style="font-size:11px;padding:2px 0;color:${r.l==='danger'?'var(--d)':r.l==='warn'?'var(--w)':'var(--tx3)'}">${r.l==='danger'?'🔴':r.l==='warn'?'🟡':'⚪'} ${r.m}</div>`).join(''):'<div style="font-size:11px;padding:2px 0;color:var(--ok)">✅ ไม่มีความเสี่ยงเฉพาะบ่อนี้</div>'}</div>
     </div>`;
   }).join('');
-  // ── เพิ่ม: สรุปรวมทั้งฟาร์มด้านบน — ผู้บริหารเห็นภาพรวมในตาเดียว เช่น "3 บ่อเสี่ยงสูง — ระวัง DO ต่ำ" ──
+  // ── แบนเนอร์อากาศระดับฟาร์ม (ครั้งเดียว) + สรุปรวมทั้งฟาร์มด้านบน — ผู้บริหารเห็นภาพรวมในตาเดียว ──
+  renderRiskWeatherBanner(weatherDays);
   renderRiskFarmSummary(pondMax);
   const recList=[
     {t:rs=>rs.some(r=>r.m.includes('ALK')||r.m.includes('ฝน')),a:'🪨 เติมปูน/โดโลไมต์ รักษา ALK ≥ 120 mg/L ก่อนฝนตกหนัก'},
     {t:rs=>rs.some(r=>r.m.includes('DO')),a:'🌊 เพิ่มกำลังเครื่องตีน้ำ โดยเฉพาะช่วง 01.00–06.00 น.'},
     {t:rs=>rs.some(r=>r.m.includes('อุณหภูมิสูง')),a:'🌡️ ลดอาหาร 20% ตรวจ DO ทุก 2 ชม.'},
     {t:rs=>rs.some(r=>r.m.includes('ลมอ่อน')),a:'⚡ ลมสงบ+ร้อน เพิ่ม paddle wheel ตรวจ DO ชั้นล่าง'},
-    {t:rs=>rs.some(r=>r.m.includes('Vibrio')),a:'🦠 Vibrio สูง ลดความเครียด เพิ่มโปรไบโอติก ลดอาหาร'},
+    {t:rs=>rs.some(r=>r.m.includes('แอมโมเนีย')),a:'🧪 แอมโมเนียสูง: เปลี่ยนน้ำ/ลดอาหาร เพิ่มแบคทีเรียย่อยแอมโมเนีย ระวัง pH สูงจะยิ่งเพิ่มความเป็นพิษ'},
+    {t:rs=>rs.some(r=>r.m.includes('ไนไตรท์')),a:'🧪 ไนไตรท์สูง: เพิ่มการเติมอากาศ ลดความหนาแน่น ตรวจระบบกรองชีวภาพ'},
+    {t:rs=>rs.some(r=>r.m.includes('TCBS')),a:'🦠 TCBS สูง ลดความเครียด เพิ่มโปรไบโอติก ลดอาหาร'},
   ];
   const recs=recList.filter(r=>r.t(allR));
   document.getElementById('risk-recs').innerHTML=recs.length>0?recs.map(r=>`<div class="ai warn" style="margin-bottom:7px"><span>💡</span><div style="font-size:13px">${r.a}</div></div>`).join(''):'<p style="color:var(--ok);font-size:13px;padding:10px">✅ ไม่พบความเสี่ยงสูงใน 3 วัน</p>';
