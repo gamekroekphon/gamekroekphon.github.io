@@ -4019,4 +4019,17 @@ document.addEventListener('DOMContentLoaded',()=>{
   initFirebase();
   syncAllDateHints();
   // ── ข้อ2: อัปเดตป้าย พ.ศ. ทุกครั้งที่ผู้ใช้เปลี่ยนค่าวันที่ (ครอบคลุมแถวที่เพิ่มแบบไดนามิก เช่น เช็คลิสต์เตรียมบ่อ) ──
-  document.addEventListener('input',e=>{if(e.target&&e.target.type==='date')syncDa
+  document.addEventListener('input',e=>{if(e.target&&e.target.type==='date')syncDateHint(e.target)});
+  document.addEventListener('change',e=>{if(e.target&&e.target.type==='date')syncDateHint(e.target)});
+  const _mt=document.getElementById('mainTabs');
+  if(_mt){_mt.addEventListener('scroll',updateTabsArrows);window.addEventListener('resize',updateTabsArrows);setTimeout(updateTabsArrows,200);}
+});
+
+// ── PWA Service Worker ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('data:text/javascript,').catch(()=>{});
+  });
+}
+</script></body>
+</html>
