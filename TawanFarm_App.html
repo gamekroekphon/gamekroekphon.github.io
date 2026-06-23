@@ -763,6 +763,22 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
     <div class="card-t">📚 ประวัติรอบเลี้ยง (ปิดแล้ว)</div>
     <div id="cr-history"></div>
   </div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-t">🔍 ดูข้อมูลย้อนหลังบ่อที่ปิดแล้ว</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+      <div class="fg" style="flex:1;min-width:160px">
+        <label class="fl">เลือกบ่อ</label>
+        <select class="fi" id="clh-pond" onchange="onChPondChange()"><option value="">-- เลือกบ่อ --</option></select>
+      </div>
+      <div class="fg" style="flex:1;min-width:160px">
+        <label class="fl">เลือกรอบที่ปิด</label>
+        <select class="fi" id="ch-cycle" onchange="onChCycleChange()"><option value="">-- เลือกรอบ --</option></select>
+      </div>
+    </div>
+    <div id="ch-detail">
+      <p style="color:var(--tx3);text-align:center;padding:30px;font-style:italic">เลือกบ่อและรอบที่ปิด เพื่อดูข้อมูลย้อนหลัง</p>
+    </div>
+  </div>
 </div>
 
 <!-- PREP -->
@@ -3694,6 +3710,7 @@ function renderCrops(){
         </td>
       </tr>`;}).join('')}
     </tbody></table></div>`;
+  populateChPondSelect();
 }
 function editCycleNote(pondId,idx){
   const p=pond(pondId);if(!p||!p.cropHistory||!p.cropHistory[idx])return;
@@ -3702,6 +3719,243 @@ function editCycleNote(pondId,idx){
   save();fbSave();
   inp.style.background='var(--ob)';
   setTimeout(()=>{inp.style.background='';},600);
+}
+
+// ===== ดูข้อมูลย้อนหลังบ่อที่ปิดแล้ว (Closed Pond History Detail Card) =====
+let _chGrowthChart=null,_chFeedChart=null,_chCompareChart=null;
+let _chCompareMode='same'; // 'same' | 'cross'
+let _chCompareSel=[]; // [{pondId, idx}]
+function populateChPondSelect(){
+  const sel=document.getElementById('clh-pond');if(!sel)return;
+  const cur=sel.value;
+  const withHist=D.ponds.filter(p=>(p.cropHistory||[]).length>0);
+  sel.innerHTML='<option value="">-- เลือกบ่อ --</option>'+withHist.map(p=>`<option value="${p.id}">บ่อ ${p.name} (${(p.cropHistory||[]).length} รอบ)</option>`).join('');
+  if(withHist.some(p=>p.id===cur))sel.value=cur;
+}
+function onChPondChange(){
+  const pid=document.getElementById('clh-pond').value;
+  const cycleSel=document.getElementById('ch-cycle');if(!cycleSel)return;
+  const p=pond(pid);
+  if(!p||!p.cropHistory||!p.cropHistory.length){
+    cycleSel.innerHTML='<option value="">-- เลือกรอบ --</option>';
+    renderClosedDetail();
+    return;
+  }
+  cycleSel.innerHTML=p.cropHistory.map((c,i)=>`<option value="${i}">รอบที่ ${c.cropNum||i+1}/${c.cropYear||c.year||''} (ปิด ${c.closeDate?fD(c.closeDate):'-'})</option>`).join('');
+  cycleSel.value=String(p.cropHistory.length-1);
+  onChCycleChange();
+}
+function onChCycleChange(){renderClosedDetail();}
+function renderClosedDetail(){
+  const wrap=document.getElementById('ch-detail');if(!wrap)return;
+  const pid=document.getElementById('clh-pond')?.value;
+  const idxRaw=document.getElementById('ch-cycle')?.value;
+  if(!pid||idxRaw===''||idxRaw==null){
+    wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:30px;font-style:italic">เลือกบ่อและรอบที่ปิด เพื่อดูข้อมูลย้อนหลัง</p>';
+    return;
+  }
+  const p=pond(pid);const idx=parseInt(idxRaw);
+  const c=p&&p.cropHistory?p.cropHistory[idx]:null;
+  if(!c){wrap.innerHTML='<p style="color:var(--d);text-align:center;padding:30px">ไม่พบข้อมูลรอบนี้</p>';return}
+  const s=getCloseSummary(p,idx);
+  const hr=c.harvestResult||{};
+  const netSales=hr.revenue!=null?hr.revenue:(s.totalBaht||null);
+  const closeRows=(s.rows||[]).filter(r=>r.type==='ปิดบ่อ');
+  const partialRows=(s.rows||[]).filter(r=>r.type==='พาเชียล');
+  const sumPartial=partialRows.reduce((a,r)=>a+(r.weight||0),0);
+  const sumClose=closeRows.reduce((a,r)=>a+(r.weight||0),0);
+  const lastPartial=partialRows.length?partialRows[partialRows.length-1]:null;
+  const lastClose=closeRows.length?closeRows[closeRows.length-1]:null;
+  const esc=v=>v==null?'':String(v).replace(/</g,'&lt;');
+  wrap.innerHTML=`
+    <div class="g5" style="margin-bottom:16px">
+      <div class="metric-card metric-card-accent"><div class="mv">${s.totalWeight?s.totalWeight.toLocaleString():'-'}</div><div class="ml">ผลผลิตรวม (กก.)</div></div>
+      <div class="metric-card metric-card-accent"><div class="mv">${s.survivalRate!=null?s.survivalRate.toFixed(1)+'%':'-'}</div><div class="ml">อัตรารอด</div></div>
+      <div class="metric-card metric-card-accent"><div class="mv">${s.fcr||'-'}</div><div class="ml">FCR</div></div>
+      <div class="metric-card metric-card-accent"><div class="mv">${s.ageDays||'-'} วัน</div><div class="ml">ระยะเลี้ยง</div></div>
+      <div class="metric-card metric-card-accent"><div class="mv" style="color:var(--ok)">${netSales!=null?Math.round(netSales).toLocaleString():'-'}</div><div class="ml">ยอดขายสุทธิ (บาท)</div></div>
+    </div>
+    <div class="g2" style="margin-bottom:16px">
+      <div style="background:var(--sf2);border-radius:var(--r);padding:12px">
+        <div style="font-weight:700;font-size:13px;margin-bottom:8px;color:var(--in)">🦐 พาเชียล (จับบางส่วน) — ${partialRows.length} ครั้ง</div>
+        ${lastPartial?`<div style="font-size:12.5px;color:var(--tx2)">รวม ${sumPartial.toLocaleString()} กก. · ล่าสุด ${fD(lastPartial.date)} (${lastPartial.weight?lastPartial.weight.toLocaleString():'-'} กก. ไซส์ ${lastPartial.size||'-'})</div>`:`<div style="font-size:12.5px;color:var(--tx3)">ไม่มีข้อมูล</div>`}
+      </div>
+      <div style="background:var(--ob);border-radius:var(--r);padding:12px">
+        <div style="font-weight:700;font-size:13px;margin-bottom:8px;color:var(--ok)">🏁 ปิดบ่อ (จับครั้งสุดท้าย) — ${closeRows.length} ครั้ง</div>
+        ${lastClose?`<div style="font-size:12.5px;color:var(--tx2)">รวม ${sumClose.toLocaleString()} กก. · วันที่ ${fD(lastClose.date)} (ไซส์ ${lastClose.size||'-'})</div>`:`<div style="font-size:12.5px;color:var(--tx3)">ไม่มีข้อมูล</div>`}
+      </div>
+    </div>
+    <div style="background:var(--wb);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:12.5px;color:var(--w)">
+      📝 สาเหตุปิดบ่อ/หมายเหตุ: ${esc(c.notes)||'-'}
+    </div>
+    <div class="g2" style="margin-bottom:16px">
+      <div><canvas id="ch-chart-growth" height="200"></canvas></div>
+      <div><canvas id="ch-chart-feed" height="200"></canvas></div>
+    </div>
+    <div class="card" style="background:var(--sf2);margin-bottom:16px">
+      <div class="card-t" style="justify-content:space-between">
+        <span>📊 เปรียบเทียบรอบเลี้ยง</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm" id="ch-cmp-same" onclick="setChCompareMode('same')">บ่อเดียวกัน</button>
+          <button class="btn btn-sm" id="ch-cmp-cross" onclick="setChCompareMode('cross')">ข้ามบ่อ</button>
+        </div>
+      </div>
+      <div id="ch-cmp-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
+      <canvas id="ch-chart-compare" height="200"></canvas>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-weight:700;font-size:13px;margin-bottom:8px">📂 ข้อมูลดิบของรอบนี้</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+        <button class="btn btn-sm" onclick="toggleChSec('feed')">🍽️ อาหาร (${(c.feedLog||[]).length})</button>
+        <button class="btn btn-sm" onclick="toggleChSec('sample')">📏 สุ่มกุ้ง (${(c.samples||[]).length})</button>
+        <button class="btn btn-sm" onclick="toggleChSec('water')">💧 น้ำ (${(c.waterLog||[]).length})</button>
+        <button class="btn btn-sm" onclick="toggleChSec('chem')">🧪 สารเคมี (${(c.chemLog||[]).length})</button>
+        <button class="btn btn-sm" onclick="toggleChSec('lab')">🔬 แล็บ (${(c.labResults||[]).length})</button>
+      </div>
+      <div id="ch-sec-feed" style="display:none;margin-bottom:10px"></div>
+      <div id="ch-sec-sample" style="display:none;margin-bottom:10px"></div>
+      <div id="ch-sec-water" style="display:none;margin-bottom:10px"></div>
+      <div id="ch-sec-chem" style="display:none;margin-bottom:10px"></div>
+      <div id="ch-sec-lab" style="display:none;margin-bottom:10px"></div>
+    </div>
+    <button class="btn btn-p" onclick="exportChPdf('${pid}',${idx})">📄 ดาวน์โหลด PDF สรุปรอบนี้</button>
+  `;
+  _chCompareSel=[{pondId:pid,idx}];
+  setChCompareMode(_chCompareMode);
+  renderChGrowthChart(s);
+  renderChFeedChart(s);
+}
+function setChCompareMode(mode){
+  _chCompareMode=mode;
+  const sameBtn=document.getElementById('ch-cmp-same'),crossBtn=document.getElementById('ch-cmp-cross');
+  if(sameBtn)sameBtn.style.background=mode==='same'?'var(--p)':'';
+  if(sameBtn)sameBtn.style.color=mode==='same'?'#fff':'';
+  if(crossBtn)crossBtn.style.background=mode==='cross'?'var(--p)':'';
+  if(crossBtn)crossBtn.style.color=mode==='cross'?'#fff':'';
+  const pid=document.getElementById('clh-pond')?.value;
+  const curIdx=parseInt(document.getElementById('ch-cycle')?.value);
+  let options=[];
+  if(mode==='same'){
+    const p=pond(pid);
+    options=(p?.cropHistory||[]).map((c,i)=>({pondId:pid,idx:i,label:`รอบ ${c.cropNum||i+1}/${c.cropYear||c.year||''}`}));
+  }else{
+    D.ponds.forEach(p=>(p.cropHistory||[]).forEach((c,i)=>{options.push({pondId:p.id,idx:i,label:`บ่อ${p.name} รอบ${c.cropNum||i+1}/${c.cropYear||c.year||''}`})}));
+  }
+  _chCompareSel=_chCompareSel.filter(sl=>options.some(o=>o.pondId===sl.pondId&&o.idx===sl.idx));
+  if(!_chCompareSel.length&&pid&&!isNaN(curIdx))_chCompareSel=[{pondId:pid,idx:curIdx}];
+  const chipsEl=document.getElementById('ch-cmp-chips');
+  if(chipsEl){
+    chipsEl.innerHTML=options.map(o=>{
+      const sel=_chCompareSel.some(sl=>sl.pondId===o.pondId&&sl.idx===o.idx);
+      return `<span onclick="toggleChCompareSel('${o.pondId}',${o.idx})" style="cursor:pointer;padding:4px 10px;border-radius:12px;font-size:11.5px;border:1px solid var(--bd);background:${sel?'var(--p)':'var(--sf)'};color:${sel?'#fff':'var(--tx2)'}">${o.label}</span>`;
+    }).join('');
+  }
+  renderChCompareChart();
+}
+function toggleChCompareSel(pondId,idx){
+  const i=_chCompareSel.findIndex(sl=>sl.pondId===pondId&&sl.idx===idx);
+  if(i>-1){if(_chCompareSel.length>1)_chCompareSel.splice(i,1);}
+  else _chCompareSel.push({pondId,idx});
+  setChCompareMode(_chCompareMode);
+}
+function renderChCompareChart(){
+  const canvas=document.getElementById('ch-chart-compare');if(!canvas||typeof Chart==='undefined')return;
+  const items=_chCompareSel.map(sl=>{
+    const p=pond(sl.pondId);const c=p&&p.cropHistory?p.cropHistory[sl.idx]:null;if(!c)return null;
+    const hr=c.harvestResult||{};
+    return{label:`บ่อ${p.name} รอบ${c.cropNum||sl.idx+1}/${c.cropYear||c.year||''}`,fcr:hr.fcr!=null?hr.fcr:null,surv:hr.survivalRate!=null?hr.survivalRate:null,size:hr.size!=null?hr.size:null};
+  }).filter(Boolean);
+  if(_chCompareChart){_chCompareChart.destroy();_chCompareChart=null;}
+  if(!items.length)return;
+  _chCompareChart=new Chart(canvas.getContext('2d'),{
+    type:'bar',
+    data:{labels:items.map(i=>i.label),datasets:[
+      {label:'FCR',data:items.map(i=>i.fcr),backgroundColor:'#3b82f6',yAxisID:'y1'},
+      {label:'อัตรารอด (%)',data:items.map(i=>i.surv),backgroundColor:'#22c55e',yAxisID:'y2'},
+      {label:'ไซส์ (ตัว/กก.)',data:items.map(i=>i.size),backgroundColor:'#f59e0b',yAxisID:'y3',hidden:true},
+    ]},
+    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{family:'Kanit'}}}},
+      scales:{y1:{type:'linear',position:'left',title:{display:true,text:'FCR'}},y2:{type:'linear',position:'right',title:{display:true,text:'%'},min:0,max:100,grid:{drawOnChartArea:false}},y3:{display:false}}}
+  });
+}
+function renderChGrowthChart(s){
+  const canvas=document.getElementById('ch-chart-growth');if(!canvas||typeof Chart==='undefined')return;
+  const samples=(s.samples||[]).filter(x=>x.abw!=null).sort((a,b)=>(a.age||0)-(b.age||0));
+  if(_chGrowthChart){_chGrowthChart.destroy();_chGrowthChart=null;}
+  if(!samples.length)return;
+  _chGrowthChart=new Chart(canvas.getContext('2d'),{
+    type:'line',
+    data:{labels:samples.map(sm=>`วัน ${sm.age}`),datasets:[{label:'ABW (กรัม/ตัว)',data:samples.map(sm=>sm.abw),borderColor:'#9A6A04',backgroundColor:'#9A6A04',tension:.3}]},
+    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{family:'Kanit'}}},title:{display:true,text:'การเติบโต (ABW)',font:{family:'Kanit'}}}}
+  });
+}
+function renderChFeedChart(s){
+  const canvas=document.getElementById('ch-chart-feed');if(!canvas||typeof Chart==='undefined')return;
+  const feed=(s.feedLog||[]).slice().sort((a,b)=>(a.age||0)-(b.age||0));
+  if(_chFeedChart){_chFeedChart.destroy();_chFeedChart=null;}
+  if(!feed.length)return;
+  _chFeedChart=new Chart(canvas.getContext('2d'),{
+    type:'bar',
+    data:{labels:feed.map(f=>`วัน ${f.age}`),datasets:[{label:'อาหาร (กก./วัน)',data:feed.map(f=>f.totalFeed||0),backgroundColor:'#185FA5'}]},
+    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{family:'Kanit'}}},title:{display:true,text:'การให้อาหาร',font:{family:'Kanit'}}}}
+  });
+}
+function toggleChSec(name){
+  const el=document.getElementById('ch-sec-'+name);if(!el)return;
+  const isOpen=el.style.display!=='none';
+  ['feed','sample','water','chem','lab'].forEach(n=>{const e=document.getElementById('ch-sec-'+n);if(e&&n!==name)e.style.display='none';});
+  if(isOpen){el.style.display='none';return}
+  el.style.display='block';
+  const pid=document.getElementById('clh-pond')?.value;
+  const idx=parseInt(document.getElementById('ch-cycle')?.value);
+  const p=pond(pid);const c=p&&p.cropHistory?p.cropHistory[idx]:null;if(!c)return;
+  if(name==='feed')el.innerHTML=renderChFeedTable(c);
+  else if(name==='sample')el.innerHTML=renderChSampleTable(c);
+  else if(name==='water')el.innerHTML=renderChWaterTable(c);
+  else if(name==='chem')el.innerHTML=renderChChemTable(c);
+  else if(name==='lab')el.innerHTML=renderChLabTable(c);
+}
+function renderChFeedTable(c){
+  const rows=(c.feedLog||[]).slice().sort((a,b)=>(a.age||0)-(b.age||0));
+  if(!rows.length)return '<p style="color:var(--tx3);text-align:center;padding:14px;font-style:italic">ไม่มีข้อมูล</p>';
+  return `<table class="tbl"><thead><tr><th>วันที่</th><th>อายุ</th><th>ยี่ห้อ</th><th>เบอร์</th><th>รวม (กก.)</th><th>Feed Rate</th><th>หมายเหตุ</th></tr></thead><tbody>${
+    rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.feedBrand||'-'}</td><td>${r.feedGrade||'-'}</td><td>${r.totalFeed!=null?(+r.totalFeed).toFixed(1):'-'}</td><td>${r.feedRate?r.feedRate+'%':'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')
+  }</tbody></table>`;
+}
+function renderChSampleTable(c){
+  const rows=(c.samples||[]).slice().sort((a,b)=>(a.age||0)-(b.age||0));
+  if(!rows.length)return '<p style="color:var(--tx3);text-align:center;padding:14px;font-style:italic">ไม่มีข้อมูล</p>';
+  return `<table class="tbl"><thead><tr><th>วันที่</th><th>อายุ</th><th>ABW (ก.)</th><th>ไซส์</th><th>อัตรารอด(%)</th><th>Biomass</th><th>PDG</th><th>หมายเหตุ</th></tr></thead><tbody>${
+    rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.abw||'-'}</td><td>${r.plCount||'-'}</td><td>${r.survivalRate||'-'}</td><td>${r.biomass||'-'}</td><td>${r.pdg||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')
+  }</tbody></table>`;
+}
+function renderChWaterTable(c){
+  const rows=(c.waterLog||[]).slice().sort((a,b)=>(a.age||0)-(b.age||0));
+  if(!rows.length)return '<p style="color:var(--tx3);text-align:center;padding:14px;font-style:italic">ไม่มีข้อมูล</p>';
+  return `<table class="tbl"><thead><tr><th>วันที่</th><th>อายุ</th><th>การดำเนินการ</th><th>ปริมาณ (ซม.)</th><th>หมายเหตุ</th></tr></thead><tbody>${
+    rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${r.age}</td><td>${WL_ACT[r.action]||r.action||'-'}</td><td>${r.vol?r.vol+' ซม.':'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')
+  }</tbody></table>`;
+}
+function renderChChemTable(c){
+  const rows=(c.chemLog||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  if(!rows.length)return '<p style="color:var(--tx3);text-align:center;padding:14px;font-style:italic">ไม่มีข้อมูล</p>';
+  return `<table class="tbl"><thead><tr><th>วันที่</th><th>หมวด</th><th>ผลิตภัณฑ์</th><th>ปริมาณ</th><th>จุดประสงค์</th><th>หมายเหตุ</th></tr></thead><tbody>${
+    rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${getCatLabel(r.category)}</td><td>${r.product||'-'}</td><td>${r.amount?r.amount+' '+(r.unit||''):'-'}</td><td>${r.reason||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')
+  }</tbody></table>`;
+}
+function renderChLabTable(c){
+  const rows=(c.labResults||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  if(!rows.length)return '<p style="color:var(--tx3);text-align:center;padding:14px;font-style:italic">ไม่มีข้อมูล</p>';
+  return `<table class="tbl"><thead><tr><th>วันที่</th><th>อายุ</th><th>แล็บ</th><th>🟢</th><th>🟡</th><th>TVC</th><th>EHP</th><th>หมายเหตุ</th></tr></thead><tbody>${
+    rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${r.age||'-'}</td><td>${r.labName||'-'}</td><td>${r.tcbsGreen!=null?r.tcbsGreen:'-'}</td><td>${r.tcbsYellow!=null?r.tcbsYellow:'-'}</td><td>${r.tvc!=null?r.tvc:'-'}</td><td>${r.ehp!=null?r.ehp:'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')
+  }</tbody></table>`;
+}
+function exportChPdf(pid,idx){
+  const exPond=document.getElementById('ex-pond');
+  const exCrop=document.getElementById('ex-crop');
+  if(exPond){exPond.value=pid;onExPondChange();}
+  if(exCrop){exCrop.value=String(idx);}
+  genPDF();
 }
 
 // ===== PREP CHECKLIST =====
