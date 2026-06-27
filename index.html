@@ -225,6 +225,16 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .dw-sev-on-ok{border-color:var(--ok);background:var(--ob);color:var(--ok)}
 .dw-sev-on-w{border-color:var(--w);background:var(--wb);color:var(--w)}
 .dw-sev-on-d{border-color:var(--d);background:var(--db);color:var(--d)}
+.pr-size-tag{display:inline-block;background:var(--pl);color:var(--pd);border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:600}
+.pr-chart{display:flex;align-items:flex-end;gap:10px;height:150px;padding:10px 4px 0;border-bottom:1px solid var(--bd)}
+.pr-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.pr-bar{width:100%;max-width:34px;background:var(--p);border-radius:5px 5px 0 0;transition:.2s}
+.pr-bar-lbl{font-size:10.5px;color:var(--tx2)}
+.pr-bar-val{font-size:10.5px;font-weight:700;color:var(--p)}
+.diff-pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px}
+.diff-up{background:var(--db);color:var(--d)}
+.diff-down{background:var(--ob);color:var(--ok)}
+.diff-flat{background:var(--sf2);color:var(--tx3)}
 .cl{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px;font-size:12px;color:var(--tx2)}
 .cl-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
 .wx-day{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:15px;text-align:center}
@@ -352,6 +362,12 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
       <button class="tab-item" id="tab-lab" onclick="goTab('lab',this)">🔬 ผลแล็บ</button>
       <button class="tab-item" id="tab-compare" onclick="goTab('compare',this)">🔄 เปรียบเทียบ</button>
       <button class="tab-item" id="tab-risk" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
+    </div>
+  </div>
+  <div class="tab-grp" id="grp-market">
+    <button class="grp-btn" onclick="toggleGrp('market')">💰 ตลาด/ต้นทุน <span class="grp-caret">▾</span></button>
+    <div class="tab-dropdown">
+      <button class="tab-item" id="tab-price" onclick="goTab('price',this)">💰 ราคาวันนี้</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-settings">
@@ -997,6 +1013,64 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
     <div class="tbl-wrap">
       <table class="tbl"><thead><tr><th>ชื่อบ่อ</th><th>ยอดปล่อย</th><th>ขนาด (ไร่)</th><th>ความหนาแน่น</th><th>วันปล่อย</th><th>อายุ</th><th>น้ำ</th><th>อาหาร</th><th>สุ่ม</th><th>แล็บ</th><th>FCR</th><th>อัตราโต (ก./วัน)</th><th>จัดการ</th></tr></thead><tbody id="mg-tbody"></tbody></table>
     </div>
+  </div>
+</div>
+<!-- ราคาวันนี้ -->
+<div id="sec-price" class="sec">
+  <div class="sec-hdr"><div class="sec-title">💰 ราคาวันนี้</div></div>
+  <div class="g4" id="pr-kpi" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px"></div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-t">📝 บันทึกราคาตลาด — วันนี้</div>
+    <div class="fgrid" style="margin-bottom:14px">
+      <div class="fg"><label class="fl">วันที่</label><input type="date" class="fi" id="pr-date" onchange="loadPriceForDate()"></div>
+      <div class="fg"><label class="fl">แหล่งราคา</label>
+        <select class="fi" id="pr-source">
+          <option>ราคาเฉลี่ยตลาด (ล้ง/แพ)</option>
+          <option>ราคาสมาคมกุ้งไทย</option>
+          <option>อื่นๆ ระบุในหมายเหตุ</option>
+        </select>
+      </div>
+    </div>
+    <div class="fgrid" id="pr-fields"></div>
+    <div class="hint" style="margin-top:8px">* ใส่เฉพาะไซส์ที่มีราคาวันนั้น เว้นช่องที่ไม่มีข้อมูลได้</div>
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-p" onclick="savePrice()">💾 บันทึกราคาวันนี้</button>
+      <button class="btn btn-s" onclick="clearPrice()">🗑️ ล้างฟอร์ม</button>
+    </div>
+    <div id="pr-msg" style="margin-top:10px"></div>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-t">📊 กราฟราคาตลาดตามไซส์ — วันที่เลือก (บาท/กก.)</div>
+    <div class="pr-chart" id="pr-chart"></div>
+    <div class="hint" style="margin-top:10px">ไซส์เล็ก (เลขน้อย = ตัวใหญ่) ราคาสูงกว่าเสมอ</div>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-t">💰 บันทึกการขายจริง</div>
+    <div class="fgrid">
+      <div class="fg"><label class="fl">บ่อ</label><select class="fi" id="sl-pond"><option value="">-- เลือกบ่อ --</option></select></div>
+      <div class="fg"><label class="fl">วันที่ขาย</label><input type="date" class="fi" id="sl-date"></div>
+      <div class="fg"><label class="fl">ไซส์ (ตัว/กก.)</label><input type="number" class="fi" id="sl-size" placeholder="60"></div>
+      <div class="fg"><label class="fl">น้ำหนักที่ขาย (กก.)</label><input type="number" class="fi" id="sl-weight" placeholder="850" oninput="updateSaleTotal()"></div>
+      <div class="fg"><label class="fl">ราคาที่ขายได้ (บาท/กก.)</label><input type="number" class="fi" id="sl-price" placeholder="195" oninput="updateSaleTotal()"></div>
+      <div class="fg"><label class="fl">ผู้รับซื้อ</label><input type="text" class="fi" id="sl-buyer" placeholder="เช่น ล้งสมชาย"></div>
+    </div>
+    <div class="fgrid" style="margin-top:11px">
+      <div class="fg" style="grid-column:1/-1"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="sl-notes" placeholder="เช่น หักค่าน้ำแข็ง/ค่าขนส่ง"></div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-p" onclick="saveSale()">💾 บันทึกการขาย</button>
+      <button class="btn btn-s" onclick="clearSale()">🗑️ ล้างฟอร์ม</button>
+      <span class="hint" id="sl-total"></span>
+    </div>
+    <div id="sl-msg" style="margin-top:10px"></div>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-t">📋 ประวัติราคาตลาด</div>
+    <div class="tbl-wrap" id="pr-history"></div>
+  </div>
+  <div class="card">
+    <div class="card-t">📋 ประวัติการขายจริง</div>
+    <div class="tbl-wrap" id="sl-history"></div>
   </div>
 </div>
 </div>
@@ -1658,7 +1732,17 @@ function mergeRemote(local, remote) {
   const localIds = new Set(merged.ponds.map(p=>p.id));
   (remote.ponds||[]).forEach(rp => { if (!localIds.has(rp.id)) merged.ponds.push(rp); });
   merged.harvestLog = mergeArr(merged.harvestLog, remote.harvestLog);
+  merged.sales = mergeArr(merged.sales, remote.sales);
+  merged.marketPrices = mergeByDate(merged.marketPrices, remote.marketPrices);
   return merged;
+}
+function mergeByDate(localArr, remoteArr) {
+  if (!Array.isArray(remoteArr)) return localArr || [];
+  if (!Array.isArray(localArr)) return remoteArr || [];
+  const byDate = {};
+  remoteArr.forEach(r => { if (r && r.date) byDate[r.date] = r; });
+  localArr.forEach(l => { if (l && l.date) byDate[l.date] = l; }); // local wins on same date (most recent save)
+  return Object.values(byDate).sort((a,b)=>new Date(a.date)-new Date(b.date));
 }
 async function save() {
   localStorage.setItem(SK, JSON.stringify(D));
@@ -1854,7 +1938,7 @@ function populateAll(){
   const cpyEl=document.getElementById('settings-crops-per-year');
   if(cpyEl)cpyEl.value=String(D.settings?.cropsPerYear||2);
   const simple={
-    'ep-pond':'','ds-pond':'','fd-pond':'','sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all',
+    'ep-pond':'','ds-pond':'','sl-pond':'','fd-pond':'','sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all',
   };
   Object.entries(simple).forEach(([id,def])=>{
     const el=document.getElementById(id);if(!el)return;const cur=el.value;
@@ -1940,7 +2024,7 @@ function goTab(t,btn){
   document.querySelectorAll('.tab-grp').forEach(g=>g.classList.remove('grp-on','grp-open'));
   const grp=btn.closest('.tab-grp');if(grp)grp.classList.add('grp-on');
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));document.getElementById('sec-'+t).classList.add('on');
-  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='disease')initDisease();if(t==='feed')initFeed();
+  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='disease')initDisease();if(t==='price')initPrice();if(t==='feed')initFeed();
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
   if(t==='chem')initChem();if(t==='lab')initLab();
   if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();
@@ -2443,6 +2527,136 @@ function clearDs(){
   dwReset();renderDiseaseWatch();
   const pid=document.getElementById('ds-pond')?.value;const p=pid?pond(pid):null;
   showMsg('ds-msg','ok',p?`🧹 ล้างฟอร์มแล้ว — ยังเลือกบ่อ <strong>${p.name}</strong> ค้างอยู่`:'🧹 ล้างฟอร์มแล้ว');
+}
+// ===== ราคาวันนี้ (ราคาตลาด + ราคาขายจริง) =====
+const PRICE_SIZES=[40,50,60,70,80,100];
+function initPrice(){
+  populateAll();
+  const pd=document.getElementById('pr-date');if(pd&&!pd.value)pd.value=today();
+  const sd=document.getElementById('sl-date');if(sd&&!sd.value)sd.value=today();
+  document.getElementById('pr-fields').innerHTML=PRICE_SIZES.map(sz=>`<div class="fg"><label class="fl"><span class="pr-size-tag">ไซส์ ${sz}</span> ตัว/กก.</label><input type="number" class="fi" id="pf-${sz}" placeholder="บาท/กก." oninput="renderPriceChart()"></div>`).join('');
+  loadPriceForDate();
+  renderPriceChart();
+  renderPriceHistory();
+  renderSaleHistory();
+  renderPriceKPI();
+}
+function findPriceEntry(d){return(D.marketPrices||[]).find(r=>r.date===d)}
+function loadPriceForDate(){
+  const d=document.getElementById('pr-date')?.value;
+  const rec=d?findPriceEntry(d):null;
+  PRICE_SIZES.forEach(sz=>{const e=document.getElementById('pf-'+sz);if(e)e.value=rec&&rec.prices&&rec.prices[sz]!==undefined&&rec.prices[sz]!==null?rec.prices[sz]:''});
+  const srcEl=document.getElementById('pr-source');if(srcEl)srcEl.value=rec?.source||'ราคาเฉลี่ยตลาด (ล้ง/แพ)';
+  const msg=document.getElementById('pr-msg');
+  if(msg){
+    if(rec)showMsg('pr-msg','warn',`⚠️ มีข้อมูลราคาวันที่ ${fD(d)} อยู่แล้ว — กด "บันทึก" เพื่ออัปเดต`);
+    else msg.innerHTML='';
+  }
+  renderPriceChart();
+}
+function savePrice(){
+  const d=document.getElementById('pr-date').value;
+  if(!d){showMsg('pr-msg','warn','กรุณาเลือกวันที่');return}
+  D.marketPrices=D.marketPrices||[];
+  const prices={};
+  PRICE_SIZES.forEach(sz=>{const v=document.getElementById('pf-'+sz)?.value;if(v!==''&&v!==undefined)prices[sz]=parseFloat(v)});
+  const idx=D.marketPrices.findIndex(r=>r.date===d);
+  const entry={date:d,source:document.getElementById('pr-source').value,prices};
+  if(idx>=0)D.marketPrices[idx]=entry;else{D.marketPrices.push(entry);D.marketPrices.sort((a,b)=>new Date(a.date)-new Date(b.date))}
+  save();
+  showMsg('pr-msg','ok',`✅ บันทึกราคาวันที่ ${fD(d)} สำเร็จ`);
+  renderPriceChart();renderPriceHistory();renderPriceKPI();
+}
+function clearPrice(){
+  document.getElementById('pr-date').value=today();
+  PRICE_SIZES.forEach(sz=>{const e=document.getElementById('pf-'+sz);if(e)e.value=''});
+  document.getElementById('pr-msg').innerHTML='';
+  renderPriceChart();
+}
+function renderPriceChart(){
+  const el=document.getElementById('pr-chart');if(!el)return;
+  const vals=PRICE_SIZES.map(sz=>{const v=document.getElementById('pf-'+sz)?.value;return v!==''&&v!==undefined?parseFloat(v):null});
+  const max=Math.max(1,...vals.filter(v=>v!==null));
+  el.innerHTML=PRICE_SIZES.map((sz,i)=>{
+    const v=vals[i];
+    const h=v!==null?Math.max(6,Math.round(v/max*100)):0;
+    return `<div class="pr-col"><div class="pr-bar-val">${v!==null?v:'-'}</div><div class="pr-bar" style="height:${h}%;${v===null?'background:var(--sf2)':''}"></div><div class="pr-bar-lbl">${sz}</div></div>`;
+  }).join('');
+}
+function renderPriceKPI(){
+  const el=document.getElementById('pr-kpi');if(!el)return;
+  const list=(D.marketPrices||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const last=list[list.length-1],prev=list[list.length-2];
+  const avg=r=>{if(!r||!r.prices)return null;const vs=Object.values(r.prices).filter(v=>v!==null&&v!==undefined);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null};
+  const lastAvg=avg(last),prevAvg=avg(prev);
+  const diff=(lastAvg!==null&&prevAvg!==null)?Math.round((lastAvg-prevAvg)*10)/10:null;
+  const diffCls=diff===null?'flat':diff>0?'up':diff<0?'down':'flat';
+  const diffTxt=diff===null?'—':diff>0?`▲ +${diff}`:diff<0?`▼ ${diff}`:'— 0';
+  let bestSize='-',bestVal=null;
+  if(last&&last.prices){Object.entries(last.prices).forEach(([sz,v])=>{if(v!==null&&v!==undefined&&(bestVal===null||v>bestVal)){bestVal=v;bestSize=sz}})}
+  const sales=(D.sales||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const lastSale=sales[sales.length-1];
+  let saleVsMkt='-';
+  if(lastSale){
+    const mkt=findPriceEntry(lastSale.date);
+    const mktAvg=avg(mkt);
+    if(mktAvg!==null){const dv=Math.round((lastSale.pricePerKg-mktAvg)*10)/10;saleVsMkt=`${dv>0?'+':''}${dv} บาท/กก.`}
+  }
+  el.innerHTML=`
+    <div class="card"><div class="kpi-l" style="font-size:11.5px;color:var(--tx2);margin-bottom:6px">ราคาเฉลี่ยล่าสุด (ทุกไซส์)</div><div style="font-size:20px;font-weight:700;color:var(--p)">${lastAvg!==null?Math.round(lastAvg):'-'} <span style="font-size:12px;color:var(--tx2)">บาท/กก.</span></div><div class="${diffCls}" style="font-size:11px;margin-top:4px">${diffTxt}${diff!==null?' จากครั้งก่อน':''}</div></div>
+    <div class="card"><div class="kpi-l" style="font-size:11.5px;color:var(--tx2);margin-bottom:6px">ไซส์ที่ราคาดีที่สุด</div><div style="font-size:20px;font-weight:700;color:var(--p)">${bestSize} <span style="font-size:12px;color:var(--tx2)">ตัว/กก.</span></div><div style="font-size:11px;color:var(--tx3);margin-top:4px">${bestVal!==null?bestVal+' บาท/กก.':'-'}</div></div>
+    <div class="card"><div class="kpi-l" style="font-size:11.5px;color:var(--tx2);margin-bottom:6px">ขายจริงล่าสุด</div><div style="font-size:18px;font-weight:700;color:var(--p)">${lastSale?fD(lastSale.date):'-'}</div><div style="font-size:11px;color:var(--tx3);margin-top:4px">${lastSale?`บ่อ ${pond(lastSale.pondId)?.name||'-'} · ไซส์ ${lastSale.size} · ${lastSale.pricePerKg} บาท/กก.`:'ยังไม่มีข้อมูล'}</div></div>
+    <div class="card"><div class="kpi-l" style="font-size:11.5px;color:var(--tx2);margin-bottom:6px">ส่วนต่าง ราคาขาย vs ตลาด</div><div style="font-size:20px;font-weight:700;color:var(--p)">${saleVsMkt}</div><div style="font-size:11px;color:var(--tx3);margin-top:4px">เทียบราคาตลาดวันที่ขาย</div></div>`;
+}
+function renderPriceHistory(){
+  const el=document.getElementById('pr-history');if(!el)return;
+  const list=(D.marketPrices||[]).slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(!list.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
+  const avg=r=>{const vs=Object.values(r.prices||{}).filter(v=>v!==null&&v!==undefined);return vs.length?Math.round(vs.reduce((a,b)=>a+b,0)/vs.length):null};
+  el.innerHTML=`<table class="tbl"><thead><tr><th>วันที่</th>${PRICE_SIZES.map(sz=>`<th>${sz}</th>`).join('')}<th>เฉลี่ย</th><th>เทียบครั้งก่อน</th></tr></thead><tbody>${
+    list.map((r,i)=>{
+      const prevEntry=list[i+1];
+      const a1=avg(r),a0=prevEntry?avg(prevEntry):null;
+      const diff=(a1!==null&&a0!==null)?a1-a0:null;
+      const cls=diff===null?'diff-flat':diff>0?'diff-up':diff<0?'diff-down':'diff-flat';
+      const txt=diff===null?'—':diff>0?`▲ +${diff}`:diff<0?`▼ ${diff}`:'— 0';
+      return `<tr><td>${fD(r.date)}</td>${PRICE_SIZES.map(sz=>`<td>${r.prices&&r.prices[sz]!==undefined&&r.prices[sz]!==null?r.prices[sz]:'-'}</td>`).join('')}<td>${a1!==null?a1:'-'}</td><td><span class="diff-pill ${cls}">${txt}</span></td></tr>`;
+    }).join('')}</tbody></table>`;
+}
+function updateSaleTotal(){
+  const w=parseFloat(document.getElementById('sl-weight')?.value),p=parseFloat(document.getElementById('sl-price')?.value);
+  const el=document.getElementById('sl-total');if(!el)return;
+  el.textContent=(!isNaN(w)&&!isNaN(p))?`ยอดรวมโดยประมาณ: ${Math.round(w*p).toLocaleString()} บาท`:'';
+}
+function saveSale(){
+  const pid=document.getElementById('sl-pond').value,d=document.getElementById('sl-date').value;
+  const size=document.getElementById('sl-size').value,weight=document.getElementById('sl-weight').value,price=document.getElementById('sl-price').value;
+  if(!pid||!d||!size||!weight||!price){showMsg('sl-msg','warn','กรุณากรอกบ่อ วันที่ ไซส์ น้ำหนัก และราคาให้ครบ');return}
+  D.sales=D.sales||[];
+  D.sales.push({date:d,pondId:pid,size:parseFloat(size),weightKg:parseFloat(weight),pricePerKg:parseFloat(price),buyer:document.getElementById('sl-buyer').value,notes:document.getElementById('sl-notes').value});
+  D.sales.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  save();
+  const p=pond(pid);
+  showMsg('sl-msg','ok',`✅ บันทึกการขาย บ่อ ${p?.name||''} วันที่ ${fD(d)} สำเร็จ`);
+  clearSale(true);
+  renderSaleHistory();renderPriceKPI();
+}
+function clearSale(keepMsg){
+  document.getElementById('sl-date').value=today();
+  document.getElementById('sl-size').value='';
+  document.getElementById('sl-weight').value='';
+  document.getElementById('sl-price').value='';
+  document.getElementById('sl-buyer').value='';
+  document.getElementById('sl-notes').value='';
+  document.getElementById('sl-total').textContent='';
+  if(!keepMsg)document.getElementById('sl-msg').innerHTML='';
+}
+function renderSaleHistory(){
+  const el=document.getElementById('sl-history');if(!el)return;
+  const list=(D.sales||[]).slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(!list.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
+  el.innerHTML=`<table class="tbl"><thead><tr><th>วันที่</th><th>บ่อ</th><th>ไซส์</th><th>น้ำหนัก (กก.)</th><th>ราคา (บาท/กก.)</th><th>ยอดรวม (บาท)</th><th>ผู้รับซื้อ</th></tr></thead><tbody>${
+    list.map(r=>`<tr><td>${fD(r.date)}</td><td>${pond(r.pondId)?.name||'-'}</td><td>${r.size}</td><td>${r.weightKg.toLocaleString()}</td><td>${r.pricePerKg}</td><td>${Math.round(r.weightKg*r.pricePerKg).toLocaleString()}</td><td>${r.buyer||'-'}</td></tr>`).join('')}</tbody></table>`;
 }
 function initEntry(){
   populateAll();document.getElementById('ep-date').value=today();
