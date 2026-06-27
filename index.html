@@ -219,6 +219,12 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .lbl-std-danger{font-size:10px;color:var(--d);margin-top:1px;font-weight:700}
 .pond-chk{display:flex;align-items:center;gap:6px;padding:5px 12px;border:1.5px solid var(--bd);border-radius:20px;cursor:pointer;font-size:13px;user-select:none;transition:all .15s}
 .pond-chk input{display:none}.pond-chk.on{background:var(--p);color:#fff;border-color:var(--p)}
+.dw-chip{border:1px solid var(--border-input);border-radius:16px;padding:5px 12px;font-size:12px;background:var(--sf);color:var(--tx);cursor:pointer;font-family:inherit}
+.dw-chip-on{border-color:var(--d);background:var(--db);color:var(--d)}
+.dw-sev{border:1px solid var(--border-input);border-radius:6px;padding:3px 10px;font-size:11px;background:var(--sf);color:var(--tx);cursor:pointer;font-family:inherit}
+.dw-sev-on-ok{border-color:var(--ok);background:var(--ob);color:var(--ok)}
+.dw-sev-on-w{border-color:var(--w);background:var(--wb);color:var(--w)}
+.dw-sev-on-d{border-color:var(--d);background:var(--db);color:var(--d)}
 .cl{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px;font-size:12px;color:var(--tx2)}
 .cl-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
 .wx-day{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:15px;text-align:center}
@@ -418,11 +424,19 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
     <div class="card-t">💧 ค่าน้ำ 14 พารามิเตอร์</div>
     <div class="fgrid" id="ep-fields"></div>
     <div style="margin-top:12px"><div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="ep-notes" placeholder="สังเกตการณ์..."></div></div>
+    <div style="margin-top:18px;border-top:1px solid var(--bd);padding-top:14px">
+      <div class="card-t" style="margin-bottom:10px">🦐 เฝ้าระวังโรคตาเปล่า</div>
+      <div id="ep-disease"></div>
+    </div>
     <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn btn-p" onclick="saveWQ()">💾 บันทึก</button>
       <button class="btn btn-s" onclick="clearWQ()">🗑️ ล้างฟอร์ม</button>
     </div>
     <div id="ep-msg" style="margin-top:10px"></div>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-t">📋 สรุปวันนี้ — บ่อที่พบอาการ</div>
+    <div id="dw-summary"></div>
   </div>
   <div class="card">
     <div class="card-t">📋 ข้อมูลย้อนหลัง</div>
@@ -2311,11 +2325,69 @@ function renderOv(){
   document.getElementById('ov-ts').textContent=new Date().toLocaleString('th-TH');
 }
 function jumpEntry(id){document.getElementById('tab-entry').click();setTimeout(()=>{document.getElementById('ep-pond').value=id;onEPond();},80)}
+// ===== เฝ้าระวังโรคตาเปล่ารายวัน =====
+const DISEASES=[
+  {key:'redBody',name:'ตัวแดง',symptoms:['ลำตัวแดง','ขาแดง','หางแดง','ว่ายเอียง/ลอยตัว']},
+  {key:'whiteFeces',name:'ขี้ขาว',symptoms:['พบเส้นขี้ขาวลอยในบ่อ','กินอาหารลดลงผิดปกติ']},
+  {key:'ems',name:'EMS (ตายเฉียบพลัน)',symptoms:['ตับซีด/ฝ่อ','ตายเฉียบพลันในกุ้งอายุน้อย (ก่อน 35 วัน)','กุ้งตายสะสมก้นบ่อ']},
+  {key:'esp',name:'ESP',symptoms:['ลำตัวซีด/โตช้าผิดปกติ','ขนาดไม่สม่ำเสมอในบ่อเดียวกัน']}
+];
+const DW_SEV=[{k:'none',l:'ไม่พบ'},{k:'mild',l:'พบเล็กน้อย'},{k:'mod',l:'พบปานกลาง'},{k:'severe',l:'พบมาก'}];
+let dwState={};
+function dwReset(){DISEASES.forEach(d=>dwState[d.key]={symptoms:[],severity:'none'})}
+function dwSevClass(sev){return sev==='severe'?'d':(sev==='mild'||sev==='mod')?'w':'ok'}
+function dwToggleSym(dk,sym){
+  const st=dwState[dk];if(!st)return;
+  const i=st.symptoms.indexOf(sym);
+  if(i>=0)st.symptoms.splice(i,1);else st.symptoms.push(sym);
+  renderDiseaseWatch();
+}
+function dwSetSev(dk,sev){if(!dwState[dk])return;dwState[dk].severity=sev;renderDiseaseWatch()}
+function renderDiseaseWatch(){
+  const el=document.getElementById('ep-disease');if(!el)return;
+  el.innerHTML=DISEASES.map(d=>{
+    const st=dwState[d.key]||{symptoms:[],severity:'none'};
+    return `<div style="margin-bottom:14px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px">${d.name}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+        ${d.symptoms.map(s=>{const on=st.symptoms.includes(s);return `<button type="button" class="dw-chip${on?' dw-chip-on':''}" onclick="dwToggleSym('${d.key}','${s.replace(/'/g,"\\'")}')">${s}${on?' ✓':''}</button>`}).join('')}
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <span style="font-size:11px;color:var(--tx2)">ความรุนแรง:</span>
+        ${DW_SEV.map(s=>`<button type="button" class="dw-sev${st.severity===s.k?' dw-sev-on-'+dwSevClass(s.k):''}" onclick="dwSetSev('${d.key}','${s.k}')">${s.l}${st.severity===s.k?' ✓':''}</button>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+function dwSevLabel(k){return(DW_SEV.find(s=>s.k===k)||{}).l||k}
+function renderDwSummary(){
+  const el=document.getElementById('dw-summary');if(!el)return;
+  const d=today();const rows=[];
+  (D.ponds||[]).forEach(p=>{
+    const rec=(p.records||[]).find(r=>r.date===d);
+    if(rec&&rec.diseaseWatch){
+      DISEASES.forEach(ds=>{
+        const st=rec.diseaseWatch[ds.key];
+        if(st&&st.severity&&st.severity!=='none'){
+          rows.push({pond:p.name,disease:ds.name,severity:st.severity,symptoms:st.symptoms||[]});
+        }
+      });
+    }
+  });
+  if(!rows.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:14px;font-style:italic">วันนี้ยังไม่พบอาการผิดปกติในทุกบ่อ</p>';return}
+  const sevColor=s=>s==='severe'?'var(--d)':'var(--w)';
+  el.innerHTML=rows.map(r=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--sf2)">
+    <span style="width:8px;height:8px;border-radius:50%;background:${sevColor(r.severity)};flex-shrink:0"></span>
+    <span style="font-size:13px;font-weight:600;width:60px">${r.pond}</span>
+    <span style="font-size:12px;color:var(--tx2);flex:1">${r.disease} — ${dwSevLabel(r.severity)}${r.symptoms.length?' ('+r.symptoms.join(', ')+')':''}</span>
+  </div>`).join('');
+}
 function initEntry(){
   populateAll();document.getElementById('ep-date').value=today();
   document.getElementById('ep-fields').innerHTML=PARAMS.map(p=>`<div class="fg"><label class="fl">${p.lbl}${p.unit?' ('+p.unit+')':''}</label><input type="number" step="any" inputmode="decimal" class="fi" id="ef-${p.key}" placeholder="—" oninput="onFI('${p.key}',this)"><span class="lbl-std" id="std-${p.key}">${stdText(p)}</span>${p.note?`<span class="hint">${p.note}</span>`:''}</div>`).join('');
   restoreLastEntry();
   calcAge('ep');
+  dwReset();renderDiseaseWatch();renderDwSummary();
   if(document.getElementById('ep-pond').value){renderWQTable();checkExistingWQ()}
 }
 function saveLastEntry(){
@@ -2350,6 +2422,9 @@ function prefillWQ(){
   if(!rec){checkExistingWQ();return}
   PARAMS.forEach(pm=>{const e=document.getElementById('ef-'+pm.key);if(e){e.value=rec[pm.key]!==null&&rec[pm.key]!==undefined?rec[pm.key]:'';onFI(pm.key,e)}});
   document.getElementById('ep-notes').value=rec.notes||'';
+  dwReset();
+  if(rec.diseaseWatch){DISEASES.forEach(d=>{if(rec.diseaseWatch[d.key])dwState[d.key]={symptoms:[...(rec.diseaseWatch[d.key].symptoms||[])],severity:rec.diseaseWatch[d.key].severity||'none'}})}
+  renderDiseaseWatch();
   showMsg('ep-msg','warn',`✏️ กำลังแก้ไขข้อมูลวันที่ ${fD(d)} บ่อ ${p.name} — แก้ค่าแล้วกด "บันทึก" เพื่ออัปเดต`);
 }
 function stdText(p){return(p.inv?'ต่ำกว่า '+p.max:p.min+'–'+p.max)+(p.unit?' '+p.unit:'')}
@@ -2380,18 +2455,20 @@ function saveWQ(){
   const rec={date:d,age:parseInt(document.getElementById('ep-age').value)||0};
   PARAMS.forEach(pm=>{const v=document.getElementById('ef-'+pm.key)?.value;rec[pm.key]=v===''||v===undefined?null:parseFloat(v)});
   rec.notes=document.getElementById('ep-notes').value;
+  rec.diseaseWatch=JSON.parse(JSON.stringify(dwState));
   const idx=p.records.findIndex(r=>r.date===d);
   if(idx>=0){
     if(!confirm(`มีข้อมูลของวันที่ ${fD(d)} บ่อ ${p.name} อยู่แล้ว ต้องการบันทึกทับข้อมูลเดิมหรือไม่?`))return;
     p.records[idx]=rec;showMsg('ep-msg','warn',`อัปเดต ${fD(d)} บ่อ ${p.name}`)
   }
   else{p.records.push(rec);p.records.sort((a,b)=>new Date(a.date)-new Date(b.date));showMsg('ep-msg','ok',`✅ บันทึกสำเร็จ บ่อ ${p.name}`)}
-  save();renderWQTable();renderOv();
+  save();renderWQTable();renderOv();renderDwSummary();
 }
 function clearWQ(){
   document.getElementById('ep-date').value=today();
   PARAMS.forEach(p=>{const e=document.getElementById('ef-'+p.key);if(e){e.value='';e.className='fi'}const std=document.getElementById('std-'+p.key);if(std){std.textContent=stdText(p);std.className='lbl-std'}});
   document.getElementById('ep-notes').value='';calcAge('ep');
+  dwReset();renderDiseaseWatch();
   // ── ตั้งใจไม่รีเซ็ตช่องเลือกบ่อ (เผื่อกรอกต่อบ่อเดิม) แต่โชว์ชัดว่ากำลังกรอกบ่อไหนอยู่ กันกรอกผิดบ่อ (ตามรายงาน UX พีแพรว ข้อ 7) ──
   const pid=document.getElementById('ep-pond')?.value;const p=pid?pond(pid):null;
   showMsg('ep-msg','ok',p?`🧹 ล้างฟอร์มแล้ว — ยังเลือกบ่อ <strong>${p.name}</strong> ค้างอยู่ (ถ้าจะกรอกบ่ออื่น กรุณาเปลี่ยนบ่อก่อนบันทึก)`:'🧹 ล้างฟอร์มแล้ว');
@@ -2411,7 +2488,7 @@ function deleteWQ(pid,d){
   if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(d)+' ใช่หรือไม่?'))return;
   const p=pond(pid);if(!p)return;
   p.records=(p.records||[]).filter(r=>r.date!==d);
-  save();renderWQTable();renderOv();
+  save();renderWQTable();renderOv();renderDwSummary();
 }
 
 // ===== EDIT HISTORY FUNCTIONS =====
