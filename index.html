@@ -235,6 +235,11 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .diff-up{background:var(--db);color:var(--d)}
 .diff-down{background:var(--ob);color:var(--ok)}
 .diff-flat{background:var(--sf2);color:var(--tx3)}
+.tag-pond{display:inline-block;background:var(--ib);color:var(--in);border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:600}
+.labor-sub{display:flex;gap:6px;border-bottom:1px solid var(--bd);margin-bottom:16px;flex-wrap:wrap}
+.labor-sub-btn{padding:8px 14px;font-size:12.5px;font-weight:600;color:var(--tx2);cursor:pointer;border-bottom:3px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
+.labor-sub-btn.on{color:var(--p);border-bottom-color:var(--p)}
+.labor-pane{display:none}.labor-pane.on{display:block}
 .cl{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px;font-size:12px;color:var(--tx2)}
 .cl-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
 .wx-day{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:15px;text-align:center}
@@ -368,6 +373,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
     <button class="grp-btn" onclick="toggleGrp('market')">💰 ตลาด/ต้นทุน <span class="grp-caret">▾</span></button>
     <div class="tab-dropdown">
       <button class="tab-item" id="tab-price" onclick="goTab('price',this)">💰 ราคาวันนี้</button>
+      <button class="tab-item" id="tab-labor" onclick="goTab('labor',this)">👷 ค่าแรง</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-settings">
@@ -870,6 +876,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
           <div class="fg"><label class="fl">ต้นทุนลูกกุ้ง (บาท)</label><input type="number" class="fi" id="cm-cost-fry" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl">ต้นทุนอาหาร (บาท)</label><input type="number" class="fi" id="cm-cost-feed" step="1" placeholder="คำนวณจาก feedLog" readonly style="background:var(--sf2)"></div>
           <div class="fg"><label class="fl">ต้นทุนสารเคมี (บาท)</label><input type="number" class="fi" id="cm-cost-chem" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ต้นทุนค่าแรง (บาท)</label><input type="number" class="fi" id="cm-cost-labor" step="1" placeholder="ดึงจากแท็บค่าแรงอัตโนมัติ" style="background:var(--sf2)"></div>
           <div class="fg"><label class="fl">ต้นทุนอื่นๆ (บาท)</label><input type="number" class="fi" id="cm-cost-other" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" style="color:var(--ok);font-weight:700">กำไรสุทธิ (บาท)</label><input type="number" class="fi" id="cm-profit" step="1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--ob);font-weight:700"></div>
         </div>
@@ -1073,6 +1080,97 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
     <div class="tbl-wrap" id="sl-history"></div>
   </div>
 </div>
+<!-- ค่าแรง -->
+<div id="sec-labor" class="sec">
+  <div class="sec-hdr"><div class="sec-title">👷 ต้นทุนแรงงาน / ค่าแรงต่อรอบ</div></div>
+  <div class="g4" id="lb-kpi" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px"></div>
+  <div class="link-note" id="lb-link-note" style="background:var(--ob);border:1px solid var(--ok);color:var(--ok);border-radius:10px;padding:10px 14px;font-size:12.5px;margin-bottom:16px;line-height:1.6">
+    🔗 <strong>เชื่อมกับ "ปิดรอบ"</strong> — ค่าแรงรายบ่อที่บันทึกไว้ตั้งแต่เริ่มรอบจะถูกดึงไปรวมในต้นทุนอัตโนมัติตอนปิดบ่อ ส่วนเงินเดือนประจำจะหารเฉลี่ยตามสัดส่วนวันของรอบ
+  </div>
+  <div class="labor-sub">
+    <button class="labor-sub-btn on" onclick="laborTab('lp-staff',this)">🧑‍💼 เงินเดือนประจำ</button>
+    <button class="labor-sub-btn" onclick="laborTab('lp-cost',this)">👷 ค่าแรงรายบ่อ</button>
+    <button class="labor-sub-btn" onclick="laborTab('lp-summary',this)">📋 ประวัติ/สรุป</button>
+  </div>
+
+  <!-- SUB-PANE: เงินเดือนประจำ -->
+  <div class="labor-pane on" id="lp-staff">
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-t">🧑‍💼 เพิ่ม/แก้ไข เงินเดือนประจำ</div>
+      <div class="fgrid">
+        <div class="fg"><label class="fl">ชื่อ</label><input type="text" class="fi" id="st-name" placeholder="เช่น สมชาย ใจดี"></div>
+        <div class="fg"><label class="fl">ตำแหน่ง</label>
+          <select class="fi" id="st-position">
+            <option value="ผู้จัดการฟาร์ม">ผู้จัดการฟาร์ม</option>
+            <option value="หัวหน้าบ่อ">หัวหน้าบ่อ</option>
+            <option value="พนักงานประจำ">พนักงานประจำ</option>
+            <option value="อื่นๆ">อื่นๆ</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">เงินเดือน (บาท/เดือน)</label><input type="number" class="fi" id="st-salary" placeholder="เช่น 25000" inputmode="decimal"></div>
+        <div class="fg"><label class="fl">มีผลตั้งแต่</label><input type="date" class="fi" id="st-start"></div>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-p" onclick="saveStaff()">💾 บันทึก</button>
+        <button class="btn btn-s" onclick="clearStaff()">🗑️ ล้างฟอร์ม</button>
+      </div>
+      <div id="st-msg" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <div class="card-t">📋 รายชื่อพนักงานประจำ (ปัจจุบัน)</div>
+      <div id="st-table"></div>
+      <div class="hint" style="margin-top:10px">* ถ้าปรับเงินเดือน ให้เพิ่มแถวใหม่พร้อมวันที่มีผล ระบบจะใช้ค่าล่าสุด ณ วันนั้นๆ ในการคำนวณ ไม่ต้องลบของเก่า</div>
+    </div>
+  </div>
+
+  <!-- SUB-PANE: ค่าแรงรายบ่อ -->
+  <div class="labor-pane" id="lp-cost">
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-t">👷 บันทึกค่าแรงรายบ่อ</div>
+      <div class="fgrid">
+        <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="lc-pond"><option value="">-- เลือกบ่อ --</option></select></div>
+        <div class="fg"><label class="fl">วันที่</label><input type="date" class="fi" id="lc-date"></div>
+        <div class="fg"><label class="fl">ประเภทงาน</label>
+          <select class="fi" id="lc-type">
+            <option value="ให้อาหาร">ให้อาหาร</option>
+            <option value="เหมาจับกุ้ง">เหมาจับกุ้ง</option>
+            <option value="เปลี่ยนน้ำ/สูบน้ำ">เปลี่ยนน้ำ/สูบน้ำ</option>
+            <option value="ซ่อมบำรุงบ่อ">ซ่อมบำรุงบ่อ</option>
+            <option value="อื่นๆ">อื่นๆ</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">จำนวนเงิน (บาท)</label><input type="number" class="fi" id="lc-amount" placeholder="เช่น 1500" inputmode="decimal"></div>
+      </div>
+      <div class="fgrid" style="margin-top:11px">
+        <div class="fg" style="grid-column:1/-1"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="lc-note" placeholder="เช่น ทีมเหมาจับกุ้ง 3 คน"></div>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-p" onclick="saveLaborCost()">💾 บันทึกค่าแรง</button>
+        <button class="btn btn-s" onclick="clearLaborCost()">🗑️ ล้างฟอร์ม</button>
+      </div>
+      <div id="lc-msg" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <div class="card-t">📋 ค่าแรงรายบ่อ — รอบปัจจุบัน</div>
+      <div style="margin-bottom:12px">
+        <select class="fi" id="lc-filter-pond" onchange="renderLaborTable()" style="max-width:180px"><option value="">ทุกบ่อ</option></select>
+      </div>
+      <div id="lc-table"></div>
+    </div>
+  </div>
+
+  <!-- SUB-PANE: ประวัติ/สรุป -->
+  <div class="labor-pane" id="lp-summary">
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-t">📊 ค่าแรงรายบ่อ — เดือนนี้</div>
+      <div id="lb-month-summary"></div>
+    </div>
+    <div class="card">
+      <div class="card-t">📋 ค่าแรง/กก. เทียบรอบที่ปิดแล้ว</div>
+      <div id="lb-crop-summary"></div>
+    </div>
+  </div>
+</div>
 </div>
 <!-- MODAL -->
 <div class="modal-bg" id="pondModal">
@@ -1143,6 +1241,8 @@ function normalizeD(d) {
   if (!d.harvestLog) d.harvestLog = [];
   if (!d.settings) d.settings = {};
   if (!d.settings.cropsPerYear) d.settings.cropsPerYear = 2;
+  if (!d.staff) d.staff = [];
+  if (!d.laborCosts) d.laborCosts = [];
   return d;
 }
 
@@ -1734,6 +1834,8 @@ function mergeRemote(local, remote) {
   merged.harvestLog = mergeArr(merged.harvestLog, remote.harvestLog);
   merged.sales = mergeArr(merged.sales, remote.sales);
   merged.marketPrices = mergeByDate(merged.marketPrices, remote.marketPrices);
+  merged.staff = mergeArr(merged.staff, remote.staff);
+  merged.laborCosts = mergeArr(merged.laborCosts, remote.laborCosts);
   return merged;
 }
 function mergeByDate(localArr, remoteArr) {
@@ -1938,14 +2040,14 @@ function populateAll(){
   const cpyEl=document.getElementById('settings-crops-per-year');
   if(cpyEl)cpyEl.value=String(D.settings?.cropsPerYear||2);
   const simple={
-    'ep-pond':'','ds-pond':'','sl-pond':'','fd-pond':'','sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all',
+    'ep-pond':'','ds-pond':'','sl-pond':'','fd-pond':'','sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all','lc-pond':'',
   };
   Object.entries(simple).forEach(([id,def])=>{
     const el=document.getElementById(id);if(!el)return;const cur=el.value;
     el.innerHTML=(def==='all'?'<option value="all">ทุกบ่อ</option>':'<option value="">-- เลือกบ่อ --</option>')+sortedPonds().map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');
     if(cur)el.value=cur;
   });
-  ['ch-pond','ch-tbl-pond'].forEach(id=>{
+  ['ch-pond','ch-tbl-pond','lc-filter-pond'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;const cur=el.value;
     el.innerHTML='<option value="all">ทุกบ่อ</option>'+sortedPonds().map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');
     if(cur)el.value=cur;
@@ -2024,7 +2126,7 @@ function goTab(t,btn){
   document.querySelectorAll('.tab-grp').forEach(g=>g.classList.remove('grp-on','grp-open'));
   const grp=btn.closest('.tab-grp');if(grp)grp.classList.add('grp-on');
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));document.getElementById('sec-'+t).classList.add('on');
-  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='disease')initDisease();if(t==='price')initPrice();if(t==='feed')initFeed();
+  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='disease')initDisease();if(t==='price')initPrice();if(t==='labor')initLabor();if(t==='feed')initFeed();
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
   if(t==='chem')initChem();if(t==='lab')initLab();
   if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();
@@ -2657,6 +2759,179 @@ function renderSaleHistory(){
   if(!list.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
   el.innerHTML=`<table class="tbl"><thead><tr><th>วันที่</th><th>บ่อ</th><th>ไซส์</th><th>น้ำหนัก (กก.)</th><th>ราคา (บาท/กก.)</th><th>ยอดรวม (บาท)</th><th>ผู้รับซื้อ</th></tr></thead><tbody>${
     list.map(r=>`<tr><td>${fD(r.date)}</td><td>${pond(r.pondId)?.name||'-'}</td><td>${r.size}</td><td>${r.weightKg.toLocaleString()}</td><td>${r.pricePerKg}</td><td>${Math.round(r.weightKg*r.pricePerKg).toLocaleString()}</td><td>${r.buyer||'-'}</td></tr>`).join('')}</tbody></table>`;
+}
+// ===== ค่าแรง / แรงงาน =====
+function laborTab(paneId, btn) {
+  document.querySelectorAll('.labor-sub-btn').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.labor-pane').forEach(p=>p.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById(paneId).classList.add('on');
+}
+function initLabor(){
+  populateAll();
+  document.getElementById('st-start').value=today();
+  document.getElementById('lc-date').value=today();
+  renderStaffTable();
+  renderLaborTable();
+  renderLaborKPI();
+  renderLaborMonthSummary();
+  renderLaborCropSummary();
+}
+function saveStaff(){
+  const name=document.getElementById('st-name').value.trim();
+  const position=document.getElementById('st-position').value;
+  const salary=parseFloat(document.getElementById('st-salary').value);
+  const startDate=document.getElementById('st-start').value;
+  const msg=document.getElementById('st-msg');
+  if(!name){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุชื่อ</span>';return;}
+  if(!salary||salary<=0){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุเงินเดือน</span>';return;}
+  if(!startDate){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุวันที่มีผล</span>';return;}
+  if(!D.staff)D.staff=[];
+  D.staff.push({id:'st_'+Date.now(),name,position,salary,startDate});
+  save();
+  msg.innerHTML='<span style="color:var(--ok)">✅ บันทึกเรียบร้อย</span>';
+  clearStaff(true);
+  renderStaffTable();
+  renderLaborKPI();
+}
+function clearStaff(keepMsg){
+  document.getElementById('st-name').value='';
+  document.getElementById('st-salary').value='';
+  document.getElementById('st-start').value=today();
+  if(!keepMsg)document.getElementById('st-msg').innerHTML='';
+}
+function deleteStaff(id){
+  if(!confirm('ลบรายการนี้?'))return;
+  D.staff=(D.staff||[]).filter(x=>x.id!==id);
+  save();renderStaffTable();renderLaborKPI();
+}
+function renderStaffTable(){
+  const el=document.getElementById('st-table');if(!el)return;
+  const list=(D.staff||[]).slice().sort((a,b)=>new Date(b.startDate)-new Date(a.startDate));
+  if(!list.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลพนักงานประจำ</p>';return;}
+  el.innerHTML=`<table class="tbl"><thead><tr><th>ชื่อ</th><th>ตำแหน่ง</th><th>เงินเดือน (บาท)</th><th>มีผลตั้งแต่</th><th></th></tr></thead><tbody>${
+    list.map(r=>`<tr><td>${r.name}</td><td><span class="pr-size-tag">${r.position}</span></td><td>${r.salary.toLocaleString()}</td><td>${fD(r.startDate)}</td><td><button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="deleteStaff('${r.id}')">🗑️</button></td></tr>`).join('')
+  }</tbody></table>`;
+}
+function saveLaborCost(){
+  const pondId=document.getElementById('lc-pond').value;
+  const date=document.getElementById('lc-date').value;
+  const type=document.getElementById('lc-type').value;
+  const amount=parseFloat(document.getElementById('lc-amount').value);
+  const note=document.getElementById('lc-note').value.trim();
+  const msg=document.getElementById('lc-msg');
+  if(!pondId){msg.innerHTML='<span style="color:var(--d)">กรุณาเลือกบ่อ</span>';return;}
+  if(!date){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุวันที่</span>';return;}
+  if(!amount||amount<=0){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุจำนวนเงิน</span>';return;}
+  if(!D.laborCosts)D.laborCosts=[];
+  D.laborCosts.push({id:'lc_'+Date.now(),pondId,date,type,amount,note});
+  save();
+  msg.innerHTML='<span style="color:var(--ok)">✅ บันทึกเรียบร้อย</span>';
+  clearLaborCost(true);
+  renderLaborTable();
+  renderLaborKPI();
+  renderLaborMonthSummary();
+}
+function clearLaborCost(keepMsg){
+  document.getElementById('lc-pond').value='';
+  document.getElementById('lc-date').value=today();
+  document.getElementById('lc-amount').value='';
+  document.getElementById('lc-note').value='';
+  if(!keepMsg)document.getElementById('lc-msg').innerHTML='';
+}
+function deleteLaborCost(id){
+  if(!confirm('ลบรายการนี้?'))return;
+  D.laborCosts=(D.laborCosts||[]).filter(x=>x.id!==id);
+  save();renderLaborTable();renderLaborKPI();renderLaborMonthSummary();
+}
+function renderLaborTable(){
+  const filterPond=document.getElementById('lc-filter-pond')?.value||'';
+  const el=document.getElementById('lc-table');if(!el)return;
+  const list=(D.laborCosts||[]).filter(r=>!filterPond||r.pondId===filterPond).slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(!list.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลค่าแรง</p>';return;}
+  const total=list.reduce((s,r)=>s+r.amount,0);
+  el.innerHTML=`<table class="tbl"><thead><tr><th>วันที่</th><th>บ่อ</th><th>ประเภทงาน</th><th>จำนวน (บาท)</th><th>หมายเหตุ</th><th></th></tr></thead><tbody>${
+    list.map(r=>`<tr><td>${fD(r.date)}</td><td><span class="tag-pond">${pond(r.pondId)?.name||'-'}</span></td><td>${r.type}</td><td>${r.amount.toLocaleString()}</td><td>${r.note||'-'}</td><td><button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="deleteLaborCost('${r.id}')">🗑️</button></td></tr>`).join('')
+  }</tbody></table><div style="text-align:right;padding:10px 10px 0;font-size:13px;color:var(--tx2)">รวม: <strong style="color:var(--p)">${total.toLocaleString()} บาท</strong></div>`;
+}
+function getLaborCostForPond(pondId, fromDate, toDate){
+  return (D.laborCosts||[]).filter(r=>{
+    if(r.pondId!==pondId)return false;
+    if(fromDate&&r.date<fromDate)return false;
+    if(toDate&&r.date>toDate)return false;
+    return true;
+  }).reduce((s,r)=>s+r.amount,0);
+}
+function getStaffCostForPeriod(fromDate, toDate){
+  if(!fromDate||!toDate)return 0;
+  const days=(new Date(toDate)-new Date(fromDate))/(1000*60*60*24)+1;
+  const activePonds=D.ponds.filter(p=>p.startDate&&!p.closed);
+  const numPonds=activePonds.length||1;
+  // รวมเงินเดือนพนักงานที่มีผลในช่วงนั้น
+  const staffMap={};
+  (D.staff||[]).forEach(s=>{
+    if(s.startDate<=toDate){
+      if(!staffMap[s.name]||s.startDate>staffMap[s.name].startDate)staffMap[s.name]=s;
+    }
+  });
+  const monthlyTotal=Object.values(staffMap).reduce((s,x)=>s+x.salary,0);
+  const dailyCost=monthlyTotal/30;
+  const totalForPeriod=dailyCost*days;
+  return totalForPeriod/numPonds; // หารเฉลี่ยตามจำนวนบ่อที่เลี้ยง
+}
+function renderLaborKPI(){
+  const el=document.getElementById('lb-kpi');if(!el)return;
+  const staffMap={};
+  (D.staff||[]).forEach(s=>{if(!staffMap[s.name]||s.startDate>staffMap[s.name].startDate)staffMap[s.name]=s;});
+  const monthlyStaff=Object.values(staffMap).reduce((s,x)=>s+x.salary,0);
+  const staffCount=Object.keys(staffMap).length;
+  const now=today();const mm=now.slice(0,7);
+  const monthCosts=(D.laborCosts||[]).filter(r=>r.date&&r.date.slice(0,7)===mm).reduce((s,r)=>s+r.amount,0);
+  const activePonds=D.ponds.filter(p=>p.startDate&&!p.closed);
+  // ค่าแรง/กก. จากรอบที่ปิดแล้ว
+  const closed=[];
+  D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{if(c.closeDate&&c.totalWeight)closed.push({...c,pondId:p.id});}));
+  let avgPerKg=null;
+  if(closed.length){
+    const vals=closed.map(c=>{
+      const lc=getLaborCostForPond(c.pondId,c.startDate,c.closeDate);
+      return c.totalWeight?lc/c.totalWeight:null;
+    }).filter(v=>v!==null&&v>0);
+    if(vals.length)avgPerKg=vals.reduce((s,v)=>s+v,0)/vals.length;
+  }
+  el.innerHTML=`
+    <div class="kpi-card"><div class="kpi-label">เงินเดือนประจำ/เดือน</div><div class="kpi-val">${monthlyStaff.toLocaleString()} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">${staffCount} คน</div></div>
+    <div class="kpi-card"><div class="kpi-label">ค่าแรงรายบ่อ (เดือนนี้)</div><div class="kpi-val">${monthCosts.toLocaleString()} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">${activePonds.length} บ่อที่กำลังเลี้ยง</div></div>
+    <div class="kpi-card"><div class="kpi-label">รวมค่าแรงทั้งหมด (เดือนนี้)</div><div class="kpi-val">${(monthlyStaff+monthCosts).toLocaleString()} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">เงินเดือน + รายบ่อ</div></div>
+    <div class="kpi-card"><div class="kpi-label">ค่าแรง/กก. เฉลี่ย (รอบที่ปิด)</div><div class="kpi-val">${avgPerKg!==null?avgPerKg.toFixed(2):'-'} <span class="kpi-unit">บาท/กก.</span></div><div class="kpi-sub">${closed.length} รอบ</div></div>`;
+}
+function renderLaborMonthSummary(){
+  const el=document.getElementById('lb-month-summary');if(!el)return;
+  const now=today();const mm=now.slice(0,7);
+  const byPond={};
+  (D.laborCosts||[]).filter(r=>r.date&&r.date.slice(0,7)===mm).forEach(r=>{
+    if(!byPond[r.pondId])byPond[r.pondId]={count:0,total:0};
+    byPond[r.pondId].count++;byPond[r.pondId].total+=r.amount;
+  });
+  const rows=Object.entries(byPond);
+  if(!rows.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลเดือนนี้</p>';return;}
+  el.innerHTML=`<table class="tbl"><thead><tr><th>บ่อ</th><th>จำนวนรายการ</th><th>รวมค่าแรง (บาท)</th></tr></thead><tbody>${
+    rows.map(([pid,v])=>`<tr><td><span class="tag-pond">${pond(pid)?.name||pid}</span></td><td>${v.count}</td><td>${v.total.toLocaleString()}</td></tr>`).join('')
+  }</tbody></table>`;
+}
+function renderLaborCropSummary(){
+  const el=document.getElementById('lb-crop-summary');if(!el)return;
+  const rows=[];
+  D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{
+    if(!c.closeDate||!c.totalWeight)return;
+    const lc=getLaborCostForPond(p.id,c.startDate,c.closeDate);
+    rows.push({name:p.name,cropNum:c.cropNum,closeDate:c.closeDate,weight:c.totalWeight,labor:lc,perKg:lc&&c.totalWeight?lc/c.totalWeight:null});
+  }));
+  rows.sort((a,b)=>new Date(b.closeDate)-new Date(a.closeDate));
+  if(!rows.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีรอบที่ปิดแล้ว</p>';return;}
+  el.innerHTML=`<table class="tbl"><thead><tr><th>บ่อ</th><th>รอบ</th><th>น้ำหนักจับ (กก.)</th><th>ค่าแรงรวมรอบ (บาท)</th><th>ค่าแรง/กก.</th></tr></thead><tbody>${
+    rows.map(r=>`<tr><td>${r.name}</td><td>รอบ ${r.cropNum}</td><td>${r.weight.toLocaleString()}</td><td>${r.labor.toLocaleString()}</td><td>${r.perKg!==null?r.perKg.toFixed(2)+' บาท':'-'}</td></tr>`).join('')
+  }</tbody></table>`;
 }
 function initEntry(){
   populateAll();document.getElementById('ep-date').value=today();
@@ -4437,6 +4712,8 @@ function openCropModal(pid){
   ['cm-weight','cm-price','cm-caught','cm-cost-fry','cm-cost-chem','cm-cost-other'].forEach(id=>{
     document.getElementById(id).value='';
   });
+  const autoLabor=getLaborCostForPond(pid,p.startDate,today());
+  document.getElementById('cm-cost-labor').value=autoLabor||'';
   document.getElementById('cm-survival').value='';
   document.getElementById('cm-revenue').value='';
   document.getElementById('cm-profit').value='';
@@ -4471,10 +4748,10 @@ function calcCropEcon(){
   // revenue
   const revenue=w*price;
   document.getElementById('cm-revenue').value=revenue?Math.round(revenue):'';
-  // feed cost (estimate from feed log — just show sum×price, for now 0 unless user fills)
   // profit
   const costFeed=parseFloat(document.getElementById('cm-cost-feed').value)||0;
-  const totalCost=costFry+costFeed+costChem+costOther;
+  const costLabor=parseFloat(document.getElementById('cm-cost-labor').value)||0;
+  const totalCost=costFry+costFeed+costChem+costLabor+costOther;
   const profit=revenue-totalCost;
   document.getElementById('cm-profit').value=(revenue||totalCost)?Math.round(profit):'';
 }
@@ -4503,6 +4780,7 @@ function confirmCloseCrop(){
     costFry:parseFloat(document.getElementById('cm-cost-fry').value)||null,
     costFeed:parseFloat(document.getElementById('cm-cost-feed').value)||null,
     costChem:parseFloat(document.getElementById('cm-cost-chem').value)||null,
+    costLabor:parseFloat(document.getElementById('cm-cost-labor').value)||null,
     costOther:parseFloat(document.getElementById('cm-cost-other').value)||null,
     netProfit:parseFloat(document.getElementById('cm-profit').value)||null,
   };
