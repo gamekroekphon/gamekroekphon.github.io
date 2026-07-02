@@ -240,6 +240,13 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .labor-sub-btn{padding:8px 14px;font-size:12.5px;font-weight:600;color:var(--tx2);cursor:pointer;border-bottom:3px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
 .labor-sub-btn.on{color:var(--p);border-bottom-color:var(--p)}
 .labor-pane{display:none}.labor-pane.on{display:block}
+.meter-badge{display:inline-block;border-radius:6px;padding:2px 10px;font-size:12px;font-weight:700}
+.meter-badge-1{background:#FEF9E7;color:#92400E}
+.meter-badge-2{background:#EFF6FF;color:#1D4ED8}
+.meter-badge-3{background:#F0FDF4;color:#166534}
+.meter-grid{display:grid;grid-template-columns:110px 1fr 1fr 1fr;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--sf2)}
+.meter-grid:last-of-type{border-bottom:none}
+.elec-total-bar{background:var(--pl);border-radius:10px;padding:12px 16px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-top:14px}
 .cl{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px;font-size:12px;color:var(--tx2)}
 .cl-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
 .wx-day{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:15px;text-align:center}
@@ -374,6 +381,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
     <div class="tab-dropdown">
       <button class="tab-item" id="tab-price" onclick="goTab('price',this)">💰 ราคาวันนี้</button>
       <button class="tab-item" id="tab-labor" onclick="goTab('labor',this)">👷 ค่าแรง</button>
+          <button class="tab-item" id="tab-elec" onclick="goTab('elec',this)">⚡ ค่าไฟฟ้า</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-settings">
@@ -877,6 +885,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
           <div class="fg"><label class="fl">ต้นทุนอาหาร (บาท)</label><input type="number" class="fi" id="cm-cost-feed" step="1" placeholder="คำนวณจาก feedLog" readonly style="background:var(--sf2)"></div>
           <div class="fg"><label class="fl">ต้นทุนสารเคมี (บาท)</label><input type="number" class="fi" id="cm-cost-chem" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl">ต้นทุนค่าแรง (บาท)</label><input type="number" class="fi" id="cm-cost-labor" step="1" placeholder="ดึงจากแท็บค่าแรงอัตโนมัติ" style="background:var(--sf2)"></div>
+          <div class="fg"><label class="fl">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="cm-cost-elec" step="1" placeholder="ดึงจากแท็บค่าไฟอัตโนมัติ" style="background:var(--sf2)"></div>
           <div class="fg"><label class="fl">ต้นทุนอื่นๆ (บาท)</label><input type="number" class="fi" id="cm-cost-other" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" style="color:var(--ok);font-weight:700">กำไรสุทธิ (บาท)</label><input type="number" class="fi" id="cm-profit" step="1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--ob);font-weight:700"></div>
         </div>
@@ -1172,6 +1181,51 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
   </div>
 </div>
 </div>
+<div id="sec-elec" class="sec">
+  <div class="sec-hdr"><div class="sec-title">⚡ ค่าไฟฟ้า</div></div>
+  <div class="g4" id="el-kpi"></div>
+  <div class="card">
+    <p style="font-size:12px;color:var(--tx2);margin:0 0 10px">💡 ค่าไฟฟ้าจะถูกดึงไปคำนวณต้นทุนอัตโนมัติตอนปิดรอบ</p>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+      <label class="fl" style="margin:0">เดือน</label>
+      <input type="month" id="el-month" class="fi" style="width:180px" onchange="loadElecBill()">
+    </div>
+    <div class="meter-grid" style="font-weight:700;color:var(--tx2);padding-bottom:6px">
+      <div></div><div>หน่วย (kWh)</div><div>ค่าไฟ (บาท)</div><div>อัตรา (บาท/หน่วย)</div>
+    </div>
+    <div class="meter-grid">
+      <div><span class="meter-badge meter-badge-1">หม้อ 1</span></div>
+      <div><input type="number" class="fi" id="el-m1-kwh" step="1" placeholder="0" oninput="calcElecRate(1)"></div>
+      <div><input type="number" class="fi" id="el-m1-baht" step="1" placeholder="0" oninput="calcElecRate(1)"></div>
+      <div><input type="number" class="fi" id="el-m1-rate" step="0.01" placeholder="อัตโนมัติ" readonly style="background:var(--sf2)"></div>
+    </div>
+    <div class="meter-grid">
+      <div><span class="meter-badge meter-badge-2">หม้อ 2</span></div>
+      <div><input type="number" class="fi" id="el-m2-kwh" step="1" placeholder="0" oninput="calcElecRate(2)"></div>
+      <div><input type="number" class="fi" id="el-m2-baht" step="1" placeholder="0" oninput="calcElecRate(2)"></div>
+      <div><input type="number" class="fi" id="el-m2-rate" step="0.01" placeholder="อัตโนมัติ" readonly style="background:var(--sf2)"></div>
+    </div>
+    <div class="meter-grid">
+      <div><span class="meter-badge meter-badge-3">หม้อ 3</span></div>
+      <div><input type="number" class="fi" id="el-m3-kwh" step="1" placeholder="0" oninput="calcElecRate(3)"></div>
+      <div><input type="number" class="fi" id="el-m3-baht" step="1" placeholder="0" oninput="calcElecRate(3)"></div>
+      <div><input type="number" class="fi" id="el-m3-rate" step="0.01" placeholder="อัตโนมัติ" readonly style="background:var(--sf2)"></div>
+    </div>
+    <div class="elec-total-bar" id="el-total-bar" style="display:none">
+      <span id="el-total-kwh" style="font-weight:700;color:var(--tx)"></span>
+      <span id="el-total-baht" style="font-weight:700;color:var(--p)"></span>
+      <span id="el-avg-rate" style="color:var(--tx2);font-size:13px"></span>
+    </div>
+    <div class="fg" style="margin-top:12px"><label class="fl">หมายเหตุ</label><input class="fi" id="el-note" placeholder="เพิ่มเติม..."></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button onclick="saveElecBill()">💾 บันทึกบิลค่าไฟ</button>
+      <button onclick="clearElecBill()" style="background:var(--sf2);color:var(--tx2)">🗑️ ล้างฟอร์ม</button>
+    </div>
+    <div id="el-msg"></div>
+  </div>
+  <div class="card"><div id="el-chart"></div></div>
+  <div class="card"><div id="el-history"></div></div>
+</div>
 <!-- MODAL -->
 <div class="modal-bg" id="pondModal">
   <div class="modal">
@@ -1243,6 +1297,7 @@ function normalizeD(d) {
   if (!d.settings.cropsPerYear) d.settings.cropsPerYear = 2;
   if (!d.staff) d.staff = [];
   if (!d.laborCosts) d.laborCosts = [];
+  if (!d.electricityBills) d.electricityBills = [];
   return d;
 }
 
@@ -1836,7 +1891,16 @@ function mergeRemote(local, remote) {
   merged.marketPrices = mergeByDate(merged.marketPrices, remote.marketPrices);
   merged.staff = mergeArr(merged.staff, remote.staff);
   merged.laborCosts = mergeArr(merged.laborCosts, remote.laborCosts);
+  merged.electricityBills = mergeByMonth(merged.electricityBills||[], remote.electricityBills||[]);
   return merged;
+}
+function mergeByMonth(localArr, remoteArr) {
+  if (!Array.isArray(remoteArr)) return localArr || [];
+  if (!Array.isArray(localArr)) return remoteArr || [];
+  const map = {};
+  remoteArr.forEach(r => { if (r && r.month) map[r.month] = r; });
+  localArr.forEach(l => { if (l && l.month) map[l.month] = l; }); // local wins
+  return Object.values(map);
 }
 function mergeByDate(localArr, remoteArr) {
   if (!Array.isArray(remoteArr)) return localArr || [];
@@ -2126,7 +2190,7 @@ function goTab(t,btn){
   document.querySelectorAll('.tab-grp').forEach(g=>g.classList.remove('grp-on','grp-open'));
   const grp=btn.closest('.tab-grp');if(grp)grp.classList.add('grp-on');
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));document.getElementById('sec-'+t).classList.add('on');
-  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='disease')initDisease();if(t==='price')initPrice();if(t==='labor')initLabor();if(t==='feed')initFeed();
+  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='disease')initDisease();if(t==='price')initPrice();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='feed')initFeed();
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
   if(t==='chem')initChem();if(t==='lab')initLab();
   if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();
@@ -2933,6 +2997,148 @@ function renderLaborCropSummary(){
     rows.map(r=>`<tr><td>${r.name}</td><td>รอบ ${r.cropNum}</td><td>${r.weight.toLocaleString()}</td><td>${r.labor.toLocaleString()}</td><td>${r.perKg!==null?r.perKg.toFixed(2)+' บาท':'-'}</td></tr>`).join('')
   }</tbody></table>`;
 }
+/* ===== ELECTRICITY ===== */
+function initElec(){
+  populateAll();
+  const el=document.getElementById('el-month');
+  if(el&&!el.value){const now=new Date();el.value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');}
+  loadElecBill();renderElecKPI();renderElecChart();renderElecHistory();
+}
+function calcElecRate(n){
+  const kwh=parseFloat(document.getElementById('el-m'+n+'-kwh').value)||0;
+  const baht=parseFloat(document.getElementById('el-m'+n+'-baht').value)||0;
+  const rate=document.getElementById('el-m'+n+'-rate');
+  if(rate)rate.value=(kwh&&baht)?(baht/kwh).toFixed(2):'';
+  calcElecTotal();
+}
+function calcElecTotal(){
+  const m=[1,2,3].map(n=>({kwh:parseFloat(document.getElementById('el-m'+n+'-kwh')?.value)||0,baht:parseFloat(document.getElementById('el-m'+n+'-baht')?.value)||0}));
+  const totalKwh=m.reduce((s,r)=>s+r.kwh,0);
+  const totalBaht=m.reduce((s,r)=>s+r.baht,0);
+  const bar=document.getElementById('el-total-bar');if(!bar)return;
+  if(totalKwh||totalBaht){
+    bar.style.display='flex';
+    document.getElementById('el-total-kwh').textContent='รวม: '+totalKwh.toLocaleString()+' หน่วย';
+    document.getElementById('el-total-baht').textContent='รวม: '+totalBaht.toLocaleString()+' บาท';
+    document.getElementById('el-avg-rate').textContent=totalKwh?'อัตราเฉลี่ย: '+(totalBaht/totalKwh).toFixed(2)+' บาท/หน่วย':'';
+  }else{bar.style.display='none';}
+}
+function loadElecBill(){
+  const month=document.getElementById('el-month')?.value;if(!month)return;
+  const bill=(D.electricityBills||[]).find(b=>b.month===month);
+  if(!bill){clearElecBill(true);return;}
+  [1,2,3].forEach(n=>{document.getElementById('el-m'+n+'-kwh').value=bill['m'+n+'kwh']||'';document.getElementById('el-m'+n+'-baht').value=bill['m'+n+'baht']||'';calcElecRate(n);});
+  const noteEl=document.getElementById('el-note');if(noteEl)noteEl.value=bill.note||'';
+  calcElecTotal();
+}
+function saveElecBill(){
+  const month=document.getElementById('el-month')?.value;
+  if(!month){showElecMsg('กรุณาเลือกเดือน','err');return;}
+  const m1kwh=parseFloat(document.getElementById('el-m1-kwh').value)||0;
+  const m1baht=parseFloat(document.getElementById('el-m1-baht').value)||0;
+  const m2kwh=parseFloat(document.getElementById('el-m2-kwh').value)||0;
+  const m2baht=parseFloat(document.getElementById('el-m2-baht').value)||0;
+  const m3kwh=parseFloat(document.getElementById('el-m3-kwh').value)||0;
+  const m3baht=parseFloat(document.getElementById('el-m3-baht').value)||0;
+  if(!m1baht&&!m2baht&&!m3baht){showElecMsg('กรุณากรอกค่าใช้จ่ายอย่างน้อย 1 หม้อ','err');return;}
+  const note=document.getElementById('el-note')?.value||'';
+  const bill={month,m1kwh,m1baht,m2kwh,m2baht,m3kwh,m3baht,note,totalKwh:m1kwh+m2kwh+m3kwh,totalBaht:m1baht+m2baht+m3baht};
+  if(!D.electricityBills)D.electricityBills=[];
+  const idx=D.electricityBills.findIndex(b=>b.month===month);
+  if(idx>=0)D.electricityBills[idx]=bill;else D.electricityBills.push(bill);
+  save();
+  showElecMsg('✅ บันทึกบิลค่าไฟ '+fmtMonth(month)+' แล้ว','ok');
+  renderElecKPI();renderElecChart();renderElecHistory();
+}
+function clearElecBill(silent){
+  [1,2,3].forEach(n=>{document.getElementById('el-m'+n+'-kwh').value='';document.getElementById('el-m'+n+'-baht').value='';document.getElementById('el-m'+n+'-rate').value='';});
+  const noteEl=document.getElementById('el-note');if(noteEl)noteEl.value='';
+  const bar=document.getElementById('el-total-bar');if(bar)bar.style.display='none';
+  if(!silent)showElecMsg('','');
+}
+function deleteElecBill(month){
+  if(!confirm('ลบบิลค่าไฟ '+fmtMonth(month)+' ?'))return;
+  D.electricityBills=(D.electricityBills||[]).filter(b=>b.month!==month);
+  save();renderElecKPI();renderElecChart();renderElecHistory();
+  const cur=document.getElementById('el-month')?.value;if(cur===month)clearElecBill(true);
+}
+function showElecMsg(msg,type){
+  const el=document.getElementById('el-msg');if(!el)return;
+  el.innerHTML=msg?'<div class="msg '+type+'">'+msg+'</div>':'';
+  if(msg)setTimeout(()=>{el.innerHTML='';},4000);
+}
+function fmtMonth(ym){
+  if(!ym)return '';
+  const [y,m]=ym.split('-');
+  const months=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return months[parseInt(m,10)-1]+' '+(parseInt(y,10)+543);
+}
+function getElecCostForPeriod(fromDate,toDate){
+  if(!fromDate||!toDate||!D.electricityBills?.length)return 0;
+  const from=new Date(fromDate),to=new Date(toDate);
+  let total=0;
+  D.electricityBills.forEach(bill=>{
+    const [y,m]=bill.month.split('-').map(Number);
+    const mStart=new Date(y,m-1,1);
+    const mEnd=new Date(y,m,0);
+    const daysInMonth=mEnd.getDate();
+    const overlapStart=from>mStart?from:mStart;
+    const overlapEnd=to<mEnd?to:mEnd;
+    if(overlapStart<=overlapEnd){
+      const days=(overlapEnd-overlapStart)/(1000*60*60*24)+1;
+      total+=bill.totalBaht*(days/daysInMonth);
+    }
+  });
+  return Math.round(total);
+}
+function renderElecKPI(){
+  const el=document.getElementById('el-kpi');if(!el)return;
+  const bills=D.electricityBills||[];
+  if(!bills.length){el.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic">ยังไม่มีข้อมูลบิลค่าไฟ</p>';return;}
+  const sorted=[...bills].sort((a,b)=>b.month.localeCompare(a.month));
+  const latest=sorted[0],prev=sorted[1];
+  const diff=prev?latest.totalBaht-prev.totalBaht:null;
+  const avgBaht=bills.reduce((s,b)=>s+b.totalBaht,0)/bills.length;
+  const avgKwh=bills.reduce((s,b)=>s+b.totalKwh,0)/bills.length;
+  el.innerHTML=`
+    <div class="kpi-card"><div class="kpi-lbl">บิลล่าสุด</div><div class="kpi-val">${latest.totalBaht.toLocaleString()} ฿</div><div class="kpi-sub">${fmtMonth(latest.month)}</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">เทียบเดือนก่อน</div><div class="kpi-val" style="color:${diff===null?'var(--tx2)':diff>0?'var(--er)':'var(--ok)'}">${diff===null?'—':(diff>0?'+':'')+diff.toLocaleString()+' ฿'}</div><div class="kpi-sub">${prev?fmtMonth(prev.month):'—'}</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">เฉลี่ยต่อเดือน</div><div class="kpi-val">${Math.round(avgBaht).toLocaleString()} ฿</div><div class="kpi-sub">${Math.round(avgKwh).toLocaleString()} หน่วย</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">จำนวนบิล</div><div class="kpi-val">${bills.length}</div><div class="kpi-sub">เดือน</div></div>`;
+}
+function renderElecChart(){
+  const el=document.getElementById('el-chart');if(!el)return;
+  const bills=[...(D.electricityBills||[])].sort((a,b)=>a.month.localeCompare(b.month)).slice(-12);
+  if(!bills.length){el.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีข้อมูล</p>';return;}
+  const maxBaht=Math.max(...bills.map(b=>b.totalBaht))||1;
+  const bars=bills.map(b=>{
+    const pct=Math.round((b.totalBaht/maxBaht)*100);
+    return `<div style="display:flex;align-items:flex-end;gap:4px;flex-direction:column;flex:1;min-width:0">
+      <span style="font-size:10px;color:var(--tx2);white-space:nowrap">${b.totalBaht.toLocaleString()}</span>
+      <div style="width:100%;background:var(--p);border-radius:4px 4px 0 0;height:${pct}px;min-height:4px"></div>
+      <span style="font-size:9px;color:var(--tx3);writing-mode:vertical-rl;transform:rotate(180deg);height:48px;overflow:hidden">${fmtMonth(b.month)}</span>
+    </div>`;
+  }).join('');
+  el.innerHTML=`<div style="font-weight:700;color:var(--tx);margin-bottom:10px">📊 ค่าไฟ 12 เดือนย้อนหลัง (บาท)</div>
+    <div style="display:flex;align-items:flex-end;gap:6px;height:160px;padding:0 4px">${bars}</div>`;
+}
+function renderElecHistory(){
+  const el=document.getElementById('el-history');if(!el)return;
+  const bills=[...(D.electricityBills||[])].sort((a,b)=>b.month.localeCompare(a.month));
+  if(!bills.length){el.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีประวัติ</p>';return;}
+  el.innerHTML=`<div style="font-weight:700;color:var(--tx);margin-bottom:10px">📋 ประวัติบิลค่าไฟ</div>
+  <table class="tbl"><thead><tr><th>เดือน</th><th>หม้อ 1 (หน่วย/฿)</th><th>หม้อ 2 (หน่วย/฿)</th><th>หม้อ 3 (หน่วย/฿)</th><th>รวม (฿)</th><th></th></tr></thead><tbody>${
+    bills.map(b=>`<tr>
+      <td>${fmtMonth(b.month)}</td>
+      <td>${b.m1kwh?b.m1kwh+' / '+b.m1baht.toLocaleString():'-'}</td>
+      <td>${b.m2kwh?b.m2kwh+' / '+b.m2baht.toLocaleString():'-'}</td>
+      <td>${b.m3kwh?b.m3kwh+' / '+b.m3baht.toLocaleString():'-'}</td>
+      <td><strong>${b.totalBaht.toLocaleString()}</strong></td>
+      <td><button class="btn-sm btn-del" onclick="deleteElecBill('${b.month}')">🗑️</button></td>
+    </tr>`).join('')
+  }</tbody></table>`;
+}
+/* ===== END ELECTRICITY ===== */
 function initEntry(){
   populateAll();document.getElementById('ep-date').value=today();
   document.getElementById('ep-fields').innerHTML=PARAMS.map(p=>`<div class="fg"><label class="fl">${p.lbl}${p.unit?' ('+p.unit+')':''}</label><input type="number" step="any" inputmode="decimal" class="fi" id="ef-${p.key}" placeholder="—" oninput="onFI('${p.key}',this)"><span class="lbl-std" id="std-${p.key}">${stdText(p)}</span>${p.note?`<span class="hint">${p.note}</span>`:''}</div>`).join('');
@@ -4714,6 +4920,8 @@ function openCropModal(pid){
   });
   const autoLabor=getLaborCostForPond(pid,p.startDate,today());
   document.getElementById('cm-cost-labor').value=autoLabor||'';
+  const autoElec=getElecCostForPeriod(p.startDate,today());
+  document.getElementById('cm-cost-elec').value=autoElec||'';
   document.getElementById('cm-survival').value='';
   document.getElementById('cm-revenue').value='';
   document.getElementById('cm-profit').value='';
@@ -4751,7 +4959,8 @@ function calcCropEcon(){
   // profit
   const costFeed=parseFloat(document.getElementById('cm-cost-feed').value)||0;
   const costLabor=parseFloat(document.getElementById('cm-cost-labor').value)||0;
-  const totalCost=costFry+costFeed+costChem+costLabor+costOther;
+  const costElec=parseFloat(document.getElementById('cm-cost-elec').value)||0;
+  const totalCost=costFry+costFeed+costChem+costLabor+costElec+costOther;
   const profit=revenue-totalCost;
   document.getElementById('cm-profit').value=(revenue||totalCost)?Math.round(profit):'';
 }
@@ -4781,6 +4990,7 @@ function confirmCloseCrop(){
     costFeed:parseFloat(document.getElementById('cm-cost-feed').value)||null,
     costChem:parseFloat(document.getElementById('cm-cost-chem').value)||null,
     costLabor:parseFloat(document.getElementById('cm-cost-labor').value)||null,
+    costElec:parseFloat(document.getElementById('cm-cost-elec').value)||null,
     costOther:parseFloat(document.getElementById('cm-cost-other').value)||null,
     netProfit:parseFloat(document.getElementById('cm-profit').value)||null,
   };
