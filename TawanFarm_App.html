@@ -430,6 +430,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
           <button class="tab-item" id="tab-elec" onclick="goTab('elec',this)">⚡ ค่าไฟฟ้า</button>
           <button class="tab-item" id="tab-stock" onclick="goTab('stock',this)">📦 สต็อก</button>
           <button class="tab-item" id="tab-abw" onclick="goTab('abw',this)">📈 ABW Growth</button>
+          <button class="tab-item" id="tab-pl" onclick="goTab('pl',this)">📊 P&amp;L สรุป</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-settings">
@@ -1437,6 +1438,34 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
     </div>
   </div>
 </div>
+<!-- P&L DASHBOARD -->
+<div id="sec-pl" class="sec">
+  <div class="sec-hdr"><div class="sec-title">📊 สรุปกำไร-ขาดทุน (P&amp;L) รายบ่อ รายรอบ</div></div>
+  <div class="g4" id="pl-kpi" style="margin-bottom:16px"></div>
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+    <label class="fl">ปี:</label>
+    <select class="fi" id="pl-year" onchange="renderPL()" style="width:110px"></select>
+    <span id="pl-badge" style="font-size:12px;color:var(--tx3)"></span>
+    <button class="btn btn-s" style="margin-left:auto" onclick="exportPLCSV()">⬇️ Export CSV</button>
+  </div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-t">📋 กำไร-ขาดทุนรายบ่อ รายรอบ</div>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch" id="pl-table-wrap">
+      <p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลรอบที่ปิดแล้ว</p>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-t">🍩 สัดส่วนต้นทุนเฉลี่ย</div>
+      <div style="max-width:240px;margin:0 auto;padding:8px 0"><canvas id="pl-donut" height="240"></canvas></div>
+      <div id="pl-donut-legend" style="margin-top:8px;display:flex;flex-direction:column;gap:5px"></div>
+    </div>
+    <div class="card">
+      <div class="card-t">💰 ต้นทุน/กก. รายบ่อ (เฉลี่ยทุกรอบ)</div>
+      <div id="pl-cost-tbl"></div>
+    </div>
+  </div>
+</div>
 <!-- MODAL -->
 <div class="modal-bg" id="pondModal">
   <div class="modal">
@@ -2414,7 +2443,7 @@ function goTab(t,btn){
   document.querySelectorAll('.tab-grp').forEach(g=>g.classList.remove('grp-on','grp-open'));
   const grp=btn.closest('.tab-grp');if(grp)grp.classList.add('grp-on');
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));document.getElementById('sec-'+t).classList.add('on');
-  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='disease')initDisease();if(t==='price')initPrice();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='stock')initStock();if(t==='abw')initAbw();if(t==='feed')initFeed();
+  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='disease')initDisease();if(t==='price')initPrice();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='stock')initStock();if(t==='abw')initAbw();if(t==='feed')initFeed();if(t==='pl')initPL();
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
   if(t==='chem')initChem();if(t==='lab')initLab();
   if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();
@@ -5913,4 +5942,137 @@ function renderWQHeatmap(){
     return`<tr><td class="wq-pond-name">${p.name}${stBadge}</td>${cells}</tr>`;
   }).join('');
 }
-// ════════════════════════════════════════════════════════════════════�
+// ══════════════════════════════════════════════════════════════════════════
+
+// ─── P&L DASHBOARD ────────────────────────────────────────────────────────
+let _plDonutChart=null;
+function initPL(){
+  const years=new Set();
+  D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{
+    if(c.harvestResult&&c.closeDate)years.add(c.closeDate.slice(0,4));
+  }));
+  const sel=document.getElementById('pl-year');
+  if(sel){
+    const sorted=[...years].sort().reverse();
+    const cur=sel.value||sorted[0]||'';
+    sel.innerHTML='<option value="">ทุกปี</option>'+sorted.map(y=>`<option value="${y}"${y===cur?' selected':''}>${parseInt(y)+543}</option>`).join('');
+  }
+  renderPL();
+}
+function renderPL(){
+  const yr=document.getElementById('pl-year')?.value||'';
+  const rows=[];
+  D.ponds.forEach(p=>{
+    (p.cropHistory||[]).forEach(c=>{
+      if(!c.harvestResult||!c.closeDate)return;
+      if(yr&&!c.closeDate.startsWith(yr))return;
+      rows.push({...c.harvestResult,pondName:p.name,pondId:p.id,cropNum:c.cropNum,cropYear:c.cropYear,startDate:c.startDate,closeDate:c.closeDate,stock:c.stock});
+    });
+  });
+  rows.sort((a,b)=>(b.closeDate||'').localeCompare(a.closeDate||''));
+  const badge=document.getElementById('pl-badge');
+  if(badge)badge.textContent=rows.length+' รอบ · '+rows.filter(r=>r.netProfit>0).length+' กำไร / '+rows.filter(r=>r.netProfit<0).length+' ขาดทุน';
+  renderPLKPI(rows);renderPLTable(rows);renderPLCostChart(rows);
+}
+function renderPLKPI(rows){
+  const el=document.getElementById('pl-kpi');if(!el)return;
+  if(!rows.length){el.innerHTML='<div class="kpi-card" style="grid-column:1/-1;text-align:center;color:var(--tx3);padding:20px">ยังไม่มีข้อมูลรอบที่ปิดแล้วในช่วงที่เลือก</div>';return;}
+  const totRev=rows.reduce((s,r)=>s+(r.revenue||0),0);
+  const totCost=rows.reduce((s,r)=>s+((r.costFry||0)+(r.costFeed||0)+(r.costChem||0)+(r.costLabor||0)+(r.costElec||0)+(r.costOther||0)),0);
+  const totProfit=rows.reduce((s,r)=>s+(r.netProfit||0),0);
+  const totWeight=rows.reduce((s,r)=>s+(r.totalWeight||0),0);
+  const fcrRows=rows.filter(r=>r.fcr&&r.fcr>0);
+  const avgFcr=fcrRows.length?fcrRows.reduce((s,r)=>s+r.fcr,0)/fcrRows.length:0;
+  const margin=totRev?totProfit/totRev*100:0;
+  const avgCostPerKg=totWeight?totCost/totWeight:0;
+  el.innerHTML=`
+    <div class="kpi-card"><div class="kpi-lbl">รายได้รวม</div><div class="kpi-val">${(totRev/1e6).toFixed(2)}<span class="kpi-unit"> ล้าน฿</span></div><div class="kpi-sub">${rows.length} รอบ · ${totWeight.toLocaleString()} กก.</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">ต้นทุนรวม</div><div class="kpi-val">${(totCost/1e6).toFixed(2)}<span class="kpi-unit"> ล้าน฿</span></div><div class="kpi-sub">${avgCostPerKg.toFixed(1)} บาท/กก. เฉลี่ย</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">กำไรสุทธิรวม</div><div class="kpi-val" style="color:${totProfit>=0?'var(--ok)':'var(--d)'}">${(totProfit/1e6).toFixed(2)}<span class="kpi-unit"> ล้าน฿</span></div><div class="kpi-sub" style="color:${margin>=0?'var(--ok)':'var(--d)'}">Margin ${margin.toFixed(1)}%</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">FCR เฉลี่ย</div><div class="kpi-val" style="color:${avgFcr&&avgFcr<1.3?'var(--ok)':avgFcr&&avgFcr<1.5?'var(--w)':'var(--d)'}">${avgFcr?avgFcr.toFixed(2):'-'}</div><div class="kpi-sub">เป้า &lt; 1.3</div></div>`;
+}
+function renderPLTable(rows){
+  const wrap=document.getElementById('pl-table-wrap');if(!wrap)return;
+  if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return;}
+  wrap.innerHTML=`<div style="font-size:11px;color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวา →</div><table class="tbl" style="white-space:nowrap;min-width:700px">
+  <thead><tr>
+    <th>บ่อ</th><th>รอบ</th><th>วันปิด</th>
+    <th style="text-align:right">ผลผลิต(กก.)</th><th style="text-align:right">ราคา(฿/กก.)</th>
+    <th style="text-align:right">รายได้(฿)</th><th style="text-align:right">ต้นทุน(฿)</th>
+    <th style="text-align:right">กำไร(฿)</th><th style="text-align:right">Margin</th>
+    <th style="text-align:right">฿/กก.</th><th style="text-align:right">FCR</th>
+  </tr></thead><tbody>${rows.map(r=>{
+    const cost=(r.costFry||0)+(r.costFeed||0)+(r.costChem||0)+(r.costLabor||0)+(r.costElec||0)+(r.costOther||0);
+    const margin=r.revenue&&r.netProfit!=null?r.netProfit/r.revenue*100:null;
+    const cpk=r.totalWeight&&cost?cost/r.totalWeight:null;
+    const prof=r.netProfit;
+    const cl=prof>0?'var(--ok)':prof<0?'var(--d)':'var(--tx)';
+    return`<tr>
+      <td style="font-weight:700">${r.pondName||r.pondId}</td><td style="text-align:center">รอบ ${r.cropNum||'-'}</td><td>${fD(r.closeDate)}</td>
+      <td style="text-align:right">${r.totalWeight?r.totalWeight.toLocaleString():'-'}</td>
+      <td style="text-align:right">${r.price?r.price.toLocaleString():'-'}</td>
+      <td style="text-align:right">${r.revenue?Math.round(r.revenue).toLocaleString():'-'}</td>
+      <td style="text-align:right">${cost?Math.round(cost).toLocaleString():'-'}</td>
+      <td style="text-align:right;font-weight:700;color:${cl}">${prof!=null?Math.round(prof).toLocaleString():'-'}</td>
+      <td style="text-align:right;color:${cl}">${margin!=null?margin.toFixed(1)+'%':'-'}</td>
+      <td style="text-align:right">${cpk!=null?cpk.toFixed(1):'-'}</td>
+      <td style="text-align:right">${r.fcr||'-'}</td>
+    </tr>`;}).join('')}</tbody></table>`;
+}
+function renderPLCostChart(rows){
+  if(!rows.length){
+    const c=document.getElementById('pl-donut');if(c&&_plDonutChart){_plDonutChart.destroy();_plDonutChart=null;}
+    const l=document.getElementById('pl-donut-legend');if(l)l.innerHTML='';
+    const t=document.getElementById('pl-cost-tbl');if(t)t.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px">ยังไม่มีข้อมูล</p>';
+    return;
+  }
+  const totFry=rows.reduce((s,r)=>s+(r.costFry||0),0);
+  const totFeed=rows.reduce((s,r)=>s+(r.costFeed||0),0);
+  const totChem=rows.reduce((s,r)=>s+(r.costChem||0),0);
+  const totLabor=rows.reduce((s,r)=>s+(r.costLabor||0),0);
+  const totElec=rows.reduce((s,r)=>s+(r.costElec||0),0);
+  const totOther=rows.reduce((s,r)=>s+(r.costOther||0),0);
+  const total=totFry+totFeed+totChem+totLabor+totElec+totOther;
+  const totWeight=rows.reduce((s,r)=>s+(r.totalWeight||0),0);
+  const labels=['ลูกกุ้ง','อาหาร','สารเคมี','ค่าแรง','ค่าไฟ','อื่นๆ'];
+  const vals=[totFry,totFeed,totChem,totLabor,totElec,totOther];
+  const colors=['#185FA5','#639922','#D85A30','#BA7517','#888780','#6b46c1'];
+  const canvas=document.getElementById('pl-donut');
+  if(canvas){
+    if(_plDonutChart){_plDonutChart.destroy();_plDonutChart=null;}
+    _plDonutChart=new Chart(canvas,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:colors,borderWidth:2}]},options:{plugins:{legend:{display:false}},cutout:'65%'}});
+  }
+  const leg=document.getElementById('pl-donut-legend');
+  if(leg)leg.innerHTML=labels.map((l,i)=>vals[i]>0?`<div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};flex-shrink:0"></span><span style="font-size:11.5px;color:var(--tx2);flex:1">${l}</span><span style="font-size:12px;font-weight:500;color:var(--tx)">${total?Math.round(vals[i]/total*100)+'%':'-'}</span></div>`:'').join('');
+  const tbl=document.getElementById('pl-cost-tbl');
+  if(tbl){
+    if(totWeight>0){
+      tbl.innerHTML=`<table class="tbl"><thead><tr><th>รายการ</th><th style="text-align:right">รวม (฿)</th><th style="text-align:right">฿/กก.</th><th style="text-align:right">%</th></tr></thead><tbody>${
+        labels.map((l,i)=>vals[i]>0?`<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${colors[i]};margin-right:5px"></span>${l}</td><td style="text-align:right">${Math.round(vals[i]).toLocaleString()}</td><td style="text-align:right">${(vals[i]/totWeight).toFixed(1)}</td><td style="text-align:right">${total?Math.round(vals[i]/total*100)+'%':'-'}</td></tr>`:'').join('')
+      }<tr style="border-top:2px solid var(--bd);font-weight:700"><td>รวม</td><td style="text-align:right">${Math.round(total).toLocaleString()}</td><td style="text-align:right">${(total/totWeight).toFixed(1)}</td><td style="text-align:right">100%</td></tr></tbody></table>`;
+    } else {
+      tbl.innerHTML=`<table class="tbl"><thead><tr><th>รายการ</th><th style="text-align:right">รวม (฿)</th><th style="text-align:right">%</th></tr></thead><tbody>${
+        labels.map((l,i)=>vals[i]>0?`<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${colors[i]};margin-right:5px"></span>${l}</td><td style="text-align:right">${Math.round(vals[i]).toLocaleString()}</td><td style="text-align:right">${total?Math.round(vals[i]/total*100)+'%':'-'}</td></tr>`:'').join('')
+      }<tr style="border-top:2px solid var(--bd);font-weight:700"><td>รวม</td><td style="text-align:right">${Math.round(total).toLocaleString()}</td><td style="text-align:right">100%</td></tr></tbody></table>`;
+    }
+  }
+}
+function exportPLCSV(){
+  const yr=document.getElementById('pl-year')?.value||'';
+  const rows=[];
+  D.ponds.forEach(p=>{(p.cropHistory||[]).forEach(c=>{
+    if(!c.harvestResult||!c.closeDate)return;
+    if(yr&&!c.closeDate.startsWith(yr))return;
+    const r=c.harvestResult;
+    rows.push([p.name,c.cropNum||'',c.closeDate,r.totalWeight||'',r.price||'',r.revenue||'',r.costFry||'',r.costFeed||'',r.costChem||'',r.costLabor||'',r.costElec||'',r.costOther||'',r.netProfit||'',r.fcr||'',r.survivalRate||'']);
+  });});
+  if(!rows.length){alert('ไม่มีข้อมูลสำหรับ export');return;}
+  const hdr='บ่อ,รอบ,วันปิด,ผลผลิต(กก.),ราคา,รายได้,ต้นทุนลูกกุ้ง,ต้นทุนอาหาร,สารเคมี,ค่าแรง,ค่าไฟ,อื่นๆ,กำไรสุทธิ,FCR,อัตรารอด(%)';
+  const csv=hdr+'\n'+rows.map(r=>r.join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='TawanFarm_PL_'+(yr||'all')+'.csv';a.click();URL.revokeObjectURL(url);
+}
+// ─── END P&L ──────────────────────────────────────────────────────────────
+
+</script></body>
+</html>
