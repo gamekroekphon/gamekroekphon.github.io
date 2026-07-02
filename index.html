@@ -198,7 +198,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .tbl td{padding:9px 12px;border-bottom:1px solid var(--bd)}
 .tbl tbody tr:nth-child(even) td{background:#FBFBFC}
 .tbl tr:hover td{background:var(--pl)}.tbl tr.hi td{background:var(--pl)}
-.tbl-wrap{overflow-x:auto;max-height:380px;overflow-y:auto}
+.tbl-wrap{overflow-x:auto;max-height:380px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .chart-wrap{position:relative;height:300px}
 .pbg{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
 .pb{padding:3px 10px;border:1.5px solid var(--bd);border-radius:20px;font-size:12px;cursor:pointer;background:var(--sf);color:var(--tx2);transition:all .15s}
@@ -363,6 +363,11 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 }
 .cat-tag{display:inline-flex;align-items:center;gap:4px;background:var(--sf2);border:1px solid var(--bd);border-radius:20px;padding:3px 10px;font-size:12px;margin:3px;}
 .cat-del{cursor:pointer;color:var(--d);font-weight:700;padding:0 2px;}
+.kpi-card{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.kpi-lbl,.kpi-label{font-size:11.5px;color:var(--tx3);font-weight:500;line-height:1.3}
+.kpi-val{font-size:22px;font-weight:700;color:var(--tx);line-height:1.2}
+.kpi-unit{font-size:13px;font-weight:500;color:var(--tx2)}
+.kpi-sub{font-size:11px;color:var(--tx3)}
 </style>
   <!-- Firebase SDKs (compat v9) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -1589,7 +1594,7 @@ async function initFirebase() {
         } else {
           populateAll(); renderOv();
         }
-        setSyncStatus('sync-ok', '🔄 ซิงค์แล้ว · ' + new Date().toLocaleTimeString('th-TH'));
+        setSyncStatus('sync-ok', '🔄 ซิงค์แล้ว');
       }, 0);
     }, err => {
       setSyncStatus('sync-err', '⚠️ ขาดการเชื่อมต่อ — บันทึกในเครื่องเท่านั้น');
@@ -1601,7 +1606,7 @@ async function initFirebase() {
       if (!snap.val()) {
         setSyncStatus('sync-err', '🔴 ออฟไลน์ — ข้อมูลจะ sync เมื่อออนไลน์');
       } else {
-        setSyncStatus('sync-ok', '🟢 ออนไลน์ · ' + new Date().toLocaleTimeString('th-TH'));
+        setSyncStatus('sync-ok', '🟢 ออนไลน์');
       }
     });
 
@@ -2136,7 +2141,7 @@ async function save() {
     const json = JSON.stringify(D);
     localStorage.setItem(SK, json);
     await dbRef.set({ json, updated: new Date().toISOString() });
-    setSyncStatus('sync-ok', '✅ บันทึกสำเร็จ · ' + new Date().toLocaleTimeString('th-TH'));
+    setSyncStatus('sync-ok', '✅ บันทึกสำเร็จ');
   } catch(e) {
     setSyncStatus('sync-err', '⚠️ บันทึกไม่ได้: ' + e.message);
   }
@@ -2179,6 +2184,15 @@ function st(key,v){
 function sc(s){return s==='danger'?'var(--d)':s==='warn'?'var(--w)':s==='ok'?'var(--ok)':'var(--tx3)'}
 // ===== OVERVIEW-ONLY status engine (มาตรฐาน L. vannamei — ยืนยัน 16 มิ.ย. 69) =====
 // แยกจาก PARAMS/st() เดิมโดยตั้งใจ เพื่อไม่กระทบเกณฑ์ที่ใช้ในแท็บอื่น (บันทึกคุณภาพน้ำ/ผลแล็บ/แจ้งเตือน)
+function warnDir(key,v){
+  switch(key){
+    case'phM':case'phA':return v>8.5?'high':'low';
+    case'alk':return v>200?'high':'low';
+    case'tM':case'tA':return v>32?'high':'low';
+    case'doM':case'doA':return'low';
+    default:return'high';
+  }
+}
 function classifyOv(key,v){
   if(v===null||v===undefined||v==='')return'na';
   switch(key){
@@ -2234,7 +2248,7 @@ function waterLineOv(last){
   };
   let line=[seg('pH',last.phM,'phM'),seg('DO',last.doM,'doM'),seg('ALK',last.alk,'alk')].join(' · ');
   const extra=[];
-  const chk=(key,lbl,unit)=>{const v=last[key];if(v===null||v===undefined||v==='')return;const s=classifyOv(key,v);if(s==='warn'||s==='danger')extra.push(`<span style="color:${s==='danger'?'var(--d)':'var(--w)'}">${lbl} ${v}${unit} เกินเกณฑ์</span>`)};
+  const chk=(key,lbl,unit)=>{const v=last[key];if(v===null||v===undefined||v==='')return;const s=classifyOv(key,v);if(s==='warn'||s==='danger'){const sfx=warnDir(key,v)==='low'?'ต่ำกว่าเกณฑ์':'เกินเกณฑ์';extra.push(`<span style="color:${s==='danger'?'var(--d)':'var(--w)'}">${lbl} ${v}${unit} ${sfx}</span>`)}};
   chk('nh4','NH4','');chk('no2','NO2','');chk('sal','ความเค็ม',' ppt');
   if(last.phM!=null&&last.phA!=null&&last.phM!==''&&last.phA!==''){
     const sw=Math.abs(last.phM-last.phA);const s=classifyOv('phSwing',sw);
@@ -2621,7 +2635,7 @@ function reasonOv(p,last,age){
   if(!pick)return'';
   if(pick.k==='age')return`อายุ ${pick.v} วัน เกินเป้า 90–120`;
   if(pick.k==='hepato')return`${lbl.hepato} ${hepatoTx[pick.v]||pick.v}`;
-  const sfx=level==='danger'?'เกินเกณฑ์':'เฝ้าระวัง';
+  const dir=warnDir(pick.k,pick.v);const sfx=dir==='low'?(level==='danger'?'ต่ำกว่าเกณฑ์อันตราย':'ต่ำกว่าเกณฑ์'):(level==='danger'?'เกินเกณฑ์อันตราย':'เกินเกณฑ์');
   return`${lbl[pick.k]} ${pick.v} ${sfx}`;
 }
 function homeRow(p,age,cls,reason){
@@ -3681,7 +3695,7 @@ function renderWQTable(){
   const p=pond(pid);if(!p||!p.records.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
   const rec=[...p.records].reverse().slice(0,rows);
   const show=PARAMS.slice(0,8);
-  wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th>${show.map(pm=>`<th>${pm.lbl}</th>`).join('')}<th>หมายเหตุ</th></tr></thead><tbody>${
+  wrap.innerHTML=`<div style="font-size:11px;color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวาเพื่อดูทุกค่า →</div><table class="tbl" style="white-space:nowrap"><thead><tr><th style="white-space:nowrap"></th><th style="white-space:nowrap">วันที่</th><th style="white-space:nowrap">อายุ</th>${show.map(pm=>`<th style="white-space:nowrap">${pm.lbl}</th>`).join('')}<th style="white-space:nowrap">หมายเหตุ</th></tr></thead><tbody>${
     rec.map((r,i)=>`<tr class="${i===0?'hi':''}""><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editWQ('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteWQ('${pid}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td>${show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v);return`<td style="color:${v!==null?sc(s):'var(--tx3)'}">${v!==null&&v!==undefined?v:'-'}</td>`}).join('')}<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.notes||'-'}</td></tr>`)
     .join('')}</tbody></table>`;
 }
@@ -5899,6 +5913,4 @@ function renderWQHeatmap(){
     return`<tr><td class="wq-pond-name">${p.name}${stBadge}</td>${cells}</tr>`;
   }).join('');
 }
-// ══════════════════════════════════════════════════════════════════════════
-</script></body>
-</html>
+// ════════════════════════════════════════════════════════════════════�
