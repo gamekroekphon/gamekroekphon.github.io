@@ -240,6 +240,15 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .labor-sub-btn{padding:8px 14px;font-size:12.5px;font-weight:600;color:var(--tx2);cursor:pointer;border-bottom:3px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
 .labor-sub-btn.on{color:var(--p);border-bottom-color:var(--p)}
 .labor-pane{display:none}.labor-pane.on{display:block}
+.stock-sub{display:flex;gap:6px;border-bottom:1px solid var(--bd);margin-bottom:16px;flex-wrap:wrap}
+.stock-sub-btn{padding:8px 14px;font-size:12.5px;font-weight:600;color:var(--tx2);cursor:pointer;border-bottom:3px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
+.stock-sub-btn.on{color:var(--p);border-bottom-color:var(--p)}
+.stock-pane{display:none}.stock-pane.on{display:block}
+.stock-warn{background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:8px 12px;font-size:12.5px;color:#DC2626;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.stock-cat-feed{background:#FEF9E7;color:#92400E}
+.stock-cat-chem{background:#EFF6FF;color:#1D4ED8}
+.stock-cat-equip{background:#F0FDF4;color:#166534}
+.stock-qty-low{color:#DC2626;font-weight:700}
 .meter-badge{display:inline-block;border-radius:6px;padding:2px 10px;font-size:12px;font-weight:700}
 .meter-badge-1{background:#FEF9E7;color:#92400E}
 .meter-badge-2{background:#EFF6FF;color:#1D4ED8}
@@ -382,6 +391,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
       <button class="tab-item" id="tab-price" onclick="goTab('price',this)">💰 ราคาวันนี้</button>
       <button class="tab-item" id="tab-labor" onclick="goTab('labor',this)">👷 ค่าแรง</button>
           <button class="tab-item" id="tab-elec" onclick="goTab('elec',this)">⚡ ค่าไฟฟ้า</button>
+          <button class="tab-item" id="tab-stock" onclick="goTab('stock',this)">📦 สต็อก</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-settings">
@@ -1226,6 +1236,98 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
   <div class="card"><div id="el-chart"></div></div>
   <div class="card"><div id="el-history"></div></div>
 </div>
+<div id="sec-stock" class="sec">
+  <div class="sec-hdr"><div class="sec-title">📦 สต็อกพัสดุ</div></div>
+  <div class="g4" id="sk-kpi"></div>
+  <div id="sk-warn" style="display:none" class="stock-warn">⚠️ <span id="sk-warn-txt"></span></div>
+  <div class="stock-sub">
+    <button class="stock-sub-btn on" id="skb-items" onclick="stockTab('items',this)">รายการพัสดุ</button>
+    <button class="stock-sub-btn" id="skb-tx" onclick="stockTab('tx',this)">บันทึกรับ-เบิก</button>
+    <button class="stock-sub-btn" id="skb-log" onclick="stockTab('log',this)">ประวัติ</button>
+  </div>
+  <!-- pane: รายการพัสดุ -->
+  <div class="stock-pane on" id="skp-items">
+    <div class="card">
+      <div style="font-weight:700;color:var(--tx);margin-bottom:10px">เพิ่มรายการพัสดุ</div>
+      <div class="fg"><label class="fl">ชื่อพัสดุ</label><input class="fi" id="sk-name" placeholder="เช่น อาหาร 0# CP, คลอรีน"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="fg"><label class="fl">หมวดหมู่</label>
+          <select class="fi" id="sk-cat">
+            <option value="feed">อาหารกุ้ง</option>
+            <option value="chem">ยา/สารเคมี</option>
+            <option value="equip">อุปกรณ์/วัสดุ</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">หน่วย</label><input class="fi" id="sk-unit" placeholder="กก., กระสอบ, ขวด..."></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div class="fg"><label class="fl">จำนวนเริ่มต้น</label><input type="number" class="fi" id="sk-qty" placeholder="0" inputmode="decimal"></div>
+        <div class="fg"><label class="fl">ขั้นต่ำเตือน</label><input type="number" class="fi" id="sk-min" placeholder="5" inputmode="decimal"></div>
+        <div class="fg"><label class="fl">หมายเหตุ</label><input class="fi" id="sk-note-item" placeholder="—"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button onclick="saveStockItem()">💾 บันทึกรายการ</button>
+        <button onclick="clearStockItem()" style="background:var(--sf2);color:var(--tx2)">ล้างฟอร์ม</button>
+      </div>
+      <div id="sk-msg-item"></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+        <span style="font-weight:700;color:var(--tx)">รายการพัสดุทั้งหมด</span>
+        <select class="fi" id="sk-filter-cat" style="width:140px" onchange="renderStockItems()">
+          <option value="">ทุกหมวด</option>
+          <option value="feed">อาหารกุ้ง</option>
+          <option value="chem">ยา/สารเคมี</option>
+          <option value="equip">อุปกรณ์/วัสดุ</option>
+        </select>
+      </div>
+      <div id="sk-item-table"></div>
+    </div>
+  </div>
+  <!-- pane: บันทึกรับ-เบิก -->
+  <div class="stock-pane" id="skp-tx">
+    <div class="card">
+      <div style="font-weight:700;color:var(--tx);margin-bottom:10px">บันทึกรับเข้า / เบิกออก</div>
+      <div class="fg"><label class="fl">รายการพัสดุ</label>
+        <select class="fi" id="sk-tx-item" onchange="onTxItemChange()">
+          <option value="">— เลือกรายการ —</option>
+        </select>
+      </div>
+      <div id="sk-tx-cur" style="display:none;background:var(--ib);color:var(--in);border-radius:6px;padding:6px 10px;font-size:12.5px;margin-bottom:8px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="fg"><label class="fl">ประเภท</label>
+          <select class="fi" id="sk-tx-type">
+            <option value="in">📥 รับเข้าสต็อก</option>
+            <option value="out">📤 เบิกออก</option>
+            <option value="adjust">✏️ ปรับยอด</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">จำนวน</label><input type="number" class="fi" id="sk-tx-qty" placeholder="0" inputmode="decimal" step="any"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="fg"><label class="fl">วันที่</label><input type="date" class="fi" id="sk-tx-date"></div>
+        <div class="fg"><label class="fl">หมายเหตุ</label><input class="fi" id="sk-tx-note" placeholder="—"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button onclick="saveStockTx()">💾 บันทึก</button>
+        <button onclick="clearStockTx()" style="background:var(--sf2);color:var(--tx2)">ล้างฟอร์ม</button>
+      </div>
+      <div id="sk-msg-tx"></div>
+    </div>
+  </div>
+  <!-- pane: ประวัติ -->
+  <div class="stock-pane" id="skp-log">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+        <span style="font-weight:700;color:var(--tx)">ประวัติรับ-เบิก</span>
+        <select class="fi" id="sk-log-filter" style="width:160px" onchange="renderStockLog()">
+          <option value="">ทุกรายการ</option>
+        </select>
+      </div>
+      <div id="sk-log-table"></div>
+    </div>
+  </div>
+</div>
 <!-- MODAL -->
 <div class="modal-bg" id="pondModal">
   <div class="modal">
@@ -1298,6 +1400,8 @@ function normalizeD(d) {
   if (!d.staff) d.staff = [];
   if (!d.laborCosts) d.laborCosts = [];
   if (!d.electricityBills) d.electricityBills = [];
+  if (!d.inventoryItems) d.inventoryItems = [];
+  if (!d.inventoryLog) d.inventoryLog = [];
   return d;
 }
 
@@ -1892,6 +1996,8 @@ function mergeRemote(local, remote) {
   merged.staff = mergeArr(merged.staff, remote.staff);
   merged.laborCosts = mergeArr(merged.laborCosts, remote.laborCosts);
   merged.electricityBills = mergeByMonth(merged.electricityBills||[], remote.electricityBills||[]);
+  merged.inventoryItems = mergeArr(merged.inventoryItems||[], remote.inventoryItems||[]);
+  merged.inventoryLog = mergeArr(merged.inventoryLog||[], remote.inventoryLog||[]);
   return merged;
 }
 function mergeByMonth(localArr, remoteArr) {
@@ -2190,7 +2296,7 @@ function goTab(t,btn){
   document.querySelectorAll('.tab-grp').forEach(g=>g.classList.remove('grp-on','grp-open'));
   const grp=btn.closest('.tab-grp');if(grp)grp.classList.add('grp-on');
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));document.getElementById('sec-'+t).classList.add('on');
-  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='disease')initDisease();if(t==='price')initPrice();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='feed')initFeed();
+  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='disease')initDisease();if(t==='price')initPrice();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='stock')initStock();if(t==='feed')initFeed();
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
   if(t==='chem')initChem();if(t==='lab')initLab();
   if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();
@@ -3139,6 +3245,245 @@ function renderElecHistory(){
   }</tbody></table>`;
 }
 /* ===== END ELECTRICITY ===== */
+
+/* ===== INVENTORY / STOCK ===== */
+const STOCK_CAT_LABEL={feed:'อาหารกุ้ง',chem:'ยา/สารเคมี',equip:'อุปกรณ์/วัสดุ'};
+const STOCK_CAT_CSS={feed:'stock-cat-feed',chem:'stock-cat-chem',equip:'stock-cat-equip'};
+const STOCK_TX_LABEL={in:'📥 รับเข้า',out:'📤 เบิกออก',adjust:'✏️ ปรับยอด'};
+
+function stockTab(paneId,btn){
+  document.querySelectorAll('.stock-pane').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.stock-sub-btn').forEach(b=>b.classList.remove('on'));
+  const p=document.getElementById('skp-'+paneId);if(p)p.classList.add('on');
+  if(btn)btn.classList.add('on');
+  if(paneId==='log')renderStockLog();
+  if(paneId==='tx')populateStockTxSelect();
+}
+
+function initStock(){
+  populateAll();
+  if(document.getElementById('sk-tx-date'))document.getElementById('sk-tx-date').value=today();
+  renderStockKPI();
+  renderStockWarn();
+  renderStockItems();
+  populateStockTxSelect();
+  populateStockLogFilter();
+}
+
+function renderStockKPI(){
+  const el=document.getElementById('sk-kpi');if(!el)return;
+  const items=D.inventoryItems||[];
+  const logs=D.inventoryLog||[];
+  const lowItems=items.filter(i=>i.qty<=i.minQty&&i.minQty>0);
+  const thisMonth=today().slice(0,7);
+  const txMonth=logs.filter(l=>l.date&&l.date.slice(0,7)===thisMonth);
+  const txIn=txMonth.filter(l=>l.type==='in').length;
+  const txOut=txMonth.filter(l=>l.type==='out').length;
+  el.innerHTML=`
+    <div class="kpi-card"><div class="kpi-lbl">รายการทั้งหมด</div><div class="kpi-val">${items.length}</div><div class="kpi-sub">รายการ</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">ใกล้หมด / หมด</div><div class="kpi-val" style="color:${lowItems.length?'var(--er)':'var(--ok)'}">${lowItems.length}</div><div class="kpi-sub">รายการ</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">รับเข้าเดือนนี้</div><div class="kpi-val">${txIn}</div><div class="kpi-sub">ครั้ง</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">เบิกออกเดือนนี้</div><div class="kpi-val">${txOut}</div><div class="kpi-sub">ครั้ง</div></div>`;
+}
+
+function renderStockWarn(){
+  const warnEl=document.getElementById('sk-warn');
+  const txtEl=document.getElementById('sk-warn-txt');
+  if(!warnEl||!txtEl)return;
+  const items=D.inventoryItems||[];
+  const low=items.filter(i=>i.minQty>0&&i.qty<=i.minQty);
+  if(!low.length){warnEl.style.display='none';return;}
+  warnEl.style.display='flex';
+  txtEl.textContent=low.map(i=>`${i.name} เหลือ ${i.qty} ${i.unit}`).join(' · ');
+}
+
+function renderStockItems(){
+  const el=document.getElementById('sk-item-table');if(!el)return;
+  const cat=document.getElementById('sk-filter-cat')?.value||'';
+  const items=(D.inventoryItems||[]).filter(i=>!cat||i.category===cat);
+  if(!items.length){el.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีรายการพัสดุ</p>';return;}
+  // sort: low stock first
+  const sorted=[...items].sort((a,b)=>{
+    const aLow=a.minQty>0&&a.qty<=a.minQty?0:1;
+    const bLow=b.minQty>0&&b.qty<=b.minQty?0:1;
+    if(aLow!==bLow)return aLow-bLow;
+    return a.name.localeCompare(b.name,'th');
+  });
+  el.innerHTML=`<table class="tbl"><thead><tr><th>รายการ</th><th>หมวด</th><th>คงเหลือ</th><th>ขั้นต่ำ</th><th>สถานะ</th><th></th></tr></thead><tbody>${
+    sorted.map(i=>{
+      const isLow=i.minQty>0&&i.qty<=i.minQty;
+      const statusBadge=isLow
+        ?'<span class="badge" style="background:#FEE2E2;color:#DC2626">ใกล้หมด</span>'
+        :'<span class="badge" style="background:var(--ob);color:var(--ok)">ปกติ</span>';
+      const catCss=STOCK_CAT_CSS[i.category]||'';
+      return `<tr>
+        <td><strong>${i.name}</strong><br><span style="font-size:11px;color:var(--tx3)">${i.note||''}</span></td>
+        <td><span class="badge ${catCss}">${STOCK_CAT_LABEL[i.category]||i.category}</span></td>
+        <td class="${isLow?'stock-qty-low':''}">${i.qty} ${i.unit}</td>
+        <td>${i.minQty||'-'} ${i.minQty?i.unit:''}</td>
+        <td>${statusBadge}</td>
+        <td style="white-space:nowrap">
+          <button class="btn-sm" onclick="editStockItem('${i.id}')">✏️</button>
+          <button class="btn-sm btn-del" onclick="deleteStockItem('${i.id}')">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('')
+  }</tbody></table>`;
+}
+
+function saveStockItem(){
+  const name=document.getElementById('sk-name').value.trim();
+  if(!name){showStockMsg('item','กรุณากรอกชื่อพัสดุ','err');return;}
+  const unit=document.getElementById('sk-unit').value.trim();
+  if(!unit){showStockMsg('item','กรุณากรอกหน่วย','err');return;}
+  const id=document.getElementById('sk-name').dataset.editId||('sk'+Date.now());
+  const item={
+    id,name,
+    category:document.getElementById('sk-cat').value||'equip',
+    unit,
+    qty:parseFloat(document.getElementById('sk-qty').value)||0,
+    minQty:parseFloat(document.getElementById('sk-min').value)||0,
+    note:document.getElementById('sk-note-item').value.trim()
+  };
+  if(!D.inventoryItems)D.inventoryItems=[];
+  const idx=D.inventoryItems.findIndex(i=>i.id===id);
+  if(idx>=0)D.inventoryItems[idx]=item;else D.inventoryItems.push(item);
+  save();
+  showStockMsg('item','✅ บันทึกแล้ว','ok');
+  clearStockItem();
+  renderStockKPI();renderStockWarn();renderStockItems();populateStockTxSelect();populateStockLogFilter();
+}
+
+function clearStockItem(){
+  ['sk-name','sk-unit','sk-qty','sk-min','sk-note-item'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';delete el.dataset.editId;}});
+  document.getElementById('sk-cat').value='feed';
+  showStockMsg('item','','');
+}
+
+function editStockItem(id){
+  const item=(D.inventoryItems||[]).find(i=>i.id===id);if(!item)return;
+  document.getElementById('sk-name').value=item.name;
+  document.getElementById('sk-name').dataset.editId=id;
+  document.getElementById('sk-cat').value=item.category||'equip';
+  document.getElementById('sk-unit').value=item.unit||'';
+  document.getElementById('sk-qty').value=item.qty||0;
+  document.getElementById('sk-min').value=item.minQty||0;
+  document.getElementById('sk-note-item').value=item.note||'';
+  stockTab('items',document.getElementById('skb-items'));
+  document.getElementById('sk-name').focus();
+  document.getElementById('sk-name').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function deleteStockItem(id){
+  const item=(D.inventoryItems||[]).find(i=>i.id===id);
+  if(!item)return;
+  if(!confirm('ลบ "'+item.name+'" ออกจากสต็อก?'))return;
+  D.inventoryItems=(D.inventoryItems||[]).filter(i=>i.id!==id);
+  save();
+  renderStockKPI();renderStockWarn();renderStockItems();populateStockTxSelect();populateStockLogFilter();
+}
+
+function populateStockTxSelect(){
+  const sel=document.getElementById('sk-tx-item');if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">— เลือกรายการ —</option>';
+  (D.inventoryItems||[]).slice().sort((a,b)=>a.name.localeCompare(b.name,'th')).forEach(i=>{
+    const opt=document.createElement('option');
+    opt.value=i.id;opt.textContent=i.name+' ('+i.qty+' '+i.unit+')';
+    sel.appendChild(opt);
+  });
+  if(cur)sel.value=cur;
+}
+
+function populateStockLogFilter(){
+  const sel=document.getElementById('sk-log-filter');if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">ทุกรายการ</option>';
+  (D.inventoryItems||[]).slice().sort((a,b)=>a.name.localeCompare(b.name,'th')).forEach(i=>{
+    const opt=document.createElement('option');opt.value=i.id;opt.textContent=i.name;
+    sel.appendChild(opt);
+  });
+  if(cur)sel.value=cur;
+}
+
+function onTxItemChange(){
+  const id=document.getElementById('sk-tx-item').value;
+  const cur=document.getElementById('sk-tx-cur');if(!cur)return;
+  const item=(D.inventoryItems||[]).find(i=>i.id===id);
+  if(!item){cur.style.display='none';return;}
+  cur.style.display='block';
+  cur.textContent='คงเหลือปัจจุบัน: '+item.qty+' '+item.unit+(item.minQty?' (ขั้นต่ำ '+item.minQty+')':'');
+}
+
+function saveStockTx(){
+  const itemId=document.getElementById('sk-tx-item').value;
+  if(!itemId){showStockMsg('tx','กรุณาเลือกรายการพัสดุ','err');return;}
+  const qty=parseFloat(document.getElementById('sk-tx-qty').value);
+  if(!qty||qty<=0){showStockMsg('tx','กรุณากรอกจำนวน','err');return;}
+  const date=document.getElementById('sk-tx-date').value||today();
+  const type=document.getElementById('sk-tx-type').value;
+  const note=document.getElementById('sk-tx-note').value.trim();
+  const item=(D.inventoryItems||[]).find(i=>i.id===itemId);if(!item)return;
+  // update qty
+  let newQty=item.qty;
+  if(type==='in')newQty+=qty;
+  else if(type==='out'){
+    if(qty>item.qty&&!confirm('จำนวนเบิก ('+qty+') มากกว่าสต็อกคงเหลือ ('+item.qty+') ยืนยันบันทึก?'))return;
+    newQty=Math.max(0,item.qty-qty);
+  } else {newQty=qty;} // adjust
+  item.qty=Math.round(newQty*100)/100;
+  // log
+  if(!D.inventoryLog)D.inventoryLog=[];
+  D.inventoryLog.push({id:'sl'+Date.now(),itemId,itemName:item.name,type,qty,date,note,balanceAfter:item.qty,unit:item.unit});
+  save();
+  showStockMsg('tx','✅ '+STOCK_TX_LABEL[type]+' '+qty+' '+item.unit+' — คงเหลือ '+item.qty+' '+item.unit,'ok');
+  clearStockTx(true);
+  renderStockKPI();renderStockWarn();renderStockItems();populateStockTxSelect();onTxItemChange();
+}
+
+function clearStockTx(keepItem){
+  if(!keepItem)document.getElementById('sk-tx-item').value='';
+  document.getElementById('sk-tx-qty').value='';
+  document.getElementById('sk-tx-note').value='';
+  document.getElementById('sk-tx-date').value=today();
+  document.getElementById('sk-tx-type').value='in';
+  if(!keepItem){const cur=document.getElementById('sk-tx-cur');if(cur)cur.style.display='none';}
+}
+
+function renderStockLog(){
+  const el=document.getElementById('sk-log-table');if(!el)return;
+  const filterId=document.getElementById('sk-log-filter')?.value||'';
+  const logs=[...(D.inventoryLog||[])].filter(l=>!filterId||l.itemId===filterId).sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,100);
+  if(!logs.length){el.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีประวัติ</p>';return;}
+  el.innerHTML=`<table class="tbl"><thead><tr><th>วันที่</th><th>รายการ</th><th>ประเภท</th><th>จำนวน</th><th>คงเหลือ</th><th>หมายเหตุ</th><th></th></tr></thead><tbody>${
+    logs.map(l=>{
+      const typeColor=l.type==='in'?'var(--ok)':l.type==='out'?'var(--er)':'var(--in)';
+      return `<tr>
+        <td>${fD(l.date)}</td>
+        <td>${l.itemName||'-'}</td>
+        <td style="color:${typeColor};font-weight:600">${STOCK_TX_LABEL[l.type]||l.type}</td>
+        <td>${l.qty} ${l.unit||''}</td>
+        <td>${l.balanceAfter!==undefined?l.balanceAfter+' '+l.unit:'-'}</td>
+        <td style="font-size:12px;color:var(--tx2)">${l.note||''}</td>
+        <td><button class="btn-sm btn-del" onclick="deleteStockLog('${l.id}')">🗑️</button></td>
+      </tr>`;
+    }).join('')
+  }</tbody></table>`;
+}
+
+function deleteStockLog(id){
+  if(!confirm('ลบรายการนี้? (ยอดสต็อกจะไม่ถูกย้อนกลับ)'))return;
+  D.inventoryLog=(D.inventoryLog||[]).filter(l=>l.id!==id);
+  save();renderStockLog();
+}
+
+function showStockMsg(area,msg,type){
+  const el=document.getElementById('sk-msg-'+area);if(!el)return;
+  el.innerHTML=msg?`<div class="msg ${type}">${msg}</div>`:'';
+  if(msg)setTimeout(()=>{el.innerHTML='';},4000);
+}
+/* ===== END INVENTORY / STOCK ===== */
+
 function initEntry(){
   populateAll();document.getElementById('ep-date').value=today();
   document.getElementById('ep-fields').innerHTML=PARAMS.map(p=>`<div class="fg"><label class="fl">${p.lbl}${p.unit?' ('+p.unit+')':''}</label><input type="number" step="any" inputmode="decimal" class="fi" id="ef-${p.key}" placeholder="—" oninput="onFI('${p.key}',this)"><span class="lbl-std" id="std-${p.key}">${stdText(p)}</span>${p.note?`<span class="hint">${p.note}</span>`:''}</div>`).join('');
