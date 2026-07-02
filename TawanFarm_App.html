@@ -272,6 +272,24 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .abw-bar-fill{height:100%;border-radius:4px;transition:width .3s}
 .abw-badge{display:inline-block;font-size:10.5px;padding:2px 8px;border-radius:10px;font-weight:600}
 .abw-ok{background:var(--ob);color:var(--ok)}.abw-warn{background:var(--wb);color:var(--w-tx)}.abw-danger{background:var(--db);color:var(--d)}
+.wq-htbl{width:100%;border-collapse:collapse;font-size:12px}
+.wq-htbl th{background:var(--sf2);padding:6px 10px;text-align:center;font-size:10px;color:var(--tx3);font-weight:500;border-bottom:1px solid var(--bd);white-space:nowrap;position:sticky;top:0;z-index:1}
+.wq-htbl th.wq-pond-col{text-align:left;position:sticky;left:0;z-index:2;background:var(--sf2)}
+.wq-htbl td{padding:0;border-bottom:0.5px solid var(--bd);vertical-align:middle}
+.wq-htbl td.wq-pond-name{padding:6px 10px;font-weight:600;color:var(--tx);background:var(--surface-1,#fff);position:sticky;left:0;z-index:1;white-space:nowrap;border-right:0.5px solid var(--bd);font-size:12px}
+.wq-htbl tr:last-child td{border-bottom:none}
+.wq-cell{padding:5px 8px;display:block;min-width:60px;text-align:center;font-weight:600;font-size:11px;line-height:1.3}
+.wq-ok{background:#F0FDF4;color:#15803D}
+.wq-warn{background:#FFFBEB;color:#B45309}
+.wq-danger{background:#FEF2F2;color:#DC2626}
+.wq-na{background:transparent;color:#CBD5E1;font-weight:400;font-size:11px}
+.wq-chip{padding:3px 10px;border-radius:16px;border:1.5px solid var(--bd);background:none;font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.wq-chip.on{border-color:var(--in);background:var(--ib);color:var(--in);font-weight:600}
+.wq-arrow-up-ok{color:#15803D;font-size:9px;margin-left:1px}
+.wq-arrow-up-bad{color:#DC2626;font-size:9px;margin-left:1px}
+.wq-arrow-down-ok{color:#15803D;font-size:9px;margin-left:1px}
+.wq-arrow-down-bad{color:#DC2626;font-size:9px;margin-left:1px}
+.wq-arrow-neutral{color:#94A3B8;font-size:9px;margin-left:1px}
 .wx-day{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:15px;text-align:center}
 .risk-ring{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:900;flex-shrink:0}
 .rl{background:var(--ob);color:var(--ok)}.rm{background:var(--wb);color:var(--w-tx)}.rh{background:var(--db);color:var(--d)}
@@ -774,22 +792,66 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 </div>
 <!-- COMPARE -->
 <div id="sec-compare" class="sec">
-  <div class="sec-hdr"><div class="sec-title">🔄 เปรียบเทียบระหว่างบ่อ</div></div>
-  <div class="card" style="margin-bottom:16px">
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+  <div class="sec-hdr"><div class="sec-title">💧 เปรียบเทียบค่าน้ำข้ามบ่อ</div></div>
+  <!-- Category buttons -->
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
       <button class="cmp-cat-btn on" id="cmp-cat-wq" onclick="setCmpCat('wq',this)">💧 คุณภาพน้ำ</button>
-      <button class="cmp-cat-btn" id="cmp-cat-feed" onclick="setCmpCat('feed',this)">🍖 เปรียบเทียบอาหาร</button>
+      <button class="cmp-cat-btn" id="cmp-cat-feed" onclick="setCmpCat('feed',this)">🍖 อาหาร</button>
       <button class="cmp-cat-btn" id="cmp-cat-size" onclick="setCmpCat('size',this)">⚖️ ไซส์</button>
-      <button class="cmp-cat-btn" id="cmp-cat-lab" onclick="setCmpCat('lab',this)">🔬 ผลแล็บ</button>
-      <button class="cmp-cat-btn" id="cmp-cat-water" onclick="setCmpCat('water',this)">💦 การจัดการน้ำ</button>
+      <button class="cmp-cat-btn" id="cmp-cat-lab" onclick="setCmpCat('lab',this)">🔬 แล็บ</button>
+      <button class="cmp-cat-btn" id="cmp-cat-water" onclick="setCmpCat('water',this)">💦 น้ำ</button>
     </div>
-    <div id="cmp-sel" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
-    <div id="cmp-param-row" class="fg" style="max-width:250px"><label class="fl">พารามิเตอร์</label><select class="fi" id="cmp-param" onchange="renderCompare()"></select></div>
+    <div id="cmp-sel" style="display:none;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
+    <div id="cmp-param-row" style="display:none" class="fg" style="max-width:250px"><label class="fl">พารามิเตอร์</label><select class="fi" id="cmp-param" onchange="renderCompare()"></select></div>
     <div id="cmp-feed-row" class="fg" style="max-width:280px;display:none"><label class="fl">ชนิดข้อมูล</label><select class="fi" id="cmp-feed-param" onchange="renderCompare()"><option value="per100k">การกิน (กก./แสน)</option><option value="daily">อาหารต่อวัน (กก.)</option><option value="cumulative">อาหารสะสม (กก.)</option></select></div>
     <div id="cmp-lab-row" class="fg" style="max-width:280px;display:none"><label class="fl">ผลตรวจ</label><select class="fi" id="cmp-lab-param" onchange="renderCompare()"><option value="tcbsGreen">🟢 เชื้อเขียว (CFU/mL)</option><option value="tcbsYellow">🟡 เชื้อเหลือง (CFU/mL)</option><option value="tvc">TVC (CFU/mL)</option></select></div>
     <div id="cmp-water-row" class="fg" style="max-width:280px;display:none"><label class="fl">ชนิดกิจกรรม</label><select class="fi" id="cmp-water-param" onchange="renderCompare()"><option value="all">ทุกกิจกรรม</option><option value="exchange">เปลี่ยนถ่ายน้ำ</option><option value="add">เติมน้ำ</option><option value="drain">ระบายน้ำ</option></select></div>
   </div>
-  <div class="card"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px"><div class="card-t" id="cmp-title">เปรียบเทียบ</div><div style="display:flex;gap:6px"><button class="btn btn-s btn-sm" onclick="cmpExportCSV()">📄 Export CSV</button><button class="btn btn-s btn-sm" onclick="cmpExportPNG()">🖼️ บันทึกรูปกราฟ</button></div></div><div class="chart-wrap" style="height:380px"><canvas id="cmpChart"></canvas></div></div>
+
+  <!-- WQ Heatmap (default shown, hidden for other cats) -->
+  <div id="cmp-wq-heatmap">
+    <!-- Date nav -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <button class="btn btn-s btn-sm" onclick="wqHmNav(-1)">‹ วันก่อน</button>
+      <span id="cmp-wq-date-lbl" style="font-size:13px;font-weight:600;color:var(--tx)"></span>
+      <button class="btn btn-s btn-sm" onclick="wqHmNav(1)">วันถัดไป ›</button>
+      <span id="cmp-wq-fill-ct" style="font-size:11px;color:var(--tx3)"></span>
+    </div>
+    <!-- KPI strip -->
+    <div class="g4" id="cmp-wq-kpi" style="margin-bottom:10px"></div>
+    <!-- Param chips -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px" id="cmp-wq-chips"></div>
+    <!-- Heatmap table -->
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+        <table class="wq-htbl">
+          <thead id="cmp-wq-thead"><tr></tr></thead>
+          <tbody id="cmp-wq-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Legend -->
+    <div style="display:flex;gap:14px;padding:10px 0 2px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2)"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--ob)"></span>ปกติ</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2)"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--wb)"></span>เฝ้าระวัง</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2)"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--db)"></span>วิกฤต</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2)"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--sf2,#F8FAFC);border:1px solid var(--bd)"></span>ไม่มีข้อมูล</div>
+      <div style="font-size:11px;color:var(--tx3);margin-left:4px">▲▼ เทียบวันก่อนหน้า</div>
+    </div>
+  </div>
+
+  <!-- Chart card (for feed/size/lab/water — hidden for wq) -->
+  <div class="card" id="cmp-chart-card" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div class="card-t" id="cmp-title">เปรียบเทียบ</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-s btn-sm" onclick="cmpExportCSV()">📄 Export CSV</button>
+        <button class="btn btn-s btn-sm" onclick="cmpExportPNG()">🖼️ บันทึกรูปกราฟ</button>
+      </div>
+    </div>
+    <div class="chart-wrap" style="height:380px"><canvas id="cmpChart"></canvas></div>
+  </div>
 </div>
 <!-- RISK -->
 <div id="sec-risk" class="sec">
@@ -4120,24 +4182,33 @@ function deleteLab(pid,d){
 function setCmpCat(cat,btn){
   cmpCat=cat;
   document.querySelectorAll('.cmp-cat-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
-  document.getElementById('cmp-param-row').style.display=cat==='wq'?'':'none';
+  document.getElementById('cmp-param-row').style.display='none';
   document.getElementById('cmp-feed-row').style.display=cat==='feed'?'':'none';
   document.getElementById('cmp-lab-row').style.display=cat==='lab'?'':'none';
   document.getElementById('cmp-water-row').style.display=cat==='water'?'':'none';
+  const isWq=cat==='wq';
+  const hmEl=document.getElementById('cmp-wq-heatmap');if(hmEl)hmEl.style.display=isWq?'':'none';
+  const chEl=document.getElementById('cmp-chart-card');if(chEl)chEl.style.display=isWq?'none':'';
+  const selEl=document.getElementById('cmp-sel');if(selEl)selEl.style.display=isWq?'none':'flex';
   renderCompare();
 }
 function initCompare(){
-  document.getElementById('cmp-sel').innerHTML=sortedPonds().map(p=>`<span class="pond-chk${cmpP.has(p.id)?' on':''}" onclick="tglCmp('${p.id}',this)"><input type="checkbox"${cmpP.has(p.id)?' checked':''}>บ่อ ${p.name}</span>`).join('');
-  document.getElementById('cmp-param').innerHTML=PARAMS.map(p=>`<option value="${p.key}">${p.lbl}</option>`).join('');
+  if(!_wqHmDate)_wqHmDate=today();
+  const selEl=document.getElementById('cmp-sel');
+  if(selEl){selEl.innerHTML=sortedPonds().map(p=>`<span class="pond-chk${cmpP.has(p.id)?' on':''}" onclick="tglCmp('${p.id}',this)"><input type="checkbox"${cmpP.has(p.id)?' checked':''}>บ่อ ${p.name}</span>`).join('');selEl.style.display=cmpCat==='wq'?'none':'flex';}
+  const pmEl=document.getElementById('cmp-param');if(pmEl)pmEl.innerHTML=PARAMS.map(p=>`<option value="${p.key}">${p.lbl}</option>`).join('');
+  const isWq=cmpCat==='wq';
+  const hmEl=document.getElementById('cmp-wq-heatmap');if(hmEl)hmEl.style.display=isWq?'':'none';
+  const chEl=document.getElementById('cmp-chart-card');if(chEl)chEl.style.display=isWq?'none':'';
   renderCompare();
 }
 function tglCmp(id,el){cmpP.has(id)?cmpP.delete(id):cmpP.add(id);el.classList.toggle('on');renderCompare()}
 function renderCompare(){
+  if(cmpCat==='wq')return renderWQHeatmap();
   if(cmpCat==='feed')return renderCmpFeed();
   if(cmpCat==='size')return renderCmpSize();
   if(cmpCat==='lab')return renderCmpLab();
   if(cmpCat==='water')return renderCmpWater();
-  renderCmpWQ();
 }
 function getSelPonds(){return cmpP.size>0?D.ponds.filter(p=>cmpP.has(p.id)):D.ponds;}
 function renderCmpWQ(){
@@ -5700,5 +5771,130 @@ function renderAbwTable(ponds){
   tbody.innerHTML=rows.length?rows.join(''):'<tr><td colspan="6" style="text-align:center;color:var(--tx3);padding:20px">ยังไม่มีข้อมูล — กรอกข้อมูลสุ่มตัวอย่างก่อน</td></tr>';
 }
 // ═══════════════════════════════════════════════════════════════════════════
+
+// ═══════════════════════════ WQ HEATMAP ═══════════════════════════════
+let _wqHmDate='';
+const WQ_HM_PARAMS=[
+  {key:'phM',lbl:'pH เช้า'},
+  {key:'phA',lbl:'pH บ่าย'},
+  {key:'doM',lbl:'DO เช้า'},
+  {key:'doA',lbl:'DO บ่าย'},
+  {key:'tM', lbl:'Temp เช้า'},
+  {key:'tA', lbl:'Temp บ่าย'},
+  {key:'alk',lbl:'ALK'},
+  {key:'sal',lbl:'Salinity'},
+  {key:'nh4',lbl:'NH₄⁺'},
+  {key:'no2',lbl:'NO₂'},
+];
+let _wqHmVis=new Set(['phM','doM','tM','sal','nh4','no2']);
+
+function wqHmNav(days){
+  if(!_wqHmDate)_wqHmDate=today();
+  const d=new Date(_wqHmDate);d.setDate(d.getDate()+days);
+  _wqHmDate=d.toISOString().split('T')[0];
+  renderWQHeatmap();
+}
+
+function wqHmToggleParam(key,el){
+  if(_wqHmVis.has(key))_wqHmVis.delete(key);else _wqHmVis.add(key);
+  el.classList.toggle('on',_wqHmVis.has(key));
+  renderWQHeatmap();
+}
+
+function wqArrow(key,curVal,prevVal){
+  if(curVal==null||prevVal==null||curVal===undefined||prevVal===undefined)return'';
+  const delta=curVal-prevVal;
+  if(Math.abs(delta)<0.0001)return'';
+  const dir=delta>0?'▲':'▼';
+  const curSt=st(key,curVal),prevSt=st(key,prevVal);
+  const ord={ok:0,warn:1,danger:2,na:3};
+  const c=ord[curSt]??3,p2=ord[prevSt]??3;
+  let cls;
+  if(c<p2)cls='wq-arrow-down-ok';       // improved (lower ord = better)
+  else if(c>p2)cls='wq-arrow-up-bad';   // worsened
+  else cls='wq-arrow-neutral';           // same status, just changed value
+  // For DO: up is usually better (when not exceeding max)
+  if(cls==='wq-arrow-neutral'){cls=delta>0?'wq-arrow-neutral':'wq-arrow-neutral';}
+  return`<span class="${cls}">${dir}</span>`;
+}
+
+function renderWQHeatmap(){
+  if(!_wqHmDate)_wqHmDate=today();
+  const date=_wqHmDate;
+  const visParams=WQ_HM_PARAMS.filter(p=>_wqHmVis.has(p.key));
+
+  // Date label
+  const dlbl=document.getElementById('cmp-wq-date-lbl');
+  if(dlbl)dlbl.textContent=fD(date);
+
+  // Build chips
+  const chipsEl=document.getElementById('cmp-wq-chips');
+  if(chipsEl)chipsEl.innerHTML=WQ_HM_PARAMS.map(p=>{
+    const on=_wqHmVis.has(p.key);
+    return`<button class="wq-chip${on?' on':''}" onclick="wqHmToggleParam('${p.key}',this)">${p.lbl}</button>`;
+  }).join('');
+
+  // Collect pond data for selected date
+  const activePonds=sortedPonds().filter(p=>p.startDate&&!p.closed);
+  const rows=activePonds.map(p=>{
+    const recs=(p.records||[]).sort((a,b)=>a.date.localeCompare(b.date));
+    const rec=recs.find(r=>r.date===date)||null;
+    // Previous record (most recent before selected date)
+    const prevRecs=recs.filter(r=>r.date<date);
+    const prev=prevRecs.length?prevRecs[prevRecs.length-1]:null;
+    // Overall status for sorting
+    let worst='na';
+    if(rec){
+      visParams.forEach(pm=>{const s=st(pm.key,rec[pm.key]);if(s==='danger')worst='danger';else if(s==='warn'&&worst!=='danger')worst='warn';else if(s==='ok'&&worst==='na')worst='ok';});
+    }
+    return{p,rec,prev,worst};
+  });
+
+  // Sort: danger → warn → ok → na
+  const sOrd={danger:0,warn:1,ok:2,na:3};
+  rows.sort((a,b)=>(sOrd[a.worst]??3)-(sOrd[b.worst]??3));
+
+  // KPI
+  const withData=rows.filter(r=>r.rec);
+  const danger=rows.filter(r=>r.worst==='danger').length;
+  const warn=rows.filter(r=>r.worst==='warn').length;
+  const ok=rows.filter(r=>r.worst==='ok').length;
+  const fillCt=document.getElementById('cmp-wq-fill-ct');
+  if(fillCt)fillCt.textContent=`กรอกข้อมูล ${withData.length} / ${rows.length} บ่อ`;
+  const kpiEl=document.getElementById('cmp-wq-kpi');
+  if(kpiEl)kpiEl.innerHTML=`
+    <div class="kpi-card"><div class="kpi-lbl">กรอกข้อมูล</div><div class="kpi-val">${withData.length}</div><div class="kpi-sub" style="color:var(--tx3)">${rows.length} บ่อทั้งหมด</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">ปกติ</div><div class="kpi-val" style="color:${ok?'var(--ok)':'var(--tx3)'}">${ok}</div><div class="kpi-sub ok">✅ ทุกค่าในเกณฑ์</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">เฝ้าระวัง</div><div class="kpi-val" style="color:${warn?'var(--w)':'var(--tx3)'}">${warn}</div><div class="kpi-sub" style="color:var(--w)">${warn?'⚠️ ต้องติดตาม':'-'}</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">วิกฤต</div><div class="kpi-val" style="color:${danger?'var(--d)':'var(--tx3)'}">${danger}</div><div class="kpi-sub" style="color:var(--d)">${danger?'🚨 ต้องแก้ไขทันที':'-'}</div></div>`;
+
+  // Table header
+  const pUnit={phM:'7.5–8.5',phA:'7.8–9.0',doM:'≥5 mg/L',doA:'≥6 mg/L',tM:'26–32°C',tA:'26–32°C',alk:'100–200',sal:'10–30 ppt',nh4:'<0.1',no2:'<0.5'};
+  const thead=document.getElementById('cmp-wq-thead');
+  if(thead)thead.innerHTML=`<tr><th class="wq-pond-col">บ่อ</th>${visParams.map(p=>`<th>${p.lbl}<div style="font-size:9px;font-weight:400;opacity:.7;margin-top:1px">${pUnit[p.key]||''}</div></th>`).join('')}</tr>`;
+
+  // Table body
+  const tbody=document.getElementById('cmp-wq-tbody');
+  if(!tbody)return;
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="99" style="text-align:center;color:var(--tx3);padding:20px">ไม่มีบ่อที่กำลังเลี้ยง</td></tr>';return;}
+
+  tbody.innerHTML=rows.map(({p,rec,prev,worst})=>{
+    const stBadge=worst==='danger'?`<span style="display:inline-block;font-size:9.5px;padding:1px 6px;border-radius:8px;background:var(--db);color:var(--d);font-weight:600;margin-left:4px">วิกฤต</span>`
+      :worst==='warn'?`<span style="display:inline-block;font-size:9.5px;padding:1px 6px;border-radius:8px;background:var(--wb);color:var(--w);font-weight:600;margin-left:4px">เฝ้าระวัง</span>`:'';
+    const cells=visParams.map(pm=>{
+      if(!rec||rec[pm.key]==null)return`<td><span class="wq-cell wq-na">—</span></td>`;
+      const v=rec[pm.key];
+      const s=st(pm.key,v);
+      const cls='wq-'+s;
+      const pm2=PARAMS.find(x=>x.key===pm.key);
+      const dec=pm2?pm2.dec:2;
+      const disp=typeof v==='number'?v.toFixed(dec).replace(/\.?0+$/,''):v;
+      const arrow=prev?wqArrow(pm.key,v,prev[pm.key]):'';
+      return`<td><span class="wq-cell ${cls}">${disp}${arrow}</span></td>`;
+    }).join('');
+    return`<tr><td class="wq-pond-name">${p.name}${stBadge}</td>${cells}</tr>`;
+  }).join('');
+}
+// ══════════════════════════════════════════════════════════════════════════
 </script></body>
 </html>
