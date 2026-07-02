@@ -258,6 +258,20 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .elec-total-bar{background:var(--pl);border-radius:10px;padding:12px 16px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-top:14px}
 .cl{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px;font-size:12px;color:var(--tx2)}
 .cl-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.abw-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.abw-leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2)}
+.abw-leg-line{width:18px;height:2px;border-radius:2px;flex-shrink:0}
+.abw-leg-dash{width:18px;height:0;border-top:2px dashed #94A3B8;flex-shrink:0}
+.abw-chip{padding:3px 10px;border-radius:16px;border:1.5px solid var(--bd);background:none;font-size:11.5px;cursor:pointer;font-family:inherit;transition:all .15s}
+.abw-chip.on{font-weight:600}
+.abw-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.abw-tbl th{background:var(--sf2);padding:8px 12px;text-align:left;font-size:11px;color:var(--tx3);font-weight:500;border-bottom:1px solid var(--bd);white-space:nowrap}
+.abw-tbl td{padding:8px 12px;border-bottom:1px solid var(--bd);white-space:nowrap;vertical-align:middle}
+.abw-tbl tr:last-child td{border-bottom:none}
+.abw-bar-bg{background:var(--sf2);border-radius:4px;height:6px;width:70px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:4px}
+.abw-bar-fill{height:100%;border-radius:4px;transition:width .3s}
+.abw-badge{display:inline-block;font-size:10.5px;padding:2px 8px;border-radius:10px;font-weight:600}
+.abw-ok{background:var(--ob);color:var(--ok)}.abw-warn{background:var(--wb);color:var(--w-tx)}.abw-danger{background:var(--db);color:var(--d)}
 .wx-day{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:15px;text-align:center}
 .risk-ring{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:900;flex-shrink:0}
 .rl{background:var(--ob);color:var(--ok)}.rm{background:var(--wb);color:var(--w-tx)}.rh{background:var(--db);color:var(--d)}
@@ -392,6 +406,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
       <button class="tab-item" id="tab-labor" onclick="goTab('labor',this)">👷 ค่าแรง</button>
           <button class="tab-item" id="tab-elec" onclick="goTab('elec',this)">⚡ ค่าไฟฟ้า</button>
           <button class="tab-item" id="tab-stock" onclick="goTab('stock',this)">📦 สต็อก</button>
+          <button class="tab-item" id="tab-abw" onclick="goTab('abw',this)">📈 ABW Growth</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-settings">
@@ -1325,6 +1340,33 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
         </select>
       </div>
       <div id="sk-log-table"></div>
+    </div>
+  </div>
+</div>
+<div id="sec-abw" class="sec">
+  <div class="sec-hdr"><div class="sec-title">📈 ABW Growth Curve</div></div>
+  <div class="g4" id="abw-kpi"></div>
+  <div class="card" style="margin-bottom:0">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+      <span style="font-size:13px;font-weight:600;color:var(--tx)">เส้นการเติบโต ABW เทียบข้ามบ่อ</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="abw-chips"></div>
+    </div>
+    <div style="position:relative;height:240px"><canvas id="abwChart"></canvas></div>
+    <div class="abw-legend" id="abw-legend"></div>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="overflow-x:auto">
+      <table class="abw-tbl">
+        <thead><tr>
+          <th>บ่อ</th>
+          <th>วันที่เลี้ยง</th>
+          <th>ABW ล่าสุด</th>
+          <th>เทียบเป้า</th>
+          <th>ADG</th>
+          <th>สถานะ</th>
+        </tr></thead>
+        <tbody id="abw-tbody"></tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -2296,7 +2338,7 @@ function goTab(t,btn){
   document.querySelectorAll('.tab-grp').forEach(g=>g.classList.remove('grp-on','grp-open'));
   const grp=btn.closest('.tab-grp');if(grp)grp.classList.add('grp-on');
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));document.getElementById('sec-'+t).classList.add('on');
-  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='disease')initDisease();if(t==='price')initPrice();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='stock')initStock();if(t==='feed')initFeed();
+  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='disease')initDisease();if(t==='price')initPrice();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='stock')initStock();if(t==='abw')initAbw();if(t==='feed')initFeed();
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
   if(t==='chem')initChem();if(t==='lab')initLab();
   if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();
@@ -5532,5 +5574,131 @@ if('serviceWorker' in navigator){
     navigator.serviceWorker.register('data:text/javascript,').catch(()=>{});
   });
 }
+
+// ═══════════════════════════ ABW GROWTH CURVE ═══════════════════════════
+const ABW_COLORS=['#3B82F6','#22C55E','#F59E0B','#EF4444','#A855F7','#14B8A6','#F97316','#EC4899'];
+let _abwChart=null;
+let _abwHiddenPonds=new Set();
+
+function getAbwTarget(age){
+  const pts=[[0,0],[7,0.8],[14,1.8],[21,3.2],[28,5.0],[35,7.2],[42,9.8],[49,12.5],[56,15.0],[70,19.0],[90,24.0]];
+  if(age<=0)return 0;
+  for(let i=1;i<pts.length;i++){
+    if(age<=pts[i][0]){
+      const[d0,w0]=pts[i-1],[d1,w1]=pts[i];
+      return w0+(w1-w0)*(age-d0)/(d1-d0);
+    }
+  }
+  return pts[pts.length-1][1];
+}
+
+function initAbw(){
+  const ponds=D.ponds.filter(p=>p.startDate&&!p.closed&&(p.samples||[]).some(s=>s.abw));
+  const chipsEl=document.getElementById('abw-chips');
+  if(chipsEl){
+    chipsEl.innerHTML=ponds.map((p,i)=>{
+      const col=ABW_COLORS[i%ABW_COLORS.length];
+      const on=!_abwHiddenPonds.has(p.id);
+      return`<button class="abw-chip${on?' on':''}" style="border-color:${col};${on?`background:${col}20;color:${col}`:''}" onclick="abwTogglePond('${p.id}',this,${i})">${p.name}</button>`;
+    }).join('');
+  }
+  renderAbwKPI(ponds);
+  renderAbwChart(ponds);
+  renderAbwTable(ponds);
+}
+
+function abwTogglePond(id,btn,idx){
+  if(_abwHiddenPonds.has(id))_abwHiddenPonds.delete(id);else _abwHiddenPonds.add(id);
+  const on=!_abwHiddenPonds.has(id);
+  const col=ABW_COLORS[idx%ABW_COLORS.length];
+  btn.classList.toggle('on',on);
+  btn.style.background=on?col+'20':'';
+  btn.style.color=on?col:'';
+  if(_abwChart){
+    const dsIdx=_abwChart.data.datasets.findIndex(ds=>ds.pondId===id);
+    if(dsIdx>=0){_abwChart.data.datasets[dsIdx].hidden=!on;_abwChart.update();}
+  }
+}
+
+function renderAbwKPI(ponds){
+  const el=document.getElementById('abw-kpi');if(!el)return;
+  if(!ponds.length){el.innerHTML='<div class="kpi-card" style="grid-column:1/-1;text-align:center;color:var(--tx3);padding:20px">ยังไม่มีข้อมูล ABW — กรอกข้อมูลสุ่มตัวอย่างก่อน</div>';return;}
+  let totalAbw=0,cntAbw=0,slowPonds=0,totalAdg=0,cntAdg=0;
+  ponds.forEach(p=>{
+    const samps=(p.samples||[]).filter(s=>s.abw).sort((a,b)=>a.age-b.age);
+    if(!samps.length)return;
+    const lat=samps[samps.length-1];
+    const tgt=getAbwTarget(lat.age);
+    totalAbw+=lat.abw;cntAbw++;
+    if(tgt>0&&lat.abw<tgt*0.8)slowPonds++;
+    if(samps.length>=2){
+      const a=samps[samps.length-2],b=lat;
+      const days=b.age-a.age;
+      if(days>0&&a.abw&&b.abw){totalAdg+=(b.abw-a.abw)/days;cntAdg++;}
+    }
+  });
+  const avgAbw=cntAbw?(totalAbw/cntAbw).toFixed(1):'-';
+  const avgAdg=cntAdg?(totalAdg/cntAdg).toFixed(2):'-';
+  el.innerHTML=`
+    <div class="kpi-card"><div class="kpi-lbl">ABW เฉลี่ย</div><div class="kpi-val">${avgAbw}<span class="kpi-unit"> g</span></div><div class="kpi-sub">${ponds.length} บ่อที่กำลังเลี้ยง</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">บ่อโตช้า (&lt;80%เป้า)</div><div class="kpi-val" style="color:${slowPonds?'var(--d)':'var(--ok)'}">${slowPonds}</div><div class="kpi-sub">${slowPonds?'⚠️ ต้องติดตาม':'✅ ปกติทั้งหมด'}</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">ADG เฉลี่ย</div><div class="kpi-val">${avgAdg}<span class="kpi-unit"> g/วัน</span></div><div class="kpi-sub">อัตราเติบโตเฉลี่ย</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">เป้า 60 วัน</div><div class="kpi-val">15<span class="kpi-unit"> g</span></div><div class="kpi-sub">มาตรฐาน Vannamei</div></div>`;
+}
+
+function renderAbwChart(ponds){
+  const canvas=document.getElementById('abwChart');if(!canvas)return;
+  if(_abwChart){_abwChart.destroy();_abwChart=null;}
+  let maxAge=42;
+  ponds.forEach(p=>(p.samples||[]).forEach(s=>{if(s.age>maxAge)maxAge=s.age;}));
+  maxAge=Math.ceil((maxAge+7)/7)*7;
+  const tgtPts=[];for(let a=0;a<=maxAge;a+=7)tgtPts.push({x:a,y:parseFloat(getAbwTarget(a).toFixed(2))});
+  const datasets=[{label:'เป้าหมาย',data:tgtPts,borderColor:'#CBD5E1',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,tension:.4,pondId:'__target__'}];
+  ponds.forEach((p,i)=>{
+    const samps=(p.samples||[]).filter(s=>s.abw!=null).sort((a,b)=>a.age-b.age);
+    if(!samps.length)return;
+    const col=ABW_COLORS[i%ABW_COLORS.length];
+    datasets.push({label:p.name,data:samps.map(s=>({x:s.age,y:s.abw})),borderColor:col,backgroundColor:col+'25',borderWidth:2.5,pointRadius:4,pointBackgroundColor:col,fill:false,tension:.3,hidden:_abwHiddenPonds.has(p.id),pondId:p.id});
+  });
+  _abwChart=new Chart(canvas,{
+    type:'line',data:{datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(15,23,42,.92)',padding:10,titleFont:{size:11},bodyFont:{size:11},callbacks:{title:items=>`วันที่ ${items[0].parsed.x}`,label:ctx=>ctx.parsed.y==null?null:` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} g`}}},
+      scales:{
+        x:{type:'linear',min:0,title:{display:true,text:'วันที่เลี้ยง',font:{size:10},color:'var(--tx3)'},ticks:{font:{size:10},color:'var(--tx3)',stepSize:7,callback:v=>`วัน ${v}`},grid:{color:'rgba(0,0,0,0.04)'}},
+        y:{min:0,title:{display:true,text:'ABW (กรัม)',font:{size:10},color:'var(--tx3)'},ticks:{font:{size:10},color:'var(--tx3)',callback:v=>`${v}g`},grid:{color:'rgba(0,0,0,0.04)'}}
+      }
+    }
+  });
+  const legEl=document.getElementById('abw-legend');
+  if(legEl)legEl.innerHTML=`<div class="abw-leg-item"><div class="abw-leg-dash"></div>เป้าหมาย</div>`+ponds.filter(p=>(p.samples||[]).some(s=>s.abw)).map((p,i)=>`<div class="abw-leg-item"><div class="abw-leg-line" style="background:${ABW_COLORS[i%ABW_COLORS.length]}"></div>${p.name}</div>`).join('');
+}
+
+function renderAbwTable(ponds){
+  const tbody=document.getElementById('abw-tbody');if(!tbody)return;
+  const rows=ponds.map((p,i)=>{
+    const samps=(p.samples||[]).filter(s=>s.abw).sort((a,b)=>a.age-b.age);
+    if(!samps.length)return null;
+    const lat=samps[samps.length-1];
+    const curAge=p.startDate?dDiff(p.startDate,today()):lat.age;
+    const tgt=getAbwTarget(lat.age);
+    const pct=tgt>0?Math.round(lat.abw/tgt*100):null;
+    const col=ABW_COLORS[i%ABW_COLORS.length];
+    let adg='-';
+    if(samps.length>=2){const a=samps[samps.length-2],b=lat,days=b.age-a.age;if(days>0&&a.abw&&b.abw)adg=((b.abw-a.abw)/days).toFixed(2)+' g/วัน';}
+    let badge,bcls;
+    if(pct==null){badge='ไม่มีข้อมูล';bcls='abw-warn';}
+    else if(pct>=95){badge='ดีมาก';bcls='abw-ok';}
+    else if(pct>=80){badge='ปกติ';bcls='abw-ok';}
+    else if(pct>=65){badge='ติดตาม';bcls='abw-warn';}
+    else{badge='ช้ามาก';bcls='abw-danger';}
+    const bw=pct!=null?Math.min(pct,100):0;
+    const bc=pct==null?'#CBD5E1':pct>=80?'#22C55E':pct>=65?'#F59E0B':'#EF4444';
+    return`<tr><td><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${col};margin-right:5px;vertical-align:middle"></span><b>${p.name}</b></td><td>${curAge} วัน</td><td><b>${lat.abw} g</b></td><td><div class="abw-bar-bg"><div class="abw-bar-fill" style="width:${bw}%;background:${bc}"></div></div><span style="font-size:11px;color:${pct!=null&&pct<80?'var(--d)':'var(--tx2)'}">${pct!=null?pct+'%':'-'}</span></td><td>${adg}</td><td><span class="abw-badge ${bcls}">${badge}</span></td></tr>`;
+  }).filter(Boolean);
+  tbody.innerHTML=rows.length?rows.join(''):'<tr><td colspan="6" style="text-align:center;color:var(--tx3);padding:20px">ยังไม่มีข้อมูล — กรอกข้อมูลสุ่มตัวอย่างก่อน</td></tr>';
+}
+// ═══════════════════════════════════════════════════════════════════════════
 </script></body>
 </html>

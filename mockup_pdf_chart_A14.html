@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Mockup: กราฟเปรียบเทียบอาหารรวม/การโตของกุ้ง — บ่อ A.14</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  body{font-family:'Kanit',sans-serif;background:#f3f6f5;margin:0;padding:24px;color:#1e1e1e}
+  .card{max-width:780px;margin:0 auto;background:#fff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden}
+  .head{background:#e8f6f0;padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
+  .head strong{color:#0f6e56;font-size:15px}
+  .head span{font-size:12px;color:#787878}
+  .note{background:#fffbeb;padding:8px 16px;font-size:12px;color:#6b5b1f;border-top:1px solid #f3e8b8}
+  .wrap-chart{padding:16px}
+  .legend-hint{font-size:11px;color:#999;text-align:center;margin-top:4px}
+  h2{font-family:'Kanit',sans-serif;text-align:center;color:#0f6e56;margin-bottom:4px}
+  .sub{text-align:center;color:#777;font-size:13px;margin-bottom:18px}
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:780px;margin:14px auto 0}
+  .box{border:1px solid #e0e0e0;border-radius:8px;padding:10px 14px;font-size:12px}
+  .box h4{margin:0 0 6px;font-size:13px;color:#0f6e56}
+  .box.before{background:#fff7f7}
+  .box.after{background:#f3fbf7}
+</style>
+</head>
+<body>
+  <h2>Mockup: ปรับกราฟ PDF ปิดบ่อ</h2>
+  <div class="sub">ใช้ข้อมูลจริงของบ่อ A.14 (รอบที่ 1/2026, ปิดบ่อ 13 มิ.ย. 2026)</div>
+
+  <div class="compare">
+    <div class="box before">
+      <h4>❌ ของเดิม (จะลบออก)</h4>
+      กราฟแท่ง "น้ำหนัก/ราคาแต่ละพาเชียล" — แสดงน้ำหนักกับรวมเงินของแต่ละครั้งที่จับ (มีแค่ 2 จุดข้อมูล: พาเชียล 11 มิ.ย. + ปิดบ่อ 13 มิ.ย.) ข้อมูลน้อยเกินไป ไม่ค่อยมีประโยชน์เป็นกราฟ
+    </div>
+    <div class="box after">
+      <h4>✅ ของใหม่ (กราฟด้านล่าง)</h4>
+      กราฟเส้น+แท่งรวม "อาหารสะสม + การกิน (กก./แสน) vs การโตของกุ้ง (ABW)" ตลอดทั้งรอบเลี้ยง — เห็นความสัมพันธ์ระหว่างอาหารที่ให้ อัตราการกินเทียบจำนวนกุ้ง กับน้ำหนักที่โตขึ้นจริง มีข้อมูลครบ 7 จุดจากการสุ่มชั่งจริง
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="head">
+      <strong>บ่อ A.14</strong>
+      <span>รอบที่ 1/2026 · เริ่ม 31 มี.ค. 2026 · ปิดบ่อ 13 มิ.ย. 2026</span>
+    </div>
+    <div class="wrap-chart">
+      <canvas id="cmp" height="300"></canvas>
+      <div class="legend-hint">แท่งสีเขียว = อาหารสะสม (กก., แกนซ้าย) · เส้นสีส้ม = น้ำหนักเฉลี่ย/ตัว ABW (กรัม, แกนขวา) · เส้นประสีฟ้า = การกิน (กก./แสน, แกนขวานอก)</div>
+    </div>
+    <div class="note">
+      <strong>หมายเหตุ:</strong> ข้อมูลจากการสุ่มชั่งจริง 7 ครั้ง (อายุ 34–72 วัน) เทียบกับอาหารสะสมและอัตราการกิน (กก./แสน เฉลี่ยต่อช่วง) ณ ช่วงอายุเดียวกัน — ช่วยดูว่าอัตราการให้อาหารสัมพันธ์กับการเติบโตหรือไม่ (FCR รอบนี้ = 1.37)
+    </div>
+  </div>
+
+<script>
+const ages=[34,41,48,55,62,69,72];
+const dates=['4 พ.ค.','11 พ.ค.','18 พ.ค.','25 พ.ค.','1 มิ.ย.','8 มิ.ย.','11 มิ.ย.'];
+const cumFeed=[5685,8340,11465,15155,19505,24055,25855];
+const abw=[10.87,14.38,17.84,20.38,23.89,29.34,30.49];
+const per100k=[25.33,57.47,67.64,79.87,94.16,98.48,90.91]; // กก./แสน เฉลี่ยต่อช่วงสุ่มชั่ง (totalFeed/stock*100000)
+new Chart(document.getElementById('cmp').getContext('2d'),{
+  data:{
+    labels:dates.map((d,i)=>d+' (วัน '+ages[i]+')'),
+    datasets:[
+      {type:'bar',label:'อาหารสะสม (กก.)',data:cumFeed,backgroundColor:'#0f6e56',yAxisID:'y1',order:3},
+      {type:'line',label:'น้ำหนักเฉลี่ย/ตัว ABW (กรัม)',data:abw,borderColor:'#f59e0b',backgroundColor:'#f59e0b',tension:.3,yAxisID:'y2',order:1,pointRadius:5,pointBackgroundColor:'#f59e0b'},
+      {type:'line',label:'การกิน (กก./แสน)',data:per100k,borderColor:'#3b82f6',backgroundColor:'#3b82f6',borderDash:[5,4],tension:.3,yAxisID:'y3',order:2,pointRadius:4,pointBackgroundColor:'#3b82f6'}
+    ]
+  },
+  options:{
+    responsive:true,
+    plugins:{
+      title:{display:true,text:'อาหารสะสม / การกิน (กก./แสน) เทียบกับ การโตของกุ้ง (ABW)',font:{family:'Kanit',size:14}},
+      legend:{position:'bottom',labels:{font:{family:'Kanit',size:11}}}
+    },
+    scales:{
+      y1:{type:'linear',position:'left',title:{display:true,text:'อาหารสะสม (กก.)',font:{family:'Kanit'}}},
+      y2:{type:'linear',position:'right',title:{display:true,text:'ABW (กรัม)',font:{family:'Kanit'}},grid:{drawOnChartArea:false}},
+      y3:{type:'linear',position:'right',title:{display:true,text:'กก./แสน',font:{family:'Kanit'}},grid:{drawOnChartArea:false},offset:true},
+      x:{ticks:{font:{family:'Kanit',size:10}}}
+    }
+  }
+});
+</script>
+</body>
+</html>
