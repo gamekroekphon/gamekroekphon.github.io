@@ -3061,7 +3061,7 @@ function saveStaff(){
   if(!salary||salary<=0){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุเงินเดือน</span>';return;}
   if(!startDate){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุวันที่มีผล</span>';return;}
   if(!D.staff)D.staff=[];
-  D.staff.push({id:'st_'+Date.now(),name,position,salary,startDate});
+  D.staff.push({id:'st_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),name,position,salary,startDate});
   save();
   msg.innerHTML='<span style="color:var(--ok)">✅ บันทึกเรียบร้อย</span>';
   clearStaff(true);
@@ -3098,7 +3098,7 @@ function saveLaborCost(){
   if(!date){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุวันที่</span>';return;}
   if(!amount||amount<=0){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุจำนวนเงิน</span>';return;}
   if(!D.laborCosts)D.laborCosts=[];
-  D.laborCosts.push({id:'lc_'+Date.now(),pondId,date,type,amount,note});
+  D.laborCosts.push({id:'lc_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),pondId,date,type,amount,note});
   save();
   msg.innerHTML='<span style="color:var(--ok)">✅ บันทึกเรียบร้อย</span>';
   clearLaborCost(true);
@@ -3440,7 +3440,7 @@ function saveStockItem(){
   if(!name){showStockMsg('item','กรุณากรอกชื่อพัสดุ','err');return;}
   const unit=document.getElementById('sk-unit').value.trim();
   if(!unit){showStockMsg('item','กรุณากรอกหน่วย','err');return;}
-  const id=document.getElementById('sk-name').dataset.editId||('sk'+Date.now());
+  const id=document.getElementById('sk-name').dataset.editId||('sk'+Date.now()+'_'+Math.random().toString(36).slice(2,6));
   const item={
     id,name,
     category:document.getElementById('sk-cat').value||'equip',
@@ -3538,7 +3538,7 @@ function saveStockTx(){
   item.qty=Math.round(newQty*100)/100;
   // log
   if(!D.inventoryLog)D.inventoryLog=[];
-  D.inventoryLog.push({id:'sl'+Date.now(),itemId,itemName:item.name,type,qty,date,note,balanceAfter:item.qty,unit:item.unit});
+  D.inventoryLog.push({id:'sl'+Date.now()+'_'+Math.random().toString(36).slice(2,6),itemId,itemName:item.name,type,qty,date,note,balanceAfter:item.qty,unit:item.unit});
   save();
   showStockMsg('tx','✅ '+STOCK_TX_LABEL[type]+' '+qty+' '+item.unit+' — คงเหลือ '+item.qty+' '+item.unit,'ok');
   clearStockTx(true);
@@ -4991,18 +4991,21 @@ function renderCrops(){
         <td style="padding:8px;text-align:right;font-weight:700;color:${(hr.netProfit||0)>=0?'var(--ok)':'var(--d)'}">${hr.netProfit!=null?Math.round(hr.netProfit).toLocaleString():'-'}</td>
         <td style="padding:6px 8px">
           <div style="display:flex;gap:4px;align-items:center;min-width:180px">
-            <input type="text" id="cnote-${c._pondId}-${c._idx}" value="${c.notes?String(c.notes).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'):''}" placeholder="เช่น โรคตัวแดง, ท่อแตก..." style="flex:1;border:1px solid var(--bd);border-radius:6px;padding:4px 6px;font-size:12px">
-            <button onclick="editCycleNote('${c._pondId}',${c._idx})" style="background:var(--p);color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap" title="บันทึกสาเหตุปิดบ่อ/หมายเหตุ">💾 บันทึก</button>
+            <input type="text" id="cnote-${c._pondId}-${c.id||c._idx}" value="${c.notes?String(c.notes).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'):''}" placeholder="เช่น โรคตัวแดง, ท่อแตก..." style="flex:1;border:1px solid var(--bd);border-radius:6px;padding:4px 6px;font-size:12px">
+            <button onclick="editCycleNote('${c._pondId}','${c.id||''}',${c._idx})" style="background:var(--p);color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap" title="บันทึกสาเหตุปิดบ่อ/หมายเหตุ">💾 บันทึก</button>
           </div>
         </td>
       </tr>`;}).join('')}
     </tbody></table></div>`;
   populateChPondSelect();
 }
-function editCycleNote(pondId,idx){
-  const p=pond(pondId);if(!p||!p.cropHistory||!p.cropHistory[idx])return;
-  const inp=document.getElementById(`cnote-${pondId}-${idx}`);if(!inp)return;
-  p.cropHistory[idx].notes=inp.value;
+function editCycleNote(pondId,cropId,idx){
+  const p=pond(pondId);if(!p||!p.cropHistory)return;
+  const entry=(cropId&&p.cropHistory.find(c=>c.id===cropId))||p.cropHistory[idx];
+  if(!entry)return;
+  const key=cropId||idx;
+  const inp=document.getElementById(`cnote-${pondId}-${key}`);if(!inp)return;
+  entry.notes=inp.value;
   save();fbSave();
   inp.style.background='var(--ob)';
   setTimeout(()=>{inp.style.background='';},600);
@@ -5455,6 +5458,7 @@ function confirmCloseCrop(){
   const notes=document.getElementById('cm-notes').value;
   // archive current crop
   const archived={
+    id:'crop_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
     cropNum:p.cropNum||1,
     cropYear:p.cropYear||new Date().getFullYear(),
     year:p.cropYear||new Date().getFullYear(),
