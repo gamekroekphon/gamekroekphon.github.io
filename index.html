@@ -392,12 +392,36 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .pc-ov-step{display:flex;align-items:center;gap:4px;margin-bottom:2px}
 .pc-ov-empty{text-align:center;padding:8px 0;color:var(--tx3);font-size:11px}
 @media(max-width:480px){.ov-kpi-bar{grid-template-columns:repeat(2,1fr)}.ov-grid{grid-template-columns:repeat(2,1fr)}}
+.login-screen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center}
+.login-box{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:32px 28px;width:320px;max-width:90vw}
+.login-logo{text-align:center;margin-bottom:20px}
+.login-logo .ico{font-size:44px;line-height:1}
+.login-logo .name{font-size:20px;font-weight:700;color:var(--tx);margin-top:6px}
+.login-logo .sub{font-size:12px;color:var(--tx3);margin-top:2px}
+.login-field{margin-bottom:12px}
+.login-field label{font-size:12px;color:var(--tx2);display:block;margin-bottom:4px}
+.login-field input{width:100%;box-sizing:border-box}
+.login-err{font-size:12px;color:var(--d);text-align:center;margin-top:10px;display:none}
+.hdr-user{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx2)}
+.hdr-user .uname{max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hdr-role-badge{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:500}
+.role-admin{background:var(--pb);color:var(--p)}.role-staff{background:var(--sf2);color:var(--tx3)}
 </style>
   <!-- Firebase SDKs (compat v9) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo"><div class="ico">🦐</div><div class="name">ตะวันฟาร์ม</div><div class="sub">กรุณาเข้าสู่ระบบ</div></div>
+    <div class="login-field"><label>อีเมล</label><input type="email" id="login-email" class="fi" placeholder="email@example.com" autocomplete="email"></div>
+    <div class="login-field"><label>รหัสผ่าน</label><input type="password" id="login-pass" class="fi" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn btn-p" style="width:100%;justify-content:center;margin-top:4px" onclick="doLogin()">เข้าสู่ระบบ</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
 <div class="hdr">
   <div class="hdr-left">
     <div class="hdr-logo">🦐</div>
@@ -410,7 +434,12 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
       <span class="sync-ind-time" id="sync-time"></span>
     </span>
     <span class="hdr-badge" id="hdr-alert"></span>
-    <button class="btn btn-sm" style="background:var(--brand-strong);color:var(--on-brand);border:1px solid var(--brand-strong-border);font-weight:700" onclick="openAddPond()">+ เพิ่มบ่อ</button>
+    <div class="hdr-user" id="hdr-user" style="display:none">
+      <span class="hdr-role-badge role-admin" id="hdr-role-badge"></span>
+      <span class="uname" id="hdr-uname"></span>
+      <button class="btn btn-sm" onclick="doLogout()" style="padding:4px 10px;font-size:11px">ออกจากระบบ</button>
+    </div>
+    <button class="btn btn-sm" id="btn-add-pond" style="background:var(--brand-strong);color:var(--on-brand);border:1px solid var(--brand-strong-border);font-weight:700;display:none" onclick="openAddPond()">+ เพิ่มบ่อ</button>
   </div>
 </div>
 <div class="tabs-wrap">
@@ -1502,6 +1531,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 </div>
 <script>
 const SK='tawan_v3';
+let APP_ROLE='staff';
 
 // ═══════════════════════════════════════════════════════
 //  🔥 FIREBASE CONFIG — ตะวันฟาร์ม Project
@@ -1577,9 +1607,51 @@ document.addEventListener('focusout', () => {
   }, 50);
 });
 
+
+// ===== AUTH & ROLE =====
+const FINANCE_TABS=['tab-harvest','tab-export','tab-labor','tab-elec','tab-stock','tab-pl','tab-manage'];
+const FINANCE_SECS=['sec-harvest','sec-export','sec-labor','sec-elec','sec-stock','sec-pl','sec-manage'];
+function applyRole(role){
+  APP_ROLE=role;
+  if(role==='admin'){
+    document.getElementById('btn-add-pond')?.style.setProperty('display','');
+    document.getElementById('hdr-role-badge').className='hdr-role-badge role-admin';
+    document.getElementById('hdr-role-badge').textContent='Admin';
+  }else{
+    FINANCE_TABS.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+    FINANCE_SECS.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+    document.getElementById('hdr-role-badge').className='hdr-role-badge role-staff';
+    document.getElementById('hdr-role-badge').textContent='พนักงาน';
+  }
+}
+function updateUserHeader(user,role){
+  const u=document.getElementById('hdr-user');if(u)u.style.display='flex';
+  const n=document.getElementById('hdr-uname');if(n)n.textContent=user.displayName||user.email.split('@')[0];
+  applyRole(role);
+}
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  const errEl=document.getElementById('login-err');
+  errEl.style.display='none';
+  if(!email||!pass){errEl.textContent='กรุณากรอกอีเมลและรหัสผ่าน';errEl.style.display='block';return;}
+  const btn=document.querySelector('#login-screen .btn-p');if(btn){btn.disabled=true;btn.textContent='กำลังเข้าสู่ระบบ...';}
+  try{
+    await firebase.auth().signInWithEmailAndPassword(email,pass);
+  }catch(e){
+    const msg=e.code==='auth/wrong-password'||e.code==='auth/user-not-found'||e.code==='auth/invalid-credential'?'อีเมลหรือรหัสผ่านไม่ถูกต้อง':'เข้าสู่ระบบไม่ได้: '+e.message;
+    errEl.textContent=msg;errEl.style.display='block';
+    if(btn){btn.disabled=false;btn.textContent='เข้าสู่ระบบ';}
+  }
+}
+function doLogout(){
+  if(!confirm('ต้องการออกจากระบบหรือไม่?'))return;
+  firebase.auth().signOut();
+  location.reload();
+}
 async function initFirebase() {
   try {
-    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    // Firebase app already initialized in DOMContentLoaded auth flow
     const dbRef = firebase.database().ref(RTDB_PATH);
 
     // ── โหลดข้อมูลจาก Cloud ──────────────────────────────
@@ -2086,7 +2158,7 @@ function loadData(){
   try{const s=localStorage.getItem(SK);if(s){
     const d=JSON.parse(s);
     const _cy=new Date().getFullYear();
-    d.ponds.forEach(p=>{['feedLog','samples','plankton','waterLog','chemLog','labResults'].forEach(k=>{if(!p[k])p[k]=[]});if(!p.cropHistory)p.cropHistory=[];if(!p.cropNum)p.cropNum=1;if(!p.cropYear)p.cropYear=_cy;if(p.prepChecklist===undefined)p.prepChecklist=null;});
+    d.ponds.forEach(p=>{['feedLog','samples','plankton','waterLog','chemLog','labResults','records'].forEach(k=>{if(!p[k])p[k]=[]});if(!p.cropHistory)p.cropHistory=[];if(!p.cropNum)p.cropNum=1;if(!p.cropYear)p.cropYear=_cy;if(p.prepChecklist===undefined)p.prepChecklist=null;});
     if(!d.categories)d.categories=[...DEFAULT_CATS];
     if(!d.harvestLog)d.harvestLog=[];
     if(!d.settings)d.settings={};
@@ -2261,6 +2333,7 @@ function classifyOv(key,v){
 }
 function worstOv(a,b){const o={ok:0,warn:1,danger:2};return(o[b]||0)>(o[a]||0)?b:a}
 function pondStatusOv(p){
+  if(!Array.isArray(p.records))p.records=[];
   const last=p.records[p.records.length-1];
   const age=p.startDate?dDiff(p.startDate,today()):(last?last.age:0);
   if(age<=0)return'prep';
@@ -2835,6 +2908,7 @@ function pondCard(p,last,age,cls){
 }
 function renderOv(){
   const meta=D.ponds.map(p=>{
+    if(!Array.isArray(p.records))p.records=[];
     const last=p.records[p.records.length-1];
     const age=p.startDate?dDiff(p.startDate,today()):(last?last.age:0);
     return{p,last,age,cls:pondStatusOv(p)};
@@ -5703,7 +5777,18 @@ document.addEventListener('DOMContentLoaded',()=>{
   populateAll();renderOv();
   document.getElementById('pondModal').addEventListener('click',e=>{if(e.target===document.getElementById('pondModal'))closePond()});
   fetchWx().catch(()=>{});
-  initFirebase();
+  if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+  firebase.auth().onAuthStateChanged(async user=>{
+    if(user){
+      const snap=await firebase.database().ref('users/'+user.uid+'/role').once('value');
+      const role=snap.val()||'staff';
+      updateUserHeader(user,role);
+      document.getElementById('login-screen').style.display='none';
+      initFirebase();
+    }else{
+      document.getElementById('login-screen').style.display='flex';
+    }
+  });
   syncAllDateHints();
   // ── ข้อ2: อัปเดตป้าย พ.ศ. ทุกครั้งที่ผู้ใช้เปลี่ยนค่าวันที่ (ครอบคลุมแถวที่เพิ่มแบบไดนามิก เช่น เช็คลิสต์เตรียมบ่อ) ──
   document.addEventListener('input',e=>{if(e.target&&e.target.type==='date')syncDateHint(e.target)});
