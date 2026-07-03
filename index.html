@@ -2771,46 +2771,48 @@ function openPondDetail(id){
   renderPondDetail(id);
   window.scrollTo({top:0,behavior:'instant'});
 }
+function backToOv(){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.getElementById('sec-ov').classList.add('on');
+  window.scrollTo({top:0,behavior:'instant'});
+}
 function renderPondDetail(id){
   const p=pond(id);const el=document.getElementById('pd-body');
   if(!el)return;
   if(!p){el.innerHTML='<div class="card">ไม่พบข้อมูลบ่อ</div>';return}
+  if(!Array.isArray(p.records))p.records=[];
   const last=p.records[p.records.length-1];
   const age=p.startDate?dDiff(p.startDate,today()):(last?last.age:0);
   const cls=pondStatusOv(p);
   const reason=reasonOv(p,last,age);
-  const badgeTxt={danger:'ต้องดู',warn:'เฝ้าระวัง',ok:'ปกติ',prep:'กำลังเตรียม'}[cls]||'ปกติ';
-  const samples=p.samples||[];const lat=samples.length?samples[samples.length-1]:null;
-  const fcr=getFCR(p);const biomass=getLatestBiomass(p);
+  const badgeTxt={danger:'ต้องดู!',warn:'เฝ้าระวัง',ok:'ปกติ',prep:'กำลังเตรียม'}[cls]||'ปกติ';
+  const badgeCls={danger:'b-danger',warn:'b-warn',ok:'b-ok',prep:'b-info'}[cls]||'b-ok';
+  const samples=p.samples||[];
+  const lat=samples.length?samples[samples.length-1]:null;
+  const latPrev=samples.length>1?samples[samples.length-2]:null;
+  const fcr=getFCR(p);
+  const biomass=getLatestBiomass(p);
   const feedLog=p.feedLog||[];const latFeed=feedLog.length?feedLog[feedLog.length-1]:null;
   const per100k=latFeed&&latFeed.totalFeed?feedPer100k(latFeed.totalFeed,p.stock):null;
+  const waterLog=p.waterLog||[];const latWater=waterLog.length?waterLog[waterLog.length-1]:null;
+  const pdg=getPDG(samples);
+  const sizeCount=lat&&lat.abw&&lat.abw>0?Math.round(1000/lat.abw):null;
 
   const subParts=[];
   if(p.stock)subParts.push(p.stock.toLocaleString()+' ตัว');
   if(p.size)subParts.push(p.size+' ไร่');
-  if(p.size&&p.stock)subParts.push(dens(p)+' ตัว/ตร.ม.');
   if(p.hatchery)subParts.push(p.hatchery);
   if(p.startDate)subParts.push('ลงกุ้ง '+fD(p.startDate));
 
-  const metrics=[
-    {lbl:'ABW ล่าสุด',v:lat&&lat.abw?lat.abw+' g':'-'},
-    {lbl:'ไซส์ (ตัว/กก.)',v:lat&&lat.plCount?lat.plCount:'-'},
-    {lbl:'FCR (อัตราแลกเนื้อ)',v:fcr||'-'},
-    {lbl:'Biomass (น้ำหนักกุ้งทั้งบ่อ)',v:biomass?biomass.toFixed(0)+' kg':'-'},
-    {lbl:'อาหารล่าสุด',v:latFeed&&latFeed.totalFeed?latFeed.totalFeed+' กก.'+(per100k!=null?' ('+per100k.toFixed(1)+' กก./แสน)':''):'-'},
-    {lbl:'อายุ',v:age!=null&&age!==undefined?age+' วัน':'-'},
-  ];
-  const metricsHtml=metrics.map(m=>`<div class="metric-card"><div class="mv" style="font-size:18px">${m.v}</div><div class="ml">${m.lbl}</div></div>`).join('');
-
+  // ===== Water quality section =====
   let waterHtml='';
   if(last){
-    // เทียบกับค่าที่กรอกครั้งก่อนหน้า (ไม่ใช่เมื่อวานตามปฏิทินเสมอไป เพราะอาจไม่ได้กรอกทุกวัน)
     const prev=p.records.length>1?p.records[p.records.length-2]:null;
     const trendArrow=(v,pv)=>{
       if(pv===null||pv===undefined||pv===''||isNaN(parseFloat(pv))||isNaN(parseFloat(v)))return'';
       const diff=parseFloat(v)-parseFloat(pv);
       if(Math.abs(diff)<0.005)return'';
-      return diff>0?`<span style="font-size:11px;color:var(--tx3);margin-left:4px">▲</span>`:`<span style="font-size:11px;color:var(--tx3);margin-left:4px">▼</span>`;
+      return diff>0?`<span style="font-size:10px;color:var(--tx3);margin-left:3px">▲</span>`:`<span style="font-size:10px;color:var(--tx3);margin-left:3px">▼</span>`;
     };
     const rows=[];
     PARAMS.forEach(pm=>{
@@ -2826,8 +2828,7 @@ function renderPondDetail(id){
       const col=s==='danger'?'var(--d)':s==='warn'?'var(--w)':'var(--tx)';
       let swArrow='';
       if(prev&&prev.phM!=null&&prev.phA!=null&&prev.phM!==''&&prev.phA!==''){
-        const prevSw=Math.abs(prev.phM-prev.phA);
-        swArrow=trendArrow(sw,prevSw);
+        const prevSw=Math.abs(prev.phM-prev.phA);swArrow=trendArrow(sw,prevSw);
       }
       rows.push(`<div class="pd-water-row"><span style="color:var(--tx2)">สวิง pH</span><span style="font-weight:600;color:${col}">${sw.toFixed(2)}${swArrow}</span></div>`);
     }
@@ -2836,19 +2837,60 @@ function renderPondDetail(id){
     waterHtml='<div style="color:var(--tx3);font-size:13px;padding:7px 0">ยังไม่มีข้อมูลคุณภาพน้ำ</div>';
   }
 
+  // ===== Feed section =====
+  const feedRate=latFeed&&latFeed.totalFeed&&biomass&&biomass>0?((latFeed.totalFeed/biomass)*100).toFixed(1):null;
+  const feedHtml=latFeed?`
+    <div class="pd-water-row"><span style="color:var(--tx2)">อาหารวันนี้</span><span style="font-weight:600">${latFeed.totalFeed} กก.</span></div>
+    ${per100k!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">กก./แสนตัว</span><span style="font-weight:600">${per100k.toFixed(1)}</span></div>`:''}
+    ${feedRate!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">Feed Rate</span><span style="font-weight:600">${feedRate}%</span></div>`:''}
+    ${latFeed.meals!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">จำนวนมื้อ</span><span style="font-weight:600">${latFeed.meals} มื้อ</span></div>`:''}
+  `:'<div style="color:var(--tx3);font-size:13px;padding:7px 0">ยังไม่มีข้อมูลอาหาร</div>';
+
+  // ===== Size section =====
+  const sizeHtml=lat?`
+    <div class="pd-water-row"><span style="color:var(--tx2)">ABW</span><span style="font-weight:600">${lat.abw} กรัม/ตัว</span></div>
+    ${sizeCount!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">ไซส์</span><span style="font-weight:600">${sizeCount} ตัว/กก.</span></div>`:''}
+    ${pdg!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">อัตราโต</span><span style="font-weight:600">${pdg} กรัม/วัน</span></div>`:''}
+    ${lat.survivalRate!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">Survival Rate</span><span style="font-weight:600">${lat.survivalRate}%</span></div>`:''}
+    ${biomass!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">Biomass (ประเมิน)</span><span style="font-weight:600">${Math.round(biomass).toLocaleString()} กก.</span></div>`:''}
+    ${fcr?`<div class="pd-water-row"><span style="color:var(--tx2)">FCR</span><span style="font-weight:600">${fcr}</span></div>`:''}
+  `:'<div style="color:var(--tx3);font-size:13px;padding:7px 0">ยังไม่มีข้อมูลสุ่มตัวอย่าง</div>';
+
+  // ===== Water management section =====
+  const wmHtml=latWater?`
+    <div class="pd-water-row"><span style="color:var(--tx2)">การดำเนินการ</span><span style="font-weight:600">${WL_ACT[latWater.action]||latWater.action}</span></div>
+    ${latWater.vol!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">ปริมาณ</span><span style="font-weight:600">${latWater.vol} ซม.</span></div>`:''}
+    ${latWater.notes?`<div class="pd-water-row"><span style="color:var(--tx2)">หมายเหตุ</span><span style="font-weight:600">${latWater.notes}</span></div>`:''}
+  `:'<div style="color:var(--tx3);font-size:13px;padding:7px 0">ยังไม่มีข้อมูลการจัดการน้ำ</div>';
+
   el.innerHTML=`
+    <div style="margin-bottom:12px">
+      <button class="btn btn-sm" style="font-size:12px;padding:4px 10px" onclick="backToOv()">← ภาพรวม</button>
+    </div>
     <div class="pd-head">
       <div>
         <div class="pd-name">บ่อ ${p.name}</div>
         <div class="pd-sub">${subParts.join(' · ')}</div>
       </div>
-      <span class="b-${cls==='prep'?'info':cls}" style="padding:5px 12px;border-radius:14px;font-size:12px;font-weight:600;flex:none">${badgeTxt}</span>
+      <span class="${badgeCls}" style="padding:5px 12px;border-radius:14px;font-size:12px;font-weight:600;flex:none">${badgeTxt}</span>
     </div>
+    <div style="display:inline-flex;align-items:center;gap:6px;background:var(--a1);color:var(--a);font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;margin-bottom:12px">⏱ อายุ ${age} วัน</div>
     ${reason?`<div class="pd-alert"><div class="ai ${cls==='prep'?'ok':cls}"><span>${cls==='danger'?'🔴':cls==='warn'?'🟡':'ℹ️'}</span><div>${reason}</div></div></div>`:''}
-    <div class="pd-metrics">${metricsHtml}</div>
-    <div class="card" style="margin-top:20px">
+    <div class="card" style="margin-top:12px">
       <div class="card-t">💧 คุณภาพน้ำล่าสุด${last&&last.date?` · ${fD(last.date)}`:''}</div>
       ${waterHtml}
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="card-t">🍖 อาหารล่าสุด${latFeed&&latFeed.date?` · ${fD(latFeed.date)}`:''}</div>
+      ${feedHtml}
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="card-t">📏 ไซส์ล่าสุด${lat&&lat.date?` · ${fD(lat.date)}`:''}</div>
+      ${sizeHtml}
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="card-t">🚰 การจัดการน้ำล่าสุด${latWater&&latWater.date?` · ${fD(latWater.date)}`:''}</div>
+      ${wmHtml}
     </div>
     <div class="pd-actions">
       <button class="btn btn-p" onclick="jumpEntry('${p.id}')">📝 กรอกข้อมูลใหม่</button>
@@ -2913,8 +2955,7 @@ function renderOv(){
     const age=p.startDate?dDiff(p.startDate,today()):(last?last.age:0);
     return{p,last,age,cls:pondStatusOv(p)};
   });
-  const rank={danger:0,warn:1,ok:2,prep:3};
-  meta.sort((a,b)=>(rank[a.cls]??4)-(rank[b.cls]??4)||b.age-a.age);
+  meta.sort((a,b)=>b.age-a.age);
   const dcP=meta.filter(m=>m.cls==='danger').length,wcP=meta.filter(m=>m.cls==='warn').length;
   document.getElementById('hdr-alert').textContent=dcP>0&&wcP>0?`🔴 ${dcP} ต้องดู · 🟡 ${wcP} เฝ้าระวัง`:dcP>0?`🔴 ${dcP} ต้องดู`:wcP>0?`🟡 ${wcP} เฝ้าระวัง`:'✅ ทุกบ่อปกติ';
   const active=meta.filter(m=>m.cls!=='prep');
