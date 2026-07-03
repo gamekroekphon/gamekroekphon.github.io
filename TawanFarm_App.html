@@ -246,6 +246,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .stock-pane{display:none}.stock-pane.on{display:block}
 .stock-warn{background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:8px 12px;font-size:12.5px;color:#DC2626;margin-bottom:12px;display:flex;align-items:center;gap:6px}
 .stock-cat-seed{background:#FCE7F3;color:#9D174D}
+.admin-only{display:none}
 .stock-cat-feed{background:#FEF9E7;color:#92400E}
 .stock-cat-chem{background:#EFF6FF;color:#1D4ED8}
 .stock-cat-equip{background:#F0FDF4;color:#166534}
@@ -1407,7 +1408,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 </div>
 <div id="sec-stock" class="sec">
   <div class="sec-hdr"><div class="sec-title">📦 สต็อกพัสดุ</div></div>
-  <div class="g5" id="sk-kpi"></div>
+  <div class="g4" id="sk-kpi"></div>
   <div id="sk-warn" style="display:none" class="stock-warn">⚠️ <span id="sk-warn-txt"></span></div>
   <div class="stock-sub">
     <button class="stock-sub-btn on" id="skb-items" onclick="stockTab('items',this)">รายการพัสดุ</button>
@@ -1416,7 +1417,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
   </div>
   <!-- pane: รายการพัสดุ -->
   <div class="stock-pane on" id="skp-items">
-    <div class="card">
+    <div class="card admin-only">
       <div style="font-weight:700;color:var(--tx);margin-bottom:10px">เพิ่มรายการพัสดุ</div>
       <div class="fg"><label class="fl">ชื่อพัสดุ</label><input class="fi" id="sk-name" placeholder="เช่น อาหาร 0# CP, คลอรีน"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
@@ -1453,7 +1454,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
             <option value="chem">ยา/สารเคมี</option>
             <option value="equip">อุปกรณ์/วัสดุ</option>
           </select>
-          <button class="btn" style="font-size:12px;padding:4px 10px;white-space:nowrap" onclick="seedStockCatalog()">📥 นำเข้าสินค้า</button>
+          <button class="btn admin-only" style="font-size:12px;padding:4px 10px;white-space:nowrap" onclick="seedStockCatalog()">📥 นำเข้าสินค้า</button>
         </div>
       </div>
       <div id="sk-item-table"></div>
@@ -1663,11 +1664,13 @@ function applyRole(role){
     document.getElementById('btn-add-pond')?.style.setProperty('display','');
     document.getElementById('hdr-role-badge').className='hdr-role-badge role-admin';
     document.getElementById('hdr-role-badge').textContent='Admin';
+    document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
   }else{
     FINANCE_TABS.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
     FINANCE_SECS.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
     document.getElementById('hdr-role-badge').className='hdr-role-badge role-staff';
     document.getElementById('hdr-role-badge').textContent='พนักงาน';
+    document.querySelectorAll('.admin-only').forEach(el=>el.style.display='none');
   }
 }
 function updateUserHeader(user,role){
@@ -3868,12 +3871,14 @@ function renderStockKPI(){
   const txMonth=logs.filter(l=>l.date&&l.date.slice(0,7)===thisMonth);
   const txIn=txMonth.filter(l=>l.type==='in').length;
   const txOut=txMonth.filter(l=>l.type==='out').length;
+  const isAdmin=APP_ROLE==='admin';
   const totalVal=items.reduce((s,i)=>s+(i.unitPrice||0)*(i.qty||0),0);
   const totalValK=totalVal>=1000?(totalVal/1000).toFixed(0)+'K':totalVal.toFixed(0);
+  el.className=isAdmin?'g5':'g4';
   el.innerHTML=`
     <div class="kpi-card"><div class="kpi-lbl">รายการทั้งหมด</div><div class="kpi-val">${items.length}</div><div class="kpi-sub">รายการ</div></div>
     <div class="kpi-card"><div class="kpi-lbl">ใกล้หมด / หมด</div><div class="kpi-val" style="color:${lowItems.length?'var(--er)':'var(--ok)'}">${lowItems.length}</div><div class="kpi-sub">รายการ</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">มูลค่าสต็อกรวม</div><div class="kpi-val">${totalVal?totalValK:'-'}</div><div class="kpi-sub">บาท</div></div>
+    ${isAdmin?`<div class="kpi-card"><div class="kpi-lbl">มูลค่าสต็อกรวม</div><div class="kpi-val">${totalVal?totalValK:'-'}</div><div class="kpi-sub">บาท</div></div>`:''}
     <div class="kpi-card"><div class="kpi-lbl">รับเข้าเดือนนี้</div><div class="kpi-val">${txIn}</div><div class="kpi-sub">ครั้ง</div></div>
     <div class="kpi-card"><div class="kpi-lbl">เบิกออกเดือนนี้</div><div class="kpi-val">${txOut}</div><div class="kpi-sub">ครั้ง</div></div>`;
 }
@@ -3901,7 +3906,9 @@ function renderStockItems(){
     if(aLow!==bLow)return aLow-bLow;
     return a.name.localeCompare(b.name,'th');
   });
-  el.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>รายการ</th><th>หมวด</th><th style="text-align:right">ราคา/หน่วย</th><th>คงเหลือ</th><th style="text-align:right">มูลค่า</th><th>ขั้นต่ำ</th><th>สถานะ</th><th></th></tr></thead><tbody>${
+  const isAdminView=APP_ROLE==='admin';
+  const priceHdr=isAdminView?'<th style="text-align:right">ราคา/หน่วย</th><th style="text-align:right">มูลค่า</th>':'';
+  el.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>รายการ</th><th>หมวด</th>${priceHdr}<th>คงเหลือ</th><th>ขั้นต่ำ</th><th>สถานะ</th><th></th></tr></thead><tbody>${
     sorted.map(i=>{
       const isLow=i.minQty>0&&i.qty<=i.minQty;
       const statusBadge=isLow
@@ -3910,18 +3917,20 @@ function renderStockItems(){
       const catCss=STOCK_CAT_CSS[i.category]||'';
       const price=i.unitPrice||0;
       const val=price*(i.qty||0);
+      const priceCols=isAdminView
+        ?`<td style="text-align:right">${price?price.toLocaleString()+' ฿':'—'}</td><td style="text-align:right;color:${val?'var(--tx)':'var(--tx3)'}">${val?val.toLocaleString()+' ฿':'—'}</td>`
+        :'';
+      const actionBtns=isAdminView
+        ?`<button class="btn-sm" onclick="editStockItem('${i.id}')">✏️</button> <button class="btn-sm btn-del" onclick="deleteStockItem('${i.id}')">🗑️</button>`
+        :`<button class="btn-sm" onclick="stockTab('tx',document.getElementById('skb-tx'));setTimeout(()=>{const s=document.getElementById('sk-tx-item');if(s){s.value='${i.id}';onTxItemChange();}},50)">📥 รับเข้า</button>`;
       return `<tr>
         <td><strong>${i.name}</strong><br><span style="font-size:11px;color:var(--tx3)">${i.note||''}</span></td>
         <td><span class="badge ${catCss}">${STOCK_CAT_LABEL[i.category]||i.category}</span></td>
-        <td style="text-align:right">${price?price.toLocaleString()+' ฿':'—'}</td>
+        ${priceCols}
         <td class="${isLow?'stock-qty-low':''}">${i.qty} ${i.unit}</td>
-        <td style="text-align:right;color:${val?'var(--tx)':'var(--tx3)'}">${val?val.toLocaleString()+' ฿':'—'}</td>
         <td>${i.minQty||'-'} ${i.minQty?i.unit:''}</td>
         <td>${statusBadge}</td>
-        <td style="white-space:nowrap">
-          <button class="btn-sm" onclick="editStockItem('${i.id}')">✏️</button>
-          <button class="btn-sm btn-del" onclick="deleteStockItem('${i.id}')">🗑️</button>
-        </td>
+        <td style="white-space:nowrap">${actionBtns}</td>
       </tr>`;
     }).join('')
   }</tbody></table></div>`;
@@ -6425,16 +6434,4 @@ function renderPL(){
   const yr=document.getElementById('pl-year')?.value||'';
   const rows=[];
   D.ponds.forEach(p=>{
-    (p.cropHistory||[]).forEach(c=>{
-      if(!c.harvestResult||!c.closeDate)return;
-      if(yr&&!c.closeDate.startsWith(yr))return;
-      rows.push({...c.harvestResult,pondName:p.name,pondId:p.id,cropNum:c.cropNum,cropYear:c.cropYear,startDate:c.startDate,closeDate:c.closeDate,stock:c.stock});
-    });
-  });
-  rows.sort((a,b)=>(b.closeDate||'').localeCompare(a.closeDate||''));
-  const badge=document.getElementById('pl-badge');
-  if(badge)badge.textContent=rows.length+' รอบ · '+rows.filter(r=>r.netProfit>0).length+' กำไร / '+rows.filter(r=>r.netProfit<0).length+' ขาดทุน';
-  renderPLKPI(rows);renderPLTable(rows);renderPLCostChart(rows);
-}
-function renderPLKPI(rows){
-  const el=document.getEl
+    (p.crop
