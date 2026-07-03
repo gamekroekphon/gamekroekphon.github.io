@@ -464,6 +464,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
       <button class="tab-item" id="tab-crops" onclick="goTab('crops',this)">🌾 รอบเลี้ยง</button>
       <button class="tab-item" id="tab-prep" onclick="goTab('prep',this)">🧹 เตรียมบ่อ</button>
       <button class="tab-item" id="tab-harvest" onclick="goTab('harvest',this)">🦐 จับกุ้ง</button>
+      <button class="tab-item" id="tab-harveststat" onclick="goTab('harveststat',this)">📊 สถิติจับกุ้ง</button>
       <button class="tab-item" id="tab-export" onclick="goTab('export',this)">📄 PDF ปิดบ่อ</button>
     </div>
   </div>
@@ -1117,6 +1118,26 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
           <tr><td colspan="11" style="text-align:center;padding:40px;color:var(--tx3)">ยังไม่มีข้อมูล</td></tr>
         </tbody>
       </table>
+    </div>
+  </div>
+</div>
+<!-- HARVEST STAT -->
+<div id="sec-harveststat" class="sec">
+  <div class="sec-hdr"><div class="sec-title">📊 สถิติจับกุ้ง (ปี 60–69)</div></div>
+  <div class="g4" style="margin-bottom:16px" id="hs-kpi"></div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-t">📈 ยอดรวมรายปี (ล้านบาท) — คลิกปีเพื่อดูรายละเอียด</div>
+    <div style="position:relative;height:220px"><canvas id="hs-chart-annual"></canvas></div>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px" id="hs-yr-btns"></div>
+  <div class="g2" style="margin-bottom:0">
+    <div class="card">
+      <div class="card-t" id="hs-monthly-title">📅 รายเดือน</div>
+      <div style="overflow-x:auto" id="hs-monthly"></div>
+    </div>
+    <div class="card" id="hs-buyers-card">
+      <div class="card-t">🏪 แพ / ห้องเย็น</div>
+      <div id="hs-buyers"><div style="color:var(--tx3);font-size:13px;padding:20px 0">ไม่มีข้อมูลแพสำหรับปีนี้</div></div>
     </div>
   </div>
 </div>
@@ -2528,6 +2549,143 @@ function updateAlertBadge(n){
   if(n>0){b.textContent=n>99?'99+':n;b.classList.add('show');}
   else{b.textContent='';b.classList.remove('show');}
 }
+// ===== HARVEST STATISTICS (ปี 60-69) =====
+const HV_YRS=[60,61,62,63,64,65,66,67,68,69];
+const HV_REV=[76840999,48397512,72485208,89978053,108885590,165677268,180339825,136409243,133239758,18472602];
+const HV_KG=[357685,271471,324064,455929,487083,615142,742600,617719,598928,127014];
+const HV_MREV={
+  60:[5128125,5390135,7034585,0,6259586,5966774,6787583,4386590,9220457,14427381,6700643,5539140],
+  61:[8593960,1938582,0,3447524,9433463,616409,7586912,0,3731850,4755443,7320726,972643],
+  62:[5121169,1329870,2506597,2195141,3761131,15378646,13268681,9921863,4745545,4130843,6531081,3594641],
+  63:[8392630,6890401,6115963,0,2523502,17505727,5728558,9206526,2288279,5200446,4926456,21199565],
+  64:[0,6597727,5841553,3068808,21466402,25822087,6067209,8854210,2188260,8025214,2913713,20228667],
+  65:[19221080,12860549,6893082,4321980,11470636,0,7964515,34721237,21128283,12580359,30661095,3854452],
+  66:[32312769,4627671,14496906,38362317,23706306,9129258,6821216,3995947,9664057,0,20919969,16303409],
+  67:[0,15325074,46008807,0,0,0,1159280,33331883,21224890,0,0,19359309],
+  68:[2715517,7283976,25303599,3454208,22898820,6483245,3923343,23891836,22451280,10713963,1948164,2171807],
+  69:[8929652,2845827,0,1213603,0,3101133,2382387,0,0,0,0,0]
+};
+const HV_MKG={
+  60:[22175,20987,30589,0,28220,31494,33358,21177,43920,71302,31729,22734],
+  61:[41760,15393,0,19447,57481,4156,39532,0,20997,25529,41854,5322],
+  62:[26219,8740,14311,11774,20144,60121,48375,46645,22148,22235,27532,15820],
+  63:[34299,34976,35652,0,15041,82343,30339,48567,31555,27603,29768,85786],
+  64:[0,30268,25919,14558,101018,103189,28188,48602,14253,36050,10413,74625],
+  65:[74660,52220,30402,23812,53597,0,30305,105166,93321,47953,84716,18990],
+  66:[113227,16166,65387,133469,87434,45472,26877,15054,53116,0,97789,88609],
+  67:[0,68073,218146,0,0,0,5222,149731,91071,0,0,85476],
+  68:[8068,29368,103408,20924,108414,29253,15155,84370,110678,58816,16695,13779],
+  69:[61694,24424,0,11708,0,18766,10422,0,0,0,0,0]
+};
+// แพ/ห้องเย็น: [ชื่อ, ยอดเงิน, กก.]
+const HV_BUYERS={
+  69:[['โชคศิริชัย',8988244,65018],['SIFCO',5497182,33997],['พี่ไข่',1062543,12812],['สุทธิรัตน์',542246,4765]],
+  68:[['โชคศิริชัย',41852934,182697],['มะลิหอม',35814291,155943],['เดวิด (จีน)',10301896,35369],['เจ้สาว',8733118,42306],['SIFCO',5463119,37720],['สุทธิรัตน์',4536160,29000],['เอ็กวัฒน์',1629567,9970],['เก้าเก',1553850,6000]],
+  67:[['มะลิหอม',77084187,330206],['จงอนันต์',27216977,127302],['เอ็กวัฒน์',14056837,61573],['CP',9163562,38712],['SIFCO',3096342,25567],['โชคศิริชัย',2410153,14288],['พี่สัน พี่เต๋า',2064810,8639],['พี่ไข่',482106,6050]],
+  66:[['มะลิหอม',55826877,229821],['จงอนันต์',46043158,193746],['CP',42370560,134640],['โชคศิริชัย',14338063,79698],['เก้าเก',10010060,48582],['เอ็ก (จีน)',2811608,7200],['หลีเฮง',2261262,9862],['พี่สัน พี่เต๋า',2110231,7404],['เจ้สาว',1774277,10595],['ป.มหาชัย',1456860,9907]],
+  65:[['CP',45398518,142494],['มะลิหอม',36276598,133542],['จงอนันต์',32010674,138280],['Tem Seafood',23239250,66394],['เจ้สาว',6492518,33567],['หลีเฮง',4874932,13541],['ซากิฟ',3977334,21720],['ซีเฟรช',4347693,20646],['พัฒนา',3343575,15395],['SIFCO',1672955,8925]]
+};
+const HV_MONTHS_S=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+let _hsYr=69;
+let _hsChartAnnual=null;
+function hsFmt(n){return n?n.toLocaleString():'-';}
+function hsFmtM(n){return n?(n/1e6).toFixed(2)+'M':'-';}
+function initHarvestStat(){
+  const totalRev=HV_REV.reduce((a,b)=>a+b,0);
+  const totalKg=HV_KG.reduce((a,b)=>a+b,0);
+  const avgPrice=Math.round(totalRev/totalKg);
+  const bestYrIdx=HV_REV.indexOf(Math.max(...HV_REV));
+  const el=document.getElementById('hs-kpi');
+  if(el)el.innerHTML=`
+    <div class="metric-card metric-card-accent"><div class="mv" style="font-size:20px">฿${hsFmtM(totalRev)}</div><div class="ml">ยอดรวม 10 ปี</div></div>
+    <div class="metric-card"><div class="mv" style="font-size:20px">${Math.round(totalKg/1000).toLocaleString()}K กก.</div><div class="ml">น้ำหนักรวม</div></div>
+    <div class="metric-card"><div class="mv" style="font-size:20px">฿${avgPrice}</div><div class="ml">ราคาเฉลี่ย/กก.</div></div>
+    <div class="metric-card"><div class="mv" style="font-size:20px">ปี ${HV_YRS[bestYrIdx]}</div><div class="ml">ปีที่ยอดสูงสุด</div></div>`;
+  // Year buttons
+  const btnsEl=document.getElementById('hs-yr-btns');
+  if(btnsEl)btnsEl.innerHTML=HV_YRS.map(y=>`<button class="btn ${y===_hsYr?'btn-p':''}" style="min-width:54px;padding:7px 10px" onclick="hsSetYr(${y})">ปี ${y}</button>`).join('');
+  // Annual chart
+  const canvas=document.getElementById('hs-chart-annual');
+  if(canvas){
+    if(_hsChartAnnual){_hsChartAnnual.destroy();_hsChartAnnual=null;}
+    const ctx=canvas.getContext('2d');
+    _hsChartAnnual=new Chart(ctx,{
+      type:'bar',
+      data:{
+        labels:HV_YRS.map(y=>'ปี '+y),
+        datasets:[{
+          label:'ยอดเงิน (ล้านบาท)',
+          data:HV_REV.map(v=>+(v/1e6).toFixed(2)),
+          backgroundColor:HV_YRS.map(y=>y===_hsYr?'rgba(224,161,6,.95)':'rgba(224,161,6,.3)'),
+          borderColor:HV_YRS.map(y=>y===_hsYr?'rgba(154,106,4,1)':'rgba(224,161,6,.5)'),
+          borderWidth:1,borderRadius:4
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,animation:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`฿${ctx.parsed.y}M`}}},
+        scales:{y:{ticks:{callback:v=>v+'M'},grid:{color:'rgba(0,0,0,.05)'}},x:{grid:{display:false}}},
+        onClick:(e,els)=>{if(els.length){const i=els[0].index;hsSetYr(HV_YRS[i]);}}
+      }
+    });
+  }
+  hsRenderYear();
+}
+function hsSetYr(yr){_hsYr=yr;initHarvestStat();}
+function hsRenderYear(){
+  const yr=_hsYr;
+  const mrev=HV_MREV[yr]||new Array(12).fill(0);
+  const mkg=HV_MKG[yr]||new Array(12).fill(0);
+  const titleEl=document.getElementById('hs-monthly-title');
+  if(titleEl)titleEl.textContent=`📅 รายเดือน — ปี ${yr}`;
+  let rows='';let totRev=0,totKg=0;
+  for(let i=0;i<12;i++){
+    const r=mrev[i]||0,k=mkg[i]||0;
+    totRev+=r;totKg+=k;
+    const avg=k>0?Math.round(r/k):0;
+    rows+=`<tr style="border-bottom:1px solid var(--bd)${r===0?';color:var(--tx3)':''}">
+      <td style="padding:7px 10px;font-weight:600">${HV_MONTHS_S[i]}</td>
+      <td style="padding:7px 10px;text-align:right">${r?'฿'+r.toLocaleString():'-'}</td>
+      <td style="padding:7px 10px;text-align:right">${k?k.toLocaleString()+' กก.':'-'}</td>
+      <td style="padding:7px 10px;text-align:right">${avg?'฿'+avg:'-'}</td>
+    </tr>`;
+  }
+  const totAvg=totKg>0?Math.round(totRev/totKg):0;
+  rows+=`<tr style="background:var(--pl);font-weight:700;border-top:2px solid var(--bd)">
+    <td style="padding:8px 10px">รวมปี ${yr}</td>
+    <td style="padding:8px 10px;text-align:right;color:var(--p)">฿${totRev.toLocaleString()}</td>
+    <td style="padding:8px 10px;text-align:right">${totKg.toLocaleString()} กก.</td>
+    <td style="padding:8px 10px;text-align:right">฿${totAvg}</td>
+  </tr>`;
+  const mEl=document.getElementById('hs-monthly');
+  if(mEl)mEl.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="background:var(--sf2);border-bottom:2px solid var(--bd)">
+      <th style="padding:8px 10px;text-align:left;font-size:12px;color:var(--tx2)">เดือน</th>
+      <th style="padding:8px 10px;text-align:right;font-size:12px;color:var(--tx2)">ยอดเงิน</th>
+      <th style="padding:8px 10px;text-align:right;font-size:12px;color:var(--tx2)">น้ำหนัก</th>
+      <th style="padding:8px 10px;text-align:right;font-size:12px;color:var(--tx2)">ราคา/กก.</th>
+    </thead><tbody>${rows}</tbody></table>`;
+  // Buyers
+  const buyers=HV_BUYERS[yr];
+  const bCard=document.getElementById('hs-buyers-card');
+  const bEl=document.getElementById('hs-buyers');
+  if(!buyers||!buyers.length){if(bEl)bEl.innerHTML='<div style="color:var(--tx3);font-size:13px;padding:16px 0">ไม่มีข้อมูลสรุปแพสำหรับปีนี้</div>';return;}
+  let brows=buyers.map(([name,rev,kg])=>`<tr style="border-bottom:1px solid var(--bd)">
+    <td style="padding:7px 10px;font-weight:500">${name}</td>
+    <td style="padding:7px 10px;text-align:right">฿${rev.toLocaleString()}</td>
+    <td style="padding:7px 10px;text-align:right">${kg.toLocaleString()} กก.</td>
+    <td style="padding:7px 10px;text-align:right">฿${Math.round(rev/kg)}</td>
+  </tr>`).join('');
+  if(bEl)bEl.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="background:var(--sf2);border-bottom:2px solid var(--bd)">
+      <th style="padding:8px 10px;text-align:left;font-size:12px;color:var(--tx2)">แพ / ห้องเย็น</th>
+      <th style="padding:8px 10px;text-align:right;font-size:12px;color:var(--tx2)">ยอดเงิน</th>
+      <th style="padding:8px 10px;text-align:right;font-size:12px;color:var(--tx2)">น้ำหนัก</th>
+      <th style="padding:8px 10px;text-align:right;font-size:12px;color:var(--tx2)">ราคา/กก.</th>
+    </thead><tbody>${brows}</tbody></table>`;
+}
+// ===== END HARVEST STATISTICS =====
+
 function goTab(t,btn){
   document.querySelectorAll('.tab,.tab-item').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
   document.querySelectorAll('.tab-grp').forEach(g=>g.classList.remove('grp-on','grp-open'));
@@ -2544,6 +2702,7 @@ function goTab(t,btn){
   }
   if(t==='crops')renderCrops();
   if(t==='prep'){initPrep();}
+  if(t==='harveststat')initHarvestStat();
   // ── sync bottom nav (ข้อ 6) ──
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
   const bnavMap={overview:'bnav-overview',entry:'bnav-entry',feed:'bnav-feed'};
