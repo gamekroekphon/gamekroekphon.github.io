@@ -6195,4 +6195,36 @@ function renderPLCostChart(rows){
     _plDonutChart=new Chart(canvas,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:colors,borderWidth:2}]},options:{plugins:{legend:{display:false}},cutout:'65%'}});
   }
   const leg=document.getElementById('pl-donut-legend');
-  if(leg)leg.innerHTML=labels.map((l,i)=>vals[i]>0?`<div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};flex-shrink:0"></span><span style="font-size:11.5px;color:var(--tx2);flex:1
+  if(leg)leg.innerHTML=labels.map((l,i)=>vals[i]>0?`<div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};flex-shrink:0"></span><span style="font-size:11.5px;color:var(--tx2);flex:1">${l}</span><span style="font-size:12px;font-weight:500;color:var(--tx)">${total?Math.round(vals[i]/total*100)+'%':'-'}</span></div>`:'').join('');
+  const tbl=document.getElementById('pl-cost-tbl');
+  if(tbl){
+    if(totWeight>0){
+      tbl.innerHTML=`<table class="tbl"><thead><tr><th>รายการ</th><th style="text-align:right">รวม (฿)</th><th style="text-align:right">฿/กก.</th><th style="text-align:right">%</th></tr></thead><tbody>${
+        labels.map((l,i)=>vals[i]>0?`<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${colors[i]};margin-right:5px"></span>${l}</td><td style="text-align:right">${Math.round(vals[i]).toLocaleString()}</td><td style="text-align:right">${(vals[i]/totWeight).toFixed(1)}</td><td style="text-align:right">${total?Math.round(vals[i]/total*100)+'%':'-'}</td></tr>`:'').join('')
+      }<tr style="border-top:2px solid var(--bd);font-weight:700"><td>รวม</td><td style="text-align:right">${Math.round(total).toLocaleString()}</td><td style="text-align:right">${(total/totWeight).toFixed(1)}</td><td style="text-align:right">100%</td></tr></tbody></table>`;
+    } else {
+      tbl.innerHTML=`<table class="tbl"><thead><tr><th>รายการ</th><th style="text-align:right">รวม (฿)</th><th style="text-align:right">%</th></tr></thead><tbody>${
+        labels.map((l,i)=>vals[i]>0?`<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${colors[i]};margin-right:5px"></span>${l}</td><td style="text-align:right">${Math.round(vals[i]).toLocaleString()}</td><td style="text-align:right">${total?Math.round(vals[i]/total*100)+'%':'-'}</td></tr>`:'').join('')
+      }<tr style="border-top:2px solid var(--bd);font-weight:700"><td>รวม</td><td style="text-align:right">${Math.round(total).toLocaleString()}</td><td style="text-align:right">100%</td></tr></tbody></table>`;
+    }
+  }
+}
+function exportPLCSV(){
+  const yr=document.getElementById('pl-year')?.value||'';
+  const rows=[];
+  D.ponds.forEach(p=>{(p.cropHistory||[]).forEach(c=>{
+    if(!c.harvestResult||!c.closeDate)return;
+    if(yr&&!c.closeDate.startsWith(yr))return;
+    const r=c.harvestResult;
+    rows.push([p.name,c.cropNum||'',c.closeDate,r.totalWeight||'',r.price||'',r.revenue||'',r.costFry||'',r.costFeed||'',r.costChem||'',r.costLabor||'',r.costElec||'',r.costOther||'',r.netProfit||'',r.fcr||'',r.survivalRate||'']);
+  });});
+  if(!rows.length){alert('ไม่มีข้อมูลสำหรับ export');return;}
+  const hdr='บ่อ,รอบ,วันปิด,ผลผลิต(กก.),ราคา,รายได้,ต้นทุนลูกกุ้ง,ต้นทุนอาหาร,สารเคมี,ค่าแรง,ค่าไฟ,อื่นๆ,กำไรสุทธิ,FCR,อัตรารอด(%)';
+  const csv=hdr+'\n'+rows.map(r=>r.join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='TawanFarm_PL_'+(yr||'all')+'.csv';a.click();URL.revokeObjectURL(url);
+}
+// ─── END P&L ──────────────────────────────────────────────────────────────
+
+</script></body>
+</html>
