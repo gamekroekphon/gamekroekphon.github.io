@@ -1123,7 +1123,16 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 </div>
 <!-- HARVEST STAT -->
 <div id="sec-harveststat" class="sec">
-  <div class="sec-hdr"><div class="sec-title">📊 สถิติจับกุ้ง (ปี 60–69)</div></div>
+  <div class="sec-hdr"><div class="sec-title">📊 สถิติจับกุ้ง</div></div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-t">⚙️ ซิงค์ Google Sheets</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input type="url" id="hs-url-input" class="fi" placeholder="วาง Google Apps Script URL ที่นี่..." style="flex:1;min-width:200px">
+      <button class="btn btn-p" onclick="hsSaveUrl()" style="white-space:nowrap">💾 บันทึก URL</button>
+      <button class="btn" onclick="initHarvestStat()" style="white-space:nowrap">🔄 รีเฟรช</button>
+    </div>
+    <div id="hs-sync-status" style="font-size:12px;color:var(--tx3);margin-top:6px"></div>
+  </div>
   <div class="g4" style="margin-bottom:16px" id="hs-kpi"></div>
   <div class="card" style="margin-bottom:16px">
     <div class="card-t">📈 ยอดรวมรายปี (ล้านบาท) — คลิกปีเพื่อดูรายละเอียด</div>
@@ -2551,8 +2560,8 @@ function updateAlertBadge(n){
 }
 // ===== HARVEST STATISTICS (ปี 60-69) =====
 const HV_YRS=[60,61,62,63,64,65,66,67,68,69];
-const HV_REV=[76840999,48397512,72485208,89978053,108885590,165677268,180339825,136409243,133239758,18472602];
-const HV_KG=[357685,271471,324064,455929,487083,615142,742600,617719,598928,127014];
+let HV_REV=[76840999,48397512,72485208,89978053,108885590,165677268,180339825,136409243,133239758,18472602];
+let HV_KG=[357685,271471,324064,455929,487083,615142,742600,617719,598928,127014];
 const HV_MREV={
   60:[5128125,5390135,7034585,0,6259586,5966774,6787583,4386590,9220457,14427381,6700643,5539140],
   61:[8593960,1938582,0,3447524,9433463,616409,7586912,0,3731850,4755443,7320726,972643],
@@ -2591,15 +2600,85 @@ let _hsChartAnnual=null;
 function hsFmt(n){return n?n.toLocaleString():'-';}
 function hsFmtM(n){return n?(n/1e6).toFixed(2)+'M':'-';}
 function initHarvestStat(){
+  // แสดง URL ปัจจุบันใน input
+  const urlInput=document.getElementById('hs-url-input');
+  const statusEl=document.getElementById('hs-sync-status');
+  const savedUrl=(localStorage.getItem('hs_sheet_url')||'').trim();
+  if(urlInput)urlInput.value=savedUrl;
+  if(savedUrl){
+    if(statusEl)statusEl.textContent='⏳ กำลังโหลดข้อมูลจาก Google Sheets...';
+    const kpiEl=document.getElementById('hs-kpi');
+    if(kpiEl)kpiEl.innerHTML='<div style="color:var(--tx3);font-size:13px;padding:8px 0">⏳ กำลังโหลด...</div>';
+    fetch(savedUrl)
+      .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+      .then(data=>{
+        // อัปเดตข้อมูลรายเดือน
+        if(Array.isArray(data.monthly)){
+          data.monthly.forEach(row=>{
+            const yr=+row.yr,m=+row.m;
+            if(!yr||!m||m<1||m>12)return;
+            if(!HV_MREV[yr])HV_MREV[yr]=new Array(12).fill(0);
+            if(!HV_MKG[yr])HV_MKG[yr]=new Array(12).fill(0);
+            HV_MREV[yr][m-1]=+row.rev||0;
+            HV_MKG[yr][m-1]=+row.kg||0;
+          });
+          // คำนวณยอดรวมรายปีใหม่
+          HV_YRS.forEach((yr,i)=>{
+            HV_REV[i]=(HV_MREV[yr]||[]).reduce((a,b)=>a+b,0);
+            HV_KG[i]=(HV_MKG[yr]||[]).reduce((a,b)=>a+b,0);
+          });
+          // เพิ่มปีที่ยังไม่มีใน HV_YRS (ถ้ามีปีใหม่)
+          if(Array.isArray(data.years)){
+            data.years.forEach(y=>{if(!HV_YRS.includes(+y))HV_YRS.push(+y);});
+            HV_YRS.sort((a,b)=>a-b);
+          }
+        }
+        // อัปเดตข้อมูลแพ
+        if(Array.isArray(data.buyers)){
+          const byYr={};
+          data.buyers.forEach(row=>{
+            const yr=+row.yr;if(!yr||!row.name)return;
+            if(!byYr[yr])byYr[yr]=[];
+            if(+row.rev>0)byYr[yr].push([row.name,+row.rev,+row.kg||0]);
+          });
+          Object.assign(HV_BUYERS,byYr);
+        }
+        const ts=new Date().toLocaleTimeString('th-TH');
+        if(statusEl)statusEl.innerHTML=`✅ ซิงค์สำเร็จ เวลา ${ts}`;
+        _hsRenderAll();
+      })
+      .catch(err=>{
+        console.error('HarvestStat fetch error:',err);
+        if(statusEl)statusEl.innerHTML=`⚠️ โหลดไม่ได้ (${err.message}) — แสดงข้อมูลเดิมแทน`;
+        _hsRenderAll();
+      });
+  } else {
+    if(statusEl)statusEl.textContent='💡 ยังไม่ได้ตั้งค่า URL — แสดงข้อมูล hardcode';
+    _hsRenderAll();
+  }
+}
+function hsSaveUrl(){
+  const url=(document.getElementById('hs-url-input')?.value||'').trim();
+  const statusEl=document.getElementById('hs-sync-status');
+  if(url){
+    localStorage.setItem('hs_sheet_url',url);
+    initHarvestStat();
+  } else {
+    localStorage.removeItem('hs_sheet_url');
+    if(statusEl)statusEl.textContent='ลบ URL แล้ว — ใช้ข้อมูล hardcode';
+    _hsRenderAll();
+  }
+}
+function _hsRenderAll(){
   const totalRev=HV_REV.reduce((a,b)=>a+b,0);
   const totalKg=HV_KG.reduce((a,b)=>a+b,0);
-  const avgPrice=Math.round(totalRev/totalKg);
+  const avgPrice=totalKg>0?Math.round(totalRev/totalKg):0;
   const bestYrIdx=HV_REV.indexOf(Math.max(...HV_REV));
   const el=document.getElementById('hs-kpi');
   if(el)el.innerHTML=`
-    <div class="metric-card metric-card-accent"><div class="mv" style="font-size:20px">฿${hsFmtM(totalRev)}</div><div class="ml">ยอดรวม 10 ปี</div></div>
+    <div class="metric-card metric-card-accent"><div class="mv" style="font-size:20px">฿${hsFmtM(totalRev)}</div><div class="ml">ยอดรวมทั้งหมด</div></div>
     <div class="metric-card"><div class="mv" style="font-size:20px">${Math.round(totalKg/1000).toLocaleString()}K กก.</div><div class="ml">น้ำหนักรวม</div></div>
-    <div class="metric-card"><div class="mv" style="font-size:20px">฿${avgPrice}</div><div class="ml">ราคาเฉลี่ย/กก.</div></div>
+    <div class="metric-card"><div class="mv" style="font-size:20px">฿${avgPrice.toLocaleString()}</div><div class="ml">ราคาเฉลี่ย/กก.</div></div>
     <div class="metric-card"><div class="mv" style="font-size:20px">ปี ${HV_YRS[bestYrIdx]}</div><div class="ml">ปีที่ยอดสูงสุด</div></div>`;
   // Year buttons
   const btnsEl=document.getElementById('hs-yr-btns');
@@ -2631,7 +2710,7 @@ function initHarvestStat(){
   }
   hsRenderYear();
 }
-function hsSetYr(yr){_hsYr=yr;initHarvestStat();}
+function hsSetYr(yr){_hsYr=yr;_hsRenderAll();}
 function hsRenderYear(){
   const yr=_hsYr;
   const mrev=HV_MREV[yr]||new Array(12).fill(0);
@@ -6350,40 +6429,4 @@ function renderPLCostChart(rows){
   const colors=['#185FA5','#639922','#D85A30','#BA7517','#888780','#6b46c1'];
   const canvas=document.getElementById('pl-donut');
   if(canvas){
-    if(_plDonutChart){_plDonutChart.destroy();_plDonutChart=null;}
-    _plDonutChart=new Chart(canvas,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:colors,borderWidth:2}]},options:{plugins:{legend:{display:false}},cutout:'65%'}});
-  }
-  const leg=document.getElementById('pl-donut-legend');
-  if(leg)leg.innerHTML=labels.map((l,i)=>vals[i]>0?`<div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};flex-shrink:0"></span><span style="font-size:11.5px;color:var(--tx2);flex:1">${l}</span><span style="font-size:12px;font-weight:500;color:var(--tx)">${total?Math.round(vals[i]/total*100)+'%':'-'}</span></div>`:'').join('');
-  const tbl=document.getElementById('pl-cost-tbl');
-  if(tbl){
-    if(totWeight>0){
-      tbl.innerHTML=`<table class="tbl"><thead><tr><th>รายการ</th><th style="text-align:right">รวม (฿)</th><th style="text-align:right">฿/กก.</th><th style="text-align:right">%</th></tr></thead><tbody>${
-        labels.map((l,i)=>vals[i]>0?`<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${colors[i]};margin-right:5px"></span>${l}</td><td style="text-align:right">${Math.round(vals[i]).toLocaleString()}</td><td style="text-align:right">${(vals[i]/totWeight).toFixed(1)}</td><td style="text-align:right">${total?Math.round(vals[i]/total*100)+'%':'-'}</td></tr>`:'').join('')
-      }<tr style="border-top:2px solid var(--bd);font-weight:700"><td>รวม</td><td style="text-align:right">${Math.round(total).toLocaleString()}</td><td style="text-align:right">${(total/totWeight).toFixed(1)}</td><td style="text-align:right">100%</td></tr></tbody></table>`;
-    } else {
-      tbl.innerHTML=`<table class="tbl"><thead><tr><th>รายการ</th><th style="text-align:right">รวม (฿)</th><th style="text-align:right">%</th></tr></thead><tbody>${
-        labels.map((l,i)=>vals[i]>0?`<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${colors[i]};margin-right:5px"></span>${l}</td><td style="text-align:right">${Math.round(vals[i]).toLocaleString()}</td><td style="text-align:right">${total?Math.round(vals[i]/total*100)+'%':'-'}</td></tr>`:'').join('')
-      }<tr style="border-top:2px solid var(--bd);font-weight:700"><td>รวม</td><td style="text-align:right">${Math.round(total).toLocaleString()}</td><td style="text-align:right">100%</td></tr></tbody></table>`;
-    }
-  }
-}
-function exportPLCSV(){
-  const yr=document.getElementById('pl-year')?.value||'';
-  const rows=[];
-  D.ponds.forEach(p=>{(p.cropHistory||[]).forEach(c=>{
-    if(!c.harvestResult||!c.closeDate)return;
-    if(yr&&!c.closeDate.startsWith(yr))return;
-    const r=c.harvestResult;
-    rows.push([p.name,c.cropNum||'',c.closeDate,r.totalWeight||'',r.price||'',r.revenue||'',r.costFry||'',r.costFeed||'',r.costChem||'',r.costLabor||'',r.costElec||'',r.costOther||'',r.netProfit||'',r.fcr||'',r.survivalRate||'']);
-  });});
-  if(!rows.length){alert('ไม่มีข้อมูลสำหรับ export');return;}
-  const hdr='บ่อ,รอบ,วันปิด,ผลผลิต(กก.),ราคา,รายได้,ต้นทุนลูกกุ้ง,ต้นทุนอาหาร,สารเคมี,ค่าแรง,ค่าไฟ,อื่นๆ,กำไรสุทธิ,FCR,อัตรารอด(%)';
-  const csv=hdr+'\n'+rows.map(r=>r.join(',')).join('\n');
-  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='TawanFarm_PL_'+(yr||'all')+'.csv';a.click();URL.revokeObjectURL(url);
-}
-// ─── END P&L ──────────────────────────────────────────────────────────────
-
-</script></body>
-</html>
+    if(_plDonutChart){_plDonutChart.destroy();_plDonutChart=
