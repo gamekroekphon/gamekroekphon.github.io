@@ -1448,6 +1448,7 @@ body.role-admin .admin-only{display:revert!important}
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px">
         <span style="font-weight:700;color:var(--tx)">รายการพัสดุทั้งหมด</span>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <input class="fi" id="sk-search" placeholder="🔍 ค้นหาชื่อสินค้า..." style="width:170px" oninput="renderStockItems()">
           <select class="fi" id="sk-filter-cat" style="width:130px" onchange="renderStockItems()">
             <option value="">ทุกหมวด</option>
             <option value="seed">🦐 ลูกกุ้ง</option>
@@ -1473,13 +1474,20 @@ body.role-admin .admin-only{display:revert!important}
       <div id="sk-tx-cur" style="display:none;background:var(--ib);color:var(--in);border-radius:6px;padding:6px 10px;font-size:12.5px;margin-bottom:8px"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div class="fg"><label class="fl">ประเภท</label>
-          <select class="fi" id="sk-tx-type">
+          <select class="fi" id="sk-tx-type" onchange="onTxTypeChange()">
             <option value="in">📥 รับเข้าสต็อก</option>
             <option value="out">📤 เบิกออก</option>
             <option value="adjust">✏️ ปรับยอด</option>
           </select>
         </div>
         <div class="fg"><label class="fl">จำนวน</label><input type="number" class="fi" id="sk-tx-qty" placeholder="0" inputmode="decimal" step="any"></div>
+      </div>
+      <div id="sk-tx-pond-row" style="display:none;margin-top:2px">
+        <div class="fg"><label class="fl">บ่อที่เบิกใช้ <span style="color:var(--tx3);font-weight:400">(เชื่อม P&amp;L)</span></label>
+          <select class="fi" id="sk-tx-pond">
+            <option value="">— ไม่ระบุบ่อ —</option>
+          </select>
+        </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div class="fg"><label class="fl">วันที่</label><input type="date" class="fi" id="sk-tx-date"></div>
@@ -4022,7 +4030,12 @@ function renderStockWarn(){
 function renderStockItems(){
   const el=document.getElementById('sk-item-table');if(!el)return;
   const cat=document.getElementById('sk-filter-cat')?.value||'';
-  const items=(D.inventoryItems||[]).filter(i=>!cat||i.category===cat);
+  const search=(document.getElementById('sk-search')?.value||'').trim().toLowerCase();
+  const items=(D.inventoryItems||[]).filter(i=>{
+    if(cat&&i.category!==cat)return false;
+    if(search&&!i.name.toLowerCase().includes(search)&&!(i.note||'').toLowerCase().includes(search))return false;
+    return true;
+  });
   if(!items.length){el.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีรายการพัสดุ</p>';return;}
   // sort: low stock first
   const sorted=[...items].sort((a,b)=>{
@@ -4138,6 +4151,23 @@ function populateStockLogFilter(){
   if(cur)sel.value=cur;
 }
 
+function onTxTypeChange(){
+  const type=document.getElementById('sk-tx-type').value;
+  const row=document.getElementById('sk-tx-pond-row');if(!row)return;
+  if(type==='out'){
+    row.style.display='';
+    const sel=document.getElementById('sk-tx-pond');
+    if(sel){
+      const cur=sel.value;
+      sel.innerHTML='<option value="">— ไม่ระบุบ่อ —</option>';
+      (D.ponds||[]).filter(p=>p.startDate&&!p.closed).sort((a,b)=>a.name.localeCompare(b.name,'th')).forEach(p=>{
+        sel.innerHTML+=`<option value="${p.id}"${p.id===cur?' selected':''}>${p.name}</option>`;
+      });
+    }
+  } else {
+    row.style.display='none';
+  }
+}
 function onTxItemChange(){
   const id=document.getElementById('sk-tx-item').value;
   const cur=document.getElementById('sk-tx-cur');if(!cur)return;
@@ -4166,7 +4196,8 @@ function saveStockTx(){
   item.qty=Math.round(newQty*100)/100;
   // log
   if(!D.inventoryLog)D.inventoryLog=[];
-  D.inventoryLog.push({id:'sl'+Date.now()+'_'+Math.random().toString(36).slice(2,6),itemId,itemName:item.name,type,qty,date,note,balanceAfter:item.qty,unit:item.unit});
+  const pondId=type==='out'?(document.getElementById('sk-tx-pond')?.value||''):'';
+  D.inventoryLog.push({id:'sl'+Date.now()+'_'+Math.random().toString(36).slice(2,6),itemId,itemName:item.name,type,qty,date,note,pondId,balanceAfter:item.qty,unit:item.unit});
   save();
   showStockMsg('tx','✅ '+STOCK_TX_LABEL[type]+' '+qty+' '+item.unit+' — คงเหลือ '+item.qty+' '+item.unit,'ok');
   clearStockTx(true);
@@ -4179,6 +4210,8 @@ function clearStockTx(keepItem){
   document.getElementById('sk-tx-note').value='';
   document.getElementById('sk-tx-date').value=today();
   document.getElementById('sk-tx-type').value='in';
+  const pondSel=document.getElementById('sk-tx-pond');if(pondSel)pondSel.value='';
+  const pondRow=document.getElementById('sk-tx-pond-row');if(pondRow)pondRow.style.display='none';
   if(!keepItem){const cur=document.getElementById('sk-tx-cur');if(cur)cur.style.display='none';}
 }
 
@@ -6541,6 +6574,11 @@ function renderWQHeatmap(){
 // ══════════════════════════════════════════════════════════════════════════
 
 // ─── P&L DASHBOARD ────────────────────────────────────────────────────────
+function getStockCostForPond(pondId,startDate,closeDate){
+  if(!pondId||!startDate||!closeDate)return 0;
+  return (D.inventoryLog||[]).filter(l=>l.type==='out'&&l.pondId===pondId&&l.date>=startDate&&l.date<=closeDate)
+    .reduce((s,l)=>{const item=(D.inventoryItems||[]).find(i=>i.id===l.itemId);return s+(item?.unitPrice||0)*(l.qty||0);},0);
+}
 let _plDonutChart=null;
 function initPL(){
   const years=new Set();
@@ -6562,7 +6600,8 @@ function renderPL(){
     (p.cropHistory||[]).forEach(c=>{
       if(!c.harvestResult||!c.closeDate)return;
       if(yr&&!c.closeDate.startsWith(yr))return;
-      rows.push({...c.harvestResult,pondName:p.name,pondId:p.id,cropNum:c.cropNum,cropYear:c.cropYear,startDate:c.startDate,closeDate:c.closeDate,stock:c.stock});
+      const costStock=getStockCostForPond(p.id,c.startDate,c.closeDate);
+      rows.push({...c.harvestResult,pondName:p.name,pondId:p.id,cropNum:c.cropNum,cropYear:c.cropYear,startDate:c.startDate,closeDate:c.closeDate,stock:c.stock,costStock});
     });
   });
   rows.sort((a,b)=>(b.closeDate||'').localeCompare(a.closeDate||''));
@@ -6574,7 +6613,7 @@ function renderPLKPI(rows){
   const el=document.getElementById('pl-kpi');if(!el)return;
   if(!rows.length){el.innerHTML='<div class="kpi-card" style="grid-column:1/-1;text-align:center;color:var(--tx3);padding:20px">ยังไม่มีข้อมูลรอบที่ปิดแล้วในช่วงที่เลือก</div>';return;}
   const totRev=rows.reduce((s,r)=>s+(r.revenue||0),0);
-  const totCost=rows.reduce((s,r)=>s+((r.costFry||0)+(r.costFeed||0)+(r.costChem||0)+(r.costLabor||0)+(r.costElec||0)+(r.costOther||0)),0);
+  const totCost=rows.reduce((s,r)=>s+((r.costFry||0)+(r.costFeed||0)+(r.costChem||0)+(r.costLabor||0)+(r.costElec||0)+(r.costOther||0)+(r.costStock||0)),0);
   const totProfit=rows.reduce((s,r)=>s+(r.netProfit||0),0);
   const totWeight=rows.reduce((s,r)=>s+(r.totalWeight||0),0);
   const fcrRows=rows.filter(r=>r.fcr&&r.fcr>0);
@@ -6595,10 +6634,11 @@ function renderPLTable(rows){
     <th>บ่อ</th><th>รอบ</th><th>วันปิด</th>
     <th style="text-align:right">ผลผลิต(กก.)</th><th style="text-align:right">ราคา(฿/กก.)</th>
     <th style="text-align:right">รายได้(฿)</th><th style="text-align:right">ต้นทุน(฿)</th>
+    <th style="text-align:right">พัสดุ(฿)</th>
     <th style="text-align:right">กำไร(฿)</th><th style="text-align:right">Margin</th>
     <th style="text-align:right">฿/กก.</th><th style="text-align:right">FCR</th>
   </tr></thead><tbody>${rows.map(r=>{
-    const cost=(r.costFry||0)+(r.costFeed||0)+(r.costChem||0)+(r.costLabor||0)+(r.costElec||0)+(r.costOther||0);
+    const cost=(r.costFry||0)+(r.costFeed||0)+(r.costChem||0)+(r.costLabor||0)+(r.costElec||0)+(r.costOther||0)+(r.costStock||0);
     const margin=r.revenue&&r.netProfit!=null?r.netProfit/r.revenue*100:null;
     const cpk=r.totalWeight&&cost?cost/r.totalWeight:null;
     const prof=r.netProfit;
@@ -6609,6 +6649,7 @@ function renderPLTable(rows){
       <td style="text-align:right">${r.price?r.price.toLocaleString():'-'}</td>
       <td style="text-align:right">${r.revenue?Math.round(r.revenue).toLocaleString():'-'}</td>
       <td style="text-align:right">${cost?Math.round(cost).toLocaleString():'-'}</td>
+      <td style="text-align:right;color:${r.costStock?'var(--tx2)':'var(--tx3)'}">${r.costStock?Math.round(r.costStock).toLocaleString():'-'}</td>
       <td style="text-align:right;font-weight:700;color:${cl}">${prof!=null?Math.round(prof).toLocaleString():'-'}</td>
       <td style="text-align:right;color:${cl}">${margin!=null?margin.toFixed(1)+'%':'-'}</td>
       <td style="text-align:right">${cpk!=null?cpk.toFixed(1):'-'}</td>
@@ -6628,11 +6669,12 @@ function renderPLCostChart(rows){
   const totLabor=rows.reduce((s,r)=>s+(r.costLabor||0),0);
   const totElec=rows.reduce((s,r)=>s+(r.costElec||0),0);
   const totOther=rows.reduce((s,r)=>s+(r.costOther||0),0);
-  const total=totFry+totFeed+totChem+totLabor+totElec+totOther;
+  const totStock=rows.reduce((s,r)=>s+(r.costStock||0),0);
+  const total=totFry+totFeed+totChem+totLabor+totElec+totOther+totStock;
   const totWeight=rows.reduce((s,r)=>s+(r.totalWeight||0),0);
-  const labels=['ลูกกุ้ง','อาหาร','สารเคมี','ค่าแรง','ค่าไฟ','อื่นๆ'];
-  const vals=[totFry,totFeed,totChem,totLabor,totElec,totOther];
-  const colors=['#185FA5','#639922','#D85A30','#BA7517','#888780','#6b46c1'];
+  const labels=['ลูกกุ้ง','อาหาร','สารเคมี','ค่าแรง','ค่าไฟ','พัสดุ','อื่นๆ'];
+  const vals=[totFry,totFeed,totChem,totLabor,totElec,totStock,totOther];
+  const colors=['#185FA5','#639922','#D85A30','#BA7517','#888780','#E09A29','#6b46c1'];
   const canvas=document.getElementById('pl-donut');
   if(canvas){
     if(_plDonutChart){_plDonutChart.destroy();_plDonutChart=null;}
