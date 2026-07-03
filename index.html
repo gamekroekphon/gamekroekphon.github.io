@@ -247,6 +247,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .stock-warn{background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:8px 12px;font-size:12.5px;color:#DC2626;margin-bottom:12px;display:flex;align-items:center;gap:6px}
 .stock-cat-seed{background:#FCE7F3;color:#9D174D}
 .admin-only{display:none}
+body.role-admin .admin-only{display:revert!important}
 .stock-cat-feed{background:#FEF9E7;color:#92400E}
 .stock-cat-chem{background:#EFF6FF;color:#1D4ED8}
 .stock-cat-equip{background:#F0FDF4;color:#166534}
@@ -1664,13 +1665,13 @@ function applyRole(role){
     document.getElementById('btn-add-pond')?.style.setProperty('display','');
     document.getElementById('hdr-role-badge').className='hdr-role-badge role-admin';
     document.getElementById('hdr-role-badge').textContent='Admin';
-    document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
+    document.body.classList.add('role-admin');
   }else{
     FINANCE_TABS.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
     FINANCE_SECS.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
     document.getElementById('hdr-role-badge').className='hdr-role-badge role-staff';
     document.getElementById('hdr-role-badge').textContent='พนักงาน';
-    document.querySelectorAll('.admin-only').forEach(el=>el.style.display='none');
+    document.body.classList.remove('role-admin');
   }
 }
 function updateUserHeader(user,role){
