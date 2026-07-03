@@ -3,7 +3,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -406,6 +406,15 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .hdr-user .uname{max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hdr-role-badge{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:500}
 .role-admin{background:var(--pb);color:var(--p)}.role-staff{background:var(--sf2);color:var(--tx3)}
+/* ── Mobile UX patch ── */
+/* 1. แถบเมนูบน: ปัดนิ้วซ้าย-ขวาได้บน iOS */
+.tabs{-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
+/* 2. ทุก container ที่ scroll แนวนอน: smooth บน iOS */
+.tbl-wrap,[style*="overflow-x:auto"],[style*="overflow-x: auto"]{-webkit-overflow-scrolling:touch}
+/* 3. ตารางที่ยังไม่มี wrapper: ปัดซ้าย-ขวาได้บนมือถือ */
+@media(max-width:768px){
+  .card table,.sec>table,#hs-monthly table,#hs-buyers table,#pl-tbl table,#abw-tbl table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+}
 </style>
   <!-- Firebase SDKs (compat v9) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
