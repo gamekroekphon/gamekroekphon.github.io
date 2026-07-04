@@ -2230,13 +2230,12 @@ function loadData(){
 function mergeArr(localArr, remoteArr) {
   if (!Array.isArray(remoteArr)) return localArr || [];
   if (!Array.isArray(localArr)) return remoteArr || [];
-  const seen = new Set();
-  const out = [];
+  const map = new Map();
   [...remoteArr, ...localArr].forEach(item => {
     const key = (item && item.id !== undefined) ? ('id:' + item.id) : JSON.stringify(item);
-    if (!seen.has(key)) { seen.add(key); out.push(item); }
+    map.set(key, item);
   });
-  return out;
+  return [...map.values()];
 }
 function mergeChecklist(local, remote) {
   if (!remote) return local || null;
