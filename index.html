@@ -1465,6 +1465,7 @@ body.role-admin .admin-only{display:revert!important}
             <option value="chem">ยา/สารเคมี</option>
             <option value="equip">อุปกรณ์/วัสดุ</option>
           </select>
+          <button id="sk-zero-toggle" class="btn" style="font-size:12px;padding:4px 10px;white-space:nowrap;background:var(--s1);color:var(--tx2)" onclick="toggleStockZero()">แสดงยอด 0</button>
           <button class="btn admin-only" style="font-size:12px;padding:4px 10px;white-space:nowrap" onclick="seedStockCatalog()">📥 นำเข้าสินค้า</button>
         </div>
       </div>
@@ -3790,6 +3791,7 @@ function fmtMonth(ym){
 function getElecCostForPeriod(fromDate,toDate){
   if(!fromDate||!toDate||!D.electricityBills?.length)return 0;
   const from=new Date(fromDate),to=new Date(toDate);
+  const pondCount=Math.max(1,D.ponds?.length||27); // หารหัวตามจำนวนบ่อทั้งหมด
   let total=0;
   D.electricityBills.forEach(bill=>{
     const [y,m]=bill.month.split('-').map(Number);
@@ -3800,7 +3802,7 @@ function getElecCostForPeriod(fromDate,toDate){
     const overlapEnd=to<mEnd?to:mEnd;
     if(overlapStart<=overlapEnd){
       const days=(overlapEnd-overlapStart)/(1000*60*60*24)+1;
-      total+=bill.totalBaht*(days/daysInMonth);
+      total+=bill.totalBaht*(days/daysInMonth)/pondCount;
     }
   });
   return Math.round(total);
@@ -4078,6 +4080,13 @@ function renderStockWarn(){
   txtEl.textContent=low.map(i=>`${i.name} เหลือ ${i.qty} ${i.unit}`).join(' · ');
 }
 
+let _stockShowZero=false;
+function toggleStockZero(){
+  _stockShowZero=!_stockShowZero;
+  const btn=document.getElementById('sk-zero-toggle');
+  if(btn){btn.textContent=_stockShowZero?'ซ่อนยอด 0':'แสดงยอด 0';btn.style.background=_stockShowZero?'var(--p)':'var(--s1)';btn.style.color=_stockShowZero?'#fff':'var(--tx2)';}
+  renderStockItems();
+}
 function renderStockItems(){
   const el=document.getElementById('sk-item-table');if(!el)return;
   const cat=document.getElementById('sk-filter-cat')?.value||'';
@@ -4085,6 +4094,7 @@ function renderStockItems(){
   const items=(D.inventoryItems||[]).filter(i=>{
     if(cat&&i.category!==cat)return false;
     if(search&&!i.name.toLowerCase().includes(search)&&!(i.note||'').toLowerCase().includes(search))return false;
+    if(!_stockShowZero&&(i.qty||0)===0)return false;
     return true;
   });
   if(!items.length){el.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีรายการพัสดุ</p>';return;}
@@ -5705,11 +5715,21 @@ function renderCrops(){
           <div style="display:flex;gap:4px;align-items:center;min-width:180px">
             <input type="text" id="cnote-${c._pondId}-${c.id||c._idx}" value="${c.notes?String(c.notes).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'):''}" placeholder="เช่น โรคตัวแดง, ท่อแตก..." style="flex:1;border:1px solid var(--bd);border-radius:6px;padding:4px 6px;font-size:12px">
             <button onclick="editCycleNote('${c._pondId}','${c.id||''}',${c._idx})" style="background:var(--p);color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap" title="บันทึกสาเหตุปิดบ่อ/หมายเหตุ">💾 บันทึก</button>
+            ${APP_ROLE==='admin'?`<button onclick="deleteCropRecord('${c._pondId}','${c.id||''}',${c._idx})" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap" title="ลบรายการปิดบ่อนี้ (Admin)">🗑️</button>`:''}
           </div>
         </td>
       </tr>`;}).join('')}
     </tbody></table></div>`;
   populateChPondSelect();
+}
+function deleteCropRecord(pondId,cropId,idx){
+  if(!confirm('🗑️ ลบรายการปิดบ่อนี้?\nไม่สามารถกู้คืนได้'))return;
+  const p=pond(pondId);if(!p||!p.cropHistory)return;
+  const before=p.cropHistory.length;
+  if(cropId)p.cropHistory=p.cropHistory.filter(c=>c.id!==cropId);
+  else p.cropHistory.splice(idx,1);
+  if(p.cropHistory.length===before){alert('ไม่พบรายการ');return;}
+  save();fbSave();renderCrops();
 }
 function editCycleNote(pondId,cropId,idx){
   const p=pond(pondId);if(!p||!p.cropHistory)return;
@@ -6150,6 +6170,9 @@ function confirmCloseCrop(){
   const p=pond(pid);if(!p)return;
   const closeDate=document.getElementById('cm-close-date').value;
   if(!closeDate){alert('กรุณาระบุวันที่ปิดบ่อ');return;}
+  if(closeDate>today()){if(!confirm(`⚠️ วันที่ปิดบ่อ (${fD(closeDate)}) เป็นวันในอนาคต\nยืนยันว่าถูกต้อง?`))return;}
+  const sameCropExists=(p.cropHistory||[]).some(c=>c.cropNum===(p.cropNum||1)&&c.closeDate&&c.closeDate!==closeDate);
+  if(sameCropExists){if(!confirm(`⚠️ บ่อ ${p.name} รอบที่ ${p.cropNum||1} มีรายการปิดบ่ออยู่แล้ว\nยืนยันเพิ่มรายการใหม่?`))return;}
   // collect harvest result
   const hr={
     totalWeight:parseFloat(document.getElementById('cm-weight').value)||null,
@@ -6671,10 +6694,13 @@ function renderPLKPI(rows){
   const avgFcr=fcrRows.length?fcrRows.reduce((s,r)=>s+r.fcr,0)/fcrRows.length:0;
   const margin=totRev?totProfit/totRev*100:0;
   const avgCostPerKg=totWeight?totCost/totWeight:0;
+  const withRevCount=rows.filter(r=>r.revenue>0).length;
+  const coverage=rows.length?withRevCount/rows.length:0;
+  const marginNote=coverage<0.5?`<span style="font-size:10px;color:var(--w)"> ⚠️ข้อมูลครบ ${withRevCount}/${rows.length} รอบ</span>`:``;
   el.innerHTML=`
-    <div class="kpi-card"><div class="kpi-lbl">รายได้รวม</div><div class="kpi-val">${(totRev/1e6).toFixed(2)}<span class="kpi-unit"> ล้าน฿</span></div><div class="kpi-sub">${rows.length} รอบ · ${totWeight.toLocaleString()} กก.</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">รายได้รวม</div><div class="kpi-val">${(totRev/1e6).toFixed(2)}<span class="kpi-unit"> ล้าน฿</span></div><div class="kpi-sub">${rows.length} รอบ · ${totWeight.toLocaleString()} กก.<br><span style="color:${coverage>=0.8?'var(--ok)':coverage>=0.5?'var(--w)':'var(--d)'}">ข้อมูลการเงินครบ ${withRevCount}/${rows.length} รอบ</span></div></div>
     <div class="kpi-card"><div class="kpi-lbl">ต้นทุนรวม</div><div class="kpi-val">${(totCost/1e6).toFixed(2)}<span class="kpi-unit"> ล้าน฿</span></div><div class="kpi-sub">${avgCostPerKg.toFixed(1)} บาท/กก. เฉลี่ย</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">กำไรสุทธิรวม</div><div class="kpi-val" style="color:${totProfit>=0?'var(--ok)':'var(--d)'}">${(totProfit/1e6).toFixed(2)}<span class="kpi-unit"> ล้าน฿</span></div><div class="kpi-sub" style="color:${margin>=0?'var(--ok)':'var(--d)'}">Margin ${margin.toFixed(1)}%</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">กำไรสุทธิรวม</div><div class="kpi-val" style="color:${totProfit>=0?'var(--ok)':'var(--d)'}">${(totProfit/1e6).toFixed(2)}<span class="kpi-unit"> ล้าน฿</span></div><div class="kpi-sub" style="color:${margin>=0?'var(--ok)':'var(--d)'}">Margin ${margin.toFixed(1)}%${marginNote}</div></div>
     <div class="kpi-card"><div class="kpi-lbl">FCR เฉลี่ย</div><div class="kpi-val" style="color:${avgFcr&&avgFcr<1.3?'var(--ok)':avgFcr&&avgFcr<1.5?'var(--w)':'var(--d)'}">${avgFcr?avgFcr.toFixed(2):'-'}</div><div class="kpi-sub">เป้า &lt; 1.3</div></div>`;
 }
 function renderPLTable(rows){
@@ -6682,7 +6708,7 @@ function renderPLTable(rows){
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return;}
   wrap.innerHTML=`<div style="font-size:11px;color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวา →</div><table class="tbl" style="white-space:nowrap;min-width:700px">
   <thead><tr>
-    <th>บ่อ</th><th>รอบ</th><th>วันปิด</th>
+    <th>บ่อ</th><th>รอบ/ปี</th><th>วันปิด</th>
     <th style="text-align:right">ผลผลิต(กก.)</th><th style="text-align:right">ราคา(฿/กก.)</th>
     <th style="text-align:right">รายได้(฿)</th><th style="text-align:right">ต้นทุน(฿)</th>
     <th style="text-align:right">พัสดุ(฿)</th>
@@ -6694,8 +6720,11 @@ function renderPLTable(rows){
     const cpk=r.totalWeight&&cost?cost/r.totalWeight:null;
     const prof=r.netProfit;
     const cl=prof>0?'var(--ok)':prof<0?'var(--d)':'var(--tx)';
-    return`<tr>
-      <td style="font-weight:700">${r.pondName||r.pondId}</td><td style="text-align:center">รอบ ${r.cropNum||'-'}</td><td>${fD(r.closeDate)}</td>
+    const noData=!r.revenue;
+    const rowStyle=noData?'opacity:0.45':'';
+    const cropYearBE=r.cropYear?(r.cropYear>2500?r.cropYear-2500:r.cropYear):'';
+    return`<tr style="${rowStyle}">
+      <td style="font-weight:700">${r.pondName||r.pondId}</td><td style="text-align:center">รอบ ${r.cropNum||'-'}${cropYearBE?'/'+cropYearBE:''}</td><td>${fD(r.closeDate)}</td>
       <td style="text-align:right">${r.totalWeight?r.totalWeight.toLocaleString():'-'}</td>
       <td style="text-align:right">${r.price?r.price.toLocaleString():'-'}</td>
       <td style="text-align:right">${r.revenue?Math.round(r.revenue).toLocaleString():'-'}</td>
