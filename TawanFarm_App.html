@@ -2386,6 +2386,18 @@ async function save() {
   }
 }
 function fbSave(){} // save() ซิงค์ Firebase อยู่แล้ว — ฟังก์ชันนี้กันพังจาก legacy calls
+async function saveForce(){
+  // เขียน D ลง Firebase โดยไม่ merge กับ remote — ใช้สำหรับ delete operations ที่ต้องการให้ local ชนะ
+  localStorage.setItem(SK,JSON.stringify(D));
+  if(!firebase.apps.length)return;
+  _remoteIgnoreUntil=Date.now()+4000;
+  setSyncStatus('sync-load','กำลังบันทึก...');
+  try{
+    const json=JSON.stringify(D);
+    await firebase.database().ref(RTDB_PATH).set({json,updated:new Date().toISOString()});
+    setSyncStatus('sync-ok','✅ บันทึกสำเร็จ');
+  }catch(e){setSyncStatus('sync-err','⚠️ บันทึกไม่ได้: '+e.message);}
+}
 function cln(x){return JSON.parse(JSON.stringify(x))}
 function pond(id){return D.ponds.find(p=>p.id===id)}
 // ── ข้อ5: เรียงบ่อใน dropdown เป็นกลุ่มตามชื่อ (A.12,A.13,...,B.1,B.2,...) แทนลำดับสุ่มที่เพิ่มเข้ามา ──
@@ -5781,7 +5793,7 @@ function deleteCropRecord(pondId,cropId,idx){
   if(cropId)p.cropHistory=p.cropHistory.filter(c=>c.id!==cropId);
   else p.cropHistory.splice(idx,1);
   if(p.cropHistory.length===before){alert('ไม่พบรายการ');return;}
-  save();fbSave();renderCrops();
+  saveForce();renderCrops(); // ใช้ saveForce แทน save() เพื่อป้องกัน mergeArr ดึงรายการกลับมา
 }
 function openEditCropModal(pondId,cropId,idx){
   const p=pond(pondId);if(!p||!p.cropHistory)return;
