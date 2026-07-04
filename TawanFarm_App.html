@@ -1061,6 +1061,57 @@ body.role-admin .admin-only{display:revert!important}
   </div>
 </div>
 
+<!-- EDIT CROP MODAL (Admin) -->
+<div id="editCropModal" class="modal-bg">
+  <div class="modal" style="max-width:640px;width:95vw;padding:0;overflow:hidden">
+    <div style="background:#d97706;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;border-radius:10px 10px 0 0">
+      <span style="font-weight:700;font-size:15px">✏️ แก้ไขข้อมูลปิดบ่อ — <span id="ecm-name"></span></span>
+      <button onclick="closeEditCropModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#fff;line-height:1">×</button>
+    </div>
+    <div style="padding:20px;max-height:75vh;overflow-y:auto">
+      <input type="hidden" id="ecm-pond-id">
+      <input type="hidden" id="ecm-crop-id">
+      <input type="hidden" id="ecm-crop-idx">
+      <!-- Harvest Results -->
+      <div style="margin-bottom:18px">
+        <div style="font-weight:700;font-size:13px;color:var(--p);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">🦐 ผลจับจริง</div>
+        <div class="fgrid" style="grid-template-columns:1fr 1fr">
+          <div class="fg"><label class="fl">ผลผลิตรวม (กก.)</label><input type="number" class="fi" id="ecm-weight" step="0.1" placeholder="1500"></div>
+          <div class="fg"><label class="fl">ไซส์จับเฉลี่ย (ตัว/กก.)</label><input type="number" class="fi" id="ecm-size" step="1" placeholder="60"></div>
+          <div class="fg"><label class="fl">ตัวที่จับได้ (ตัว)</label><input type="number" class="fi" id="ecm-caught" placeholder="0"></div>
+          <div class="fg"><label class="fl">อัตรารอด (%)</label><input type="number" class="fi" id="ecm-survival" step="0.1" placeholder="0"></div>
+          <div class="fg"><label class="fl">FCR</label><input type="number" class="fi" id="ecm-fcr" step="0.01" placeholder="0"></div>
+          <div class="fg"><label class="fl">ราคาขาย (บาท/กก.)</label><input type="number" class="fi" id="ecm-price" step="0.5" placeholder="130"></div>
+        </div>
+      </div>
+      <!-- Economics -->
+      <div style="margin-bottom:18px">
+        <div style="font-weight:700;font-size:13px;color:var(--in);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">💰 รายได้ & ต้นทุน</div>
+        <div class="fgrid" style="grid-template-columns:1fr 1fr">
+          <div class="fg"><label class="fl">รายได้รวม (บาท)</label><input type="number" class="fi" id="ecm-revenue" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ต้นทุนลูกกุ้ง (บาท)</label><input type="number" class="fi" id="ecm-cost-fry" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ต้นทุนอาหาร (บาท)</label><input type="number" class="fi" id="ecm-cost-feed" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ต้นทุนสารเคมี (บาท)</label><input type="number" class="fi" id="ecm-cost-chem" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ต้นทุนค่าแรง (บาท)</label><input type="number" class="fi" id="ecm-cost-labor" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="ecm-cost-elec" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ต้นทุนอื่นๆ (บาท)</label><input type="number" class="fi" id="ecm-cost-other" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" style="color:var(--ok);font-weight:700">กำไรสุทธิ (บาท)</label><input type="number" class="fi" id="ecm-profit" step="1" placeholder="คำนวณอัตโนมัติ" style="background:var(--ob);font-weight:700"></div>
+        </div>
+      </div>
+      <!-- Close Date + Notes -->
+      <div class="fgrid" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
+        <div class="fg"><label class="fl">วันที่ปิดบ่อ</label><input type="date" class="fi" id="ecm-close-date"></div>
+        <div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="ecm-notes" placeholder="..."></div>
+      </div>
+      <div id="ecm-msg" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px"></div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn btn-p" onclick="saveEditCrop()" style="flex:1;justify-content:center;padding:12px;background:#d97706">💾 บันทึกการแก้ไข</button>
+        <button class="btn" onclick="closeEditCropModal()" style="padding:12px 20px">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- HARVEST -->
 <div id="sec-harvest" class="sec">
   <div class="sec-hdr"><div class="sec-title">🦐 บันทึกการจับกุ้ง</div></div>
@@ -5715,6 +5766,7 @@ function renderCrops(){
           <div style="display:flex;gap:4px;align-items:center;min-width:180px">
             <input type="text" id="cnote-${c._pondId}-${c.id||c._idx}" value="${c.notes?String(c.notes).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'):''}" placeholder="เช่น โรคตัวแดง, ท่อแตก..." style="flex:1;border:1px solid var(--bd);border-radius:6px;padding:4px 6px;font-size:12px">
             <button onclick="editCycleNote('${c._pondId}','${c.id||''}',${c._idx})" style="background:var(--p);color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap" title="บันทึกสาเหตุปิดบ่อ/หมายเหตุ">💾 บันทึก</button>
+            ${APP_ROLE==='admin'?`<button onclick="openEditCropModal('${c._pondId}','${c.id||''}',${c._idx})" style="background:#fffbeb;color:#d97706;border:1px solid #fde68a;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap" title="แก้ไขข้อมูลรอบนี้ (Admin)">✏️</button>`:''}
             ${APP_ROLE==='admin'?`<button onclick="deleteCropRecord('${c._pondId}','${c.id||''}',${c._idx})" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap" title="ลบรายการปิดบ่อนี้ (Admin)">🗑️</button>`:''}
           </div>
         </td>
@@ -5730,6 +5782,58 @@ function deleteCropRecord(pondId,cropId,idx){
   else p.cropHistory.splice(idx,1);
   if(p.cropHistory.length===before){alert('ไม่พบรายการ');return;}
   save();fbSave();renderCrops();
+}
+function openEditCropModal(pondId,cropId,idx){
+  const p=pond(pondId);if(!p||!p.cropHistory)return;
+  const c=(cropId&&p.cropHistory.find(x=>x.id===cropId))||p.cropHistory[idx];
+  if(!c)return;
+  const hr=c.harvestResult||{};
+  document.getElementById('ecm-pond-id').value=pondId;
+  document.getElementById('ecm-crop-id').value=cropId||'';
+  document.getElementById('ecm-crop-idx').value=idx;
+  document.getElementById('ecm-name').textContent=(p.name||pondId)+' รอบ '+(c.cropNum||'');
+  const fv=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v!=null&&v!==''?v:''};
+  fv('ecm-weight',hr.totalWeight);fv('ecm-size',hr.size);fv('ecm-caught',hr.caught);
+  fv('ecm-survival',hr.survivalRate);fv('ecm-fcr',hr.fcr);fv('ecm-price',hr.price);
+  fv('ecm-revenue',hr.revenue);
+  fv('ecm-cost-fry',hr.costFry);fv('ecm-cost-feed',hr.costFeed);fv('ecm-cost-chem',hr.costChem);
+  fv('ecm-cost-labor',hr.costLabor);fv('ecm-cost-elec',hr.costElec);fv('ecm-cost-other',hr.costOther);
+  fv('ecm-profit',hr.netProfit);
+  fv('ecm-close-date',c.closeDate);fv('ecm-notes',c.notes||'');
+  const msg=document.getElementById('ecm-msg');if(msg)msg.style.display='none';
+  ['ecm-revenue','ecm-cost-fry','ecm-cost-feed','ecm-cost-chem','ecm-cost-labor','ecm-cost-elec','ecm-cost-other'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.oninput=()=>{
+      const rev=parseFloat(document.getElementById('ecm-revenue').value)||0;
+      const cost=['ecm-cost-fry','ecm-cost-feed','ecm-cost-chem','ecm-cost-labor','ecm-cost-elec','ecm-cost-other'].reduce((s,i)=>s+(parseFloat(document.getElementById(i)?.value)||0),0);
+      const pp=document.getElementById('ecm-profit');if(pp&&rev)pp.value=Math.round(rev-cost);
+    };
+  });
+  document.getElementById('editCropModal').classList.add('on');
+}
+function closeEditCropModal(){document.getElementById('editCropModal').classList.remove('on');}
+function saveEditCrop(){
+  const pondId=document.getElementById('ecm-pond-id').value;
+  const cropId=document.getElementById('ecm-crop-id').value;
+  const idx=parseInt(document.getElementById('ecm-crop-idx').value);
+  const p=pond(pondId);if(!p||!p.cropHistory)return;
+  const c=(cropId&&p.cropHistory.find(x=>x.id===cropId))||p.cropHistory[idx];
+  if(!c){alert('ไม่พบรายการ');return;}
+  const gn=(id)=>{const v=parseFloat(document.getElementById(id)?.value);return isNaN(v)?null:v;};
+  c.closeDate=document.getElementById('ecm-close-date').value||c.closeDate;
+  c.notes=document.getElementById('ecm-notes').value||'';
+  if(!c.harvestResult)c.harvestResult={};
+  const hr=c.harvestResult;
+  hr.totalWeight=gn('ecm-weight');hr.size=gn('ecm-size');hr.caught=gn('ecm-caught');
+  hr.survivalRate=gn('ecm-survival');hr.fcr=gn('ecm-fcr');hr.price=gn('ecm-price');
+  hr.revenue=gn('ecm-revenue');
+  hr.costFry=gn('ecm-cost-fry');hr.costFeed=gn('ecm-cost-feed');hr.costChem=gn('ecm-cost-chem');
+  hr.costLabor=gn('ecm-cost-labor');hr.costElec=gn('ecm-cost-elec');hr.costOther=gn('ecm-cost-other');
+  hr.netProfit=gn('ecm-profit');
+  save();fbSave();
+  const msg=document.getElementById('ecm-msg');
+  if(msg){msg.style.display='block';msg.style.background='var(--ob)';msg.style.color='var(--ok)';msg.textContent='✅ บันทึกสำเร็จ';}
+  setTimeout(()=>{closeEditCropModal();renderCrops();},800);
 }
 function editCycleNote(pondId,cropId,idx){
   const p=pond(pondId);if(!p||!p.cropHistory)return;
