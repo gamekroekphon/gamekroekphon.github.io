@@ -941,7 +941,10 @@ body.role-admin .admin-only{display:revert!important}
   <div class="card">
     <div class="card-t" style="justify-content:space-between">
       <span>📋 สรุปรอบเลี้ยงปีนี้</span>
-      <select class="fi" id="cr-year" onchange="renderCrops()" style="width:120px;font-size:12px;padding:4px 8px"></select>
+      <div style="display:flex;gap:6px;align-items:center">
+        <select class="fi" id="cr-year" onchange="renderCrops()" style="width:120px;font-size:12px;padding:4px 8px"></select>
+        <button class="btn" style="font-size:12px;padding:5px 10px;white-space:nowrap" onclick="goStatForCropYear()">📊 สถิติ →</button>
+      </div>
     </div>
     <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -1151,6 +1154,7 @@ body.role-admin .admin-only{display:revert!important}
     <div style="position:relative;height:220px"><canvas id="hs-chart-annual"></canvas></div>
   </div>
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px" id="hs-yr-btns"></div>
+  <div id="hs-crop-summary" style="margin-bottom:16px"></div>
   <div class="g2" style="margin-bottom:0">
     <div class="card">
       <div class="card-t" id="hs-monthly-title">📅 รายเดือน</div>
@@ -2744,6 +2748,7 @@ function _hsRenderAll(){
     });
   }
   hsRenderYear();
+  hsRenderCropSummary(_hsYr);
 }
 function hsSetYr(yr){_hsYr=yr;_hsRenderAll();}
 function hsRenderYear(){
@@ -2797,6 +2802,48 @@ function hsRenderYear(){
       <th style="padding:8px 10px;text-align:right;font-size:12px;color:var(--tx2)">น้ำหนัก</th>
       <th style="padding:8px 10px;text-align:right;font-size:12px;color:var(--tx2)">ราคา/กก.</th>
     </thead><tbody>${brows}</tbody></table>`;
+}
+function hsCropStats(shortYr){
+  if(!D||!D.ponds)return{totalKg:0,closedCount:0};
+  let totalKg=0,closedCount=0;
+  D.ponds.forEach(p=>{
+    (p.cropHistory||[]).forEach(c=>{
+      if((c.cropYear||0)-2500!==shortYr||!c.closed)return;
+      totalKg+=((c.harvestResult||{}).totalWeight)||0;
+      closedCount++;
+    });
+  });
+  return{totalKg,closedCount};
+}
+function hsRenderCropSummary(shortYr){
+  const el=document.getElementById('hs-crop-summary');
+  if(!el)return;
+  const{totalKg,closedCount}=hsCropStats(shortYr);
+  if(!closedCount){el.innerHTML='';return;}
+  const avg=Math.round(totalKg/closedCount);
+  el.innerHTML=`<div class="card" style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:2px">🌾 จากประวัติเลี้ยง ปี ${shortYr}</div>
+      <div style="font-size:15px;font-weight:700">${totalKg.toLocaleString()} กก. · ${closedCount} รอบ</div>
+      <div style="font-size:12px;color:var(--tx2)">เฉลี่ย ${avg.toLocaleString()} กก./รอบ</div>
+    </div>
+    <button class="btn" style="font-size:12px;padding:6px 12px;white-space:nowrap" onclick="goCropsForYear(${shortYr})">🌾 ดูรายรอบ →</button>
+  </div>`;
+}
+function goCropsForYear(shortYr){
+  const fullYr=shortYr+2500;
+  const btn=[...document.querySelectorAll('.tab,.tab-item')].find(b=>(b.getAttribute('onclick')||'').includes("'crops'"));
+  if(btn)goTab('crops',btn);
+  setTimeout(()=>{const s=document.getElementById('cr-year');if(s){s.value=fullYr;renderCrops();}},80);
+}
+function goStatForCropYear(){
+  const fullYr=parseInt(document.getElementById('cr-year')?.value)||0;
+  const shortYr=fullYr-2500;
+  if(shortYr<60||shortYr>99)return;
+  _hsYr=shortYr;
+  const btn=[...document.querySelectorAll('.tab,.tab-item')].find(b=>(b.getAttribute('onclick')||'').includes("'harveststat'"));
+  if(btn)goTab('harveststat',btn);
+  else{document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));const sec=document.getElementById('sec-harveststat');if(sec)sec.classList.add('on');initHarvestStat();}
 }
 // ===== END HARVEST STATISTICS =====
 
