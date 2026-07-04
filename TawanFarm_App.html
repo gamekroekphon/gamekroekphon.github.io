@@ -1694,6 +1694,10 @@ function normalizeD(d) {
     if (!p.cropNum) p.cropNum = 1;
     if (!p.cropYear) p.cropYear = curYear;
     if (p.prepChecklist === undefined) p.prepChecklist = null;
+    // assign deterministic id ให้รอบเก่าที่ยังไม่มี id (คำนวณเหมือนกันทุกเครื่อง)
+    p.cropHistory.forEach(c => {
+      if (!c.id) c.id = 'crop_'+(p.id||'')+'_'+(c.closeDate||'')+'_'+(c.cropNum||0);
+    });
   });
   if (!d.categories) d.categories = [...DEFAULT_CATS];
   if (!d.harvestLog) d.harvestLog = [];
@@ -1704,6 +1708,7 @@ function normalizeD(d) {
   if (!d.electricityBills) d.electricityBills = [];
   if (!d.inventoryItems) d.inventoryItems = [];
   if (!d.inventoryLog) d.inventoryLog = [];
+  if (!d.deletedIds) d.deletedIds = [];
   return d;
 }
 
@@ -2327,25 +2332,29 @@ function mergeChecklist(local, remote) {
 }
 function mergeRemote(local, remote) {
   const merged = cln(local);
+  // tombstone: union รายการที่ถูกลบจากทุกเครื่อง → กรองออกหลัง merge
+  merged.deletedIds = [...new Set([...(local.deletedIds||[]), ...(remote.deletedIds||[])])];
+  const dead = new Set(merged.deletedIds);
+  const dropDead = arr => (arr||[]).filter(x => !x || x.id===undefined || !dead.has(x.id));
   const LOG_KEYS = ['feedLog','samples','plankton','waterLog','chemLog','labResults','cropHistory'];
   const remotePonds = {};
   (remote.ponds||[]).forEach(p => { remotePonds[p.id] = p; });
   merged.ponds.forEach(p => {
     const rp = remotePonds[p.id];
     if (!rp) return;
-    LOG_KEYS.forEach(k => { p[k] = mergeArr(p[k], rp[k]); });
+    LOG_KEYS.forEach(k => { p[k] = dropDead(mergeArr(p[k], rp[k])); });
     p.prepChecklist = mergeChecklist(p.prepChecklist, rp.prepChecklist);
   });
   const localIds = new Set(merged.ponds.map(p=>p.id));
   (remote.ponds||[]).forEach(rp => { if (!localIds.has(rp.id)) merged.ponds.push(rp); });
-  merged.harvestLog = mergeArr(merged.harvestLog, remote.harvestLog);
-  merged.sales = mergeArr(merged.sales, remote.sales);
+  merged.harvestLog = dropDead(mergeArr(merged.harvestLog, remote.harvestLog));
+  merged.sales = dropDead(mergeArr(merged.sales, remote.sales));
   merged.marketPrices = mergeByDate(merged.marketPrices, remote.marketPrices);
-  merged.staff = mergeArr(merged.staff, remote.staff);
-  merged.laborCosts = mergeArr(merged.laborCosts, remote.laborCosts);
+  merged.staff = dropDead(mergeArr(merged.staff, remote.staff));
+  merged.laborCosts = dropDead(mergeArr(merged.laborCosts, remote.laborCosts));
   merged.electricityBills = mergeByMonth(merged.electricityBills||[], remote.electricityBills||[]);
-  merged.inventoryItems = mergeArr(merged.inventoryItems||[], remote.inventoryItems||[]);
-  merged.inventoryLog = mergeArr(merged.inventoryLog||[], remote.inventoryLog||[]);
+  merged.inventoryItems = dropDead(mergeArr(merged.inventoryItems||[], remote.inventoryItems||[]));
+  merged.inventoryLog = dropDead(mergeArr(merged.inventoryLog||[], remote.inventoryLog||[]));
   return merged;
 }
 function mergeByMonth(localArr, remoteArr) {
@@ -5789,11 +5798,12 @@ function renderCrops(){
 function deleteCropRecord(pondId,cropId,idx){
   if(!confirm('🗑️ ลบรายการปิดบ่อนี้?\nไม่สามารถกู้คืนได้'))return;
   const p=pond(pondId);if(!p||!p.cropHistory)return;
-  const before=p.cropHistory.length;
-  if(cropId)p.cropHistory=p.cropHistory.filter(c=>c.id!==cropId);
-  else p.cropHistory.splice(idx,1);
-  if(p.cropHistory.length===before){alert('ไม่พบรายการ');return;}
-  saveForce();renderCrops(); // ใช้ saveForce แทน save() เพื่อป้องกัน mergeArr ดึงรายการกลับมา
+  const target=(cropId&&p.cropHistory.find(c=>c.id===cropId))||p.cropHistory[idx];
+  if(!target){alert('ไม่พบรายการ');return;}
+  p.cropHistory=p.cropHistory.filter(c=>c!==target);
+  D.deletedIds=D.deletedIds||[];
+  if(target.id)D.deletedIds.push(target.id); // tombstone — กันรายการนี้กลับมาจาก merge ทุกเครื่อง
+  saveForce();renderCrops();
 }
 function openEditCropModal(pondId,cropId,idx){
   const p=pond(pondId);if(!p||!p.cropHistory)return;
