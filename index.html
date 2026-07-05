@@ -3299,6 +3299,7 @@ function renderPondDetail(id){
 }
 function jumpFeed(id){document.getElementById('tab-feed').click();setTimeout(()=>{document.getElementById('fd-pond').value=id;onFdPond();},80)}
 let homeAttnExpanded=false;
+let _wxToday=null; // cache สภาพอากาศวันนี้ (จาก fetchWx)
 function homeToggleAttn(){homeAttnExpanded=true;renderOv()}
 function homeToggleGroup(id){
   const el=document.getElementById(id);if(!el)return;
@@ -3363,11 +3364,16 @@ function renderOv(){
   const warnM=meta.filter(m=>m.cls==='warn'||m.cls==='danger');
   const closedCount=Math.max(0,TOTAL_PONDS-D.ponds.length);
   const totalBio=active.reduce((s,{p})=>s+(getLatestBiomass(p)||0),0);
+  const td=today();
+  const totalFeedToday=D.ponds.reduce((s,p)=>s+(p.feedLog||[]).filter(r=>r.date===td).reduce((ss,r)=>ss+(parseFloat(r.totalFeed)||0),0),0);
+  const wxCard=_wxToday
+    ?`<div class="ov-kk-v" style="font-size:15px">${_wxToday.tMax.toFixed(0)}°/<span style="font-size:12px;color:var(--tx2)">${_wxToday.tMin.toFixed(0)}°C</span></div><div style="font-size:10px;color:var(--tx3);margin-top:2px">🌧️ ${_wxToday.rain.toFixed(0)}มม. 💨 ${_wxToday.wind.toFixed(0)}กม/ชม</div>`
+    :`<div class="ov-kk-v">-</div><div style="font-size:10px;color:var(--tx3)">รอข้อมูล...</div>`;
   document.getElementById('ov-kpi-bar').innerHTML=`
     <div class="ov-kk"><div class="ov-kk-l">บ่อที่เลี้ยงอยู่</div><div class="ov-kk-v">${active.length}<span class="ov-kk-u"> บ่อ</span></div></div>
     <div class="ov-kk"><div class="ov-kk-l">น้ำหนักกุ้งรวม</div><div class="ov-kk-v">${totalBio>0?(totalBio/1000).toFixed(1):'-'}<span class="ov-kk-u"> ตัน</span></div></div>
-    <div class="ov-kk"><div class="ov-kk-l">เฝ้าระวัง</div><div class="ov-kk-v" style="${warnM.length>0?'color:var(--w)':''}">${warnM.length}<span class="ov-kk-u"> บ่อ</span></div></div>
-    <div class="ov-kk"><div class="ov-kk-l">เตรียมบ่อ</div><div class="ov-kk-v">${prepM.length}<span class="ov-kk-u"> บ่อ</span></div></div>`;
+    <div class="ov-kk"><div class="ov-kk-l">อาหารรวมวันนี้</div><div class="ov-kk-v">${totalFeedToday>0?totalFeedToday.toFixed(0):'-'}<span class="ov-kk-u"> กก.</span></div><div style="font-size:10px;color:var(--tx3)">ทั้งฟาร์ม</div></div>
+    <div class="ov-kk"><div class="ov-kk-l">สภาพอากาศวันนี้</div>${wxCard}</div>`;
   let html='';
   if(active.length>0)html+=`<div class="ov-sec-lbl">กำลังเลี้ยง</div><div class="ov-grid">${active.map(({p,last,age,cls})=>pondCard(p,last,age,cls)).join('')}</div>`;
   if(prepM.length>0)html+=`<div class="ov-sec-lbl">เตรียมบ่อ</div><div class="ov-grid">${prepM.map(({p,last,age,cls})=>pondCard(p,last,age,cls)).join('')}</div>`;
@@ -5160,6 +5166,9 @@ function wmoDesc(c){
 function renderWx(data){
   const d=data.daily;
   const cur=data.current_weather;
+  // cache สภาพอากาศวันนี้ สำหรับ KPI bar ภาพรวม
+  _wxToday={tMax:d.temperature_2m_max[0],tMin:d.temperature_2m_min[0],rain:d.precipitation_sum[0],wind:d.wind_speed_10m_max[0]};
+  renderOv();
   // ── Current weather banner ──
   const curEl=document.getElementById('wx-current');
   if(curEl&&cur){
