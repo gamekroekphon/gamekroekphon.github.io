@@ -1698,6 +1698,13 @@ function normalizeD(d) {
     p.cropHistory.forEach(c => {
       if (!c.id) c.id = 'crop_'+(p.id||'')+'_'+(c.closeDate||'')+'_'+(c.cropNum||0);
     });
+    // assign id ให้ log รายวัน (ใช้ key ที่ deterministic เพื่อ tombstone ทำงานได้)
+    (p.feedLog||[]).forEach((r,i)=>{ if(!r.id) r.id='fd_'+(p.id||'')+'_'+(r.date||'')+'_'+i; });
+    (p.samples||[]).forEach((r,i)=>{ if(!r.id) r.id='sp_'+(p.id||'')+'_'+(r.date||'')+'_'+i; });
+    (p.waterLog||[]).forEach((r,i)=>{ if(!r.id) r.id='wl_'+(p.id||'')+'_'+(r.date||'')+'_'+(r.action||'')+'_'+i; });
+    (p.chemLog||[]).forEach((r,i)=>{ if(!r.id) r.id='ch_'+(p.id||'')+'_'+(r.date||'')+'_'+(r.product||'')+'_'+i; });
+    (p.labResults||[]).forEach((r,i)=>{ if(!r.id) r.id='lb_'+(p.id||'')+'_'+(r.date||'')+'_'+i; });
+    (p.plankton||[]).forEach((r,i)=>{ if(!r.id) r.id='pk_'+(p.id||'')+'_'+(r.date||'')+'_'+i; });
   });
   if (!d.categories) d.categories = [...DEFAULT_CATS];
   if (!d.harvestLog) d.harvestLog = [];
@@ -2346,23 +2353,23 @@ function mergeRemote(local, remote) {
     p.prepChecklist = mergeChecklist(p.prepChecklist, rp.prepChecklist);
   });
   const localIds = new Set(merged.ponds.map(p=>p.id));
-  (remote.ponds||[]).forEach(rp => { if (!localIds.has(rp.id)) merged.ponds.push(rp); });
+  (remote.ponds||[]).forEach(rp => { if (!localIds.has(rp.id) && !dead.has(rp.id)) merged.ponds.push(rp); });
   merged.harvestLog = dropDead(mergeArr(merged.harvestLog, remote.harvestLog));
   merged.sales = dropDead(mergeArr(merged.sales, remote.sales));
   merged.marketPrices = mergeByDate(merged.marketPrices, remote.marketPrices);
   merged.staff = dropDead(mergeArr(merged.staff, remote.staff));
   merged.laborCosts = dropDead(mergeArr(merged.laborCosts, remote.laborCosts));
-  merged.electricityBills = mergeByMonth(merged.electricityBills||[], remote.electricityBills||[]);
+  merged.electricityBills = mergeByMonth(merged.electricityBills||[], remote.electricityBills||[], dead);
   merged.inventoryItems = dropDead(mergeArr(merged.inventoryItems||[], remote.inventoryItems||[]));
   merged.inventoryLog = dropDead(mergeArr(merged.inventoryLog||[], remote.inventoryLog||[]));
   return merged;
 }
-function mergeByMonth(localArr, remoteArr) {
+function mergeByMonth(localArr, remoteArr, dead) {
   if (!Array.isArray(remoteArr)) return localArr || [];
   if (!Array.isArray(localArr)) return remoteArr || [];
   const map = {};
-  remoteArr.forEach(r => { if (r && r.month) map[r.month] = r; });
-  localArr.forEach(l => { if (l && l.month) map[l.month] = l; }); // local wins
+  remoteArr.forEach(r => { if (r && r.month && !(dead&&dead.has('elec_'+r.month))) map[r.month] = r; });
+  localArr.forEach(l => { if (l && l.month && !(dead&&dead.has('elec_'+l.month))) map[l.month] = l; }); // local wins
   return Object.values(map);
 }
 function mergeByDate(localArr, remoteArr) {
@@ -3654,6 +3661,7 @@ function clearStaff(keepMsg){
 function deleteStaff(id){
   if(!confirm('ลบรายการนี้?'))return;
   D.staff=(D.staff||[]).filter(x=>x.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
   save();renderStaffTable();renderLaborKPI();
 }
 function renderStaffTable(){
@@ -3693,6 +3701,7 @@ function clearLaborCost(keepMsg){
 function deleteLaborCost(id){
   if(!confirm('ลบรายการนี้?'))return;
   D.laborCosts=(D.laborCosts||[]).filter(x=>x.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
   save();renderLaborTable();renderLaborKPI();renderLaborMonthSummary();
 }
 function renderLaborTable(){
@@ -3846,6 +3855,7 @@ function clearElecBill(silent){
 function deleteElecBill(month){
   if(!confirm('ลบบิลค่าไฟ '+fmtMonth(month)+' ?'))return;
   D.electricityBills=(D.electricityBills||[]).filter(b=>b.month!==month);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push('elec_'+month);
   save();renderElecKPI();renderElecChart();renderElecHistory();
   const cur=document.getElementById('el-month')?.value;if(cur===month)clearElecBill(true);
 }
@@ -4257,6 +4267,7 @@ function deleteStockItem(id){
   if(!item)return;
   if(!confirm('ลบ "'+item.name+'" ออกจากสต็อก?'))return;
   D.inventoryItems=(D.inventoryItems||[]).filter(i=>i.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
   save();
   renderStockKPI();renderStockWarn();renderStockItems();populateStockTxSelect();populateStockLogFilter();
 }
@@ -4372,6 +4383,7 @@ function renderStockLog(){
 function deleteStockLog(id){
   if(!confirm('ลบรายการนี้? (ยอดสต็อกจะไม่ถูกย้อนกลับ)'))return;
   D.inventoryLog=(D.inventoryLog||[]).filter(l=>l.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
   save();renderStockLog();
 }
 
@@ -4594,11 +4606,11 @@ function saveFeed(){
   const total=parseFloat(document.getElementById('fd-total').value)||null;
   if(!total){showMsg('fd-msg','warn','กรุณากรอกปริมาณอาหาร');return}
   const p=pond(pid);if(!p)return;if(!p.feedLog)p.feedLog=[];
-  const rec={date:d,age:parseInt(document.getElementById('fd-age').value)||0,
+  const rec={id:'fd_'+pid+'_'+d,date:d,age:parseInt(document.getElementById('fd-age').value)||0,
     feedBrand:document.getElementById('fd-brand').value,feedGrade:document.getElementById('fd-grade').value,
     totalFeed:total,feedRate:parseFloat(document.getElementById('fd-rate').value)||null,
     notes:document.getElementById('fd-notes').value};
-  const idx=p.feedLog.findIndex(r=>r.date===d);
+  const idx=p.feedLog.findIndex(r=>r.id===rec.id||r.date===d);
   if(idx>=0){p.feedLog[idx]=rec;showMsg('fd-msg','warn',`อัปเดต ${fD(d)}`)}
   else{p.feedLog.push(rec);p.feedLog.sort((a,b)=>new Date(a.date)-new Date(b.date));showMsg('fd-msg','ok',`✅ อาหาร ${total.toFixed(1)} กก. บ่อ ${p.name}`)}
   save();renderFeedTable();renderFeedMetrics(pid);renderFeedChart();renderOv();
@@ -4663,12 +4675,15 @@ function renderFeedTable(){
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
   const pk=feedPer100k;
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ยี่ห้อ</th><th>เบอร์</th><th>รวม (กก.)</th><th>กก./แสน</th><th>Feed Rate (%อาหาร)</th><th>หมายเหตุ</th></tr></thead><tbody>${
-    rows.map((r,i)=>{const v=pk(r.totalFeed,p.stock);return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editFeed('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteFeed('${pid}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.feedBrand||'-'}</td><td>${r.feedGrade||'-'}</td><td><strong>${r.totalFeed?.toFixed(1)||'-'}</strong></td><td style="color:var(--p);font-weight:600">${v!=null?v.toFixed(2):'-'}</td><td>${r.feedRate?r.feedRate+'%':'-'}</td><td>${r.notes||'-'}</td></tr>`}).join('')}</tbody></table>`;
+    rows.map((r,i)=>{const v=pk(r.totalFeed,p.stock);return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editFeed('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteFeed('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.feedBrand||'-'}</td><td>${r.feedGrade||'-'}</td><td><strong>${r.totalFeed?.toFixed(1)||'-'}</strong></td><td style="color:var(--p);font-weight:600">${v!=null?v.toFixed(2):'-'}</td><td>${r.feedRate?r.feedRate+'%':'-'}</td><td>${r.notes||'-'}</td></tr>`}).join('')}</tbody></table>`;
 }
-function deleteFeed(pid,d){
-  if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(d)+' ใช่หรือไม่?'))return;
+function deleteFeed(pid,id){
   const p=pond(pid);if(!p)return;
-  p.feedLog=(p.feedLog||[]).filter(r=>r.date!==d);
+  const target=p.feedLog.find(r=>r.id===id);
+  if(!target){alert('ไม่พบรายการ');return;}
+  if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(target.date)+' ใช่หรือไม่?'))return;
+  p.feedLog=(p.feedLog||[]).filter(r=>r.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
   save();renderFeedTable();renderFeedChart();
 }
 // ===== SAMPLING =====
@@ -4710,11 +4725,11 @@ function saveSample(){
   const pdg=p.samples.length>0?parseFloat(getPDG([...p.samples,{age,abw}])):null;
   const sizeEl=document.getElementById('sp-size');
   const sizeVal=sizeEl?parseInt(sizeEl.value)||null:abw?Math.round(1000/abw):null;
-  const rec={date:d,age,sampleCount:parseInt(document.getElementById('sp-count').value)||null,
+  const rec={id:'sp_'+pid+'_'+d,date:d,age,sampleCount:parseInt(document.getElementById('sp-count').value)||null,
     sampleWeight:parseFloat(document.getElementById('sp-weight').value)||null,
     abw,plCount:sizeVal,survivalRate:surv,biomass:bm,pdg,
     notes:document.getElementById('sp-notes').value};
-  const idx=p.samples.findIndex(r=>r.date===d);
+  const idx=p.samples.findIndex(r=>r.id===rec.id||r.date===d);
   if(idx>=0){p.samples[idx]=rec;showMsg('sp-msg','warn',`อัปเดต ${fD(d)}`)}
   else{p.samples.push(rec);p.samples.sort((a,b)=>new Date(a.date)-new Date(b.date));showMsg('sp-msg','ok',`✅ ABW: ${abw}g | Biomass: ${bm?.toFixed(0)||'-'}kg | PDG: ${pdg||'-'}g/วัน`)}
   save();renderSampleTable();renderSampleMetrics(pid);renderSampleChart();renderOv();
@@ -4761,12 +4776,15 @@ function renderSampleTable(){
   const p=pond(pid);const rows=(p?.samples||[]).slice().reverse();
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ตัวอย่าง</th><th>น้ำหนักรวม (กก.)</th><th>ABW (g)</th><th>ไซส์ (ตัว/กก.)</th><th>Survival%</th><th>Biomass (kg)</th><th>PDG (g/วัน)</th><th>หมายเหตุ</th></tr></thead><tbody>${
-    rows.map((r,i)=>`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editSample('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteSample('${pid}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.sampleCount||'-'}</td><td>${r.sampleWeight!=null?r.sampleWeight+' กก.':'-'}</td><td><strong style="color:var(--p)">${r.abw?.toFixed(2)||'-'}</strong></td><td><strong style="color:var(--in)">${r.plCount||'-'}</strong></td><td>${r.survivalRate?r.survivalRate+'%':'-'}</td><td>${r.biomass?.toFixed(0)||'-'}</td><td>${r.pdg||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')}</tbody></table>`;
+    rows.map((r,i)=>`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editSample('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteSample('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.sampleCount||'-'}</td><td>${r.sampleWeight!=null?r.sampleWeight+' กก.':'-'}</td><td><strong style="color:var(--p)">${r.abw?.toFixed(2)||'-'}</strong></td><td><strong style="color:var(--in)">${r.plCount||'-'}</strong></td><td>${r.survivalRate?r.survivalRate+'%':'-'}</td><td>${r.biomass?.toFixed(0)||'-'}</td><td>${r.pdg||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')}</tbody></table>`;
 }
-function deleteSample(pid,d){
-  if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(d)+' ใช่หรือไม่?'))return;
+function deleteSample(pid,id){
   const p=pond(pid);if(!p)return;
-  p.samples=(p.samples||[]).filter(r=>r.date!==d);
+  const target=p.samples.find(r=>r.id===id);
+  if(!target){alert('ไม่พบรายการ');return;}
+  if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(target.date)+' ใช่หรือไม่?'))return;
+  p.samples=(p.samples||[]).filter(r=>r.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
   save();renderSampleTable();renderSampleChart();
 }
 // plankton section removed
@@ -4776,7 +4794,7 @@ function saveWaterLog(){
   const pid=document.getElementById('wl-pond').value,d=document.getElementById('wl-date').value;
   if(!pid||!d){showMsg('wl-msg','warn','กรุณาเลือกบ่อและวันที่');return}
   const p=pond(pid);if(!p)return;if(!p.waterLog)p.waterLog=[];
-  const rec={date:d,age:parseInt(document.getElementById('wl-age').value)||0,
+  const rec={id:'wl_'+pid+'_'+d+'_'+Date.now(),date:d,age:parseInt(document.getElementById('wl-age').value)||0,
     action:document.getElementById('wl-action').value,vol:parseFloat(document.getElementById('wl-vol').value)||null,
     notes:document.getElementById('wl-notes').value};
   p.waterLog.push(rec);p.waterLog.sort((a,b)=>new Date(a.date)-new Date(b.date));
@@ -4802,13 +4820,15 @@ function renderWaterTable(){
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
   const wlPond=pond(pid);const wlFull=(wlPond?.waterLog||[]).slice().reverse();
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>การดำเนินการ</th><th>ปริมาณ (ซม.)</th><th>หมายเหตุ</th></tr></thead><tbody>${
-    rows.map((r,i)=>{const origIdx=(wlPond?.waterLog||[]).indexOf(r);return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editWaterLog('${pid}',${origIdx})">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteWaterLog('${pid}',${origIdx})">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td><span class="badge b-info">${WL_ACT[r.action]||r.action}</span></td><td>${r.vol?r.vol+' ซม.':'-'}</td><td>${r.notes||'-'}</td></tr>`}).join('')}</tbody></table>`;
+    rows.map((r,i)=>{const origIdx=(wlPond?.waterLog||[]).indexOf(r);return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editWaterLog('${pid}',${origIdx})">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteWaterLog('${pid}','${r.id||origIdx}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td><span class="badge b-info">${WL_ACT[r.action]||r.action}</span></td><td>${r.vol?r.vol+' ซม.':'-'}</td><td>${r.notes||'-'}</td></tr>`}).join('')}</tbody></table>`;
 }
-function deleteWaterLog(pid,idx){
-  const p=pond(pid);if(!p||!p.waterLog||!p.waterLog[idx])return;
-  const d=p.waterLog[idx].date;
-  if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(d)+' ใช่หรือไม่?'))return;
-  p.waterLog.splice(idx,1);
+function deleteWaterLog(pid,id){
+  const p=pond(pid);if(!p)return;
+  const target=(p.waterLog||[]).find(r=>r.id===id||String(r.id)===String(id));
+  if(!target){alert('ไม่พบรายการ');return;}
+  if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(target.date)+' ใช่หรือไม่?'))return;
+  p.waterLog=(p.waterLog||[]).filter(r=>r!==target);
+  D.deletedIds=D.deletedIds||[];if(target.id)D.deletedIds.push(target.id);
   save();renderWaterTable();renderWaterSummary();
 }
 // ===== CHEMICAL LOG =====
@@ -4855,7 +4875,7 @@ function saveChem(){
     unit:document.getElementById('ch-unit').value,
     reason:document.getElementById('ch-reason').value,notes:document.getElementById('ch-notes').value};
   const ponds=pid==='all'?D.ponds:[pond(pid)].filter(Boolean);
-  ponds.forEach(p=>{if(!p.chemLog)p.chemLog=[];p.chemLog.push({...rec,pondId:p.id});p.chemLog.sort((a,b)=>new Date(a.date)-new Date(b.date))});
+  ponds.forEach(p=>{if(!p.chemLog)p.chemLog=[];p.chemLog.push({...rec,pondId:p.id,id:'ch_'+p.id+'_'+d+'_'+(product||'')+'_'+Date.now()});p.chemLog.sort((a,b)=>new Date(a.date)-new Date(b.date))});
   showMsg('ch-msg','ok',`✅ ${getCatLabel(rec.category)} ${rec.product||''} ${rec.amount||''} ${rec.unit} ${pid==='all'?'ทุกบ่อ':'บ่อ '+ponds[0]?.name}`);
   save();renderChemTable();renderChemSummary();
 }
@@ -4889,12 +4909,15 @@ function renderChemTable(){
   allLogs.sort((a,b)=>new Date(b.date)-new Date(a.date));
   if(!allLogs.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>บ่อ</th><th>หมวด</th><th>ผลิตภัณฑ์</th><th>ปริมาณ</th><th>จุดประสงค์</th><th>หมายเหตุ</th></tr></thead><tbody>${
-    allLogs.slice(0,50).map((r,i)=>`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editChem('${r.pondId||''}','${r.date}','${r.product||''}','${r.category||''}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteChem('${r.pondId||''}','${r.date}','${r.product||''}','${r.category||''}')">🗑️</button></td><td>${fD(r.date)}</td><td><span class="badge b-info">บ่อ ${r.pondName}</span></td><td>${getCatLabel(r.category)}</td><td>${r.product||'-'}</td><td>${r.amount?r.amount+' '+r.unit:'-'}</td><td>${r.reason||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')}</tbody></table>`;
+    allLogs.slice(0,50).map((r,i)=>`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editChem('${r.pondId||''}','${r.date}','${r.product||''}','${r.category||''}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteChem('${r.pondId||''}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td><span class="badge b-info">บ่อ ${r.pondName}</span></td><td>${getCatLabel(r.category)}</td><td>${r.product||'-'}</td><td>${r.amount?r.amount+' '+r.unit:'-'}</td><td>${r.reason||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')}</tbody></table>`;
 }
-function deleteChem(pid,d,product,cat){
-  if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(d)+' ใช่หรือไม่?'))return;
+function deleteChem(pid,id){
   const p=pond(pid);if(!p)return;
-  p.chemLog=(p.chemLog||[]).filter(r=>!(r.date===d&&(r.product||'')===(product||'')&&(r.category||'')===(cat||'')));
+  const target=(p.chemLog||[]).find(r=>r.id===id);
+  if(!target){alert('ไม่พบรายการ');return;}
+  if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(target.date)+' ใช่หรือไม่?'))return;
+  p.chemLog=(p.chemLog||[]).filter(r=>r.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
   save();renderChemTable();renderChemSummary();
 }
 // ===== LAB RESULTS =====
@@ -4923,7 +4946,7 @@ function saveLab(){
   const p=pond(pid);if(!p)return;if(!p.labResults)p.labResults=[];
   const tg=parseFloat(document.getElementById('lb-tcbs-g').value)||null;
   const ty=parseFloat(document.getElementById('lb-tcbs-y').value)||null;
-  const rec={date:d,age:parseInt(document.getElementById('lb-age').value)||0,
+  const rec={id:'lb_'+pid+'_'+d,date:d,age:parseInt(document.getElementById('lb-age').value)||0,
     labName:document.getElementById('lb-lab').value,tcbsGreen:tg,tcbsYellow:ty,
     tvc:parseFloat(document.getElementById('lb-tvc').value)||null,
     ehp:document.getElementById('lb-ehp').value!==''?parseFloat(document.getElementById('lb-ehp').value):null,
@@ -4932,7 +4955,7 @@ function saveLab(){
     lipidDroplet:document.getElementById('lb-lipid').value!==''?parseFloat(document.getElementById('lb-lipid').value):null,
     hepato:document.getElementById('lb-hepato').value,
     notes:document.getElementById('lb-notes').value};
-  const idx=p.labResults.findIndex(r=>r.date===d);
+  const idx=p.labResults.findIndex(r=>r.id===rec.id||r.date===d);
   const sg=tg!==null?(tg>1000?'danger':tg>100?'warn':'ok'):'ok';
   if(idx>=0){p.labResults[idx]=rec;showMsg('lb-msg','warn',`อัปเดต ${fD(d)}`)}
   else{p.labResults.push(rec);p.labResults.sort((a,b)=>new Date(a.date)-new Date(b.date));showMsg('lb-msg',sg==='danger'?'danger':sg==='warn'?'warn':'ok',`✅ บันทึกผลแล็บ บ่อ ${p.name} 🟢${tg||'-'} 🟡${ty||'-'} CFU/mL`)}
@@ -4963,13 +4986,16 @@ function renderLabTable(){
       const gutCls=(typeof r.gutInflam==='number')?(r.gutInflam>30?'b-danger':r.gutInflam>10?'b-warn':'b-ok'):'b-na';
       const lipidDisp=(typeof r.lipidDroplet==='number')?`${r.lipidDroplet}%`:'-';
       const lipidCls=(typeof r.lipidDroplet==='number')?(r.lipidDroplet>=70?'b-ok':r.lipidDroplet>=50?'b-warn':'b-danger'):'b-na';
-      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editLab('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteLab('${pid}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.labName||'-'}</td><td style="font-weight:700;color:${sc(sg)}">${r.tcbsGreen!=null?r.tcbsGreen.toLocaleString():'-'}</td><td>${r.tcbsYellow!=null?r.tcbsYellow.toLocaleString():'-'}</td><td>${r.tvc?r.tvc.toExponential(1):'-'}</td><td><span class="badge ${ehpCls}">${ehpDisp}</span></td><td><span class="badge ${ehpLarvaCls}">${ehpLarvaDisp}</span></td><td><span class="badge ${gutCls}">${gutDisp}</span></td><td><span class="badge ${lipidCls}">${lipidDisp}</span></td><td><span class="badge ${r.hepato==='normal'?'b-ok':r.hepato==='pale'?'b-warn':'b-danger'}">${HEPATO_LBL[r.hepato]||r.hepato}</span></td><td>${r.notes||'-'}</td></tr>`;
+      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editLab('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteLab('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.labName||'-'}</td><td style="font-weight:700;color:${sc(sg)}">${r.tcbsGreen!=null?r.tcbsGreen.toLocaleString():'-'}</td><td>${r.tcbsYellow!=null?r.tcbsYellow.toLocaleString():'-'}</td><td>${r.tvc?r.tvc.toExponential(1):'-'}</td><td><span class="badge ${ehpCls}">${ehpDisp}</span></td><td><span class="badge ${ehpLarvaCls}">${ehpLarvaDisp}</span></td><td><span class="badge ${gutCls}">${gutDisp}</span></td><td><span class="badge ${lipidCls}">${lipidDisp}</span></td><td><span class="badge ${r.hepato==='normal'?'b-ok':r.hepato==='pale'?'b-warn':'b-danger'}">${HEPATO_LBL[r.hepato]||r.hepato}</span></td><td>${r.notes||'-'}</td></tr>`;
     }).join('')}</tbody></table>`;
 }
-function deleteLab(pid,d){
-  if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(d)+' ใช่หรือไม่?'))return;
+function deleteLab(pid,id){
   const p=pond(pid);if(!p)return;
-  p.labResults=(p.labResults||[]).filter(r=>r.date!==d);
+  const target=(p.labResults||[]).find(r=>r.id===id);
+  if(!target){alert('ไม่พบรายการ');return;}
+  if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(target.date)+' ใช่หรือไม่?'))return;
+  p.labResults=(p.labResults||[]).filter(r=>r.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
   save();renderLabTable();renderOv();
 }
 // ===== COMPARE =====
@@ -5659,7 +5685,9 @@ function savePond(){
 }
 function delPond(id){
   const p=pond(id);if(!confirm(`ลบบ่อ ${p.name} และข้อมูลทั้งหมด?`))return;
-  D.ponds=D.ponds.filter(x=>x.id!==id);save();renderManage();populateAll();renderOv();
+  D.ponds=D.ponds.filter(x=>x.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
+  save();renderManage();populateAll();renderOv();
 }
 // ===== CROP CYCLES =====
 const PREP_STEPS = [
@@ -6402,7 +6430,8 @@ function saveHarvest(){
 function deleteHarvest(id){
   if(!confirm('ลบรายการนี้?'))return;
   D.harvestLog=(D.harvestLog||[]).filter(r=>r.id!==id);
-  save();fbSave();renderHarvest();
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
+  save();renderHarvest();
 }
 function renderHarvest(){
   if(!D.harvestLog)D.harvestLog=[];
