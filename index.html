@@ -182,7 +182,10 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .fg{display:flex;flex-direction:column;gap:4px}.fl{font-size:12px;color:var(--tx2);font-weight:600}
 .fi{padding:8px 10px;border:1.5px solid var(--bd);border-radius:6px;font-size:13px;color:var(--tx);background:var(--sf);transition:border-color .15s;width:100%}
 .fi:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px rgba(224,161,6,.12)}
-.fi.fi-ok{border-color:var(--ok);background:var(--ob)}.fi.fi-warn{border-color:var(--w);background:var(--wb)}.fi.fi-danger{border-color:var(--d);background:var(--db)}
+.fi.fi-ok{border-color:var(--ok);background:var(--ob)}
+/* ข้อ 8: เตือนค่าเกินเกณฑ์ทันทีตอนพิมพ์ — เพิ่ม glow ให้สังเกตได้ชัด */
+.fi.fi-warn{border-color:var(--w);background:var(--wb);border-width:2px;box-shadow:0 0 0 3px rgba(180,83,9,.15)}
+.fi.fi-danger{border-color:var(--d);background:var(--db);border-width:2px;box-shadow:0 0 0 3px rgba(220,38,38,.18);font-weight:700}
 .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:11px}
 
 /* ── Buttons ── */
@@ -4467,7 +4470,8 @@ function saveWQ(){
   const pid=document.getElementById('ep-pond').value,d=document.getElementById('ep-date').value;
   if(!pid||!d){showMsg('ep-msg','warn','กรุณาเลือกบ่อและวันที่');return}
   const p=pond(pid);if(!p)return;
-  const rec={date:d,age:parseInt(document.getElementById('ep-age').value)||0};
+  // ข้อ 1: คำนวณอายุอัตโนมัติ — ไม่อ่านจาก input (ป้องกันค่าผิดจากการกรอกมือ)
+  const rec={date:d,age:dDiff(p.startDate,d)};
   PARAMS.forEach(pm=>{const v=document.getElementById('ef-'+pm.key)?.value;rec[pm.key]=v===''||v===undefined?null:parseFloat(v)});
   rec.notes=document.getElementById('ep-notes').value;
   const idx=p.records.findIndex(r=>r.date===d);
@@ -4494,9 +4498,19 @@ function renderWQTable(){
   const p=pond(pid);if(!p||!p.records.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
   const rec=[...p.records].reverse().slice(0,rows);
   const show=PARAMS.slice(0,8);
-  wrap.innerHTML=`<div style="font-size:11px;color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวาเพื่อดูทุกค่า →</div><table class="tbl" style="white-space:nowrap"><thead><tr><th style="white-space:nowrap"></th><th style="white-space:nowrap">วันที่</th><th style="white-space:nowrap">อายุ</th>${show.map(pm=>`<th style="white-space:nowrap">${pm.lbl}</th>`).join('')}<th style="white-space:nowrap">หมายเหตุ</th></tr></thead><tbody>${
-    rec.map((r,i)=>`<tr class="${i===0?'hi':''}""><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editWQ('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteWQ('${pid}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td>${show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v);return`<td style="color:${v!==null?sc(s):'var(--tx3)'}">${v!==null&&v!==undefined?v:'-'}</td>`}).join('')}<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.notes||'-'}</td></tr>`)
-    .join('')}</tbody></table>`;
+  // ข้อ 4: แสดงชื่อบ่อในหัวตาราง
+  const pondHdr=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:13px;color:var(--tx3)">ประวัติค่าน้ำ:</span><span style="font-size:14px;font-weight:700;color:var(--p)">${p.name}</span><span style="font-size:11px;color:var(--tx3)">(${p.records.length} บันทึก)</span></div>`;
+  wrap.innerHTML=pondHdr+`<div style="font-size:11px;color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวาเพื่อดูทุกค่า →</div><table class="tbl" style="white-space:nowrap"><thead><tr><th style="white-space:nowrap"></th><th style="white-space:nowrap">วันที่</th><th style="white-space:nowrap">อายุ</th>${show.map(pm=>`<th style="white-space:nowrap">${pm.lbl}</th>`).join('')}<th style="white-space:nowrap">หมายเหตุ</th></tr></thead><tbody>${
+    rec.map((r,i)=>{
+      // ข้อ 1: คำนวณอายุจากวันปล่อย ไม่ใช้ค่าที่เก็บไว้ (ป้องกันค่าผิดจากการกรอกมือ)
+      const ageCalc=p.startDate?dDiff(p.startDate,r.date):r.age;
+      return`<tr class="${i===0?'hi':''}""><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editWQ('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteWQ('${pid}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc}</td>${show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v);
+        // ข้อ 5: null (ยังไม่กรอก) แสดง – สีเทา / 0 (ค่าจริง) แสดง 0 ตามสถานะ
+        const cell=v===null||v===undefined
+          ?`<span style="color:var(--tx3);font-size:12px" title="ยังไม่ได้กรอก">–</span>`
+          :`<span style="color:${sc(s)}"${v===0?' title="ค่าจริงเป็น 0"':''}>${v}</span>`;
+        return`<td>${cell}</td>`;}).join('')}<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.notes||'<span style="color:var(--tx3);font-size:12px">–</span>'}</td></tr>`;
+    }).join('')}</tbody></table>`;
 }
 function deleteWQ(pid,d){
   if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(d)+' ใช่หรือไม่?'))return;
@@ -6889,10 +6903,18 @@ function renderPLTable(rows){
     const prof=r.netProfit;
     const cl=prof>0?'var(--ok)':prof<0?'var(--d)':'var(--tx)';
     const noData=!r.revenue;
+    // ข้อ 3: ตรวจว่าต้นทุนหลัก (ลูกกุ้ง+อาหาร+ค่าแรง+ค่าไฟ) ยังไม่ได้ลง
+    const costMain=(r.costFry||0)+(r.costFeed||0)+(r.costLabor||0)+(r.costElec||0);
+    const costIncomplete=r.revenue>0&&costMain===0;
     const rowStyle=noData?'opacity:0.45':'';
     const cropYearBE=r.cropYear?(r.cropYear>2500?r.cropYear-2500:r.cropYear):'';
+    const dataBadge=noData
+      ?`<div style="font-size:10px;color:var(--d);margin-top:2px;font-weight:600">⚠️ ยังไม่มีข้อมูลการเงิน</div>`
+      :costIncomplete
+      ?`<div style="font-size:10px;color:var(--w);margin-top:2px;font-weight:600">⚠️ ต้นทุนยังไม่ครบ</div>`
+      :'';
     return`<tr style="${rowStyle}">
-      <td style="font-weight:700">${r.pondName||r.pondId}</td><td style="text-align:center">รอบ ${r.cropNum||'-'}${cropYearBE?'/'+cropYearBE:''}</td><td>${fD(r.closeDate)}</td>
+      <td style="font-weight:700">${r.pondName||r.pondId}</td><td style="text-align:center">รอบ ${r.cropNum||'-'}${cropYearBE?'/'+cropYearBE:''}${dataBadge}</td><td>${fD(r.closeDate)}</td>
       <td style="text-align:right">${r.totalWeight?r.totalWeight.toLocaleString():'-'}</td>
       <td style="text-align:right">${r.price?r.price.toLocaleString():'-'}</td>
       <td style="text-align:right">${r.revenue?Math.round(r.revenue).toLocaleString():'-'}</td>
