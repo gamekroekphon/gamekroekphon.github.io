@@ -380,6 +380,22 @@ body.role-admin .admin-only{display:revert!important}
 .ov-kk-v{font-size:18px;font-weight:500;color:var(--tx)}
 .ov-kk-u{font-size:11px;color:var(--tx2)}
 .ov-sec-lbl{font-size:11px;font-weight:500;color:var(--tx3);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.04em}
+/* ข้อ 9: เช็คลิสต์วันนี้ */
+.cl-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px;margin:16px 0}
+.cl-hdr{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.cl-title{font-size:14px;font-weight:700;color:var(--tx)}
+.cl-prog{font-size:11px;color:var(--tx3);background:var(--sf2);padding:2px 9px;border-radius:99px;white-space:nowrap}
+.cl-bar{height:4px;background:var(--sf2);border-radius:2px;margin-bottom:12px;overflow:hidden}
+.cl-bar-fill{height:100%;background:var(--ok);border-radius:2px;transition:width .3s}
+.cl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px}
+.cl-pond{background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:8px 10px}
+.cl-pond-name{font-size:12px;font-weight:700;color:var(--tx);margin-bottom:6px}
+.cl-items{display:flex;flex-direction:column;gap:3px}
+.cl-item{display:flex;align-items:center;gap:6px;font-size:11px}
+.cl-dot-ok{width:8px;height:8px;border-radius:50%;background:var(--ok);flex-shrink:0}
+.cl-dot-no{width:8px;height:8px;border-radius:50%;background:var(--sf3,#ccc);flex-shrink:0;border:1px solid var(--bd)}
+.cl-lbl-ok{color:var(--tx2)}
+.cl-lbl-no{color:var(--tx3)}
 .ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:8px;margin-bottom:4px}
 .pc-ov{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:10px 11px;position:relative;cursor:pointer;transition:border-color .15s,transform .1s}
 .pc-ov:hover{border-color:var(--p);transform:translateY(-1px)}
@@ -523,6 +539,7 @@ body.role-admin .admin-only{display:revert!important}
 <div id="sec-overview" class="sec on">
   <div class="ov-kpi-bar" id="ov-kpi-bar"></div>
   <div id="ov-sections"></div>
+  <div id="ov-checklist"></div>
   <div class="home-quick">
     <button onclick="document.getElementById('tab-entry')?.click()"><span class="qi">◔</span>กรอกค่าน้ำ</button>
     <button onclick="document.getElementById('tab-feed')?.click()"><span class="qi">▦</span>กรอกอาหาร</button>
@@ -2432,6 +2449,8 @@ function sortedPonds(){
 function today(){return new Date(Date.now()+7*3600000).toISOString().split('T')[0]}
 function dDiff(a,b){return Math.floor((new Date(b)-new Date(a))/86400000)}
 function fD(d){if(!d)return'-';return new Date(d).toLocaleDateString('th-TH',{year:'2-digit',month:'short',day:'numeric'})}
+// ข้อ 2: แปลง cropYear เป็น พ.ศ. 4 หลักเสมอ (รองรับ BE 4 หลัก, CE 4 หลัก, และ BE 2 หลัก)
+function yearBE(y){if(!y)return'';const n=parseInt(y);if(isNaN(n))return'';if(n>2500)return n;if(n>100)return n+543;return n+2500;}
 // ── ข้อ2: input[type=date] เป็น ค.ศ. เสมอ (ข้อจำกัดเบราว์เซอร์) จึงแสดงป้าย พ.ศ. ไทยคู่กันเพื่อไม่ให้สับสน ──
 function syncDateHint(el){
   if(!el||el.type!=='date')return;
@@ -3391,6 +3410,40 @@ function renderOv(){
   const trendIco={up:'<span style="color:var(--ok)">↓ ดีขึ้น</span>',down:'<span style="color:var(--d)">↑ แย่ลง</span>',flat:'<span style="color:var(--tx3)">→ เท่าเดิม</span>'};
   document.getElementById('ov-alerts').innerHTML=alerts.length>0?`<div class="card" style="margin-top:24px"><div class="card-t">🔔 การแจ้งเตือน</div>${alerts.slice(0,8).map(a=>`<div class="ai ${a.level}"><span>${a.level==='danger'?'🔴':'🟡'}</span><div><strong>บ่อ ${a.pond}</strong> · ${a.param}: <strong>${a.val!==null?a.val+a.unit:'-'}</strong>${a.trend&&trendIco[a.trend]?' · '+trendIco[a.trend]:''}</div></div>`).join('')}</div>`:'';
   document.getElementById('ov-ts').textContent=new Date().toLocaleString('th-TH');
+  renderChecklist();
+}
+function renderChecklist(){
+  const el=document.getElementById('ov-checklist');if(!el)return;
+  const td=today();
+  const actives=D.ponds.filter(p=>{const cls=pondStatusOv(p);return cls!=='prep'&&cls!=='empty'&&cls!=='closed';});
+  if(!actives.length){el.innerHTML='';return}
+  const ITEMS=[{key:'wq',lbl:'ค่าน้ำ'},{key:'feed',lbl:'อาหาร'},{key:'disease',lbl:'เฝ้าระวังโรค'},{key:'stock',lbl:'สต็อกรายวัน'}];
+  const pondChecks=actives.map(p=>{
+    const hasWQ=(p.records||[]).some(r=>r.date===td);
+    const hasFeed=(p.feedLog||[]).some(r=>r.date===td);
+    const hasDisease=(p.records||[]).some(r=>r.date===td&&r.diseaseWatch&&typeof r.diseaseWatch==='object'&&Object.keys(r.diseaseWatch).length>0);
+    const hasStock=(D.inventoryLog||[]).some(r=>r.date===td&&r.type==='out'&&(!r.pondId||r.pondId===p.id||r.pondId===''));
+    const checks={wq:hasWQ,feed:hasFeed,disease:hasDisease,stock:hasStock};
+    const done=Object.values(checks).filter(Boolean).length;
+    return{p,checks,done};
+  });
+  const fullDone=pondChecks.filter(pc=>pc.done===4).length;
+  const pct=actives.length>0?Math.round(fullDone/actives.length*100):0;
+  const dateStr=new Date(td+'T00:00:00').toLocaleDateString('th-TH-u-ca-buddhist',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  el.innerHTML=`<div class="cl-card">
+    <div class="cl-hdr">
+      <span class="cl-title">✅ เช็คลิสต์วันนี้ <span style="font-size:11px;font-weight:400;color:var(--tx3)">${dateStr}</span></span>
+      <span class="cl-prog">${fullDone}/${actives.length} บ่อ ครบทุกรายการ</span>
+    </div>
+    <div class="cl-bar"><div class="cl-bar-fill" style="width:${pct}%"></div></div>
+    <div class="cl-grid">${pondChecks.map(({p,checks})=>`<div class="cl-pond">
+      <div class="cl-pond-name">${p.name}</div>
+      <div class="cl-items">${ITEMS.map(it=>`<div class="cl-item">
+        <span class="${checks[it.key]?'cl-dot-ok':'cl-dot-no'}"></span>
+        <span class="${checks[it.key]?'cl-lbl-ok':'cl-lbl-no'}">${it.lbl}${checks[it.key]?' ✓':''}</span>
+      </div>`).join('')}</div>
+    </div>`).join('')}</div>
+  </div>`;
 }
 function jumpEntry(id){document.getElementById('tab-entry').click();setTimeout(()=>{document.getElementById('ep-pond').value=id;onEPond();},80)}
 // ===== เฝ้าระวังโรคตาเปล่ารายวัน =====
@@ -5367,7 +5420,7 @@ function onExPondChange(){
   }
   if(cropWrap)cropWrap.style.display='';
   if(cropSel){
-    cropSel.innerHTML=hist.map((c,i)=>`<option value="${i}">รอบที่ ${c.cropNum}/${c.cropYear} (ปิด ${c.closeDate?fD(c.closeDate):'-'})</option>`).join('');
+    cropSel.innerHTML=hist.map((c,i)=>`<option value="${i}">รอบที่ ${c.cropNum}/${yearBE(c.cropYear)} (ปิด ${c.closeDate?fD(c.closeDate):'-'})</option>`).join('');
     cropSel.value=String(hist.length-1);
   }
   renderExPreview();
@@ -5408,7 +5461,7 @@ function renderExChart(p){
   const hist=(p.cropHistory||[]).filter(c=>c.harvestResult);
   if(hist.length<1){wrap.style.display='none';return;}
   wrap.style.display='';
-  const labels=hist.map(c=>`รอบ ${c.cropNum}/${c.cropYear}`);
+  const labels=hist.map(c=>`รอบ ${c.cropNum}/${yearBE(c.cropYear)}`);
   const fcrData=hist.map(c=>c.harvestResult&&c.harvestResult.fcr!=null?c.harvestResult.fcr:null);
   const survData=hist.map(c=>c.harvestResult&&c.harvestResult.survivalRate!=null?c.harvestResult.survivalRate:null);
   const yieldData=hist.map(c=>{
@@ -5469,7 +5522,7 @@ function getCloseSummary(p,cropIdx){
   const yieldPerRai=(totalWeight&&p.size)?+(totalWeight/p.size).toFixed(1):null;
   const notesAll=[notesCrop,...rows.map(r=>r.notes).filter(Boolean)].filter(Boolean).join(' / ');
   const samples=lastCrop?(lastCrop.samples||[]):(p.samples||[]);
-  return{pondName:p.name,cropLabel:lastCrop?`รอบที่ ${lastCrop.cropNum}/${lastCrop.cropYear}`:'(รอบปัจจุบัน ยังไม่ปิด)',hatchery,stock,buyer,price,totalWeight,totalBaht,partialCount,ageDays,totalFeed,fcr,closeSize,adg,survivalRate,yieldPerRai,notesAll,closeDate,startDate,rows,feedLog,samples};
+  return{pondName:p.name,cropLabel:lastCrop?`รอบที่ ${lastCrop.cropNum}/${yearBE(lastCrop.cropYear)}`:'(รอบปัจจุบัน ยังไม่ปิด)',hatchery,stock,buyer,price,totalWeight,totalBaht,partialCount,ageDays,totalFeed,fcr,closeSize,adg,survivalRate,yieldPerRai,notesAll,closeDate,startDate,rows,feedLog,samples};
 }
 async function genPDF(){
   const pid=document.getElementById('ex-pond').value;
@@ -5734,7 +5787,7 @@ function renderCrops(){
   [curY-1,curY,curY+1].forEach(y=>years.add(y));
   D.ponds.forEach(p=>{(p.cropHistory||[]).forEach(c=>{years.add(c.cropYear||c.year||curY);});years.add(p.cropYear||curY);});
   const yrEl=document.getElementById('cr-year');
-  if(yrEl){const cv=yrEl.value||curY;yrEl.innerHTML=[...years].sort((a,b)=>b-a).map(y=>`<option value="${y}"${y==cv?' selected':''}>${y}</option>`).join('');}
+  if(yrEl){const cv=yrEl.value||curY;yrEl.innerHTML=[...years].sort((a,b)=>yearBE(b)-yearBE(a)).map(y=>`<option value="${y}"${y==cv?' selected':''}>${yearBE(y)} พ.ศ.</option>`).join('');}
   // metrics
   let totalClosed=0,onTrack=0,behindTrack=0;
   D.ponds.forEach(p=>{
@@ -5826,7 +5879,7 @@ function renderCrops(){
       return`<tr style="border-bottom:1px solid var(--bd)">
         <td style="padding:8px 10px;font-weight:700">บ่อ ${c.pondName}</td>
         <td style="padding:8px;text-align:center">${c.cropNum}</td>
-        <td style="padding:8px;text-align:center">${c.cropYear||c.year||'-'}</td>
+        <td style="padding:8px;text-align:center">${yearBE(c.cropYear||c.year)||'-'}</td>
         <td style="padding:8px;text-align:center;font-size:12px">${fD(c.startDate||'')}</td>
         <td style="padding:8px;text-align:center;font-size:12px">${fD(c.closeDate||'')}</td>
         <td style="padding:8px;text-align:center;font-weight:700;color:${dClr}">${days}</td>
@@ -5944,7 +5997,7 @@ function onChPondChange(){
     renderClosedDetail();
     return;
   }
-  cycleSel.innerHTML=p.cropHistory.map((c,i)=>`<option value="${i}">รอบที่ ${c.cropNum||i+1}/${c.cropYear||c.year||''} (ปิด ${c.closeDate?fD(c.closeDate):'-'})</option>`).join('');
+  cycleSel.innerHTML=p.cropHistory.map((c,i)=>`<option value="${i}">รอบที่ ${c.cropNum||i+1}/${yearBE(c.cropYear||c.year)||''} (ปิด ${c.closeDate?fD(c.closeDate):'-'})</option>`).join('');
   cycleSel.value=String(p.cropHistory.length-1);
   onChCycleChange();
 }
@@ -6040,9 +6093,9 @@ function setChCompareMode(mode){
   let options=[];
   if(mode==='same'){
     const p=pond(pid);
-    options=(p?.cropHistory||[]).map((c,i)=>({pondId:pid,idx:i,label:`รอบ ${c.cropNum||i+1}/${c.cropYear||c.year||''}`}));
+    options=(p?.cropHistory||[]).map((c,i)=>({pondId:pid,idx:i,label:`รอบ ${c.cropNum||i+1}/${yearBE(c.cropYear||c.year)||''}`}));
   }else{
-    D.ponds.forEach(p=>(p.cropHistory||[]).forEach((c,i)=>{options.push({pondId:p.id,idx:i,label:`บ่อ${p.name} รอบ${c.cropNum||i+1}/${c.cropYear||c.year||''}`})}));
+    D.ponds.forEach(p=>(p.cropHistory||[]).forEach((c,i)=>{options.push({pondId:p.id,idx:i,label:`บ่อ${p.name} รอบ${c.cropNum||i+1}/${yearBE(c.cropYear||c.year)||''}`})}));
   }
   _chCompareSel=_chCompareSel.filter(sl=>options.some(o=>o.pondId===sl.pondId&&o.idx===sl.idx));
   if(!_chCompareSel.length&&pid&&!isNaN(curIdx))_chCompareSel=[{pondId:pid,idx:curIdx}];
@@ -6066,7 +6119,7 @@ function renderChCompareChart(){
   const items=_chCompareSel.map(sl=>{
     const p=pond(sl.pondId);const c=p&&p.cropHistory?p.cropHistory[sl.idx]:null;if(!c)return null;
     const hr=c.harvestResult||{};
-    return{label:`บ่อ${p.name} รอบ${c.cropNum||sl.idx+1}/${c.cropYear||c.year||''}`,fcr:hr.fcr!=null?hr.fcr:null,surv:hr.survivalRate!=null?hr.survivalRate:null,size:hr.size!=null?hr.size:null};
+    return{label:`บ่อ${p.name} รอบ${c.cropNum||sl.idx+1}/${yearBE(c.cropYear||c.year)||''}`,fcr:hr.fcr!=null?hr.fcr:null,surv:hr.survivalRate!=null?hr.survivalRate:null,size:hr.size!=null?hr.size:null};
   }).filter(Boolean);
   if(_chCompareChart){_chCompareChart.destroy();_chCompareChart=null;}
   if(!items.length)return;
@@ -6845,7 +6898,7 @@ function initPL(){
   if(sel){
     const sorted=[...years].sort().reverse();
     const cur=sel.value||sorted[0]||'';
-    sel.innerHTML='<option value="">ทุกปี</option>'+sorted.map(y=>`<option value="${y}"${y===cur?' selected':''}>${parseInt(y)+543}</option>`).join('');
+    sel.innerHTML='<option value="">ทุกปี</option>'+sorted.map(y=>`<option value="${y}"${y===cur?' selected':''}>${yearBE(parseInt(y))}</option>`).join('');
   }
   renderPL();
 }
@@ -6907,7 +6960,7 @@ function renderPLTable(rows){
     const costMain=(r.costFry||0)+(r.costFeed||0)+(r.costLabor||0)+(r.costElec||0);
     const costIncomplete=r.revenue>0&&costMain===0;
     const rowStyle=noData?'opacity:0.45':'';
-    const cropYearBE=r.cropYear?(r.cropYear>2500?r.cropYear-2500:r.cropYear):'';
+    const cropYearBE=r.cropYear?yearBE(r.cropYear):'';
     const dataBadge=noData
       ?`<div style="font-size:10px;color:var(--d);margin-top:2px;font-weight:600">⚠️ ยังไม่มีข้อมูลการเงิน</div>`
       :costIncomplete
