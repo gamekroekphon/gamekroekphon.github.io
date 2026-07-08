@@ -10065,15 +10065,39 @@ const HISTORICAL_CROPS = {
 function seedHistoricalCrops() {
   if (!D || !D.ponds) { alert('ยังไม่ได้โหลดข้อมูล'); return; }
 
-  let added = 0, skipped = 0, notFound = [];
+  let added = 0, skipped = 0, created = 0;
 
-  D.ponds.forEach(pond => {
-    const pondName = (pond.name || '').trim();
+  // build pondMap by name for quick lookup
+  const pondMap = {};
+  D.ponds.forEach(p => { pondMap[(p.name||'').trim()] = p; });
+
+  // รวม keys ทั้งหมดใน HISTORICAL_CROPS ที่ขึ้นต้นด้วย A.
+  // (ข้าม B.x เพราะควร migrate ชื่อก่อน)
+  Object.keys(HISTORICAL_CROPS).forEach(pondName => {
     const histCrops = HISTORICAL_CROPS[pondName];
-    if (!histCrops || histCrops.length === 0) {
-      if (pondName && !notFound.includes(pondName)) notFound.push(pondName);
-      return;
+    if (!histCrops || histCrops.length === 0) return;
+
+    let pond = pondMap[pondName];
+
+    // ถ้าบ่อยังไม่มีในระบบ → สร้างบ่อเปล่าอัตโนมัติ (เฉพาะชื่อ A.x)
+    if (!pond && /^A\.\d+$/.test(pondName)) {
+      const newId = 'auto_' + pondName.replace('.', '_') + '_' + Date.now();
+      pond = {
+        id: newId,
+        name: pondName,
+        stock: 0,
+        size: 0,
+        startDate: '',
+        records: [], feedLog: [], samples: [], plankton: [],
+        waterLog: [], chemLog: [], labResults: [],
+        cropHistory: [], prepChecklist: {}
+      };
+      D.ponds.push(pond);
+      pondMap[pondName] = pond;
+      created++;
     }
+
+    if (!pond) return; // ยังไม่ match (เช่น B.x ที่ยังไม่ migrate)
 
     if (!pond.cropHistory) pond.cropHistory = [];
     const existingIds = new Set(pond.cropHistory.map(c => c.id));
@@ -10085,15 +10109,17 @@ function seedHistoricalCrops() {
       added++;
     });
 
-    // Sort cropHistory by startDate
     pond.cropHistory.sort((a, b) => (a.startDate || '').localeCompare(b.startDate || ''));
   });
 
+  // รายงานบ่อที่ยังหาไม่เจอ (B.x ที่ยังไม่ migrate)
+  const stillMissing = Object.keys(HISTORICAL_CROPS).filter(n => !pondMap[n] && HISTORICAL_CROPS[n].length > 0);
+
   save();
-  const msg = `✅ seed สำเร็จ: เพิ่ม ${added} รอบ, ข้ามซ้ำ ${skipped} รอบ` +
-    (notFound.length ? `\n⚠️ ไม่พบบ่อ: ${notFound.join(', ')}` : '');
+  let msg = `✅ seed สำเร็จ: เพิ่ม ${added} รอบ, ข้ามซ้ำ ${skipped} รอบ`;
+  if (created > 0) msg += `\n🆕 สร้างบ่อใหม่ ${created} บ่อ (เปล่า — กรอกข้อมูลภายหลัง)`;
+  if (stillMissing.length) msg += `\n⚠️ ยังหาไม่เจอ (ต้อง migrate B→A ก่อน): ${stillMissing.join(', ')}`;
   alert(msg);
-  console.log('seedCropHistory:', msg);
   populateAll();
   renderOv();
 }
