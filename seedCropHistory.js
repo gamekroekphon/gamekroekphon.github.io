@@ -3795,12 +3795,12 @@ const HISTORICAL_CROPS = {
       }
     },
     {
-      "id": "hist_A18_20250228",
+      "id": "hist_A18_20260228",
       "cropYear": 2569,
       "year": 2569,
       "cropNum": 1,
-      "startDate": "2025-02-28",
-      "closeDate": "2025-06-18",
+      "startDate": "2026-02-28",
+      "closeDate": "2026-04-03",
       "closed": true,
       "stock": 594986,
       "hatchery": "cp ชุมพร1",
@@ -4123,12 +4123,12 @@ const HISTORICAL_CROPS = {
       }
     },
     {
-      "id": "hist_A19_20250226",
+      "id": "hist_A19_20260226",
       "cropYear": 2569,
       "year": 2569,
       "cropNum": 1,
-      "startDate": "2025-02-26",
-      "closeDate": "2025-06-16",
+      "startDate": "2026-02-26",
+      "closeDate": "2026-04-04",
       "closed": true,
       "stock": 555030,
       "hatchery": "cp ชุมพร1",
@@ -4988,12 +4988,12 @@ const HISTORICAL_CROPS = {
       }
     },
     {
-      "id": "hist_A20_20250226",
+      "id": "hist_A20_20260226",
       "cropYear": 2569,
       "year": 2569,
       "cropNum": 1,
-      "startDate": "2025-02-26",
-      "closeDate": "2025-06-16",
+      "startDate": "2026-02-26",
+      "closeDate": "2026-04-07",
       "closed": true,
       "stock": 564018,
       "hatchery": "cp ชุมพร1",
