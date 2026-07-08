@@ -10017,10 +10017,9 @@ const HISTORICAL_CROPS = {
         "netProfit": null
       }
     }
-  ],
-  "B.5": [
+,
     {
-      "id": "hist_B5_20220228",
+      "id": "hist_A5_B_20220228",
       "cropYear": 2565,
       "year": 2565,
       "cropNum": 1,
@@ -10089,37 +10088,4 @@ function seedHistoricalCrops() {
         size: 0,
         startDate: '',
         records: [], feedLog: [], samples: [], plankton: [],
-        waterLog: [], chemLog: [], labResults: [],
-        cropHistory: [], prepChecklist: {}
-      };
-      D.ponds.push(pond);
-      pondMap[pondName] = pond;
-      created++;
-    }
-
-    if (!pond) return; // ยังไม่ match (เช่น B.x ที่ยังไม่ migrate)
-
-    if (!pond.cropHistory) pond.cropHistory = [];
-    const existingIds = new Set(pond.cropHistory.map(c => c.id));
-
-    histCrops.forEach(crop => {
-      if (existingIds.has(crop.id)) { skipped++; return; }
-      pond.cropHistory.push({ ...crop });
-      existingIds.add(crop.id);
-      added++;
-    });
-
-    pond.cropHistory.sort((a, b) => (a.startDate || '').localeCompare(b.startDate || ''));
-  });
-
-  // รายงานบ่อที่ยังหาไม่เจอ (B.x ที่ยังไม่ migrate)
-  const stillMissing = Object.keys(HISTORICAL_CROPS).filter(n => !pondMap[n] && HISTORICAL_CROPS[n].length > 0);
-
-  save();
-  let msg = `✅ seed สำเร็จ: เพิ่ม ${added} รอบ, ข้ามซ้ำ ${skipped} รอบ`;
-  if (created > 0) msg += `\n🆕 สร้างบ่อใหม่ ${created} บ่อ (เปล่า — กรอกข้อมูลภายหลัง)`;
-  if (stillMissing.length) msg += `\n⚠️ ยังหาไม่เจอ (ต้อง migrate B→A ก่อน): ${stillMissing.join(', ')}`;
-  alert(msg);
-  populateAll();
-  renderOv();
-}
+        waterLog: [], chemLog: [], la
