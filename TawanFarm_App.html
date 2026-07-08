@@ -1290,6 +1290,11 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
     <div style="font-size:13px;color:var(--tx2);margin-bottom:10px">ลบ entries ที่มี startDate ผิด (ปี 2025 แทนที่จะเป็น 2026) ของบ่อ A.18, A.19, A.20 รอบ 1 ปี 2569<br>หลังจากลบแล้ว กด "seed ประวัติการเลี้ยงย้อนหลัง" ด้านบนอีกครั้งเพื่อเพิ่มข้อมูลที่ถูกต้อง</div>
     <button class="btn btn-p" onclick="fixYear2569Round1()">🗑️ ลบรอบปีผิด A.18/19/20</button>
     <span id="fix2569-msg" style="font-size:12px;margin-left:10px;color:var(--ok)"></span>
+    <hr style="border:none;border-top:1px dashed var(--bd);margin:14px 0">
+    <div style="font-weight:700;color:var(--tx);margin-bottom:8px">⚡ Force-inject รอบ 1 ปี 2569 (A.18/19/20)</div>
+    <div style="font-size:13px;color:var(--tx2);margin-bottom:10px">เขียนข้อมูลรอบ 1 ปี 2569 ของ A.18, A.19, A.20 ลง Firebase โดยตรง (ข้าม ID check / tombstone ทั้งหมด)</div>
+    <button class="btn" onclick="forceInjectYear2569Round1()" style="background:#d97706;color:#fff">⚡ Force inject ทันที</button>
+    <span id="fi2569-msg" style="font-size:12px;margin-left:10px;color:var(--ok)"></span>
   </div>
   <!-- Mobile-only logout -->
   <div class="mobile-logout-block" style="display:none;margin-top:16px">
@@ -7132,10 +7137,4 @@ async function fixYear2569Round1(){
   }catch(e){
     if(msg)msg.textContent='❌ บันทึกไม่ได้: '+e.message;
   }
-}
-// ─── END FIX ──────────────────────────────────────────────────────────────
-
-</script>
-<script src="seedCropHistory.js"></script>
-<script src="seedHarvestHistory.js"></script></body>
-</html>                                                                                                                                                                                                                                                                                                                                                                          
+}
