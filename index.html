@@ -765,56 +765,29 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
 </div>
 <!-- CHEMICAL LOG -->
 <div id="sec-chem" class="sec">
-  <div class="sec-hdr"><div class="sec-title">🧪 บันทึกการใช้สารเคมี &amp; อาหารเสริม</div></div>
-  <div class="g2" style="margin-bottom:16px;align-items:start">
-    <div class="card">
-      <div class="card-t">📝 บันทึกการใช้</div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">บ่อ * (หรือทุกบ่อ)</label><select class="fi" id="ch-pond" onchange="onChPond()"><option value="all">ทุกบ่อ</option></select></div>
-          <div class="fg"><label class="fl">วันที่ *</label><input type="date" class="fi" id="ch-date"></div>
-        </div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-              <label class="fl" style="margin-bottom:0">หมวดหมู่ *</label>
-              <button type="button" class="btn btn-s btn-sm" onclick="toggleCatPanel()">⚙️ จัดการหมวด</button>
-            </div>
-            <select class="fi" id="ch-cat"></select>
-            <div id="cat-panel" style="display:none;margin-top:8px;padding:12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px">
-              <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:8px">หมวดหมู่ที่มี (กด ✕ เพื่อลบ)</div>
-              <div id="cat-tag-list" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px"></div>
-              <div style="display:flex;gap:6px">
-                <input type="text" class="fi" id="new-cat-input" placeholder="ชื่อหมวดใหม่..." style="flex:1;font-size:12px;padding:6px 8px">
-                <button type="button" class="btn btn-p btn-sm" onclick="addCategory()">+ เพิ่ม</button>
-              </div>
-            </div>
-          </div>
-          <div class="fg"><label class="fl">ชื่อผลิตภัณฑ์/ยี่ห้อ</label><input type="text" class="fi" id="ch-product" placeholder="ชื่อสินค้า"></div>
-        </div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">ปริมาณ</label><input type="number" step="0.1" class="fi" id="ch-amount" placeholder="5"></div>
-          <div class="fg"><label class="fl">หน่วย</label><select class="fi" id="ch-unit"><option value="kg">กก.</option><option value="g">กรัม</option><option value="L">ลิตร</option><option value="mL">มล.</option><option value="pack">ถุง/ซอง</option></select></div>
-        </div>
-        <div class="fg"><label class="fl">จุดประสงค์ / เหตุผล</label><input type="text" class="fi" id="ch-reason" placeholder="เพิ่ม ALK / รักษา Vibrio..."></div>
-        <div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="ch-notes" placeholder="วิธีการ, เวลาใส..."></div>
-        <div style="display:flex;gap:10px"><button class="btn btn-p" onclick="saveChem()">💾 บันทึก</button><button class="btn btn-s" onclick="clearChem()">🗑️ ล้าง</button></div>
-        <div id="ch-msg"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-t">📊 สรุปการใช้แต่ละบ่อ</div>
-      <div style="margin-bottom:12px"><select class="fi" id="ch-sum-pond" onchange="renderChemSummary()" style="width:200px"><option value="">-- เลือกบ่อ --</option></select></div>
-      <div id="ch-summary"><div style="color:var(--tx3);text-align:center;padding:20px;font-size:13px">เลือกบ่อเพื่อดูสรุป</div></div>
-      <div style="position:relative;height:260px;margin-top:12px;display:none" id="ch-pie-wrap"><canvas id="ch-pie-chart"></canvas></div>
+  <div class="sec-hdr">
+    <div class="sec-title">🧪 ประวัติสารเคมี &amp; วัสดุ</div>
+    <div style="font-size:12px;color:var(--tx3);margin-top:2px">รายการที่เบิกออกจากสต็อกไปแต่ละบ่อ (ดูอย่างเดียว)</div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select class="fi" id="ch-hist-pond" onchange="renderChemHistory()" style="flex:1;min-width:140px;max-width:200px">
+        <option value="">ทุกบ่อ</option>
+      </select>
+      <select class="fi" id="ch-hist-cat" onchange="renderChemHistory()" style="flex:1;min-width:140px;max-width:200px">
+        <option value="">ทุกหมวด</option>
+        <option value="chem">🧪 ยา/สารเคมี</option>
+        <option value="feed">🍚 อาหารกุ้ง</option>
+        <option value="equip">🔧 อุปกรณ์/วัสดุ</option>
+        <option value="seed">🦐 ลูกกุ้ง</option>
+      </select>
+      <input type="month" class="fi" id="ch-hist-month" onchange="renderChemHistory()" style="width:150px">
+      <button class="btn btn-s btn-sm" onclick="clearChemFilter()">ล้างตัวกรอง</button>
     </div>
   </div>
   <div class="card">
-    <div class="card-t">📋 ประวัติการใช้</div>
-    <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-      <select class="fi" id="ch-tbl-cat" onchange="renderChemTable()" style="width:160px"><option value="">ทุกหมวด</option></select>
-    </div>
-    <div class="tbl-wrap" id="ch-tbl-wrap"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p></div>
+    <div class="card-t">📋 ประวัติรับจากสต็อก</div>
+    <div class="tbl-wrap" id="ch-hist-wrap"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">กำลังโหลด...</p></div>
   </div>
 </div>
 <!-- LAB RESULTS -->
@@ -4710,21 +4683,7 @@ function editWaterLog(pid,idx){
   document.getElementById('wl-notes').value=r.notes||'';
   const el=document.getElementById('wl-pond');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
 }
-function editChem(pid,d,product,cat){
-  const p=pond(pid);if(!p)return;
-  const r=(p.chemLog||[]).find(x=>x.date===d&&(x.product||'')===(product||'')&&(x.category||'')===(cat||''));
-  if(!r)return;
-  document.getElementById('ch-pond').value=pid;
-  document.getElementById('ch-date').value=r.date;
-  syncDateHint(document.getElementById('ch-date'));
-  const catEl=document.getElementById('ch-cat');if(catEl)catEl.value=r.category||'';
-  document.getElementById('ch-product').value=r.product||'';
-  document.getElementById('ch-amount').value=r.amount||'';
-  const uEl=document.getElementById('ch-unit');if(uEl)uEl.value=r.unit||'';
-  document.getElementById('ch-reason').value=r.reason||'';
-  document.getElementById('ch-notes').value=r.notes||'';
-  const el=document.getElementById('ch-pond');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
-}
+function editChem(){/* ลบฟอร์มสารเคมีแล้ว — ใช้สต็อก → เบิกออก แทน */}
 function editLab(pid,d){
   document.getElementById('lb-pond').value=pid;
   document.getElementById('lb-date').value=d;
@@ -4778,7 +4737,7 @@ function saveFeed(){
 function onFdPond(){clearFeed();updateFeedRate();renderFeedTable();renderFeedChart();const pid=document.getElementById('fd-pond').value;if(pid)renderFeedMetrics(pid);}
 function onSpPond(){clearSample();renderSampleTable();renderSampleChart();const pid=document.getElementById('sp-pond').value;if(pid)renderSampleMetrics(pid);}
 function onWlPond(){clearWaterLog();renderWaterTable();}
-function onChPond(){clearChem();renderChemTable();}
+function onChPond(){renderChemHistory();}
 function onLbPond(){clearLab();renderLabTable();}
 function clearFeed(){
   document.getElementById('fd-date').value=today();
@@ -4992,92 +4951,41 @@ function deleteWaterLog(pid,id){
 }
 // ===== CHEMICAL LOG =====
 function initChem(){
-  populateAll();
-  document.getElementById('ch-date').value=today();
-  const sumSel=document.getElementById('ch-sum-pond');
-  if(sumSel){sumSel.innerHTML='<option value="">-- เลือกบ่อ --</option>'+sortedPonds().map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');}
-  renderChCatSelect();renderChemTable();renderChemSummary();
+  const pondSel=document.getElementById('ch-hist-pond');
+  if(pondSel){pondSel.innerHTML='<option value="">ทุกบ่อ</option>'+sortedPonds().map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');}
+  const mEl=document.getElementById('ch-hist-month');
+  if(mEl&&!mEl.value)mEl.value=today().substring(0,7);
+  renderChemHistory();
 }
-function toggleCatPanel(){
-  const p=document.getElementById('cat-panel');if(p)p.style.display=p.style.display==='none'?'block':'none';
+function renderChemHistory(){
+  const pid=document.getElementById('ch-hist-pond')?.value||'';
+  const cat=document.getElementById('ch-hist-cat')?.value||'';
+  const month=document.getElementById('ch-hist-month')?.value||'';
+  const wrap=document.getElementById('ch-hist-wrap');if(!wrap)return;
+  const itemMap={};(D.inventoryItems||[]).forEach(i=>itemMap[i.id]=i);
+  const pondMap={};D.ponds.forEach(p=>pondMap[p.id]=p.name);
+  let logs=(D.inventoryLog||[]).filter(r=>r.type==='out'&&r.pondId);
+  if(pid)logs=logs.filter(r=>r.pondId===pid);
+  if(cat)logs=logs.filter(r=>{const item=itemMap[r.itemId];return item&&item.category===cat;});
+  if(month)logs=logs.filter(r=>r.date&&r.date.startsWith(month));
+  logs.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(!logs.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ไม่มีข้อมูล'+(month?' ในเดือนนี้':''+'</p>');return;}
+  wrap.innerHTML=`<table class="tbl"><thead><tr><th>วันที่</th><th>บ่อ</th><th>หมวด</th><th>รายการ</th><th>จำนวน</th><th>หมายเหตุ</th></tr></thead><tbody>${
+    logs.slice(0,100).map(r=>{
+      const item=itemMap[r.itemId];
+      const catKey=item?.category||'';
+      const catLbl=STOCK_CAT_LABEL[catKey]||'-';
+      const catCss=STOCK_CAT_CSS[catKey]||'';
+      const pondName=pondMap[r.pondId]||r.pondId;
+      return `<tr><td>${fD(r.date)}</td><td><span class="badge b-info">บ่อ ${pondName}</span></td><td><span class="stock-cat-badge ${catCss}">${catLbl}</span></td><td>${r.itemName||'-'}</td><td>${r.qty||'-'} ${r.unit||''}</td><td>${r.note||'-'}</td></tr>`;
+    }).join('')
+  }</tbody></table>`;
 }
-function renderCatList(){
-  const el=document.getElementById('cat-tag-list');if(!el)return;
-  const cats=D.categories||DEFAULT_CATS;
-  el.innerHTML=cats.map(c=>`<span class="cat-tag">${c}<span class="cat-del" onclick="removeCategory('${c}')">✕</span></span>`).join('');
-}
-function addCategory(){
-  const inp=document.getElementById('new-cat-input');if(!inp)return;
-  const v=inp.value.trim();if(!v)return;
-  if(!D.categories)D.categories=[...DEFAULT_CATS];
-  if(D.categories.includes(v)){inp.value='';return}
-  D.categories.push(v);save();inp.value='';renderCatList();renderChCatSelect();
-}
-function removeCategory(v){
-  if(!D.categories)return;
-  D.categories=D.categories.filter(c=>c!==v);save();renderCatList();renderChCatSelect();
-}
-function renderChCatSelect(){
-  const cats=D.categories||DEFAULT_CATS;
-  const chCat=document.getElementById('ch-cat');
-  if(chCat){const cur=chCat.value;chCat.innerHTML=cats.map(c=>`<option value="${c}">${c}</option>`).join('');if(cats.includes(cur))chCat.value=cur;}
-  const tblCat=document.getElementById('ch-tbl-cat');
-  if(tblCat){const cur=tblCat.value;tblCat.innerHTML='<option value="">ทุกหมวด</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');if(cur)tblCat.value=cur;}
-  renderCatList();
-}
-function saveChem(){
-  const pid=document.getElementById('ch-pond').value,d=document.getElementById('ch-date').value;
-  if(!d){showMsg('ch-msg','warn','กรุณาเลือกวันที่');return}
-  const product=document.getElementById('ch-product').value,amount=parseFloat(document.getElementById('ch-amount').value)||null;
-  if(!product&&!amount){showMsg('ch-msg','warn','กรุณากรอกชื่อผลิตภัณฑ์หรือปริมาณ');return}
-  const rec={date:d,pondId:pid,category:document.getElementById('ch-cat').value,product,amount,
-    unit:document.getElementById('ch-unit').value,
-    reason:document.getElementById('ch-reason').value,notes:document.getElementById('ch-notes').value};
-  const ponds=pid==='all'?D.ponds:[pond(pid)].filter(Boolean);
-  ponds.forEach(p=>{if(!p.chemLog)p.chemLog=[];p.chemLog.push({...rec,pondId:p.id,id:'ch_'+p.id+'_'+d+'_'+(product||'')+'_'+Date.now()});p.chemLog.sort((a,b)=>new Date(a.date)-new Date(b.date))});
-  showMsg('ch-msg','ok',`✅ ${getCatLabel(rec.category)} ${rec.product||''} ${rec.amount||''} ${rec.unit} ${pid==='all'?'ทุกบ่อ':'บ่อ '+ponds[0]?.name}`);
-  save();renderChemTable();renderChemSummary();
-}
-function clearChem(){
-  document.getElementById('ch-date').value=today();
-  ['ch-product','ch-amount','ch-reason','ch-notes'].forEach(id=>{document.getElementById(id).value=''});
-  document.getElementById('ch-msg').innerHTML='';
-}
-let _chemPieChart=null;
-function renderChemSummary(){
-  const el=document.getElementById('ch-summary');if(!el)return;
-  const pid=document.getElementById('ch-sum-pond')?.value||'';
-  const wrap=document.getElementById('ch-pie-wrap');
-  if(!pid){el.innerHTML='<div style="color:var(--tx3);text-align:center;padding:20px;font-size:13px">เลือกบ่อเพื่อดูสรุป</div>';if(wrap)wrap.style.display='none';return}
-  const p=pond(pid);const logs=(p?.chemLog||[]);
-  const byCat={};logs.forEach(r=>{const k=r.category||'อื่นๆ';if(!byCat[k])byCat[k]=0;byCat[k]++});
-  const cats=Object.entries(byCat);
-  if(!cats.length){el.innerHTML='<div style="color:var(--tx3);text-align:center;padding:20px;font-size:13px">ยังไม่มีข้อมูลสำหรับบ่อนี้</div>';if(wrap)wrap.style.display='none';return}
-  const total=cats.reduce((s,[,v])=>s+v,0);
-  el.innerHTML=`<div class="g3" style="margin-bottom:8px">${cats.map(([k,v])=>`<div class="cat-card"><div style="font-size:13px;font-weight:700">${getCatLabel(k)}</div><div style="font-size:22px;font-weight:800;color:var(--p)">${v}</div><div style="font-size:11px;color:var(--tx3)">ครั้ง (${Math.round(v/total*100)}%)</div></div>`).join('')}</div>`;
-  if(wrap){wrap.style.display='block';const colors=['#EA580C','#F59F00','#2f9e44','#1971c2','#ae3ec9','#f03e3e','#74b816','#0ca678','#3bc9db','#748ffc'];
-  const ctx=document.getElementById('ch-pie-chart');if(!ctx)return;
-  if(_chemPieChart){_chemPieChart.destroy();}
-  _chemPieChart=new Chart(ctx,{type:'doughnut',data:{labels:cats.map(([k])=>getCatLabel(k)),datasets:[{data:cats.map(([,v])=>v),backgroundColor:cats.map((_,i)=>colors[i%colors.length]),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12}}}}});}
-}
-function renderChemTable(){
-  const pid=document.getElementById('ch-pond')?.value||'all';
-  const cat=document.getElementById('ch-tbl-cat')?.value||'';
-  const wrap=document.getElementById('ch-tbl-wrap');if(!wrap)return;
-  const allLogs=D.ponds.filter(p=>pid==='all'||p.id===pid).flatMap(p=>(p.chemLog||[]).filter(r=>!cat||r.category===cat).map(r=>({...r,pondName:p.name})));
-  allLogs.sort((a,b)=>new Date(b.date)-new Date(a.date));
-  if(!allLogs.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
-  wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>บ่อ</th><th>หมวด</th><th>ผลิตภัณฑ์</th><th>ปริมาณ</th><th>จุดประสงค์</th><th>หมายเหตุ</th></tr></thead><tbody>${
-    allLogs.slice(0,50).map((r,i)=>`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editChem('${r.pondId||''}','${r.date}','${r.product||''}','${r.category||''}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteChem('${r.pondId||''}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td><span class="badge b-info">บ่อ ${r.pondName}</span></td><td>${getCatLabel(r.category)}</td><td>${r.product||'-'}</td><td>${r.amount?r.amount+' '+r.unit:'-'}</td><td>${r.reason||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')}</tbody></table>`;
-}
-function deleteChem(pid,id){
-  const p=pond(pid);if(!p)return;
-  const target=(p.chemLog||[]).find(r=>r.id===id);
-  if(!target){alert('ไม่พบรายการ');return;}
-  if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(target.date)+' ใช่หรือไม่?'))return;
-  p.chemLog=(p.chemLog||[]).filter(r=>r.id!==id);
-  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
-  save();renderChemTable();renderChemSummary();
+function clearChemFilter(){
+  const m=document.getElementById('ch-hist-month');if(m)m.value='';
+  const p=document.getElementById('ch-hist-pond');if(p)p.value='';
+  const c=document.getElementById('ch-hist-cat');if(c)c.value='';
+  renderChemHistory();
 }
 // ===== LAB RESULTS =====
 function initLab(){populateAll();document.getElementById('lb-date').value=today();calcAge('lb');renderLabTable();}
