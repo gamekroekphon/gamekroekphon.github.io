@@ -1296,6 +1296,11 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
     <div style="font-size:13px;color:var(--tx2);margin-bottom:10px">เขียนข้อมูลรอบ 1 ปี 2569 ของ A.18, A.19, A.20 ลง Firebase โดยตรง (ข้าม ID check / tombstone ทั้งหมด)</div>
     <button class="btn" onclick="forceInjectYear2569Round1()" style="background:#d97706;color:#fff">⚡ Force inject ทันที</button>
     <span id="fi2569-msg" style="font-size:12px;margin-left:10px;color:var(--ok)"></span>
+    <hr style="border:none;border-top:1px dashed var(--bd);margin:14px 0">
+    <div style="font-weight:700;color:var(--tx);margin-bottom:8px">➕ เพิ่มรอบที่หาย A.1 รอบ 3 ปี 2568</div>
+    <div style="font-size:13px;color:var(--tx2);margin-bottom:10px">เติมวันลง 24 พ.ย.68 / วันจับ 20 ม.ค.69 / ไซส์ 55 ตัว เข้าประวัติรอบเลี้ยง (ปิดแล้ว) — ข้อมูลผลผลิต/ต้นทุนที่เหลือกรอกทีหลังผ่านปุ่มแก้ไข (ดินสอ)</div>
+    <button class="btn" onclick="fixA1Round3_2568()" style="background:#d97706;color:#fff">➕ เพิ่มรอบ A.1 #3/2568</button>
+    <span id="fixA1r3-msg" style="font-size:12px;margin-left:10px;color:var(--ok)"></span>
   </div>
   <!-- Mobile-only logout -->
   <div class="mobile-logout-block" style="display:none;margin-top:16px">
@@ -7139,4 +7144,104 @@ async function fixYear2569Round1(){
   }catch(e){
     if(msg)msg.textContent='❌ บันทึกไม่ได้: '+e.message;
   }
-}
+}
+// ─── END FIX ──────────────────────────────────────────────────────────────
+// ─── FORCE-INJECT ปี 2569 รอบ 1 สำหรับ A.18/19/20 ──────────────────────
+async function forceInjectYear2569Round1(){
+  const msg=document.getElementById('fi2569-msg');
+  const INJECT=[
+    {pondName:'A.18', entry:{
+      id:'hist_A18_20260228',cropYear:2569,year:2569,cropNum:1,
+      startDate:'2026-02-28',closeDate:'2026-04-03',closed:true,
+      stock:594986,hatchery:'cp ชุมพร1',plType:'',plWeight:null,
+      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],prepChecklist:{},
+      notes:'นำเข้าจากแผนลงลูกกุ้ง',
+      parchan:[{weightKg:4186,size:103}],
+      totalWeight:4186,
+      harvestResult:{totalWeight:4186,size:103,caught:431158,survivalRate:82.0}
+    }},
+    {pondName:'A.19', entry:{
+      id:'hist_A19_20260226',cropYear:2569,year:2569,cropNum:1,
+      startDate:'2026-02-26',closeDate:'2026-04-04',closed:true,
+      stock:555030,hatchery:'cp ชุมพร1',plType:'',plWeight:null,
+      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],prepChecklist:{},
+      notes:'นำเข้าจากแผนลงลูกกุ้ง',
+      parchan:[{weightKg:3486,size:118}],
+      totalWeight:3486,
+      harvestResult:{totalWeight:3486,size:118,caught:411348,survivalRate:82.0}
+    }},
+    {pondName:'A.20', entry:{
+      id:'hist_A20_20260226',cropYear:2569,year:2569,cropNum:1,
+      startDate:'2026-02-26',closeDate:'2026-04-07',closed:true,
+      stock:564018,hatchery:'cp ชุมพร1',plType:'',plWeight:null,
+      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],prepChecklist:{},
+      notes:'นำเข้าจากแผนลงลูกกุ้ง',
+      parchan:[{weightKg:4036,size:102}],
+      totalWeight:4036,
+      harvestResult:{totalWeight:4036,size:102,caught:411672,survivalRate:82.0}
+    }}
+  ];
+  // ลบ ID เก่าและใหม่ทั้งหมด + ลบออกจาก deletedIds ก่อน inject
+  const ALL_IDS=[
+    'hist_A18_20250228','hist_A18_20260228',
+    'hist_A19_20250226','hist_A19_20260226',
+    'hist_A20_20250226','hist_A20_20260226'
+  ];
+  if(D.deletedIds)D.deletedIds=D.deletedIds.filter(id=>!ALL_IDS.includes(id));
+  let injected=0,notFound=[];
+  INJECT.forEach(({pondName,entry})=>{
+    const p=D.ponds.find(x=>(x.name||'').trim()===pondName);
+    if(!p){notFound.push(pondName);return;}
+    if(!p.cropHistory)p.cropHistory=[];
+    p.cropHistory=p.cropHistory.filter(c=>!ALL_IDS.includes(c.id));
+    p.cropHistory.push({...entry});
+    p.cropHistory.sort((a,b)=>(a.startDate||'').localeCompare(b.startDate||''));
+    injected++;
+  });
+  if(injected===0){
+    if(msg)msg.innerHTML=`❌ ไม่พบบ่อ: ${notFound.join(', ')} — ชื่อในระบบอาจต่างกัน<br><small>ชื่อบ่อทั้งหมด: ${D.ponds.map(p=>p.name).join(', ')}</small>`;
+    return;
+  }
+  try{
+    await saveForce();
+    if(msg)msg.textContent=`✅ inject แล้ว ${injected} บ่อ${notFound.length?' | ⚠️ ไม่พบ: '+notFound.join(', '):''}`;
+    renderCrops();populateAll();
+  }catch(e){
+    if(msg)msg.textContent='❌ บันทึกไม่ได้: '+e.message;
+  }
+}
+// ─── END FORCE-INJECT ────────────────────────────────────────────────────
+// ─── เพิ่มรอบที่หาย A.1 รอบ 3 ปี 2568 ────────────────────────────────────
+async function fixA1Round3_2568(){
+  const msg=document.getElementById('fixA1r3-msg');
+  const p=D.ponds.find(x=>(x.name||'').trim()==='A.1');
+  if(!p){if(msg)msg.textContent='❌ ไม่พบบ่อ A.1';return;}
+  if(!p.cropHistory)p.cropHistory=[];
+  let c=p.cropHistory.find(x=>x.cropYear===2568&&x.cropNum===3);
+  if(!c){
+    c={id:'hist_A1_20251124',cropYear:2568,year:2568,cropNum:3,stock:null,hatchery:'',plType:'',plWeight:null,
+       records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],prepChecklist:{},
+       notes:'',parchan:[],totalWeight:null,harvestResult:null};
+    p.cropHistory.push(c);
+  }
+  c.startDate='2025-11-24';
+  c.closeDate='2026-01-20';
+  c.closed=true;
+  if(!c.harvestResult)c.harvestResult={};
+  c.harvestResult.size=55;
+  c.notes=(c.notes?c.notes+' | ':'')+'รอกรอกผลผลิต/ต้นทุนเพิ่มเติม';
+  try{
+    await saveForce();
+    if(msg)msg.textContent='✅ เพิ่ม/แก้ไขรอบ 3 ปี 2568 บ่อ A.1 สำเร็จ — กดดินสอในตารางประวัติเพื่อกรอกข้อมูลที่เหลือ (ผลผลิต, ต้นทุน ฯลฯ)';
+    renderCrops();populateAll();
+  }catch(e){
+    if(msg)msg.textContent='❌ บันทึกไม่ได้: '+e.message;
+  }
+}
+// ─── END เพิ่มรอบที่หาย A.1 ──────────────────────────────────────────────
+
+</script>
+<script src="seedCropHistory.js"></script>
+<script src="seedHarvestHistory.js"></script></body>
+</html>
+

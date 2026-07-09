@@ -1296,6 +1296,11 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
     <div style="font-size:13px;color:var(--tx2);margin-bottom:10px">เขียนข้อมูลรอบ 1 ปี 2569 ของ A.18, A.19, A.20 ลง Firebase โดยตรง (ข้าม ID check / tombstone ทั้งหมด)</div>
     <button class="btn" onclick="forceInjectYear2569Round1()" style="background:#d97706;color:#fff">⚡ Force inject ทันที</button>
     <span id="fi2569-msg" style="font-size:12px;margin-left:10px;color:var(--ok)"></span>
+    <hr style="border:none;border-top:1px dashed var(--bd);margin:14px 0">
+    <div style="font-weight:700;color:var(--tx);margin-bottom:8px">➕ เพิ่มรอบที่หาย A.1 รอบ 3 ปี 2568</div>
+    <div style="font-size:13px;color:var(--tx2);margin-bottom:10px">เติมวันลง 24 พ.ย.68 / วันจับ 20 ม.ค.69 / ไซส์ 55 ตัว เข้าประวัติรอบเลี้ยง (ปิดแล้ว) — ข้อมูลผลผลิต/ต้นทุนที่เหลือกรอกทีหลังผ่านปุ่มแก้ไข (ดินสอ)</div>
+    <button class="btn" onclick="fixA1Round3_2568()" style="background:#d97706;color:#fff">➕ เพิ่มรอบ A.1 #3/2568</button>
+    <span id="fixA1r3-msg" style="font-size:12px;margin-left:10px;color:var(--ok)"></span>
   </div>
   <!-- Mobile-only logout -->
   <div class="mobile-logout-block" style="display:none;margin-top:16px">
@@ -7206,6 +7211,34 @@ async function forceInjectYear2569Round1(){
   }
 }
 // ─── END FORCE-INJECT ────────────────────────────────────────────────────
+// ─── เพิ่มรอบที่หาย A.1 รอบ 3 ปี 2568 ────────────────────────────────────
+async function fixA1Round3_2568(){
+  const msg=document.getElementById('fixA1r3-msg');
+  const p=D.ponds.find(x=>(x.name||'').trim()==='A.1');
+  if(!p){if(msg)msg.textContent='❌ ไม่พบบ่อ A.1';return;}
+  if(!p.cropHistory)p.cropHistory=[];
+  let c=p.cropHistory.find(x=>x.cropYear===2568&&x.cropNum===3);
+  if(!c){
+    c={id:'hist_A1_20251124',cropYear:2568,year:2568,cropNum:3,stock:null,hatchery:'',plType:'',plWeight:null,
+       records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],prepChecklist:{},
+       notes:'',parchan:[],totalWeight:null,harvestResult:null};
+    p.cropHistory.push(c);
+  }
+  c.startDate='2025-11-24';
+  c.closeDate='2026-01-20';
+  c.closed=true;
+  if(!c.harvestResult)c.harvestResult={};
+  c.harvestResult.size=55;
+  c.notes=(c.notes?c.notes+' | ':'')+'รอกรอกผลผลิต/ต้นทุนเพิ่มเติม';
+  try{
+    await saveForce();
+    if(msg)msg.textContent='✅ เพิ่ม/แก้ไขรอบ 3 ปี 2568 บ่อ A.1 สำเร็จ — กดดินสอในตารางประวัติเพื่อกรอกข้อมูลที่เหลือ (ผลผลิต, ต้นทุน ฯลฯ)';
+    renderCrops();populateAll();
+  }catch(e){
+    if(msg)msg.textContent='❌ บันทึกไม่ได้: '+e.message;
+  }
+}
+// ─── END เพิ่มรอบที่หาย A.1 ──────────────────────────────────────────────
 
 </script>
 <script src="seedCropHistory.js"></script>
