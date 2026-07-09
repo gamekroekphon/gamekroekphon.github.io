@@ -1104,10 +1104,11 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
           <div class="fg"><label class="fl" style="color:var(--ok);font-weight:700">กำไรสุทธิ (บาท)</label><input type="number" class="fi" id="ecm-profit" step="1" placeholder="คำนวณอัตโนมัติ" style="background:var(--ob);font-weight:700"></div>
         </div>
       </div>
-      <!-- Close Date + Notes -->
+      <!-- Start Date + Close Date + Notes -->
       <div class="fgrid" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
+        <div class="fg"><label class="fl">วันลง</label><input type="date" class="fi" id="ecm-start-date"></div>
         <div class="fg"><label class="fl">วันที่ปิดบ่อ</label><input type="date" class="fi" id="ecm-close-date"></div>
-        <div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="ecm-notes" placeholder="..."></div>
+        <div class="fg" style="grid-column:1/-1"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="ecm-notes" placeholder="..."></div>
       </div>
       <div id="ecm-msg" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px"></div>
       <div style="display:flex;gap:10px;align-items:center">
@@ -5974,7 +5975,7 @@ function openEditCropModal(pondId,cropId,idx){
   fv('ecm-cost-fry',hr.costFry);fv('ecm-cost-feed',hr.costFeed);fv('ecm-cost-chem',hr.costChem);
   fv('ecm-cost-labor',hr.costLabor);fv('ecm-cost-elec',hr.costElec);fv('ecm-cost-other',hr.costOther);
   fv('ecm-profit',hr.netProfit);
-  fv('ecm-close-date',c.closeDate);fv('ecm-notes',c.notes||'');
+  fv('ecm-start-date',c.startDate);fv('ecm-close-date',c.closeDate);fv('ecm-notes',c.notes||'');
   const msg=document.getElementById('ecm-msg');if(msg)msg.style.display='none';
   // auto-calc profit on cost/revenue change
   ['ecm-revenue','ecm-cost-fry','ecm-cost-feed','ecm-cost-chem','ecm-cost-labor','ecm-cost-elec','ecm-cost-other'].forEach(id=>{
@@ -5997,6 +5998,7 @@ function saveEditCrop(){
   if(!c){alert('ไม่พบรายการ');return;}
   const gn=(id)=>{const v=parseFloat(document.getElementById(id)?.value);return isNaN(v)?null:v;};
   const gs=(id)=>{const v=(document.getElementById(id)?.value||'').trim();return v||null;};
+  c.startDate=document.getElementById('ecm-start-date').value||c.startDate;
   c.closeDate=document.getElementById('ecm-close-date').value||c.closeDate;
   c.notes=document.getElementById('ecm-notes').value||'';
   if(!c.harvestResult)c.harvestResult={};
