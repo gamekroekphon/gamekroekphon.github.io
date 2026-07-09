@@ -1836,8 +1836,15 @@ function updateUserHeader(user,role){
 function renderUsers(){
   const tbody=document.getElementById('us-tbody');if(!tbody)return;
   if(APP_ROLE!=='admin')return;
+  let _usersGotResponse=false;
+  setTimeout(()=>{
+    if(!_usersGotResponse&&tbody.innerHTML.includes('กำลังโหลด')){
+      tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--w)">⏱️ เชื่อมต่อ Firebase ไม่สำเร็จ (รอนานเกินไป) — ตรวจสอบอินเทอร์เน็ต หรือลองรีเฟรชหน้าจอ</td></tr>';
+    }
+  },10000);
   firebase.database().ref('users').off('value');
   firebase.database().ref('users').on('value',snap=>{
+    _usersGotResponse=true;
     const val=snap.val()||{};
     const q=(document.getElementById('us-search')?.value||'').trim().toLowerCase();
     let rows=Object.entries(val).map(([uid,u])=>({uid,...u}));
@@ -1867,6 +1874,9 @@ function renderUsers(){
         <td style="padding:10px"><button class="btn btn-s" style="padding:4px 10px;font-size:11.5px" onclick="removeUserEntry('${r.uid}','${esc(r.email)}')">🗑️ ลบ</button></td>
       </tr>`;
     }).join('');
+  },err=>{
+    _usersGotResponse=true;
+    tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--d)">❌ โหลดรายชื่อไม่สำเร็จ: ${err.message}<br><small style="color:var(--tx3)">ถ้าขึ้น permission_denied ต้องเพิ่มกฎ Firebase Realtime Database ให้อ่าน/เขียน path "users" ได้สำหรับผู้ใช้ที่ login แล้ว</small></td></tr>`;
   });
 }
 function changeUserRole(uid,role,email){
