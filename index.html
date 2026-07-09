@@ -535,6 +535,7 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
     <button class="grp-btn" onclick="toggleGrp('settings')">⚙️ ตั้งค่า <span class="grp-caret">▾</span></button>
     <div class="tab-dropdown">
       <button class="tab-item" id="tab-manage" onclick="goTab('manage',this)">⚙️ จัดการบ่อ</button>
+      <button class="tab-item admin-only" id="tab-users" onclick="goTab('users',this)">👤 จัดการผู้ใช้</button>
     </div>
   </div>
 </div>
@@ -1310,6 +1311,40 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
     </div>
   </div>
 </div>
+<!-- USER MANAGEMENT (Admin only) -->
+<div id="sec-users" class="sec">
+  <div class="sec-hdr"><div class="sec-title">👤 จัดการผู้ใช้ (Admin เท่านั้น)</div></div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-t">➕ เพิ่มผู้ใช้ใหม่</div>
+    <div class="fgrid" style="grid-template-columns:1.3fr 1fr 1fr 1fr auto">
+      <div class="fg"><label class="fl">อีเมล</label><input class="fi" id="nu-email" placeholder="name@tawanfarm.com"></div>
+      <div class="fg"><label class="fl">ชื่อที่แสดง</label><input class="fi" id="nu-name" placeholder="ชื่อพนักงาน"></div>
+      <div class="fg"><label class="fl">รหัสผ่านเริ่มต้น</label><input class="fi" id="nu-pass" type="text" placeholder="อย่างน้อย 6 ตัว"></div>
+      <div class="fg"><label class="fl">สิทธิ์ (Role)</label>
+        <select class="fi" id="nu-role"><option value="staff">staff (พนักงาน)</option><option value="admin">admin</option></select>
+      </div>
+      <div class="fg"><button class="btn btn-p" onclick="addNewUser()">💾 เพิ่มผู้ใช้</button></div>
+    </div>
+    <div id="nu-msg" style="margin-top:10px;font-size:12.5px"></div>
+    <div style="font-size:11.5px;color:var(--tx3);margin-top:6px">* สร้างบัญชีเข้าสู่ระบบ (Firebase Auth) ให้อัตโนมัติ แล้วตั้งสิทธิ์ให้เลย ไม่ต้องเข้า Firebase Console</div>
+  </div>
+  <div class="card">
+    <div class="card-t" style="justify-content:space-between">
+      <span>📋 รายชื่อผู้ใช้ทั้งหมด</span>
+      <input class="fi" id="us-search" placeholder="🔍 ค้นหาอีเมล/ชื่อ..." style="max-width:200px" oninput="renderUsers()">
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr>
+          <th>ผู้ใช้</th><th>สิทธิ์ปัจจุบัน</th><th>เปลี่ยนสิทธิ์</th><th>เข้าระบบล่าสุด</th><th></th>
+        </tr></thead>
+        <tbody id="us-tbody"><tr><td colspan="5" style="text-align:center;padding:30px;color:var(--tx3)">กำลังโหลด...</td></tr></tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:10px;background:var(--wb);border:1px solid #F5D98B;color:var(--w-tx);border-radius:8px;padding:10px 14px;font-size:12.5px;margin-top:12px">⚠️ เปลี่ยนสิทธิ์มีผลทันทีแบบเรียลไทม์ — staff จะไม่เห็นข้อมูลกำไร/ต้นทุน/ค่าแรงและแท็บการเงินอื่นๆ ทันที (ถ้ากำลังเปิดแอปอยู่ ต้อง refresh หน้าจอ 1 ครั้ง)</div>
+    <div style="font-size:11.5px;color:var(--tx3);margin-top:8px">* ปุ่ม "ลบ" คือเอาออกจากรายชื่อ/ตัดสิทธิ์ในแอปเท่านั้น ไม่ได้ลบบัญชีเข้าสู่ระบบจริง (ถ้าต้องการปิดการเข้าสู่ระบบถาวร ต้องลบใน Firebase Console → Authentication)</div>
+  </div>
+</div>
 <!-- ราคาวันนี้ -->
 <div id="sec-price" class="sec">
   <div class="sec-hdr"><div class="sec-title">💰 ราคาวันนี้</div></div>
@@ -1796,6 +1831,85 @@ function updateUserHeader(user,role){
   const n=document.getElementById('hdr-uname');if(n)n.textContent=uname;
   const mn=document.getElementById('mobile-uname');if(mn)mn.textContent=uname;
   applyRole(role);
+}
+// ===== USER MANAGEMENT (Admin) =====
+function renderUsers(){
+  const tbody=document.getElementById('us-tbody');if(!tbody)return;
+  if(APP_ROLE!=='admin')return;
+  firebase.database().ref('users').off('value');
+  firebase.database().ref('users').on('value',snap=>{
+    const val=snap.val()||{};
+    const q=(document.getElementById('us-search')?.value||'').trim().toLowerCase();
+    let rows=Object.entries(val).map(([uid,u])=>({uid,...u}));
+    if(q)rows=rows.filter(r=>(r.email||'').toLowerCase().includes(q)||(r.displayName||'').toLowerCase().includes(q));
+    rows.sort((a,b)=>(a.email||'').localeCompare(b.email||''));
+    if(!rows.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--tx3)">ยังไม่มีผู้ใช้ในระบบ (จะเพิ่มอัตโนมัติเมื่อ login ครั้งแรก หรือกด เพิ่มผู้ใช้ใหม่ ด้านบน)</td></tr>';return;}
+    const meUid=firebase.auth().currentUser?.uid;
+    const esc=s=>String(s||'').replace(/'/g,'').replace(/</g,'');
+    tbody.innerHTML=rows.map(r=>{
+      const initial=(r.displayName||r.email||'?').trim().charAt(0).toUpperCase()||'?';
+      const isMe=r.uid===meUid;
+      const roleBadge=r.role==='admin'
+        ?'<span style="display:inline-flex;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:700;background:var(--pl);color:var(--p)">Admin</span>'
+        :'<span style="display:inline-flex;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:700;background:var(--sf2);color:var(--tx3)">พนักงาน (staff)</span>';
+      const lastLogin=r.lastLogin?(fD(r.lastLogin.slice(0,10))+' '+(r.lastLogin.slice(11,16)||'')):'-';
+      return `<tr>
+        <td style="padding:10px"><div style="display:flex;align-items:center;gap:8px">
+          <span style="width:30px;height:30px;border-radius:50%;background:var(--pl);color:var(--p);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">${initial}</span>
+          <span><b style="display:block;font-size:13px">${esc(r.displayName)||'(ไม่มีชื่อ)'}</b><small style="color:var(--tx3);font-size:11.5px">${esc(r.email)||r.uid}${isMe?' · (คุณ)':''}</small></span>
+        </div></td>
+        <td style="padding:10px">${roleBadge}</td>
+        <td style="padding:10px"><select class="fi" style="padding:6px 8px;font-size:12.5px;width:auto" onchange="changeUserRole('${r.uid}',this.value,'${esc(r.email)}')">
+          <option value="staff"${r.role!=='admin'?' selected':''}>staff</option>
+          <option value="admin"${r.role==='admin'?' selected':''}>admin</option>
+        </select></td>
+        <td style="padding:10px;font-size:12px">${lastLogin}</td>
+        <td style="padding:10px"><button class="btn btn-s" style="padding:4px 10px;font-size:11.5px" onclick="removeUserEntry('${r.uid}','${esc(r.email)}')">🗑️ ลบ</button></td>
+      </tr>`;
+    }).join('');
+  });
+}
+function changeUserRole(uid,role,email){
+  if(!confirm(`เปลี่ยนสิทธิ์ ${email||uid} เป็น "${role}" ?`)){renderUsers();return;}
+  firebase.database().ref('users/'+uid+'/role').set(role).then(()=>{
+    if(uid===firebase.auth().currentUser?.uid)applyRole(role);
+  }).catch(e=>alert('บันทึกไม่ได้: '+e.message));
+}
+function removeUserEntry(uid,email){
+  if(!confirm(`เอา ${email||uid} ออกจากรายชื่อ?\nไม่ได้ลบบัญชีเข้าสู่ระบบจริง — แค่ตัดสิทธิ์ในแอป`))return;
+  firebase.database().ref('users/'+uid).remove().catch(e=>alert('ลบไม่ได้: '+e.message));
+}
+async function addNewUser(){
+  const email=document.getElementById('nu-email').value.trim();
+  const name=document.getElementById('nu-name').value.trim();
+  const pass=document.getElementById('nu-pass').value;
+  const role=document.getElementById('nu-role').value;
+  const msg=document.getElementById('nu-msg');
+  const setMsg=(ok,text)=>{if(msg){msg.style.color=ok?'var(--ok)':'var(--d)';msg.textContent=text;}};
+  setMsg(true,'');
+  if(!email||!pass){setMsg(false,'กรุณากรอกอีเมลและรหัสผ่าน');return;}
+  if(pass.length<6){setMsg(false,'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');return;}
+  const btn=document.querySelector('#sec-users .btn-p');if(btn){btn.disabled=true;btn.textContent='กำลังสร้าง...';}
+  let secApp;
+  try{
+    secApp=firebase.initializeApp(FIREBASE_CONFIG,'Secondary_'+Date.now());
+    const cred=await secApp.auth().createUserWithEmailAndPassword(email,pass);
+    const uid=cred.user.uid;
+    if(name)await cred.user.updateProfile({displayName:name});
+    await firebase.database().ref('users/'+uid).set({email,displayName:name||'',role,createdAt:new Date().toISOString()});
+    await secApp.auth().signOut();
+    setMsg(true,'✅ เพิ่มผู้ใช้ '+email+' สำเร็จ');
+    document.getElementById('nu-email').value='';document.getElementById('nu-name').value='';document.getElementById('nu-pass').value='';
+  }catch(e){
+    const emsg=e.code==='auth/email-already-in-use'?'อีเมลนี้มีบัญชีอยู่แล้ว'
+      :e.code==='auth/invalid-email'?'อีเมลไม่ถูกต้อง'
+      :e.code==='auth/weak-password'?'รหัสผ่านสั้นเกินไป'
+      :'สร้างไม่สำเร็จ: '+e.message;
+    setMsg(false,'❌ '+emsg);
+  }finally{
+    if(secApp)try{await secApp.delete();}catch(_){}
+    if(btn){btn.disabled=false;btn.textContent='💾 เพิ่มผู้ใช้';}
+  }
 }
 async function doLogin(){
   const email=document.getElementById('login-email').value.trim();
@@ -2976,6 +3090,7 @@ function goTab(t,btn){
   if(t==='chem')initChem();if(t==='lab')initLab();
   if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();
   if(t==='manage')renderManage();
+  if(t==='users')renderUsers();
   if(t==='harvest'){
     const dEl=document.getElementById('hv-date');if(dEl&&!dEl.value)dEl.value=today();
     renderHarvest();
@@ -6662,8 +6777,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
   firebase.auth().onAuthStateChanged(async user=>{
     if(user){
-      const snap=await firebase.database().ref('users/'+user.uid+'/role').once('value');
-      const role=snap.val()||'staff';
+      const uref=firebase.database().ref('users/'+user.uid);
+      const snap=await uref.once('value');
+      const existing=snap.val()||{};
+      const role=existing.role||'staff';
+      // ── สร้าง/อัปเดตรายการผู้ใช้อัตโนมัติทุกครั้งที่ login (ไว้ให้หน้า จัดการผู้ใช้ เห็นรายชื่อ) ──
+      uref.update({email:user.email||existing.email||'',displayName:user.displayName||existing.displayName||'',role,lastLogin:new Date().toISOString()}).catch(()=>{});
       updateUserHeader(user,role);
       document.getElementById('login-screen').style.display='none';
       initFirebase();
