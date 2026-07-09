@@ -5910,6 +5910,7 @@ function renderCrops(){
   const allHistory=[];D.ponds.forEach(p=>(p.cropHistory||[]).forEach((c,_idx)=>allHistory.push({...c,pondName:p.name,_pondId:p.id,_idx})));
   allHistory.sort((a,b)=>(b.closeDate||'').localeCompare(a.closeDate||''));
   if(allHistory.length===0){histEl.innerHTML='<p style="color:var(--tx3);padding:10px">ยังไม่มีประวัติรอบเลี้ยง</p>';return;}
+  const isAdminHist=APP_ROLE==='admin';
   histEl.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
     <thead><tr style="background:var(--sf2);border-bottom:2px solid var(--bd)">
       <th style="text-align:left;padding:8px 10px;font-size:12px;color:var(--tx2)">บ่อ</th>
@@ -5922,7 +5923,7 @@ function renderCrops(){
       <th style="text-align:right;padding:8px;font-size:12px;color:var(--tx2)">ไซส์</th>
       <th style="text-align:right;padding:8px;font-size:12px;color:var(--tx2)">อัตรารอด(%)</th>
       <th style="text-align:right;padding:8px;font-size:12px;color:var(--tx2)">FCR</th>
-      <th style="text-align:right;padding:8px;font-size:12px;color:var(--tx2)">กำไร(บาท)</th>
+      ${isAdminHist?'<th style="text-align:right;padding:8px;font-size:12px;color:var(--tx2)">กำไร(บาท)</th>':''}
       <th style="text-align:left;padding:8px;font-size:12px;color:var(--tx2)">สาเหตุปิดบ่อ/หมายเหตุ</th>
     </tr></thead>
     <tbody>${allHistory.map(c=>{
@@ -5940,7 +5941,7 @@ function renderCrops(){
         <td style="padding:8px;text-align:right">${hr.size||'-'}</td>
         <td style="padding:8px;text-align:right">${hr.survivalRate?hr.survivalRate.toFixed(1):'-'}</td>
         <td style="padding:8px;text-align:right">${hr.fcr||'-'}</td>
-        <td style="padding:8px;text-align:right;font-weight:700;color:${(hr.netProfit||0)>=0?'var(--ok)':'var(--d)'}">${hr.netProfit!=null?Math.round(hr.netProfit).toLocaleString():'-'}</td>
+        ${isAdminHist?`<td style="padding:8px;text-align:right;font-weight:700;color:${(hr.netProfit||0)>=0?'var(--ok)':'var(--d)'}">${hr.netProfit!=null?Math.round(hr.netProfit).toLocaleString():'-'}</td>`:''}
         <td style="padding:6px 8px">
           <div style="display:flex;gap:4px;align-items:center;min-width:180px">
             <input type="text" id="cnote-${c._pondId}-${c.id||c._idx}" value="${c.notes?String(c.notes).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'):''}" placeholder="เช่น โรคตัวแดง, ท่อแตก..." style="flex:1;border:1px solid var(--bd);border-radius:6px;padding:4px 6px;font-size:12px">
