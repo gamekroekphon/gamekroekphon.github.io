@@ -1055,7 +1055,12 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
           <div class="fg"><label class="fl">ต้นทุนอาหาร (บาท)</label><input type="number" class="fi" id="cm-cost-feed" step="1" placeholder="คำนวณจาก feedLog" readonly style="background:var(--sf2)"></div>
           <div class="fg"><label class="fl">ต้นทุนสารเคมี (บาท)</label><input type="number" class="fi" id="cm-cost-chem" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl">ต้นทุนค่าแรง (บาท)</label><input type="number" class="fi" id="cm-cost-labor" step="1" placeholder="ดึงจากแท็บค่าแรงอัตโนมัติ" style="background:var(--sf2)"></div>
-          <div class="fg"><label class="fl">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="cm-cost-elec" step="1" placeholder="ดึงจากแท็บค่าไฟอัตโนมัติ" style="background:var(--sf2)"></div>
+          <div class="fg"><label class="fl">ต้นทุนค่าไฟฟ้า (บาท)</label>
+            <div style="display:flex;gap:6px">
+              <input type="number" class="fi" id="cm-cost-elec" step="1" placeholder="ดึงจากแท็บค่าไฟอัตโนมัติ" style="background:var(--sf2)">
+              <button type="button" class="btn btn-s" style="white-space:nowrap;font-size:11px;padding:0 8px" onclick="estimateElecFromBenchmark('cm')" title="ประมาณจากค่าเฉลี่ยฟาร์ม 19.37 บาท/กก. — ใช้เมื่อยังไม่มีบิลค่าไฟช่วงนี้">💡 ประมาณ</button>
+            </div>
+          </div>
           <div class="fg"><label class="fl">ต้นทุนอื่นๆ (บาท)</label><input type="number" class="fi" id="cm-cost-other" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" style="color:var(--ok);font-weight:700">กำไรสุทธิ (บาท)</label><input type="number" class="fi" id="cm-profit" step="1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--ob);font-weight:700"></div>
         </div>
@@ -1108,7 +1113,12 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
           <div class="fg"><label class="fl">ต้นทุนอาหาร (บาท)</label><input type="number" class="fi" id="ecm-cost-feed" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl">ต้นทุนสารเคมี (บาท)</label><input type="number" class="fi" id="ecm-cost-chem" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl">ต้นทุนค่าแรง (บาท)</label><input type="number" class="fi" id="ecm-cost-labor" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="ecm-cost-elec" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ต้นทุนค่าไฟฟ้า (บาท)</label>
+            <div style="display:flex;gap:6px">
+              <input type="number" class="fi" id="ecm-cost-elec" step="1" placeholder="0">
+              <button type="button" class="btn btn-s" style="white-space:nowrap;font-size:11px;padding:0 8px" onclick="estimateElecFromBenchmark('ecm')" title="ประมาณจากค่าเฉลี่ยฟาร์ม 19.37 บาท/กก. — ใช้เมื่อยังไม่มีบิลค่าไฟช่วงนี้">💡 ประมาณ</button>
+            </div>
+          </div>
           <div class="fg"><label class="fl">ต้นทุนอื่นๆ (บาท)</label><input type="number" class="fi" id="ecm-cost-other" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" style="color:var(--ok);font-weight:700">กำไรสุทธิ (บาท)</label><input type="number" class="fi" id="ecm-profit" step="1" placeholder="คำนวณอัตโนมัติ" style="background:var(--ob);font-weight:700"></div>
         </div>
@@ -1544,7 +1554,11 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
       <button onclick="clearElecBill()" style="background:var(--sf2);color:var(--tx2)">🗑️ ล้างฟอร์ม</button>
     </div>
     <div id="el-msg"></div>
+    <div class="admin-only" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)">
+      <button onclick="seedElecHistory()" style="background:var(--sf2);color:var(--tx2);font-size:12px">⬇️ นำเข้าบิลค่าไฟย้อนหลัง (2563-2569)</button>
+    </div>
   </div>
+  <div class="card"><div id="el-yearly-trend"></div></div>
   <div class="card"><div id="el-chart"></div></div>
   <div class="card"><div id="el-history"></div></div>
 </div>
@@ -4045,7 +4059,7 @@ function initElec(){
   populateAll();
   const el=document.getElementById('el-month');
   if(el&&!el.value){const now=new Date();el.value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');}
-  loadElecBill();renderElecKPI();renderElecChart();renderElecHistory();
+  loadElecBill();renderElecKPI();renderElecChart();renderElecHistory();renderElecYearlyTrend();
 }
 function calcElecRate(n){
   const kwh=parseFloat(document.getElementById('el-m'+n+'-kwh').value)||0;
@@ -4182,6 +4196,82 @@ function renderElecHistory(){
       <td><button class="btn-sm btn-del" onclick="deleteElecBill('${b.month}')">🗑️</button></td>
     </tr>`).join('')
   }</tbody></table>`;
+}
+// ===== ประมาณค่าไฟจากค่าเฉลี่ยฟาร์ม (บาท/กก.) =====
+const ELEC_COST_PER_KG_BENCHMARK=19.37; // เฉลี่ยจากข้อมูลค่าไฟย้อนหลัง 2564-2568 (18.3,20,19.75,19.03,19.76)
+function estimateElecFromBenchmark(prefix){
+  const w=parseFloat(document.getElementById(prefix+'-weight')?.value)||0;
+  if(!w){alert('กรุณากรอกผลผลิต (กก.) ก่อน ถึงจะประมาณค่าไฟได้');return;}
+  const est=Math.round(w*ELEC_COST_PER_KG_BENCHMARK);
+  const el=document.getElementById(prefix+'-cost-elec');if(!el)return;
+  el.value=est;
+  if(prefix==='cm')calcCropEcon();
+  else el.oninput?.();
+}
+// ===== นำเข้าบิลค่าไฟย้อนหลัง 2563-2569 (ยอดรวม 3 หม้อ ไม่แยกหม้อ) =====
+const ELEC_HISTORY_SEED=[
+  {month:'2020-01',baht:641748},{month:'2020-02',baht:564825},{month:'2020-03',baht:409145},{month:'2020-04',baht:526199},
+  {month:'2020-05',baht:441535},{month:'2020-06',baht:619733},{month:'2020-07',baht:721351},{month:'2020-08',baht:441712},
+  {month:'2020-09',baht:566730},{month:'2020-10',baht:706018},{month:'2020-11',baht:753220},{month:'2020-12',baht:711145},
+  {month:'2021-01',baht:548752},{month:'2021-02',baht:433132},{month:'2021-03',baht:628119},{month:'2021-04',baht:856249},
+  {month:'2021-05',baht:903639},{month:'2021-06',baht:1068354},{month:'2021-07',baht:851853},{month:'2021-08',baht:701686},
+  {month:'2021-09',baht:579643},{month:'2021-10',baht:667517},{month:'2021-11',baht:755785},{month:'2021-12',baht:928831},
+  {month:'2022-01',baht:1127017},{month:'2022-02',baht:763167},{month:'2022-03',baht:723788},{month:'2022-04',baht:802747},
+  {month:'2022-05',baht:739174},{month:'2022-06',baht:616689},{month:'2022-07',baht:810172},{month:'2022-08',baht:1324076},
+  {month:'2022-09',baht:1655367},{month:'2022-10',baht:1360442},{month:'2022-11',baht:1200645},{month:'2022-12',baht:1133037},
+  {month:'2023-01',baht:1333666},{month:'2023-02',baht:1892410},{month:'2023-03',baht:2107973},{month:'2023-04',baht:1957606},
+  {month:'2023-05',baht:1042272},{month:'2023-06',baht:553221},{month:'2023-07',baht:728758},{month:'2023-08',baht:661819},
+  {month:'2023-09',baht:884421},{month:'2023-10',baht:1205599},{month:'2023-11',baht:1439587},{month:'2023-12',baht:862357},
+  {month:'2024-01',baht:862357},{month:'2024-02',baht:1321415},{month:'2024-03',baht:1656476},{month:'2024-04',baht:880738},
+  {month:'2024-05',baht:307942},{month:'2024-06',baht:661116},{month:'2024-07',baht:1019200},{month:'2024-08',baht:1399517},
+  {month:'2024-09',baht:1123323},{month:'2024-10',baht:573751},{month:'2024-11',baht:714013},{month:'2024-12',baht:1239445},
+  {month:'2025-01',baht:1133641},{month:'2025-02',baht:846036},{month:'2025-03',baht:1081373},{month:'2025-04',baht:999214},
+  {month:'2025-05',baht:960152},{month:'2025-06',baht:817218},{month:'2025-07',baht:822528},{month:'2025-08',baht:1245650},
+  {month:'2025-09',baht:1442460},{month:'2025-10',baht:1144690},{month:'2025-11',baht:577124},{month:'2025-12',baht:766279},
+  {month:'2026-01',baht:635907},{month:'2026-02',baht:332534},{month:'2026-03',baht:442270},{month:'2026-04',baht:332619},
+  {month:'2026-05',baht:498563}
+];
+function seedElecHistory(){
+  if(!confirm('นำเข้าบิลค่าไฟย้อนหลัง (พ.ศ. 2563-2569) ทั้งหมด '+ELEC_HISTORY_SEED.length+' เดือน?\nระบบจะข้ามเดือนที่มีข้อมูลอยู่แล้ว ไม่ทับของเดิม'))return;
+  if(!D.electricityBills)D.electricityBills=[];
+  let added=0,skipped=0;
+  ELEC_HISTORY_SEED.forEach(s=>{
+    if(D.electricityBills.some(b=>b.month===s.month)){skipped++;return;}
+    D.electricityBills.push({month:s.month,m1kwh:0,m1baht:s.baht,m2kwh:0,m2baht:0,m3kwh:0,m3baht:0,note:'นำเข้าย้อนหลัง (ยอดรวม 3 หม้อ ไม่แยกหม้อ)',totalKwh:0,totalBaht:s.baht});
+    added++;
+  });
+  save();
+  renderElecKPI();renderElecChart();renderElecHistory();renderElecYearlyTrend();
+  showElecMsg('✅ นำเข้าสำเร็จ '+added+' เดือน (ข้าม '+skipped+' เดือนที่มีข้อมูลอยู่แล้ว)','ok');
+}
+// ===== แนวโน้มค่าไฟรายปี (จากข้อมูลย้อนหลัง) =====
+const ELEC_COSTPERKG_REF={2564:18.3,2565:20,2566:19.75,2567:19.03,2568:19.76}; // ข้อมูลอ้างอิงจากไฟล์ที่อัปโหลด ไม่ได้คำนวณจากแอป
+function renderElecYearlyTrend(){
+  const el=document.getElementById('el-yearly-trend');if(!el)return;
+  const bills=D.electricityBills||[];
+  if(!bills.length){el.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีข้อมูล</p>';return;}
+  const byYear={};
+  bills.forEach(b=>{
+    const y=parseInt(b.month.split('-')[0],10);
+    const by=yearBE(y);
+    if(!byYear[by])byYear[by]={total:0,count:0};
+    byYear[by].total+=(b.totalBaht||0);byYear[by].count++;
+  });
+  const years=Object.keys(byYear).map(Number).sort((a,b)=>a-b);
+  const maxTotal=Math.max(...years.map(y=>byYear[y].total))||1;
+  const bars=years.map(y=>{
+    const v=byYear[y];
+    const pct=Math.round((v.total/maxTotal)*100);
+    const ref=ELEC_COSTPERKG_REF[y];
+    return `<div style="display:flex;align-items:flex-end;gap:4px;flex-direction:column;flex:1;min-width:0">
+      <span style="font-size:10px;color:var(--tx2);white-space:nowrap">${Math.round(v.total).toLocaleString()}</span>
+      <div style="width:100%;background:var(--p);border-radius:4px 4px 0 0;height:${pct}px;min-height:4px" title="${v.count} เดือนที่มีข้อมูล${ref?', ต้นทุนอ้างอิง '+ref+' บาท/กก.':''}"></div>
+      <span style="font-size:11px;color:var(--tx3);text-align:center">${y}${ref?'<br><span style="font-size:9px;color:var(--tx2)">'+ref+' ฿/กก.</span>':''}</span>
+    </div>`;
+  }).join('');
+  el.innerHTML=`<div style="font-weight:700;color:var(--tx);margin-bottom:4px">📈 แนวโน้มค่าไฟรายปี (พ.ศ. 2563-2569)</div>
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">ยอดรวม 3 หม้อ/ปี (บาท) — ตัวเลข ฿/กก. ใต้แต่ละปีเป็นข้อมูลอ้างอิงจากภายนอกที่ให้มา ไม่ใช่ค่าที่แอปคำนวณ</div>
+    <div style="display:flex;align-items:flex-end;gap:8px;height:180px;padding:0 4px">${bars}</div>`;
 }
 /* ===== END ELECTRICITY ===== */
 
