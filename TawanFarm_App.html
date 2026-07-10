@@ -97,6 +97,13 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 /* ── Cards ── */
 .card{background:var(--sf);border-radius:var(--r);border:1px solid var(--bd);padding:18px;box-shadow:var(--sh)}
 .card-t{font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:7px;color:var(--tx);border-bottom:1px solid var(--bd);padding-bottom:10px}
+/* ── กราฟรายปีค่าไฟ (grid 3 แถว: ยอด/แท่ง/ปี) ── */
+.yr-chart{display:grid;grid-auto-flow:column;grid-template-rows:20px 160px 22px;column-gap:14px;row-gap:6px;align-items:end;padding:0 4px 4px}
+.yr-val{font-size:11px;font-weight:700;color:var(--tx);text-align:center;white-space:nowrap;align-self:start}
+.yr-bar{position:relative;width:100%;max-width:56px;margin:0 auto;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#C08A1E,var(--p));align-self:end}
+.yr-bar.hi{background:linear-gradient(180deg,#E0A72E,var(--pd))}
+.yr-ref-in{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);writing-mode:vertical-rl;font-size:9px;font-weight:700;color:#FFF3D6;letter-spacing:.3px;white-space:nowrap}
+.yr-label{font-size:12px;font-weight:700;color:var(--tx2);text-align:center}
 .metric-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:16px 12px;text-align:center;box-shadow:var(--sh)}
 .metric-card-accent{border-top:3px solid var(--p)}
 .mv{font-size:28px;font-weight:800;color:var(--tx);letter-spacing:-.3px}.ml{font-size:11px;color:var(--tx3);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
@@ -4181,12 +4188,26 @@ function renderElecChart(){
   el.innerHTML=`<div style="font-weight:700;color:var(--tx);margin-bottom:10px">📊 ค่าไฟ 12 เดือนย้อนหลัง (บาท)</div>
     <div style="display:flex;align-items:flex-end;gap:6px;height:160px;padding:0 4px">${bars}</div>`;
 }
+let elHistYearSel=null; // null = ยังไม่ตั้งค่า (จะ default เป็นปีล่าสุดที่มีข้อมูล), 'all' = ทุกปี, หรือปี พ.ศ. (string)
 function renderElecHistory(){
   const el=document.getElementById('el-history');if(!el)return;
-  const bills=[...(D.electricityBills||[])].sort((a,b)=>b.month.localeCompare(a.month));
-  if(!bills.length){el.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีประวัติ</p>';return;}
-  el.innerHTML=`<div style="font-weight:700;color:var(--tx);margin-bottom:10px">📋 ประวัติบิลค่าไฟ</div>
-  <table class="tbl"><thead><tr><th>เดือน</th><th>หม้อ 1 (หน่วย/฿)</th><th>หม้อ 2 (หน่วย/฿)</th><th>หม้อ 3 (หน่วย/฿)</th><th>รวม (฿)</th><th></th></tr></thead><tbody>${
+  const allBills=[...(D.electricityBills||[])].sort((a,b)=>b.month.localeCompare(a.month));
+  if(!allBills.length){el.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีประวัติ</p>';return;}
+  const yearCounts={};
+  allBills.forEach(b=>{
+    const y=yearBE(parseInt(b.month.split('-')[0],10));
+    yearCounts[y]=(yearCounts[y]||0)+1;
+  });
+  const years=Object.keys(yearCounts).map(Number).sort((a,b)=>b-a);
+  if(elHistYearSel===null||!(elHistYearSel==='all'||years.includes(Number(elHistYearSel))))elHistYearSel=String(years[0]);
+  const bills=elHistYearSel==='all'?allBills:allBills.filter(b=>yearBE(parseInt(b.month.split('-')[0],10))===Number(elHistYearSel));
+  const opts=`<option value="all"${elHistYearSel==='all'?' selected':''}>ทุกปี</option>`+
+    years.map(y=>`<option value="${y}"${String(y)===elHistYearSel?' selected':''}>ปี ${y} (${yearCounts[y]} เดือน)</option>`).join('');
+  el.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+    <div style="font-weight:700;color:var(--tx)">📋 ประวัติบิลค่าไฟ</div>
+    <select class="fi" id="el-hist-year" onchange="elHistYearSel=this.value;renderElecHistory()" style="width:180px;font-size:12px;padding:4px 8px">${opts}</select>
+  </div>
+  ${!bills.length?'<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ไม่มีข้อมูลในปีที่เลือก</p>':`<table class="tbl"><thead><tr><th>เดือน</th><th>หม้อ 1 (หน่วย/฿)</th><th>หม้อ 2 (หน่วย/฿)</th><th>หม้อ 3 (หน่วย/฿)</th><th>รวม (฿)</th><th></th></tr></thead><tbody>${
     bills.map(b=>`<tr>
       <td>${fmtMonth(b.month)}</td>
       <td>${b.m1kwh?b.m1kwh+' / '+b.m1baht.toLocaleString():'-'}</td>
@@ -4195,7 +4216,7 @@ function renderElecHistory(){
       <td><strong>${b.totalBaht.toLocaleString()}</strong></td>
       <td><button class="btn-sm btn-del" onclick="deleteElecBill('${b.month}')">🗑️</button></td>
     </tr>`).join('')
-  }</tbody></table>`;
+  }</tbody></table>`}`;
 }
 // ===== ประมาณค่าไฟจากค่าเฉลี่ยฟาร์ม (บาท/กก.) =====
 const ELEC_COST_PER_KG_BENCHMARK=19.37; // เฉลี่ยจากข้อมูลค่าไฟย้อนหลัง 2564-2568 (18.3,20,19.75,19.03,19.76)
@@ -4261,17 +4282,16 @@ function renderElecYearlyTrend(){
   const maxTotal=Math.max(...years.map(y=>byYear[y].total))||1;
   const bars=years.map(y=>{
     const v=byYear[y];
-    const pct=Math.round((v.total/maxTotal)*100);
+    const h=Math.round((v.total/maxTotal)*140)+16;
     const ref=ELEC_COSTPERKG_REF[y];
-    return `<div style="display:flex;align-items:flex-end;gap:4px;flex-direction:column;flex:1;min-width:0">
-      <span style="font-size:10px;color:var(--tx2);white-space:nowrap">${Math.round(v.total).toLocaleString()}</span>
-      <div style="width:100%;background:var(--p);border-radius:4px 4px 0 0;height:${pct}px;min-height:4px" title="${v.count} เดือนที่มีข้อมูล${ref?', ต้นทุนอ้างอิง '+ref+' บาท/กก.':''}"></div>
-      <span style="font-size:11px;color:var(--tx3);text-align:center">${y}${ref?'<br><span style="font-size:9px;color:var(--tx2)">'+ref+' ฿/กก.</span>':''}</span>
-    </div>`;
+    const hi=v.total===maxTotal?' hi':'';
+    return `<div class="yr-val">${Math.round(v.total).toLocaleString()}</div>
+      <div class="yr-bar${hi}" style="height:${h}px" title="${v.count} เดือนที่มีข้อมูล${ref?', ต้นทุนอ้างอิง '+ref+' บาท/กก.':''}">${ref?`<span class="yr-ref-in">${ref} ฿/กก.</span>`:''}</div>
+      <div class="yr-label">${y}</div>`;
   }).join('');
   el.innerHTML=`<div style="font-weight:700;color:var(--tx);margin-bottom:4px">📈 แนวโน้มค่าไฟรายปี (พ.ศ. 2563-2569)</div>
-    <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">ยอดรวม 3 หม้อ/ปี (บาท) — ตัวเลข ฿/กก. ใต้แต่ละปีเป็นข้อมูลอ้างอิงจากภายนอกที่ให้มา ไม่ใช่ค่าที่แอปคำนวณ</div>
-    <div style="display:flex;align-items:flex-end;gap:8px;height:180px;padding:0 4px">${bars}</div>`;
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">ยอดรวม 3 หม้อ/ปี (บาท) — ตัวเลขแนวตั้งในแท่งคือ ฿/กก. ข้อมูลอ้างอิงจากภายนอกที่ให้มา ไม่ใช่ค่าที่แอปคำนวณ</div>
+    <div class="yr-chart">${bars}</div>`;
 }
 /* ===== END ELECTRICITY ===== */
 
