@@ -985,7 +985,10 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
     </div>
   </div>
   <div class="card" style="margin-top:16px">
-    <div class="card-t">📚 ประวัติรอบเลี้ยง (ปิดแล้ว)</div>
+    <div class="card-t" style="justify-content:space-between">
+      <span>📚 ประวัติรอบเลี้ยง (ปิดแล้ว)</span>
+      <select class="fi" id="cr-hist-year" onchange="renderCrops()" style="width:170px;font-size:12px;padding:4px 8px"></select>
+    </div>
     <div id="cr-history"></div>
   </div>
   <div class="card" style="margin-top:16px">
@@ -6110,6 +6113,25 @@ function renderCrops(){
   const allHistory=[];D.ponds.forEach(p=>(p.cropHistory||[]).forEach((c,_idx)=>allHistory.push({...c,pondName:p.name,_pondId:p.id,_idx})));
   allHistory.sort((a,b)=>(b.closeDate||'').localeCompare(a.closeDate||''));
   if(allHistory.length===0){histEl.innerHTML='<p style="color:var(--tx3);padding:10px">ยังไม่มีประวัติรอบเลี้ยง</p>';return;}
+  // ── dropdown ปี สำหรับการ์ดประวัติ (แยกจาก dropdown ปีของการ์ดสรุปด้านบน) ──
+  const histYearCounts={};
+  allHistory.forEach(c=>{const y=c.cropYear||c.year||curY;histYearCounts[y]=(histYearCounts[y]||0)+1;});
+  const histYearEl=document.getElementById('cr-hist-year');
+  let histYearFilter='all';
+  if(histYearEl){
+    const sortedYears=Object.keys(histYearCounts).map(Number).sort((a,b)=>yearBE(b)-yearBE(a));
+    let cv=histYearEl.value;
+    if(!histYearEl.dataset.init){
+      // ค่าเริ่มต้นครั้งแรก: ปีปัจจุบันถ้ามีข้อมูล ไม่งั้นใช้ปีล่าสุดที่มีข้อมูล
+      cv=sortedYears.includes(curY)?String(curY):(sortedYears.length?String(sortedYears[0]):'all');
+      histYearEl.dataset.init='1';
+    }
+    if(!sortedYears.some(y=>String(y)===cv))cv='all';
+    histYearEl.innerHTML=sortedYears.map(y=>`<option value="${y}"${String(y)===cv?' selected':''}>ปี ${yearBE(y)} (${histYearCounts[y]} รอบ)</option>`).join('')
+      +`<option value="all"${cv==='all'?' selected':''}>ทั้งหมดทุกปี (${allHistory.length} รอบ)</option>`;
+    histYearFilter=cv;
+  }
+  const filteredHistory=histYearFilter==='all'?allHistory:allHistory.filter(c=>String(c.cropYear||c.year||curY)===histYearFilter);
   const isAdminHist=APP_ROLE==='admin';
   histEl.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
     <thead><tr style="background:var(--sf2);border-bottom:2px solid var(--bd)">
@@ -6126,7 +6148,7 @@ function renderCrops(){
       ${isAdminHist?'<th style="text-align:right;padding:8px;font-size:12px;color:var(--tx2)">กำไร(บาท)</th>':''}
       <th style="text-align:left;padding:8px;font-size:12px;color:var(--tx2)">สาเหตุปิดบ่อ/หมายเหตุ</th>
     </tr></thead>
-    <tbody>${allHistory.map(c=>{
+    <tbody>${filteredHistory.map(c=>{
       const hr=c.harvestResult||{};
       const days=c.startDate&&c.closeDate?dDiff(c.startDate,c.closeDate):'-';
       const dClr=days!=='-'?(days>=90&&days<=120?'var(--ok)':days>120?'var(--w)':'var(--d)'):'var(--tx3)';
