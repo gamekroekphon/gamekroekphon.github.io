@@ -649,8 +649,13 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
         </div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
           <div class="fg"><label class="fl">เบอร์อาหาร</label><input type="text" class="fi" id="fd-grade" placeholder="0, 1, 2, P1..."></div>
-          <div class="fg"><label class="fl">อาหารต่อวัน (กก.) *</label><input type="number" step="0.1" class="fi" id="fd-total" placeholder="20.0" oninput="updateFeedRate()"></div>
+          <div class="fg"><label class="fl">อาหารต่อวัน (กก.) *</label><input type="number" step="0.1" class="fi" id="fd-total" placeholder="20.0" oninput="updateFeedRate();updateFeedStockCalc()"></div>
         </div>
+        <div class="fg">
+          <label class="fl">อาหารจากสต็อก <span style="font-weight:400;color:var(--tx3)">(ไม่บังคับ — เลือกถ้าต้องการตัดสต็อกอัตโนมัติ)</span></label>
+          <select class="fi" id="fd-stockitem" onchange="updateFeedStockCalc()"><option value="">-- ไม่ตัดสต็อก --</option></select>
+        </div>
+        <div id="fd-stock-calc" style="display:none"></div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
           <div class="fg">
             <label class="fl">Feed Rate <span style="font-weight:400;color:var(--tx3)">(อัตราการให้อาหารต่อน้ำหนักกุ้ง %)</span></label>
@@ -4835,7 +4840,9 @@ function editFeed(pid,d){
     document.getElementById('fd-total').value=r.totalFeed||'';
     document.getElementById('fd-rate').value=r.feedRate||'';
     document.getElementById('fd-notes').value=r.notes||'';
-    updateFeedRate();
+    populateFeedStockItems();
+    const se=document.getElementById('fd-stockitem');if(se)se.value=r.stockItemId||'';
+    updateFeedRate();updateFeedStockCalc();
   }
   const el=document.getElementById('fd-pond');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -4891,7 +4898,47 @@ function editLab(pid,d){
   const el=document.getElementById('lb-pond');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
 }
 // ===== FEEDING =====
-function initFeed(){populateAll();document.getElementById('fd-date').value=today();calcAge('fd');renderFeedTable();renderFeedChart();}
+function initFeed(){populateAll();document.getElementById('fd-date').value=today();calcAge('fd');populateFeedStockItems();renderFeedTable();renderFeedChart();}
+function populateFeedStockItems(){
+  const sel=document.getElementById('fd-stockitem');if(!sel)return;
+  const cur=sel.value;
+  const items=(D.inventoryItems||[]).filter(i=>i.category==='feed').sort((a,b)=>a.name.localeCompare(b.name,'th'));
+  sel.innerHTML='<option value="">-- ไม่ตัดสต็อก --</option>'+items.map(i=>`<option value="${i.id}">${i.name} — คงเหลือ ${i.qty} ${i.unit||'กระสอบ'}</option>`).join('');
+  sel.value=cur&&items.some(i=>i.id===cur)?cur:'';
+}
+function updateFeedStockCalc(){
+  const box=document.getElementById('fd-stock-calc');if(!box)return;
+  const itemId=document.getElementById('fd-stockitem')?.value||'';
+  const total=parseFloat(document.getElementById('fd-total').value)||0;
+  if(!itemId||!total){box.style.display='none';box.innerHTML='';return;}
+  const item=(D.inventoryItems||[]).find(i=>i.id===itemId);
+  if(!item){box.style.display='none';box.innerHTML='';return;}
+  const sacks=Math.round((total/25)*100)/100;
+  const after=Math.round((item.qty-sacks)*100)/100;
+  const warnRow=after<0?`<div style="color:var(--d);font-weight:700;margin-top:4px">⚠️ สต็อกจะติดลบ (${after} ${item.unit||'กระสอบ'})</div>`:'';
+  box.style.display='block';
+  box.innerHTML=`<div style="background:var(--pl);border:1px solid #F0D98A;border-radius:8px;padding:10px 12px;font-size:12.5px">
+    <div style="font-weight:700;color:var(--p);margin-bottom:4px">📦 จะตัดสต็อก ${sacks} ${item.unit||'กระสอบ'} (1 กระสอบ = 25 กก.)</div>
+    <div>คงเหลือ ${item.qty} ${item.unit||'กระสอบ'} → หลังตัด <b style="color:${after<0?'var(--d)':'var(--ok)'}">${after}</b> ${item.unit||'กระสอบ'}</div>
+    ${warnRow}
+  </div>`;
+}
+function reverseFeedStockDeduction(rec){
+  if(!rec||!rec.stockItemId||!rec.stockLogId)return;
+  const item=(D.inventoryItems||[]).find(i=>i.id===rec.stockItemId);
+  if(item)item.qty=Math.round((item.qty+(rec.stockQty||0))*100)/100;
+  D.inventoryLog=(D.inventoryLog||[]).filter(l=>l.id!==rec.stockLogId);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(rec.stockLogId);
+}
+function applyFeedStockDeduction(rec,pid,d,stockItemId,sacks){
+  const item=(D.inventoryItems||[]).find(i=>i.id===stockItemId);
+  if(!item||!sacks)return;
+  item.qty=Math.round((item.qty-sacks)*100)/100;
+  if(!D.inventoryLog)D.inventoryLog=[];
+  const logId='sl_fd_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  D.inventoryLog.push({id:logId,itemId:item.id,itemName:item.name,type:'out',qty:sacks,date:d,note:'ตัดอัตโนมัติจากบันทึกอาหาร',pondId:pid,balanceAfter:item.qty,unit:item.unit||'กระสอบ'});
+  rec.stockItemId=item.id;rec.stockQty=sacks;rec.stockLogId=logId;
+}
 function updateFeedRate(){
   const pid=document.getElementById('fd-pond').value;
   const total=parseFloat(document.getElementById('fd-total').value)||0;
@@ -4909,17 +4956,34 @@ function saveFeed(){
   const total=parseFloat(document.getElementById('fd-total').value)||null;
   if(!total){showMsg('fd-msg','warn','กรุณากรอกปริมาณอาหาร');return}
   const p=pond(pid);if(!p)return;if(!p.feedLog)p.feedLog=[];
-  const rec={id:'fd_'+pid+'_'+d,date:d,age:parseInt(document.getElementById('fd-age').value)||0,
+  const recId='fd_'+pid+'_'+d;
+  const oldRec=p.feedLog.find(r=>r.id===recId||r.date===d)||null;
+  const stockItemId=document.getElementById('fd-stockitem')?.value||'';
+  let newSacks=0;
+  if(stockItemId){
+    newSacks=Math.round((total/25)*100)/100;
+    const item=(D.inventoryItems||[]).find(i=>i.id===stockItemId);
+    if(item){
+      const oldSameItem=oldRec&&oldRec.stockItemId===stockItemId?(oldRec.stockQty||0):0;
+      const projected=Math.round((item.qty+oldSameItem-newSacks)*100)/100;
+      if(projected<0){
+        if(!confirm(`สต็อก "${item.name}" จะติดลบ (${projected} ${item.unit||'กระสอบ'}) หลังตัด\nยืนยันบันทึกต่อหรือไม่?`))return;
+      }
+    }
+  }
+  if(oldRec)reverseFeedStockDeduction(oldRec);
+  const rec={id:recId,date:d,age:parseInt(document.getElementById('fd-age').value)||0,
     feedBrand:document.getElementById('fd-brand').value,feedGrade:document.getElementById('fd-grade').value,
     totalFeed:total,feedRate:parseFloat(document.getElementById('fd-rate').value)||null,
     notes:document.getElementById('fd-notes').value};
+  if(stockItemId)applyFeedStockDeduction(rec,pid,d,stockItemId,newSacks);
   const idx=p.feedLog.findIndex(r=>r.id===rec.id||r.date===d);
   if(idx>=0){p.feedLog[idx]=rec;showMsg('fd-msg','warn',`อัปเดต ${fD(d)}`)}
   else{p.feedLog.push(rec);p.feedLog.sort((a,b)=>new Date(a.date)-new Date(b.date));showMsg('fd-msg','ok',`✅ อาหาร ${total.toFixed(1)} กก. บ่อ ${p.name}`)}
-  save();renderFeedTable();renderFeedMetrics(pid);renderFeedChart();renderOv();
+  save();renderFeedTable();renderFeedMetrics(pid);renderFeedChart();renderOv();populateFeedStockItems();updateFeedStockCalc();renderStockKPI();renderStockWarn();renderStockItems();
 }
 // ===== POND CHANGE HANDLERS =====
-function onFdPond(){clearFeed();updateFeedRate();renderFeedTable();renderFeedChart();const pid=document.getElementById('fd-pond').value;if(pid)renderFeedMetrics(pid);}
+function onFdPond(){clearFeed();updateFeedRate();populateFeedStockItems();renderFeedTable();renderFeedChart();const pid=document.getElementById('fd-pond').value;if(pid)renderFeedMetrics(pid);}
 function onSpPond(){clearSample();renderSampleTable();renderSampleChart();const pid=document.getElementById('sp-pond').value;if(pid)renderSampleMetrics(pid);}
 function onWlPond(){clearWaterLog();renderWaterTable();}
 function onChPond(){renderChemHistory();}
@@ -4927,6 +4991,8 @@ function onLbPond(){clearLab();renderLabTable();}
 function clearFeed(){
   document.getElementById('fd-date').value=today();
   ['fd-brand','fd-grade','fd-total','fd-rate','fd-notes'].forEach(id=>{document.getElementById(id).value=''});
+  const se=document.getElementById('fd-stockitem');if(se)se.value='';
+  const box=document.getElementById('fd-stock-calc');if(box){box.style.display='none';box.innerHTML='';}
   document.getElementById('fd-msg').innerHTML='';calcAge('fd');
 }
 function feedPer100k(totalFeed,stock){
@@ -4977,17 +5043,22 @@ function renderFeedTable(){
   const p=pond(pid);const rows=(p?.feedLog||[]).slice().reverse();
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
   const pk=feedPer100k;
-  wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ยี่ห้อ</th><th>เบอร์</th><th>รวม (กก.)</th><th>กก./แสน</th><th>Feed Rate (%อาหาร)</th><th>หมายเหตุ</th></tr></thead><tbody>${
-    rows.map((r,i)=>{const v=pk(r.totalFeed,p.stock);return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editFeed('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteFeed('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.feedBrand||'-'}</td><td>${r.feedGrade||'-'}</td><td><strong>${r.totalFeed?.toFixed(1)||'-'}</strong></td><td style="color:var(--p);font-weight:600">${v!=null?v.toFixed(2):'-'}</td><td>${r.feedRate?r.feedRate+'%':'-'}</td><td>${r.notes||'-'}</td></tr>`}).join('')}</tbody></table>`;
+  wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ยี่ห้อ</th><th>เบอร์</th><th>รวม (กก.)</th><th>กก./แสน</th><th>Feed Rate (%อาหาร)</th><th>สต็อก</th><th>หมายเหตุ</th></tr></thead><tbody>${
+    rows.map((r,i)=>{const v=pk(r.totalFeed,p.stock);
+      const stockCell=r.stockItemId&&r.stockQty
+        ?`<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--ob);color:var(--ok)" title="${r.itemName||''}">📦 ตัดแล้ว ${r.stockQty} กส.</span>`
+        :`<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--sf2);color:var(--tx3)">— ไม่ตัดสต็อก</span>`;
+      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editFeed('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteFeed('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.feedBrand||'-'}</td><td>${r.feedGrade||'-'}</td><td><strong>${r.totalFeed?.toFixed(1)||'-'}</strong></td><td style="color:var(--p);font-weight:600">${v!=null?v.toFixed(2):'-'}</td><td>${r.feedRate?r.feedRate+'%':'-'}</td><td>${stockCell}</td><td>${r.notes||'-'}</td></tr>`}).join('')}</tbody></table>`;
 }
 function deleteFeed(pid,id){
   const p=pond(pid);if(!p)return;
   const target=p.feedLog.find(r=>r.id===id);
   if(!target){alert('ไม่พบรายการ');return;}
   if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(target.date)+' ใช่หรือไม่?'))return;
+  reverseFeedStockDeduction(target);
   p.feedLog=(p.feedLog||[]).filter(r=>r.id!==id);
   D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
-  save();renderFeedTable();renderFeedChart();
+  save();renderFeedTable();renderFeedChart();renderStockKPI();renderStockWarn();renderStockItems();populateFeedStockItems();
 }
 // ===== SAMPLING =====
 function initSample(){populateAll();document.getElementById('sp-date').value=today();calcAge('sp');renderSampleTable();renderSampleChart();}
