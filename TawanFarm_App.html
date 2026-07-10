@@ -3531,12 +3531,16 @@ function pondCard(p,last,age,cls){
   const phCls=phVal!==null?classifyOv('phM',phVal):'na';
   const doCls=doVal!==null?classifyOv('doM',doVal):'na';
   const alertTxt=(cls==='warn'||cls==='danger')?reasonOv(p,last,age):'';
+  const latF=(p.feedLog||[]).length?p.feedLog[p.feedLog.length-1]:null;
+  const feedTxt=latF&&latF.totalFeed!=null
+    ?Number(latF.totalFeed).toFixed(1)+' กก./วัน'+(latF.date!==today()?` (${fD(latF.date)})`:'')
+    :'ยังไม่มีข้อมูล';
   return`<div class="pc-ov" onclick="openPondDetail('${p.id}')">
     <div class="pc-ov-top"><span class="pc-ov-name">${p.name}</span><span class="pc-ov-badge ${bCls[cls]||'pcb-empty'}">${bTxt[cls]||cls}</span></div>
     <div class="pc-ov-row"><span class="pc-ov-lbl">อายุ</span><span class="pc-ov-val">${age>0?age+' วัน':'-'}</span></div>
     <div class="pc-ov-row"><span class="pc-ov-lbl">ไซส์</span><span class="pc-ov-val">${sizeVal?sizeVal+' ตัว/กก.':'-'}</span></div>
     <div class="pc-ov-row"><span class="pc-ov-lbl">Biomass</span><span class="pc-ov-val">${bio?Math.round(bio).toLocaleString()+' กก.':'-'}</span></div>
-    <div class="pc-ov-row"><span class="pc-ov-lbl">ปล่อย</span><span class="pc-ov-val">${p.stock?p.stock.toLocaleString():'-'}</span></div>
+    <div class="pc-ov-row"><span class="pc-ov-lbl">อาหาร</span><span class="pc-ov-val" style="${latF?'':'color:var(--tx3)'}">${feedTxt}</span></div>
     <hr class="pc-ov-div">
     <div class="pc-ov-row"><span class="pc-ov-lbl">pH</span><span class="pc-ov-val ${phCls!=='na'?phCls:''}">${vc(phVal)}</span></div>
     <div class="pc-ov-row"><span class="pc-ov-lbl">DO</span><span class="pc-ov-val ${doCls!=='na'?doCls:''}">${vc(doVal)}</span></div>
