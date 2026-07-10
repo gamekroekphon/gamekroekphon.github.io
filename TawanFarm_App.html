@@ -6042,19 +6042,21 @@ const PREP_STEPS = [
 ];
 
 function renderCrops(){
-  const selYear=parseInt(document.getElementById('cr-year')?.value)||new Date().getFullYear();
+  // หมายเหตุ: ตัวเลือกในดรอปดาวน์ปีเป็น พ.ศ. (BE) เสมอ ต้อง normalize ผ่าน yearBE() ทุกจุดที่เทียบปี กันปีเดียวกันแยกเป็น 2 ตัวเลือก (ข้อมูลเก่าบางรายการเก็บเป็น ค.ศ. บางรายการเป็น พ.ศ. ปนกัน)
+  const curY=new Date().getFullYear();
+  const selYear=parseInt(document.getElementById('cr-year')?.value)||yearBE(curY);
   // fill year dropdown
-  const years=new Set();const curY=new Date().getFullYear();
-  [curY-1,curY,curY+1].forEach(y=>years.add(y));
-  D.ponds.forEach(p=>{(p.cropHistory||[]).forEach(c=>{years.add(c.cropYear||c.year||curY);});years.add(p.cropYear||curY);});
+  const years=new Set();
+  [curY-1,curY,curY+1].forEach(y=>years.add(yearBE(y)));
+  D.ponds.forEach(p=>{(p.cropHistory||[]).forEach(c=>{years.add(yearBE(c.cropYear||c.year||curY));});years.add(yearBE(p.cropYear||curY));});
   const yrEl=document.getElementById('cr-year');
-  if(yrEl){const cv=yrEl.value||curY;yrEl.innerHTML=[...years].sort((a,b)=>yearBE(b)-yearBE(a)).map(y=>`<option value="${y}"${y==cv?' selected':''}>${yearBE(y)} พ.ศ.</option>`).join('');}
+  if(yrEl){const cv=yrEl.value||yearBE(curY);yrEl.innerHTML=[...years].sort((a,b)=>b-a).map(y=>`<option value="${y}"${y==cv?' selected':''}>${y} พ.ศ.</option>`).join('');}
   // metrics
   let totalClosed=0,onTrack=0,behindTrack=0;
   D.ponds.forEach(p=>{
-    const closed=(p.cropHistory||[]).filter(c=>(c.cropYear||c.year||curY)==selYear).length;
+    const closed=(p.cropHistory||[]).filter(c=>yearBE(c.cropYear||c.year||curY)===selYear).length;
     totalClosed+=closed;
-    const curIsThisYear=(p.cropYear||curY)==selYear;
+    const curIsThisYear=yearBE(p.cropYear||curY)===selYear;
     if(curIsThisYear){
       const age=p.startDate?dDiff(p.startDate,today()):0;
       const total=closed+(age>0?1:0);
@@ -6070,9 +6072,9 @@ function renderCrops(){
   // table body
   const tbody=document.getElementById('cr-tbody');if(!tbody)return;
   tbody.innerHTML=D.ponds.map(p=>{
-    const history=(p.cropHistory||[]).filter(c=>(c.cropYear||c.year||curY)==selYear).sort((a,b)=>(a.cropNum||1)-(b.cropNum||1));
+    const history=(p.cropHistory||[]).filter(c=>yearBE(c.cropYear||c.year||curY)===selYear).sort((a,b)=>(a.cropNum||1)-(b.cropNum||1));
     const c1=history[0]||null;const c2=history[1]||null;
-    const isCurYear=(p.cropYear||curY)==selYear;
+    const isCurYear=yearBE(p.cropYear||curY)===selYear;
     const curAge=p.startDate?dDiff(p.startDate,today()):0;
     const hasStarted=!!p.startDate&&curAge>=0;
     const onTrackNow=isCurYear&&hasStarted;
