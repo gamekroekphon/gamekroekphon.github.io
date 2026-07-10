@@ -6114,23 +6114,25 @@ function renderCrops(){
   allHistory.sort((a,b)=>(b.closeDate||'').localeCompare(a.closeDate||''));
   if(allHistory.length===0){histEl.innerHTML='<p style="color:var(--tx3);padding:10px">ยังไม่มีประวัติรอบเลี้ยง</p>';return;}
   // ── dropdown ปี สำหรับการ์ดประวัติ (แยกจาก dropdown ปีของการ์ดสรุปด้านบน) ──
+  // หมายเหตุ: ข้อมูลเก่าบางรายการเก็บปีเป็น ค.ศ. บางรายการเป็น พ.ศ. ปนกัน ต้อง normalize ผ่าน yearBE() ก่อน group กัน ไม่งั้นปีเดียวกันจะแยกเป็น 2 ช่อง
+  const curYBE=yearBE(curY);
   const histYearCounts={};
-  allHistory.forEach(c=>{const y=c.cropYear||c.year||curY;histYearCounts[y]=(histYearCounts[y]||0)+1;});
+  allHistory.forEach(c=>{const y=yearBE(c.cropYear||c.year||curY);histYearCounts[y]=(histYearCounts[y]||0)+1;});
   const histYearEl=document.getElementById('cr-hist-year');
   let histYearFilter='all';
   if(histYearEl){
-    const sortedYears=Object.keys(histYearCounts).map(Number).sort((a,b)=>yearBE(b)-yearBE(a));
+    const sortedYears=Object.keys(histYearCounts).map(Number).sort((a,b)=>b-a);
     let cv=histYearEl.value;
     if(!histYearEl.dataset.init){
-      cv=sortedYears.includes(curY)?String(curY):(sortedYears.length?String(sortedYears[0]):'all');
+      cv=sortedYears.includes(curYBE)?String(curYBE):(sortedYears.length?String(sortedYears[0]):'all');
       histYearEl.dataset.init='1';
     }
     if(!sortedYears.some(y=>String(y)===cv))cv='all';
-    histYearEl.innerHTML=sortedYears.map(y=>`<option value="${y}"${String(y)===cv?' selected':''}>ปี ${yearBE(y)} (${histYearCounts[y]} รอบ)</option>`).join('')
+    histYearEl.innerHTML=sortedYears.map(y=>`<option value="${y}"${String(y)===cv?' selected':''}>ปี ${y} (${histYearCounts[y]} รอบ)</option>`).join('')
       +`<option value="all"${cv==='all'?' selected':''}>ทั้งหมดทุกปี (${allHistory.length} รอบ)</option>`;
     histYearFilter=cv;
   }
-  const filteredHistory=histYearFilter==='all'?allHistory:allHistory.filter(c=>String(c.cropYear||c.year||curY)===histYearFilter);
+  const filteredHistory=histYearFilter==='all'?allHistory:allHistory.filter(c=>String(yearBE(c.cropYear||c.year||curY))===histYearFilter);
   const isAdminHist=APP_ROLE==='admin';
   histEl.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
     <thead><tr style="background:var(--sf2);border-bottom:2px solid var(--bd)">
