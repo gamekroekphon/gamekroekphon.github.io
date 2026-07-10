@@ -98,12 +98,12 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .card{background:var(--sf);border-radius:var(--r);border:1px solid var(--bd);padding:18px;box-shadow:var(--sh)}
 .card-t{font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:7px;color:var(--tx);border-bottom:1px solid var(--bd);padding-bottom:10px}
 /* ── กราฟรายปีค่าไฟ (grid 3 แถว: ยอด/แท่ง/ปี) ── */
-.yr-chart{display:grid;grid-auto-flow:column;grid-template-rows:20px 160px 22px;column-gap:14px;row-gap:6px;align-items:end;padding:0 4px 4px}
+.yr-chart{display:grid;grid-auto-flow:column;grid-template-rows:20px 150px 22px 22px;column-gap:14px;row-gap:6px;align-items:end;padding:0 4px 4px}
 .yr-val{font-size:11px;font-weight:700;color:var(--tx);text-align:center;white-space:nowrap;align-self:start}
-.yr-bar{position:relative;width:100%;max-width:56px;margin:0 auto;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#C08A1E,var(--p));align-self:end}
+.yr-bar{width:100%;max-width:56px;margin:0 auto;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#C08A1E,var(--p));align-self:end}
 .yr-bar.hi{background:linear-gradient(180deg,#E0A72E,var(--pd))}
-.yr-ref-in{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);writing-mode:vertical-rl;font-size:9px;font-weight:700;color:#FFF3D6;letter-spacing:.3px;white-space:nowrap}
-.yr-label{font-size:12px;font-weight:700;color:var(--tx2);text-align:center}
+.yr-label{font-size:12px;font-weight:700;color:var(--tx2);text-align:center;align-self:start}
+.yr-ref-badge{font-size:10px;font-weight:700;color:var(--in);background:var(--ib);border-radius:6px;padding:2px 6px;text-align:center;white-space:nowrap;justify-self:center;align-self:start}
 .metric-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:16px 12px;text-align:center;box-shadow:var(--sh)}
 .metric-card-accent{border-top:3px solid var(--p)}
 .mv{font-size:28px;font-weight:800;color:var(--tx);letter-spacing:-.3px}.ml{font-size:11px;color:var(--tx3);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
@@ -4282,15 +4282,16 @@ function renderElecYearlyTrend(){
   const maxTotal=Math.max(...years.map(y=>byYear[y].total))||1;
   const bars=years.map(y=>{
     const v=byYear[y];
-    const h=Math.round((v.total/maxTotal)*140)+16;
+    const h=Math.round((v.total/maxTotal)*130)+16;
     const ref=ELEC_COSTPERKG_REF[y];
     const hi=v.total===maxTotal?' hi':'';
     return `<div class="yr-val">${Math.round(v.total).toLocaleString()}</div>
-      <div class="yr-bar${hi}" style="height:${h}px" title="${v.count} เดือนที่มีข้อมูล${ref?', ต้นทุนอ้างอิง '+ref+' บาท/กก.':''}">${ref?`<span class="yr-ref-in">${ref} ฿/กก.</span>`:''}</div>
-      <div class="yr-label">${y}</div>`;
+      <div class="yr-bar${hi}" style="height:${h}px" title="${v.count} เดือนที่มีข้อมูล${ref?', ต้นทุนอ้างอิง '+ref+' บาท/กก.':''}"></div>
+      <div class="yr-label">${y}</div>
+      <div class="yr-ref-badge">${ref?ref+' ฿/กก.':''}</div>`;
   }).join('');
   el.innerHTML=`<div style="font-weight:700;color:var(--tx);margin-bottom:4px">📈 แนวโน้มค่าไฟรายปี (พ.ศ. 2563-2569)</div>
-    <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">ยอดรวม 3 หม้อ/ปี (บาท) — ตัวเลขแนวตั้งในแท่งคือ ฿/กก. ข้อมูลอ้างอิงจากภายนอกที่ให้มา ไม่ใช่ค่าที่แอปคำนวณ</div>
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">ยอดรวม 3 หม้อ/ปี (บาท) — ป้ายสีฟ้าคือต้นทุนอ้างอิง (บาท/กก.) จากข้อมูลภายนอกที่ให้มา ไม่ใช่ค่าที่แอปคำนวณ</div>
     <div class="yr-chart">${bars}</div>`;
 }
 /* ===== END ELECTRICITY ===== */
