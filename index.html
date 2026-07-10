@@ -2600,6 +2600,11 @@ function dDiff(a,b){return Math.floor((new Date(b)-new Date(a))/86400000)}
 function fD(d){if(!d)return'-';return new Date(d).toLocaleDateString('th-TH',{year:'2-digit',month:'short',day:'numeric'})}
 // ข้อ 2: แปลง cropYear เป็น พ.ศ. 4 หลักเสมอ (รองรับ BE 4 หลัก, CE 4 หลัก, และ BE 2 หลัก)
 function yearBE(y){if(!y)return'';const n=parseInt(y);if(isNaN(n))return'';if(n>2500)return n;if(n>100)return n+543;return n+2500;}
+// ── ปีของรอบเลี้ยง (ประวัติ) ยึดตามปีของ "วันที่จับ" (closeDate) เป็นหลัก — ถ้ายังไม่ปิด/ไม่มีวันที่จับ ค่อย fallback ไปใช้ cropYear/year ที่บันทึกไว้ ──
+function histRecYear(c){
+  if(c&&c.closeDate){const y=parseInt(String(c.closeDate).slice(0,4));if(!isNaN(y))return yearBE(y);}
+  return yearBE(c&&(c.cropYear||c.year)||new Date().getFullYear());
+}
 // ── ข้อ2: input[type=date] เป็น ค.ศ. เสมอ (ข้อจำกัดเบราว์เซอร์) จึงแสดงป้าย พ.ศ. ไทยคู่กันเพื่อไม่ให้สับสน ──
 function syncDateHint(el){
   if(!el||el.type!=='date')return;
@@ -6114,10 +6119,10 @@ function renderCrops(){
   allHistory.sort((a,b)=>(b.closeDate||'').localeCompare(a.closeDate||''));
   if(allHistory.length===0){histEl.innerHTML='<p style="color:var(--tx3);padding:10px">ยังไม่มีประวัติรอบเลี้ยง</p>';return;}
   // ── dropdown ปี สำหรับการ์ดประวัติ (แยกจาก dropdown ปีของการ์ดสรุปด้านบน) ──
-  // หมายเหตุ: ข้อมูลเก่าบางรายการเก็บปีเป็น ค.ศ. บางรายการเป็น พ.ศ. ปนกัน ต้อง normalize ผ่าน yearBE() ก่อน group กัน ไม่งั้นปีเดียวกันจะแยกเป็น 2 ช่อง
+  // ยึดปีตาม "วันที่จับ" (closeDate) เป็นหลัก เช่น ลงกุ้ง ธ.ค.68 จับ ก.พ.69 → นับเป็นรอบของปี 2569 (ดู histRecYear())
   const curYBE=yearBE(curY);
   const histYearCounts={};
-  allHistory.forEach(c=>{const y=yearBE(c.cropYear||c.year||curY);histYearCounts[y]=(histYearCounts[y]||0)+1;});
+  allHistory.forEach(c=>{const y=histRecYear(c);histYearCounts[y]=(histYearCounts[y]||0)+1;});
   const histYearEl=document.getElementById('cr-hist-year');
   let histYearFilter='all';
   if(histYearEl){
@@ -6133,7 +6138,7 @@ function renderCrops(){
       +`<option value="all"${cv==='all'?' selected':''}>ทั้งหมดทุกปี (${allHistory.length} รอบ)</option>`;
     histYearFilter=cv;
   }
-  const filteredHistory=histYearFilter==='all'?allHistory:allHistory.filter(c=>String(yearBE(c.cropYear||c.year||curY))===histYearFilter);
+  const filteredHistory=histYearFilter==='all'?allHistory:allHistory.filter(c=>String(histRecYear(c))===histYearFilter);
   const isAdminHist=APP_ROLE==='admin';
   histEl.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
     <thead><tr style="background:var(--sf2);border-bottom:2px solid var(--bd)">
@@ -6157,7 +6162,7 @@ function renderCrops(){
       return`<tr style="border-bottom:1px solid var(--bd)">
         <td style="padding:8px 10px;font-weight:700">บ่อ ${c.pondName}</td>
         <td style="padding:8px;text-align:center">${c.cropNum}</td>
-        <td style="padding:8px;text-align:center">${yearBE(c.cropYear||c.year)||'-'}</td>
+        <td style="padding:8px;text-align:center">${histRecYear(c)||'-'}</td>
         <td style="padding:8px;text-align:center;font-size:12px">${fD(c.startDate||'')}</td>
         <td style="padding:8px;text-align:center;font-size:12px">${fD(c.closeDate||'')}</td>
         <td style="padding:8px;text-align:center;font-weight:700;color:${dClr}">${days}</td>
