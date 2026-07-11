@@ -110,6 +110,20 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .ov-risk-sc.l{background:var(--sn-green)}
 .ov-risk-info{font-size:12px}
 .ov-risk-info small{color:var(--tx3);display:block;margin-top:1px}
+/* ── หัวข้อสไตล์มือถือ (เฉพาะหน้าภาพรวม) ตาม prototype พี่แพรว ── */
+.mhd{display:none}
+@media(max-width:600px){
+  body:has(#sec-overview.on) .hdr{display:none}
+  .mhd{display:block;background:var(--sn-bg);color:#eafbe7;padding:16px;border-radius:16px;margin-bottom:14px}
+}
+.mhd-top{display:flex;align-items:center;gap:11px}
+.mhd-av{width:38px;height:38px;border-radius:50%;background:var(--sn-lime);color:var(--sn-bg);display:grid;place-items:center;font-weight:700;flex-shrink:0;font-size:15px}
+.mhd-top small{color:#a9c9b3;font-size:11px;display:block;margin-top:1px}
+.mhd-greet{font-weight:600;font-size:15px}
+.mhd-bell{margin-left:auto;position:relative;font-size:19px;cursor:pointer}
+.mhd-bell-badge{display:none;position:absolute;top:-4px;right:-6px;background:var(--sn-danger);color:#fff;font-size:9px;font-weight:700;border-radius:50%;min-width:15px;height:15px;line-height:15px;text-align:center;padding:0 2px}
+.mhd-bell-badge.show{display:block}
+.mhd-search{margin-top:13px;background:#20493a;border-radius:30px;padding:10px 15px;color:#8fae9c;font-size:12.5px;cursor:pointer}
 
 /* ── Tabs ── */
 .tabs-wrap{position:sticky;top:60px;z-index:99;background:var(--sf);border-bottom:2px solid var(--bd)}
@@ -667,6 +681,14 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
 <div class="main">
 <!-- OVERVIEW -->
 <div id="sec-overview" class="sec on">
+  <div class="mhd">
+    <div class="mhd-top">
+      <div class="mhd-av" id="mhd-av">?</div>
+      <div><div class="mhd-greet" id="mhd-greet">สวัสดี 👋</div><small id="mhd-sub">ตะวันฟาร์ม</small></div>
+      <div class="mhd-bell" onclick="document.getElementById('bnav-alerts')?.click()">🔔<span class="mhd-bell-badge" id="mhd-bell-badge"></span></div>
+    </div>
+    <div class="mhd-search" onclick="document.getElementById('bnav-more')?.click()">🔍 ค้นหาบ่อ / ข้อมูล...</div>
+  </div>
   <div class="ov-kpi-bar" id="ov-kpi-bar"></div>
   <div class="ov-main-grid">
     <div id="ov-sections"></div>
@@ -1970,6 +1992,7 @@ function applyRole(role){
     document.getElementById('hdr-role-badge').textContent='Admin';
     document.body.classList.add('role-admin');
     const sr=document.getElementById('sn-role');if(sr)sr.textContent='Admin';
+    const ms=document.getElementById('mhd-sub');if(ms)ms.textContent='ตะวันฟาร์ม · Admin';
   }else{
     FINANCE_TABS.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
     FINANCE_SECS.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
@@ -1977,6 +2000,7 @@ function applyRole(role){
     document.getElementById('hdr-role-badge').textContent='พนักงาน';
     document.body.classList.remove('role-admin');
     const sr=document.getElementById('sn-role');if(sr)sr.textContent='พนักงาน';
+    const ms=document.getElementById('mhd-sub');if(ms)ms.textContent='ตะวันฟาร์ม · พนักงาน';
   }
 }
 function updateUserHeader(user,role){
@@ -1986,6 +2010,8 @@ function updateUserHeader(user,role){
   const mn=document.getElementById('mobile-uname');if(mn)mn.textContent=uname;
   const sn=document.getElementById('sn-uname');if(sn)sn.textContent=uname;
   const sav=document.getElementById('sn-av');if(sav)sav.textContent=(uname||'?').charAt(0).toUpperCase();
+  const mg=document.getElementById('mhd-greet');if(mg)mg.textContent='สวัสดี, '+uname+' 👋';
+  const mav=document.getElementById('mhd-av');if(mav)mav.textContent=(uname||'?').charAt(0).toUpperCase();
   applyRole(role);
 }
 // ===== USER MANAGEMENT (Admin) =====
@@ -2997,9 +3023,14 @@ function toggleMobMenu(btn){
 }
 function updateAlertBadge(n){
   const b=document.getElementById('bnav-alert-badge');
-  if(!b)return;
-  if(n>0){b.textContent=n>99?'99+':n;b.classList.add('show');}
-  else{b.textContent='';b.classList.remove('show');}
+  const mb=document.getElementById('mhd-bell-badge');
+  if(n>0){
+    if(b){b.textContent=n>99?'99+':n;b.classList.add('show');}
+    if(mb){mb.textContent=n>99?'99+':n;mb.classList.add('show');}
+  }else{
+    if(b){b.textContent='';b.classList.remove('show');}
+    if(mb){mb.textContent='';mb.classList.remove('show');}
+  }
 }
 // ===== HARVEST STATISTICS (ปี 60-69) =====
 const HV_YRS=[60,61,62,63,64,65,66,67,68,69];
