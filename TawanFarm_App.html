@@ -98,7 +98,7 @@ body.role-admin .sn-link.admin-only{display:block!important}
 /* ── หน้าภาพรวมดีไซน์ใหม่: 2 คอลัมน์ ── */
 .ov-main-grid{display:grid;grid-template-columns:1fr 290px;gap:16px;align-items:start}
 @media(max-width:900px){.ov-main-grid{grid-template-columns:1fr}}
-.ov-kk-dark{background:var(--sn-bg);border-color:var(--sn-bg)}
+.ov-kk-dark{background:var(--sn-bg)!important;border-color:var(--sn-bg)!important}
 .ov-kk-dark .ov-kk-l{color:#a9c9b3}
 .ov-kk-dark .ov-kk-v{color:#eafbe7}
 .ov-kk-dark .ov-kk-sub{font-size:11px;color:#a9c9b3;margin-top:3px}
@@ -3814,12 +3814,12 @@ function renderPdCharts(p){
   const wEl=document.getElementById('pd-c-water');
   if(wEl&&recs.length)_pdCharts.water=new Chart(wEl,{type:'line',data:{labels:recs.map(r=>fD(r.date)),datasets:[
     {label:'pH',data:recs.map(r=>r.phM!=null&&r.phM!==''?parseFloat(r.phM):null),borderColor:'#2f8f5b',backgroundColor:'rgba(47,143,91,.1)',tension:.35,fill:true,spanGaps:true},
-    {label:'DO',data:recs.map(r=>r.doM!=null&&r.doM!==''?parseFloat(r.doM):null),borderColor:'#a9d34f',tension:.35,spanGaps:true}
+    {label:'DO',data:recs.map(r=>r.doM!=null&&r.doM!==''?parseFloat(r.doM):null),borderColor:'#3f6212',tension:.35,spanGaps:true}
   ]},options:{maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{boxWidth:10,font:{size:10}}}},scales:{x:{ticks:{font:{size:9}}},y:{ticks:{font:{size:9}}}}}});
   else if(wEl)wEl.parentElement.innerHTML='<div class="card-t">📉 แนวโน้มคุณภาพน้ำ 10 วันล่าสุด</div><p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลพอ</p>';
   const feeds=(p.feedLog||[]).filter(r=>r.date).slice(-14);
   const fEl=document.getElementById('pd-c-feedday');
-  if(fEl&&feeds.length)_pdCharts.feedDay=new Chart(fEl,{type:'bar',data:{labels:feeds.map(r=>fD(r.date)),datasets:[{label:'กก./วัน',data:feeds.map(r=>parseFloat(r.totalFeed)||0),backgroundColor:'#c2e66e',borderRadius:4}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8}}},y:{ticks:{font:{size:9}}}}}});
+  if(fEl&&feeds.length)_pdCharts.feedDay=new Chart(fEl,{type:'bar',data:{labels:feeds.map(r=>fD(r.date)),datasets:[{label:'กก./วัน',data:feeds.map(r=>parseFloat(r.totalFeed)||0),backgroundColor:'#3f6212',borderRadius:4}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8}}},y:{ticks:{font:{size:9}}}}}});
   else if(fEl)fEl.parentElement.innerHTML='<div class="card-t">🍤 อาหารการกินรายวัน 14 วันล่าสุด</div><p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลพอ</p>';
   const buckets=pdWeekBuckets(p);
   const wkLbls=buckets.map(b=>'สัปดาห์ '+b.week);
@@ -3829,7 +3829,7 @@ function renderPdCharts(p){
     {type:'line',label:'ADG (ก./วัน)',data:buckets.map(b=>b.adg),borderColor:'#1f6b42',tension:.35,spanGaps:true,yAxisID:'y1'}
   ]},options:{maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{boxWidth:10,font:{size:9}}}},scales:{y:{ticks:{font:{size:9}}},y1:{position:'right',grid:{drawOnChartArea:false},ticks:{font:{size:9}}},x:{ticks:{font:{size:8}}}}}});
   const gEl=document.getElementById('pd-c-growth');
-  if(gEl&&buckets.some(b=>b.abw!=null))_pdCharts.growth=new Chart(gEl,{type:'line',data:{labels:wkLbls,datasets:[{label:'กรัม/ตัว',data:buckets.map(b=>b.abw),borderColor:'#2f8f5b',backgroundColor:'rgba(194,230,110,.25)',fill:true,tension:.35,spanGaps:true,pointRadius:3,pointBackgroundColor:'#2f8f5b'}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8}}},y:{ticks:{font:{size:9}}}}}});
+  if(gEl&&buckets.some(b=>b.abw!=null))_pdCharts.growth=new Chart(gEl,{type:'line',data:{labels:wkLbls,datasets:[{label:'กรัม/ตัว',data:buckets.map(b=>b.abw),borderColor:'#2f8f5b',backgroundColor:'rgba(63,98,18,.18)',fill:true,tension:.35,spanGaps:true,pointRadius:3,pointBackgroundColor:'#2f8f5b'}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8}}},y:{ticks:{font:{size:9}}}}}});
   else if(gEl)gEl.parentElement.innerHTML='<div class="card-t">📈 การเติบโต — น้ำหนักเฉลี่ย (รายสัปดาห์)</div><p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลผลสุ่มพอ</p>';
 }
 function jumpFeed(id){document.getElementById('tab-feed').click();setTimeout(()=>{document.getElementById('fd-pond').value=id;onFdPond();},80)}
@@ -3958,12 +3958,12 @@ function renderOvDonut(activeCount,prepCount,emptyCount){
     <div style="width:96px;height:96px;flex-shrink:0"><canvas id="ovDonutCanvas"></canvas></div>
     <div style="font-size:12px;display:flex;flex-direction:column;gap:6px">
       <div><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2f8f5b;margin-right:6px"></span>กำลังเลี้ยง ${activeCount}</div>
-      <div><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#c2e66e;margin-right:6px"></span>เตรียมบ่อ ${prepCount}</div>
+      <div><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#3f6212;margin-right:6px"></span>เตรียมบ่อ ${prepCount}</div>
       <div><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#d7ded8;margin-right:6px"></span>ว่าง/พักบ่อ ${emptyCount}</div>
     </div></div>`;
   const canvas=document.getElementById('ovDonutCanvas');if(!canvas||typeof Chart==='undefined')return;
   if(_ovDonutChart){_ovDonutChart.destroy();_ovDonutChart=null;}
-  _ovDonutChart=new Chart(canvas,{type:'doughnut',data:{labels:['กำลังเลี้ยง','เตรียมบ่อ','ว่าง/พักบ่อ'],datasets:[{data:[activeCount,prepCount,emptyCount],backgroundColor:['#2f8f5b','#c2e66e','#d7ded8'],borderWidth:0}]},options:{cutout:'70%',plugins:{legend:{display:false}}}});
+  _ovDonutChart=new Chart(canvas,{type:'doughnut',data:{labels:['กำลังเลี้ยง','เตรียมบ่อ','ว่าง/พักบ่อ'],datasets:[{data:[activeCount,prepCount,emptyCount],backgroundColor:['#2f8f5b','#3f6212','#d7ded8'],borderWidth:0}]},options:{cutout:'70%',plugins:{legend:{display:false}}}});
 }
 function renderChecklist(){
   const el=document.getElementById('ov-checklist');if(!el)return;
@@ -7757,7 +7757,7 @@ function renderPLCostChart(rows){
   const totWeight=rows.reduce((s,r)=>s+(r.totalWeight||0),0);
   const labels=['ลูกกุ้ง','อาหาร','สารเคมี','ค่าแรง','ค่าไฟ','พัสดุ','อื่นๆ'];
   const vals=[totFry,totFeed,totChem,totLabor,totElec,totStock,totOther];
-  const colors=['#1f6b42','#2f8f5b','#c2e66e','#a9d34f','#f0a83a','#7f8c84','#20493a'];
+  const colors=['#1f6b42','#2f8f5b','#3f6212','#6b8e23','#f0a83a','#7f8c84','#20493a'];
   const canvas=document.getElementById('pl-donut');
   if(canvas){
     if(_plDonutChart){_plDonutChart.destroy();_plDonutChart=null;}
@@ -7950,4 +7950,3 @@ async function fixA1Round3_2568(){
 <script src="seedCropHistory.js"></script>
 <script src="seedHarvestHistory.js"></script></body>
 </html>
-
