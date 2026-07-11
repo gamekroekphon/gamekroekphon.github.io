@@ -270,6 +270,15 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .fi.fi-warn{border-color:var(--w);background:var(--wb);border-width:2px;box-shadow:0 0 0 3px rgba(180,83,9,.15)}
 .fi.fi-danger{border-color:var(--d);background:var(--db);border-width:2px;box-shadow:0 0 0 3px rgba(220,38,38,.18);font-weight:700}
 .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:11px}
+/* ── เฟส 3 (พี่แพรว): ซ่อนค่าเสริม Ca/Mg/Hardness บนมือถือ กดเพิ่มถึงเห็น ── */
+.wq-extra-toggle{display:none}
+.wq-extra-wrap{max-height:0;overflow:hidden;transition:max-height .25s}
+.wq-extra-wrap.open{max-height:500px}
+@media(max-width:768px){
+  .wq-extra-toggle{display:inline-flex;margin:10px 0}
+  .wq-extra-wrap{margin-top:0}
+}
+@media(min-width:769px){.wq-extra-wrap{max-height:none!important;margin-top:11px}}
 
 /* ── Buttons ── */
 .btn{padding:8px 16px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
@@ -757,6 +766,8 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
     </div>
     <div class="card-t">💧 ค่าน้ำ 14 พารามิเตอร์</div>
     <div class="fgrid" id="ep-fields"></div>
+    <button type="button" class="btn btn-s wq-extra-toggle" id="wq-extra-btn" onclick="toggleWqExtra()">+ เพิ่มค่าเสริม (Ca/Mg/Hardness)</button>
+    <div class="wq-extra-wrap" id="ep-fields-extra-wrap"><div class="fgrid" id="ep-fields-extra"></div></div>
     <div style="margin-top:12px"><div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="ep-notes" placeholder="สังเกตการณ์..."></div></div>
     <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn btn-p" onclick="saveWQ()">💾 บันทึก</button>
@@ -5158,10 +5169,20 @@ function showStockMsg(area,msg,type){
 
 function initEntry(){
   populateAll();document.getElementById('ep-date').value=today();
-  document.getElementById('ep-fields').innerHTML=PARAMS.map(p=>`<div class="fg"><label class="fl">${p.lbl}${p.unit?' ('+p.unit+')':''}</label><input type="number" step="any" inputmode="decimal" class="fi" id="ef-${p.key}" placeholder="—" oninput="onFI('${p.key}',this)"><span class="lbl-std" id="std-${p.key}">${stdText(p)}</span>${p.note?`<span class="hint">${p.note}</span>`:''}</div>`).join('');
+  const wqFieldHtml=p=>`<div class="fg"><label class="fl">${p.lbl}${p.unit?' ('+p.unit+')':''}</label><input type="number" step="any" inputmode="decimal" class="fi" id="ef-${p.key}" placeholder="—" oninput="onFI('${p.key}',this)"><span class="lbl-std" id="std-${p.key}">${stdText(p)}</span>${p.note?`<span class="hint">${p.note}</span>`:''}</div>`;
+  // ── มือถือ: ค่าหลักก่อน ค่าเสริม (Ca/Mg/Hardness) ซ่อนไว้กดเพิ่ม (สเปกพี่แพรว ข้อ 6) ──
+  const WQ_EXTRA_KEYS=['ca','mg_','hard'];
+  document.getElementById('ep-fields').innerHTML=PARAMS.filter(p=>!WQ_EXTRA_KEYS.includes(p.key)).map(wqFieldHtml).join('');
+  document.getElementById('ep-fields-extra').innerHTML=PARAMS.filter(p=>WQ_EXTRA_KEYS.includes(p.key)).map(wqFieldHtml).join('');
   restoreLastEntry();
   calcAge('ep');
   if(document.getElementById('ep-pond').value){renderWQTable();checkExistingWQ()}
+}
+function toggleWqExtra(){
+  const el=document.getElementById('ep-fields-extra-wrap');if(!el)return;
+  const open=el.classList.toggle('open');
+  const btn=document.getElementById('wq-extra-btn');
+  if(btn)btn.textContent=open?'− ซ่อนค่าเสริม (Ca/Mg/Hardness)':'+ เพิ่มค่าเสริม (Ca/Mg/Hardness)';
 }
 function saveLastEntry(){
   const pid=document.getElementById('ep-pond')?.value;
