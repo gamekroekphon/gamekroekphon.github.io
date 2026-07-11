@@ -59,6 +59,58 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .hdr-badge{background:var(--bg-page);border:1px solid var(--border);color:var(--text-2);padding:4px 12px;border-radius:6px;font-size:12px;white-space:nowrap}
 .hdr-meta{display:none}
 
+/* ══════ เฟส 1 (ดีไซน์ใหม่พี่แพรว): เมนูซ้าย + หน้าภาพรวม ══════ */
+:root{
+  --sn-bg:#15382a;--sn-bg2:#1d4a37;--sn-lime:#c2e66e;--sn-lime-d:#a9d34f;
+  --sn-green:#2f8f5b;--sn-green-d:#1f6b42;--sn-danger:#e5533c;--sn-warn:#f0a83a;
+}
+.side-nav{display:none}
+@media(min-width:601px){
+  .side-nav{display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;width:230px;z-index:130;
+    background:var(--sn-bg);color:#dfeede;padding:18px 14px;overflow-y:auto;font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif}
+  .hdr,.tabs-wrap,.main{margin-left:230px!important}
+  .tabs-wrap{display:none!important}
+}
+.sn-logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;color:#fff;padding:0 6px 16px}
+.sn-mark{width:30px;height:30px;background:var(--sn-lime);border-radius:8px;display:grid;place-items:center;font-size:15px;flex-shrink:0}
+.sn-label{font-size:10px;letter-spacing:1px;color:#7fa38e;margin:12px 8px 6px}
+.sn-nav{display:flex;flex-direction:column;gap:2px}
+.sn-top,.sn-grp-btn{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;color:#c4d8ca;text-align:left;padding:9px 11px;border-radius:9px;font-family:inherit;font-size:13px;cursor:pointer}
+.sn-top:hover,.sn-grp-btn:hover{background:var(--sn-bg2)}
+.sn-top.on{background:var(--sn-lime);color:var(--sn-bg);font-weight:600}
+.sn-grp-btn.sn-has-active{color:var(--sn-lime);font-weight:600}
+.sn-caret{margin-left:auto;font-size:9px;transition:transform .15s}
+.sn-grp-btn.open .sn-caret{transform:rotate(180deg)}
+.sn-sub{max-height:0;overflow:hidden;transition:max-height .2s}
+.sn-sub.open{max-height:320px}
+.sn-link{display:block;width:100%;background:none;border:none;text-align:left;padding:7px 11px 7px 34px;color:#a9c3b0;font-family:inherit;font-size:12px;border-radius:8px;cursor:pointer}
+.sn-link:hover{background:var(--sn-bg2);color:#fff}
+.sn-link.on{color:var(--sn-lime);font-weight:600}
+body.role-admin .sn-link.admin-only{display:block!important}
+.sn-side-card{margin-top:auto;background:var(--sn-bg2);border-radius:12px;padding:11px;font-size:11px;color:#bcd3c3;margin-top:12px}
+.sn-side-card b{color:#fff}
+.sn-profile{display:flex;align-items:center;gap:9px;margin-top:12px;padding-top:12px;border-top:1px solid #2b5741}
+.sn-av{width:30px;height:30px;border-radius:50%;background:var(--sn-lime);color:var(--sn-bg);display:grid;place-items:center;font-weight:700;font-size:12px;flex-shrink:0}
+.sn-profile small{color:#8fae9c;font-size:10.5px}
+
+/* ── หน้าภาพรวมดีไซน์ใหม่: 2 คอลัมน์ ── */
+.ov-main-grid{display:grid;grid-template-columns:1fr 290px;gap:16px;align-items:start}
+@media(max-width:900px){.ov-main-grid{grid-template-columns:1fr}}
+.ov-kk-dark{background:var(--sn-bg);border-color:var(--sn-bg)}
+.ov-kk-dark .ov-kk-l{color:#a9c9b3}
+.ov-kk-dark .ov-kk-v{color:#eafbe7}
+.ov-kk-dark .ov-kk-sub{font-size:11px;color:#a9c9b3;margin-top:3px}
+.ov-weather{background:linear-gradient(160deg,var(--sn-bg2),var(--sn-green));color:#eafbe7;border-radius:14px;padding:16px;margin-bottom:14px}
+.ov-weather-big{font-size:24px;font-weight:700;margin:5px 0}
+.ov-risk-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd);cursor:pointer}
+.ov-risk-item:last-child{border:none}
+.ov-risk-sc{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0}
+.ov-risk-sc.h{background:var(--sn-danger)}
+.ov-risk-sc.m{background:var(--sn-warn)}
+.ov-risk-sc.l{background:var(--sn-green)}
+.ov-risk-info{font-size:12px}
+.ov-risk-info small{color:var(--tx3);display:block;margin-top:1px}
+
 /* ── Tabs ── */
 .tabs-wrap{position:sticky;top:60px;z-index:99;background:var(--sf);border-bottom:2px solid var(--bd)}
 .tabs{background:var(--sf);display:flex;padding:0 20px;gap:0;overflow-x:auto;scrollbar-width:thin;position:relative}
@@ -474,6 +526,63 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
     <div class="login-err" id="login-err"></div>
   </div>
 </div>
+<aside class="side-nav" id="sideNav">
+  <div class="sn-logo"><span class="sn-mark">🦐</span> ตะวันฟาร์ม</div>
+  <div class="sn-label">เมนูหลัก</div>
+  <nav class="sn-nav">
+    <button class="sn-top tab on" id="sn-overview" onclick="goTab('overview',this)"><span>🏠</span> ภาพรวม</button>
+
+    <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-daily')"><span>📅</span> รายวัน <span class="sn-caret">▾</span></button>
+    <div class="sn-sub" id="sn-g-daily">
+      <button class="sn-link tab-item" onclick="goTab('tide',this)">🌊 น้ำขึ้นน้ำลง</button>
+      <button class="sn-link tab-item" onclick="goTab('entry',this)">💧 คุณภาพน้ำ</button>
+      <button class="sn-link tab-item" onclick="goTab('disease',this)">🦐 เฝ้าระวังโรค</button>
+      <button class="sn-link tab-item" onclick="goTab('feed',this)">🍖 อาหาร &amp; FCR</button>
+      <button class="sn-link tab-item" onclick="goTab('sample',this)">⚖️ สุ่มตัวอย่าง</button>
+      <button class="sn-link tab-item" onclick="goTab('watlog',this)">💦 จัดการน้ำ</button>
+      <button class="sn-link tab-item" onclick="goTab('chem',this)">🧪 สารเคมี</button>
+    </div>
+
+    <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-crop')"><span>🌾</span> รอบเลี้ยง <span class="sn-caret">▾</span></button>
+    <div class="sn-sub" id="sn-g-crop">
+      <button class="sn-link tab-item" onclick="goTab('crops',this)">🌾 รอบเลี้ยง</button>
+      <button class="sn-link tab-item" onclick="goTab('prep',this)">🧹 เตรียมบ่อ</button>
+      <button class="sn-link tab-item" onclick="goTab('harvest',this)">🦐 จับกุ้ง</button>
+      <button class="sn-link tab-item" onclick="goTab('harveststat',this)">📊 สถิติจับกุ้ง</button>
+      <button class="sn-link tab-item" onclick="goTab('export',this)">📄 PDF ปิดบ่อ</button>
+    </div>
+
+    <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-analyze')"><span>📊</span> วิเคราะห์ <span class="sn-caret">▾</span></button>
+    <div class="sn-sub" id="sn-g-analyze">
+      <button class="sn-link tab-item" onclick="goTab('lab',this)">🔬 ผลแล็บ</button>
+      <button class="sn-link tab-item" onclick="goTab('compare',this)">🔄 เปรียบเทียบ</button>
+      <button class="sn-link tab-item" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
+    </div>
+
+    <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-market')"><span>💰</span> ตลาด/ต้นทุน <span class="sn-caret">▾</span></button>
+    <div class="sn-sub" id="sn-g-market">
+      <button class="sn-link tab-item" onclick="goTab('price',this)">💰 ราคาวันนี้</button>
+      <button class="sn-link tab-item" onclick="goTab('labor',this)">👷 ค่าแรง</button>
+      <button class="sn-link tab-item" onclick="goTab('elec',this)">⚡ ค่าไฟฟ้า</button>
+      <button class="sn-link tab-item" onclick="goTab('stock',this)">📦 สต็อก</button>
+      <button class="sn-link tab-item" onclick="goTab('abw',this)">📈 ABW Growth</button>
+      <button class="sn-link tab-item" onclick="goTab('pl',this)">📊 P&amp;L สรุป</button>
+    </div>
+  </nav>
+  <div class="sn-label">ทั่วไป</div>
+  <nav class="sn-nav">
+    <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-settings')"><span>⚙️</span> ตั้งค่า <span class="sn-caret">▾</span></button>
+    <div class="sn-sub" id="sn-g-settings">
+      <button class="sn-link tab-item" onclick="goTab('manage',this)">⚙️ จัดการบ่อ</button>
+      <button class="sn-link tab-item admin-only" onclick="goTab('users',this)">👤 จัดการผู้ใช้</button>
+    </div>
+  </nav>
+  <div class="sn-side-card">ระบบซิงค์ข้อมูลจริง<br><b id="sn-sync-txt">กำลังซิงค์...</b></div>
+  <div class="sn-profile">
+    <div class="sn-av" id="sn-av">?</div>
+    <div><div id="sn-uname" style="font-size:12.5px"></div><small id="sn-role"></small></div>
+  </div>
+</aside>
 <div class="hdr">
   <div class="hdr-left">
     <div class="hdr-logo">🦐</div>
@@ -559,7 +668,20 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
 <!-- OVERVIEW -->
 <div id="sec-overview" class="sec on">
   <div class="ov-kpi-bar" id="ov-kpi-bar"></div>
-  <div id="ov-sections"></div>
+  <div class="ov-main-grid">
+    <div id="ov-sections"></div>
+    <div class="ov-side">
+      <div id="ov-weather-card"></div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-t">⚠️ บ่อเสี่ยงสูงสุด</div>
+        <div id="ov-risk-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-t">🍩 สถานะบ่อทั้งฟาร์ม</div>
+        <div id="ov-status-donut"></div>
+      </div>
+    </div>
+  </div>
   <div id="ov-checklist"></div>
   <div class="home-quick">
     <button onclick="document.getElementById('tab-entry')?.click()"><span class="qi">◔</span>กรอกค่าน้ำ</button>
@@ -1777,6 +1899,7 @@ function setSyncStatus(type, msg) {
     const t = new Date().toLocaleTimeString('th-TH');
     if (tm) tm.textContent = '· ' + t;
     ind.title = msg + ' · อัปเดตล่าสุด ' + t;
+    const snS=document.getElementById('sn-sync-txt');if(snS)snS.textContent='อัปเดตล่าสุด '+t;
   } else {
     if (tm) tm.textContent = '';
     ind.title = msg;
@@ -1846,12 +1969,14 @@ function applyRole(role){
     document.getElementById('hdr-role-badge').className='hdr-role-badge role-admin';
     document.getElementById('hdr-role-badge').textContent='Admin';
     document.body.classList.add('role-admin');
+    const sr=document.getElementById('sn-role');if(sr)sr.textContent='Admin';
   }else{
     FINANCE_TABS.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
     FINANCE_SECS.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
     document.getElementById('hdr-role-badge').className='hdr-role-badge role-staff';
     document.getElementById('hdr-role-badge').textContent='พนักงาน';
     document.body.classList.remove('role-admin');
+    const sr=document.getElementById('sn-role');if(sr)sr.textContent='พนักงาน';
   }
 }
 function updateUserHeader(user,role){
@@ -1859,6 +1984,8 @@ function updateUserHeader(user,role){
   const uname=user.displayName||user.email.split('@')[0];
   const n=document.getElementById('hdr-uname');if(n)n.textContent=uname;
   const mn=document.getElementById('mobile-uname');if(mn)mn.textContent=uname;
+  const sn=document.getElementById('sn-uname');if(sn)sn.textContent=uname;
+  const sav=document.getElementById('sn-av');if(sav)sav.textContent=(uname||'?').charAt(0).toUpperCase();
   applyRole(role);
 }
 // ===== USER MANAGEMENT (Admin) =====
@@ -3124,10 +3251,26 @@ function goStatForCropYear(){
 }
 // ===== END HARVEST STATISTICS =====
 
+function snToggleGrp(btn,id){
+  const wasOpen=btn.classList.contains('open');
+  document.querySelectorAll('.sn-grp-btn').forEach(b=>b.classList.remove('open'));
+  document.querySelectorAll('.sn-sub').forEach(s=>s.classList.remove('open'));
+  if(!wasOpen){btn.classList.add('open');const sub=document.getElementById(id);if(sub)sub.classList.add('open');}
+}
 function goTab(t,btn){
-  document.querySelectorAll('.tab,.tab-item').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  document.querySelectorAll('.tab,.tab-item,.sn-top,.sn-link').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
   document.querySelectorAll('.tab-grp').forEach(g=>g.classList.remove('grp-on','grp-open'));
   const grp=btn.closest('.tab-grp');if(grp)grp.classList.add('grp-on');
+  // ── sync เมนูซ้าย (เฟส 1): เปิดกลุ่มที่มีเมนูย่อยกำลัง active ค้างไว้ ให้เห็นว่าอยู่ตรงไหน ──
+  const snSub=btn.closest('.sn-sub');
+  document.querySelectorAll('.sn-grp-btn').forEach(b=>b.classList.remove('sn-has-active'));
+  if(snSub){
+    document.querySelectorAll('.sn-sub').forEach(s=>{if(s!==snSub)s.classList.remove('open')});
+    snSub.classList.add('open');
+    const gb=document.querySelector(`.sn-grp-btn[onclick*="'${snSub.id}'"]`);
+    if(gb){gb.classList.add('open','sn-has-active');}
+  }
+  if(btn.classList.contains('sn-top'))document.querySelectorAll('.sn-sub').forEach(s=>s.classList.remove('open'));
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));document.getElementById('sec-'+t).classList.add('on');
   if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='disease')initDisease();if(t==='price')initPrice();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='stock')initStock();if(t==='abw')initAbw();if(t==='feed')initFeed();if(t==='pl')initPL();
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
@@ -3594,14 +3737,14 @@ function renderOv(){
   const td=today();
   const yd=new Date(new Date(td).getTime()-86400000).toISOString().slice(0,10);
   const totalFeedToday=D.ponds.reduce((s,p)=>s+(p.feedLog||[]).filter(r=>r.date===yd).reduce((ss,r)=>ss+(parseFloat(r.totalFeed)||0),0),0);
-  const wxCard=_wxToday
-    ?`<div class="ov-kk-v" style="font-size:15px">${_wxToday.tMax.toFixed(0)}°/<span style="font-size:12px;color:var(--tx2)">${_wxToday.tMin.toFixed(0)}°C</span></div><div style="font-size:10px;color:var(--tx3);margin-top:2px">🌧️ ${_wxToday.rain.toFixed(0)}มม. 💨 ${_wxToday.wind.toFixed(0)}กม/ชม</div>`
-    :`<div class="ov-kk-v">-</div><div style="font-size:10px;color:var(--tx3)">รอข้อมูล...</div>`;
   document.getElementById('ov-kpi-bar').innerHTML=`
-    <div class="ov-kk"><div class="ov-kk-l">บ่อที่เลี้ยงอยู่</div><div class="ov-kk-v">${active.length}<span class="ov-kk-u"> บ่อ</span></div></div>
-    <div class="ov-kk"><div class="ov-kk-l">น้ำหนักกุ้งรวม</div><div class="ov-kk-v">${totalBio>0?(totalBio/1000).toFixed(1):'-'}<span class="ov-kk-u"> ตัน</span></div></div>
-    <div class="ov-kk"><div class="ov-kk-l">อาหารเมื่อวาน</div><div class="ov-kk-v">${totalFeedToday>0?totalFeedToday.toFixed(0):'-'}<span class="ov-kk-u"> กก.</span></div><div style="font-size:10px;color:var(--tx3)">ทั้งฟาร์ม</div></div>
-    <div class="ov-kk"><div class="ov-kk-l">สภาพอากาศวันนี้</div>${wxCard}</div>`;
+    <div class="ov-kk ov-kk-dark"><div class="ov-kk-l">🦐 บ่อที่เลี้ยงอยู่</div><div class="ov-kk-v">${active.length}<span class="ov-kk-u"> / ${TOTAL_PONDS} บ่อ</span></div><div class="ov-kk-sub">เตรียมบ่อ ${prepM.length} · ว่าง ${closedCount}</div></div>
+    <div class="ov-kk"><div class="ov-kk-l">⚖️ Biomass รวม</div><div class="ov-kk-v">${totalBio>0?(totalBio/1000).toFixed(1):'-'}<span class="ov-kk-u"> ตัน</span></div></div>
+    <div class="ov-kk"><div class="ov-kk-l">🍖 อาหารรวมต่อวัน</div><div class="ov-kk-v">${totalFeedToday>0?totalFeedToday.toFixed(0):'-'}<span class="ov-kk-u"> กก./วัน</span></div><div style="font-size:10px;color:var(--tx3)">ทั้งฟาร์ม</div></div>
+    <div class="ov-kk"><div class="ov-kk-l">⚠️ บ่อต้องดู</div><div class="ov-kk-v" style="color:${dcP>0?'var(--d)':'inherit'}">${dcP}<span class="ov-kk-u"> / เฝ้าระวัง ${wcP}</span></div></div>`;
+  renderOvWeatherCard();
+  renderOvRiskList();
+  renderOvDonut(active.length,prepM.length,closedCount);
   let html='';
   if(active.length>0)html+=`<div class="ov-sec-lbl">กำลังเลี้ยง</div><div class="ov-grid">${active.map(({p,last,age,cls})=>pondCard(p,last,age,cls)).join('')}</div>`;
   if(prepM.length>0)html+=`<div class="ov-sec-lbl">เตรียมบ่อ</div><div class="ov-grid">${prepM.map(({p,last,age,cls})=>pondCard(p,last,age,cls)).join('')}</div>`;
@@ -3616,6 +3759,42 @@ function renderOv(){
   document.getElementById('ov-alerts').innerHTML=alerts.length>0?`<div class="card" style="margin-top:24px"><div class="card-t">🔔 การแจ้งเตือน</div>${alerts.slice(0,8).map(a=>`<div class="ai ${a.level}"><span>${a.level==='danger'?'🔴':'🟡'}</span><div><strong>บ่อ ${a.pond}</strong> · ${a.param}: <strong>${a.val!==null?a.val+a.unit:'-'}</strong>${a.trend&&trendIco[a.trend]?' · '+trendIco[a.trend]:''}</div></div>`).join('')}</div>`:'';
   document.getElementById('ov-ts').textContent=new Date().toLocaleString('th-TH');
   renderChecklist();
+}
+// ══════ เฟส 1 (ดีไซน์ใหม่พี่แพรว): การ์ดสภาพอากาศ + บ่อเสี่ยงสูงสุด + โดนัทสถานะบ่อ ในหน้าภาพรวม ══════
+function renderOvWeatherCard(){
+  const el=document.getElementById('ov-weather-card');if(!el)return;
+  if(!_wxToday){el.innerHTML=`<div class="ov-weather"><div style="font-size:12px;opacity:.85">สภาพอากาศวันนี้</div><div style="font-size:13px;margin-top:8px">กำลังโหลด...</div></div>`;return;}
+  el.innerHTML=`<div class="ov-weather">
+    <div style="font-size:12px;opacity:.85">สภาพอากาศวันนี้</div>
+    <div class="ov-weather-big">${_wxToday.tMax.toFixed(0)}° / ${_wxToday.tMin.toFixed(0)}°C</div>
+    <div style="font-size:12.5px">🌧️ ฝน ${_wxToday.rain.toFixed(0)} มม. · 💨 ${_wxToday.wind.toFixed(0)} กม./ชม.</div>
+  </div>`;
+}
+let _riskPondMaxCache=null; // cache ล่าสุดจาก renderRisk() ใช้แสดง "บ่อเสี่ยงสูงสุด" ในหน้าภาพรวม
+function renderOvRiskList(){
+  const el=document.getElementById('ov-risk-list');if(!el)return;
+  if(!_riskPondMaxCache){el.innerHTML='<p style="color:var(--tx3);font-size:12px;padding:8px 0;font-style:italic">กำลังโหลดข้อมูลความเสี่ยง...</p>';return;}
+  const top=_riskPondMaxCache.filter(x=>x.maxS>0).slice(0,3);
+  if(!top.length){el.innerHTML='<p style="color:var(--ok);font-size:12px;padding:8px 0">✅ ไม่พบความเสี่ยงสูงใน 3 วันนี้</p>';return;}
+  el.innerHTML=top.map(x=>{
+    const rc=x.maxS>=6?'h':x.maxS>=3?'m':'l';
+    const reason=(x.reasons&&x.reasons[0])?x.reasons[0].m:'';
+    return`<div class="ov-risk-item" onclick="openPondDetail('${x.p.id}')"><div class="ov-risk-sc ${rc}">${x.maxS}</div><div class="ov-risk-info"><b>บ่อ ${x.p.name}</b><small>${reason}</small></div></div>`;
+  }).join('');
+}
+let _ovDonutChart=null;
+function renderOvDonut(activeCount,prepCount,emptyCount){
+  const wrap=document.getElementById('ov-status-donut');if(!wrap)return;
+  wrap.innerHTML=`<div style="display:flex;align-items:center;gap:14px">
+    <div style="width:96px;height:96px;flex-shrink:0"><canvas id="ovDonutCanvas"></canvas></div>
+    <div style="font-size:12px;display:flex;flex-direction:column;gap:6px">
+      <div><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2f8f5b;margin-right:6px"></span>กำลังเลี้ยง ${activeCount}</div>
+      <div><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#c2e66e;margin-right:6px"></span>เตรียมบ่อ ${prepCount}</div>
+      <div><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#d7ded8;margin-right:6px"></span>ว่าง/พักบ่อ ${emptyCount}</div>
+    </div></div>`;
+  const canvas=document.getElementById('ovDonutCanvas');if(!canvas||typeof Chart==='undefined')return;
+  if(_ovDonutChart){_ovDonutChart.destroy();_ovDonutChart=null;}
+  _ovDonutChart=new Chart(canvas,{type:'doughnut',data:{labels:['กำลังเลี้ยง','เตรียมบ่อ','ว่าง/พักบ่อ'],datasets:[{data:[activeCount,prepCount,emptyCount],backgroundColor:['#2f8f5b','#c2e66e','#d7ded8'],borderWidth:0}]},options:{cutout:'70%',plugins:{legend:{display:false}}}});
 }
 function renderChecklist(){
   const el=document.getElementById('ov-checklist');if(!el)return;
@@ -5750,6 +5929,8 @@ function renderRisk(d){
   // ── แบนเนอร์อากาศระดับฟาร์ม (ครั้งเดียว) + สรุปรวมทั้งฟาร์มด้านบน — ผู้บริหารเห็นภาพรวมในตาเดียว ──
   renderRiskWeatherBanner(weatherDays);
   renderRiskFarmSummary(pondMax);
+  _riskPondMaxCache=pondMax.slice().sort((a,b)=>b.maxS-a.maxS);
+  renderOvRiskList();
   const recList=[
     {t:rs=>rs.some(r=>r.m.includes('ALK')||r.m.includes('ฝน')),a:'🪨 เติมปูน/โดโลไมต์ รักษา ALK ≥ 120 mg/L ก่อนฝนตกหนัก'},
     {t:rs=>rs.some(r=>r.m.includes('DO')),a:'🌊 เพิ่มกำลังเครื่องตีน้ำ โดยเฉพาะช่วง 01.00–06.00 น.'},
