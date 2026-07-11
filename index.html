@@ -7733,4 +7733,221 @@ function renderPLTable(rows){
       <td style="text-align:right">${r.price?r.price.toLocaleString():'-'}</td>
       <td style="text-align:right">${r.revenue?Math.round(r.revenue).toLocaleString():'-'}</td>
       <td style="text-align:right">${cost?Math.round(cost).toLocaleString():'-'}</td>
-      <td style="text-align:right;color:${r.costStock?
+      <td style="text-align:right;color:${r.costStock?'var(--tx2)':'var(--tx3)'}">${r.costStock?Math.round(r.costStock).toLocaleString():'-'}</td>
+      <td style="text-align:right;font-weight:700;color:${cl}">${prof!=null?Math.round(prof).toLocaleString():'-'}</td>
+      <td style="text-align:right;color:${cl}">${margin!=null?margin.toFixed(1)+'%':'-'}</td>
+      <td style="text-align:right">${cpk!=null?cpk.toFixed(1):'-'}</td>
+      <td style="text-align:right">${r.fcr||'-'}</td>
+    </tr>`;}).join('')}</tbody></table>`;
+}
+function renderPLCostChart(rows){
+  if(!rows.length){
+    const c=document.getElementById('pl-donut');if(c&&_plDonutChart){_plDonutChart.destroy();_plDonutChart=null;}
+    const l=document.getElementById('pl-donut-legend');if(l)l.innerHTML='';
+    const t=document.getElementById('pl-cost-tbl');if(t)t.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px">ยังไม่มีข้อมูล</p>';
+    return;
+  }
+  const totFry=rows.reduce((s,r)=>s+(r.costFry||0),0);
+  const totFeed=rows.reduce((s,r)=>s+(r.costFeed||0),0);
+  const totChem=rows.reduce((s,r)=>s+(r.costChem||0),0);
+  const totLabor=rows.reduce((s,r)=>s+(r.costLabor||0),0);
+  const totElec=rows.reduce((s,r)=>s+(r.costElec||0),0);
+  const totOther=rows.reduce((s,r)=>s+(r.costOther||0),0);
+  const totStock=rows.reduce((s,r)=>s+(r.costStock||0),0);
+  const total=totFry+totFeed+totChem+totLabor+totElec+totOther+totStock;
+  const totWeight=rows.reduce((s,r)=>s+(r.totalWeight||0),0);
+  const labels=['ลูกกุ้ง','อาหาร','สารเคมี','ค่าแรง','ค่าไฟ','พัสดุ','อื่นๆ'];
+  const vals=[totFry,totFeed,totChem,totLabor,totElec,totStock,totOther];
+  const colors=['#1f6b42','#2f8f5b','#c2e66e','#a9d34f','#f0a83a','#7f8c84','#20493a'];
+  const canvas=document.getElementById('pl-donut');
+  if(canvas){
+    if(_plDonutChart){_plDonutChart.destroy();_plDonutChart=null;}
+    _plDonutChart=new Chart(canvas,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:colors,borderWidth:2}]},options:{plugins:{legend:{display:false}},cutout:'65%'}});
+  }
+  const leg=document.getElementById('pl-donut-legend');
+  if(leg)leg.innerHTML=labels.map((l,i)=>vals[i]>0?`<div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};flex-shrink:0"></span><span style="font-size:11.5px;color:var(--tx2);flex:1">${l}</span><span style="font-size:12px;font-weight:500;color:var(--tx)">${total?Math.round(vals[i]/total*100)+'%':'-'}</span></div>`:'').join('');
+  const tbl=document.getElementById('pl-cost-tbl');
+  if(tbl){
+    if(totWeight>0){
+      tbl.innerHTML=`<table class="tbl"><thead><tr><th>รายการ</th><th style="text-align:right">รวม (฿)</th><th style="text-align:right">฿/กก.</th><th style="text-align:right">%</th></tr></thead><tbody>${
+        labels.map((l,i)=>vals[i]>0?`<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${colors[i]};margin-right:5px"></span>${l}</td><td style="text-align:right">${Math.round(vals[i]).toLocaleString()}</td><td style="text-align:right">${(vals[i]/totWeight).toFixed(1)}</td><td style="text-align:right">${total?Math.round(vals[i]/total*100)+'%':'-'}</td></tr>`:'').join('')
+      }<tr style="border-top:2px solid var(--bd);font-weight:700"><td>รวม</td><td style="text-align:right">${Math.round(total).toLocaleString()}</td><td style="text-align:right">${(total/totWeight).toFixed(1)}</td><td style="text-align:right">100%</td></tr></tbody></table>`;
+    } else {
+      tbl.innerHTML=`<table class="tbl"><thead><tr><th>รายการ</th><th style="text-align:right">รวม (฿)</th><th style="text-align:right">%</th></tr></thead><tbody>${
+        labels.map((l,i)=>vals[i]>0?`<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${colors[i]};margin-right:5px"></span>${l}</td><td style="text-align:right">${Math.round(vals[i]).toLocaleString()}</td><td style="text-align:right">${total?Math.round(vals[i]/total*100)+'%':'-'}</td></tr>`:'').join('')
+      }<tr style="border-top:2px solid var(--bd);font-weight:700"><td>รวม</td><td style="text-align:right">${Math.round(total).toLocaleString()}</td><td style="text-align:right">100%</td></tr></tbody></table>`;
+    }
+  }
+}
+function exportPLCSV(){
+  const yr=document.getElementById('pl-year')?.value||'';
+  const rows=[];
+  D.ponds.forEach(p=>{(p.cropHistory||[]).forEach(c=>{
+    if(!c.harvestResult||!c.closeDate)return;
+    if(yr&&!c.closeDate.startsWith(yr))return;
+    const r=c.harvestResult;
+    rows.push([p.name,c.cropNum||'',c.closeDate,r.totalWeight||'',r.price||'',r.revenue||'',r.costFry||'',r.costFeed||'',r.costChem||'',r.costLabor||'',r.costElec||'',r.costOther||'',r.netProfit||'',r.fcr||'',r.survivalRate||'']);
+  });});
+  if(!rows.length){alert('ไม่มีข้อมูลสำหรับ export');return;}
+  const hdr='บ่อ,รอบ,วันปิด,ผลผลิต(กก.),ราคา,รายได้,ต้นทุนลูกกุ้ง,ต้นทุนอาหาร,สารเคมี,ค่าแรง,ค่าไฟ,อื่นๆ,กำไรสุทธิ,FCR,อัตรารอด(%)';
+  const csv=hdr+'\n'+rows.map(r=>r.join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='TawanFarm_PL_'+(yr||'all')+'.csv';a.click();URL.revokeObjectURL(url);
+}
+// ─── END P&L ──────────────────────────────────────────────────────────────
+
+// ─── เปลี่ยนชื่อบ่อ B.x → A.x ────────────────────────────────────────────
+async function migratePondNamesB2A(){
+  const msg=document.getElementById('b2a-msg');
+  const changed=[];
+  D.ponds.forEach(p=>{
+    if(p.name&&/^B\.\d+$/.test(p.name.trim())){
+      const newName=p.name.trim().replace(/^B\./,'A.');
+      changed.push({pond:p,oldName:p.name,newName});
+      p.name=newName;
+    }
+  });
+  if(!changed.length){
+    if(msg)msg.textContent='✅ ไม่พบบ่อที่ใช้ชื่อ B.x (อาจแก้ไปแล้ว)';
+    return;
+  }
+  try{
+    await save();
+    const names=changed.map(c=>`${c.oldName}→${c.newName}`).join(', ');
+    if(msg)msg.textContent=`✅ แปลงแล้ว ${changed.length} บ่อ: ${names}`;
+    renderOv();
+    populateAll();
+  }catch(e){
+    // rollback
+    changed.forEach(c=>{c.pond.name=c.oldName;});
+    if(msg)msg.textContent='❌ บันทึกไม่ได้: '+e.message;
+  }
+}
+// ─── END migrate B→A ──────────────────────────────────────────────────────
+// ─── FIX: ลบรอบปีผิด A.18/19/20 ปี 2569 รอบ 1 ────────────────────────────
+async function fixYear2569Round1(){
+  const msg=document.getElementById('fix2569-msg');
+  const wrongIds={
+    'A.18':['hist_A18_20250228'],
+    'A.19':['hist_A19_20250226'],
+    'A.20':['hist_A20_20250226']
+  };
+  let removed=0;
+  D.ponds.forEach(p=>{
+    const ids=wrongIds[(p.name||'').trim()];
+    if(!ids||!p.cropHistory)return;
+    const before=p.cropHistory.length;
+    p.cropHistory=p.cropHistory.filter(c=>!ids.includes(c.id));
+    removed+=before-p.cropHistory.length;
+  });
+  if(removed===0){
+    if(msg)msg.textContent='✅ ไม่พบ entries ผิดปี (อาจลบไปแล้ว หรือยังไม่เคย seed)';
+    return;
+  }
+  try{
+    await save();
+    if(msg)msg.textContent=`✅ ลบแล้ว ${removed} รอบ — กด "seed ประวัติการเลี้ยงย้อนหลัง" เพื่อเพิ่มข้อมูลที่ถูกต้อง`;
+    renderOv();populateAll();
+  }catch(e){
+    if(msg)msg.textContent='❌ บันทึกไม่ได้: '+e.message;
+  }
+}
+// ─── END FIX ──────────────────────────────────────────────────────────────
+// ─── FORCE-INJECT ปี 2569 รอบ 1 สำหรับ A.18/19/20 ──────────────────────
+async function forceInjectYear2569Round1(){
+  const msg=document.getElementById('fi2569-msg');
+  const INJECT=[
+    {pondName:'A.18', entry:{
+      id:'hist_A18_20260228',cropYear:2569,year:2569,cropNum:1,
+      startDate:'2026-02-28',closeDate:'2026-04-03',closed:true,
+      stock:594986,hatchery:'cp ชุมพร1',plType:'',plWeight:null,
+      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],prepChecklist:{},
+      notes:'นำเข้าจากแผนลงลูกกุ้ง',
+      parchan:[{weightKg:4186,size:103}],
+      totalWeight:4186,
+      harvestResult:{totalWeight:4186,size:103,caught:431158,survivalRate:82.0}
+    }},
+    {pondName:'A.19', entry:{
+      id:'hist_A19_20260226',cropYear:2569,year:2569,cropNum:1,
+      startDate:'2026-02-26',closeDate:'2026-04-04',closed:true,
+      stock:555030,hatchery:'cp ชุมพร1',plType:'',plWeight:null,
+      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],prepChecklist:{},
+      notes:'นำเข้าจากแผนลงลูกกุ้ง',
+      parchan:[{weightKg:3486,size:118}],
+      totalWeight:3486,
+      harvestResult:{totalWeight:3486,size:118,caught:411348,survivalRate:82.0}
+    }},
+    {pondName:'A.20', entry:{
+      id:'hist_A20_20260226',cropYear:2569,year:2569,cropNum:1,
+      startDate:'2026-02-26',closeDate:'2026-04-07',closed:true,
+      stock:564018,hatchery:'cp ชุมพร1',plType:'',plWeight:null,
+      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],prepChecklist:{},
+      notes:'นำเข้าจากแผนลงลูกกุ้ง',
+      parchan:[{weightKg:4036,size:102}],
+      totalWeight:4036,
+      harvestResult:{totalWeight:4036,size:102,caught:411672,survivalRate:82.0}
+    }}
+  ];
+  // ลบ ID เก่าและใหม่ทั้งหมด + ลบออกจาก deletedIds ก่อน inject
+  const ALL_IDS=[
+    'hist_A18_20250228','hist_A18_20260228',
+    'hist_A19_20250226','hist_A19_20260226',
+    'hist_A20_20250226','hist_A20_20260226'
+  ];
+  if(D.deletedIds)D.deletedIds=D.deletedIds.filter(id=>!ALL_IDS.includes(id));
+  let injected=0,notFound=[];
+  INJECT.forEach(({pondName,entry})=>{
+    const p=D.ponds.find(x=>(x.name||'').trim()===pondName);
+    if(!p){notFound.push(pondName);return;}
+    if(!p.cropHistory)p.cropHistory=[];
+    p.cropHistory=p.cropHistory.filter(c=>!ALL_IDS.includes(c.id));
+    p.cropHistory.push({...entry});
+    p.cropHistory.sort((a,b)=>(a.startDate||'').localeCompare(b.startDate||''));
+    injected++;
+  });
+  if(injected===0){
+    if(msg)msg.innerHTML=`❌ ไม่พบบ่อ: ${notFound.join(', ')} — ชื่อในระบบอาจต่างกัน<br><small>ชื่อบ่อทั้งหมด: ${D.ponds.map(p=>p.name).join(', ')}</small>`;
+    return;
+  }
+  try{
+    await saveForce();
+    if(msg)msg.textContent=`✅ inject แล้ว ${injected} บ่อ${notFound.length?' | ⚠️ ไม่พบ: '+notFound.join(', '):''}`;
+    renderCrops();populateAll();
+  }catch(e){
+    if(msg)msg.textContent='❌ บันทึกไม่ได้: '+e.message;
+  }
+}
+// ─── END FORCE-INJECT ────────────────────────────────────────────────────
+// ─── เพิ่มรอบที่หาย A.1 รอบ 3 ปี 2568 ────────────────────────────────────
+async function fixA1Round3_2568(){
+  const msg=document.getElementById('fixA1r3-msg');
+  const p=D.ponds.find(x=>(x.name||'').trim()==='A.1');
+  if(!p){if(msg)msg.textContent='❌ ไม่พบบ่อ A.1';return;}
+  if(!p.cropHistory)p.cropHistory=[];
+  let c=p.cropHistory.find(x=>x.cropYear===2568&&x.cropNum===3);
+  if(!c){
+    c={id:'hist_A1_20251124',cropYear:2568,year:2568,cropNum:3,stock:null,hatchery:'',plType:'',plWeight:null,
+       records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],prepChecklist:{},
+       notes:'',parchan:[],totalWeight:null,harvestResult:null};
+    p.cropHistory.push(c);
+  }
+  c.startDate='2025-11-24';
+  c.closeDate='2026-01-20';
+  c.closed=true;
+  if(!c.harvestResult)c.harvestResult={};
+  c.harvestResult.size=55;
+  c.notes=(c.notes?c.notes+' | ':'')+'รอกรอกผลผลิต/ต้นทุนเพิ่มเติม';
+  try{
+    await saveForce();
+    if(msg)msg.textContent='✅ เพิ่ม/แก้ไขรอบ 3 ปี 2568 บ่อ A.1 สำเร็จ — กดดินสอในตารางประวัติเพื่อกรอกข้อมูลที่เหลือ (ผลผลิต, ต้นทุน ฯลฯ)';
+    renderCrops();populateAll();
+  }catch(e){
+    if(msg)msg.textContent='❌ บันทึกไม่ได้: '+e.message;
+  }
+}
+// ─── END เพิ่มรอบที่หาย A.1 ──────────────────────────────────────────────
+
+</script>
+<script src="seedCropHistory.js"></script>
+<script src="seedHarvestHistory.js"></script></body>
+</html>
