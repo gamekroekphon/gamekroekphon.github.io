@@ -1298,6 +1298,15 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
       <input type="hidden" id="ecm-pond-id">
       <input type="hidden" id="ecm-crop-id">
       <input type="hidden" id="ecm-crop-idx">
+      <!-- ข้อมูลลูกกุ้ง (กรอกย้อนหลังได้) -->
+      <div style="margin-bottom:18px">
+        <div style="font-weight:700;font-size:13px;color:var(--ok);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">🦐 ข้อมูลลูกกุ้ง</div>
+        <div class="fgrid" style="grid-template-columns:1fr 1fr">
+          <div class="fg" style="grid-column:1/-1"><label class="fl">โรงเพาะฟัก / บริษัทลูกกุ้ง</label><input type="text" class="fi" id="ecm-hatchery" placeholder="ซีพี, ซายอควา, ไทยแปซิฟิก..." list="hatchery-list"></div>
+          <div class="fg"><label class="fl">ระยะลูกกุ้งตอนปล่อย</label><select class="fi" id="ecm-pltype"><option value="">-- เลือกระยะ --</option><option value="PL10">PL10</option><option value="PL12">PL12</option><option value="PL15">PL15</option><option value="PL17">PL17</option><option value="SuperPL">SuperPL</option><option value="ชำนอก">ชำนอก</option></select></div>
+          <div class="fg"><label class="fl">น้ำหนักลูกกุ้งตอนปล่อย (กรัม/ตัว)</label><input type="number" class="fi" id="ecm-plweight" step="0.001" placeholder="0.003"></div>
+        </div>
+      </div>
       <!-- Harvest Results -->
       <div style="margin-bottom:18px">
         <div style="font-weight:700;font-size:13px;color:var(--p);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">🦐 ผลจับจริง</div>
@@ -6822,6 +6831,7 @@ function openEditCropModal(pondId,cropId,idx){
   document.getElementById('ecm-name').textContent=(p.name||pondId)+' รอบ '+(c.cropNum||'');
   // fill fields
   const fv=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v!=null&&v!==''?v:''};
+  fv('ecm-hatchery',c.hatchery);fv('ecm-pltype',c.plType);fv('ecm-plweight',c.plWeight);
   fv('ecm-weight',hr.totalWeight);fv('ecm-size',hr.size);fv('ecm-caught',hr.caught);
   fv('ecm-survival',hr.survivalRate);fv('ecm-fcr',hr.fcr);fv('ecm-price',hr.price);
   fv('ecm-revenue',hr.revenue);
@@ -6854,6 +6864,9 @@ function saveEditCrop(){
   c.startDate=document.getElementById('ecm-start-date').value||c.startDate;
   c.closeDate=document.getElementById('ecm-close-date').value||c.closeDate;
   c.notes=document.getElementById('ecm-notes').value||'';
+  c.hatchery=document.getElementById('ecm-hatchery').value.trim();
+  c.plType=document.getElementById('ecm-pltype').value;
+  c.plWeight=gn('ecm-plweight');
   if(!c.harvestResult)c.harvestResult={};
   const hr=c.harvestResult;
   hr.totalWeight=gn('ecm-weight');hr.size=gn('ecm-size');hr.caught=gn('ecm-caught');
