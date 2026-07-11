@@ -68,7 +68,9 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 @media(min-width:601px){
   .side-nav{display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;width:230px;z-index:130;
     background:var(--sn-bg);color:#dfeede;padding:18px 14px;overflow-y:auto;font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif}
-  .hdr,.tabs-wrap,.main{margin-left:230px!important}
+  /* บั๊ก: margin-left เฉยๆ ชนกับ margin:0 auto ของ .main เดิม ทำให้เนื้อหากว้างเกินจอ เลื่อนซ้าย-ขวาแล้วเนื้อหาซ้ายโดนตัด — แก้ด้วยการกำหนด width ตรงๆ แทน */
+  .hdr{margin-left:230px!important;width:calc(100% - 230px)!important;box-sizing:border-box!important}
+  .main{margin-left:230px!important;margin-right:0!important;width:calc(100% - 230px)!important;max-width:calc(100% - 230px)!important;box-sizing:border-box!important}
   .tabs-wrap{display:none!important}
 }
 .sn-logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;color:#fff;padding:0 6px 16px}
