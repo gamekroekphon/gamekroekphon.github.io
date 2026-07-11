@@ -2927,7 +2927,7 @@ function initHatchery(){
   if(!stats.length){
     if(chEl)chEl.parentElement.innerHTML='<div class="card-t">📊 อัตรารอดเฉลี่ยตามโรงเพาะฟัก</div><p style="color:var(--tx3);text-align:center;padding:24px">ยังไม่มีรอบเลี้ยงที่ปิดแล้วพอสำหรับวิเคราะห์</p>';
   }else if(chEl&&typeof Chart!=='undefined'){
-    _hatcheryChart=new Chart(chEl,{type:'bar',indexAxis:'y',data:{labels:stats.map(s=>s.name+' ('+s.rounds+' รอบ)'),datasets:[{data:stats.map(s=>s.survAvg||0),backgroundColor:'#3f6212',borderRadius:4}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+'% รอด'}}},scales:{x:{max:100,ticks:{font:{size:10},callback:v=>v+'%'}},y:{ticks:{font:{size:11}}}}}});
+    _hatcheryChart=new Chart(chEl,{type:'bar',data:{labels:stats.map(s=>s.name+' ('+s.rounds+' รอบ)'),datasets:[{data:stats.map(s=>s.survAvg||0),backgroundColor:'#3f6212',borderRadius:4}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+'% รอด'}}},scales:{x:{max:100,ticks:{font:{size:10},callback:v=>v+'%'}},y:{ticks:{font:{size:11}}}}}});
   }
   const tbl=document.getElementById('hatchery-table');
   if(!tbl)return;
