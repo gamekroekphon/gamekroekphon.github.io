@@ -244,6 +244,16 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .pd-water-row{display:flex;justify-content:space-between;padding:7px 0;border-top:.5px solid var(--bd);font-size:13px}
 .pd-actions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
 @media(max-width:600px){.pd-metrics{grid-template-columns:repeat(2,1fr)}}
+/* ── เฟส 2 (พี่แพรว): เกจค่าน้ำ + กราฟรายบ่อ ในหน้าวิเคราะห์รายบ่อ ── */
+.pd-gauges{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.pd-gauge{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:10px 6px;text-align:center}
+.pd-gauge-lab{font-size:10.5px;color:var(--tx3);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pd-gauge-wrap{position:relative;height:62px}
+.pd-gauge-val{position:absolute;bottom:0;left:0;right:0;font-size:15px;font-weight:700;color:var(--tx)}
+.pd-gauge-st{font-size:9.5px;margin-top:2px;font-weight:600}
+@media(max-width:480px){.pd-gauges{grid-template-columns:repeat(2,1fr)}}
+.pd-chart-card{margin-top:12px}
+.pd-chart-wrap{height:200px;margin-top:6px}
 
 /* ── Badges & Alerts ── */
 .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
@@ -3672,6 +3682,7 @@ function renderPondDetail(id){
     </div>
     <div style="display:inline-flex;align-items:center;gap:6px;background:var(--a1);color:var(--a);font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;margin-bottom:12px">⏱ อายุ ${age} วัน</div>
     ${reason?`<div class="pd-alert"><div class="ai ${cls==='prep'?'ok':cls}"><span>${cls==='danger'?'🔴':cls==='warn'?'🟡':'ℹ️'}</span><div>${reason}</div></div></div>`:''}
+    <div class="pd-gauges" id="pd-gauges"></div>
     ${kpiHero}
     <div class="card" style="margin-top:12px">
       <div class="card-t">💧 คุณภาพน้ำล่าสุด${last&&last.date?` · ${fD(last.date)}`:''}</div>
@@ -3689,10 +3700,117 @@ function renderPondDetail(id){
       <div class="card-t">🚰 การจัดการน้ำล่าสุด${latWater&&latWater.date?` · ${fD(latWater.date)}`:''}</div>
       ${wmHtml}
     </div>
+    <div class="card pd-chart-card">
+      <div class="card-t">📉 แนวโน้มคุณภาพน้ำ 10 วันล่าสุด</div>
+      <div class="pd-chart-wrap"><canvas id="pd-c-water"></canvas></div>
+    </div>
+    <div class="card pd-chart-card">
+      <div class="card-t">🍤 อาหารการกินรายวัน 14 วันล่าสุด</div>
+      <div class="pd-chart-wrap"><canvas id="pd-c-feedday"></canvas></div>
+    </div>
+    <div class="card pd-chart-card">
+      <div class="card-t">⚖️ อาหาร vs การเติบโต รายสัปดาห์</div>
+      <div class="pd-chart-wrap"><canvas id="pd-c-feedweek"></canvas></div>
+    </div>
+    <div class="card pd-chart-card">
+      <div class="card-t">📈 การเติบโต — น้ำหนักเฉลี่ย (รายสัปดาห์)</div>
+      <div class="pd-chart-wrap"><canvas id="pd-c-growth"></canvas></div>
+    </div>
     <div class="pd-actions">
       <button class="btn btn-p" onclick="jumpEntry('${p.id}')">📝 กรอกข้อมูลใหม่</button>
       <button class="btn" onclick="jumpFeed('${p.id}')">🍖 กรอกอาหาร</button>
     </div>`;
+  renderPdGauges(p,last);
+  renderPdCharts(p);
+}
+// ══════ เฟส 2 (ดีไซน์ใหม่พี่แพรว): เกจค่าน้ำ + กราฟรายบ่อ ══════
+const PD_GAUGE_RANGE={phM:[6.5,9.5],doM:[0,10],nh4:[0,1],no2:[0,5],tM:[20,38]};
+let _pdGaugeCharts={};
+function pdBustGauges(){Object.values(_pdGaugeCharts).forEach(c=>c&&c.destroy());_pdGaugeCharts={};}
+function renderPdGauges(p,last){
+  const wrap=document.getElementById('pd-gauges');if(!wrap)return;
+  pdBustGauges();
+  if(typeof Chart==='undefined'){wrap.innerHTML='';return;}
+  const thirdKey=(last&&last.nh4!=null&&last.nh4!=='')?'nh4':'no2';
+  const thirdLbl=thirdKey==='nh4'?'แอมโมเนีย':'ไนไตรท์';
+  const items=[
+    {lbl:'pH เช้า',key:'phM',id:'pdg1'},
+    {lbl:'DO เช้า',key:'doM',id:'pdg2'},
+    {lbl:thirdLbl,key:thirdKey,id:'pdg3'},
+    {lbl:'อุณหภูมิเช้า',key:'tM',id:'pdg4'}
+  ];
+  wrap.innerHTML=items.map(it=>`<div class="pd-gauge">
+    <div class="pd-gauge-lab">${it.lbl}</div>
+    <div class="pd-gauge-wrap"><canvas id="${it.id}"></canvas><div class="pd-gauge-val" id="${it.id}v">–</div></div>
+    <div class="pd-gauge-st" id="${it.id}s"></div>
+  </div>`).join('');
+  items.forEach(it=>{
+    const v=last?last[it.key]:null;
+    const has=v!=null&&v!=='';
+    const rng=PD_GAUGE_RANGE[it.key];
+    const cls=has?classifyOv(it.key,parseFloat(v)):'na';
+    const col=cls==='danger'?'#e5533c':cls==='warn'?'#f0a83a':cls==='ok'?'#2f8f5b':'#d7ded8';
+    const pct=has&&rng?Math.max(2,Math.min(98,((parseFloat(v)-rng[0])/(rng[1]-rng[0]))*100)):0;
+    const canvas=document.getElementById(it.id);
+    if(canvas)_pdGaugeCharts[it.id]=new Chart(canvas,{type:'doughnut',data:{datasets:[{data:[pct,100-pct],backgroundColor:[col,'#e7ece6'],borderWidth:0}]},options:{rotation:-90,circumference:180,cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:false}}}});
+    const vEl=document.getElementById(it.id+'v');if(vEl)vEl.textContent=has?v:'–';
+    const sEl=document.getElementById(it.id+'s');if(sEl){sEl.textContent=!has?'ไม่มีข้อมูล':(cls==='ok'?'อยู่ในเกณฑ์':'เกินเกณฑ์');sEl.style.color=col;}
+  });
+}
+function pdWeekBuckets(p){
+  const start=p.startDate;if(!start)return[];
+  const curAge=Math.max(0,dDiff(start,today()));
+  const nWeeks=Math.max(1,Math.ceil((curAge+1)/7));
+  const buckets=Array.from({length:nWeeks},(_,i)=>({week:i+1,feedTotal:0,abw:null,sampleDate:null,adg:null}));
+  (p.feedLog||[]).forEach(r=>{
+    if(!r.date)return;
+    const age=dDiff(start,r.date);if(age<0)return;
+    const wi=Math.min(nWeeks-1,Math.max(0,Math.floor(age/7)));
+    buckets[wi].feedTotal+=(parseFloat(r.totalFeed)||0);
+  });
+  (p.samples||[]).forEach(s=>{
+    if(!s.date||s.abw==null||s.abw==='')return;
+    const age=dDiff(start,s.date);if(age<0)return;
+    const wi=Math.min(nWeeks-1,Math.max(0,Math.floor(age/7)));
+    if(!buckets[wi].sampleDate||new Date(s.date)>new Date(buckets[wi].sampleDate)){
+      buckets[wi].abw=parseFloat(s.abw);buckets[wi].sampleDate=s.date;
+    }
+  });
+  let prevAbw=null,prevWeek=null;
+  buckets.forEach((b,i)=>{
+    if(b.abw!=null){
+      if(prevAbw!=null&&i>prevWeek)b.adg=+(((b.abw-prevAbw)/((i-prevWeek)*7)).toFixed(2));
+      prevAbw=b.abw;prevWeek=i;
+    }
+  });
+  return buckets;
+}
+let _pdCharts={};
+function pdBustCharts(){Object.values(_pdCharts).forEach(c=>c&&c.destroy());_pdCharts={};}
+function renderPdCharts(p){
+  pdBustCharts();
+  if(typeof Chart==='undefined')return;
+  const recs=(p.records||[]).filter(r=>r.date).slice(-10);
+  const wEl=document.getElementById('pd-c-water');
+  if(wEl&&recs.length)_pdCharts.water=new Chart(wEl,{type:'line',data:{labels:recs.map(r=>fD(r.date)),datasets:[
+    {label:'pH',data:recs.map(r=>r.phM!=null&&r.phM!==''?parseFloat(r.phM):null),borderColor:'#2f8f5b',backgroundColor:'rgba(47,143,91,.1)',tension:.35,fill:true,spanGaps:true},
+    {label:'DO',data:recs.map(r=>r.doM!=null&&r.doM!==''?parseFloat(r.doM):null),borderColor:'#a9d34f',tension:.35,spanGaps:true}
+  ]},options:{maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{boxWidth:10,font:{size:10}}}},scales:{x:{ticks:{font:{size:9}}},y:{ticks:{font:{size:9}}}}}});
+  else if(wEl)wEl.parentElement.innerHTML='<div class="card-t">📉 แนวโน้มคุณภาพน้ำ 10 วันล่าสุด</div><p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลพอ</p>';
+  const feeds=(p.feedLog||[]).filter(r=>r.date).slice(-14);
+  const fEl=document.getElementById('pd-c-feedday');
+  if(fEl&&feeds.length)_pdCharts.feedDay=new Chart(fEl,{type:'bar',data:{labels:feeds.map(r=>fD(r.date)),datasets:[{label:'กก./วัน',data:feeds.map(r=>parseFloat(r.totalFeed)||0),backgroundColor:'#c2e66e',borderRadius:4}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8}}},y:{ticks:{font:{size:9}}}}}});
+  else if(fEl)fEl.parentElement.innerHTML='<div class="card-t">🍤 อาหารการกินรายวัน 14 วันล่าสุด</div><p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลพอ</p>';
+  const buckets=pdWeekBuckets(p);
+  const wkLbls=buckets.map(b=>'สัปดาห์ '+b.week);
+  const fwEl=document.getElementById('pd-c-feedweek');
+  if(fwEl&&buckets.length)_pdCharts.feedWeek=new Chart(fwEl,{data:{labels:wkLbls,datasets:[
+    {type:'bar',label:'อาหาร/สัปดาห์ (กก.)',data:buckets.map(b=>Math.round(b.feedTotal)),backgroundColor:'#7fbf7a',borderRadius:4,yAxisID:'y'},
+    {type:'line',label:'ADG (ก./วัน)',data:buckets.map(b=>b.adg),borderColor:'#1f6b42',tension:.35,spanGaps:true,yAxisID:'y1'}
+  ]},options:{maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{boxWidth:10,font:{size:9}}}},scales:{y:{ticks:{font:{size:9}}},y1:{position:'right',grid:{drawOnChartArea:false},ticks:{font:{size:9}}},x:{ticks:{font:{size:8}}}}}});
+  const gEl=document.getElementById('pd-c-growth');
+  if(gEl&&buckets.some(b=>b.abw!=null))_pdCharts.growth=new Chart(gEl,{type:'line',data:{labels:wkLbls,datasets:[{label:'กรัม/ตัว',data:buckets.map(b=>b.abw),borderColor:'#2f8f5b',backgroundColor:'rgba(194,230,110,.25)',fill:true,tension:.35,spanGaps:true,pointRadius:3,pointBackgroundColor:'#2f8f5b'}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8}}},y:{ticks:{font:{size:9}}}}}});
+  else if(gEl)gEl.parentElement.innerHTML='<div class="card-t">📈 การเติบโต — น้ำหนักเฉลี่ย (รายสัปดาห์)</div><p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลผลสุ่มพอ</p>';
 }
 function jumpFeed(id){document.getElementById('tab-feed').click();setTimeout(()=>{document.getElementById('fd-pond').value=id;onFdPond();},80)}
 let homeAttnExpanded=false;
