@@ -254,6 +254,13 @@ body.role-admin .sn-link.admin-only{display:block!important}
 @media(max-width:480px){.pd-gauges{grid-template-columns:repeat(2,1fr)}}
 .pd-chart-card{margin-top:12px}
 .pd-chart-wrap{height:200px;margin-top:6px}
+/* ── เฟส 4 (พี่แพรว): ปรับสีหน้า P&L ให้ตรงธีมเขียว-มะนาวใหม่ ── */
+#sec-pl .kpi-card{border-top:3px solid var(--sn-green)}
+#sec-pl .kpi-card.pl-kpi-dark{background:var(--sn-bg);border-color:var(--sn-bg);border-top-color:var(--sn-lime)}
+#sec-pl .kpi-card.pl-kpi-dark .kpi-lbl{color:#a9c9b3}
+#sec-pl .kpi-card.pl-kpi-dark .kpi-val{color:#eafbe7}
+#sec-pl .kpi-card.pl-kpi-dark .kpi-unit{color:#c7e4d0}
+#sec-pl .kpi-card.pl-kpi-dark .kpi-sub{color:#a9c9b3}
 
 /* ── Badges & Alerts ── */
 .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
@@ -7685,7 +7692,7 @@ function renderPLKPI(rows){
   const coverage=rows.length?withRevCount/rows.length:0;
   const marginNote=coverage<0.5?`<span style="font-size:10px;color:var(--w)"> ⚠️ข้อมูลครบ ${withRevCount}/${rows.length} รอบ</span>`:``;
   el.innerHTML=`
-    <div class="kpi-card"><div class="kpi-lbl">รายได้รวม</div><div class="kpi-val">${(totRev/1e6).toFixed(2)}<span class="kpi-unit"> ล้าน฿</span></div><div class="kpi-sub">${rows.length} รอบ · ${totWeight.toLocaleString()} กก.<br><span style="color:${coverage>=0.8?'var(--ok)':coverage>=0.5?'var(--w)':'var(--d)'}">ข้อมูลการเงินครบ ${withRevCount}/${rows.length} รอบ</span></div></div>
+    <div class="kpi-card pl-kpi-dark"><div class="kpi-lbl">รายได้รวม</div><div class="kpi-val">${(totRev/1e6).toFixed(2)}<span class="kpi-unit"> ล้าน฿</span></div><div class="kpi-sub">${rows.length} รอบ · ${totWeight.toLocaleString()} กก.<br><span style="color:${coverage>=0.8?'#c2e66e':coverage>=0.5?'var(--w)':'var(--d)'}">ข้อมูลการเงินครบ ${withRevCount}/${rows.length} รอบ</span></div></div>
     <div class="kpi-card"><div class="kpi-lbl">ต้นทุนรวม</div><div class="kpi-val">${(totCost/1e6).toFixed(2)}<span class="kpi-unit"> ล้าน฿</span></div><div class="kpi-sub">${avgCostPerKg.toFixed(1)} บาท/กก. เฉลี่ย</div></div>
     <div class="kpi-card"><div class="kpi-lbl">กำไรสุทธิรวม</div><div class="kpi-val" style="color:${totProfit>=0?'var(--ok)':'var(--d)'}">${(totProfit/1e6).toFixed(2)}<span class="kpi-unit"> ล้าน฿</span></div><div class="kpi-sub" style="color:${margin>=0?'var(--ok)':'var(--d)'}">Margin ${margin.toFixed(1)}%${marginNote}</div></div>
     <div class="kpi-card"><div class="kpi-lbl">FCR เฉลี่ย</div><div class="kpi-val" style="color:${avgFcr&&avgFcr<1.3?'var(--ok)':avgFcr&&avgFcr<1.5?'var(--w)':'var(--d)'}">${avgFcr?avgFcr.toFixed(2):'-'}</div><div class="kpi-sub">เป้า &lt; 1.3</div></div>`;
@@ -7749,7 +7756,7 @@ function renderPLCostChart(rows){
   const totWeight=rows.reduce((s,r)=>s+(r.totalWeight||0),0);
   const labels=['ลูกกุ้ง','อาหาร','สารเคมี','ค่าแรง','ค่าไฟ','พัสดุ','อื่นๆ'];
   const vals=[totFry,totFeed,totChem,totLabor,totElec,totStock,totOther];
-  const colors=['#185FA5','#639922','#D85A30','#BA7517','#888780','#E09A29','#6b46c1'];
+  const colors=['#1f6b42','#2f8f5b','#c2e66e','#a9d34f','#f0a83a','#7f8c84','#20493a'];
   const canvas=document.getElementById('pl-donut');
   if(canvas){
     if(_plDonutChart){_plDonutChart.destroy();_plDonutChart=null;}
