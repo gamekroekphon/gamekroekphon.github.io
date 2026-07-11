@@ -600,6 +600,7 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
       <button class="sn-link tab-item" onclick="goTab('compare',this)">🔄 เปรียบเทียบ</button>
       <button class="sn-link tab-item" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
       <button class="sn-link tab-item" onclick="goTab('wqfeed',this)">🌡️ น้ำ-อาหาร</button>
+      <button class="sn-link tab-item" onclick="goTab('hatchery',this)">🦐 โรงเพาะฟัก</button>
     </div>
 
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-market')"><span>💰</span> ตลาด/ต้นทุน <span class="sn-caret">▾</span></button>
@@ -677,6 +678,7 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
       <button class="tab-item" id="tab-compare" onclick="goTab('compare',this)">🔄 เปรียบเทียบ</button>
       <button class="tab-item" id="tab-risk" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
       <button class="tab-item" id="tab-wqfeed" onclick="goTab('wqfeed',this)">🌡️ น้ำ-อาหาร</button>
+      <button class="tab-item" id="tab-hatchery" onclick="goTab('hatchery',this)">🦐 โรงเพาะฟัก</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-market">
@@ -1137,6 +1139,15 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
     <div style="position:relative;height:180px;margin-bottom:8px"><canvas id="wqfeed-c-water"></canvas></div>
     <div style="position:relative;height:120px"><canvas id="wqfeed-c-feed"></canvas></div>
   </div>
+</div>
+<div id="sec-hatchery" class="sec">
+  <div class="sec-hdr"><div class="sec-title">🦐 เปรียบเทียบโรงเพาะฟัก</div></div>
+  <div style="font-size:12px;color:var(--tx3);margin-bottom:14px">วิเคราะห์จากรอบเลี้ยงที่ปิดแล้วเท่านั้น (มีผลผลิต/อัตรารอดบันทึกครบ)</div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-t">📊 อัตรารอดเฉลี่ยตามโรงเพาะฟัก</div>
+    <div style="position:relative;height:220px"><canvas id="hatchery-chart"></canvas></div>
+  </div>
+  <div class="card"><div class="card-t">📋 สรุปตามโรงเพาะฟัก</div><div id="hatchery-table"></div></div>
 </div>
 <!-- CROPS -->
 <div id="sec-crops" class="sec">
@@ -2881,6 +2892,50 @@ function renderWqFeedChart(){
     _wqfeedFeedChart=new Chart(fEl,{type:'bar',data:{labels:ff.map(r=>fD(r.date)),datasets:[{label:'อาหาร กก./วัน',data:ff.map(r=>parseFloat(r.totalFeed)||0),backgroundColor:'#3f6212',borderRadius:4}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8}}},y:{ticks:{font:{size:9}}}}}});
   }else if(fEl)fEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;text-align:center;padding:20px">ยังไม่มีข้อมูลอาหารพอ</p>';
 }
+function hatcheryStats(){
+  const groups={};
+  D.ponds.forEach(p=>{
+    (p.cropHistory||[]).forEach(c=>{
+      if(!c.closed||!c.harvestResult)return;
+      const name=(c.hatchery||'').trim()||'ไม่ระบุ';
+      if(!groups[name])groups[name]={name,rounds:0,survSum:0,survN:0,fcrSum:0,fcrN:0,adgSum:0,adgN:0};
+      const g=groups[name];
+      g.rounds++;
+      const hr=c.harvestResult;
+      if(hr.survivalRate!=null){g.survSum+=parseFloat(hr.survivalRate)||0;g.survN++;}
+      const totalFeed=(c.feedLog||[]).reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0);
+      const fcr=hr.fcr!=null?parseFloat(hr.fcr):(totalFeed&&hr.totalWeight?+(totalFeed/hr.totalWeight).toFixed(2):null);
+      if(fcr!=null&&!isNaN(fcr)){g.fcrSum+=fcr;g.fcrN++;}
+      const ageDays=c.startDate?dDiff(c.startDate,c.closeDate||today()):null;
+      const finalWeightG=hr.size?1000/hr.size:null;
+      const adg=(finalWeightG!=null&&ageDays)?(finalWeightG-(c.plWeight||0))/ageDays:null;
+      if(adg!=null&&!isNaN(adg)){g.adgSum+=adg;g.adgN++;}
+    });
+  });
+  return Object.values(groups).map(g=>({
+    name:g.name,rounds:g.rounds,
+    survAvg:g.survN?+(g.survSum/g.survN).toFixed(1):null,
+    fcrAvg:g.fcrN?+(g.fcrSum/g.fcrN).toFixed(2):null,
+    adgAvg:g.adgN?+(g.adgSum/g.adgN).toFixed(3):null
+  })).sort((a,b)=>(b.survAvg||0)-(a.survAvg||0));
+}
+let _hatcheryChart=null;
+function initHatchery(){
+  const stats=hatcheryStats();
+  const chEl=document.getElementById('hatchery-chart');
+  if(_hatcheryChart){_hatcheryChart.destroy();_hatcheryChart=null;}
+  if(!stats.length){
+    if(chEl)chEl.parentElement.innerHTML='<div class="card-t">📊 อัตรารอดเฉลี่ยตามโรงเพาะฟัก</div><p style="color:var(--tx3);text-align:center;padding:24px">ยังไม่มีรอบเลี้ยงที่ปิดแล้วพอสำหรับวิเคราะห์</p>';
+  }else if(chEl&&typeof Chart!=='undefined'){
+    _hatcheryChart=new Chart(chEl,{type:'bar',indexAxis:'y',data:{labels:stats.map(s=>s.name+' ('+s.rounds+' รอบ)'),datasets:[{data:stats.map(s=>s.survAvg||0),backgroundColor:'#3f6212',borderRadius:4}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+'% รอด'}}},scales:{x:{max:100,ticks:{font:{size:10},callback:v=>v+'%'}},y:{ticks:{font:{size:11}}}}}});
+  }
+  const tbl=document.getElementById('hatchery-table');
+  if(!tbl)return;
+  if(!stats.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:10px">-</p>';return;}
+  tbl.innerHTML=`<table class="tbl"><thead><tr><th>โรงเพาะฟัก</th><th style="text-align:right">รอบที่เลี้ยง</th><th style="text-align:right">อัตรารอดเฉลี่ย</th><th style="text-align:right">FCR เฉลี่ย</th><th style="text-align:right">ADG เฉลี่ย</th></tr></thead><tbody>${
+    stats.map(s=>`<tr><td>${s.name}</td><td style="text-align:right">${s.rounds}</td><td style="text-align:right">${s.survAvg!=null?s.survAvg+'%':'-'}</td><td style="text-align:right">${s.fcrAvg!=null?s.fcrAvg:'-'}</td><td style="text-align:right">${s.adgAvg!=null?s.adgAvg+' ก./วัน':'-'}</td></tr>`).join('')
+  }</tbody></table>`;
+}
 function fD(d){if(!d)return'-';return new Date(d).toLocaleDateString('th-TH',{year:'2-digit',month:'short',day:'numeric'})}
 // ข้อ 2: แปลง cropYear เป็น พ.ศ. 4 หลักเสมอ (รองรับ BE 4 หลัก, CE 4 หลัก, และ BE 2 หลัก)
 function yearBE(y){if(!y)return'';const n=parseInt(y);if(isNaN(n))return'';if(n>2500)return n;if(n>100)return n+543;return n+2500;}
@@ -3416,7 +3471,7 @@ function goTab(t,btn){
   if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='disease')initDisease();if(t==='price')initPrice();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='stock')initStock();if(t==='abw')initAbw();if(t==='feed')initFeed();if(t==='pl')initPL();
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
   if(t==='chem')initChem();if(t==='lab')initLab();
-  if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();if(t==='wqfeed')initWqFeed();
+  if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();if(t==='wqfeed')initWqFeed();if(t==='hatchery')initHatchery();
   if(t==='manage')renderManage();
   if(t==='users')renderUsers();
   if(t==='harvest'){
