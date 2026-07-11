@@ -98,9 +98,10 @@ body.role-admin .sn-link.admin-only{display:block!important}
 /* ── หน้าภาพรวมดีไซน์ใหม่: 2 คอลัมน์ ── */
 .ov-main-grid{display:grid;grid-template-columns:1fr 290px;gap:16px;align-items:start}
 @media(max-width:900px){.ov-main-grid{grid-template-columns:1fr}}
-.ov-kk-dark{background:var(--sn-bg)!important;border-color:var(--sn-bg)!important}
+.ov-kk-dark{background:var(--sn-bg2)!important;border-color:var(--sn-bg2)!important}
 .ov-kk-dark .ov-kk-l{color:#a9c9b3}
 .ov-kk-dark .ov-kk-v{color:#eafbe7}
+.ov-kk-dark .ov-kk-u{color:#a9c9b3}
 .ov-kk-dark .ov-kk-sub{font-size:11px;color:#a9c9b3;margin-top:3px}
 .ov-weather{background:linear-gradient(160deg,var(--sn-bg2),var(--sn-green));color:#eafbe7;border-radius:14px;padding:16px;margin-bottom:14px}
 .ov-weather-big{font-size:24px;font-weight:700;margin:5px 0}
@@ -3908,9 +3909,9 @@ function renderOv(){
   const totalFeedToday=D.ponds.reduce((s,p)=>s+(p.feedLog||[]).filter(r=>r.date===yd).reduce((ss,r)=>ss+(parseFloat(r.totalFeed)||0),0),0);
   document.getElementById('ov-kpi-bar').innerHTML=`
     <div class="ov-kk ov-kk-dark"><div class="ov-kk-l">🦐 บ่อที่เลี้ยงอยู่</div><div class="ov-kk-v">${active.length}<span class="ov-kk-u"> / ${TOTAL_PONDS} บ่อ</span></div><div class="ov-kk-sub">เตรียมบ่อ ${prepM.length} · ว่าง ${closedCount}</div></div>
-    <div class="ov-kk"><div class="ov-kk-l">⚖️ Biomass รวม</div><div class="ov-kk-v">${totalBio>0?(totalBio/1000).toFixed(1):'-'}<span class="ov-kk-u"> ตัน</span></div></div>
-    <div class="ov-kk"><div class="ov-kk-l">🍖 อาหารรวมต่อวัน</div><div class="ov-kk-v">${totalFeedToday>0?totalFeedToday.toFixed(0):'-'}<span class="ov-kk-u"> กก./วัน</span></div><div style="font-size:10px;color:var(--tx3)">ทั้งฟาร์ม</div></div>
-    <div class="ov-kk"><div class="ov-kk-l">⚠️ บ่อต้องดู</div><div class="ov-kk-v" style="color:${dcP>0?'var(--d)':'inherit'}">${dcP}<span class="ov-kk-u"> / เฝ้าระวัง ${wcP}</span></div></div>`;
+    <div class="ov-kk ov-kk-dark"><div class="ov-kk-l">⚖️ Biomass รวม</div><div class="ov-kk-v">${totalBio>0?(totalBio/1000).toFixed(1):'-'}<span class="ov-kk-u"> ตัน</span></div></div>
+    <div class="ov-kk ov-kk-dark"><div class="ov-kk-l">🍖 อาหารรวมต่อวัน</div><div class="ov-kk-v">${totalFeedToday>0?totalFeedToday.toFixed(0):'-'}<span class="ov-kk-u"> กก./วัน</span></div><div style="font-size:10px;color:#a9c9b3">ทั้งฟาร์ม</div></div>
+    <div class="ov-kk ov-kk-dark"><div class="ov-kk-l">⚠️ บ่อต้องดู</div><div class="ov-kk-v" style="color:${dcP>0?'#ff8a70':'inherit'}">${dcP}<span class="ov-kk-u"> / เฝ้าระวัง ${wcP}</span></div></div>`;
   renderOvWeatherCard();
   renderOvRiskList();
   renderOvDonut(active.length,prepM.length,closedCount);
