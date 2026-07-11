@@ -599,6 +599,7 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
       <button class="sn-link tab-item" onclick="goTab('lab',this)">🔬 ผลแล็บ</button>
       <button class="sn-link tab-item" onclick="goTab('compare',this)">🔄 เปรียบเทียบ</button>
       <button class="sn-link tab-item" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
+      <button class="sn-link tab-item" onclick="goTab('wqfeed',this)">🌡️ น้ำ-อาหาร</button>
     </div>
 
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-market')"><span>💰</span> ตลาด/ต้นทุน <span class="sn-caret">▾</span></button>
@@ -675,6 +676,7 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
       <button class="tab-item" id="tab-lab" onclick="goTab('lab',this)">🔬 ผลแล็บ</button>
       <button class="tab-item" id="tab-compare" onclick="goTab('compare',this)">🔄 เปรียบเทียบ</button>
       <button class="tab-item" id="tab-risk" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
+      <button class="tab-item" id="tab-wqfeed" onclick="goTab('wqfeed',this)">🌡️ น้ำ-อาหาร</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-market">
@@ -1123,6 +1125,18 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
   <div class="card" style="margin-bottom:16px"><div class="card-t">🌤️ พยากรณ์อากาศ 4 วัน</div><div id="wx-cards" class="g4"><div style="text-align:center;padding:40px;grid-column:1/-1;color:var(--tx3)"><div class="spin" style="margin:0 auto 12px"></div>โหลด...</div></div></div>
   <div class="card" style="margin-bottom:16px"><div class="card-t">🦐 ความเสี่ยงรายบ่อ</div><div class="g3" id="risk-grid"></div></div>
   <div class="card"><div class="card-t">💡 คำแนะนำ</div><div id="risk-recs"></div></div>
+</div>
+<div id="sec-wqfeed" class="sec">
+  <div class="sec-hdr"><div class="sec-title">🌡️ สหสัมพันธ์น้ำ-อาหาร</div></div>
+  <div id="wqfeed-alerts" style="margin-bottom:14px"></div>
+  <div class="card">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+      <label class="fl" style="margin:0">เลือกบ่อ:</label>
+      <select class="fi" id="wqfeed-pond" onchange="renderWqFeedChart()" style="width:160px"></select>
+    </div>
+    <div style="position:relative;height:180px;margin-bottom:8px"><canvas id="wqfeed-c-water"></canvas></div>
+    <div style="position:relative;height:120px"><canvas id="wqfeed-c-feed"></canvas></div>
+  </div>
 </div>
 <!-- CROPS -->
 <div id="sec-crops" class="sec">
@@ -2801,6 +2815,72 @@ function sortedPonds(){
 }
 function today(){return new Date(Date.now()+7*3600000).toISOString().split('T')[0]}
 function dDiff(a,b){return Math.floor((new Date(b)-new Date(a))/86400000)}
+function wqfeedActivePonds(){return D.ponds.filter(p=>{const cls=pondStatusOv(p);return cls!=='prep'&&cls!=='empty'&&cls!=='closed';});}
+function wqfeedPondStats(p){
+  const recs=(p.records||[]).filter(r=>r.date).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const feeds=(p.feedLog||[]).filter(r=>r.date).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  return{recs,feeds};
+}
+function wqfeedAvg(rows,keys){
+  const vals=rows.flatMap(r=>keys.map(k=>r[k])).filter(v=>v!=null&&v!=='').map(parseFloat).filter(v=>!isNaN(v));
+  return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
+}
+function initWqFeed(){
+  const sel=document.getElementById('wqfeed-pond');if(!sel)return;
+  const actives=wqfeedActivePonds();
+  sel.innerHTML=actives.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  renderWqFeedAlerts(actives);
+  if(actives.length)renderWqFeedChart();
+  else{
+    const wEl=document.getElementById('wqfeed-c-water');if(wEl)wEl.parentElement.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px">ไม่มีบ่อที่กำลังเลี้ยงอยู่</p>';
+  }
+}
+function renderWqFeedAlerts(actives){
+  const el=document.getElementById('wqfeed-alerts');if(!el)return;
+  const warns=[];
+  actives.forEach(p=>{
+    const{recs,feeds}=wqfeedPondStats(p);
+    if(recs.length<2||feeds.length<7)return;
+    const avgDO=wqfeedAvg(recs.slice(-2),['doM','doA']);
+    const tempNow=wqfeedAvg(recs.slice(-3),['tM','tA']);
+    const tempBefore=wqfeedAvg(recs.slice(-10,-3),['tM','tA']);
+    const feedLast2=feeds.slice(-2).reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0)/2;
+    const feedPrior=feeds.slice(-7,-2);
+    const feedPriorAvg=feedPrior.length?feedPrior.reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0)/feedPrior.length:0;
+    const feedDropPct=feedPriorAvg>0?Math.round((1-feedLast2/feedPriorAvg)*100):0;
+    const causes=[];
+    if(avgDO!=null&&avgDO<5)causes.push(`DO ต่ำ (${avgDO.toFixed(1)} mg/L)`);
+    if(tempBefore!=null&&tempNow!=null&&(tempBefore-tempNow)>=1.5)causes.push(`อุณหภูมิลด ${(tempBefore-tempNow).toFixed(1)}°C`);
+    if(!causes.length)return;
+    if(feedDropPct>=10){
+      warns.push({level:'high',text:`บ่อ ${p.name}: ${causes.join(' + ')} และอาหารลด ${feedDropPct}% ใน 2 วันล่าสุด — สอดคล้องกับพฤติกรรมกุ้งกินน้อยลง ควรพิจารณาลดอาหารเพิ่มเพื่อลดของเสียในบ่อ`});
+    }else{
+      warns.push({level:'watch',text:`บ่อ ${p.name}: ${causes.join(' + ')} — เฝ้าระวังการกินอาหารช่วง 1-2 วันนี้`});
+    }
+  });
+  if(!warns.length){el.innerHTML='<div class="card" style="background:var(--ob);border-color:var(--ok)"><p style="color:var(--ok);font-size:13px">✅ ไม่พบความผิดปกติของค่าน้ำที่กระทบการกินอาหารในช่วงนี้</p></div>';return;}
+  el.innerHTML=warns.map(w=>`<div class="card" style="background:${w.level==='high'?'var(--db)':'var(--wb)'};border-color:${w.level==='high'?'var(--d)':'var(--w)'};margin-bottom:8px"><p style="color:${w.level==='high'?'var(--d)':'var(--w-tx)'};font-size:12.5px">⚠️ ${w.text}</p></div>`).join('');
+}
+let _wqfeedWaterChart=null,_wqfeedFeedChart=null;
+function renderWqFeedChart(){
+  const sel=document.getElementById('wqfeed-pond');if(!sel||!sel.value)return;
+  const p=D.ponds.find(x=>x.id===sel.value);if(!p)return;
+  const{recs,feeds}=wqfeedPondStats(p);
+  const rr=recs.slice(-14),ff=feeds.slice(-14);
+  if(_wqfeedWaterChart){_wqfeedWaterChart.destroy();_wqfeedWaterChart=null;}
+  if(_wqfeedFeedChart){_wqfeedFeedChart.destroy();_wqfeedFeedChart=null;}
+  const wEl=document.getElementById('wqfeed-c-water');
+  if(wEl&&rr.length&&typeof Chart!=='undefined'){
+    _wqfeedWaterChart=new Chart(wEl,{type:'line',data:{labels:rr.map(r=>fD(r.date)),datasets:[
+      {label:'อุณหภูมิ',data:rr.map(r=>{const v=wqfeedAvg([r],['tM','tA']);return v!=null?+v.toFixed(1):null;}),borderColor:'#e5533c',tension:.35,spanGaps:true,pointRadius:0},
+      {label:'DO',data:rr.map(r=>{const v=wqfeedAvg([r],['doM','doA']);return v!=null?+v.toFixed(2):null;}),borderColor:'#185fa5',tension:.35,spanGaps:true,pointRadius:0,yAxisID:'y1'}
+    ]},options:{maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{boxWidth:10,font:{size:10}}}},scales:{x:{ticks:{font:{size:9}}},y:{ticks:{font:{size:9}}},y1:{position:'right',grid:{drawOnChartArea:false},ticks:{font:{size:9}}}}}});
+  }else if(wEl)wEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;text-align:center;padding:20px">ยังไม่มีข้อมูลค่าน้ำพอ</p>';
+  const fEl=document.getElementById('wqfeed-c-feed');
+  if(fEl&&ff.length&&typeof Chart!=='undefined'){
+    _wqfeedFeedChart=new Chart(fEl,{type:'bar',data:{labels:ff.map(r=>fD(r.date)),datasets:[{label:'อาหาร กก./วัน',data:ff.map(r=>parseFloat(r.totalFeed)||0),backgroundColor:'#3f6212',borderRadius:4}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8}}},y:{ticks:{font:{size:9}}}}}});
+  }else if(fEl)fEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;text-align:center;padding:20px">ยังไม่มีข้อมูลอาหารพอ</p>';
+}
 function fD(d){if(!d)return'-';return new Date(d).toLocaleDateString('th-TH',{year:'2-digit',month:'short',day:'numeric'})}
 // ข้อ 2: แปลง cropYear เป็น พ.ศ. 4 หลักเสมอ (รองรับ BE 4 หลัก, CE 4 หลัก, และ BE 2 หลัก)
 function yearBE(y){if(!y)return'';const n=parseInt(y);if(isNaN(n))return'';if(n>2500)return n;if(n>100)return n+543;return n+2500;}
@@ -3336,7 +3416,7 @@ function goTab(t,btn){
   if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='disease')initDisease();if(t==='price')initPrice();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='stock')initStock();if(t==='abw')initAbw();if(t==='feed')initFeed();if(t==='pl')initPL();
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
   if(t==='chem')initChem();if(t==='lab')initLab();
-  if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();
+  if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();if(t==='wqfeed')initWqFeed();
   if(t==='manage')renderManage();
   if(t==='users')renderUsers();
   if(t==='harvest'){
