@@ -601,8 +601,8 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
       <button class="sn-link tab-item" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
       <button class="sn-link tab-item" onclick="goTab('wqfeed',this)">🌡️ น้ำ-อาหาร</button>
       <button class="sn-link tab-item" onclick="goTab('hatchery',this)">🦐 โรงเพาะฟัก</button>
-      <button class="sn-link tab-item" onclick="goTab('breakeven',this)">💰 จุดคุ้มทุน</button>
-      <button class="sn-link tab-item" onclick="goTab('riskfin',this)">🚨 ความเสี่ยงเงินลงทุน</button>
+      <button class="sn-link tab-item admin-only" onclick="goTab('breakeven',this)">💰 จุดคุ้มทุน</button>
+      <button class="sn-link tab-item admin-only" onclick="goTab('riskfin',this)">🚨 ความเสี่ยงเงินลงทุน</button>
     </div>
 
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-market')"><span>💰</span> ตลาด/ต้นทุน <span class="sn-caret">▾</span></button>
@@ -681,8 +681,8 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
       <button class="tab-item" id="tab-risk" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
       <button class="tab-item" id="tab-wqfeed" onclick="goTab('wqfeed',this)">🌡️ น้ำ-อาหาร</button>
       <button class="tab-item" id="tab-hatchery" onclick="goTab('hatchery',this)">🦐 โรงเพาะฟัก</button>
-      <button class="tab-item" id="tab-breakeven" onclick="goTab('breakeven',this)">💰 จุดคุ้มทุน</button>
-      <button class="tab-item" id="tab-riskfin" onclick="goTab('riskfin',this)">🚨 ความเสี่ยงเงินลงทุน</button>
+      <button class="tab-item admin-only" id="tab-breakeven" onclick="goTab('breakeven',this)">💰 จุดคุ้มทุน</button>
+      <button class="tab-item admin-only" id="tab-riskfin" onclick="goTab('riskfin',this)">🚨 ความเสี่ยงเงินลงทุน</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-market">
@@ -2070,8 +2070,8 @@ document.addEventListener('focusout', () => {
 
 
 // ===== AUTH & ROLE =====
-const FINANCE_TABS=['tab-harvest','tab-harveststat','tab-export','tab-labor','tab-elec','tab-pl','tab-manage'];
-const FINANCE_SECS=['sec-harvest','sec-harveststat','sec-export','sec-labor','sec-elec','sec-pl','sec-manage'];
+const FINANCE_TABS=['tab-harvest','tab-harveststat','tab-export','tab-labor','tab-elec','tab-pl','tab-manage','tab-breakeven','tab-riskfin'];
+const FINANCE_SECS=['sec-harvest','sec-harveststat','sec-export','sec-labor','sec-elec','sec-pl','sec-manage','sec-breakeven','sec-riskfin'];
 function applyRole(role){
   APP_ROLE=role;
   if(role==='admin'){
