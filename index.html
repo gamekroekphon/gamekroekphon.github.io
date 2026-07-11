@@ -577,9 +577,8 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
 
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-daily')"><span>📅</span> รายวัน <span class="sn-caret">▾</span></button>
     <div class="sn-sub" id="sn-g-daily">
-      <button class="sn-link tab-item" onclick="goTab('tide',this)">🌊 น้ำขึ้นน้ำลง</button>
+      <button class="sn-link tab-item" onclick="goTab('tide',this)">🌊 สภาพอากาศและน้ำขึ้นน้ำลง</button>
       <button class="sn-link tab-item" onclick="goTab('entry',this)">💧 คุณภาพน้ำ</button>
-      <button class="sn-link tab-item" onclick="goTab('disease',this)">🦐 เฝ้าระวังโรค</button>
       <button class="sn-link tab-item" onclick="goTab('feed',this)">🍖 อาหาร &amp; FCR</button>
       <button class="sn-link tab-item" onclick="goTab('sample',this)">⚖️ สุ่มตัวอย่าง</button>
       <button class="sn-link tab-item" onclick="goTab('watlog',this)">💦 จัดการน้ำ</button>
@@ -652,9 +651,8 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
   <div class="tab-grp" id="grp-daily">
     <button class="grp-btn" onclick="toggleGrp('daily')">📅 รายวัน <span class="grp-caret">▾</span></button>
     <div class="tab-dropdown">
-      <button class="tab-item" id="tab-tide" onclick="goTab('tide',this)">🌊 น้ำขึ้นน้ำลง</button>
+      <button class="tab-item" id="tab-tide" onclick="goTab('tide',this)">🌊 สภาพอากาศและน้ำขึ้นน้ำลง</button>
       <button class="tab-item" id="tab-entry" onclick="goTab('entry',this)">💧 คุณภาพน้ำ</button>
-      <button class="tab-item" id="tab-disease" onclick="goTab('disease',this)">🦐 เฝ้าระวังโรค</button>
       <button class="tab-item" id="tab-feed" onclick="goTab('feed',this)">🍖 อาหาร &amp; FCR <span style="font-size:10px;opacity:.7">(อัตราแลกเนื้อ)</span></button>
       <button class="tab-item" id="tab-sample" onclick="goTab('sample',this)">⚖️ สุ่มตัวอย่าง</button>
       <button class="tab-item" id="tab-watlog" onclick="goTab('watlog',this)">💦 จัดการน้ำ</button>
@@ -749,7 +747,8 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
   <div id="pd-body"></div>
 </div>
 <div id="sec-tide" class="sec">
-  <div class="sec-hdr"><div class="sec-title">🌊 น้ำขึ้นน้ำลง 7 วัน</div></div>
+  <div class="sec-hdr"><div class="sec-title">🌊 สภาพอากาศและน้ำขึ้นน้ำลง</div></div>
+  <div id="tide-weather-card" style="margin-bottom:14px"></div>
   <div class="g2" style="margin-bottom:16px;align-items:start">
     <div class="card">
       <div class="card-t" style="display:flex;justify-content:space-between;align-items:center">
@@ -3395,7 +3394,17 @@ function _tExtrema(s0,s1){
   }
   return ex;
 }
+function renderTideWeatherCard(){
+  const el=document.getElementById('tide-weather-card');if(!el)return;
+  if(!_wxToday){el.innerHTML=`<div class="ov-weather"><div style="font-size:12px;opacity:.85">สภาพอากาศวันนี้</div><div style="font-size:13px;margin-top:8px">กำลังโหลด...</div></div>`;fetchWx().catch(()=>{});return;}
+  el.innerHTML=`<div class="ov-weather">
+    <div style="font-size:12px;opacity:.85">สภาพอากาศวันนี้</div>
+    <div class="ov-weather-big">${_wxToday.tMax.toFixed(0)}° / ${_wxToday.tMin.toFixed(0)}°C</div>
+    <div style="font-size:12.5px">🌧️ ฝน ${_wxToday.rain.toFixed(0)} มม. · 💨 ${_wxToday.wind.toFixed(0)} กม./ชม.</div>
+  </div>`;
+}
 function renderTide(){
+  renderTideWeatherCard();
   const el=document.getElementById('tide-card');const nowEl=document.getElementById('tide-now');if(!el||!nowEl)return;
   const now=Date.now(),TZ=7*3600000,D7=7*24*3600*1000;
   const nowH=_tAt(now),prevH=_tAt(now-600000);
@@ -3971,17 +3980,16 @@ function renderChecklist(){
   const td=today();
   const actives=D.ponds.filter(p=>{const cls=pondStatusOv(p);return cls!=='prep'&&cls!=='empty'&&cls!=='closed';});
   if(!actives.length){el.innerHTML='';return}
-  const ITEMS=[{key:'wq',lbl:'ค่าน้ำ'},{key:'feed',lbl:'อาหาร'},{key:'disease',lbl:'เฝ้าระวังโรค'},{key:'stock',lbl:'สต็อกรายวัน'}];
+  const ITEMS=[{key:'wq',lbl:'ค่าน้ำ'},{key:'feed',lbl:'อาหาร'},{key:'stock',lbl:'สต็อกรายวัน'}];
   const pondChecks=actives.map(p=>{
     const hasWQ=(p.records||[]).some(r=>r.date===td);
     const hasFeed=(p.feedLog||[]).some(r=>r.date===td);
-    const hasDisease=(p.records||[]).some(r=>r.date===td&&r.diseaseWatch&&typeof r.diseaseWatch==='object'&&Object.keys(r.diseaseWatch).length>0);
     const hasStock=(D.inventoryLog||[]).some(r=>r.date===td&&r.type==='out'&&(!r.pondId||r.pondId===p.id||r.pondId===''));
-    const checks={wq:hasWQ,feed:hasFeed,disease:hasDisease,stock:hasStock};
+    const checks={wq:hasWQ,feed:hasFeed,stock:hasStock};
     const done=Object.values(checks).filter(Boolean).length;
     return{p,checks,done};
   });
-  const fullDone=pondChecks.filter(pc=>pc.done===4).length;
+  const fullDone=pondChecks.filter(pc=>pc.done===3).length;
   const pct=actives.length>0?Math.round(fullDone/actives.length*100):0;
   const dateStr=new Date(td+'T00:00:00').toLocaleDateString('th-TH-u-ca-buddhist',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
   el.innerHTML=`<div class="cl-card">
@@ -5968,6 +5976,7 @@ function renderWx(data){
   // cache สภาพอากาศวันนี้ สำหรับ KPI bar ภาพรวม
   _wxToday={tMax:d.temperature_2m_max[0],tMin:d.temperature_2m_min[0],rain:d.precipitation_sum[0],wind:d.wind_speed_10m_max[0]};
   renderOv();
+  renderTideWeatherCard();
   // ── Current weather banner ──
   const curEl=document.getElementById('wx-current');
   if(curEl&&cur){
