@@ -333,15 +333,6 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .dw-sev-on-w{border-color:var(--w);background:var(--wb);color:var(--w)}
 .dw-sev-on-d{border-color:var(--d);background:var(--db);color:var(--d)}
 .pr-size-tag{display:inline-block;background:var(--pl);color:var(--pd);border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:600}
-.pr-chart{display:flex;align-items:flex-end;gap:10px;height:150px;padding:10px 4px 0;border-bottom:1px solid var(--bd)}
-.pr-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
-.pr-bar{width:100%;max-width:34px;background:var(--p);border-radius:5px 5px 0 0;transition:.2s}
-.pr-bar-lbl{font-size:10.5px;color:var(--tx2)}
-.pr-bar-val{font-size:10.5px;font-weight:700;color:var(--p)}
-.diff-pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px}
-.diff-up{background:var(--db);color:var(--d)}
-.diff-down{background:var(--ob);color:var(--ok)}
-.diff-flat{background:var(--sf2);color:var(--tx3)}
 .tag-pond{display:inline-block;background:var(--ib);color:var(--in);border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:600}
 .labor-sub{display:flex;gap:6px;border-bottom:1px solid var(--bd);margin-bottom:16px;flex-wrap:wrap}
 .labor-sub-btn{padding:8px 14px;font-size:12.5px;font-weight:600;color:var(--tx2);cursor:pointer;border-bottom:3px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
@@ -603,13 +594,10 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
       <button class="sn-link tab-item" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
       <button class="sn-link tab-item" onclick="goTab('wqfeed',this)">🌡️ น้ำ-อาหาร</button>
       <button class="sn-link tab-item" onclick="goTab('hatchery',this)">🦐 โรงเพาะฟัก</button>
-      <button class="sn-link tab-item admin-only" onclick="goTab('breakeven',this)">💰 จุดคุ้มทุน</button>
-      <button class="sn-link tab-item admin-only" onclick="goTab('riskfin',this)">🚨 ความเสี่ยงเงินลงทุน</button>
     </div>
 
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-market')"><span>💰</span> ตลาด/ต้นทุน <span class="sn-caret">▾</span></button>
     <div class="sn-sub" id="sn-g-market">
-      <button class="sn-link tab-item" onclick="goTab('price',this)">💰 ราคาวันนี้</button>
       <button class="sn-link tab-item" onclick="goTab('labor',this)">👷 ค่าแรง</button>
       <button class="sn-link tab-item" onclick="goTab('elec',this)">⚡ ค่าไฟฟ้า</button>
       <button class="sn-link tab-item" onclick="goTab('stock',this)">📦 สต็อก</button>
@@ -683,14 +671,11 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
       <button class="tab-item" id="tab-risk" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
       <button class="tab-item" id="tab-wqfeed" onclick="goTab('wqfeed',this)">🌡️ น้ำ-อาหาร</button>
       <button class="tab-item" id="tab-hatchery" onclick="goTab('hatchery',this)">🦐 โรงเพาะฟัก</button>
-      <button class="tab-item admin-only" id="tab-breakeven" onclick="goTab('breakeven',this)">💰 จุดคุ้มทุน</button>
-      <button class="tab-item admin-only" id="tab-riskfin" onclick="goTab('riskfin',this)">🚨 ความเสี่ยงเงินลงทุน</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-market">
     <button class="grp-btn" onclick="toggleGrp('market')">💰 ตลาด/ต้นทุน <span class="grp-caret">▾</span></button>
     <div class="tab-dropdown">
-      <button class="tab-item" id="tab-price" onclick="goTab('price',this)">💰 ราคาวันนี้</button>
       <button class="tab-item" id="tab-labor" onclick="goTab('labor',this)">👷 ค่าแรง</button>
           <button class="tab-item" id="tab-elec" onclick="goTab('elec',this)">⚡ ค่าไฟฟ้า</button>
           <button class="tab-item" id="tab-stock" onclick="goTab('stock',this)">📦 สต็อก</button>
@@ -1149,21 +1134,6 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
     <div id="hatchery-merge-msg" style="margin-top:10px"></div>
   </div>
 </div>
-<div id="sec-breakeven" class="sec">
-  <div class="sec-hdr"><div class="sec-title">💰 จุดคุ้มทุนรายวัน (Break-even)</div></div>
-  <div style="font-size:12px;color:var(--tx3);margin-bottom:14px">เปรียบเทียบต้นทุนสะสม (ลูกกุ้ง+อาหาร+ค่าแรง+ค่าไฟฟ้าโดยประมาณ) กับมูลค่ากุ้งในบ่อ ณ ราคาตลาดวันนี้ — เฉพาะบ่อที่กำลังเลี้ยงอยู่</div>
-  <div class="g4" id="be-kpi" style="margin-bottom:16px"></div>
-  <div class="card">
-    <div class="card-t">🦐 รายละเอียดจุดคุ้มทุนรายบ่อ</div>
-    <div id="be-list"></div>
-  </div>
-</div>
-<div id="sec-riskfin" class="sec">
-  <div class="sec-hdr"><div class="sec-title">🚨 ความเสี่ยงเงินลงทุน (Risk Exposure Scorecard)</div></div>
-  <div style="font-size:12px;color:var(--tx3);margin-bottom:14px">รวมคะแนนความเสี่ยง (น้ำ + สภาพอากาศ + ผลแล็บ) เข้ากับสัดส่วนเงินลงทุนที่ยังไม่คุ้มทุน เป็น % ความเสี่ยงต่อเงินลงทุนของแต่ละบ่อ</div>
-  <div id="rf-summary" style="margin-bottom:16px"></div>
-  <div class="g3" id="rf-grid"></div>
-</div>
 <!-- CROPS -->
 <div id="sec-crops" class="sec">
   <div class="sec-hdr">
@@ -1594,63 +1564,6 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
   </div>
 </div>
 <!-- ราคาวันนี้ -->
-<div id="sec-price" class="sec">
-  <div class="sec-hdr"><div class="sec-title">💰 ราคาวันนี้</div></div>
-  <div class="g4" id="pr-kpi" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px"></div>
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-t">📝 บันทึกราคาตลาด — วันนี้</div>
-    <div class="fgrid" style="margin-bottom:14px">
-      <div class="fg"><label class="fl">วันที่</label><input type="date" class="fi" id="pr-date" onchange="loadPriceForDate()"></div>
-      <div class="fg"><label class="fl">แหล่งราคา</label>
-        <select class="fi" id="pr-source">
-          <option>ราคาเฉลี่ยตลาด (ล้ง/แพ)</option>
-          <option>ราคาสมาคมกุ้งไทย</option>
-          <option>อื่นๆ ระบุในหมายเหตุ</option>
-        </select>
-      </div>
-    </div>
-    <div class="fgrid" id="pr-fields"></div>
-    <div class="hint" style="margin-top:8px">* ใส่เฉพาะไซส์ที่มีราคาวันนั้น เว้นช่องที่ไม่มีข้อมูลได้</div>
-    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn btn-p" onclick="savePrice()">💾 บันทึกราคาวันนี้</button>
-      <button class="btn btn-s" onclick="clearPrice()">🗑️ ล้างฟอร์ม</button>
-    </div>
-    <div id="pr-msg" style="margin-top:10px"></div>
-  </div>
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-t">📊 กราฟราคาตลาดตามไซส์ — วันที่เลือก (บาท/กก.)</div>
-    <div class="pr-chart" id="pr-chart"></div>
-    <div class="hint" style="margin-top:10px">ไซส์เล็ก (เลขน้อย = ตัวใหญ่) ราคาสูงกว่าเสมอ</div>
-  </div>
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-t">💰 บันทึกการขายจริง</div>
-    <div class="fgrid">
-      <div class="fg"><label class="fl">บ่อ</label><select class="fi" id="sl-pond"><option value="">-- เลือกบ่อ --</option></select></div>
-      <div class="fg"><label class="fl">วันที่ขาย</label><input type="date" class="fi" id="sl-date"></div>
-      <div class="fg"><label class="fl">ไซส์ (ตัว/กก.)</label><input type="number" class="fi" id="sl-size" placeholder="60"></div>
-      <div class="fg"><label class="fl">น้ำหนักที่ขาย (กก.)</label><input type="number" class="fi" id="sl-weight" placeholder="850" oninput="updateSaleTotal()"></div>
-      <div class="fg"><label class="fl">ราคาที่ขายได้ (บาท/กก.)</label><input type="number" class="fi" id="sl-price" placeholder="195" oninput="updateSaleTotal()"></div>
-      <div class="fg"><label class="fl">ผู้รับซื้อ</label><input type="text" class="fi" id="sl-buyer" placeholder="เช่น ล้งสมชาย"></div>
-    </div>
-    <div class="fgrid" style="margin-top:11px">
-      <div class="fg" style="grid-column:1/-1"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="sl-notes" placeholder="เช่น หักค่าน้ำแข็ง/ค่าขนส่ง"></div>
-    </div>
-    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-      <button class="btn btn-p" onclick="saveSale()">💾 บันทึกการขาย</button>
-      <button class="btn btn-s" onclick="clearSale()">🗑️ ล้างฟอร์ม</button>
-      <span class="hint" id="sl-total"></span>
-    </div>
-    <div id="sl-msg" style="margin-top:10px"></div>
-  </div>
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-t">📋 ประวัติราคาตลาด</div>
-    <div class="tbl-wrap" id="pr-history"></div>
-  </div>
-  <div class="card">
-    <div class="card-t">📋 ประวัติการขายจริง</div>
-    <div class="tbl-wrap" id="sl-history"></div>
-  </div>
-</div>
 <!-- ค่าแรง -->
 <div id="sec-labor" class="sec">
   <div class="sec-hdr"><div class="sec-title">👷 ต้นทุนแรงงาน / ค่าแรงต่อรอบ</div></div>
@@ -2062,8 +1975,8 @@ document.addEventListener('focusout', () => {
 
 
 // ===== AUTH & ROLE =====
-const FINANCE_TABS=['tab-harvest','tab-harveststat','tab-export','tab-labor','tab-elec','tab-pl','tab-manage','tab-breakeven','tab-riskfin'];
-const FINANCE_SECS=['sec-harvest','sec-harveststat','sec-export','sec-labor','sec-elec','sec-pl','sec-manage','sec-breakeven','sec-riskfin'];
+const FINANCE_TABS=['tab-harvest','tab-harveststat','tab-export','tab-labor','tab-elec','tab-pl','tab-manage'];
+const FINANCE_SECS=['sec-harvest','sec-harveststat','sec-export','sec-labor','sec-elec','sec-pl','sec-manage'];
 function applyRole(role){
   APP_ROLE=role;
   if(role==='admin'){
@@ -3024,51 +2937,6 @@ function mergeHatcheryNames(){
   initHatchery();
   showMsg('hatchery-merge-msg','ok',`✅ รวมชื่อสำเร็จ อัปเดต ${changed} รายการ เป็น "${target}"`);
 }
-// ===== BREAK-EVEN & RISK EXPOSURE (มุมผู้บริหาร) =====
-function getElecCostForPeriodByShare(fromDate,toDate,share){
-  if(!fromDate||!toDate||!D.electricityBills?.length||!share)return 0;
-  const from=new Date(fromDate),to=new Date(toDate);
-  let total=0;
-  D.electricityBills.forEach(bill=>{
-    const [y,m]=bill.month.split('-').map(Number);
-    const mStart=new Date(y,m-1,1);
-    const mEnd=new Date(y,m,0);
-    const daysInMonth=mEnd.getDate();
-    const overlapStart=from>mStart?from:mStart;
-    const overlapEnd=to<mEnd?to:mEnd;
-    if(overlapStart<=overlapEnd){
-      const days=(overlapEnd-overlapStart)/(1000*60*60*24)+1;
-      total+=bill.totalBaht*(days/daysInMonth)*share;
-    }
-  });
-  return Math.round(total);
-}
-function pondLatestSample(p){
-  const s=(p.samples||[]);
-  return s.length?s[s.length-1]:null;
-}
-function pondCurrentBiomassKg(p){
-  return getLatestBiomass(p)||0;
-}
-function pondCurrentSize(p){ // ตัว/กก. จาก ABW ล่าสุด
-  const s=pondLatestSample(p);
-  if(s&&s.abw)return 1000/s.abw;
-  return null;
-}
-function priceForSize(size,d){
-  if(size==null)return null;
-  const list=(D.marketPrices||[]).filter(r=>r.date<=d).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
-  const rec=list[list.length-1];if(!rec||!rec.prices)return null;
-  const sizes=PRICE_SIZES.filter(sz=>rec.prices[sz]!=null&&rec.prices[sz]!=='');
-  if(!sizes.length)return null;
-  const rounded=Math.round(size);
-  if(sizes.includes(rounded))return rec.prices[rounded];
-  let lo=null,hi=null;
-  sizes.forEach(sz=>{if(sz<=size&&(lo===null||sz>lo))lo=sz;if(sz>=size&&(hi===null||sz<hi))hi=sz;});
-  if(lo!=null&&hi!=null&&lo!==hi){const t=(size-lo)/(hi-lo);return rec.prices[lo]+(rec.prices[hi]-rec.prices[lo])*t;}
-  const nearest=sizes.reduce((a,b)=>Math.abs(b-size)<Math.abs(a-size)?b:a);
-  return rec.prices[nearest];
-}
 function pondFeedCost(p){
   let cost=0;
   (p.feedLog||[]).forEach(r=>{
@@ -3083,116 +2951,6 @@ function pondFeedCost(p){
     }
   });
   return Math.round(cost);
-}
-function pondLaborCost(p){
-  return Math.round(getLaborCostForPond(p.id,p.startDate,today()));
-}
-function farmActiveBiomassTotal(){
-  return wqfeedActivePonds().reduce((s,p)=>s+pondCurrentBiomassKg(p),0);
-}
-function pondBreakeven(p){
-  const plCost=p.costFry||0;
-  const feedCost=pondFeedCost(p);
-  const laborCost=pondLaborCost(p);
-  const totalBiomass=farmActiveBiomassTotal();
-  const myBiomass=pondCurrentBiomassKg(p);
-  const share=totalBiomass>0?myBiomass/totalBiomass:0;
-  const elecCost=getElecCostForPeriodByShare(p.startDate,today(),share);
-  const cost=plCost+feedCost+laborCost+elecCost;
-  const size=pondCurrentSize(p);
-  const price=size!=null?priceForSize(size,today()):null;
-  const value=(price!=null&&myBiomass)?Math.round(myBiomass*price):0;
-  const status=cost<=0?'na':value>=cost?'ok':(value>=cost*0.5?'warn':'danger');
-  return{plCost,feedCost,laborCost,elecCost,cost,biomass:myBiomass,size,price,value,profit:value-cost,status};
-}
-function initBreakeven(){
-  populateAll();
-  renderBreakeven();
-}
-function renderBreakeven(){
-  const kpiEl=document.getElementById('be-kpi'),listEl=document.getElementById('be-list');
-  if(!kpiEl||!listEl)return;
-  const actives=wqfeedActivePonds();
-  if(!actives.length){kpiEl.innerHTML='';listEl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีบ่อที่กำลังเลี้ยงอยู่</p>';return}
-  const rows=actives.map(p=>({p,be:pondBreakeven(p)}));
-  const totCost=rows.reduce((s,r)=>s+r.be.cost,0);
-  const totValue=rows.reduce((s,r)=>s+r.be.value,0);
-  const totProfit=totValue-totCost;
-  const notYet=rows.filter(r=>r.be.status==='warn'||r.be.status==='danger');
-  kpiEl.innerHTML=`
-    <div class="ov-kk ov-kk-dark"><div class="ov-kk-l">ต้นทุนสะสมทั้งฟาร์ม</div><div class="ov-kk-v">${totCost.toLocaleString()}<span class="ov-kk-u"> บาท</span></div><div class="ov-kk-sub">${actives.length} บ่อที่กำลังเลี้ยงอยู่</div></div>
-    <div class="ov-kk ov-kk-dark"><div class="ov-kk-l">มูลค่ากุ้งในบ่อ (ราคาตลาดวันนี้)</div><div class="ov-kk-v">${totValue.toLocaleString()}<span class="ov-kk-u"> บาท</span></div><div class="ov-kk-sub">ประเมินจาก ABW ล่าสุด × ราคาไซส์ปัจจุบัน</div></div>
-    <div class="ov-kk ov-kk-dark"><div class="ov-kk-l">กำไรขั้นต้นหากจับวันนี้</div><div class="ov-kk-v" style="color:${totProfit>=0?'#c2e66e':'#ff8a70'}">${totProfit>=0?'+':''}${totProfit.toLocaleString()}<span class="ov-kk-u"> บาท</span></div><div class="ov-kk-sub">รวมทุกบ่อ (ก่อนหักค่าจับ/ขนส่ง)</div></div>
-    <div class="ov-kk ov-kk-dark"><div class="ov-kk-l">บ่อที่ยังไม่คุ้มทุน</div><div class="ov-kk-v" style="color:${notYet.length?'#ff8a70':'#c2e66e'}">${notYet.length}<span class="ov-kk-u"> บ่อ</span></div><div class="ov-kk-sub">${notYet.length?notYet.map(r=>r.p.name).join(', '):'ทุกบ่อคุ้มทุนแล้ว'}</div></div>`;
-  const badge=st=>st==='ok'?'<span class="badge" style="background:var(--ob);color:var(--ok)">✅ คุ้มทุนแล้ว</span>':st==='warn'?'<span class="badge" style="background:var(--wb);color:var(--w)">⏳ ยังไม่คุ้มทุน</span>':st==='danger'?'<span class="badge" style="background:var(--db);color:var(--d)">🔴 ห่างจุดคุ้มทุน</span>':'<span class="badge" style="background:var(--sf2);color:var(--tx3)">— ไม่มีข้อมูลพอ</span>';
-  listEl.innerHTML=rows.map(({p,be})=>{
-    const max=Math.max(be.cost,be.value,1);
-    const costW=Math.round(be.cost/max*100),valW=Math.round(be.value/max*100);
-    const age=p.startDate?Math.floor((new Date()-new Date(p.startDate))/86400000):null;
-    return`<div style="padding:10px 0;border-bottom:1px solid var(--bd)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px">
-        <div><b>${p.name}</b><span style="font-size:11px;color:var(--tx3);margin-left:8px">วันที่ ${age!=null?age:'-'}</span></div>
-        ${badge(be.status)}
-      </div>
-      <div style="height:24px;background:var(--sf2);border-radius:8px;overflow:hidden;display:flex;border:1px solid var(--bd)">
-        <div style="background:linear-gradient(90deg,#dc2626,#f0a83a);height:100%;display:flex;align-items:center;color:#fff;font-size:11px;font-weight:700;padding-left:8px;white-space:nowrap;width:${costW}%">${be.cost.toLocaleString()}</div>
-        <div style="background:linear-gradient(90deg,#15803d,#22a35a);height:100%;display:flex;align-items:center;justify-content:flex-end;color:#fff;font-size:11px;font-weight:700;padding-right:8px;white-space:nowrap;width:${valW}%">${be.value.toLocaleString()}</div>
-      </div>
-      <div style="font-size:11px;color:var(--tx3);margin-top:4px">ต้นทุน: ลูกกุ้ง ${be.plCost.toLocaleString()} + อาหาร ${be.feedCost.toLocaleString()} + ค่าแรง ${be.laborCost.toLocaleString()} + ไฟฟ้า(ประเมิน) ${be.elecCost.toLocaleString()} = ${be.cost.toLocaleString()} บาท ${be.size?`· ไซส์ปัจจุบัน ~${be.size.toFixed(0)} ตัว/กก.`:''} ${be.plCost===0?' · ⚠️ ยังไม่ได้กรอกต้นทุนลูกกุ้ง':''}</div>
-    </div>`;
-  }).join('');
-}
-function riskExposureForPond(p){
-  const d=_wxDaily;
-  let maxS=0,reasons=[];
-  if(d&&d.time){
-    const days=d.time.slice(1,4).map((_,i)=>calcRisk(d,i+1,p));
-    maxS=Math.max(...days.map(r=>r.score),0);
-    days.forEach(r=>r.reasons.forEach(x=>{if(!reasons.some(y=>y.m===x.m))reasons.push(x)}));
-  }
-  const be=pondBreakeven(p);
-  const unrecovered=be.cost>0?Math.max(0,Math.min(1,(be.cost-be.value)/be.cost)):0;
-  const riskNorm=Math.min(1,maxS/10);
-  const pct=Math.round((riskNorm*0.6+unrecovered*0.4)*100);
-  const exposureBaht=Math.round(be.cost*unrecovered);
-  return{pct,exposureBaht,reasons,be,maxS};
-}
-function initRiskFin(){
-  populateAll();
-  if(!_wxDaily){fetchWx().then(renderRiskFin).catch(()=>renderRiskFin())}
-  else renderRiskFin();
-}
-function renderRiskFin(){
-  const sumEl=document.getElementById('rf-summary'),gridEl=document.getElementById('rf-grid');
-  if(!sumEl||!gridEl)return;
-  const actives=wqfeedActivePonds();
-  const rows=actives.map(p=>({p,r:riskExposureForPond(p)})).sort((a,b)=>b.r.pct-a.r.pct);
-  const crit=rows.filter(x=>x.r.pct>=70),high=rows.filter(x=>x.r.pct>=50&&x.r.pct<70);
-  const totalExposure=rows.reduce((s,x)=>s+x.r.exposureBaht,0);
-  if(!rows.length){sumEl.innerHTML='';gridEl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีบ่อที่กำลังเลี้ยงอยู่</p>';return}
-  if(crit.length+high.length===0){
-    sumEl.innerHTML=`<div class="card" style="background:var(--ob);border:1px solid var(--ok)"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:26px">✅</span><div style="font-weight:700;color:var(--ok)">ทุกบ่อความเสี่ยงเงินลงทุนต่ำในขณะนี้</div></div></div>`;
-  }else{
-    const names=[...crit,...high].map(x=>x.p.name).join(', ');
-    sumEl.innerHTML=`<div class="card" style="background:var(--db);border:1px solid var(--d)"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:26px">⚠️</span><div><div style="font-weight:800;font-size:15px;color:var(--d)">${crit.length+high.length} บ่อ ความเสี่ยงสูง/วิกฤต รวมมูลค่าลงทุนเสี่ยง ${totalExposure.toLocaleString()} บาท</div><div style="font-size:12px;color:var(--tx3);margin-top:2px">บ่อที่ต้องตัดสินใจเร่งด่วน: ${names}</div></div></div></div>`;
-  }
-  gridEl.innerHTML=rows.map(({p,r})=>{
-    const cls=r.pct>=70?'crit':r.pct>=50?'high':r.pct>=25?'mid':'low';
-    const col=cls==='crit'?'var(--d)':cls==='high'?'#e85d3f':cls==='mid'?'var(--w)':'var(--ok)';
-    const age=p.startDate?Math.floor((new Date()-new Date(p.startDate))/86400000):null;
-    const factorsHtml=r.reasons.length?r.reasons.slice(0,3).map(x=>`<div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--tx2)"><span style="width:7px;height:7px;border-radius:50%;flex:none;background:${x.l==='danger'?'var(--d)':x.l==='warn'?'var(--w)':'var(--ok)'}"></span>${x.m}</div>`).join(''):'<div style="font-size:11.5px;color:var(--ok)">✅ ไม่พบปัจจัยเสี่ยงเด่นชัด</div>';
-    return`<div class="card" style="position:relative;overflow:hidden">
-      <div style="position:absolute;left:0;top:0;bottom:0;width:5px;background:${col}"></div>
-      <div style="padding-left:6px">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-          <div><div style="font-weight:700;font-size:14px">บ่อ ${p.name}</div><div style="font-size:11px;color:var(--tx3)">วันที่เลี้ยง ${age!=null?age:'-'} · มูลค่าลงทุนสะสม ${r.be.cost.toLocaleString()} บ.</div></div>
-          <div style="font-size:26px;font-weight:800;color:${col}">${r.pct}%</div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:4px">${factorsHtml}</div>
-        <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--bd);font-size:11.5px;color:var(--tx3)">เงินลงทุนที่เสี่ยง: <span style="font-weight:700;color:var(--tx)">${r.exposureBaht.toLocaleString()} บาท</span></div>
-      </div>
-    </div>`;
-  }).join('');
 }
 function fD(d){if(!d)return'-';return new Date(d).toLocaleDateString('th-TH',{year:'2-digit',month:'short',day:'numeric'})}
 // ข้อ 2: แปลง cropYear เป็น พ.ศ. 4 หลักเสมอ (รองรับ BE 4 หลัก, CE 4 หลัก, และ BE 2 หลัก)
@@ -3369,7 +3127,7 @@ function populateAll(){
   const cpyEl=document.getElementById('settings-crops-per-year');
   if(cpyEl)cpyEl.value=String(D.settings?.cropsPerYear||2);
   const simple={
-    'ds-pond':'','sl-pond':'','sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all','lc-pond':'',
+    'ds-pond':'','sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all','lc-pond':'',
   };
   Object.entries(simple).forEach(([id,def])=>{
     const el=document.getElementById(id);if(!el)return;const cur=el.value;
@@ -3727,10 +3485,10 @@ function goTab(t,btn){
   }
   if(btn.classList.contains('sn-top'))document.querySelectorAll('.sn-sub').forEach(s=>s.classList.remove('open'));
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));document.getElementById('sec-'+t).classList.add('on');
-  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='disease')initDisease();if(t==='price')initPrice();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='stock')initStock();if(t==='abw')initAbw();if(t==='feed')initFeed();if(t==='pl')initPL();
+  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='disease')initDisease();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='stock')initStock();if(t==='abw')initAbw();if(t==='feed')initFeed();if(t==='pl')initPL();
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
   if(t==='chem')initChem();if(t==='lab')initLab();
-  if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();if(t==='wqfeed')initWqFeed();if(t==='hatchery')initHatchery();if(t==='breakeven')initBreakeven();if(t==='riskfin')initRiskFin();
+  if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();if(t==='wqfeed')initWqFeed();if(t==='hatchery')initHatchery();
   if(t==='manage')renderManage();
   if(t==='users')renderUsers();
   if(t==='harvest'){
@@ -4525,136 +4283,6 @@ function clearDs(){
   dwReset();renderDiseaseWatch();
   const pid=document.getElementById('ds-pond')?.value;const p=pid?pond(pid):null;
   showMsg('ds-msg','ok',p?`🧹 ล้างฟอร์มแล้ว — ยังเลือกบ่อ <strong>${p.name}</strong> ค้างอยู่`:'🧹 ล้างฟอร์มแล้ว');
-}
-// ===== ราคาวันนี้ (ราคาตลาด + ราคาขายจริง) =====
-const PRICE_SIZES=[25,30,40,50,60,70,80,100];
-function initPrice(){
-  populateAll();
-  const pd=document.getElementById('pr-date');if(pd&&!pd.value)pd.value=today();
-  const sd=document.getElementById('sl-date');if(sd&&!sd.value)sd.value=today();
-  document.getElementById('pr-fields').innerHTML=PRICE_SIZES.map(sz=>`<div class="fg"><label class="fl"><span class="pr-size-tag">ไซส์ ${sz}</span> ตัว/กก.</label><input type="number" class="fi" id="pf-${sz}" placeholder="บาท/กก." oninput="renderPriceChart()"></div>`).join('');
-  loadPriceForDate();
-  renderPriceChart();
-  renderPriceHistory();
-  renderSaleHistory();
-  renderPriceKPI();
-}
-function findPriceEntry(d){return(D.marketPrices||[]).find(r=>r.date===d)}
-function loadPriceForDate(){
-  const d=document.getElementById('pr-date')?.value;
-  const rec=d?findPriceEntry(d):null;
-  PRICE_SIZES.forEach(sz=>{const e=document.getElementById('pf-'+sz);if(e)e.value=rec&&rec.prices&&rec.prices[sz]!==undefined&&rec.prices[sz]!==null?rec.prices[sz]:''});
-  const srcEl=document.getElementById('pr-source');if(srcEl)srcEl.value=rec?.source||'ราคาเฉลี่ยตลาด (ล้ง/แพ)';
-  const msg=document.getElementById('pr-msg');
-  if(msg){
-    if(rec)showMsg('pr-msg','warn',`⚠️ มีข้อมูลราคาวันที่ ${fD(d)} อยู่แล้ว — กด "บันทึก" เพื่ออัปเดต`);
-    else msg.innerHTML='';
-  }
-  renderPriceChart();
-}
-function savePrice(){
-  const d=document.getElementById('pr-date').value;
-  if(!d){showMsg('pr-msg','warn','กรุณาเลือกวันที่');return}
-  D.marketPrices=D.marketPrices||[];
-  const prices={};
-  PRICE_SIZES.forEach(sz=>{const v=document.getElementById('pf-'+sz)?.value;if(v!==''&&v!==undefined)prices[sz]=parseFloat(v)});
-  const idx=D.marketPrices.findIndex(r=>r.date===d);
-  const entry={date:d,source:document.getElementById('pr-source').value,prices};
-  if(idx>=0)D.marketPrices[idx]=entry;else{D.marketPrices.push(entry);D.marketPrices.sort((a,b)=>new Date(a.date)-new Date(b.date))}
-  save();
-  showMsg('pr-msg','ok',`✅ บันทึกราคาวันที่ ${fD(d)} สำเร็จ`);
-  renderPriceChart();renderPriceHistory();renderPriceKPI();
-}
-function clearPrice(){
-  document.getElementById('pr-date').value=today();
-  PRICE_SIZES.forEach(sz=>{const e=document.getElementById('pf-'+sz);if(e)e.value=''});
-  document.getElementById('pr-msg').innerHTML='';
-  renderPriceChart();
-}
-function renderPriceChart(){
-  const el=document.getElementById('pr-chart');if(!el)return;
-  const vals=PRICE_SIZES.map(sz=>{const v=document.getElementById('pf-'+sz)?.value;return v!==''&&v!==undefined?parseFloat(v):null});
-  const max=Math.max(1,...vals.filter(v=>v!==null));
-  el.innerHTML=PRICE_SIZES.map((sz,i)=>{
-    const v=vals[i];
-    const h=v!==null?Math.max(6,Math.round(v/max*100)):0;
-    return `<div class="pr-col"><div class="pr-bar-val">${v!==null?v:'-'}</div><div class="pr-bar" style="height:${h}%;${v===null?'background:var(--sf2)':''}"></div><div class="pr-bar-lbl">${sz}</div></div>`;
-  }).join('');
-}
-function renderPriceKPI(){
-  const el=document.getElementById('pr-kpi');if(!el)return;
-  const list=(D.marketPrices||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
-  const last=list[list.length-1],prev=list[list.length-2];
-  const avg=r=>{if(!r||!r.prices)return null;const vs=Object.values(r.prices).filter(v=>v!==null&&v!==undefined);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null};
-  const lastAvg=avg(last),prevAvg=avg(prev);
-  const diff=(lastAvg!==null&&prevAvg!==null)?Math.round((lastAvg-prevAvg)*10)/10:null;
-  const diffCls=diff===null?'flat':diff>0?'up':diff<0?'down':'flat';
-  const diffTxt=diff===null?'—':diff>0?`▲ +${diff}`:diff<0?`▼ ${diff}`:'— 0';
-  let bestSize='-',bestVal=null;
-  if(last&&last.prices){Object.entries(last.prices).forEach(([sz,v])=>{if(v!==null&&v!==undefined&&(bestVal===null||v>bestVal)){bestVal=v;bestSize=sz}})}
-  const sales=(D.sales||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
-  const lastSale=sales[sales.length-1];
-  let saleVsMkt='-';
-  if(lastSale){
-    const mkt=findPriceEntry(lastSale.date);
-    const mktAvg=avg(mkt);
-    if(mktAvg!==null){const dv=Math.round((lastSale.pricePerKg-mktAvg)*10)/10;saleVsMkt=`${dv>0?'+':''}${dv} บาท/กก.`}
-  }
-  el.innerHTML=`
-    <div class="card"><div class="kpi-l" style="font-size:11.5px;color:var(--tx2);margin-bottom:6px">ราคาเฉลี่ยล่าสุด (ทุกไซส์)</div><div style="font-size:20px;font-weight:700;color:var(--p)">${lastAvg!==null?Math.round(lastAvg):'-'} <span style="font-size:12px;color:var(--tx2)">บาท/กก.</span></div><div class="${diffCls}" style="font-size:11px;margin-top:4px">${diffTxt}${diff!==null?' จากครั้งก่อน':''}</div></div>
-    <div class="card"><div class="kpi-l" style="font-size:11.5px;color:var(--tx2);margin-bottom:6px">ไซส์ที่ราคาดีที่สุด</div><div style="font-size:20px;font-weight:700;color:var(--p)">${bestSize} <span style="font-size:12px;color:var(--tx2)">ตัว/กก.</span></div><div style="font-size:11px;color:var(--tx3);margin-top:4px">${bestVal!==null?bestVal+' บาท/กก.':'-'}</div></div>
-    <div class="card"><div class="kpi-l" style="font-size:11.5px;color:var(--tx2);margin-bottom:6px">ขายจริงล่าสุด</div><div style="font-size:18px;font-weight:700;color:var(--p)">${lastSale?fD(lastSale.date):'-'}</div><div style="font-size:11px;color:var(--tx3);margin-top:4px">${lastSale?`บ่อ ${pond(lastSale.pondId)?.name||'-'} · ไซส์ ${lastSale.size} · ${lastSale.pricePerKg} บาท/กก.`:'ยังไม่มีข้อมูล'}</div></div>
-    <div class="card"><div class="kpi-l" style="font-size:11.5px;color:var(--tx2);margin-bottom:6px">ส่วนต่าง ราคาขาย vs ตลาด</div><div style="font-size:20px;font-weight:700;color:var(--p)">${saleVsMkt}</div><div style="font-size:11px;color:var(--tx3);margin-top:4px">เทียบราคาตลาดวันที่ขาย</div></div>`;
-}
-function renderPriceHistory(){
-  const el=document.getElementById('pr-history');if(!el)return;
-  const list=(D.marketPrices||[]).slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
-  if(!list.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
-  const avg=r=>{const vs=Object.values(r.prices||{}).filter(v=>v!==null&&v!==undefined);return vs.length?Math.round(vs.reduce((a,b)=>a+b,0)/vs.length):null};
-  el.innerHTML=`<table class="tbl"><thead><tr><th>วันที่</th>${PRICE_SIZES.map(sz=>`<th>${sz}</th>`).join('')}<th>เฉลี่ย</th><th>เทียบครั้งก่อน</th></tr></thead><tbody>${
-    list.map((r,i)=>{
-      const prevEntry=list[i+1];
-      const a1=avg(r),a0=prevEntry?avg(prevEntry):null;
-      const diff=(a1!==null&&a0!==null)?a1-a0:null;
-      const cls=diff===null?'diff-flat':diff>0?'diff-up':diff<0?'diff-down':'diff-flat';
-      const txt=diff===null?'—':diff>0?`▲ +${diff}`:diff<0?`▼ ${diff}`:'— 0';
-      return `<tr><td>${fD(r.date)}</td>${PRICE_SIZES.map(sz=>`<td>${r.prices&&r.prices[sz]!==undefined&&r.prices[sz]!==null?r.prices[sz]:'-'}</td>`).join('')}<td>${a1!==null?a1:'-'}</td><td><span class="diff-pill ${cls}">${txt}</span></td></tr>`;
-    }).join('')}</tbody></table>`;
-}
-function updateSaleTotal(){
-  const w=parseFloat(document.getElementById('sl-weight')?.value),p=parseFloat(document.getElementById('sl-price')?.value);
-  const el=document.getElementById('sl-total');if(!el)return;
-  el.textContent=(!isNaN(w)&&!isNaN(p))?`ยอดรวมโดยประมาณ: ${Math.round(w*p).toLocaleString()} บาท`:'';
-}
-function saveSale(){
-  const pid=document.getElementById('sl-pond').value,d=document.getElementById('sl-date').value;
-  const size=document.getElementById('sl-size').value,weight=document.getElementById('sl-weight').value,price=document.getElementById('sl-price').value;
-  if(!pid||!d||!size||!weight||!price){showMsg('sl-msg','warn','กรุณากรอกบ่อ วันที่ ไซส์ น้ำหนัก และราคาให้ครบ');return}
-  D.sales=D.sales||[];
-  D.sales.push({date:d,pondId:pid,size:parseFloat(size),weightKg:parseFloat(weight),pricePerKg:parseFloat(price),buyer:document.getElementById('sl-buyer').value,notes:document.getElementById('sl-notes').value});
-  D.sales.sort((a,b)=>new Date(a.date)-new Date(b.date));
-  save();
-  const p=pond(pid);
-  showMsg('sl-msg','ok',`✅ บันทึกการขาย บ่อ ${p?.name||''} วันที่ ${fD(d)} สำเร็จ`);
-  clearSale(true);
-  renderSaleHistory();renderPriceKPI();
-}
-function clearSale(keepMsg){
-  document.getElementById('sl-date').value=today();
-  document.getElementById('sl-size').value='';
-  document.getElementById('sl-weight').value='';
-  document.getElementById('sl-price').value='';
-  document.getElementById('sl-buyer').value='';
-  document.getElementById('sl-notes').value='';
-  document.getElementById('sl-total').textContent='';
-  if(!keepMsg)document.getElementById('sl-msg').innerHTML='';
-}
-function renderSaleHistory(){
-  const el=document.getElementById('sl-history');if(!el)return;
-  const list=(D.sales||[]).slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
-  if(!list.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
-  el.innerHTML=`<table class="tbl"><thead><tr><th>วันที่</th><th>บ่อ</th><th>ไซส์</th><th>น้ำหนัก (กก.)</th><th>ราคา (บาท/กก.)</th><th>ยอดรวม (บาท)</th><th>ผู้รับซื้อ</th></tr></thead><tbody>${
-    list.map(r=>`<tr><td>${fD(r.date)}</td><td>${pond(r.pondId)?.name||'-'}</td><td>${r.size}</td><td>${r.weightKg.toLocaleString()}</td><td>${r.pricePerKg}</td><td>${Math.round(r.weightKg*r.pricePerKg).toLocaleString()}</td><td>${r.buyer||'-'}</td></tr>`).join('')}</tbody></table>`;
 }
 // ===== ค่าแรง / แรงงาน =====
 function laborTab(paneId, btn) {
