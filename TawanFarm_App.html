@@ -940,6 +940,7 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
     <div class="card">
       <div class="card-t">📝 บันทึกการเปลี่ยน/เติมน้ำ</div>
       <div style="display:flex;flex-direction:column;gap:12px">
+        <input type="hidden" id="wl-edit-id">
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
           <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="wl-pond" onchange="onWlPond()"><option value="">-- เลือกบ่อ --</option></select></div>
           <div class="fg"><label class="fl">วันที่ *</label><input type="date" class="fi" id="wl-date" onchange="calcAge('wl')"></div>
@@ -3030,7 +3031,7 @@ function pondFeedCost(p){
   return Math.round(cost);
 }
 function pondLaborCost(p){
-  return Math.round((D.laborCosts||[]).filter(r=>r.pondId===p.id).reduce((s,r)=>s+(r.amount||0),0));
+  return Math.round(getLaborCostForPond(p.id,p.startDate,today()));
 }
 function farmActiveBiomassTotal(){
   return wqfeedActivePonds().reduce((s,p)=>s+pondCurrentBiomassKg(p),0);
@@ -5714,6 +5715,7 @@ function editSample(pid,d){
 function editWaterLog(pid,idx){
   const p=pond(pid);if(!p||!p.waterLog||!p.waterLog[idx])return;
   const r=p.waterLog[idx];
+  document.getElementById('wl-edit-id').value=r.id||'';
   document.getElementById('wl-pond').value=pid;
   document.getElementById('wl-date').value=r.date;
   syncDateHint(document.getElementById('wl-date'));
@@ -6016,15 +6018,20 @@ function saveWaterLog(){
   const pid=document.getElementById('wl-pond').value,d=document.getElementById('wl-date').value;
   if(!pid||!d){showMsg('wl-msg','warn','กรุณาเลือกบ่อและวันที่');return}
   const p=pond(pid);if(!p)return;if(!p.waterLog)p.waterLog=[];
-  const rec={id:'wl_'+pid+'_'+d+'_'+Date.now(),date:d,age:parseInt(document.getElementById('wl-age').value)||0,
+  const editId=document.getElementById('wl-edit-id').value;
+  const rec={id:editId||('wl_'+pid+'_'+d+'_'+Date.now()),date:d,age:parseInt(document.getElementById('wl-age').value)||0,
     action:document.getElementById('wl-action').value,vol:parseFloat(document.getElementById('wl-vol').value)||null,
     notes:document.getElementById('wl-notes').value};
-  p.waterLog.push(rec);p.waterLog.sort((a,b)=>new Date(a.date)-new Date(b.date));
-  showMsg('wl-msg','ok',`✅ ${WL_ACT[rec.action]||rec.action} ${rec.vol||'-'} ซม. บ่อ ${p.name}`);
+  const idx=editId?p.waterLog.findIndex(r=>r.id===editId):-1;
+  if(idx>=0){p.waterLog[idx]=rec;showMsg('wl-msg','warn',`อัปเดต ${WL_ACT[rec.action]||rec.action} ${rec.vol||'-'} ซม. บ่อ ${p.name}`);}
+  else{p.waterLog.push(rec);showMsg('wl-msg','ok',`✅ ${WL_ACT[rec.action]||rec.action} ${rec.vol||'-'} ซม. บ่อ ${p.name}`);}
+  p.waterLog.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  document.getElementById('wl-edit-id').value='';
   save();renderWaterTable();renderWaterSummary();
 }
 function clearWaterLog(){
   document.getElementById('wl-date').value=today();
+  document.getElementById('wl-edit-id').value='';
   ['wl-vol','wl-notes'].forEach(id=>{document.getElementById(id).value=''});
   document.getElementById('wl-msg').innerHTML='';calcAge('wl');
 }
