@@ -1330,7 +1330,7 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
           <div class="fg"><label class="fl">ไซส์จับเฉลี่ย (ตัว/กก.)</label><input type="number" class="fi" id="ecm-size" step="1" placeholder="60"></div>
           <div class="fg"><label class="fl">ตัวที่จับได้ (ตัว)</label><input type="number" class="fi" id="ecm-caught" placeholder="0"></div>
           <div class="fg"><label class="fl">อัตรารอด (%)</label><input type="number" class="fi" id="ecm-survival" step="0.1" placeholder="0"></div>
-          <div class="fg"><label class="fl">FCR</label><input type="number" class="fi" id="ecm-fcr" step="0.01" placeholder="0"></div>
+          <div class="fg"><label class="fl">FCR สุดท้าย</label><input type="number" class="fi" id="ecm-fcr" step="0.01" placeholder="0"></div>
           <div class="fg"><label class="fl">ราคาขาย (บาท/กก.)</label><input type="number" class="fi" id="ecm-price" step="0.5" placeholder="130"></div>
         </div>
       </div>
@@ -1519,7 +1519,7 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
   </div>
   <div class="card">
     <div class="tbl-wrap">
-      <table class="tbl"><thead><tr><th>ชื่อบ่อ</th><th>ยอดปล่อย</th><th>ขนาด (ไร่)</th><th>ความหนาแน่น</th><th>วันปล่อย</th><th>อายุ</th><th>น้ำ</th><th>อาหาร</th><th>สุ่ม</th><th>แล็บ</th><th>FCR</th><th>อัตราโต (ก./วัน)</th><th>จัดการ</th></tr></thead><tbody id="mg-tbody"></tbody></table>
+      <table class="tbl"><thead><tr><th>ชื่อบ่อ</th><th>ยอดปล่อย</th><th>ขนาด (ไร่)</th><th>ความหนาแน่น</th><th>วันปล่อย</th><th>อายุ</th><th>น้ำ</th><th>อาหาร</th><th>สุ่ม</th><th>แล็บ</th><th>อัตราโต (ก./วัน)</th><th>จัดการ</th></tr></thead><tbody id="mg-tbody"></tbody></table>
     </div>
   </div>
   <div class="card admin-only" style="border:2px dashed var(--wr);background:var(--sf2)">
@@ -4078,7 +4078,6 @@ function renderPondDetail(id){
     ${pdg!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">อัตราโต</span><span style="font-weight:600">${pdg} กรัม/วัน</span></div>`:''}
     ${lat.survivalRate!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">Survival Rate</span><span style="font-weight:600">${lat.survivalRate}%</span></div>`:''}
     ${biomass!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">Biomass (ประเมิน)</span><span style="font-weight:600">${Math.round(biomass).toLocaleString()} กก.</span></div>`:''}
-    ${fcr?`<div class="pd-water-row"><span style="color:var(--tx2)">FCR</span><span style="font-weight:600">${fcr}</span></div>`:''}
   `:'<div style="color:var(--tx3);font-size:13px;padding:7px 0">ยังไม่มีข้อมูลสุ่มตัวอย่าง</div>';
 
   // ===== Water management section =====
@@ -4109,8 +4108,8 @@ function renderPondDetail(id){
       <div style="font-size:22px;font-weight:500;color:#15803d;line-height:1">${cumFeed?cumFeed.toLocaleString():'—'}</div>
       <div style="font-size:10px;color:#16a34a;margin-top:3px">กก. ตลอดรอบ</div>
     </div>
-    <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px">
-      <div style="font-size:10px;color:#16a34a;margin-bottom:4px">FCR</div>
+    <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px" title="ประเมินจากอาหารสะสม ÷ biomass ประเมิน — ไม่ใช่ FCR สุดท้ายตอนปิดรอบ">
+      <div style="font-size:10px;color:#16a34a;margin-bottom:4px">FCR ประเมิน</div>
       <div style="font-size:22px;font-weight:500;color:${fcrValColor};line-height:1">${fcr??'—'}</div>
       <div style="font-size:10px;color:#16a34a;margin-top:3px">เป้า &lt; 1.5</div>
     </div>
@@ -5879,7 +5878,6 @@ function feedGridRow(p,d,feedItems){
   const suggestedTotal=existing?existing.totalFeed:(prev?prev.totalFeed:null);
   const suggestedStock=existing?(existing.stockItemId||''):(prev?(prev.stockItemId||''):'');
   const suggestedBrand=existing?(existing.feedBrand||''):(prev?(prev.feedBrand||''):'');
-  const fcr=getFCR(p);
   const rid=p.id;
   const rateTxt=(bio&&suggestedTotal)?((suggestedTotal/bio)*100).toFixed(1)+'%':'-';
   return`<tr data-pond="${rid}">
@@ -5889,7 +5887,6 @@ function feedGridRow(p,d,feedItems){
     <td style="text-align:right;color:var(--tx3)">${prev&&prev.totalFeed!=null?prev.totalFeed.toFixed(1):'-'}</td>
     <td style="text-align:right"><input type="number" step="0.1" class="fi" style="width:90px;text-align:right" id="fdg-${rid}-total" value="${suggestedTotal!=null?suggestedTotal:''}" placeholder="0.0" oninput="fdGridCalcRate('${rid}')"></td>
     <td style="text-align:right" id="fdg-${rid}-rate">${rateTxt}</td>
-    <td style="text-align:right;color:var(--tx3)">${fcr||'-'}</td>
     <td><input type="text" class="fi" style="width:100px" id="fdg-${rid}-brand" value="${suggestedBrand}" placeholder="ยี่ห้อ/เบอร์"></td>
     <td><select class="fi" style="width:170px" id="fdg-${rid}-stock"><option value="">-- ไม่ตัดสต็อก --</option>${feedItems.map(i=>`<option value="${i.id}"${i.id===suggestedStock?' selected':''}>${i.name} — คงเหลือ ${i.qty} ${i.unit||'กระสอบ'}</option>`).join('')}</select></td>
     <td><input type="text" class="fi" style="width:120px" id="fdg-${rid}-notes" value="${existing?.notes||''}" placeholder="-"></td>
@@ -5904,7 +5901,7 @@ function renderFeedGrid(){
   wrap.innerHTML=`<table class="tbl" style="white-space:nowrap"><thead><tr>
     <th>บ่อ</th><th>อายุ</th><th style="text-align:right">Biomass</th><th style="text-align:right">เมื่อวาน</th>
     <th style="text-align:right">อาหารวันนี้ (กก.)</th><th style="text-align:right">Feed Rate</th>
-    <th style="text-align:right">FCR</th><th>ยี่ห้อ/เบอร์</th><th>สต็อกที่ตัด</th><th>หมายเหตุ</th>
+    <th>ยี่ห้อ/เบอร์</th><th>สต็อกที่ตัด</th><th>หมายเหตุ</th>
   </tr></thead><tbody>${ponds.map(p=>feedGridRow(p,d,feedItems)).join('')}</tbody></table>`;
 }
 function fdGridCalcRate(pid){
@@ -6880,10 +6877,9 @@ function renderManage(){
     const age=p.startDate?dDiff(p.startDate,today()):null;
     const ageCell=(age===null)?'<span style="color:var(--tx3)">ยังไม่ลงกุ้ง</span>':age<0?`<span style="color:var(--in)">เตรียมบ่อ (เหลือ ${Math.abs(age)} วัน)</span>`:`${age} วัน`;
     const active=age!==null&&age>=0; // ลงกุ้งแล้วและไม่ได้อยู่ระหว่างเตรียมบ่อ — ใช้ตัดสินว่า "ควรมีข้อมูล" หรือยัง
-    const fcr=getFCR(p);const adg=getPDG(p.samples||[]);
-    const fcrCell=fcr?`<strong style="color:${fcr<1.3?'var(--ok)':fcr<1.6?'var(--w)':'var(--d)'}">${fcr}</strong>`:'<span style="color:var(--tx3)">-</span>';
+    const adg=getPDG(p.samples||[]);
     const adgCell=adg?`${adg}`:'<span style="color:var(--tx3)">-</span>';
-    return`<tr><td><strong style="color:var(--p)">${p.name}</strong></td><td>${p.stock.toLocaleString()}</td><td>${p.size}</td><td>${dens(p)} ตัว/ตรม.</td><td>${p.startDate?fD(p.startDate):'-'}</td><td>${ageCell}</td><td>${mgCountCell(p.records.length,active)}</td><td>${mgCountCell((p.feedLog||[]).length,active)}</td><td>${mgCountCell((p.samples||[]).length,active)}</td><td>${mgCountCell((p.labResults||[]).length,active)}</td><td>${fcrCell}</td><td>${adgCell}</td><td style="display:flex;gap:6px"><button class="btn btn-s btn-sm" onclick="editPond('${p.id}')">✏️</button><button class="btn btn-d btn-sm" onclick="delPond('${p.id}')">🗑️</button></td></tr>`;
+    return`<tr><td><strong style="color:var(--p)">${p.name}</strong></td><td>${p.stock.toLocaleString()}</td><td>${p.size}</td><td>${dens(p)} ตัว/ตรม.</td><td>${p.startDate?fD(p.startDate):'-'}</td><td>${ageCell}</td><td>${mgCountCell(p.records.length,active)}</td><td>${mgCountCell((p.feedLog||[]).length,active)}</td><td>${mgCountCell((p.samples||[]).length,active)}</td><td>${mgCountCell((p.labResults||[]).length,active)}</td><td>${adgCell}</td><td style="display:flex;gap:6px"><button class="btn btn-s btn-sm" onclick="editPond('${p.id}')">✏️</button><button class="btn btn-d btn-sm" onclick="delPond('${p.id}')">🗑️</button></td></tr>`;
   }).join('');
 }
 function openAddPond(){
@@ -7523,15 +7519,14 @@ function openCropModal(pid){
   document.getElementById('cm-name').textContent=p.name;
   document.getElementById('cm-close-date').value=today();
   syncDateHint(document.getElementById('cm-close-date'));
-  // auto-fill FCR
-  const cumFeed=getCumFeed(p);
-  document.getElementById('cm-cost-feed').value=0;
-  // auto-calc FCR if possible
   document.getElementById('cm-fcr').value='';
   // auto-fill revenue when price+weight change
-  ['cm-weight','cm-price','cm-caught','cm-cost-fry','cm-cost-chem','cm-cost-other'].forEach(id=>{
+  ['cm-weight','cm-price','cm-caught','cm-cost-chem','cm-cost-other'].forEach(id=>{
     document.getElementById(id).value='';
   });
+  // ── ต้นทุนลูกกุ้ง/อาหาร ดึงจากข้อมูลที่มีอยู่แล้วในระบบมาให้ ไม่ต้องพิมพ์ซ้ำ (ลูกกุ้งยังแก้ไขได้ถ้าตัวเลขจริงต่างจากนี้) ──
+  document.getElementById('cm-cost-fry').value=p.costFry||'';
+  document.getElementById('cm-cost-feed').value=pondFeedCost(p)||'';
   const autoLabor=getLaborCostForPond(pid,p.startDate,today());
   document.getElementById('cm-cost-labor').value=autoLabor||'';
   const autoElec=getElecCostForPeriod(p.startDate,today());
