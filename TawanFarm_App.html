@@ -1138,6 +1138,16 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
     <div style="position:relative;height:220px"><canvas id="hatchery-chart"></canvas></div>
   </div>
   <div class="card"><div class="card-t">📋 สรุปตามโรงเพาะฟัก</div><div id="hatchery-table"></div></div>
+  <div class="card" id="hatchery-merge-card" style="display:none">
+    <div class="card-t">🔧 รวมชื่อโรงเพาะฟักที่สะกดต่างกัน</div>
+    <div style="font-size:12px;color:var(--tx3);margin-bottom:10px">เลือกชื่อที่หมายถึงโรงเพาะฟักเดียวกัน (เช่น "cp ชุมพร1" กับ "ซีพี") อย่างน้อย 2 ชื่อ แล้วกรอกชื่อที่ต้องการใช้จริง — ระบบจะแก้ทุกบ่อ/ทุกรอบเลี้ยงที่เกี่ยวข้องให้อัตโนมัติ (Admin เท่านั้น)</div>
+    <div id="hatchery-merge-list" style="max-height:260px;overflow-y:auto;margin-bottom:12px"></div>
+    <div class="fgrid" style="grid-template-columns:1fr auto;align-items:end">
+      <div class="fg"><label class="fl">รวมเป็นชื่อ</label><input type="text" class="fi" id="hatchery-merge-target" placeholder="เช่น ซีพี ชุมพร1"></div>
+      <button class="btn btn-p" onclick="mergeHatcheryNames()">🔗 รวมชื่อที่เลือก</button>
+    </div>
+    <div id="hatchery-merge-msg" style="margin-top:10px"></div>
+  </div>
 </div>
 <div id="sec-breakeven" class="sec">
   <div class="sec-hdr"><div class="sec-title">💰 จุดคุ้มทุนรายวัน (Break-even)</div></div>
@@ -2911,7 +2921,8 @@ function hatcheryStats(){
   const groups={};
   D.ponds.forEach(p=>{
     (p.cropHistory||[]).forEach(c=>{
-      if(!c.closed||!c.harvestResult)return;
+      // ── ทุก record ใน cropHistory คือรอบที่ปิดแล้วอยู่แล้ว (ไม่ต้องพึ่ง c.closed ที่ confirmCloseCrop() ไม่เคยตั้งค่าให้) ──
+      if(!c.harvestResult)return;
       const name=(c.hatchery||'').trim()||'ไม่ระบุ';
       if(!groups[name])groups[name]={name,rounds:0,survSum:0,survN:0,fcrSum:0,fcrN:0,adgSum:0,adgN:0};
       const g=groups[name];
@@ -2945,11 +2956,73 @@ function initHatchery(){
     _hatcheryChart=new Chart(chEl,{type:'bar',data:{labels:stats.map(s=>s.name+' ('+s.rounds+' รอบ)'),datasets:[{data:stats.map(s=>s.survAvg||0),backgroundColor:'#3f6212',borderRadius:4}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+'% รอด'}}},scales:{x:{max:100,ticks:{font:{size:10},callback:v=>v+'%'}},y:{ticks:{font:{size:11}}}}}});
   }
   const tbl=document.getElementById('hatchery-table');
-  if(!tbl)return;
-  if(!stats.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:10px">-</p>';return;}
-  tbl.innerHTML=`<table class="tbl"><thead><tr><th>โรงเพาะฟัก</th><th style="text-align:right">รอบที่เลี้ยง</th><th style="text-align:right">อัตรารอดเฉลี่ย</th><th style="text-align:right">FCR เฉลี่ย</th><th style="text-align:right">ADG เฉลี่ย</th></tr></thead><tbody>${
-    stats.map(s=>`<tr><td>${s.name}</td><td style="text-align:right">${s.rounds}</td><td style="text-align:right">${s.survAvg!=null?s.survAvg+'%':'-'}</td><td style="text-align:right">${s.fcrAvg!=null?s.fcrAvg:'-'}</td><td style="text-align:right">${s.adgAvg!=null?s.adgAvg+' ก./วัน':'-'}</td></tr>`).join('')
-  }</tbody></table>`;
+  if(tbl){
+    if(!stats.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:10px">-</p>';}
+    else{
+      tbl.innerHTML=`<table class="tbl"><thead><tr><th>โรงเพาะฟัก</th><th style="text-align:right">รอบที่เลี้ยง</th><th style="text-align:right">อัตรารอดเฉลี่ย</th><th style="text-align:right">FCR เฉลี่ย</th><th style="text-align:right">ADG เฉลี่ย</th></tr></thead><tbody>${
+        stats.map(s=>`<tr><td>${s.name}</td><td style="text-align:right">${s.rounds}</td><td style="text-align:right">${s.survAvg!=null?s.survAvg+'%':'-'}</td><td style="text-align:right">${s.fcrAvg!=null?s.fcrAvg:'-'}</td><td style="text-align:right">${s.adgAvg!=null?s.adgAvg+' ก./วัน':'-'}</td></tr>`).join('')
+      }</tbody></table>`;
+    }
+  }
+  const mergeCard=document.getElementById('hatchery-merge-card');
+  if(mergeCard){
+    mergeCard.style.display=APP_ROLE==='admin'?'':'none';
+    if(APP_ROLE==='admin')renderHatcheryMergeTool();
+  }
+}
+// ── รวมชื่อโรงเพาะฟักที่สะกดต่างกันแต่หมายถึงที่เดียวกัน (แก้ทั้ง pond.hatchery ปัจจุบัน + cropHistory ทุกรอบ) ──
+let _hatcheryMergeSel=new Set();
+let _hatcheryMergeUsageCache=[];
+function hatcheryNameUsage(){
+  const map={};
+  D.ponds.forEach(p=>{
+    const cur=(p.hatchery||'').trim();
+    if(cur){if(!map[cur])map[cur]={name:cur,count:0};map[cur].count++;}
+    (p.cropHistory||[]).forEach(c=>{
+      const n=(c.hatchery||'').trim();
+      if(!n)return;
+      if(!map[n])map[n]={name:n,count:0};
+      map[n].count++;
+    });
+  });
+  return Object.values(map).sort((a,b)=>b.count-a.count);
+}
+function renderHatcheryMergeTool(){
+  const el=document.getElementById('hatchery-merge-list');if(!el)return;
+  const usage=hatcheryNameUsage();
+  for(const name of[..._hatcheryMergeSel])if(!usage.some(u=>u.name===name))_hatcheryMergeSel.delete(name);
+  if(!usage.length){el.innerHTML='<p style="color:var(--tx3);font-size:12.5px;padding:8px 0">ยังไม่มีชื่อโรงเพาะฟักที่บันทึกไว้</p>';return;}
+  el.innerHTML=usage.map((u,i)=>{
+    return`<label style="display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid var(--bd);font-size:13px;cursor:pointer">
+      <input type="checkbox" onchange="toggleHatcheryMergeSelByIdx(${i},this.checked)" ${_hatcheryMergeSel.has(u.name)?'checked':''}>
+      <span style="flex:1">${u.name}</span>
+      <span style="color:var(--tx3);font-size:11.5px">${u.count} รายการ</span>
+    </label>`;
+  }).join('');
+  _hatcheryMergeUsageCache=usage;
+}
+function toggleHatcheryMergeSelByIdx(idx,checked){
+  const u=_hatcheryMergeUsageCache[idx];if(!u)return;
+  if(checked)_hatcheryMergeSel.add(u.name);else _hatcheryMergeSel.delete(u.name);
+}
+function mergeHatcheryNames(){
+  const target=document.getElementById('hatchery-merge-target').value.trim();
+  if(!target){showMsg('hatchery-merge-msg','warn','กรุณากรอกชื่อที่จะรวมเป็น');return}
+  if(_hatcheryMergeSel.size<2){showMsg('hatchery-merge-msg','warn','กรุณาเลือกอย่างน้อย 2 ชื่อที่ต้องการรวม');return}
+  const names=[..._hatcheryMergeSel];
+  if(!confirm(`รวมชื่อ "${names.join('", "')}" เป็น "${target}" ทั้งหมดใช่หรือไม่?\n(จะแก้ไขทุกบ่อและทุกรอบเลี้ยงที่เคยใช้ชื่อเหล่านี้)`))return;
+  let changed=0;
+  D.ponds.forEach(p=>{
+    if(p.hatchery&&names.includes(p.hatchery.trim())){p.hatchery=target;changed++;}
+    (p.cropHistory||[]).forEach(c=>{
+      if(c.hatchery&&names.includes(c.hatchery.trim())){c.hatchery=target;changed++;}
+    });
+  });
+  save();
+  _hatcheryMergeSel.clear();
+  document.getElementById('hatchery-merge-target').value='';
+  initHatchery();
+  showMsg('hatchery-merge-msg','ok',`✅ รวมชื่อสำเร็จ อัปเดต ${changed} รายการ เป็น "${target}"`);
 }
 // ===== BREAK-EVEN & RISK EXPOSURE (มุมผู้บริหาร) =====
 function getElecCostForPeriodByShare(fromDate,toDate,share){
@@ -3593,7 +3666,8 @@ function hsCropStats(shortYr){
   let totalKg=0,closedCount=0;
   D.ponds.forEach(p=>{
     (p.cropHistory||[]).forEach(c=>{
-      if((c.cropYear||0)-2500!==shortYr||!c.closed)return;
+      // ── ทุก record ใน cropHistory คือรอบที่ปิดแล้วอยู่แล้ว (ไม่ต้องพึ่ง c.closed ที่ confirmCloseCrop() ไม่เคยตั้งค่าให้) ──
+      if((c.cropYear||0)-2500!==shortYr)return;
       totalKg+=((c.harvestResult||{}).totalWeight)||0;
       closedCount++;
     });
@@ -7560,6 +7634,7 @@ function confirmCloseCrop(){
     prepChecklist:p.prepChecklist?JSON.parse(JSON.stringify(p.prepChecklist)):null,
     harvestResult:hr,
     notes,
+    closed:true,
   };
   if(!p.cropHistory)p.cropHistory=[];
   p.cropHistory.push(archived);
