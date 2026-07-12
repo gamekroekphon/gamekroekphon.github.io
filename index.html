@@ -324,6 +324,8 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .lbl-std-danger{font-size:10px;color:var(--d);margin-top:1px;font-weight:700}
 .pond-chk{display:flex;align-items:center;gap:6px;padding:5px 12px;border:1.5px solid var(--bd);border-radius:20px;cursor:pointer;font-size:13px;user-select:none;transition:all .15s}
 .pond-chk input{display:none}.pond-chk.on{background:var(--p);color:#fff;border-color:var(--p)}
+.pond-chk.wq-done{background:var(--ob);border-color:#bfe3cc;color:var(--ok)}
+.pond-chk.wq-done.on{background:var(--p);border-color:var(--p);color:#fff}
 .dw-chip{border:1px solid var(--border-input);border-radius:16px;padding:5px 12px;font-size:12px;background:var(--sf);color:var(--tx);cursor:pointer;font-family:inherit}
 .dw-chip-on{border-color:var(--d);background:var(--db);color:var(--d)}
 .dw-sev{border:1px solid var(--border-input);border-radius:6px;padding:3px 10px;font-size:11px;background:var(--sf);color:var(--tx);cursor:pointer;font-family:inherit}
@@ -779,19 +781,27 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
 <!-- WATER QUALITY -->
 <div id="sec-entry" class="sec">
   <div class="sec-hdr"><div class="sec-title">💧 บันทึกคุณภาพน้ำ</div></div>
+  <input type="hidden" id="ep-pond">
   <div class="card" style="margin-bottom:16px">
-    <div class="fgrid" style="margin-bottom:16px">
-      <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="ep-pond" onchange="onEPond()"><option value="">-- เลือกบ่อ --</option></select></div>
-      <div class="fg"><label class="fl">วันที่ *</label><input type="date" class="fi" id="ep-date" onchange="calcAge('ep');checkExistingWQ();saveLastEntry()"></div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:12.5px;color:var(--tx2);font-weight:600;margin-bottom:6px" id="ep-prog-txt">0 / 0 บ่อ กรอกแล้ว</div>
+      <div style="height:8px;background:var(--sf2);border-radius:99px;overflow:hidden"><div id="ep-prog-fill" style="height:100%;background:linear-gradient(90deg,var(--ok),#22a35a);border-radius:99px;width:0%;transition:width .3s"></div></div>
+    </div>
+    <div id="ep-chipbar" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"></div>
+    <div class="fgrid" style="margin-bottom:16px;grid-template-columns:1fr 1fr">
+      <div class="fg"><label class="fl">วันที่ *</label><input type="date" class="fi" id="ep-date" onchange="calcAge('ep');checkExistingWQ();saveLastEntry();renderEpChips();updateEpHeader()"></div>
       <div class="fg"><label class="fl">อายุ (วัน)</label><input type="number" class="fi" id="ep-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
     </div>
-    <div class="card-t">💧 ค่าน้ำ 14 พารามิเตอร์</div>
+    <div class="card-t" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div><span id="ep-active-name" style="font-size:16px;font-weight:700;color:var(--p)">— เลือกบ่อด้านบน —</span> <span id="ep-active-sub" style="font-size:11.5px;color:var(--tx3)"></span></div>
+      <span id="ep-active-tag" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;display:none"></span>
+    </div>
     <div class="fgrid" id="ep-fields"></div>
     <button type="button" class="btn btn-s wq-extra-toggle" id="wq-extra-btn" onclick="toggleWqExtra()">+ เพิ่มค่าเสริม (Ca/Mg/Hardness)</button>
     <div class="wq-extra-wrap" id="ep-fields-extra-wrap"><div class="fgrid" id="ep-fields-extra"></div></div>
     <div style="margin-top:12px"><div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="ep-notes" placeholder="สังเกตการณ์..."></div></div>
     <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn btn-p" onclick="saveWQ()">💾 บันทึก</button>
+      <button class="btn btn-p" onclick="saveWQ()">💾 บันทึก แล้วไปบ่อถัดไป</button>
       <button class="btn btn-s" onclick="clearWQ()">🗑️ ล้างฟอร์ม</button>
     </div>
     <div id="ep-msg" style="margin-top:10px"></div>
@@ -3286,7 +3296,7 @@ function populateAll(){
   const cpyEl=document.getElementById('settings-crops-per-year');
   if(cpyEl)cpyEl.value=String(D.settings?.cropsPerYear||2);
   const simple={
-    'ep-pond':'','ds-pond':'','sl-pond':'','sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all','lc-pond':'',
+    'ds-pond':'','sl-pond':'','sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all','lc-pond':'',
   };
   Object.entries(simple).forEach(([id,def])=>{
     const el=document.getElementById(id);if(!el)return;const cur=el.value;
@@ -4337,7 +4347,7 @@ function renderChecklist(){
     </div>`).join('')}</div>
   </div>`;
 }
-function jumpEntry(id){document.getElementById('tab-entry').click();setTimeout(()=>{document.getElementById('ep-pond').value=id;onEPond();},80)}
+function jumpEntry(id){document.getElementById('tab-entry').click();setTimeout(()=>{selectEPond(id);},80)}
 // ===== เฝ้าระวังโรคตาเปล่ารายวัน =====
 const DISEASES=[
   {key:'redBody',name:'ตัวแดง',symptoms:['ลำตัวแดง','ขาแดง','หางแดง','ว่ายเอียง/ลอยตัว']},
@@ -5516,15 +5526,24 @@ function showStockMsg(area,msg,type){
 /* ===== END INVENTORY / STOCK ===== */
 
 function initEntry(){
-  populateAll();document.getElementById('ep-date').value=today();
+  populateAll();
+  const dEl=document.getElementById('ep-date');if(dEl&&!dEl.value)dEl.value=today();
   const wqFieldHtml=p=>`<div class="fg"><label class="fl">${p.lbl}${p.unit?' ('+p.unit+')':''}</label><input type="number" step="any" inputmode="decimal" class="fi" id="ef-${p.key}" placeholder="—" oninput="onFI('${p.key}',this)"><span class="lbl-std" id="std-${p.key}">${stdText(p)}</span>${p.note?`<span class="hint">${p.note}</span>`:''}</div>`;
   // ── มือถือ: ค่าหลักก่อน ค่าเสริม (Ca/Mg/Hardness) ซ่อนไว้กดเพิ่ม (สเปกพี่แพรว ข้อ 6) ──
   const WQ_EXTRA_KEYS=['ca','mg_','hard'];
   document.getElementById('ep-fields').innerHTML=PARAMS.filter(p=>!WQ_EXTRA_KEYS.includes(p.key)).map(wqFieldHtml).join('');
   document.getElementById('ep-fields-extra').innerHTML=PARAMS.filter(p=>WQ_EXTRA_KEYS.includes(p.key)).map(wqFieldHtml).join('');
   restoreLastEntry();
+  const activeIds=wqfeedActivePonds().map(p=>p.id);
+  let pid=document.getElementById('ep-pond').value;
+  if(!pid||!activeIds.includes(pid)){
+    const next=epNextUnfilled(null);
+    pid=next?next.id:(activeIds[0]||'');
+  }
+  document.getElementById('ep-pond').value=pid;
   calcAge('ep');
-  if(document.getElementById('ep-pond').value){renderWQTable();checkExistingWQ()}
+  renderEpChips();updateEpHeader();
+  if(pid){renderWQTable();checkExistingWQ()}
 }
 function toggleWqExtra(){
   const el=document.getElementById('ep-fields-extra-wrap');if(!el)return;
@@ -5538,11 +5557,58 @@ function saveLastEntry(){
 }
 function restoreLastEntry(){
   // จำไว้เฉพาะ "บ่อล่าสุดที่เลือก" — วันที่ต้องเป็นวันนี้เสมอ (ฟอร์มเปล่า ไม่ดึงข้อมูลเก่ามาแสดง)
-  const sel=document.getElementById('ep-pond');if(!sel)return;
+  const el=document.getElementById('ep-pond');if(!el)return;
   const lastPid=localStorage.getItem('tf_lastPondId');
-  if(lastPid&&[...sel.options].some(o=>o.value===lastPid)){sel.value=lastPid}
+  if(lastPid&&wqfeedActivePonds().some(p=>p.id===lastPid)){el.value=lastPid}
 }
-function onEPond(){saveLastEntry();clearWQ();renderWQTable();checkExistingWQ()}
+// ── บ่อถัดไปที่ยังไม่กรอกข้อมูลของวันที่เลือกอยู่ (ใช้ auto-advance หลังบันทึก + ตอนเปิดหน้าครั้งแรก) ──
+function epNextUnfilled(excludeId){
+  const d=document.getElementById('ep-date')?.value||today();
+  const list=wqfeedActivePonds().slice().sort((a,b)=>a.name.localeCompare(b.name,'th'));
+  return list.find(p=>p.id!==excludeId&&!(p.records||[]).some(r=>r.date===d));
+}
+function renderEpChips(){
+  const bar=document.getElementById('ep-chipbar');if(!bar)return;
+  const d=document.getElementById('ep-date')?.value||today();
+  const activePid=document.getElementById('ep-pond')?.value;
+  const list=wqfeedActivePonds().slice().sort((a,b)=>a.name.localeCompare(b.name,'th'));
+  bar.innerHTML=list.map(p=>{
+    const done=(p.records||[]).some(r=>r.date===d);
+    const cls='pond-chk'+(done?' wq-done':'')+(p.id===activePid?' on':'');
+    return`<span class="${cls}" onclick="selectEPond('${p.id}')">${done?'✓ ':''}บ่อ ${p.name}</span>`;
+  }).join('');
+  const doneCount=list.filter(p=>(p.records||[]).some(r=>r.date===d)).length;
+  const progTxt=document.getElementById('ep-prog-txt');
+  if(progTxt)progTxt.textContent=`${doneCount} / ${list.length} บ่อ กรอกแล้ว${d===today()?'วันนี้':'วันที่ '+fD(d)}`;
+  const progFill=document.getElementById('ep-prog-fill');
+  if(progFill)progFill.style.width=(list.length?doneCount/list.length*100:0)+'%';
+}
+function updateEpHeader(){
+  const pid=document.getElementById('ep-pond')?.value;
+  const nameEl=document.getElementById('ep-active-name');if(!nameEl)return;
+  const tagEl=document.getElementById('ep-active-tag');
+  const subEl=document.getElementById('ep-active-sub');
+  const p=pid?pond(pid):null;
+  if(!p){nameEl.textContent='— เลือกบ่อด้านบน —';if(subEl)subEl.textContent='';if(tagEl)tagEl.style.display='none';return;}
+  nameEl.textContent='บ่อ '+p.name;
+  const d=document.getElementById('ep-date')?.value||today();
+  const age=p.startDate?dDiff(p.startDate,d):0;
+  if(subEl)subEl.textContent=age>0?`อายุ ${age} วัน`:'';
+  const done=(p.records||[]).some(r=>r.date===d);
+  if(tagEl){
+    tagEl.style.display='';
+    tagEl.textContent=done?'กรอกแล้ว':'ยังไม่กรอก';
+    tagEl.style.background=done?'var(--ob)':'var(--wb)';
+    tagEl.style.color=done?'var(--ok)':'var(--w)';
+  }
+}
+function selectEPond(id){
+  document.getElementById('ep-pond').value=id;
+  onEPond();
+  renderEpChips();updateEpHeader();
+  document.getElementById('ep-fields')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function onEPond(){saveLastEntry();clearWQFields();renderWQTable();checkExistingWQ()}
 function checkExistingWQ(){
   // ไม่ดึงค่าเดิมมาเติมในฟอร์มอัตโนมัติ — แค่เตือนว่ามีข้อมูลวันนี้อยู่แล้ว เพื่อไม่ให้กรอกทับโดยไม่ตั้งใจ
   const pid=document.getElementById('ep-pond').value;
@@ -5596,21 +5662,28 @@ function saveWQ(){
   PARAMS.forEach(pm=>{const v=document.getElementById('ef-'+pm.key)?.value;rec[pm.key]=v===''||v===undefined?null:parseFloat(v)});
   rec.notes=document.getElementById('ep-notes').value;
   const idx=p.records.findIndex(r=>r.date===d);
+  let msg;
   if(idx>=0){
     if(!confirm(`มีข้อมูลของวันที่ ${fD(d)} บ่อ ${p.name} อยู่แล้ว ต้องการบันทึกทับข้อมูลเดิมหรือไม่?`))return;
     rec.diseaseWatch=p.records[idx].diseaseWatch;
-    p.records[idx]=rec;showMsg('ep-msg','warn',`อัปเดต ${fD(d)} บ่อ ${p.name}`)
+    p.records[idx]=rec;msg=`อัปเดต ${fD(d)} บ่อ ${p.name} แล้ว`;
   }
-  else{p.records.push(rec);p.records.sort((a,b)=>new Date(a.date)-new Date(b.date));showMsg('ep-msg','ok',`✅ บันทึกสำเร็จ บ่อ ${p.name}`)}
+  else{p.records.push(rec);p.records.sort((a,b)=>new Date(a.date)-new Date(b.date));msg=`✅ บันทึกสำเร็จ บ่อ ${p.name}`;}
   save();renderWQTable();renderOv();
+  const next=epNextUnfilled(pid);
+  if(next){selectEPond(next.id);showMsg('ep-msg','ok',msg);}
+  else{renderEpChips();updateEpHeader();showMsg('ep-msg','ok',`${msg} — 🎉 ครบทุกบ่อวันที่ ${fD(d)} แล้ว`);}
+}
+// ── เคลียร์เฉพาะช่องกรอกค่า ไม่แตะวันที่/บ่อที่เลือกอยู่ — ใช้ตอนสลับบ่อผ่านชิป (ไม่งั้นวันที่จะเด้งกลับวันนี้ทุกครั้งที่สลับบ่อ) ──
+function clearWQFields(){
+  PARAMS.forEach(p=>{const e=document.getElementById('ef-'+p.key);if(e){e.value='';e.className='fi'}const std=document.getElementById('std-'+p.key);if(std){std.textContent=stdText(p);std.className='lbl-std'}});
+  document.getElementById('ep-notes').value='';
 }
 function clearWQ(){
-  document.getElementById('ep-date').value=today();
-  PARAMS.forEach(p=>{const e=document.getElementById('ef-'+p.key);if(e){e.value='';e.className='fi'}const std=document.getElementById('std-'+p.key);if(std){std.textContent=stdText(p);std.className='lbl-std'}});
-  document.getElementById('ep-notes').value='';calcAge('ep');
+  clearWQFields();calcAge('ep');
   // ── ตั้งใจไม่รีเซ็ตช่องเลือกบ่อ (เผื่อกรอกต่อบ่อเดิม) แต่โชว์ชัดว่ากำลังกรอกบ่อไหนอยู่ กันกรอกผิดบ่อ (ตามรายงาน UX พีแพรว ข้อ 7) ──
   const pid=document.getElementById('ep-pond')?.value;const p=pid?pond(pid):null;
-  showMsg('ep-msg','ok',p?`🧹 ล้างฟอร์มแล้ว — ยังเลือกบ่อ <strong>${p.name}</strong> ค้างอยู่ (ถ้าจะกรอกบ่ออื่น กรุณาเปลี่ยนบ่อก่อนบันทึก)`:'🧹 ล้างฟอร์มแล้ว');
+  showMsg('ep-msg','ok',p?`🧹 ล้างฟอร์มแล้ว — ยังเลือกบ่อ <strong>${p.name}</strong> ค้างอยู่ (ถ้าจะกรอกบ่ออื่น แตะเลือกบ่อด้านบน)`:'🧹 ล้างฟอร์มแล้ว');
 }
 function renderWQTable(){
   const pid=document.getElementById('ep-pond')?.value,rows=parseInt(document.getElementById('tbl-rows')?.value||999);
@@ -5638,6 +5711,7 @@ function deleteWQ(pid,d){
   const p=pond(pid);if(!p)return;
   p.records=(p.records||[]).filter(r=>r.date!==d);
   save();renderWQTable();renderOv();renderDwSummary();
+  renderEpChips();updateEpHeader();
 }
 
 // ===== EDIT HISTORY FUNCTIONS =====
@@ -5646,7 +5720,8 @@ function editWQ(pid,d){
   document.getElementById('ep-date').value=d;
   syncDateHint(document.getElementById('ep-date'));
   calcAge('ep');prefillWQ();
-  const el=document.getElementById('ep-pond');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+  renderEpChips();updateEpHeader();
+  const el=document.getElementById('ep-fields');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function editSample(pid,d){
   document.getElementById('sp-pond').value=pid;
