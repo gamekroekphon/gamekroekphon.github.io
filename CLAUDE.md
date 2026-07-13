@@ -160,6 +160,17 @@ function pondLaborCost(p){
 - ไม่มีปุ่ม `tab-disease` หรือทางเข้าใดๆ ในเมนูเรียก `switchTab('disease')` เลย — ยืนยันตรงกับ commit `9704a93` ที่บอกว่าถอดเมนูนี้ออกแล้ว
 - **ลบออกแล้วทั้งหมด**: markup `sec-disease`, ฟังก์ชัน `DISEASES`/`DW_SEV`/`dwState`/`dwReset`/`dwSevClass`/`dwToggleSym`/`dwSetSev`/`renderDiseaseWatch`/`dwSevLabel`/`renderDwSummary`/`initDisease`/`onDsPond`/`onDsDate`/`loadDsForDate`/`saveDs`/`clearDs`, entry `'ds-pond':''` ใน `populateAll()`, router `if(t==='disease')initDisease();`, และการอ้างอิง `rec.diseaseWatch`/`renderDwSummary()` ใน `saveWQ()`/`deleteWQ()` — ลบออกจากทั้ง `index.html` และ `TawanFarm_App.html`, ทดสอบแล้วว่า WQ save/delete ยังทำงานปกติไม่มี error
 
+### 8. สต็อกพัสดุ — 3 ช่องโหว่ logic (แก้แล้ว)
+**ไฟล์:** `index.html` และ `TawanFarm_App.html` — markup หน้า `sec-stock` + ฟังก์ชัน `saveStockTxBatch()`/`deleteStockLog()`/`stockTab()`
+
+**8.1 เบิกออกไม่บังคับเลือกบ่อปลายทาง** — เดิม `saveStockTxBatch()` ตอนโหมด "เบิกออก ไปบ่อ" ไม่เช็คว่าเลือกบ่อหรือยัง ถ้าลืมเลือกแล้วบันทึก สต็อกจะถูกตัดจริงแต่ `pondId` ว่างเปล่า ทำให้รายการหายไปจากหน้า "ประวัติ" (กรองด้วย pondId) และไม่ถูกคิดต้นทุนบ่อไหนเลยตอนปิดบ่อ (`getInventoryCostForPond` กรอง pondId ตรง) — **แก้แล้ว**: เพิ่มเช็ค `if(mode==='out'&&!pondId)` แจ้งเตือนและ block การบันทึก พร้อมใส่ `*` ที่ label "บ่อปลายทาง"
+
+**8.2 ประวัติ "รับเข้า" ดูไม่ได้เลยในแอป** — เดิมหน้า "ประวัติ" โชว์แค่ฝั่งเบิกออกรายบ่อ ส่วนรายการรับเข้าส่วนกลาง (`type==='in'`) ไม่มีที่แสดงเลย มีแค่ตัวเลขนับจำนวนครั้งบน KPI card — **แก้แล้ว**: เพิ่ม toggle ในแท็บ "ประวัติ" แยก "📤 เบิกออก รายบ่อ" / "📥 รับเข้าส่วนกลาง" ฟังก์ชันใหม่ `setStockLogMode()`/`renderStockInLog()` แสดงตารางรับเข้าทั้งหมดเรียงตามวันที่ ลบได้เหมือนกัน
+
+**8.3 ลบรายการประวัติผิด → สต็อกไม่ย้อนกลับ** — เดิม `deleteStockLog()` ลบ log อย่างเดียว ไม่แก้ `item.qty` ให้ (มีแค่ข้อความเตือนว่า "ยอดสต็อกจะไม่ถูกย้อนกลับ") ต้องไปแก้จำนวนคงเหลือเองอีกขั้น เสี่ยงลืม — **แก้แล้ว**: `deleteStockLog()` คำนวณย้อนยอดให้อัตโนมัติ (`out` ที่เคยตัดออก → บวกคืน, `in` ที่เคยรับเข้า → หักออก) ทดสอบแล้วว่าตัวเลขกลับมาถูกต้อง (119→99 ตอนลบ in, 99→100 ตอนลบ out)
+
+ทดสอบทั้ง 3 จุดผ่าน browser + mock data แล้ว ไม่มี console error
+
 ## หมายเหตุโครงสร้างโค้ด
 
 - `index.html` และ `TawanFarm_App.html` เป็นไฟล์เดียวกัน (ต้อง sync การแก้ทั้งคู่เวลา deploy — ดู push_*.bat)

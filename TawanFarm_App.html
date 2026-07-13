@@ -1748,7 +1748,7 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
         <button id="sk-mode-out" class="stock-mode-btn" onclick="setStockMode('out')">− เบิกออก ไปบ่อ</button>
       </div>
       <div id="sk-tx-pond-row" style="display:none;margin-bottom:8px">
-        <div class="fg"><label class="fl">บ่อปลายทาง <span style="color:var(--tx3);font-weight:400">(เชื่อม P&amp;L)</span></label>
+        <div class="fg"><label class="fl">บ่อปลายทาง * <span style="color:var(--tx3);font-weight:400">(เชื่อม P&amp;L)</span></label>
           <select class="fi" id="sk-tx-pond"><option value="">— เลือกบ่อ —</option></select>
         </div>
       </div>
@@ -1775,14 +1775,22 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
   <!-- pane: ประวัติ -->
   <div class="stock-pane" id="skp-log">
     <div class="card">
-      <div style="font-weight:700;color:var(--tx);margin-bottom:10px">ประวัติรับเข้า รายบ่อ</div>
-      <div id="sk-log-pond-grid"></div>
-      <div id="sk-log-pond-detail" style="display:none">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-          <button onclick="backToStockPondGrid()" style="background:none;border:none;cursor:pointer;color:var(--p);font-size:13px">← กลับ</button>
-          <span id="sk-log-pond-name" style="font-weight:700;color:var(--tx);font-size:14px"></span>
+      <div style="display:flex;gap:0;background:var(--sf2);border-radius:8px;padding:3px;margin-bottom:14px;width:fit-content">
+        <button id="skl-mode-out" class="stock-mode-btn on-out" onclick="setStockLogMode('out')">📤 เบิกออก รายบ่อ</button>
+        <button id="skl-mode-in" class="stock-mode-btn" onclick="setStockLogMode('in')">📥 รับเข้าส่วนกลาง</button>
+      </div>
+      <div id="skl-pane-out">
+        <div id="sk-log-pond-grid"></div>
+        <div id="sk-log-pond-detail" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <button onclick="backToStockPondGrid()" style="background:none;border:none;cursor:pointer;color:var(--p);font-size:13px">← กลับ</button>
+            <span id="sk-log-pond-name" style="font-weight:700;color:var(--tx);font-size:14px"></span>
+          </div>
+          <div id="sk-log-pond-table"></div>
         </div>
-        <div id="sk-log-pond-table"></div>
+      </div>
+      <div id="skl-pane-in" style="display:none">
+        <div id="sk-log-in-table"></div>
       </div>
     </div>
   </div>
@@ -4741,7 +4749,7 @@ function stockTab(paneId,btn){
   document.querySelectorAll('.stock-sub-btn').forEach(b=>b.classList.remove('on'));
   const p=document.getElementById('skp-'+paneId);if(p)p.classList.add('on');
   if(btn)btn.classList.add('on');
-  if(paneId==='log'){backToStockPondGrid();renderStockPondGrid();}
+  if(paneId==='log'){backToStockPondGrid();setStockLogMode(_stockLogMode||'out');}
   if(paneId==='tx'){setStockMode(_stockMode||'in');}
 }
 
@@ -4993,6 +5001,7 @@ function saveStockTxBatch(){
   const date=document.getElementById('sk-tx-date').value||today();
   const note=document.getElementById('sk-tx-note').value.trim();
   const pondId=mode==='out'?(document.getElementById('sk-tx-pond')?.value||''):'';
+  if(mode==='out'&&!pondId){showStockMsg('tx','กรุณาเลือกบ่อปลายทางก่อนบันทึก (ไม่งั้นจะตามหาต้นทุนย้อนหลังไม่ได้)','err');return;}
   for(const c of _stockCart){
     if(!c.qty||c.qty<=0){showStockMsg('tx','จำนวน "'+c.itemName+'" ต้องมากกว่า 0','err');return;}
     if(mode==='out'&&c.qty>c.currentQty){
@@ -5028,7 +5037,40 @@ function clearStockTx(){
   hideStockDrop();
 }
 
-// ── history by pond (จุด 4) ─────────────────────────────────────────────────
+// ── history: เบิกออกรายบ่อ / รับเข้าส่วนกลาง ─────────────────────────────────
+let _stockLogMode='out';
+function setStockLogMode(mode){
+  _stockLogMode=mode;
+  const btnOut=document.getElementById('skl-mode-out');
+  const btnIn=document.getElementById('skl-mode-in');
+  if(btnOut)btnOut.className='stock-mode-btn'+(mode==='out'?' on-out':'');
+  if(btnIn)btnIn.className='stock-mode-btn'+(mode==='in'?' on-in':'');
+  const paneOut=document.getElementById('skl-pane-out');
+  const paneIn=document.getElementById('skl-pane-in');
+  if(paneOut)paneOut.style.display=mode==='out'?'':'none';
+  if(paneIn)paneIn.style.display=mode==='in'?'':'none';
+  if(mode==='out'){backToStockPondGrid();renderStockPondGrid();}
+  else{renderStockInLog();}
+}
+function renderStockInLog(){
+  const tbl=document.getElementById('sk-log-in-table');if(!tbl)return;
+  const logs=[...(D.inventoryLog||[])].filter(l=>l.type==='in').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีประวัติรับเข้าส่วนกลาง</p>';return;}
+  const byDate={};
+  logs.forEach(l=>{if(!byDate[l.date])byDate[l.date]=[];byDate[l.date].push(l);});
+  tbl.innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>รายการ</th><th style="text-align:right">จำนวน</th><th>หน่วย</th><th>หมายเหตุ</th><th></th></tr></thead><tbody>'+
+    Object.entries(byDate).sort((a,b)=>b[0].localeCompare(a[0])).flatMap(([date,ls])=>
+      ls.map((l,i)=>`<tr>
+        <td style="${i>0?'color:transparent':''};">${fD(date)}</td>
+        <td>${l.itemName||'-'}</td>
+        <td style="text-align:right">${l.qty}</td>
+        <td style="color:var(--tx2)">${l.unit||''}</td>
+        <td style="font-size:12px;color:var(--tx2)">${l.note||''}</td>
+        <td><button class="btn-sm btn-del" onclick="deleteStockLog('${l.id}');renderStockInLog()">🗑️</button></td>
+      </tr>`)
+    ).join('')+
+  '</tbody></table></div>';
+}
 function renderStockPondGrid(){
   const el=document.getElementById('sk-log-pond-grid');if(!el)return;
   const actives=(D.ponds||[]).filter(p=>p.startDate&&!p.closed).sort((a,b)=>a.name.localeCompare(b.name,'th'));
@@ -5079,13 +5121,19 @@ function backToStockPondGrid(){
   const d=document.getElementById('sk-log-pond-detail');if(d)d.style.display='none';
 }
 
-function renderStockLog(){renderStockPondGrid();}// backward-compat stub
+function renderStockLog(){if(_stockLogMode==='in')renderStockInLog();else renderStockPondGrid();}// backward-compat stub
 
 function deleteStockLog(id){
-  if(!confirm('ลบรายการนี้? (ยอดสต็อกจะไม่ถูกย้อนกลับ)'))return;
+  const log=(D.inventoryLog||[]).find(l=>l.id===id);if(!log)return;
+  if(!confirm('ลบรายการนี้? ระบบจะย้อนยอดคงเหลือของ "'+(log.itemName||'')+'" ให้อัตโนมัติ'))return;
+  const item=(D.inventoryItems||[]).find(i=>i.id===log.itemId);
+  if(item){
+    // out ที่เคยตัดออกไป → บวกคืน / in ที่เคยรับเข้ามา → หักออก
+    item.qty=Math.round(((item.qty||0)+(log.type==='out'?(log.qty||0):-(log.qty||0)))*100)/100;
+  }
   D.inventoryLog=(D.inventoryLog||[]).filter(l=>l.id!==id);
   D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
-  save();renderStockLog();
+  save();renderStockLog();renderStockKPI();renderStockWarn();renderStockItems();
 }
 
 function showStockMsg(area,msg,type){
