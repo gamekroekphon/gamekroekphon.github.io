@@ -1413,12 +1413,7 @@ body.role-ceo .main{max-width:640px}
             <div id="cm-stock-breakdown" style="font-size:11.5px;color:var(--tx2);background:var(--sf2);border-radius:6px;padding:8px 10px"></div>
           </div>
           <div class="fg"><label class="fl">ต้นทุนค่าแรง (บาท)</label><input type="number" class="fi" id="cm-cost-labor" step="1" placeholder="ดึงจากแท็บค่าแรงอัตโนมัติ" style="background:var(--sf2)"></div>
-          <div class="fg"><label class="fl">ต้นทุนค่าไฟฟ้า (บาท)</label>
-            <div style="display:flex;gap:6px">
-              <input type="number" class="fi" id="cm-cost-elec" step="1" placeholder="ดึงจากแท็บค่าไฟอัตโนมัติ" style="background:var(--sf2)">
-              <button type="button" class="btn btn-s" style="white-space:nowrap;font-size:11px;padding:0 8px" onclick="estimateElecFromBenchmark('cm')" title="ประมาณจากค่าเฉลี่ยฟาร์ม 19.37 บาท/กก. — ใช้เมื่อยังไม่มีบิลค่าไฟช่วงนี้">💡 ประมาณ</button>
-            </div>
-          </div>
+          <div class="fg"><label class="fl">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="cm-cost-elec" step="1" placeholder="ดึงอัตโนมัติ 2,500 บาท/วัน" style="background:var(--sf2)"></div>
           <div class="fg"><label class="fl">ต้นทุนอื่นๆ (บาท)</label><input type="number" class="fi" id="cm-cost-other" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" style="color:var(--ok);font-weight:700">กำไรสุทธิ (บาท)</label><input type="number" class="fi" id="cm-profit" step="1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--ob);font-weight:700"></div>
         </div>
@@ -1480,12 +1475,7 @@ body.role-ceo .main{max-width:640px}
           <div class="fg"><label class="fl">ต้นทุนอาหาร (บาท)</label><input type="number" class="fi" id="ecm-cost-feed" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl">ต้นทุนสารเคมี (บาท)</label><input type="number" class="fi" id="ecm-cost-chem" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl">ต้นทุนค่าแรง (บาท)</label><input type="number" class="fi" id="ecm-cost-labor" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนค่าไฟฟ้า (บาท)</label>
-            <div style="display:flex;gap:6px">
-              <input type="number" class="fi" id="ecm-cost-elec" step="1" placeholder="0">
-              <button type="button" class="btn btn-s" style="white-space:nowrap;font-size:11px;padding:0 8px" onclick="estimateElecFromBenchmark('ecm')" title="ประมาณจากค่าเฉลี่ยฟาร์ม 19.37 บาท/กก. — ใช้เมื่อยังไม่มีบิลค่าไฟช่วงนี้">💡 ประมาณ</button>
-            </div>
-          </div>
+          <div class="fg"><label class="fl">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="ecm-cost-elec" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl">ต้นทุนอื่นๆ (บาท)</label><input type="number" class="fi" id="ecm-cost-other" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" style="color:var(--ok);font-weight:700">กำไรสุทธิ (บาท)</label><input type="number" class="fi" id="ecm-profit" step="1" placeholder="คำนวณอัตโนมัติ" style="background:var(--ob);font-weight:700"></div>
         </div>
@@ -4628,24 +4618,14 @@ function fmtMonth(ym){
   const months=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   return months[parseInt(m,10)-1]+' '+(parseInt(y,10)+543);
 }
+// ── ต้นทุนค่าไฟรายบ่อ: ประมาณคร่าวๆ 2,500 บาท/วัน × จำนวนวันที่เลี้ยง ──
+// เดิมหารจากบิลจริง/D.electricityBills เฉลี่ยทั้งฟาร์ม แต่ตัวเลขเพี้ยนเพราะมีวันที่ไม่ได้เลี้ยงกุ้งในรอบปีปนอยู่ในค่าเฉลี่ยด้วย
+// ข้อมูลบิลค่าไฟ (D.electricityBills, หน้า "ค่าไฟฟ้า") ยังเก็บไว้เป็นประวัติเหมือนเดิม ไม่ได้ใช้คำนวณต้นทุนต่อบ่อจุดนี้แล้ว
+const ELEC_RATE_PER_DAY=2500;
 function getElecCostForPeriod(fromDate,toDate){
-  if(!fromDate||!toDate||!D.electricityBills?.length)return 0;
-  const from=new Date(fromDate),to=new Date(toDate);
-  const pondCount=Math.max(1,D.ponds?.length||27); // หารหัวตามจำนวนบ่อทั้งหมด
-  let total=0;
-  D.electricityBills.forEach(bill=>{
-    const [y,m]=bill.month.split('-').map(Number);
-    const mStart=new Date(y,m-1,1);
-    const mEnd=new Date(y,m,0);
-    const daysInMonth=mEnd.getDate();
-    const overlapStart=from>mStart?from:mStart;
-    const overlapEnd=to<mEnd?to:mEnd;
-    if(overlapStart<=overlapEnd){
-      const days=(overlapEnd-overlapStart)/(1000*60*60*24)+1;
-      total+=bill.totalBaht*(days/daysInMonth)/pondCount;
-    }
-  });
-  return Math.round(total);
+  if(!fromDate||!toDate)return 0;
+  const days=dDiff(fromDate,toDate);
+  return Math.max(0,days)*ELEC_RATE_PER_DAY;
 }
 function renderElecKPI(){
   const el=document.getElementById('el-kpi');if(!el)return;
@@ -4707,17 +4687,6 @@ function renderElecHistory(){
       <td><button class="btn-sm btn-del" onclick="deleteElecBill('${b.month}')">🗑️</button></td>
     </tr>`).join('')
   }</tbody></table>`}`;
-}
-// ===== ประมาณค่าไฟจากค่าเฉลี่ยฟาร์ม (บาท/กก.) =====
-const ELEC_COST_PER_KG_BENCHMARK=19.37; // เฉลี่ยจากข้อมูลค่าไฟย้อนหลัง 2564-2568 (18.3,20,19.75,19.03,19.76)
-function estimateElecFromBenchmark(prefix){
-  const w=parseFloat(document.getElementById(prefix+'-weight')?.value)||0;
-  if(!w){alert('กรุณากรอกผลผลิต (กก.) ก่อน ถึงจะประมาณค่าไฟได้');return;}
-  const est=Math.round(w*ELEC_COST_PER_KG_BENCHMARK);
-  const el=document.getElementById(prefix+'-cost-elec');if(!el)return;
-  el.value=est;
-  if(prefix==='cm')calcCropEcon();
-  else el.oninput?.();
 }
 // ===== นำเข้าบิลค่าไฟย้อนหลัง 2563-2569 (ยอดรวม 3 หม้อ ไม่แยกหม้อ) =====
 const ELEC_HISTORY_SEED=[
