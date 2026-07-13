@@ -1498,44 +1498,33 @@ body.role-ceo .main{max-width:640px}
 <!-- HARVEST -->
 <div id="sec-harvest" class="sec">
   <div class="sec-hdr"><div class="sec-title">🦐 บันทึกการจับกุ้ง</div></div>
-  <div class="g2" style="margin-bottom:20px">
-    <div class="card">
-      <div class="card-t">➕ บันทึกการจับกุ้ง</div>
-      <div class="fgrid" style="grid-template-columns:1fr 1fr">
-        <div class="fg"><label class="fl">วันที่จับกุ้ง</label><input type="date" class="fi" id="hv-date"></div>
-        <div class="fg"><label class="fl">บ่อ</label><select class="fi" id="hv-pond"><option value="">-- เลือกบ่อ --</option></select></div>
-        <div class="fg"><label class="fl">รูปแบบการจับ</label>
-          <select class="fi" id="hv-type">
-            <option value="">-- เลือก --</option>
-            <option value="พาเชียล">พาเชียล</option>
-          </select>
-        </div>
-        <div class="fg"><label class="fl">แพที่ทำการจับ</label><input type="text" class="fi" id="hv-buyer" placeholder="ชื่อแพ / บริษัท"></div>
-        <div class="fg"><label class="fl">ลักษณะการจับ</label>
-          <select class="fi" id="hv-live">
-            <option value="">-- เลือก --</option>
-            <option value="กุ้งเป็น">จับกุ้งเป็น</option>
-            <option value="กุ้งตาย">จับกุ้งตาย</option>
-          </select>
-        </div>
-        <div class="fg"><label class="fl">ไซส์ (ตัว/กก.)</label><input type="number" class="fi" id="hv-size" placeholder="60" step="1"></div>
-        <div class="fg"><label class="fl">น้ำหนักรวม (กก.)</label><input type="number" class="fi" id="hv-weight" placeholder="1000" step="0.1"></div>
-        <div class="fg"><label class="fl">ราคา (บาท/กก.)</label><input type="number" class="fi" id="hv-price" placeholder="120" step="0.5"></div>
-      </div>
-      <div class="fg" style="margin-top:8px"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="hv-notes" placeholder="..."></div>
-      <div style="margin-top:14px;display:flex;align-items:center;gap:10px">
-        <button class="btn btn-p" onclick="saveHarvest()">💾 บันทึก</button>
-        <span id="hv-msg" style="font-size:12px"></span>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-t" style="justify-content:space-between">
-        <span>📊 สรุปการจับกุ้ง</span>
-        <select class="fi" id="hv-sum-pond" onchange="renderHarvest()" style="width:150px;font-size:12px;padding:4px 8px">
-          <option value="">ทุกบ่อ (รวม)</option>
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-t">➕ บันทึกการจับกุ้ง</div>
+    <div class="fgrid" style="grid-template-columns:1fr 1fr">
+      <div class="fg"><label class="fl">วันที่จับกุ้ง</label><input type="date" class="fi" id="hv-date"></div>
+      <div class="fg"><label class="fl">บ่อ</label><select class="fi" id="hv-pond"><option value="">-- เลือกบ่อ --</option></select></div>
+      <div class="fg"><label class="fl">รูปแบบการจับ</label>
+        <select class="fi" id="hv-type">
+          <option value="">-- เลือก --</option>
+          <option value="พาเชียล">พาเชียล</option>
         </select>
       </div>
-      <div id="hv-summary" style="color:var(--tx3);font-size:13px">ยังไม่มีข้อมูลการจับกุ้ง</div>
+      <div class="fg"><label class="fl">แพที่ทำการจับ</label><input type="text" class="fi" id="hv-buyer" placeholder="ชื่อแพ / บริษัท"></div>
+      <div class="fg"><label class="fl">ลักษณะการจับ</label>
+        <select class="fi" id="hv-live">
+          <option value="">-- เลือก --</option>
+          <option value="กุ้งเป็น">จับกุ้งเป็น</option>
+          <option value="กุ้งตาย">จับกุ้งตาย</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">ไซส์ (ตัว/กก.)</label><input type="number" class="fi" id="hv-size" placeholder="60" step="1"></div>
+      <div class="fg"><label class="fl">น้ำหนักรวม (กก.)</label><input type="number" class="fi" id="hv-weight" placeholder="1000" step="0.1"></div>
+      <div class="fg"><label class="fl">ราคา (บาท/กก.)</label><input type="number" class="fi" id="hv-price" placeholder="120" step="0.5"></div>
+    </div>
+    <div class="fg" style="margin-top:8px"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="hv-notes" placeholder="..."></div>
+    <div style="margin-top:14px;display:flex;align-items:center;gap:10px">
+      <button class="btn btn-p" onclick="saveHarvest()">💾 บันทึก</button>
+      <span id="hv-msg" style="font-size:12px"></span>
     </div>
   </div>
   <div class="card">
@@ -3341,8 +3330,6 @@ function populateAll(){
     el.innerHTML='<option value="">ทุกบ่อ</option>'+sortedPonds().map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');
     if(cur)el.value=cur;
   });
-  const hvSumEl=document.getElementById('hv-sum-pond');
-  if(hvSumEl){const cur=hvSumEl.value;hvSumEl.innerHTML='<option value="">ทุกบ่อ (รวม)</option>'+sortedPonds().map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');if(cur)hvSumEl.value=cur;}
   // prep checklist pond selector
   const prepSel=document.getElementById('prep-pond');
   if(prepSel){const cur=prepSel.value;prepSel.innerHTML='<option value="">-- เลือกบ่อ --</option>'+sortedPonds().map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');if(cur)prepSel.value=cur;}
@@ -6407,7 +6394,7 @@ function renderExChart(p){
     }
   });
 }
-// ===== CLOSE-SUMMARY DATA (ใช้ร่วมกันโดย renderPondCloseSummary และ genPDF) =====
+// ===== CLOSE-SUMMARY DATA (ใช้ร่วมกันโดย renderExPreview และ genPDF) =====
 // cropIdx: index ของ p.cropHistory ที่ต้องการดู (ไม่ระบุ = รอบล่าสุดที่ปิด)
 function getCloseSummary(p,cropIdx){
   if(!p)return null;
@@ -7487,65 +7474,6 @@ function renderHarvest(){
       </tr>`;
     }).join('');
   }
-  // summary
-  const sumEl=document.getElementById('hv-summary');
-  if(sumEl){
-    const sumPid=document.getElementById('hv-sum-pond')?.value||'';
-    if(sumPid){
-      renderPondCloseSummary(sumPid,sumEl);
-      return;
-    }
-    const all=D.harvestLog;
-    if(all.length===0){sumEl.innerHTML='<p style="color:var(--tx3)">ยังไม่มีข้อมูลการจับกุ้ง</p>';return;}
-    const totalKg=all.reduce((s,r)=>s+(r.weight||0),0);
-    const totalBaht=all.reduce((s,r)=>s+(r.weight&&r.price?r.weight*r.price:0),0);
-    const avgPrice=totalKg>0?totalBaht/totalKg:0;
-    const countClose=all.filter(r=>r.type==='ปิดบ่อ').length;
-    const countPartial=all.filter(r=>r.type==='พาเชียล').length;
-    sumEl.innerHTML=`
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-        <div style="background:var(--pl);border-radius:8px;padding:12px;text-align:center">
-          <div style="font-size:20px;font-weight:800;color:var(--p)">${totalKg.toLocaleString()}</div>
-          <div style="font-size:11px;color:var(--tx3);margin-top:3px">น้ำหนักรวม (กก.)</div>
-        </div>
-        <div style="background:var(--ob);border-radius:8px;padding:12px;text-align:center">
-          <div style="font-size:20px;font-weight:800;color:var(--ok)">${Math.round(totalBaht).toLocaleString()}</div>
-          <div style="font-size:11px;color:var(--tx3);margin-top:3px">มูลค่ารวม (บาท)</div>
-        </div>
-        <div style="background:var(--sf2);border-radius:8px;padding:12px;text-align:center">
-          <div style="font-size:20px;font-weight:800;color:var(--in)">${avgPrice.toFixed(2)}</div>
-          <div style="font-size:11px;color:var(--tx3);margin-top:3px">ราคาเฉลี่ย (บาท/กก.)</div>
-        </div>
-        <div style="background:var(--sf2);border-radius:8px;padding:12px;text-align:center">
-          <div style="font-size:20px;font-weight:800;color:var(--tx)">${all.length}</div>
-          <div style="font-size:11px;color:var(--tx3);margin-top:3px">ครั้งทั้งหมด (ปิดบ่อ ${countClose} / พาเชียล ${countPartial})</div>
-        </div>
-      </div>`;
-  }
-}
-// ===== PER-POND CLOSE SUMMARY (หมวดปิดบ่อ — สรุปรายบ่อ) =====
-function renderPondCloseSummary(pid,sumEl){
-  const p=pond(pid);
-  if(!p){sumEl.innerHTML='<p style="color:var(--tx3)">ไม่พบบ่อนี้</p>';return;}
-  const s=getCloseSummary(p);
-  const row=(label,val)=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd)"><span style="color:var(--tx3)">${label}</span><span style="font-weight:700">${val!=null&&val!==''?val:'-'}</span></div>`;
-  sumEl.innerHTML=`
-    <div style="margin-bottom:8px;font-weight:700;color:var(--p)">บ่อ ${p.name} — ${s.cropLabel}</div>
-    ${row('ลูกกุ้งจากที่ไหน',s.hatchery)}
-    ${row('จำนวนปล่อย (ตัว)',s.stock?s.stock.toLocaleString():null)}
-    ${row('ปิดบ่อกับแพ',s.buyer)}
-    ${row('ไซส์ปิดบ่อ (ตัว/กก.)',s.closeSize)}
-    ${row('ราคา (บาท/กก.)',s.price)}
-    ${row('น้ำหนักรวม (กก.)',s.totalWeight?s.totalWeight.toLocaleString():null)}
-    ${row('จำนวนพาเชียล (รอบ)',s.partialCount)}
-    ${row('อายุกุ้งตอนปิดบ่อ (วัน)',s.ageDays)}
-    ${row('อาหารรวม (กก.)',s.totalFeed?s.totalFeed.toLocaleString():null)}
-    ${row('FCR (อัตราแลกเนื้อ)',s.fcr)}
-    ${row('ADG/อัตราการเติบโต (กรัม/วัน)',s.adg)}
-    ${row('อัตรารอด (%)',s.survivalRate)}
-    ${row('Yield/ผลผลิตต่อไร่ (กก./ไร่)',s.yieldPerRai)}
-    ${row('หมายเหตุ',s.notesAll)}
-  `;
 }
 // ===== CEO DASHBOARD (role=ceo) =====
 const ceoMoney=v=>'฿'+Math.round(v||0).toLocaleString('th-TH');
