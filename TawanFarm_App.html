@@ -346,6 +346,10 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .stock-cat-seed{background:#FCE7F3;color:#9D174D}
 .admin-only{display:none}
 body.role-admin .admin-only{display:revert!important}
+/* .admin-only{display:revert} รีเซ็ตกลับเป็นค่า default ของ browser (inline-block สำหรับ button) ไม่ใช่ค่า display:flex ที่ .home-quick button ต้องการ ต้องระบุทับเฉพาะจุดนี้ */
+/* .home-quick button{display:flex} (class+type = 0,0,1,1) มี specificity สูงกว่า .admin-only{display:none} (0,0,1,0) เฉยๆ ทำให้ปุ่มโชว์ทุก role ถ้าไม่ระบุทับตรงนี้ */
+.home-quick .admin-only{display:none!important}
+body.role-admin .home-quick .admin-only{display:flex!important}
 .stock-cat-feed{background:#FEF9E7;color:#92400E}
 .stock-cat-chem{background:#EFF6FF;color:#1D4ED8}
 .stock-cat-equip{background:#F0FDF4;color:#166534}
@@ -913,6 +917,7 @@ body.role-ceo .main{max-width:640px}
     <button onclick="document.getElementById('tab-entry')?.click()"><span class="qi">◔</span>กรอกค่าน้ำ</button>
     <button onclick="document.getElementById('tab-feed')?.click()"><span class="qi">▦</span>กรอกอาหาร</button>
     <button onclick="homeQuickAlerts()"><span class="qi">◉</span>แจ้งเตือน</button>
+    <button class="admin-only" onclick="openAddPond()"><span class="qi">🦐</span>เปิดบ่อใหม่</button>
   </div>
   <div id="ov-alerts"></div>
   <div style="font-size:11px;color:var(--tx3);text-align:right;margin-top:14px">อัปเดต: <span id="ov-ts"></span></div>
@@ -1625,18 +1630,6 @@ body.role-ceo .main{max-width:640px}
 <!-- MANAGE -->
 <div id="sec-manage" class="sec">
   <div class="sec-hdr"><div class="sec-title">⚙️ จัดการบ่อ</div><button class="btn btn-p" onclick="openAddPond()">+ เพิ่มบ่อใหม่</button></div>
-  <div class="card" style="margin-bottom:12px">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <label class="fl" style="margin:0">จำนวนรอบเลี้ยงต่อปี</label>
-      <select class="fi" id="settings-crops-per-year" style="width:100px" onchange="updateCropsPerYear(this.value)">
-        <option value="1">1 รอบ</option>
-        <option value="2">2 รอบ</option>
-        <option value="3">3 รอบ</option>
-        <option value="4">4 รอบ</option>
-      </select>
-      <span style="font-size:11px;color:var(--tx3)">ใช้คำนวณการขึ้นรอบใหม่/ปี ของแต่ละบ่อ</span>
-    </div>
-  </div>
   <div class="card">
     <div class="tbl-wrap">
       <table class="tbl"><thead><tr><th>ชื่อบ่อ</th><th>ยอดปล่อย</th><th>ขนาด (ไร่)</th><th>ความหนาแน่น</th><th>วันปล่อย</th><th>อายุ</th><th>น้ำ</th><th>อาหาร</th><th>สุ่ม</th><th>แล็บ</th><th>อัตราโต (ก./วัน)</th><th>จัดการ</th></tr></thead><tbody id="mg-tbody"></tbody></table>
@@ -3309,8 +3302,6 @@ function projHarvest(p,target=22){
   return{days,age:lat.age+days,date:hDate.toISOString().split('T')[0]};
 }
 function populateAll(){
-  const cpyEl=document.getElementById('settings-crops-per-year');
-  if(cpyEl)cpyEl.value=String(D.settings?.cropsPerYear||2);
   const simple={
     'sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all','lc-pond':'',
   };
@@ -3931,6 +3922,13 @@ function homeRow(p,age,cls,reason){
     ${age!==null&&age!==undefined?`<span class="age">${age} วัน</span>`:''}<span class="chev">›</span>
   </div>`;
 }
+// ── ล้างแผนเตรียมบ่อ (ใช้เมื่อเปลี่ยนแผนการเลี้ยง) — ไม่ลบบ่อออกจาก D.ponds แค่รีเซ็ต prepChecklist กลับเป็น null บ่อยังอยู่ในกลุ่ม "เตรียมบ่อ" พร้อมเริ่มวางแผนใหม่ ──
+function resetPrepPond(pid){
+  const p=pond(pid);if(!p)return;
+  if(!confirm(`ล้างแผนเตรียมบ่อ "${p.name}" ?\n(ใช้เมื่อเปลี่ยนแผนการเลี้ยง — ไม่ลบบ่อออกจากระบบ แค่ล้างเช็คลิสต์เตรียมบ่อเดิม)`))return;
+  p.prepChecklist=null;
+  save();fbSave();renderOv();
+}
 function openPondDetail(id){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
   document.getElementById('sec-ponddetail').classList.add('on');
@@ -4217,7 +4215,7 @@ function pondCard(p,last,age,cls){
     }).join('');
     const done=cl?PREP_STEPS.filter(s=>cl.steps&&cl.steps[s.key]?.done).length:0;
     return`<div class="pc-ov" onclick="openPondDetail('${p.id}')">
-      <div class="pc-ov-top"><span class="pc-ov-name">${p.name}</span><span class="pc-ov-badge pcb-prep">เตรียมบ่อ</span></div>
+      <div class="pc-ov-top"><span class="pc-ov-name">${p.name}</span><span style="display:flex;gap:5px;align-items:center"><span class="pc-ov-badge pcb-prep">เตรียมบ่อ</span><button class="admin-only" onclick="event.stopPropagation();resetPrepPond('${p.id}')" title="ล้างแผนเตรียมบ่อ (ใช้เมื่อเปลี่ยนแผนการเลี้ยง)" style="background:none;border:none;cursor:pointer;color:var(--d);font-size:13px;padding:0;line-height:1">🗑️</button></span></div>
       <div style="font-size:10px;color:var(--tx2);margin-bottom:4px">${done}/${PREP_STEPS.length} ขั้นตอน</div>
       <div class="pc-ov-prep">${steps}</div>
     </div>`;
@@ -7346,11 +7344,6 @@ function calcCropEcon(){
 }
 function closeCropModal(){
   document.getElementById('cropModal').classList.remove('on');
-}
-function updateCropsPerYear(val){
-  if(!D.settings)D.settings={};
-  D.settings.cropsPerYear=parseInt(val)||2;
-  save();fbSave();
 }
 function confirmCloseCrop(){
   const pid=document.getElementById('cm-pond-id').value;
