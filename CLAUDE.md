@@ -109,9 +109,9 @@
 - **สาเหตุเชิงโปรดักต์ (ไม่ใช่โค้ดพัง):** เช็คลิสต์ประจำวันในหน้าภาพรวม (`ov-checklist`) มีแค่ "ค่าน้ำ / อาหาร / สต็อกรายวัน" — ไม่มีการเตือนให้สุ่มตัวอย่างเป็นระยะ (ปกติควรสุ่มทุก 7-14 วัน) ทำให้บ่อถูกลืมได้ง่าย
 - **ข้อเสนอ (ยังไม่ได้แก้ เพราะเป็นการเพิ่มฟีเจอร์ ไม่ใช่ bug fix):** เพิ่ม badge เตือนในการ์ดบ่อ เช่น "⚠ ไม่ได้สุ่มมา 14+ วัน" เมื่อ `today() - lastSample.date > 14`
 
-### 2. รายละเอียดบ่อ — dead code `backToOv()` (index.html:3943-3947)
+### 2. รายละเอียดบ่อ — dead code `backToOv()` (index.html:3943-3947) ✅ ลบแล้ว
 - ฟังก์ชันนี้อ้างอิง `document.getElementById('sec-ov')` แต่ id จริงของหน้าภาพรวมคือ `sec-overview` — ถ้าถูกเรียกจะพัง (null.classList error)
-- ตรวจแล้วไม่มีปุ่มไหนเรียกฟังก์ชันนี้เลยในทั้งไฟล์ (ปุ่ม "‹ ภาพรวม" จริงใช้ `document.getElementById('tab-overview').click()` แทน ซึ่งทำงานถูกต้อง) — ไม่กระทบผู้ใช้งานจริง แต่เป็นโค้ดขยะที่ควรลบทิ้งหรือแก้ id ถ้าจะใช้ในอนาคต
+- ตรวจแล้วไม่มีปุ่มไหนเรียกฟังก์ชันนี้เลยในทั้งไฟล์ (ปุ่ม "‹ ภาพรวม" จริงใช้ `document.getElementById('tab-overview').click()` แทน ซึ่งทำงานถูกต้อง) — ไม่กระทบผู้ใช้งานจริง เป็นโค้ดขยะ **ลบออกแล้วทั้ง 2 ไฟล์**
 
 ### 4. 🔴 ค่าแรงรั่วข้ามรอบเลี้ยง กระทบ Break-even + Risk Exposure (แก้แล้ว)
 **ไฟล์:** `index.html` และ `TawanFarm_App.html` บรรทัด ~3032 (ฟังก์ชัน `pondLaborCost`)
@@ -156,9 +156,9 @@ function pondLaborCost(p){
 ### 7. การซ่อนข้อมูลการเงินจาก staff เป็นแค่ระดับ UI (ข้อสังเกต ไม่ใช่บัค ไม่ได้แก้)
 `applyRole()` (index.html:2076) ซ่อนแท็บ/หน้าการเงิน (`FINANCE_TABS`/`FINANCE_SECS`: จับกุ้ง, สถิติจับกุ้ง, PDF ปิดบ่อ, ค่าแรง, ค่าไฟฟ้า, P&L, จัดการบ่อ, Break-even, Risk Exposure) ด้วย `style.display='none'` เมื่อ role ไม่ใช่ admin — เป็นการซ่อนแค่ฝั่ง UI/browser เท่านั้น ถ้า staff เปิด DevTools เรียกฟังก์ชันตรงๆ (เช่น `switchTab('pl')`) ก็ยังเห็นข้อมูลได้ เพราะข้อมูลทั้งหมดโหลดมาที่ฝั่ง client อยู่แล้ว การป้องกันจริงต้องทำที่ Firebase Security Rules (`firebase_rules.json`) ไม่ใช่ที่ UI — เป็นข้อจำกัดที่มีมาแต่ต้นของสถาปัตยกรรมแอปนี้ (client-side single file) ไม่ใช่สิ่งที่เพิ่งพัง แจ้งไว้เผื่อพี่อยากจะเสริมความปลอดภัยเพิ่มในอนาคต
 
-### 3. เฝ้าระวังโรค — dead code ยืนยันแล้ว (sec-disease)
+### 3. เฝ้าระวังโรค — dead code ยืนยันแล้ว (sec-disease) ✅ ลบแล้ว
 - ไม่มีปุ่ม `tab-disease` หรือทางเข้าใดๆ ในเมนูเรียก `switchTab('disease')` เลย — ยืนยันตรงกับ commit `9704a93` ที่บอกว่าถอดเมนูนี้ออกแล้ว
-- โค้ดที่เหลือ (markup `sec-disease` + ฟังก์ชัน `initDisease()`) ยังอยู่ในไฟล์แต่เข้าถึงไม่ได้จริง — ไม่กระทบผู้ใช้ แต่เพิ่มขนาดไฟล์โดยไม่จำเป็น เป็นตัวเลือกสำหรับลบทิ้งถ้าต้องการเคลียร์โค้ด (ต้องเช็ค `diseaseWatch` field ที่ยังถูกอ้างอิงใน `saveWQ()`/`deleteWQ()` ก่อนลบ เพราะข้อมูลเก่าอาจยังมี field นี้ค้างอยู่)
+- **ลบออกแล้วทั้งหมด**: markup `sec-disease`, ฟังก์ชัน `DISEASES`/`DW_SEV`/`dwState`/`dwReset`/`dwSevClass`/`dwToggleSym`/`dwSetSev`/`renderDiseaseWatch`/`dwSevLabel`/`renderDwSummary`/`initDisease`/`onDsPond`/`onDsDate`/`loadDsForDate`/`saveDs`/`clearDs`, entry `'ds-pond':''` ใน `populateAll()`, router `if(t==='disease')initDisease();`, และการอ้างอิง `rec.diseaseWatch`/`renderDwSummary()` ใน `saveWQ()`/`deleteWQ()` — ลบออกจากทั้ง `index.html` และ `TawanFarm_App.html`, ทดสอบแล้วว่า WQ save/delete ยังทำงานปกติไม่มี error
 
 ## หมายเหตุโครงสร้างโค้ด
 

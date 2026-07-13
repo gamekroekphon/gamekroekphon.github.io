@@ -799,27 +799,6 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
     <div class="tbl-wrap" id="tbl-wrap"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อเพื่อดูข้อมูล</p></div>
   </div>
 </div>
-<!-- DISEASE WATCH -->
-<div id="sec-disease" class="sec">
-  <div class="sec-hdr"><div class="sec-title">🦐 เฝ้าระวังโรคตาเปล่ารายวัน</div></div>
-  <div class="card" style="margin-bottom:16px">
-    <div class="fgrid" style="margin-bottom:16px">
-      <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="ds-pond" onchange="onDsPond()"><option value="">-- เลือกบ่อ --</option></select></div>
-      <div class="fg"><label class="fl">วันที่ *</label><input type="date" class="fi" id="ds-date" onchange="calcAge('ds');onDsDate()"></div>
-      <div class="fg"><label class="fl">อายุ (วัน)</label><input type="number" class="fi" id="ds-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
-    </div>
-    <div id="ds-fields"></div>
-    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn btn-p" onclick="saveDs()">💾 บันทึก</button>
-      <button class="btn btn-s" onclick="clearDs()">🗑️ ล้างฟอร์ม</button>
-    </div>
-    <div id="ds-msg" style="margin-top:10px"></div>
-  </div>
-  <div class="card">
-    <div class="card-t">📋 สรุปวันนี้ — บ่อที่พบอาการ</div>
-    <div id="dw-summary"></div>
-  </div>
-</div>
 <!-- FEEDING -->
 <div id="sec-feed" class="sec">
   <div class="sec-hdr"><div class="sec-title">🍖 สมุดให้อาหารรายวัน &amp; FCR (อัตราแลกเนื้อ)</div></div>
@@ -3127,7 +3106,7 @@ function populateAll(){
   const cpyEl=document.getElementById('settings-crops-per-year');
   if(cpyEl)cpyEl.value=String(D.settings?.cropsPerYear||2);
   const simple={
-    'ds-pond':'','sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all','lc-pond':'',
+    'sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all','lc-pond':'',
   };
   Object.entries(simple).forEach(([id,def])=>{
     const el=document.getElementById(id);if(!el)return;const cur=el.value;
@@ -3485,7 +3464,7 @@ function goTab(t,btn){
   }
   if(btn.classList.contains('sn-top'))document.querySelectorAll('.sn-sub').forEach(s=>s.classList.remove('open'));
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));document.getElementById('sec-'+t).classList.add('on');
-  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='disease')initDisease();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='stock')initStock();if(t==='abw')initAbw();if(t==='feed')initFeed();if(t==='pl')initPL();
+  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='stock')initStock();if(t==='abw')initAbw();if(t==='feed')initFeed();if(t==='pl')initPL();
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
   if(t==='chem')initChem();if(t==='lab')initLab();
   if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();if(t==='wqfeed')initWqFeed();if(t==='hatchery')initHatchery();
@@ -3752,11 +3731,6 @@ function openPondDetail(id){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
   document.getElementById('sec-ponddetail').classList.add('on');
   renderPondDetail(id);
-  window.scrollTo({top:0,behavior:'instant'});
-}
-function backToOv(){
-  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
-  document.getElementById('sec-ov').classList.add('on');
   window.scrollTo({top:0,behavior:'instant'});
 }
 function renderPondDetail(id){
@@ -4179,111 +4153,6 @@ function renderChecklist(){
   </div>`;
 }
 function jumpEntry(id){document.getElementById('tab-entry').click();setTimeout(()=>{selectEPond(id);},80)}
-// ===== เฝ้าระวังโรคตาเปล่ารายวัน =====
-const DISEASES=[
-  {key:'redBody',name:'ตัวแดง',symptoms:['ลำตัวแดง','ขาแดง','หางแดง','ว่ายเอียง/ลอยตัว']},
-  {key:'whiteFeces',name:'ขี้ขาว',symptoms:['พบเส้นขี้ขาวลอยในบ่อ','กินอาหารลดลงผิดปกติ']},
-  {key:'ems',name:'EMS (ตายเฉียบพลัน)',symptoms:['ตับซีด/ฝ่อ','ตายเฉียบพลันในกุ้งอายุน้อย (ก่อน 35 วัน)','กุ้งตายสะสมก้นบ่อ']},
-  {key:'esp',name:'ESP',symptoms:['ลำตัวซีด/โตช้าผิดปกติ','ขนาดไม่สม่ำเสมอในบ่อเดียวกัน']}
-];
-const DW_SEV=[{k:'none',l:'ไม่พบ'},{k:'mild',l:'พบเล็กน้อย'},{k:'mod',l:'พบปานกลาง'},{k:'severe',l:'พบมาก'}];
-let dwState={};
-function dwReset(){DISEASES.forEach(d=>dwState[d.key]={symptoms:[],severity:'none'})}
-function dwSevClass(sev){return sev==='severe'?'d':(sev==='mild'||sev==='mod')?'w':'ok'}
-function dwToggleSym(dk,sym){
-  const st=dwState[dk];if(!st)return;
-  const i=st.symptoms.indexOf(sym);
-  if(i>=0)st.symptoms.splice(i,1);else st.symptoms.push(sym);
-  renderDiseaseWatch();
-}
-function dwSetSev(dk,sev){if(!dwState[dk])return;dwState[dk].severity=sev;renderDiseaseWatch()}
-function renderDiseaseWatch(){
-  const el=document.getElementById('ds-fields');if(!el)return;
-  el.innerHTML=DISEASES.map(d=>{
-    const st=dwState[d.key]||{symptoms:[],severity:'none'};
-    return `<div style="margin-bottom:14px">
-      <div style="font-size:13px;font-weight:700;margin-bottom:6px">${d.name}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
-        ${d.symptoms.map(s=>{const on=st.symptoms.includes(s);return `<button type="button" class="dw-chip${on?' dw-chip-on':''}" onclick="dwToggleSym('${d.key}','${s.replace(/'/g,"\\'")}')">${s}${on?' ✓':''}</button>`}).join('')}
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-        <span style="font-size:11px;color:var(--tx2)">ความรุนแรง:</span>
-        ${DW_SEV.map(s=>`<button type="button" class="dw-sev${st.severity===s.k?' dw-sev-on-'+dwSevClass(s.k):''}" onclick="dwSetSev('${d.key}','${s.k}')">${s.l}${st.severity===s.k?' ✓':''}</button>`).join('')}
-      </div>
-    </div>`;
-  }).join('');
-}
-function dwSevLabel(k){return(DW_SEV.find(s=>s.k===k)||{}).l||k}
-function renderDwSummary(){
-  const el=document.getElementById('dw-summary');if(!el)return;
-  const d=today();const rows=[];
-  (D.ponds||[]).forEach(p=>{
-    const rec=(p.records||[]).find(r=>r.date===d);
-    if(rec&&rec.diseaseWatch){
-      DISEASES.forEach(ds=>{
-        const st=rec.diseaseWatch[ds.key];
-        if(st&&st.severity&&st.severity!=='none'){
-          rows.push({pond:p.name,disease:ds.name,severity:st.severity,symptoms:st.symptoms||[]});
-        }
-      });
-    }
-  });
-  if(!rows.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:14px;font-style:italic">วันนี้ยังไม่พบอาการผิดปกติในทุกบ่อ</p>';return}
-  const sevColor=s=>s==='severe'?'var(--d)':'var(--w)';
-  el.innerHTML=rows.map(r=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--sf2)">
-    <span style="width:8px;height:8px;border-radius:50%;background:${sevColor(r.severity)};flex-shrink:0"></span>
-    <span style="font-size:13px;font-weight:600;width:60px">${r.pond}</span>
-    <span style="font-size:12px;color:var(--tx2);flex:1">${r.disease} — ${dwSevLabel(r.severity)}${r.symptoms.length?' ('+r.symptoms.join(', ')+')':''}</span>
-  </div>`).join('');
-}
-function initDisease(){
-  populateAll();
-  const dEl=document.getElementById('ds-date');if(dEl&&!dEl.value)dEl.value=today();
-  calcAge('ds');
-  loadDsForDate();
-  renderDwSummary();
-}
-function onDsPond(){calcAge('ds');loadDsForDate()}
-function onDsDate(){loadDsForDate()}
-function loadDsForDate(){
-  const pid=document.getElementById('ds-pond')?.value;
-  const d=document.getElementById('ds-date')?.value;
-  dwReset();
-  const msg=document.getElementById('ds-msg');
-  if(pid&&d){
-    const p=pond(pid);
-    const rec=p?.records.find(r=>r.date===d);
-    if(rec&&rec.diseaseWatch){
-      DISEASES.forEach(ds=>{if(rec.diseaseWatch[ds.key])dwState[ds.key]={symptoms:[...(rec.diseaseWatch[ds.key].symptoms||[])],severity:rec.diseaseWatch[ds.key].severity||'none'}});
-    }
-    if(msg){
-      const hasData=rec&&rec.diseaseWatch&&DISEASES.some(ds=>rec.diseaseWatch[ds.key]&&rec.diseaseWatch[ds.key].severity!=='none');
-      if(hasData)showMsg('ds-msg','warn',`⚠️ มีข้อมูลเฝ้าระวังโรควันที่ ${fD(d)} บ่อ ${p.name} อยู่แล้ว — กด "บันทึก" เพื่ออัปเดต`);
-      else msg.innerHTML='';
-    }
-  } else if(msg){msg.innerHTML=''}
-  renderDiseaseWatch();
-}
-function saveDs(){
-  const pid=document.getElementById('ds-pond').value,d=document.getElementById('ds-date').value;
-  if(!pid||!d){showMsg('ds-msg','warn','กรุณาเลือกบ่อและวันที่');return}
-  const p=pond(pid);if(!p)return;
-  let rec=p.records.find(r=>r.date===d);
-  if(!rec){
-    rec={date:d,age:parseInt(document.getElementById('ds-age').value)||0};
-    p.records.push(rec);p.records.sort((a,b)=>new Date(a.date)-new Date(b.date));
-  }
-  rec.diseaseWatch=JSON.parse(JSON.stringify(dwState));
-  save();renderDwSummary();renderWQTable();renderOv();
-  showMsg('ds-msg','ok',`✅ บันทึกข้อมูลเฝ้าระวังโรค บ่อ ${p.name} วันที่ ${fD(d)}`);
-}
-function clearDs(){
-  document.getElementById('ds-date').value=today();
-  calcAge('ds');
-  dwReset();renderDiseaseWatch();
-  const pid=document.getElementById('ds-pond')?.value;const p=pid?pond(pid):null;
-  showMsg('ds-msg','ok',p?`🧹 ล้างฟอร์มแล้ว — ยังเลือกบ่อ <strong>${p.name}</strong> ค้างอยู่`:'🧹 ล้างฟอร์มแล้ว');
-}
 // ===== ค่าแรง / แรงงาน =====
 function laborTab(paneId, btn) {
   document.querySelectorAll('.labor-sub-btn').forEach(b=>b.classList.remove('on'));
@@ -5366,7 +5235,6 @@ function saveWQ(){
   let msg;
   if(idx>=0){
     if(!confirm(`มีข้อมูลของวันที่ ${fD(d)} บ่อ ${p.name} อยู่แล้ว ต้องการบันทึกทับข้อมูลเดิมหรือไม่?`))return;
-    rec.diseaseWatch=p.records[idx].diseaseWatch;
     p.records[idx]=rec;msg=`อัปเดต ${fD(d)} บ่อ ${p.name} แล้ว`;
   }
   else{p.records.push(rec);p.records.sort((a,b)=>new Date(a.date)-new Date(b.date));msg=`✅ บันทึกสำเร็จ บ่อ ${p.name}`;}
@@ -5411,7 +5279,7 @@ function deleteWQ(pid,d){
   if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(d)+' ใช่หรือไม่?'))return;
   const p=pond(pid);if(!p)return;
   p.records=(p.records||[]).filter(r=>r.date!==d);
-  save();renderWQTable();renderOv();renderDwSummary();
+  save();renderWQTable();renderOv();
   renderEpChips();updateEpHeader();
 }
 
