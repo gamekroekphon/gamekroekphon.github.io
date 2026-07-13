@@ -645,6 +645,18 @@ body.role-ceo .main{max-width:640px}
 .ceo-hist-tbl td:first-child{text-align:left;color:var(--tx2);font-variant-numeric:normal}
 .ceo-hist-tbl tr:last-child td{border-bottom:none}
 .ceo-empty{color:var(--tx3);padding:14px;font-style:italic;text-align:center;font-size:12.5px}
+/* iPad/แท็บเล็ต: กว้างขึ้น การ์ดบ่อเรียงหลายคอลัมน์ ไม่ยืดเป็นแถวเดียวยาวๆ เหมือนมือถือ (วางท้าย section กัน base rule ทับ) */
+@media(min-width:700px){
+  body.role-ceo .main{max-width:900px}
+  .ceo-kpi-grid{grid-template-columns:repeat(4,1fr)}
+  .ceo-pond-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .ceo-sheet{left:50%;right:auto;transform:translateX(-50%);width:560px;border-radius:20px;bottom:16px;max-height:calc(100% - 32px)}
+}
+@media(min-width:1000px){
+  body.role-ceo .main{max-width:1180px}
+  .ceo-kpi-grid{grid-template-columns:repeat(5,1fr)}
+  .ceo-pond-list{grid-template-columns:repeat(3,1fr)}
+}
 </style>
   <!-- Firebase SDKs (compat v9) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
