@@ -566,6 +566,7 @@ body.role-ceo .main{max-width:640px}
 .ceo-kpi.hero .ceo-kpi-val{font-size:25px;color:var(--pd)}
 .ceo-kpi-val small{font-size:12px;font-weight:600;color:var(--tx3);margin-left:3px}
 .ceo-kpi.warn .ceo-kpi-val{color:var(--w)}
+.ceo-kpi-note{font-size:9.5px;color:var(--tx3);margin-top:3px}
 .ceo-sec-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
 .ceo-sec-title{font-size:14px;font-weight:700}
 .ceo-sec-note{font-size:11.5px;color:var(--tx3)}
@@ -579,18 +580,16 @@ body.role-ceo .main{max-width:640px}
 .ceo-status-pill{font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:99px;white-space:nowrap;flex-shrink:0}
 .ceo-status-ok{background:var(--ob);color:var(--ok)}
 .ceo-status-watch{background:var(--wb);color:var(--w)}
-.ceo-pcard-body{display:flex;gap:12px;align-items:stretch}
-.ceo-pcard-spark{width:58px;height:64px;flex-shrink:0}
-.ceo-pcard-stats{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;min-width:0}
+.ceo-pcard-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
 .ceo-mini-lbl{font-size:10px;color:var(--tx3);margin-bottom:1px;white-space:nowrap}
 .ceo-mini-val{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .ceo-pcard-cost{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--bd);padding-top:10px;margin-top:11px}
 .ceo-cost-lbl{font-size:11px;color:var(--tx3);font-weight:600}
 .ceo-cost-val{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
-.ceo-scrim{position:fixed;inset:0;background:rgba(20,17,10,.42);opacity:0;pointer-events:none;transition:opacity .22s ease;z-index:200}
-.ceo-scrim.on{opacity:1;pointer-events:auto}
-.ceo-sheet{position:fixed;left:0;right:0;bottom:0;max-height:92vh;background:var(--sf);border-radius:20px 20px 0 0;box-shadow:0 -10px 34px rgba(16,24,40,.22);z-index:201;transform:translateY(100%);transition:transform .26s cubic-bezier(.22,.8,.25,1);display:flex;flex-direction:column;max-width:560px;margin:0 auto}
-.ceo-sheet.on{transform:translateY(0)}
+.ceo-scrim{position:fixed;inset:0;background:rgba(20,17,10,.42);z-index:200;display:none}
+.ceo-scrim.on{display:block}
+.ceo-sheet{position:fixed;left:0;right:0;bottom:0;max-height:92vh;background:var(--sf);border-radius:20px 20px 0 0;box-shadow:0 -10px 34px rgba(16,24,40,.22);z-index:201;display:none;flex-direction:column;max-width:560px;margin:0 auto}
+.ceo-sheet.on{display:flex}
 .ceo-sheet-handle{width:36px;height:4px;background:var(--bd);border-radius:99px;margin:10px auto 4px;flex-shrink:0}
 .ceo-sheet-hd{padding:6px 20px 14px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0}
 .ceo-sheet-name{font-size:19px;font-weight:700}
@@ -606,10 +605,17 @@ body.role-ceo .main{max-width:640px}
 .ceo-plain-row .src{font-size:10px;color:var(--tx3);display:block;margin-top:1px}
 .ceo-plain-row .val{font-weight:700;font-variant-numeric:tabular-nums}
 .ceo-stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.ceo-wq-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.ceo-wq-cell{background:var(--sf2);border-radius:10px;padding:10px 11px}
+.ceo-wq-lbl{font-size:10px;color:var(--tx3);margin-bottom:3px}
+.ceo-wq-val{font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:5px}
+.ceo-wq-arrow{font-size:11px;font-weight:700}
+.ceo-wq-arrow.up{color:var(--ok)}
+.ceo-wq-arrow.down{color:var(--d)}
+.ceo-wq-arrow.flat{color:var(--tx3)}
 .ceo-stat{background:var(--sf2);border-radius:10px;padding:10px 10px}
 .ceo-stat-lbl{font-size:10px;color:var(--tx3);margin-bottom:3px}
 .ceo-stat-val{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
-.ceo-chart-box{height:100px;position:relative;margin-bottom:6px}
 .ceo-growth-note{font-size:11.5px;color:var(--tx3);line-height:1.6;margin-bottom:22px}
 .ceo-acc{border:1px solid var(--bd);border-radius:10px;margin-bottom:10px;overflow:hidden}
 .ceo-acc-hd{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;background:var(--sf)}
@@ -824,12 +830,8 @@ body.role-ceo .main{max-width:640px}
         <div class="ceo-plain-row"><span class="lbl">จัดการน้ำล่าสุด</span><span class="val" id="ceo-p-lastwater" style="text-align:right;max-width:60%">—</span></div>
       </div>
 
-      <div class="ceo-block-title">ค่าน้ำเช้าล่าสุด</div>
-      <div class="ceo-stat-grid">
-        <div class="ceo-stat"><div class="ceo-stat-lbl">pH เช้า</div><div class="ceo-stat-val" id="ceo-p-phm">—</div></div>
-        <div class="ceo-stat"><div class="ceo-stat-lbl">DO เช้า</div><div class="ceo-stat-val" id="ceo-p-dom">—</div></div>
-        <div class="ceo-stat"><div class="ceo-stat-lbl">อุณหภูมิเช้า</div><div class="ceo-stat-val" id="ceo-p-tempm">—</div></div>
-      </div>
+      <div class="ceo-block-title">ค่าน้ำล่าสุด <span id="ceo-p-waterdate" style="text-transform:none;font-weight:400;color:var(--tx3)"></span></div>
+      <div class="ceo-wq-grid" id="ceo-p-watergrid"></div>
 
       <div class="ceo-block-title">การเติบโต</div>
       <div class="ceo-stat-grid">
@@ -837,7 +839,6 @@ body.role-ceo .main{max-width:640px}
         <div class="ceo-stat"><div class="ceo-stat-lbl">ไซส์</div><div class="ceo-stat-val" id="ceo-p-size">—</div></div>
         <div class="ceo-stat"><div class="ceo-stat-lbl">FCR ประเมิน</div><div class="ceo-stat-val" id="ceo-p-fcr">—</div></div>
       </div>
-      <div class="ceo-chart-box"><canvas id="ceo-p-chart"></canvas></div>
       <div class="ceo-growth-note" id="ceo-p-growthnote">—</div>
 
       <div class="ceo-acc" id="ceo-acc-cost">
@@ -7592,13 +7593,16 @@ function ceoStatus(p){
   if(!target||!last.abw)return'ok';
   return last.abw<target*0.85?'watch':'ok';
 }
-function ceoFeedToday(p){
-  const rec=(p.feedLog||[]).find(r=>r.date===today());
-  return rec&&rec.totalFeed!=null?rec.totalFeed:0;
+// ── อาหารวันนี้: ถ้ายังไม่กรอกวันนี้ ใช้บันทึกล่าสุดก่อนหน้าแทน ไม่โชว่างเปล่า ──
+function ceoFeedDisplay(p){
+  const today_=(p.feedLog||[]).find(r=>r.date===today());
+  if(today_&&today_.totalFeed!=null)return{val:today_.totalFeed,isToday:true};
+  const prev=(p.feedLog||[]).filter(r=>r.totalFeed!=null&&r.date<today()).sort((a,b)=>b.date.localeCompare(a.date))[0];
+  return prev?{val:prev.totalFeed,isToday:false,date:prev.date}:{val:0,isToday:true};
 }
 function ceoFeedPer100k(p){
   if(!p.stock)return'-';
-  return(ceoFeedToday(p)/(p.stock/100000)).toFixed(1);
+  return(ceoFeedDisplay(p).val/(p.stock/100000)).toFixed(1);
 }
 // ── รายการเบิกสต็อกจริงของบ่อ ไม่รวมอาหาร (คิดแยกจาก pondFeedCost อยู่แล้ว) เรียงล่าสุดก่อน ──
 function getStockItemsForPond(pondId,startDate,endDate){
@@ -7620,37 +7624,6 @@ function ceoTotalCost(p){
   const elecCost=getElecCostForPeriod(p.startDate,today());
   return fryCost+feedCost+stockCost+laborCost+elecCost;
 }
-function ceoSpark(canvas,data,color){
-  if(!canvas)return;
-  const ctx=canvas.getContext('2d');
-  const dpr=window.devicePixelRatio||1;
-  const w=canvas.clientWidth,h=canvas.clientHeight;
-  if(!w||!h)return;
-  canvas.width=w*dpr;canvas.height=h*dpr;ctx.scale(dpr,dpr);
-  ctx.clearRect(0,0,w,h);
-  if(!data.length)return;
-  const min=Math.min(...data),max=Math.max(...data);
-  const pad=4;
-  const pts=data.map((v,i)=>[
-    pad+(data.length>1?(i/(data.length-1))*(w-pad*2):0),
-    h-pad-((v-min)/(max-min||1))*(h-pad*2)
-  ]);
-  const grad=ctx.createLinearGradient(0,0,0,h);
-  grad.addColorStop(0,color+'33');
-  grad.addColorStop(1,color+'00');
-  ctx.beginPath();
-  ctx.moveTo(pts[0][0],h);
-  pts.forEach(pt=>ctx.lineTo(pt[0],pt[1]));
-  ctx.lineTo(pts[pts.length-1][0],h);
-  ctx.closePath();
-  ctx.fillStyle=grad;ctx.fill();
-  ctx.beginPath();
-  pts.forEach((pt,i)=>i?ctx.lineTo(pt[0],pt[1]):ctx.moveTo(pt[0],pt[1]));
-  ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.lineJoin='round';ctx.stroke();
-  const last=pts[pts.length-1];
-  ctx.beginPath();ctx.arc(last[0],last[1],2.6,0,Math.PI*2);
-  ctx.fillStyle=color;ctx.fill();
-}
 function ceoRelDays(dateStr){
   const days=dDiff(dateStr,today());
   if(days<=0)return'วันนี้';
@@ -7666,7 +7639,8 @@ function renderCeo(){
   const el=document.getElementById('ceo-kpi');if(!el)return;
   const ponds=wqfeedActivePonds();
   const totalCostAll=ponds.reduce((s,p)=>s+ceoTotalCost(p),0);
-  const totalFeedToday=ponds.reduce((s,p)=>s+ceoFeedToday(p),0);
+  let totalFeedToday=0,feedAllToday=true;
+  ponds.forEach(p=>{const f=ceoFeedDisplay(p);totalFeedToday+=f.val;if(!f.isToday)feedAllToday=false;});
   const totalBiomass=ponds.reduce((s,p)=>s+(getLatestBiomass(p)||0),0);
   const watchCount=ponds.filter(p=>ceoStatus(p)==='watch').length;
   el.innerHTML=`
@@ -7677,6 +7651,7 @@ function renderCeo(){
     <div class="ceo-kpi">
       <div class="ceo-kpi-lbl">อาหารรวมวันนี้</div>
       <div class="ceo-kpi-val">${Math.round(totalFeedToday).toLocaleString()}<small>กก.</small></div>
+      ${feedAllToday?'':'<div class="ceo-kpi-note">* บางบ่อยังไม่กรอก ใช้ข้อมูลล่าสุดแทน</div>'}
     </div>
     <div class="ceo-kpi">
       <div class="ceo-kpi-lbl">Biomass รวม</div>
@@ -7702,7 +7677,7 @@ function renderCeo(){
     const bio=getLatestBiomass(p);
     const size=(p.samples&&p.samples.length)?p.samples[p.samples.length-1].plCount:null;
     const age=p.startDate?dDiff(p.startDate,today()):0;
-    const feedToday=ceoFeedToday(p);
+    const f=ceoFeedDisplay(p);
     return`<div class="ceo-pcard" onclick="ceoOpenSheet('${p.id}')">
       <div class="ceo-pcard-top">
         <div>
@@ -7711,14 +7686,11 @@ function renderCeo(){
         </div>
         <span class="ceo-status-pill ceo-status-${status}">${statusLbl}</span>
       </div>
-      <div class="ceo-pcard-body">
-        <canvas class="ceo-pcard-spark" id="ceo-spark-${p.id}"></canvas>
-        <div class="ceo-pcard-stats">
-          <div><div class="ceo-mini-lbl">Biomass</div><div class="ceo-mini-val">${bio?Math.round(bio).toLocaleString()+' กก.':'-'}</div></div>
-          <div><div class="ceo-mini-lbl">ไซส์</div><div class="ceo-mini-val">${size?size+' ตัว/กก.':'-'}</div></div>
-          <div><div class="ceo-mini-lbl">อาหารวันนี้</div><div class="ceo-mini-val">${feedToday?Math.round(feedToday).toLocaleString()+' กก.':'-'}</div></div>
-          <div><div class="ceo-mini-lbl">อาหาร/แสนตัว</div><div class="ceo-mini-val">${ceoFeedPer100k(p)} กก.</div></div>
-        </div>
+      <div class="ceo-pcard-stats">
+        <div><div class="ceo-mini-lbl">Biomass</div><div class="ceo-mini-val">${bio?Math.round(bio).toLocaleString()+' กก.':'-'}</div></div>
+        <div><div class="ceo-mini-lbl">ไซส์</div><div class="ceo-mini-val">${size?size+' ตัว/กก.':'-'}</div></div>
+        <div><div class="ceo-mini-lbl">อาหารวันนี้${f.isToday?'':' (ล่าสุด)'}</div><div class="ceo-mini-val">${f.val?Math.round(f.val).toLocaleString()+' กก.':'-'}</div></div>
+        <div><div class="ceo-mini-lbl">อาหาร/แสนตัว</div><div class="ceo-mini-val">${ceoFeedPer100k(p)} กก.</div></div>
       </div>
       <div class="ceo-pcard-cost">
         <span class="ceo-cost-lbl">ต้นทุนสะสม</span>
@@ -7726,12 +7698,6 @@ function renderCeo(){
       </div>
     </div>`;
   }).join('');
-
-  const accentColor=getComputedStyle(document.documentElement).getPropertyValue('--p').trim();
-  ponds.forEach(p=>{
-    const growth=(p.samples||[]).filter(s=>s.abw).map(s=>s.abw);
-    ceoSpark(document.getElementById('ceo-spark-'+p.id),growth.length?growth:[0,0],accentColor);
-  });
 }
 function ceoOpenSheet(pid){
   const p=pond(pid);if(!p)return;
@@ -7752,10 +7718,24 @@ function ceoOpenSheet(pid){
     ?`${WL_ACT[lastWl.action]||lastWl.action} ${lastWl.vol||'-'} ซม. · ${ceoRelDays(lastWl.date)}`
     :'ยังไม่มีการจัดการน้ำ';
 
-  const lastRec=(p.records||[]).slice().sort((a,b)=>b.date.localeCompare(a.date))[0];
-  document.getElementById('ceo-p-phm').textContent=lastRec&&lastRec.phM!=null?lastRec.phM.toFixed(2):'-';
-  document.getElementById('ceo-p-dom').textContent=lastRec&&lastRec.doM!=null?lastRec.doM.toFixed(2)+' mg/L':'-';
-  document.getElementById('ceo-p-tempm').textContent=lastRec&&lastRec.tM!=null?lastRec.tM.toFixed(1)+'°C':'-';
+  // ── ค่าน้ำล่าสุด: โชว์ทุกค่าที่มีการวัดจริง (ไม่ใช่ 3 ค่าตายตัว) พร้อมลูกศรเทียบกับครั้งก่อนหน้า ──
+  const recsSorted=(p.records||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const lastRec=recsSorted[0],prevRec=recsSorted[1];
+  const wdEl=document.getElementById('ceo-p-waterdate');
+  if(wdEl)wdEl.textContent=lastRec?(lastRec.date===today()?'(วันนี้)':'(ล่าสุด — '+ceoRelDays(lastRec.date)+')'):'';
+  const wgEl=document.getElementById('ceo-p-watergrid');
+  if(wgEl){
+    const measured=lastRec?PARAMS.filter(pm=>lastRec[pm.key]!=null):[];
+    wgEl.innerHTML=measured.length?measured.map(pm=>{
+      const cur=lastRec[pm.key],prev=prevRec?prevRec[pm.key]:null;
+      let arrow='';
+      if(prev!=null){
+        const diff=cur-prev;
+        arrow=Math.abs(diff)<1e-9?'<span class="ceo-wq-arrow flat">▬</span>':(diff>0?'<span class="ceo-wq-arrow up">▲</span>':'<span class="ceo-wq-arrow down">▼</span>');
+      }
+      return`<div class="ceo-wq-cell"><div class="ceo-wq-lbl">${pm.lbl}</div><div class="ceo-wq-val">${cur.toFixed(pm.dec)}${pm.unit?' '+pm.unit:''}${arrow}</div></div>`;
+    }).join(''):'<div style="grid-column:1/-1;color:var(--tx3);font-size:12px;text-align:center;padding:10px">ยังไม่มีข้อมูลค่าน้ำ</div>';
+  }
 
   document.getElementById('ceo-p-bio').textContent=bio?Math.round(bio).toLocaleString()+' กก.':'-';
   document.getElementById('ceo-p-size').textContent=lastSample&&lastSample.plCount?lastSample.plCount+' ตัว/กก.':'-';
@@ -7819,11 +7799,6 @@ function ceoOpenSheet(pid){
 
   ['ceo-acc-cost','ceo-acc-water','ceo-acc-feed'].forEach(id=>document.getElementById(id)?.classList.remove('open'));
   document.getElementById('ceo-acc-cost')?.classList.add('open');
-
-  requestAnimationFrame(()=>{
-    const accentColor=getComputedStyle(document.documentElement).getPropertyValue('--p').trim();
-    ceoSpark(document.getElementById('ceo-p-chart'),growth.length?growth:[0,0],accentColor);
-  });
 
   document.getElementById('ceo-scrim').classList.add('on');
   document.getElementById('ceo-sheet').classList.add('on');
