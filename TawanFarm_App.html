@@ -1533,6 +1533,7 @@ body.role-ceo .main{max-width:640px}
       <span>📋 ประวัติการจับกุ้ง</span>
       <div style="display:flex;gap:6px;align-items:center">
         <button class="btn btn-s admin-only" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="syncHarvestLogFromCropHistory(2569)" title="ดึงรายการปิดบ่อจากประวัติรอบเลี้ยง (ปิดแล้ว) ปี 2569 มาใส่ในตารางนี้ เฉพาะรายการที่ยังไม่มี">🔄 ซิงค์จากรอบเลี้ยง (ปี 2569)</button>
+        <select class="fi" id="hv-filter-year" onchange="renderHarvest()" style="width:110px;font-size:12px;padding:4px 8px"></select>
         <select class="fi" id="hv-filter-pond" onchange="renderHarvest()" style="width:160px;font-size:12px;padding:4px 8px">
           <option value="">ทุกบ่อ</option>
         </select>
@@ -7452,8 +7453,22 @@ function deleteHarvest(id){
 }
 function renderHarvest(){
   if(!D.harvestLog)D.harvestLog=[];
+  // ── ตัวกรองปี — คำนวณใหม่ทุกครั้งที่ render (ไม่ใช่แค่ตอน populateAll) กันกรณีปีใหม่ถูกเพิ่มมาระหว่างหน้ายังเปิดอยู่ (เช่น หลังกดปุ่มซิงค์) ──
+  const hvYearEl=document.getElementById('hv-filter-year');
+  if(hvYearEl){
+    // ── ค่าเริ่มต้นเป็นปีปัจจุบันแค่ตอน dropdown ยังไม่เคย populate เท่านั้น (options.length===0) — รอบต่อๆ ไปคงค่าที่ผู้ใช้เลือกไว้เป๊ะๆ รวมถึง "" (ทุกปี) ด้วย กัน cur||curYr ตีความ "" เป็น falsy แล้วดีดกลับไปปีปัจจุบันทุกครั้งที่ render ──
+    const isFirstPopulate=hvYearEl.options.length===0;
+    const cur=hvYearEl.value;
+    const curYr=yearBE(new Date().getFullYear());
+    const yrs=[...new Set(D.harvestLog.map(r=>yearBE(r.date.slice(0,4))))];
+    if(!yrs.includes(curYr))yrs.push(curYr);
+    yrs.sort((a,b)=>b-a);
+    hvYearEl.innerHTML='<option value="">ทุกปี</option>'+yrs.map(y=>`<option value="${y}">ปี ${y}</option>`).join('');
+    hvYearEl.value=isFirstPopulate?String(curYr):cur;
+  }
   const filterPond=document.getElementById('hv-filter-pond')?.value||'';
-  const rows=D.harvestLog.filter(r=>!filterPond||r.pondId===filterPond);
+  const filterYear=hvYearEl?.value||'';
+  const rows=D.harvestLog.filter(r=>(!filterPond||r.pondId===filterPond)&&(!filterYear||String(yearBE(r.date.slice(0,4)))===filterYear));
   const tbody=document.getElementById('hv-tbody');
   if(!tbody)return;
   if(rows.length===0){
