@@ -1231,7 +1231,10 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
           <div class="fg"><label class="fl">รายได้รวม (บาท)</label><input type="number" class="fi" id="cm-revenue" step="1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--sf2)"></div>
           <div class="fg"><label class="fl">ต้นทุนลูกกุ้ง (บาท)</label><input type="number" class="fi" id="cm-cost-fry" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl">ต้นทุนอาหาร (บาท)</label><input type="number" class="fi" id="cm-cost-feed" step="1" placeholder="คำนวณจาก feedLog" readonly style="background:var(--sf2)"></div>
-          <div class="fg"><label class="fl">ต้นทุนสารเคมี (บาท)</label><input type="number" class="fi" id="cm-cost-chem" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ต้นทุนสารเคมี (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากสต็อกอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-chem" step="1" placeholder="0"></div>
+          <div class="fg" id="cm-stock-breakdown-wrap" style="grid-column:1/-1;display:none">
+            <div id="cm-stock-breakdown" style="font-size:11.5px;color:var(--tx2);background:var(--sf2);border-radius:6px;padding:8px 10px"></div>
+          </div>
           <div class="fg"><label class="fl">ต้นทุนค่าแรง (บาท)</label><input type="number" class="fi" id="cm-cost-labor" step="1" placeholder="ดึงจากแท็บค่าแรงอัตโนมัติ" style="background:var(--sf2)"></div>
           <div class="fg"><label class="fl">ต้นทุนค่าไฟฟ้า (บาท)</label>
             <div style="display:flex;gap:6px">
@@ -7115,6 +7118,18 @@ function openCropModal(pid){
   // ── ต้นทุนลูกกุ้ง/อาหาร ดึงจากข้อมูลที่มีอยู่แล้วในระบบมาให้ ไม่ต้องพิมพ์ซ้ำ (ลูกกุ้งยังแก้ไขได้ถ้าตัวเลขจริงต่างจากนี้) ──
   document.getElementById('cm-cost-fry').value=p.costFry||'';
   document.getElementById('cm-cost-feed').value=pondFeedCost(p)||'';
+  // ── ต้นทุนสารเคมี ดึงจากรายการเบิกพัสดุจริงของบ่อนี้ (หมวดยากิน/ยาลงน้ำ/จุลินทรีย์/ปูน/อุปกรณ์) แยกให้เห็นที่มาแต่ละหมวด แก้ไขตัวเลขรวมเองได้ ──
+  const stockBd=getStockCostBreakdownForPond(pid,p.startDate,today());
+  document.getElementById('cm-cost-chem').value=stockBd.total||'';
+  const bdWrap=document.getElementById('cm-stock-breakdown-wrap');
+  const bdEl=document.getElementById('cm-stock-breakdown');
+  const catKeys=Object.keys(stockBd.byCat);
+  if(catKeys.length){
+    bdWrap.style.display='';
+    bdEl.innerHTML='📦 แยกตามหมวด: '+catKeys.map(k=>`${STOCK_CAT_LABEL[k]||k} ${Math.round(stockBd.byCat[k]).toLocaleString()}฿`).join(' · ');
+  }else{
+    bdWrap.style.display='none';bdEl.innerHTML='';
+  }
   const autoLabor=getLaborCostForPond(pid,p.startDate,today());
   document.getElementById('cm-cost-labor').value=autoLabor||'';
   const autoElec=getElecCostForPeriod(p.startDate,today());
@@ -7662,6 +7677,18 @@ function getStockCostForPond(pondId,startDate,closeDate){
   if(!pondId||!startDate||!closeDate)return 0;
   return (D.inventoryLog||[]).filter(l=>l.type==='out'&&l.pondId===pondId&&l.date>=startDate&&l.date<=closeDate)
     .reduce((s,l)=>{const item=(D.inventoryItems||[]).find(i=>i.id===l.itemId);return s+(item?.unitPrice||0)*(l.qty||0);},0);
+}
+// ── ต้นทุนพัสดุแยกตามหมวดหมู่สต็อก (ไม่รวมอาหาร — คิดแยกจาก pondFeedCost อยู่แล้ว) ──
+function getStockCostBreakdownForPond(pondId,startDate,closeDate){
+  const byCat={};let total=0;
+  if(!pondId||!startDate||!closeDate)return{byCat,total};
+  (D.inventoryLog||[]).filter(l=>l.type==='out'&&l.pondId===pondId&&l.date>=startDate&&l.date<=closeDate).forEach(l=>{
+    const item=(D.inventoryItems||[]).find(i=>i.id===l.itemId);if(!item||item.category==='feed')return;
+    const cost=(item.unitPrice||0)*(l.qty||0);
+    byCat[item.category]=(byCat[item.category]||0)+cost;
+    total+=cost;
+  });
+  return{byCat,total};
 }
 let _plDonutChart=null;
 function initPL(){
