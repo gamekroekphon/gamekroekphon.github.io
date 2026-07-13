@@ -1531,9 +1531,12 @@ body.role-ceo .main{max-width:640px}
   <div class="card">
     <div class="card-t" style="justify-content:space-between">
       <span>📋 ประวัติการจับกุ้ง</span>
-      <select class="fi" id="hv-filter-pond" onchange="renderHarvest()" style="width:160px;font-size:12px;padding:4px 8px">
-        <option value="">ทุกบ่อ</option>
-      </select>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn btn-s admin-only" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="syncHarvestLogFromCropHistory(2569)" title="ดึงรายการปิดบ่อจากประวัติรอบเลี้ยง (ปิดแล้ว) ปี 2569 มาใส่ในตารางนี้ เฉพาะรายการที่ยังไม่มี">🔄 ซิงค์จากรอบเลี้ยง (ปี 2569)</button>
+        <select class="fi" id="hv-filter-pond" onchange="renderHarvest()" style="width:160px;font-size:12px;padding:4px 8px">
+          <option value="">ทุกบ่อ</option>
+        </select>
+      </div>
     </div>
     <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;font-size:13px" id="hv-table">
@@ -7475,6 +7478,35 @@ function renderHarvest(){
       </tr>`;
     }).join('');
   }
+}
+// ── ซิงค์ "ประวัติการจับกุ้ง" (D.harvestLog) ให้ตรงกับ "ประวัติรอบเลี้ยง (ปิดแล้ว)" (p.cropHistory) ──
+// confirmCloseCrop() ไม่เคย push เข้า D.harvestLog เอง — ปุ่มนี้ดึงรอบที่ปิดไปแล้วมาเติมเป็นรายการ "ปิดบ่อ" ให้ครบ (ข้ามรายการที่มีอยู่แล้ว กันซ้ำด้วย pondId+วันที่ปิดบ่อ)
+function syncHarvestLogFromCropHistory(targetYearBE){
+  if(!D.harvestLog)D.harvestLog=[];
+  const existingKeys=new Set(D.harvestLog.map(r=>r.pondId+'|'+r.date));
+  let added=0,skipped=0,scanned=0;
+  (D.ponds||[]).forEach(p=>{
+    (p.cropHistory||[]).forEach(c=>{
+      if(!c.harvestResult||!c.closeDate)return;
+      if(histRecYear(c)!==targetYearBE)return;
+      scanned++;
+      const key=p.id+'|'+c.closeDate;
+      if(existingKeys.has(key)){skipped++;return;}
+      const hr=c.harvestResult;
+      D.harvestLog.push({
+        id:'HVsync_'+p.id+'_'+c.closeDate,
+        date:c.closeDate,pondId:p.id,pondName:p.name,
+        type:'ปิดบ่อ',buyer:'',live:'',
+        size:hr.size||null,weight:hr.totalWeight||null,price:hr.price||null,
+        notes:(c.notes||'')+' (ซิงค์จากประวัติรอบเลี้ยง)'
+      });
+      existingKeys.add(key);added++;
+    });
+  });
+  if(!scanned){alert(`ไม่พบรอบเลี้ยงที่ปิดแล้วในปี ${targetYearBE} เลย`);return;}
+  D.harvestLog.sort((a,b)=>b.date.localeCompare(a.date));
+  save();fbSave();renderHarvest();
+  alert(`✅ ซิงค์เสร็จแล้ว — เพิ่มใหม่ ${added} รายการ (ข้าม ${skipped} รายการที่มีอยู่แล้ว)\nจากทั้งหมด ${scanned} รอบที่ปิดในปี ${targetYearBE}`);
 }
 // ===== CEO DASHBOARD (role=ceo) =====
 const ceoMoney=v=>'฿'+Math.round(v||0).toLocaleString('th-TH');
