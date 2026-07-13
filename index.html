@@ -349,6 +349,11 @@ body.role-admin .admin-only{display:revert!important}
 .stock-cat-feed{background:#FEF9E7;color:#92400E}
 .stock-cat-chem{background:#EFF6FF;color:#1D4ED8}
 .stock-cat-equip{background:#F0FDF4;color:#166534}
+.stock-cat-chemOral{background:#EFF6FF;color:#1D4ED8}
+.stock-cat-chemWater{background:#E0F2FE;color:#0369A1}
+.stock-cat-probioOral{background:#F3E8FF;color:#7E22CE}
+.stock-cat-probioWater{background:#EDE9FE;color:#5B21B6}
+.stock-cat-lime{background:#F5F5F4;color:#57534E}
 .stock-qty-low{color:#DC2626;font-weight:700}
 .stock-mode-btn{flex:1;padding:7px;font-size:13px;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--tx2);font-weight:500;transition:background .15s,color .15s}
 .stock-mode-btn.on-in{background:var(--ob);color:var(--ok)}
@@ -922,10 +927,13 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
       </select>
       <select class="fi" id="ch-hist-cat" onchange="renderChemHistory()" style="flex:1;min-width:140px;max-width:200px">
         <option value="">ทุกหมวด</option>
-        <option value="chem">🧪 ยา/สารเคมี</option>
         <option value="feed">🍚 อาหารกุ้ง</option>
-        <option value="equip">🔧 อุปกรณ์/วัสดุ</option>
-        <option value="seed">🦐 ลูกกุ้ง</option>
+        <option value="chemOral">💊 ยากิน</option>
+        <option value="chemWater">🧪 ยาลงน้ำ</option>
+        <option value="probioOral">🦠 จุลินทรีย์กิน</option>
+        <option value="probioWater">🧫 จุลินทรีย์ลงน้ำ</option>
+        <option value="lime">🪨 ปูน</option>
+        <option value="equip">🔧 อุปกรณ์</option>
       </select>
       <input type="month" class="fi" id="ch-hist-month" onchange="renderChemHistory()" style="width:150px">
       <button class="btn btn-s btn-sm" onclick="clearChemFilter()">ล้างตัวกรอง</button>
@@ -1700,10 +1708,13 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
         <div class="fg"><label class="fl">หมวดหมู่</label>
           <select class="fi" id="sk-cat">
-            <option value="seed">🦐 ลูกกุ้ง</option>
-            <option value="feed">อาหารกุ้ง</option>
-            <option value="chem">ยา/สารเคมี</option>
-            <option value="equip">อุปกรณ์/วัสดุ</option>
+            <option value="feed">🍚 อาหารกุ้ง</option>
+            <option value="chemOral">💊 ยากิน</option>
+            <option value="chemWater">🧪 ยาลงน้ำ</option>
+            <option value="probioOral">🦠 จุลินทรีย์กิน</option>
+            <option value="probioWater">🧫 จุลินทรีย์ลงน้ำ</option>
+            <option value="lime">🪨 ปูน</option>
+            <option value="equip">🔧 อุปกรณ์</option>
           </select>
         </div>
         <div class="fg"><label class="fl">หน่วย</label><input class="fi" id="sk-unit" placeholder="กก., กระสอบ, ขวด..."></div>
@@ -1725,12 +1736,15 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
         <span style="font-weight:700;color:var(--tx)">รายการพัสดุทั้งหมด</span>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
           <input class="fi" id="sk-search" placeholder="🔍 ค้นหาชื่อสินค้า..." style="width:170px" oninput="renderStockItems()">
-          <select class="fi" id="sk-filter-cat" style="width:130px" onchange="renderStockItems()">
+          <select class="fi" id="sk-filter-cat" style="width:150px" onchange="renderStockItems()">
             <option value="">ทุกหมวด</option>
-            <option value="seed">🦐 ลูกกุ้ง</option>
-            <option value="feed">อาหารกุ้ง</option>
-            <option value="chem">ยา/สารเคมี</option>
-            <option value="equip">อุปกรณ์/วัสดุ</option>
+            <option value="feed">🍚 อาหารกุ้ง</option>
+            <option value="chemOral">💊 ยากิน</option>
+            <option value="chemWater">🧪 ยาลงน้ำ</option>
+            <option value="probioOral">🦠 จุลินทรีย์กิน</option>
+            <option value="probioWater">🧫 จุลินทรีย์ลงน้ำ</option>
+            <option value="lime">🪨 ปูน</option>
+            <option value="equip">🔧 อุปกรณ์</option>
           </select>
           <button id="sk-zero-toggle" class="btn" style="font-size:12px;padding:4px 10px;white-space:nowrap;background:var(--s1);color:var(--tx2)" onclick="toggleStockZero()">แสดงยอด 0</button>
           <button class="btn admin-only" style="font-size:12px;padding:4px 10px;white-space:nowrap" onclick="seedStockCatalog()">📥 นำเข้าสินค้า</button>
@@ -4572,131 +4586,128 @@ function renderElecYearlyTrend(){
 /* ===== END ELECTRICITY ===== */
 
 /* ===== INVENTORY / STOCK ===== */
-const STOCK_CAT_LABEL={seed:'ลูกกุ้ง',feed:'อาหารกุ้ง',chem:'ยา/สารเคมี',equip:'อุปกรณ์/วัสดุ'};
-const STOCK_CAT_CSS={seed:'stock-cat-seed',feed:'stock-cat-feed',chem:'stock-cat-chem',equip:'stock-cat-equip'};
+// หมวดหมู่ที่เลือกได้จริงตอนนี้ (ลูกกุ้งถูกตัดออก เพราะมีการบันทึกไว้แล้วตอนลงกุ้งในหน้าอื่น)
+const STOCK_CATEGORIES=[
+  {key:'feed',lbl:'อาหารกุ้ง'},
+  {key:'chemOral',lbl:'ยากิน'},
+  {key:'chemWater',lbl:'ยาลงน้ำ'},
+  {key:'probioOral',lbl:'จุลินทรีย์กิน'},
+  {key:'probioWater',lbl:'จุลินทรีย์ลงน้ำ'},
+  {key:'lime',lbl:'ปูน'},
+  {key:'equip',lbl:'อุปกรณ์'}
+];
+// เก็บ label/css ของหมวดเก่า (seed, chem) ไว้เผื่อรายการเก่าที่เคยบันทึกไว้ก่อนหน้านี้ยังต้องแสดงผลได้ถูกต้อง — ไม่แสดงเป็นตัวเลือกให้เพิ่มใหม่แล้ว
+const STOCK_CAT_LABEL={seed:'ลูกกุ้ง (เดิม)',chem:'ยา/สารเคมี (เดิม)',feed:'อาหารกุ้ง',chemOral:'ยากิน',chemWater:'ยาลงน้ำ',probioOral:'จุลินทรีย์กิน',probioWater:'จุลินทรีย์ลงน้ำ',lime:'ปูน',equip:'อุปกรณ์'};
+const STOCK_CAT_CSS={seed:'stock-cat-seed',chem:'stock-cat-chem',feed:'stock-cat-feed',chemOral:'stock-cat-chemOral',chemWater:'stock-cat-chemWater',probioOral:'stock-cat-probioOral',probioWater:'stock-cat-probioWater',lime:'stock-cat-lime',equip:'stock-cat-equip'};
 const STOCK_TX_LABEL={in:'📥 รับเข้า',out:'📤 เบิกออก',adjust:'✏️ ปรับยอด'};
 
 // ===== STOCK CATALOG (ราคาต้นทุน+ขนส่ง จากรายการราคาหน้าร้าน) =====
 // แก้ไขราคาและเพิ่มรายการได้ที่นี่
 const STOCK_CATALOG=[
-  // ── ลูกกุ้ง (ราคา ณ 24/05/65 ต้นทุน+ขนส่ง บาท/ล้านตัว) ──
-  {name:'บลังก้า กุ้งขาว #7701',  category:'seed',unit:'ล้านตัว',unitPrice:1050,minQty:0,note:'บลังก้า'},
-  {name:'บลังก้า กุ้งขาว #7702s', category:'seed',unit:'ล้านตัว',unitPrice:1030,minQty:0,note:'บลังก้า'},
-  {name:'บลังก้า กุ้งขาว #7703s', category:'seed',unit:'ล้านตัว',unitPrice:1015,minQty:0,note:'บลังก้า'},
-  {name:'บลังก้า กุ้งขาว #7703p', category:'seed',unit:'ล้านตัว',unitPrice:1000,minQty:0,note:'บลังก้า'},
-  {name:'บลังก้า กุ้งขาว #7704s', category:'seed',unit:'ล้านตัว',unitPrice:980, minQty:0,note:'บลังก้า'},
-  {name:'บลังก้า กุ้งขาว #7704',  category:'seed',unit:'ล้านตัว',unitPrice:965, minQty:0,note:'บลังก้า'},
-  {name:'ซีพี กุ้งดำ #9000',       category:'seed',unit:'ล้านตัว',unitPrice:473, minQty:0,note:'ซีพี'},
-  {name:'ซีพี กุ้งดำ #9001',       category:'seed',unit:'ล้านตัว',unitPrice:1160,minQty:0,note:'ซีพี'},
-  {name:'ซีพี กุ้งดำ #9002',       category:'seed',unit:'ล้านตัว',unitPrice:1153,minQty:0,note:'ซีพี'},
-  {name:'ซีพี กุ้งดำ #9003 3s',    category:'seed',unit:'ล้านตัว',unitPrice:1153,minQty:0,note:'ซีพี'},
-  {name:'ซีพี กุ้งดำ #9003 3p',    category:'seed',unit:'ล้านตัว',unitPrice:1153,minQty:0,note:'ซีพี'},
-  {name:'ซีพี กุ้งดำ #9004 4s',    category:'seed',unit:'ล้านตัว',unitPrice:1132,minQty:0,note:'ซีพี'},
-  {name:'ซีพี กุ้งดำ #9004',       category:'seed',unit:'ล้านตัว',unitPrice:1132,minQty:0,note:'ซีพี'},
   // ── อาหารกุ้ง (บาท/กระสอบ) ──
   {name:'ไทยยู นานามิ #3L (32%)',            category:'feed',unit:'กระสอบ',unitPrice:983, minQty:0,note:'ไทยยู'},
   {name:'ไทยยู กุ้งดำแอควาฟีด #3L (37%)',   category:'feed',unit:'กระสอบ',unitPrice:913, minQty:0,note:'ไทยยู'},
   {name:'TRF คัสโกเอส #3S (38%)',            category:'feed',unit:'กระสอบ',unitPrice:975, minQty:0,note:'TRF'},
   {name:'TRF คัสโกเอส #4S (38%)',            category:'feed',unit:'กระสอบ',unitPrice:925, minQty:0,note:'TRF'},
   {name:'โภคา #9074 S (39%)',                 category:'feed',unit:'กระสอบ',unitPrice:971, minQty:0,note:'โภคา'},
-  // ── ยา/สารเคมี ──
+  // ── ยาลงน้ำ (สารเคมีปรับ/บำบัดคุณภาพน้ำ) — ⚠️ นำเข้าจากหมวด "ยา/สารเคมี" เดิมทั้งหมด แนะนำให้ตรวจสอบและย้ายหมวดเองอีกครั้งตามการใช้งานจริง ──
   // บ.ซิสเคม
-  {name:'WORK (ซิสเคม)',            category:'chem',unit:'ขวด', unitPrice:500, minQty:0,note:'ซิสเคม'},
-  {name:'FINE-DOC',                 category:'chem',unit:'ขวด', unitPrice:500, minQty:0,note:'ซิสเคม'},
-  {name:'DROP 635',                 category:'chem',unit:'ขวด', unitPrice:415, minQty:0,note:'ซิสเคม'},
-  {name:'BE BEST',                  category:'chem',unit:'ขวด', unitPrice:320, minQty:0,note:'ซิสเคม'},
-  {name:'สีน้ำเทียม 500g (ซิสเคม)',category:'chem',unit:'ถุง',  unitPrice:250, minQty:0,note:'ซิสเคม'},
-  {name:'สีน้ำเทียม 1kg (ซิสเคม)', category:'chem',unit:'ถุง',  unitPrice:500, minQty:0,note:'ซิสเคม'},
-  {name:'IN-OUT',                   category:'chem',unit:'ขวด', unitPrice:480, minQty:0,note:'ซิสเคม'},
-  {name:'HERBENA',                  category:'chem',unit:'ขวด', unitPrice:500, minQty:0,note:'ซิสเคม'},
-  {name:'ไบโอแบค',                 category:'chem',unit:'ขวด', unitPrice:120, minQty:0,note:'ซิสเคม'},
-  {name:'ไอแบค',                   category:'chem',unit:'ขวด', unitPrice:113, minQty:0,note:'ซิสเคม'},
-  {name:'ไลโซแมก',                 category:'chem',unit:'ขวด', unitPrice:240, minQty:0,note:'ซิสเคม'},
-  {name:'แอคตินอล',                category:'chem',unit:'ขวด', unitPrice:683, minQty:0,note:'ซิสเคม'},
-  {name:'ทูมอร์',                  category:'chem',unit:'ขวด', unitPrice:485, minQty:0,note:'ซิสเคม'},
+  {name:'WORK (ซิสเคม)',            category:'chemWater',unit:'ขวด', unitPrice:500, minQty:0,note:'ซิสเคม'},
+  {name:'FINE-DOC',                 category:'chemWater',unit:'ขวด', unitPrice:500, minQty:0,note:'ซิสเคม'},
+  {name:'DROP 635',                 category:'chemWater',unit:'ขวด', unitPrice:415, minQty:0,note:'ซิสเคม'},
+  {name:'BE BEST',                  category:'chemWater',unit:'ขวด', unitPrice:320, minQty:0,note:'ซิสเคม'},
+  {name:'สีน้ำเทียม 500g (ซิสเคม)',category:'chemWater',unit:'ถุง',  unitPrice:250, minQty:0,note:'ซิสเคม'},
+  {name:'สีน้ำเทียม 1kg (ซิสเคม)', category:'chemWater',unit:'ถุง',  unitPrice:500, minQty:0,note:'ซิสเคม'},
+  {name:'IN-OUT',                   category:'chemWater',unit:'ขวด', unitPrice:480, minQty:0,note:'ซิสเคม'},
+  {name:'HERBENA',                  category:'chemWater',unit:'ขวด', unitPrice:500, minQty:0,note:'ซิสเคม'},
+  {name:'ไบโอแบค',                 category:'probioWater',unit:'ขวด', unitPrice:120, minQty:0,note:'ซิสเคม'},
+  {name:'ไอแบค',                   category:'probioWater',unit:'ขวด', unitPrice:113, minQty:0,note:'ซิสเคม'},
+  {name:'ไลโซแมก',                 category:'chemWater',unit:'ขวด', unitPrice:240, minQty:0,note:'ซิสเคม'},
+  {name:'แอคตินอล',                category:'chemWater',unit:'ขวด', unitPrice:683, minQty:0,note:'ซิสเคม'},
+  {name:'ทูมอร์',                  category:'chemWater',unit:'ขวด', unitPrice:485, minQty:0,note:'ซิสเคม'},
   // บ.พาเวล
-  {name:'Pro-M1/M2/M3 (ถัง30L)',   category:'chem',unit:'ถัง',  unitPrice:3800,minQty:0,note:'พาเวล'},
-  {name:'Pro-M1/M2/M3 (ขวด)',      category:'chem',unit:'ขวด', unitPrice:175, minQty:0,note:'พาเวล'},
-  {name:'Pro-M1/M2/M3 (ลัง)',      category:'chem',unit:'ลัง',  unitPrice:2100,minQty:0,note:'พาเวล'},
-  {name:'Pro-M6 (ซอง1kg)',          category:'chem',unit:'ซอง',  unitPrice:685, minQty:0,note:'พาเวล'},
-  {name:'Pro-M6 (ลัง)',             category:'chem',unit:'ลัง',  unitPrice:8220,minQty:0,note:'พาเวล'},
-  {name:'แอนตี้ไตรท์',             category:'chem',unit:'ถัง',  unitPrice:2584,minQty:0,note:'พาเวล จุลินทรีย์ลดไนไตรท์'},
-  {name:'Sodium Thiosulfate',       category:'chem',unit:'ถุง',  unitPrice:749, minQty:0,note:'พาเวล ฆ่าคลอรีน'},
+  {name:'Pro-M1/M2/M3 (ถัง30L)',   category:'probioWater',unit:'ถัง',  unitPrice:3800,minQty:0,note:'พาเวล'},
+  {name:'Pro-M1/M2/M3 (ขวด)',      category:'probioWater',unit:'ขวด', unitPrice:175, minQty:0,note:'พาเวล'},
+  {name:'Pro-M1/M2/M3 (ลัง)',      category:'probioWater',unit:'ลัง',  unitPrice:2100,minQty:0,note:'พาเวล'},
+  {name:'Pro-M6 (ซอง1kg)',          category:'probioWater',unit:'ซอง',  unitPrice:685, minQty:0,note:'พาเวล'},
+  {name:'Pro-M6 (ลัง)',             category:'probioWater',unit:'ลัง',  unitPrice:8220,minQty:0,note:'พาเวล'},
+  {name:'แอนตี้ไตรท์',             category:'probioWater',unit:'ถัง',  unitPrice:2584,minQty:0,note:'พาเวล จุลินทรีย์ลดไนไตรท์'},
+  {name:'Sodium Thiosulfate',       category:'chemWater',unit:'ถุง',  unitPrice:749, minQty:0,note:'พาเวล ฆ่าคลอรีน'},
   // บ.วอเตอร์
-  {name:'คลอรีนฟูจิ',              category:'chem',unit:'ถุง',  unitPrice:2160, minQty:0,note:'วอเตอร์'},
-  {name:'ไฮโดรเจน',               category:'chem',unit:'ขวด', unitPrice:578,  minQty:0,note:'วอเตอร์'},
-  {name:'คอปเปอร์',               category:'chem',unit:'ขวด', unitPrice:2450, minQty:0,note:'วอเตอร์'},
-  {name:'โซเดียม-ไบขาบ',          category:'chem',unit:'ถุง',  unitPrice:400,  minQty:0,note:'วอเตอร์'},
-  {name:'ด่างทับทิม',              category:'chem',unit:'ถุง',  unitPrice:3250, minQty:0,note:'วอเตอร์'},
-  {name:'แมกนีเซียมซัลเฟต',       category:'chem',unit:'ถุง',  unitPrice:213,  minQty:0,note:'วอเตอร์'},
-  {name:'BKC ถัง200L',             category:'chem',unit:'ถัง',  unitPrice:22000,minQty:0,note:'วอเตอร์'},
-  {name:'โซดาไฟ (วอเตอร์)',       category:'chem',unit:'ถุง',  unitPrice:669,  minQty:0,note:'วอเตอร์'},
+  {name:'คลอรีนฟูจิ',              category:'chemWater',unit:'ถุง',  unitPrice:2160, minQty:0,note:'วอเตอร์'},
+  {name:'ไฮโดรเจน',               category:'chemWater',unit:'ขวด', unitPrice:578,  minQty:0,note:'วอเตอร์'},
+  {name:'คอปเปอร์',               category:'chemWater',unit:'ขวด', unitPrice:2450, minQty:0,note:'วอเตอร์'},
+  {name:'โซเดียม-ไบขาบ',          category:'chemWater',unit:'ถุง',  unitPrice:400,  minQty:0,note:'วอเตอร์'},
+  {name:'ด่างทับทิม',              category:'chemWater',unit:'ถุง',  unitPrice:3250, minQty:0,note:'วอเตอร์'},
+  {name:'แมกนีเซียมซัลเฟต',       category:'chemWater',unit:'ถุง',  unitPrice:213,  minQty:0,note:'วอเตอร์'},
+  {name:'BKC ถัง200L',             category:'chemWater',unit:'ถัง',  unitPrice:22000,minQty:0,note:'วอเตอร์'},
+  {name:'โซดาไฟ (วอเตอร์)',       category:'chemWater',unit:'ถุง',  unitPrice:669,  minQty:0,note:'วอเตอร์'},
   // บ.ซาโกร
-  {name:'คลอรีนสโนไวท์',          category:'chem',unit:'ถุง',  unitPrice:2180, minQty:0,note:'ซาโกร'},
-  {name:'โปตัสเซียม คลอไรด์',     category:'chem',unit:'ถุง',  unitPrice:1100, minQty:0,note:'ซาโกร'},
-  {name:'อ๊อกซิเจนผง',            category:'chem',unit:'ถุง',  unitPrice:830,  minQty:0,note:'ซาโกร โซเดียมเปอร์คาร์บอเนต'},
-  {name:'ดีเกลือ จีน',            category:'chem',unit:'ถุง',  unitPrice:175,  minQty:0,note:'ซาโกร แมกนีเซียม คลอไรต์'},
-  {name:'โซดาไฟ (ซาโกร)',         category:'chem',unit:'ถุง',  unitPrice:700,  minQty:0,note:'ซาโกร'},
-  {name:'กากชา',                  category:'chem',unit:'ถุง',  unitPrice:230,  minQty:0,note:'ซาโกร'},
-  {name:'แคลเซียม คลอไรด์',       category:'chem',unit:'ถุง',  unitPrice:175,  minQty:0,note:'ซาโกร'},
+  {name:'คลอรีนสโนไวท์',          category:'chemWater',unit:'ถุง',  unitPrice:2180, minQty:0,note:'ซาโกร'},
+  {name:'โปตัสเซียม คลอไรด์',     category:'chemWater',unit:'ถุง',  unitPrice:1100, minQty:0,note:'ซาโกร'},
+  {name:'อ๊อกซิเจนผง',            category:'chemWater',unit:'ถุง',  unitPrice:830,  minQty:0,note:'ซาโกร โซเดียมเปอร์คาร์บอเนต'},
+  {name:'ดีเกลือ จีน',            category:'chemWater',unit:'ถุง',  unitPrice:175,  minQty:0,note:'ซาโกร แมกนีเซียม คลอไรต์'},
+  {name:'โซดาไฟ (ซาโกร)',         category:'chemWater',unit:'ถุง',  unitPrice:700,  minQty:0,note:'ซาโกร'},
+  {name:'กากชา',                  category:'chemWater',unit:'ถุง',  unitPrice:230,  minQty:0,note:'ซาโกร'},
+  {name:'แคลเซียม คลอไรด์',       category:'chemWater',unit:'ถุง',  unitPrice:175,  minQty:0,note:'ซาโกร'},
   // ชุดเทส
-  {name:'ชุดเทส PH',              category:'chem',unit:'กล่อง',unitPrice:250,  minQty:0,note:'ชุดเทส'},
-  {name:'ชุดเทส อัลคาไลน์',       category:'chem',unit:'กล่อง',unitPrice:210,  minQty:0,note:'ชุดเทส'},
-  {name:'ชุดเทส แอมโมเนีย',       category:'chem',unit:'กล่อง',unitPrice:500,  minQty:0,note:'ชุดเทส'},
-  {name:'ชุดเทส ไนไตรท์',         category:'chem',unit:'กล่อง',unitPrice:250,  minQty:0,note:'ชุดเทส'},
-  {name:'ชุดเทส ไตเตรท T',        category:'chem',unit:'กล่อง',unitPrice:115,  minQty:0,note:'ชุดเทส'},
-  {name:'ชุดเทส แมกนีเซียม',       category:'chem',unit:'กล่อง',unitPrice:460,  minQty:0,note:'ชุดเทส'},
-  {name:'ชุดเทส คลอรีน',          category:'chem',unit:'กล่อง',unitPrice:240,  minQty:0,note:'ชุดเทส'},
-  {name:'ชุดเทส ไนเตรท (กล่องปลา)',category:'chem',unit:'กล่อง',unitPrice:384,  minQty:0,note:'ชุดเทส'},
+  {name:'ชุดเทส PH',              category:'chemWater',unit:'กล่อง',unitPrice:250,  minQty:0,note:'ชุดเทส'},
+  {name:'ชุดเทส อัลคาไลน์',       category:'chemWater',unit:'กล่อง',unitPrice:210,  minQty:0,note:'ชุดเทส'},
+  {name:'ชุดเทส แอมโมเนีย',       category:'chemWater',unit:'กล่อง',unitPrice:500,  minQty:0,note:'ชุดเทส'},
+  {name:'ชุดเทส ไนไตรท์',         category:'chemWater',unit:'กล่อง',unitPrice:250,  minQty:0,note:'ชุดเทส'},
+  {name:'ชุดเทส ไตเตรท T',        category:'chemWater',unit:'กล่อง',unitPrice:115,  minQty:0,note:'ชุดเทส'},
+  {name:'ชุดเทส แมกนีเซียม',       category:'chemWater',unit:'กล่อง',unitPrice:460,  minQty:0,note:'ชุดเทส'},
+  {name:'ชุดเทส คลอรีน',          category:'chemWater',unit:'กล่อง',unitPrice:240,  minQty:0,note:'ชุดเทส'},
+  {name:'ชุดเทส ไนเตรท (กล่องปลา)',category:'chemWater',unit:'กล่อง',unitPrice:384,  minQty:0,note:'ชุดเทส'},
   // บ.ASP
-  {name:'ฟูมิค (ASP)',             category:'chem',unit:'ขวด', unitPrice:900, minQty:0,note:'ASP'},
-  {name:'แอสมิโค',                 category:'chem',unit:'ขวด', unitPrice:400, minQty:0,note:'ASP'},
-  {name:'ไคโตซาน',                 category:'chem',unit:'ขวด', unitPrice:1160,minQty:0,note:'ASP'},
-  {name:'เอ็กซ์โป',               category:'chem',unit:'ขวด', unitPrice:750, minQty:0,note:'ASP'},
+  {name:'ฟูมิค (ASP)',             category:'chemOral',unit:'ขวด', unitPrice:900, minQty:0,note:'ASP'},
+  {name:'แอสมิโค',                 category:'chemOral',unit:'ขวด', unitPrice:400, minQty:0,note:'ASP'},
+  {name:'ไคโตซาน',                 category:'chemOral',unit:'ขวด', unitPrice:1160,minQty:0,note:'ASP'},
+  {name:'เอ็กซ์โป',               category:'chemOral',unit:'ขวด', unitPrice:750, minQty:0,note:'ASP'},
   // บ.ออลเวท
-  {name:'เอ็นโวมิน 10kg',          category:'chem',unit:'ถุง',  unitPrice:280, minQty:0,note:'ออลเวท'},
-  {name:'คลินแซ็ค',               category:'chem',unit:'ขวด', unitPrice:240, minQty:0,note:'ออลเวท'},
+  {name:'เอ็นโวมิน 10kg',          category:'chemOral',unit:'ถุง',  unitPrice:280, minQty:0,note:'ออลเวท'},
+  {name:'คลินแซ็ค',               category:'chemWater',unit:'ขวด', unitPrice:240, minQty:0,note:'ออลเวท'},
   // บ.ADVANCE
-  {name:'คลอรีนโลตัส',            category:'chem',unit:'ถุง',  unitPrice:2220,minQty:0,note:'ADVANCE'},
-  {name:'D100',                    category:'chem',unit:'ขวด', unitPrice:59,  minQty:0,note:'ADVANCE'},
-  {name:'SUPER PS',                category:'chem',unit:'ถุง',  unitPrice:1258,minQty:0,note:'ADVANCE'},
-  {name:'HI-POWER',               category:'chem',unit:'ขวด', unitPrice:238, minQty:0,note:'ADVANCE'},
-  {name:'คลอรีน-ฮาร์ทคลอ',       category:'chem',unit:'ถุง',  unitPrice:2360,minQty:0,note:'ADVANCE'},
-  {name:'ปูนร้อน PHพลัส',         category:'chem',unit:'ถุง',  unitPrice:162, minQty:0,note:'ADVANCE'},
-  {name:'PH Fixer',               category:'chem',unit:'ขวด', unitPrice:140, minQty:0,note:'ADVANCE'},
-  {name:'ไบโอติก (ADVANCE)',       category:'chem',unit:'ขวด', unitPrice:156, minQty:0,note:'ADVANCE'},
-  {name:'แลคโต Pro biotic',       category:'chem',unit:'ขวด', unitPrice:116, minQty:0,note:'ADVANCE'},
-  {name:'เนอร์ส bac',             category:'chem',unit:'ขวด', unitPrice:304, minQty:0,note:'ADVANCE'},
-  {name:'บี บลูม',                category:'chem',unit:'ขวด', unitPrice:85,  minQty:0,note:'ADVANCE'},
+  {name:'คลอรีนโลตัส',            category:'chemWater',unit:'ถุง',  unitPrice:2220,minQty:0,note:'ADVANCE'},
+  {name:'D100',                    category:'chemWater',unit:'ขวด', unitPrice:59,  minQty:0,note:'ADVANCE'},
+  {name:'SUPER PS',                category:'chemWater',unit:'ถุง',  unitPrice:1258,minQty:0,note:'ADVANCE'},
+  {name:'HI-POWER',               category:'chemWater',unit:'ขวด', unitPrice:238, minQty:0,note:'ADVANCE'},
+  {name:'คลอรีน-ฮาร์ทคลอ',       category:'chemWater',unit:'ถุง',  unitPrice:2360,minQty:0,note:'ADVANCE'},
+  {name:'ปูนร้อน PHพลัส',         category:'lime',unit:'ถุง',  unitPrice:162, minQty:0,note:'ADVANCE'},
+  {name:'PH Fixer',               category:'chemWater',unit:'ขวด', unitPrice:140, minQty:0,note:'ADVANCE'},
+  {name:'ไบโอติก (ADVANCE)',       category:'probioWater',unit:'ขวด', unitPrice:156, minQty:0,note:'ADVANCE'},
+  {name:'แลคโต Pro biotic',       category:'probioOral',unit:'ขวด', unitPrice:116, minQty:0,note:'ADVANCE'},
+  {name:'เนอร์ส bac',             category:'probioWater',unit:'ขวด', unitPrice:304, minQty:0,note:'ADVANCE'},
+  {name:'บี บลูม',                category:'probioWater',unit:'ขวด', unitPrice:85,  minQty:0,note:'ADVANCE'},
   // บ.เบน ไมเยอร์
-  {name:'แร่ธาตุ BM',             category:'chem',unit:'ถุง',  unitPrice:444, minQty:0,note:'เบน ไมเยอร์'},
-  {name:'แคลดี-3',                category:'chem',unit:'ถุง',  unitPrice:357, minQty:0,note:'เบน ไมเยอร์'},
-  {name:'DUO',                    category:'chem',unit:'ถัง',  unitPrice:5000,minQty:0,note:'เบน ไมเยอร์'},
+  {name:'แร่ธาตุ BM',             category:'chemOral',unit:'ถุง',  unitPrice:444, minQty:0,note:'เบน ไมเยอร์'},
+  {name:'แคลดี-3',                category:'chemOral',unit:'ถุง',  unitPrice:357, minQty:0,note:'เบน ไมเยอร์'},
+  {name:'DUO',                    category:'chemWater',unit:'ถัง',  unitPrice:5000,minQty:0,note:'เบน ไมเยอร์'},
   // บ.ไทยเอ็กตร้า
-  {name:'แร่ธาตุ ไทยเอ็กตร้า',    category:'chem',unit:'ถุง',  unitPrice:220, minQty:0,note:'ไทยเอ็กตร้า'},
+  {name:'แร่ธาตุ ไทยเอ็กตร้า',    category:'chemOral',unit:'ถุง',  unitPrice:220, minQty:0,note:'ไทยเอ็กตร้า'},
   // บ.วังเคมี
-  {name:'อมิโน (วังเคมี)',         category:'chem',unit:'กก.',  unitPrice:235, minQty:0,note:'วังเคมี 25kg/ถุง'},
+  {name:'อมิโน (วังเคมี)',         category:'chemOral',unit:'กก.',  unitPrice:235, minQty:0,note:'วังเคมี 25kg/ถุง'},
   // บ.อินเว่
-  {name:'ซาโน โครอล',             category:'chem',unit:'ขวด', unitPrice:360, minQty:0,note:'อินเว่'},
+  {name:'ซาโน โครอล',             category:'chemWater',unit:'ขวด', unitPrice:360, minQty:0,note:'อินเว่'},
   // บ.กรีนเซเวน
-  {name:'บิ๊กชริม',               category:'chem',unit:'ขวด', unitPrice:200, minQty:0,note:'กรีนเซเวน'},
-  {name:'บล็อค&เคลีย',            category:'chem',unit:'ขวด', unitPrice:450, minQty:0,note:'กรีนเซเวน'},
-  {name:'ปูนร้อน ชลิต',           category:'chem',unit:'ถุง',  unitPrice:175, minQty:0,note:'กรีนเซเวน'},
-  {name:'ไรซ์อัพ',                category:'chem',unit:'ถัง',  unitPrice:3750,minQty:0,note:'กรีนเซเวน'},
-  {name:'สีน้ำเทียม 1kg (กรีนเซเวน)',category:'chem',unit:'ถุง',unitPrice:530,minQty:0,note:'กรีนเซเวน'},
+  {name:'บิ๊กชริม',               category:'chemOral',unit:'ขวด', unitPrice:200, minQty:0,note:'กรีนเซเวน'},
+  {name:'บล็อค&เคลีย',            category:'chemWater',unit:'ขวด', unitPrice:450, minQty:0,note:'กรีนเซเวน'},
+  {name:'ปูนร้อน ชลิต',           category:'lime',unit:'ถุง',  unitPrice:175, minQty:0,note:'กรีนเซเวน'},
+  {name:'ไรซ์อัพ',                category:'chemWater',unit:'ถัง',  unitPrice:3750,minQty:0,note:'กรีนเซเวน'},
+  {name:'สีน้ำเทียม 1kg (กรีนเซเวน)',category:'chemWater',unit:'ถุง',unitPrice:530,minQty:0,note:'กรีนเซเวน'},
   // บ.TRF
-  {name:'จุลินทรีย์ Power jets',   category:'chem',unit:'ขวด', unitPrice:273, minQty:0,note:'TRF'},
-  {name:'ปูนร้อน TRF',            category:'chem',unit:'ถุง',  unitPrice:146, minQty:0,note:'TRF'},
-  {name:'แองจี้เคลียร์',          category:'chem',unit:'ขวด', unitPrice:295, minQty:0,note:'TRF'},
+  {name:'จุลินทรีย์ Power jets',   category:'probioWater',unit:'ขวด', unitPrice:273, minQty:0,note:'TRF'},
+  {name:'ปูนร้อน TRF',            category:'lime',unit:'ถุง',  unitPrice:146, minQty:0,note:'TRF'},
+  {name:'แองจี้เคลียร์',          category:'chemWater',unit:'ขวด', unitPrice:295, minQty:0,note:'TRF'},
   // บ.มาริโอ้
-  {name:'เอ็มโมลาส (กากน้ำตาล)',  category:'chem',unit:'ถัง',  unitPrice:310, minQty:0,note:'มาริโอ้'},
+  {name:'เอ็มโมลาส (กากน้ำตาล)',  category:'probioWater',unit:'ถัง',  unitPrice:310, minQty:0,note:'มาริโอ้'},
   // วัสดุปูน
-  {name:'ปูนขาว พีซี',            category:'chem',unit:'ถุง',  unitPrice:23,  minQty:0,note:'วัสดุปูน'},
-  {name:'ปูนขาวช้าง',             category:'chem',unit:'ถุง',  unitPrice:35,  minQty:0,note:'วัสดุปูน'},
-  {name:'โดโลไมท์',               category:'chem',unit:'ถุง',  unitPrice:51,  minQty:0,note:'วัสดุปูน เมืองกาญ'},
-  {name:'ปูนขาวโกวิท',            category:'chem',unit:'ถุง',  unitPrice:43,  minQty:0,note:'วัสดุปูน'},
-  {name:'ปูนจับตะกอนยางไม้ ยูนิตี้',category:'chem',unit:'ถุง',unitPrice:325,minQty:0,note:'ยูนิตี้'},
-  {name:'โฟโต้แบค 20L (จุลน้ำแดง)',category:'chem',unit:'ถัง', unitPrice:550, minQty:0,note:'ยูนิตี้'},
+  {name:'ปูนขาว พีซี',            category:'lime',unit:'ถุง',  unitPrice:23,  minQty:0,note:'วัสดุปูน'},
+  {name:'ปูนขาวช้าง',             category:'lime',unit:'ถุง',  unitPrice:35,  minQty:0,note:'วัสดุปูน'},
+  {name:'โดโลไมท์',               category:'lime',unit:'ถุง',  unitPrice:51,  minQty:0,note:'วัสดุปูน เมืองกาญ'},
+  {name:'ปูนขาวโกวิท',            category:'lime',unit:'ถุง',  unitPrice:43,  minQty:0,note:'วัสดุปูน'},
+  {name:'ปูนจับตะกอนยางไม้ ยูนิตี้',category:'lime',unit:'ถุง',unitPrice:325,minQty:0,note:'ยูนิตี้'},
+  {name:'โฟโต้แบค 20L (จุลน้ำแดง)',category:'probioWater',unit:'ถัง', unitPrice:550, minQty:0,note:'ยูนิตี้'},
   // ── อุปกรณ์/วัสดุ ──
   {name:'โฟม',                    category:'equip',unit:'ชิ้น',unitPrice:72,    minQty:0,note:''},
   {name:'ใยฟู',                   category:'equip',unit:'ม้วน',unitPrice:1400,  minQty:0,note:''},
