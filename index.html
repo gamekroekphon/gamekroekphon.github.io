@@ -1507,7 +1507,6 @@ body.role-ceo .main{max-width:640px}
         <div class="fg"><label class="fl">รูปแบบการจับ</label>
           <select class="fi" id="hv-type">
             <option value="">-- เลือก --</option>
-            <option value="ปิดบ่อ">ปิดบ่อ</option>
             <option value="พาเชียล">พาเชียล</option>
           </select>
         </div>
@@ -7449,19 +7448,6 @@ function saveHarvest(){
   D.harvestLog.sort((a,b)=>b.date.localeCompare(a.date));
   save();fbSave();
   showMsg('hv-msg','ok',`✅ บันทึกการจับกุ้งบ่อ ${p?p.name:pondId} สำเร็จ`);
-  // type "ปิดบ่อ" = pond close → prompt to actually close the crop cycle so pond doesn't keep showing as active
-  if(type==='ปิดบ่อ'&&p){
-    if(confirm(`บันทึกนี้เป็น "ปิดบ่อ" สำหรับบ่อ ${p.name}\nต้องการปิดรอบเลี้ยงของบ่อนี้ตอนนี้เลยหรือไม่?\n(ระบบจะเปิดหน้าสรุปปิดรอบ พร้อมข้อมูลน้ำหนัก/ไซส์/ราคาที่กรอกไว้ ให้ตรวจสอบและกรอกต้นทุนก่อนยืนยัน)`)){
-      openCropModal(pondId);
-      if(weight)document.getElementById('cm-weight').value=weight;
-      if(size)document.getElementById('cm-size').value=size;
-      if(price)document.getElementById('cm-price').value=price;
-      document.getElementById('cm-close-date').value=date;
-      syncDateHint(document.getElementById('cm-close-date'));
-      document.getElementById('cm-notes').value=notes||'';
-      calcCropEcon();
-    }
-  }
   // clear form except date & pond
   ['hv-type','hv-buyer','hv-live','hv-notes'].forEach(id=>{document.getElementById(id).value='';});
   ['hv-size','hv-weight','hv-price'].forEach(id=>{document.getElementById(id).value='';});
