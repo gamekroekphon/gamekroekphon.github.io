@@ -1347,7 +1347,10 @@ body.role-ceo .main{max-width:640px}
   <div class="card" style="margin-top:16px">
     <div class="card-t" style="justify-content:space-between">
       <span>📚 ประวัติรอบเลี้ยง (ปิดแล้ว)</span>
-      <select class="fi" id="cr-hist-year" onchange="renderCrops()" style="width:170px;font-size:12px;padding:4px 8px"></select>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn btn-s admin-only" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="openAddCropModal()" title="ใส่ข้อมูลรอบเลี้ยงเก่าของบ่อที่ตกหล่นไป (กรอกย้อนหลังเอง)">➕ เพิ่มข้อมูล</button>
+        <select class="fi" id="cr-hist-year" onchange="renderCrops()" style="width:170px;font-size:12px;padding:4px 8px"></select>
+      </div>
     </div>
     <div id="cr-history"></div>
   </div>
@@ -1443,13 +1446,22 @@ body.role-ceo .main{max-width:640px}
 <div id="editCropModal" class="modal-bg">
   <div class="modal" style="max-width:640px;width:95vw;padding:0;overflow:hidden">
     <div style="background:#d97706;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;border-radius:10px 10px 0 0">
-      <span style="font-weight:700;font-size:15px">✏️ แก้ไขข้อมูลปิดบ่อ — <span id="ecm-name"></span></span>
+      <span style="font-weight:700;font-size:15px"><span id="ecm-title">✏️ แก้ไขข้อมูลปิดบ่อ</span> — <span id="ecm-name"></span></span>
       <button onclick="closeEditCropModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#fff;line-height:1">×</button>
     </div>
     <div style="padding:20px;max-height:75vh;overflow-y:auto">
       <input type="hidden" id="ecm-pond-id">
       <input type="hidden" id="ecm-crop-id">
       <input type="hidden" id="ecm-crop-idx">
+      <!-- แสดงเฉพาะตอน "เพิ่มข้อมูล" รอบเก่าที่ตกหล่น (ไม่มีบ่อ/รอบ/ปีให้อ้างอิงจากที่ไหนมาก่อน) -->
+      <div id="ecm-new-fields" style="display:none;margin-bottom:18px">
+        <div style="font-weight:700;font-size:13px;color:#d97706;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">📌 ระบุบ่อ/รอบ (สำหรับข้อมูลเก่าที่ตกหล่น)</div>
+        <div class="fgrid" style="grid-template-columns:1fr 1fr 1fr">
+          <div class="fg" style="grid-column:1/-1"><label class="fl">บ่อ *</label><select class="fi" id="ecm-new-pond"><option value="">-- เลือกบ่อ --</option></select></div>
+          <div class="fg"><label class="fl">รอบที่ *</label><input type="number" class="fi" id="ecm-new-cropnum" step="1" placeholder="1"></div>
+          <div class="fg"><label class="fl">ปี (พ.ศ.) *</label><input type="number" class="fi" id="ecm-new-cropyear" step="1" placeholder="2568"></div>
+        </div>
+      </div>
       <!-- ข้อมูลลูกกุ้ง (กรอกย้อนหลังได้) -->
       <div style="margin-bottom:18px">
         <div style="font-weight:700;font-size:13px;color:var(--ok);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">🦐 ข้อมูลลูกกุ้ง</div>
@@ -6845,7 +6857,26 @@ function deleteCropRecord(pondId,cropId,idx){
   if(target.id)D.deletedIds.push(target.id); // tombstone — กันรายการนี้กลับมาจาก merge ทุกเครื่อง
   saveForce();renderCrops();
 }
+// ── เพิ่มข้อมูลรอบเลี้ยงเก่าที่ตกหล่น (ไม่ได้แก้ของเดิม สร้างรายการใหม่เข้า cropHistory) ──
+function openAddCropModal(){
+  const nameEl=document.getElementById('ecm-name');if(nameEl)nameEl.textContent='';
+  const titleEl=document.getElementById('ecm-title');if(titleEl)titleEl.textContent='➕ เพิ่มข้อมูลรอบเลี้ยงเก่า';
+  document.getElementById('ecm-pond-id').value='';
+  document.getElementById('ecm-crop-id').value='';
+  document.getElementById('ecm-crop-idx').value='-1';
+  ['ecm-hatchery','ecm-pltype','ecm-plweight','ecm-weight','ecm-size','ecm-caught','ecm-survival','ecm-fcr',
+   'ecm-price','ecm-revenue','ecm-cost-fry','ecm-cost-feed','ecm-cost-chem','ecm-cost-labor','ecm-cost-elec',
+   'ecm-cost-other','ecm-profit','ecm-start-date','ecm-close-date','ecm-notes','ecm-new-cropnum','ecm-new-cropyear'
+  ].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  const pondSel=document.getElementById('ecm-new-pond');
+  if(pondSel)pondSel.innerHTML='<option value="">-- เลือกบ่อ --</option>'+sortedPonds().map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');
+  const newFields=document.getElementById('ecm-new-fields');if(newFields)newFields.style.display='';
+  const msg=document.getElementById('ecm-msg');if(msg)msg.style.display='none';
+  document.getElementById('editCropModal').classList.add('on');
+}
 function openEditCropModal(pondId,cropId,idx){
+  const newFields=document.getElementById('ecm-new-fields');if(newFields)newFields.style.display='none';
+  const titleEl=document.getElementById('ecm-title');if(titleEl)titleEl.textContent='✏️ แก้ไขข้อมูลปิดบ่อ';
   const p=pond(pondId);if(!p||!p.cropHistory)return;
   const c=(cropId&&p.cropHistory.find(x=>x.id===cropId))||p.cropHistory[idx];
   if(!c)return;
@@ -6878,14 +6909,53 @@ function openEditCropModal(pondId,cropId,idx){
 }
 function closeEditCropModal(){document.getElementById('editCropModal').classList.remove('on');}
 function saveEditCrop(){
+  const idx=parseInt(document.getElementById('ecm-crop-idx').value);
+  const gn=(id)=>{const v=parseFloat(document.getElementById(id)?.value);return isNaN(v)?null:v;};
+  const gs=(id)=>{const v=(document.getElementById(id)?.value||'').trim();return v||null;};
+  // ── โหมด "เพิ่มข้อมูล" รอบเก่าที่ตกหล่น (idx===-1 คือสัญญาณจาก openAddCropModal) ──
+  if(idx===-1){
+    const newPondId=document.getElementById('ecm-new-pond').value;
+    const cropNum=parseInt(document.getElementById('ecm-new-cropnum').value);
+    const cropYearBE=parseInt(document.getElementById('ecm-new-cropyear').value);
+    if(!newPondId){alert('กรุณาเลือกบ่อ');return;}
+    if(!cropNum){alert('กรุณาระบุรอบที่');return;}
+    if(!cropYearBE){alert('กรุณาระบุปี (พ.ศ.)');return;}
+    const p=pond(newPondId);if(!p)return;
+    if(!p.cropHistory)p.cropHistory=[];
+    const dup=p.cropHistory.some(x=>(x.cropNum||1)===cropNum&&yearBE(x.cropYear||x.year)===cropYearBE);
+    if(dup&&!confirm(`บ่อ ${p.name} มีรอบที่ ${cropNum} ปี ${cropYearBE} อยู่แล้ว\nยืนยันเพิ่มรายการซ้ำ?`))return;
+    const startDate=document.getElementById('ecm-start-date').value||'';
+    const closeDate=document.getElementById('ecm-close-date').value||'';
+    const newCrop={
+      id:'crop_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+      cropNum,cropYear:cropYearBE-543,year:cropYearBE-543,
+      startDate,closeDate,stock:null,
+      hatchery:document.getElementById('ecm-hatchery').value.trim(),
+      plType:document.getElementById('ecm-pltype').value,
+      plWeight:gn('ecm-plweight'),
+      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],prepChecklist:null,
+      harvestResult:{
+        totalWeight:gn('ecm-weight'),size:gn('ecm-size'),caught:gn('ecm-caught'),
+        survivalRate:gn('ecm-survival'),fcr:gn('ecm-fcr'),price:gn('ecm-price'),revenue:gn('ecm-revenue'),
+        costFry:gn('ecm-cost-fry'),costFeed:gn('ecm-cost-feed'),costChem:gn('ecm-cost-chem'),
+        costLabor:gn('ecm-cost-labor'),costElec:gn('ecm-cost-elec'),costOther:gn('ecm-cost-other'),
+        netProfit:gn('ecm-profit'),
+      },
+      notes:document.getElementById('ecm-notes').value||'',
+      closed:true,
+    };
+    p.cropHistory.push(newCrop);
+    save();fbSave();
+    const msg=document.getElementById('ecm-msg');
+    if(msg){msg.style.display='block';msg.style.background='var(--ob)';msg.style.color='var(--ok)';msg.textContent='✅ เพิ่มข้อมูลสำเร็จ';}
+    setTimeout(()=>{closeEditCropModal();renderCrops();},800);
+    return;
+  }
   const pondId=document.getElementById('ecm-pond-id').value;
   const cropId=document.getElementById('ecm-crop-id').value;
-  const idx=parseInt(document.getElementById('ecm-crop-idx').value);
   const p=pond(pondId);if(!p||!p.cropHistory)return;
   const c=(cropId&&p.cropHistory.find(x=>x.id===cropId))||p.cropHistory[idx];
   if(!c){alert('ไม่พบรายการ');return;}
-  const gn=(id)=>{const v=parseFloat(document.getElementById(id)?.value);return isNaN(v)?null:v;};
-  const gs=(id)=>{const v=(document.getElementById(id)?.value||'').trim();return v||null;};
   c.startDate=document.getElementById('ecm-start-date').value||c.startDate;
   c.closeDate=document.getElementById('ecm-close-date').value||c.closeDate;
   c.notes=document.getElementById('ecm-notes').value||'';
