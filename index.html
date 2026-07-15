@@ -1049,6 +1049,7 @@ body.role-ceo .main{max-width:640px}
         <div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="sp-notes" placeholder="กุ้งสวย/ซีด/เปลือกนิ่ม..."></div>
         <div style="display:flex;gap:10px"><button class="btn btn-p" onclick="saveSample()">💾 บันทึก</button><button class="btn btn-s" onclick="clearSample()">🗑️ ล้าง</button></div>
         <div id="sp-msg"></div>
+        <div id="sp-result" style="display:none;margin-top:10px"></div>
       </div>
     </div>
     <div>
@@ -1389,6 +1390,19 @@ body.role-ceo .main{max-width:640px}
 </div>
 
 <!-- CLOSE CROP MODAL -->
+<!-- ปิดรอบสำเร็จ — เสนอทางไปต่อ 3 ทาง (ประวัติ/PDF/เตรียมบ่อ) แทน alert เปล่าๆ -->
+<div id="closeDoneModal" class="modal-bg">
+  <div class="modal" style="max-width:440px;width:92vw;text-align:center;padding:26px 22px">
+    <div style="font-size:17px;font-weight:700;color:var(--ok);margin-bottom:6px">✅ <span id="cdm-title">ปิดรอบสำเร็จ</span></div>
+    <div id="cdm-sub" style="font-size:13px;color:var(--tx2);margin-bottom:18px"></div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="btn" onclick="cdmGoHistory()">📚 ดูประวัติรอบนี้</button>
+      <button class="btn" onclick="cdmGoPdf()">📄 สร้าง PDF สรุปปิดบ่อ</button>
+      <button class="btn btn-p" onclick="cdmGoPrep()">🧹 เริ่มเตรียมบ่อรอบถัดไป</button>
+    </div>
+    <button onclick="closeCdm()" style="margin-top:14px;background:none;border:none;color:var(--tx3);font-size:12px;cursor:pointer;text-decoration:underline">ปิดหน้าต่างนี้</button>
+  </div>
+</div>
 <div id="cropModal" class="modal-bg">
   <div class="modal" style="max-width:640px;width:95vw;padding:0;overflow:hidden">
     <div style="background:var(--p);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;border-radius:10px 10px 0 0">
@@ -1518,66 +1532,45 @@ body.role-ceo .main{max-width:640px}
   <div class="card" style="margin-bottom:20px">
     <div class="card-t">➕ บันทึกการจับกุ้ง</div>
     <div class="fgrid" style="grid-template-columns:1fr 1fr">
-      <div class="fg"><label class="fl">วันที่จับกุ้ง</label><input type="date" class="fi" id="hv-date"></div>
-      <div class="fg"><label class="fl">บ่อ</label><select class="fi" id="hv-pond"><option value="">-- เลือกบ่อ --</option></select></div>
-      <div class="fg"><label class="fl">รูปแบบการจับ</label>
-        <select class="fi" id="hv-type">
+      <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="hv-pond" onchange="onHvPondChange()"><option value="">-- เลือกบ่อ --</option></select></div>
+      <div class="fg"><label class="fl">รูปแบบการจับ *</label>
+        <select class="fi" id="hv-type" onchange="onHvTypeChange()">
           <option value="">-- เลือก --</option>
-          <option value="ปิดบ่อ">ปิดบ่อ</option>
-          <option value="พาเชียล">พาเชียล</option>
+          <option value="พาเชียล">พาเชียล (จับบางส่วน บ่อยังเลี้ยงต่อ)</option>
+          <option value="ปิดรอบ">ปิดรอบ (จับหมด ปิดบ่อจริง)</option>
         </select>
       </div>
-      <div class="fg"><label class="fl">แพที่ทำการจับ</label><input type="text" class="fi" id="hv-buyer" placeholder="ชื่อแพ / บริษัท"></div>
-      <div class="fg"><label class="fl">ลักษณะการจับ</label>
-        <select class="fi" id="hv-live">
-          <option value="">-- เลือก --</option>
-          <option value="กุ้งเป็น">จับกุ้งเป็น</option>
-          <option value="กุ้งตาย">จับกุ้งตาย</option>
-        </select>
-      </div>
-      <div class="fg"><label class="fl">ไซส์ (ตัว/กก.)</label><input type="number" class="fi" id="hv-size" placeholder="60" step="1"></div>
-      <div class="fg"><label class="fl">น้ำหนักรวม (กก.)</label><input type="number" class="fi" id="hv-weight" placeholder="1000" step="0.1"></div>
-      <div class="fg"><label class="fl">ราคา (บาท/กก.)</label><input type="number" class="fi" id="hv-price" placeholder="120" step="0.5"></div>
     </div>
-    <div class="fg" style="margin-top:8px"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="hv-notes" placeholder="..."></div>
-    <div style="margin-top:14px;display:flex;align-items:center;gap:10px">
-      <button class="btn btn-p" onclick="saveHarvest()">💾 บันทึก</button>
-      <span id="hv-msg" style="font-size:12px"></span>
+    <div id="hv-round-strip" style="display:none;margin-top:12px;gap:8px;flex-wrap:wrap"></div>
+    <div id="hv-partial-fields" style="display:none">
+      <div class="fgrid" style="grid-template-columns:1fr 1fr">
+        <div class="fg"><label class="fl">วันที่จับ</label><input type="date" class="fi" id="hv-date"></div>
+        <div class="fg"><label class="fl">แพที่ทำการจับ</label><input type="text" class="fi" id="hv-buyer" placeholder="ชื่อแพ / บริษัท"></div>
+        <div class="fg"><label class="fl">ลักษณะการจับ</label>
+          <select class="fi" id="hv-live">
+            <option value="">-- เลือก --</option>
+            <option value="กุ้งเป็น">จับกุ้งเป็น</option>
+            <option value="กุ้งตาย">จับกุ้งตาย</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">ไซส์ (ตัว/กก.)</label><input type="number" class="fi" id="hv-size" placeholder="60" step="1"></div>
+        <div class="fg"><label class="fl">น้ำหนักรวม (กก.)</label><input type="number" class="fi" id="hv-weight" placeholder="1000" step="0.1"></div>
+        <div class="fg"><label class="fl">ราคา (บาท/กก.)</label><input type="number" class="fi" id="hv-price" placeholder="120" step="0.5"></div>
+      </div>
+      <div class="fg" style="margin-top:8px"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="hv-notes" placeholder="..."></div>
+      <div style="margin-top:14px;display:flex;align-items:center;gap:10px">
+        <button class="btn btn-p" onclick="savePartialHarvest()">💾 บันทึกพาเชียล</button>
+        <span id="hv-msg" style="font-size:12px"></span>
+      </div>
+    </div>
+    <div id="hv-close-fields" style="display:none;margin-top:14px;padding:14px;background:var(--sf2);border-radius:8px">
+      <div style="font-size:13px;color:var(--tx2);margin-bottom:10px">การปิดรอบต้องกรอกผลผลิต/ต้นทุนแบบเต็มรูปแบบ (คำนวณ FCR, กำไร-ขาดทุน) กดเปิดฟอร์มปิดรอบได้เลย</div>
+      <button class="btn btn-p" onclick="openCropModalFromHarvest()">📋 เปิดฟอร์มปิดรอบเต็มรูปแบบ</button>
     </div>
   </div>
   <div class="card">
-    <div class="card-t" style="justify-content:space-between">
-      <span>📋 ประวัติการจับกุ้ง</span>
-      <div style="display:flex;gap:6px;align-items:center">
-        <button class="btn btn-s admin-only" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="syncHarvestLogFromCropHistory(2569)" title="ดึงรายการปิดบ่อจากประวัติรอบเลี้ยง (ปิดแล้ว) ปี 2569 มาใส่ในตารางนี้ เฉพาะรายการที่ยังไม่มี">🔄 ซิงค์จากรอบเลี้ยง (ปี 2569)</button>
-        <select class="fi" id="hv-filter-year" onchange="renderHarvest()" style="width:110px;font-size:12px;padding:4px 8px"></select>
-        <select class="fi" id="hv-filter-pond" onchange="renderHarvest()" style="width:160px;font-size:12px;padding:4px 8px">
-          <option value="">ทุกบ่อ</option>
-        </select>
-      </div>
-    </div>
-    <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:13px" id="hv-table">
-        <thead>
-          <tr style="background:var(--sf2);border-bottom:2px solid var(--bd)">
-            <th style="text-align:left;padding:8px 10px;font-size:12px;color:var(--tx2)">วันที่</th>
-            <th style="text-align:left;padding:8px 10px;font-size:12px;color:var(--tx2)">บ่อ</th>
-            <th style="text-align:left;padding:8px 10px;font-size:12px;color:var(--tx2)">รูปแบบ</th>
-            <th style="text-align:left;padding:8px 10px;font-size:12px;color:var(--tx2)">แพ</th>
-            <th style="text-align:left;padding:8px 10px;font-size:12px;color:var(--tx2)">ลักษณะ</th>
-            <th style="text-align:right;padding:8px 10px;font-size:12px;color:var(--tx2)">ไซส์</th>
-            <th style="text-align:right;padding:8px 10px;font-size:12px;color:var(--tx2)">น้ำหนัก (กก.)</th>
-            <th style="text-align:right;padding:8px 10px;font-size:12px;color:var(--tx2)">ราคา/กก.</th>
-            <th style="text-align:right;padding:8px 10px;font-size:12px;color:var(--tx2)">รวม (บาท)</th>
-            <th style="text-align:left;padding:8px 10px;font-size:12px;color:var(--tx2)">หมายเหตุ</th>
-            <th style="padding:8px 6px"></th>
-          </tr>
-        </thead>
-        <tbody id="hv-tbody">
-          <tr><td colspan="11" style="text-align:center;padding:40px;color:var(--tx3)">ยังไม่มีข้อมูล</td></tr>
-        </tbody>
-      </table>
-    </div>
+    <div class="card-t"><span>📋 รายการพาเชียลของรอบปัจจุบัน<span id="hv-cur-pond-name" style="color:var(--tx3);font-weight:400"></span></span></div>
+    <div id="hv-partial-list"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อก่อนเพื่อดูรายการ</p></div>
   </div>
 </div>
 <!-- HARVEST STAT -->
@@ -2093,13 +2086,15 @@ function setSyncStatus(type, msg) {
 function normalizeD(d) {
   const curYear = new Date().getFullYear();
   d.ponds.forEach(p => {
-    ['feedLog','samples','plankton','waterLog','chemLog','labResults'].forEach(k => {
+    ['feedLog','samples','plankton','waterLog','chemLog','labResults','partialHarvests'].forEach(k => {
       if (!p[k]) p[k] = [];
     });
     if (!p.cropHistory) p.cropHistory = [];
     if (!p.cropNum) p.cropNum = 1;
     if (!p.cropYear) p.cropYear = curYear;
     if (p.prepChecklist === undefined) p.prepChecklist = null;
+    // เช็คลิสต์เตรียมบ่อเก่าที่ยังไม่มี id — ใช้ id deterministic เดียวกันทุกเครื่อง เพื่อให้ tombstone ตอนล้างแผน/ปิดรอบทำงานข้ามเครื่องได้ (ของใหม่ได้ id ไม่ซ้ำจากตอนสร้าง)
+    if (p.prepChecklist && !p.prepChecklist.id) p.prepChecklist.id = 'prep_'+p.id;
     // assign deterministic id ให้รอบเก่าที่ยังไม่มี id (คำนวณเหมือนกันทุกเครื่อง)
     p.cropHistory.forEach(c => {
       if (!c.id) c.id = 'crop_'+(p.id||'')+'_'+(c.closeDate||'')+'_'+(c.cropNum||0);
@@ -2333,7 +2328,7 @@ async function initFirebase() {
       setSyncStatus('sync-load', '🔄 กำลัง migrate ข้อมูลเก่า...');
       const oldPonds = Array.isArray(val.ponds) ? val.ponds : Object.values(val.ponds);
       oldPonds.forEach(p => {
-        ['feedLog','samples','plankton','waterLog','chemLog','labResults'].forEach(k => { if (!p[k]) p[k] = []; });
+        ['feedLog','samples','plankton','waterLog','chemLog','labResults','partialHarvests'].forEach(k => { if (!p[k]) p[k] = []; });
         if (!p.hatchery) p.hatchery = '';
         if (!p.plType)   p.plType   = '';
         if (!p.plWeight) p.plWeight = '';
@@ -2441,7 +2436,7 @@ const DEFAULT={ponds:[
     {date:'2026-05-23',age:1,phM:7.99,phA:null,tM:29,tA:null,doM:5.92,doA:null,alk:136,sal:31,ca:320,mg_:900,hard:4800,k:null,nh4:0,no2:0,no3:null,po4:null,notes:'น้ำใส'},
     {date:'2026-05-24',age:2,phM:8.08,phA:8.15,tM:28.5,tA:30.4,doM:6.16,doA:6.35,alk:136,sal:32,ca:280,mg_:900,hard:4800,k:null,nh4:0,no2:0,no3:null,po4:null,notes:'น้ำใส'},
   ],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[]},
-  {id:'A12',name:'A.12',stock:408000,size:3.4,startDate:'2026-05-21',records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[]},
+  {id:'A12',name:'A.12',stock:408000,size:3.4,startDate:'2026-05-21',records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[]},
 ]};
 function seedPonds(){
   function r(dt,ag,phM,phA,tM,tA,doM,doA,alk,sal,ca,mg,hd,nh4,no2,no3){
@@ -2818,7 +2813,7 @@ function loadData(){
   try{const s=localStorage.getItem(SK);if(s){
     const d=JSON.parse(s);
     const _cy=new Date().getFullYear();
-    d.ponds.forEach(p=>{['feedLog','samples','plankton','waterLog','chemLog','labResults','records'].forEach(k=>{if(!p[k])p[k]=[]});if(!p.cropHistory)p.cropHistory=[];if(!p.cropNum)p.cropNum=1;if(!p.cropYear)p.cropYear=_cy;if(p.prepChecklist===undefined)p.prepChecklist=null;});
+    d.ponds.forEach(p=>{['feedLog','samples','plankton','waterLog','chemLog','labResults','records','partialHarvests'].forEach(k=>{if(!p[k])p[k]=[]});if(!p.cropHistory)p.cropHistory=[];if(!p.cropNum)p.cropNum=1;if(!p.cropYear)p.cropYear=_cy;if(p.prepChecklist===undefined)p.prepChecklist=null;});
     if(!d.categories)d.categories=[...DEFAULT_CATS];
     if(!d.harvestLog)d.harvestLog=[];
     if(!d.settings)d.settings={};
@@ -2858,6 +2853,7 @@ function mergeChecklist(local, remote) {
     }
   });
   return {
+    id: local.id || remote.id, // คง id ไว้เสมอ — ถ้าหายไป tombstone ตอนล้างแผนจะจับเช็คลิสต์นี้ไม่ได้อีก
     steps,
     stockDate: local.stockDate || remote.stockDate || '',
     notes: local.notes || remote.notes || ''
@@ -2869,14 +2865,20 @@ function mergeRemote(local, remote) {
   merged.deletedIds = [...new Set([...(local.deletedIds||[]), ...(remote.deletedIds||[])])];
   const dead = new Set(merged.deletedIds);
   const dropDead = arr => (arr||[]).filter(x => !x || x.id===undefined || !dead.has(x.id));
-  const LOG_KEYS = ['feedLog','samples','plankton','waterLog','chemLog','labResults','cropHistory'];
+  const LOG_KEYS = ['feedLog','samples','plankton','waterLog','chemLog','labResults','partialHarvests','cropHistory'];
   const remotePonds = {};
   (remote.ponds||[]).forEach(p => { remotePonds[p.id] = p; });
   merged.ponds.forEach(p => {
     const rp = remotePonds[p.id];
     if (!rp) return;
     LOG_KEYS.forEach(k => { p[k] = dropDead(mergeArr(p[k], rp[k])); });
-    p.prepChecklist = mergeChecklist(p.prepChecklist, rp.prepChecklist);
+    // ── เช็คลิสต์เตรียมบ่อ: เคารพ tombstone ก่อน merge — ถ้าฝั่งใดถูกล้างไปแล้ว (id อยู่ใน deletedIds) ห้ามให้อีกฝั่งดันกลับมา ──
+    const lc = p.prepChecklist, rc = rp.prepChecklist;
+    const lDead = !!(lc && lc.id && dead.has(lc.id)), rDead = !!(rc && rc.id && dead.has(rc.id));
+    if (lDead && rDead) p.prepChecklist = null;
+    else if (lDead) p.prepChecklist = rc || null;
+    else if (rDead) p.prepChecklist = lc || null;
+    else p.prepChecklist = mergeChecklist(lc, rc);
   });
   const localIds = new Set(merged.ponds.map(p=>p.id));
   (remote.ponds||[]).forEach(rp => { if (!localIds.has(rp.id) && !dead.has(rp.id)) merged.ponds.push(rp); });
@@ -3150,6 +3152,22 @@ function histRecYear(c){
   if(c&&c.closeDate){const y=parseInt(String(c.closeDate).slice(0,4));if(!isNaN(y))return yearBE(y);}
   return yearBE(c&&(c.cropYear||c.year)||new Date().getFullYear());
 }
+// ── ต้นทุนสะสม realtime ของรอบปัจจุบัน — สูตรชุดเดียวกับ auto-fill ในฟอร์มปิดรอบ (openCropModal) เพื่อให้เลขตรงกันเสมอ ──
+function pondRunningCost(p){
+  if(!p||!p.startDate)return null;
+  const fry=p.costFry||0;
+  const feed=Math.round(pondFeedCost(p)||0);
+  const chem=Math.round(getStockCostBreakdownForPond(p.id,p.startDate,today()).total||0);
+  const labor=Math.round(getLaborCostForPond(p.id,p.startDate,today())||0);
+  const elec=Math.round(getElecCostForPeriod(p.startDate,today())||0);
+  return{fry,feed,chem,labor,elec,total:fry+feed+chem+labor+elec};
+}
+// ── สลับแท็บด้วยชื่อ section (หา nav button ให้เอง) — ใช้กับปุ่มทางลัดข้ามหน้า เช่น ประวัติ→PDF, ปิดรอบเสร็จ→เตรียมบ่อ ──
+function goTabByName(t){
+  const btn=[...document.querySelectorAll('.tab,.tab-item,.sn-top,.sn-link')].find(b=>(b.getAttribute('onclick')||'').includes("'"+t+"'"));
+  if(btn)goTab(t,btn);
+  else{document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));const sec=document.getElementById('sec-'+t);if(sec)sec.classList.add('on');}
+}
 // ── ข้อ2: input[type=date] เป็น ค.ศ. เสมอ (ข้อจำกัดเบราว์เซอร์) จึงแสดงป้าย พ.ศ. ไทยคู่กันเพื่อไม่ให้สับสน ──
 function syncDateHint(el){
   if(!el||el.type!=='date')return;
@@ -3331,11 +3349,6 @@ function populateAll(){
   ['hv-pond'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;const cur=el.value;
     el.innerHTML='<option value="">-- เลือกบ่อ --</option>'+sortedPonds().map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');
-    if(cur)el.value=cur;
-  });
-  ['hv-filter-pond'].forEach(id=>{
-    const el=document.getElementById(id);if(!el)return;const cur=el.value;
-    el.innerHTML='<option value="">ทุกบ่อ</option>'+sortedPonds().map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');
     if(cur)el.value=cur;
   });
   // prep checklist pond selector
@@ -3611,7 +3624,8 @@ function hsCropStats(shortYr){
   D.ponds.forEach(p=>{
     (p.cropHistory||[]).forEach(c=>{
       // ── ทุก record ใน cropHistory คือรอบที่ปิดแล้วอยู่แล้ว (ไม่ต้องพึ่ง c.closed ที่ confirmCloseCrop() ไม่เคยตั้งค่าให้) ──
-      if((c.cropYear||0)-2500!==shortYr)return;
+      // เทียบปีผ่าน histRecYear() — cropYear ในข้อมูลจริงมีทั้ง พ.ศ. (seed เก่า) และ ค.ศ. (รอบที่ปิดผ่านแอป) ถ้าลบ 2500 ตรงๆ รอบที่เป็น ค.ศ. จะหายจากสถิติทั้งหมด
+      if(histRecYear(c)-2500!==shortYr)return;
       totalKg+=((c.harvestResult||{}).totalWeight)||0;
       closedCount++;
     });
@@ -3677,10 +3691,7 @@ function goTab(t,btn){
   if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();if(t==='wqfeed')initWqFeed();if(t==='hatchery')initHatchery();
   if(t==='manage')renderManage();
   if(t==='users')renderUsers();
-  if(t==='harvest'){
-    const dEl=document.getElementById('hv-date');if(dEl&&!dEl.value)dEl.value=today();
-    renderHarvest();
-  }
+  if(t==='harvest')initHarvest();
   if(t==='crops')renderCrops();
   if(t==='prep'){initPrep();}
   if(t==='harveststat')initHarvestStat();
@@ -3938,8 +3949,12 @@ function homeRow(p,age,cls,reason){
 function resetPrepPond(pid){
   const p=pond(pid);if(!p)return;
   if(!confirm(`ล้างแผนเตรียมบ่อ "${p.name}" ?\n(ใช้เมื่อเปลี่ยนแผนการเลี้ยง — ไม่ลบบ่อออกจากระบบ แค่ล้างเช็คลิสต์เตรียมบ่อเดิม)`))return;
+  // tombstone id เช็คลิสต์ — กัน save()/เครื่องอื่น merge เช็คลิสต์เดิมกลับมาหลังล้าง
+  if(p.prepChecklist&&p.prepChecklist.id){D.deletedIds=D.deletedIds||[];D.deletedIds.push(p.prepChecklist.id);}
   p.prepChecklist=null;
+  if(typeof _prepPonds!=='undefined')_prepPonds=_prepPonds.filter(x=>x!==pid);
   save();fbSave();renderOv();
+  if(typeof renderPrep==='function')renderPrep();
 }
 function openPondDetail(id){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
@@ -4228,7 +4243,8 @@ function pondCard(p,last,age,cls){
     const done=cl?PREP_STEPS.filter(s=>cl.steps&&cl.steps[s.key]?.done).length:0;
     return`<div class="pc-ov" onclick="openPondDetail('${p.id}')">
       <div class="pc-ov-top"><span class="pc-ov-name">${p.name}</span><span style="display:flex;gap:5px;align-items:center"><span class="pc-ov-badge pcb-prep">เตรียมบ่อ</span><button class="admin-only" onclick="event.stopPropagation();resetPrepPond('${p.id}')" title="ล้างแผนเตรียมบ่อ (ใช้เมื่อเปลี่ยนแผนการเลี้ยง)" style="background:none;border:none;cursor:pointer;color:var(--d);font-size:14px;padding:6px;margin:-6px;line-height:1;min-width:28px;min-height:28px;display:inline-flex;align-items:center;justify-content:center">🗑️</button></span></div>
-      <div style="font-size:10px;color:var(--tx2);margin-bottom:4px">${done}/${PREP_STEPS.length} ขั้นตอน</div>
+      <div style="font-size:10px;color:var(--tx2);margin-bottom:4px">เตรียมแล้ว <b style="color:${done===PREP_STEPS.length?'var(--ok)':done>=PREP_STEPS.length/2?'var(--w)':'var(--d)'}">${done}/${PREP_STEPS.length}</b>${cl?.stockDate?` · ลงกุ้ง ${fD(cl.stockDate)}`:''}${done===PREP_STEPS.length?' ✅ พร้อมลง':''}</div>
+      <div style="background:var(--bd);border-radius:3px;height:4px;margin-bottom:6px"><div style="background:${done===PREP_STEPS.length?'var(--ok)':done>=PREP_STEPS.length/2?'var(--w)':'var(--p)'};height:4px;border-radius:3px;width:${Math.round(done/PREP_STEPS.length*100)}%"></div></div>
       <div class="pc-ov-prep">${steps}</div>
     </div>`;
   }
@@ -5615,16 +5631,10 @@ function feedGridRow(p,d,feedItems){
     <td style="text-align:right;color:var(--tx3)">${prev&&prev.totalFeed!=null?prev.totalFeed.toFixed(1):'-'}</td>
     <td style="text-align:right"><input type="number" step="0.1" class="fi" style="width:90px;text-align:right" id="fdg-${rid}-total" value="${suggestedTotal!=null?suggestedTotal:''}" placeholder="0.0" oninput="fdGridCalcRate('${rid}')"></td>
     <td style="text-align:right" id="fdg-${rid}-rate">${rateTxt}</td>
-    <td><select class="fi" style="width:220px" id="fdg-${rid}-stock" onchange="fdGridUpdateSupplier('${rid}')"><option value="">-- ไม่ตัดสต็อก --</option>${opts.map(i=>`<option value="${i.id}"${i.id===suggestedStock?' selected':''}>${i.name} — คงเหลือ ${i.qty} ${i.unit||'กระสอบ'}</option>`).join('')}</select></td>
-    <td style="color:var(--tx2)" id="fdg-${rid}-supplier">${suggestedItem?.note||'-'}</td>
+    <td><select class="fi" style="width:220px" id="fdg-${rid}-stock"><option value="">-- ไม่ตัดสต็อก --</option>${opts.map(i=>`<option value="${i.id}"${i.id===suggestedStock?' selected':''}>${i.name} — คงเหลือ ${i.qty} ${i.unit||'กระสอบ'}</option>`).join('')}</select></td>
+    ${APP_ROLE==='admin'?`<td style="text-align:right;color:var(--pd);font-weight:600">${pondFeedCost(p)?Math.round(pondFeedCost(p)).toLocaleString()+' บ.':'-'}</td>`:''}
     <td><input type="text" class="fi" style="width:120px" id="fdg-${rid}-notes" value="${existing?.notes||''}" placeholder="-"></td>
   </tr>`;
-}
-function fdGridUpdateSupplier(pid){
-  const sel=document.getElementById(`fdg-${pid}-stock`);const el=document.getElementById(`fdg-${pid}-supplier`);
-  if(!sel||!el)return;
-  const item=sel.value?(D.inventoryItems||[]).find(i=>i.id===sel.value):null;
-  el.textContent=item?.note||'-';
 }
 function renderFeedGrid(){
   const wrap=document.getElementById('fd-grid-wrap');if(!wrap)return;
@@ -5632,10 +5642,14 @@ function renderFeedGrid(){
   const ponds=wqfeedActivePonds().slice().sort((a,b)=>a.name.localeCompare(b.name,'th'));
   if(!ponds.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีบ่อที่กำลังเลี้ยงอยู่</p>';return}
   const feedItems=(D.inventoryItems||[]).filter(i=>i.category==='feed').sort((a,b)=>a.name.localeCompare(b.name,'th'));
-  wrap.innerHTML=`<table class="tbl" style="white-space:nowrap"><thead><tr>
+  // ── เตือนบ่อที่ยังไม่ได้กรอกอาหารของวันที่เลือก — มองปราดเดียวรู้ว่าขาดบ่อไหน ──
+  const missing=ponds.filter(p=>!(p.feedLog||[]).some(r=>r.date===d));
+  const banner=missing.length?`<div style="background:var(--wb);border:1px solid #f0d9a8;border-radius:8px;padding:8px 12px;font-size:12.5px;margin-bottom:10px">⚠️ ${d===today()?'วันนี้':'วันที่ '+fD(d)}ยังไม่ได้กรอกอาหาร ${missing.length} บ่อ: <b>${missing.map(p=>p.name).join(', ')}</b></div>`:'';
+  // คอลัมน์ "ต้นทุนอาหารสะสม" เห็นเฉพาะ admin (ข้อมูลการเงิน) — เลขชุดเดียวกับที่ auto-fill ตอนปิดรอบ
+  wrap.innerHTML=banner+`<table class="tbl" style="white-space:nowrap"><thead><tr>
     <th>บ่อ</th><th>อายุ</th><th style="text-align:right">Biomass</th><th style="text-align:right">เมื่อวาน</th>
     <th style="text-align:right">อาหารวันนี้ (กก.)</th><th style="text-align:right">Feed Rate</th>
-    <th>สต็อกที่ตัด</th><th>ผู้จำหน่าย</th><th>หมายเหตุ</th>
+    <th>สต็อกที่ตัด</th>${APP_ROLE==='admin'?'<th style="text-align:right">ต้นทุนอาหารสะสม</th>':''}<th>หมายเหตุ</th>
   </tr></thead><tbody>${ponds.map(p=>feedGridRow(p,d,feedItems)).join('')}</tbody></table>`;
 }
 function fdGridCalcRate(pid){
@@ -5736,10 +5750,33 @@ function saveSample(){
     notes:document.getElementById('sp-notes').value};
   const idx=p.samples.findIndex(r=>r.id===rec.id||r.date===d);
   if(idx>=0){p.samples[idx]=rec;showMsg('sp-msg','warn',`อัปเดต ${fD(d)}`)}
-  else{p.samples.push(rec);p.samples.sort((a,b)=>new Date(a.date)-new Date(b.date));showMsg('sp-msg','ok',`✅ ABW: ${abw}g | Biomass: ${bm?.toFixed(0)||'-'}kg | PDG: ${pdg||'-'}g/วัน`)}
+  else{p.samples.push(rec);p.samples.sort((a,b)=>new Date(a.date)-new Date(b.date));showMsg('sp-msg','ok',`✅ บันทึกสุ่มตัวอย่าง บ่อ ${p.name} สำเร็จ`)}
+  renderSampleResult(p,rec);
   save();renderSampleTable();renderSampleMetrics(pid);renderSampleChart();renderOv();
 }
+// ── ผลทันทีหลังบันทึกสุ่ม — แปลผลให้เลยว่ากุ้งโตตามเกณฑ์อายุไหม ไม่ต้องเทียบตารางเอง + ทางลัดไปดู FCR/กราฟที่หน้ารายละเอียดบ่อ (FCR โชว์ที่เดียวตามนโยบายเดิม) ──
+function renderSampleResult(p,rec){
+  const el=document.getElementById('sp-result');if(!el)return;
+  const target=getAbwTarget(rec.age||0);
+  const chip=t=>`<span style="display:inline-flex;align-items:center;gap:5px;background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:3px 11px;font-size:12px">${t}</span>`;
+  const chips=[];
+  const pdgTxt=rec.pdg!=null&&!isNaN(rec.pdg)?` <b style="color:${rec.pdg>=0.2?'var(--ok)':'var(--w)'}">${rec.pdg>=0?'▲':'▼'} ${rec.pdg} g/วัน</b>`:'';
+  chips.push(chip(`ABW ${rec.abw} g${pdgTxt}`));
+  if(target>0){
+    const ratio=rec.abw/target;
+    const verdict=ratio>=0.95?`<b style="color:var(--ok)">✓ ตามเกณฑ์</b>`:ratio>=0.85?`<b style="color:var(--w)">△ ต่ำกว่าเกณฑ์เล็กน้อย</b>`:`<b style="color:var(--d)">✗ ต่ำกว่าเกณฑ์ ควรติดตาม</b>`;
+    chips.push(chip(`เป้าหมายอายุ ${rec.age} วัน ~${target.toFixed(1)} g ${verdict}`));
+  }
+  if(rec.plCount)chips.push(chip(`ไซส์ ~${rec.plCount} ตัว/กก.`));
+  if(rec.biomass)chips.push(chip(`Biomass ~${Math.round(rec.biomass).toLocaleString()} กก.`));
+  el.innerHTML=`<div style="background:var(--ib);border:1px solid #b9d5ef;border-radius:8px;padding:10px 12px">
+    <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">${chips.join('')}</div>
+    <button class="btn" onclick="openPondDetail('${p.id}')" style="margin-top:8px;font-size:12px;padding:5px 12px;background:var(--sf);border:1px solid var(--bd)">📈 ดู FCR / กราฟโต ที่หน้ารายละเอียดบ่อ →</button>
+  </div>`;
+  el.style.display='';
+}
 function clearSample(){
+  const spr=document.getElementById('sp-result');if(spr){spr.style.display='none';spr.innerHTML='';}
   document.getElementById('sp-date').value=today();
   ['sp-count','sp-weight','sp-abw','sp-size','sp-surv','sp-biomass','sp-notes'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
   document.getElementById('sp-pdg-info').textContent='';
@@ -6425,9 +6462,10 @@ function getCloseSummary(p,cropIdx){
   const feedLog=lastCrop?lastCrop.feedLog:(p.feedLog||[]);
   const harvestResult=lastCrop?lastCrop.harvestResult:null;
   const notesCrop=lastCrop?lastCrop.notes:'';
-  const rows=(D.harvestLog||[]).filter(r=>r.pondId===p.id&&(!startDate||r.date>=startDate)&&(!closeDate||r.date<=closeDate));
-  const closeRows=rows.filter(r=>r.type==='ปิดบ่อ');
-  const partialRows=rows.filter(r=>r.type==='พาเชียล');
+  // ติด type/date ให้ครบ — ตาราง "รายละเอียดการจับแต่ละครั้ง" ใน PDF ใช้ทั้งสอง field แยกสี badge และเรียงลำดับ
+  const partialRows=((lastCrop?lastCrop.partialHarvests:(p.partialHarvests||[]))||[]).map(r=>({...r,type:'พาเชียล'}));
+  const closeRows=harvestResult?[{type:'ปิดบ่อ',date:closeDate||'',weight:harvestResult.totalWeight,price:harvestResult.price,size:harvestResult.size,buyer:''}]:[];
+  const rows=[...partialRows,...closeRows];
   const totalWeight=rows.reduce((s,r)=>s+(r.weight||0),0)||(harvestResult?harvestResult.totalWeight:null);
   const totalBaht=rows.reduce((s,r)=>s+(r.weight&&r.price?r.weight*r.price:0),0);
   const lastCloseRow=closeRows.length?closeRows[closeRows.length-1]:(rows.length?rows[rows.length-1]:null);
@@ -6631,7 +6669,7 @@ function exportJSON(){dl(JSON.stringify(D,null,2),'application/json',`TawanFarm_
 function importJSON(inp){
   const f=inp.files[0];if(!f)return;
   const reader=new FileReader();
-  reader.onload=e=>{try{const data=JSON.parse(e.target.result);if(data.ponds){data.ponds.forEach(p=>{['feedLog','samples','plankton','waterLog','chemLog','labResults'].forEach(k=>{if(!p[k])p[k]=[]})});D=data;save();alert(`นำเข้าสำเร็จ! ${data.ponds.length} บ่อ`);populateAll();renderOv()}}catch{alert('ไฟล์ JSON ไม่ถูกต้อง')}};
+  reader.onload=e=>{try{const data=JSON.parse(e.target.result);if(data.ponds){data.ponds.forEach(p=>{['feedLog','samples','plankton','waterLog','chemLog','labResults','partialHarvests'].forEach(k=>{if(!p[k])p[k]=[]})});D=data;save();alert(`นำเข้าสำเร็จ! ${data.ponds.length} บ่อ`);populateAll();renderOv()}}catch{alert('ไฟล์ JSON ไม่ถูกต้อง')}};
   reader.readAsText(f);
 }
 // ===== POND MANAGEMENT =====
@@ -6679,9 +6717,36 @@ function savePond(){
   const plWeight=document.getElementById('mdl-plWeight').value?parseFloat(document.getElementById('mdl-plWeight').value):null;
   const costFry=document.getElementById('mdl-costfry').value?parseFloat(document.getElementById('mdl-costfry').value):null;
   if(!name||!stock||!size||!startDate){alert('กรุณากรอกข้อมูลให้ครบ');return}
-  if(id){const p=pond(id);Object.assign(p,{name,stock,size,startDate,hatchery,plType,plWeight,costFry})}
-  else D.ponds.push({id:'P'+Date.now(),name,stock,size,startDate,hatchery,plType,plWeight,costFry,records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[]});
+  if(id){
+    const p=pond(id);
+    const wasIdle=!p.startDate; // ลงลูกกุ้งรอบใหม่ (เดิมว่างจากการปิดรอบ) — ไม่ใช่แค่แก้ไขข้อมูลรอบเดิม
+    Object.assign(p,{name,stock,size,startDate,hatchery,plType,plWeight,costFry});
+    if(wasIdle){
+      const nxt=computeNextCrop(p,startDate);
+      p.cropNum=nxt.cropNum;p.cropYear=nxt.cropYear;
+      // ลงกุ้งแล้ว = เตรียมบ่อจบหน้าที่ — ล้างเช็คลิสต์พร้อม tombstone กัน merge ดันกลับ
+      if(p.prepChecklist){
+        if(p.prepChecklist.id){D.deletedIds=D.deletedIds||[];D.deletedIds.push(p.prepChecklist.id);}
+        p.prepChecklist=null;
+      }
+      if(typeof _prepPonds!=='undefined')_prepPonds=_prepPonds.filter(x=>x!==id);
+    }
+  }
+  else{
+    const np={id:'P'+Date.now(),name,stock,size,startDate,hatchery,plType,plWeight,costFry,records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[]};
+    const nxt=computeNextCrop(np,startDate);
+    np.cropNum=nxt.cropNum;np.cropYear=nxt.cropYear;
+    D.ponds.push(np);
+  }
   save();closePond();renderManage();populateAll();renderOv();
+}
+// ── เลขรอบ/ปีของรอบใหม่ นับจากความจริง: ปี = ปีของวันลงกุ้ง, รอบ = จำนวนรอบที่ปิดแล้วในปีนั้น + 1 ──
+// (แทนสูตรเดิมที่เดาจากค่า "จำนวนรอบเลี้ยงต่อปี=2" ซึ่ง UI ตั้งค่าถูกถอดไปแล้ว — ฟาร์มจริงบางปี 1 รอบ บางปี 3 รอบ)
+function computeNextCrop(p,baseDate){
+  const yCE=parseInt(String(baseDate||today()).slice(0,4))||new Date().getFullYear();
+  const yBE=yearBE(yCE);
+  const closedThisYear=(p.cropHistory||[]).filter(c=>histRecYear(c)===yBE).length;
+  return{cropNum:closedThisYear+1,cropYear:yCE};
 }
 function delPond(id){
   const p=pond(id);if(!confirm(`ลบบ่อ ${p.name} และข้อมูลทั้งหมด?`))return;
@@ -6774,7 +6839,12 @@ function renderCrops(){
       ${cropCells(c2,showCurAt===2)}
       <td style="padding:8px 10px;text-align:center;font-size:20px;font-weight:800;color:${progColor}">${totalClosed}/2</td>
       <td style="padding:8px 10px;text-align:center"><span class="badge ${prog>=2?'b-ok':prog>=1?'b-warn':'b-danger'}">${prog>=2?'✅ ครบ':prog>=1?'⏳ 1/2':'⚠️ ยังไม่มี'}</span></td>
-      <td style="padding:8px 6px;text-align:center">${isCurYear&&hasStarted?`<button class="btn btn-sm" style="background:var(--p);color:#fff;border:none;font-size:12px" onclick="openCropModal('${p.id}')">ปิดรอบ</button>`:''}</td>
+      <td style="padding:8px 6px;text-align:center">${isCurYear&&hasStarted?`<button class="btn btn-sm" style="background:var(--p);color:#fff;border:none;font-size:12px" onclick="openCropModal('${p.id}')">ปิดรอบ</button>${(()=>{
+        // ต้นทุนสะสม realtime (admin) — เลขชุดเดียวกับ auto-fill ตอนปิดรอบ เห็นก่อนตัดสินใจโดยไม่ต้องเปิดฟอร์มปิดรอบเสี่ยงกดยืนยันพลาด
+        if(APP_ROLE!=='admin')return'';
+        const rc=pondRunningCost(p);if(!rc)return'';
+        return`<div style="font-size:10.5px;color:var(--pd);margin-top:4px;white-space:nowrap;cursor:help" title="ลูกกุ้ง ${rc.fry.toLocaleString()} · อาหาร ${rc.feed.toLocaleString()} · เคมี ${rc.chem.toLocaleString()} · แรงงาน ${rc.labor.toLocaleString()} · ไฟ ${rc.elec.toLocaleString()} บาท (สูตรเดียวกับตอนปิดรอบ)">💰 ${rc.total.toLocaleString()} บ.</div>`;
+      })()}`:''}</td>
     </tr>`;
   }).join('');
   // history section
@@ -6813,6 +6883,7 @@ function renderCrops(){
       <th style="text-align:center;padding:8px;font-size:12px;color:var(--tx2)">วันปิด</th>
       <th style="text-align:center;padding:8px;font-size:12px;color:var(--tx2)">ระยะ(วัน)</th>
       <th style="text-align:right;padding:8px;font-size:12px;color:var(--tx2)">ผลผลิต(กก.)</th>
+      <th style="text-align:center;padding:8px;font-size:12px;color:var(--tx2)">พาเชียล</th>
       <th style="text-align:right;padding:8px;font-size:12px;color:var(--tx2)">ไซส์</th>
       <th style="text-align:right;padding:8px;font-size:12px;color:var(--tx2)">อัตรารอด(%)</th>
       <th style="text-align:right;padding:8px;font-size:12px;color:var(--tx2)">FCR</th>
@@ -6823,6 +6894,9 @@ function renderCrops(){
       const hr=c.harvestResult||{};
       const days=c.startDate&&c.closeDate?dDiff(c.startDate,c.closeDate):'-';
       const dClr=days!=='-'?(days>=90&&days<=120?'var(--ok)':days>120?'var(--w)':'var(--d)'):'var(--tx3)';
+      const rowId=c._pondId+'_'+(c.id||c._idx);
+      const ph=c.partialHarvests||[];
+      const colspan=isAdminHist?12:11;
       return`<tr style="border-bottom:1px solid var(--bd)">
         <td style="padding:8px 10px;font-weight:700">บ่อ ${c.pondName}</td>
         <td style="padding:8px;text-align:center">${c.cropNum}</td>
@@ -6831,6 +6905,7 @@ function renderCrops(){
         <td style="padding:8px;text-align:center;font-size:12px">${fD(c.closeDate||'')}</td>
         <td style="padding:8px;text-align:center;font-weight:700;color:${dClr}">${days}</td>
         <td style="padding:8px;text-align:right;font-weight:700">${hr.totalWeight?hr.totalWeight.toLocaleString():'-'}</td>
+        <td style="padding:8px;text-align:center">${ph.length?`<button onclick="togglePartialRow('${rowId}')" style="background:none;border:1px solid var(--bd);border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;color:var(--in)">📦 ${ph.length}</button>`:'-'}</td>
         <td style="padding:8px;text-align:right">${hr.size||'-'}</td>
         <td style="padding:8px;text-align:right">${hr.survivalRate?hr.survivalRate.toFixed(1):'-'}</td>
         <td style="padding:8px;text-align:right">${hr.fcr||'-'}</td>
@@ -6839,13 +6914,36 @@ function renderCrops(){
           <div style="display:flex;gap:4px;align-items:center;min-width:180px">
             <input type="text" id="cnote-${c._pondId}-${c.id||c._idx}" value="${c.notes?String(c.notes).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'):''}" placeholder="เช่น โรคตัวแดง, ท่อแตก..." style="flex:1;border:1px solid var(--bd);border-radius:6px;padding:4px 6px;font-size:12px">
             <button onclick="editCycleNote('${c._pondId}','${c.id||''}',${c._idx})" style="background:var(--p);color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap" title="บันทึกสาเหตุปิดบ่อ/หมายเหตุ">💾 บันทึก</button>
+            <button onclick="goPdfForCrop('${c._pondId}',${c._idx})" style="background:var(--ib);color:var(--in);border:1px solid #b9d5ef;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap" title="ไปหน้า PDF ปิดบ่อ พร้อมเลือกบ่อ+รอบนี้ให้เลย">📄 PDF</button>
             ${APP_ROLE==='admin'?`<button onclick="openEditCropModal('${c._pondId}','${c.id||''}',${c._idx})" style="background:#fffbeb;color:#d97706;border:1px solid #fde68a;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap" title="แก้ไขข้อมูลรอบนี้ (Admin)">✏️</button>`:''}
             ${APP_ROLE==='admin'?`<button onclick="deleteCropRecord('${c._pondId}','${c.id||''}',${c._idx})" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap" title="ลบรายการปิดบ่อนี้ (Admin)">🗑️</button>`:''}
           </div>
         </td>
-      </tr>`;}).join('')}
+      </tr>${ph.length?`<tr id="prow-${rowId}" style="display:none;background:var(--sf2)"><td colspan="${colspan}" style="padding:10px 16px">
+        <div style="font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:6px">📦 รายการพาเชียลของรอบนี้ (บ่อ ${c.pondName} รอบ ${c.cropNum})</div>
+        <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="border-bottom:1px solid var(--bd)">
+            <th style="text-align:left;padding:4px 8px;color:var(--tx3)">วันที่</th>
+            <th style="text-align:left;padding:4px 8px;color:var(--tx3)">แพ</th>
+            <th style="text-align:left;padding:4px 8px;color:var(--tx3)">ลักษณะ</th>
+            <th style="text-align:right;padding:4px 8px;color:var(--tx3)">ไซส์</th>
+            <th style="text-align:right;padding:4px 8px;color:var(--tx3)">น้ำหนัก(กก.)</th>
+            <th style="text-align:right;padding:4px 8px;color:var(--tx3)">ราคา/กก.</th>
+            <th style="text-align:right;padding:4px 8px;color:var(--tx3)">รวม(บาท)</th>
+            <th style="text-align:left;padding:4px 8px;color:var(--tx3)">หมายเหตุ</th>
+          </tr></thead>
+          <tbody>${ph.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(r=>{
+            const total=(r.weight&&r.price)?Math.round(r.weight*r.price):null;
+            return`<tr><td style="padding:4px 8px">${fD(r.date||'')}</td><td style="padding:4px 8px">${r.buyer||'-'}</td><td style="padding:4px 8px">${r.live||'-'}</td><td style="padding:4px 8px;text-align:right">${r.size||'-'}</td><td style="padding:4px 8px;text-align:right">${r.weight?r.weight.toLocaleString():'-'}</td><td style="padding:4px 8px;text-align:right">${r.price?r.price.toLocaleString():'-'}</td><td style="padding:4px 8px;text-align:right;color:var(--ok)">${total?total.toLocaleString():'-'}</td><td style="padding:4px 8px;color:var(--tx3)">${r.notes||''}</td></tr>`;
+          }).join('')}</tbody>
+        </table></div>
+      </td></tr>`:''}`;}).join('')}
     </tbody></table></div>`;
   populateChPondSelect();
+}
+function togglePartialRow(id){
+  const el=document.getElementById('prow-'+id);if(!el)return;
+  el.style.display=el.style.display==='none'?'':'none';
 }
 function deleteCropRecord(pondId,cropId,idx){
   if(!confirm('🗑️ ลบรายการปิดบ่อนี้?\nไม่สามารถกู้คืนได้'))return;
@@ -6933,7 +7031,7 @@ function saveEditCrop(){
       hatchery:document.getElementById('ecm-hatchery').value.trim(),
       plType:document.getElementById('ecm-pltype').value,
       plWeight:gn('ecm-plweight'),
-      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],prepChecklist:null,
+      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[],prepChecklist:null,
       harvestResult:{
         totalWeight:gn('ecm-weight'),size:gn('ecm-size'),caught:gn('ecm-caught'),
         survivalRate:gn('ecm-survival'),fcr:gn('ecm-fcr'),price:gn('ecm-price'),revenue:gn('ecm-revenue'),
@@ -7247,14 +7345,22 @@ function addPrepPond(){
   if(!pid){showMsg('prep-msg','warn','กรุณาเลือกบ่อก่อน');return}
   if(_prepPonds.includes(pid)){showMsg('prep-msg','warn','บ่อนี้อยู่ในรายการแล้ว');return}
   const p=pond(pid);
-  if(!p.prepChecklist)p.prepChecklist={steps:{},stockDate:p.startDate||'',notes:''};
+  if(!p.prepChecklist)p.prepChecklist={id:'prep_'+pid+'_'+Date.now(),steps:{},stockDate:p.startDate||'',notes:''};
   _prepPonds=[..._prepPonds.filter(id=>id!==pid),pid];
   document.getElementById('prep-msg').innerHTML='';
   save();renderPrep();
 }
-function removePrepPond(pid){
-  _prepPonds=_prepPonds.filter(id=>id!==pid);
-  renderPrep();
+// (ปุ่ม × เอาออกจากรายการเดิมถูกแทนด้วย 🗑️ ล้างแผน — ความหมายเดียวกับปุ่มบนการ์ดภาพรวม ลดปุ่มซ้ำซ้อน)
+// ── เช็คลิสต์ครบ 100% → ลงลูกกุ้งต่อได้เลยในปุ่มเดียว: เปิดฟอร์มบ่อพร้อมวันลงจากเช็คลิสต์ เคลียร์ค่ารอบเก่า
+//    การล้างเช็คลิสต์+คำนวณรอบ/ปีใหม่เกิดใน savePond() ตอนบันทึก (เส้นทางเดียวกับการลงกุ้งปกติ ไม่มี logic ซ้ำ) ──
+function startCropFromPrep(pid){
+  const p=pond(pid);if(!p)return;
+  editPond(pid);
+  document.getElementById('mdl-title').textContent=`🦐 ลงลูกกุ้ง — เริ่มรอบใหม่ บ่อ ${p.name}`;
+  const sd=(p.prepChecklist&&p.prepChecklist.stockDate)||today();
+  document.getElementById('mdl-start').value=sd;syncDateHint(document.getElementById('mdl-start'));
+  ['mdl-stock','mdl-hatchery','mdl-plWeight','mdl-costfry'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const pt=document.getElementById('mdl-plType');if(pt)pt.value='';
 }
 function renderPrep(){
   const wrap=document.getElementById('prep-checklist-wrap');if(!wrap)return;
@@ -7264,7 +7370,7 @@ function renderPrep(){
 }
 function renderPrepCard(pid){
   const p=pond(pid);if(!p)return'';
-  if(!p.prepChecklist)p.prepChecklist={steps:{},stockDate:p.startDate||'',notes:''};
+  if(!p.prepChecklist)p.prepChecklist={id:'prep_'+pid+'_'+Date.now(),steps:{},stockDate:p.startDate||'',notes:''};
   const cl=p.prepChecklist;
   const stockDate=cl.stockDate||p.startDate||'';
   const checked=PREP_STEPS.filter(s=>cl.steps[s.key]?.done).length;
@@ -7279,10 +7385,14 @@ function renderPrepCard(pid){
       <div style="display:flex;align-items:center;gap:8px">
         <label style="font-size:11px;color:var(--tx3)">วันลงกุ้ง:</label>
         <input type="date" class="fi" id="prep-stock-date-${pid}" value="${stockDate}" onchange="updatePrepStockDate('${pid}')" style="width:120px;padding:3px 7px;font-size:11px">
-        <button onclick="removePrepPond('${pid}')" style="background:none;border:1px solid var(--bd);border-radius:5px;padding:2px 7px;font-size:15px;cursor:pointer;color:var(--tx3);line-height:1.2">×</button>
+        <button onclick="resetPrepPond('${pid}')" title="ล้างแผนเตรียมบ่อ (ใช้เมื่อเปลี่ยนแผนการเลี้ยง)" style="background:none;border:1px solid var(--bd);border-radius:5px;padding:2px 8px;font-size:13px;cursor:pointer;color:var(--d);line-height:1.4">🗑️ ล้างแผน</button>
       </div>
     </div>
     <div style="background:var(--bd);border-radius:3px;height:5px;margin-bottom:8px"><div style="background:${pct===100?'var(--ok)':pct>=50?'var(--w)':'var(--p)'};height:5px;border-radius:3px;width:${pct}%;transition:width .3s"></div></div>
+    ${pct===100&&!p.startDate?`<div style="background:var(--ob);border:1px solid #bbe3c8;border-radius:8px;padding:12px;text-align:center;margin-bottom:10px">
+      <button class="btn" style="background:var(--ok);color:#fff;font-weight:600;font-size:13.5px;padding:9px 20px;border:none;border-radius:8px;cursor:pointer" onclick="startCropFromPrep('${pid}')">🦐 ลงลูกกุ้ง — เริ่มรอบใหม่บ่อนี้</button>
+      <div style="font-size:11px;color:var(--tx2);margin-top:6px">เปิดฟอร์มลงกุ้งพร้อมวันลงจากเช็คลิสต์ · บันทึกแล้วระบบล้างเช็คลิสต์และเริ่มรอบใหม่ให้เอง</div>
+    </div>`:''}
     <div style="overflow-x:auto">
     <table style="width:100%;border-collapse:collapse;font-size:12px">
       <thead><tr style="background:var(--sf2)">
@@ -7314,13 +7424,13 @@ function addDays(dateStr,days){
 function updatePrepStockDate(pid){
   const p=pond(pid);if(!p)return;
   const d=document.getElementById(`prep-stock-date-${pid}`)?.value;
-  if(!p.prepChecklist)p.prepChecklist={steps:{},stockDate:'',notes:''};
+  if(!p.prepChecklist)p.prepChecklist={id:'prep_'+pid+'_'+Date.now(),steps:{},stockDate:'',notes:''};
   p.prepChecklist.stockDate=d||'';
   save();fbSave();renderPrep();
 }
 function togglePrepStep(pid,key,checked){
   const p=pond(pid);if(!p)return;
-  if(!p.prepChecklist)p.prepChecklist={steps:{},stockDate:p.startDate||'',notes:''};
+  if(!p.prepChecklist)p.prepChecklist={id:'prep_'+pid+'_'+Date.now(),steps:{},stockDate:p.startDate||'',notes:''};
   if(!p.prepChecklist.steps[key])p.prepChecklist.steps[key]={done:false,date:'',notes:''};
   p.prepChecklist.steps[key].done=checked;
   if(checked&&!p.prepChecklist.steps[key].date)p.prepChecklist.steps[key].date=today();
@@ -7421,7 +7531,8 @@ function confirmCloseCrop(){
   const closeDate=document.getElementById('cm-close-date').value;
   if(!closeDate){alert('กรุณาระบุวันที่ปิดบ่อ');return;}
   if(closeDate>today()){if(!confirm(`⚠️ วันที่ปิดบ่อ (${fD(closeDate)}) เป็นวันในอนาคต\nยืนยันว่าถูกต้อง?`))return;}
-  const sameCropExists=(p.cropHistory||[]).some(c=>c.cropNum===(p.cropNum||1)&&c.closeDate&&c.closeDate!==closeDate);
+  // เตือนซ้ำต้องเทียบทั้งรอบ+ปี — เดิมเทียบแค่ cropNum ทำให้รอบ 1 ปีเก่าโดนเตือนปนกับรอบ 1 ปีนี้ และปิดวันเดียวกันซ้ำ 2 ครั้งกลับไม่เตือนเลย
+  const sameCropExists=(p.cropHistory||[]).some(c=>c.cropNum===(p.cropNum||1)&&yearBE(c.cropYear||c.year)===yearBE(p.cropYear)&&c.closeDate);
   if(sameCropExists){if(!confirm(`⚠️ บ่อ ${p.name} รอบที่ ${p.cropNum||1} มีรายการปิดบ่ออยู่แล้ว\nยืนยันเพิ่มรายการใหม่?`))return;}
   // collect harvest result
   const hr={
@@ -7460,6 +7571,7 @@ function confirmCloseCrop(){
     waterLog:[...(p.waterLog||[])],
     chemLog:[...(p.chemLog||[])],
     labResults:[...(p.labResults||[])],
+    partialHarvests:[...(p.partialHarvests||[])],
     prepChecklist:p.prepChecklist?JSON.parse(JSON.stringify(p.prepChecklist)):null,
     harvestResult:hr,
     notes,
@@ -7467,124 +7579,159 @@ function confirmCloseCrop(){
   };
   if(!p.cropHistory)p.cropHistory=[];
   p.cropHistory.push(archived);
-  // reset for new crop
-  const cropsPerYear=D.settings?.cropsPerYear||2;
-  const nextCropNum=(p.cropNum||1)+1;
-  const nextCropYear=nextCropNum>cropsPerYear?p.cropYear+1:p.cropYear||new Date().getFullYear();
-  p.cropNum=nextCropNum>cropsPerYear?1:nextCropNum;
-  p.cropYear=nextCropYear;
+  // ── tombstone ทุก log ของรอบที่ปิด — save() ทำ merge แบบ union กับ remote เสมอ ถ้าไม่ tombstone ข้อมูลรอบเก่าจากเครื่องอื่น/remote จะถูกดันกลับเข้า array สดของรอบใหม่ (สำเนาใน cropHistory ไม่โดนกรอง เพราะ dropDead กรองเฉพาะ item ชั้นบนสุด) ──
+  D.deletedIds=D.deletedIds||[];
+  ['feedLog','samples','plankton','waterLog','chemLog','labResults','partialHarvests'].forEach(k=>{
+    (p[k]||[]).forEach(r=>{if(r&&r.id)D.deletedIds.push(r.id);});
+  });
+  if(p.prepChecklist&&p.prepChecklist.id)D.deletedIds.push(p.prepChecklist.id);
+  // reset for new crop — เลขรอบ/ปีตั้งต้นจากความจริง (จะถูกคำนวณซ้ำอีกทีตอนลงลูกกุ้งจริงใน savePond)
+  const nxt=computeNextCrop(p,closeDate);
+  p.cropNum=nxt.cropNum;p.cropYear=nxt.cropYear;
   p.startDate='';
   p.stock=0;
   p.hatchery='';p.plType='';p.plWeight=null;
   p.records=[];p.feedLog=[];p.samples=[];p.plankton=[];
-  p.waterLog=[];p.chemLog=[];p.labResults=[];
+  p.waterLog=[];p.chemLog=[];p.labResults=[];p.partialHarvests=[];
   p.prepChecklist=null;
   save();fbSave();
   closeCropModal();
   populateAll();renderOv();renderManage();
-  alert(`✅ ปิดรอบที่ ${archived.cropNum} บ่อ ${p.name} สำเร็จ\nข้อมูลถูกเก็บเข้าประวัติแล้ว`);
+  openCloseDoneModal(p,archived);
+}
+// ── หน้าต่างหลังปิดรอบสำเร็จ — เดิมเป็น alert เปล่าๆ ต้องหาเมนูไปต่อเอง เพิ่มทางลัด 3 ทางที่ต้องไปอยู่แล้ว ──
+let _cdmPondId=null,_cdmCropId=null;
+function openCloseDoneModal(p,archived){
+  _cdmPondId=p.id;_cdmCropId=archived.id;
+  document.getElementById('cdm-title').textContent=`ปิดรอบที่ ${archived.cropNum} บ่อ ${p.name} สำเร็จ`;
+  const hr=archived.harvestResult||{};
+  const parts=[];
+  if(hr.totalWeight)parts.push(`ผลผลิต ${hr.totalWeight.toLocaleString()} กก.`);
+  if(APP_ROLE==='admin'&&hr.netProfit!=null)parts.push(`กำไรสุทธิ ${(hr.netProfit>=0?'+':'')}${Math.round(hr.netProfit).toLocaleString()} บ.`);
+  parts.push('เก็บเข้าประวัติแล้ว');
+  document.getElementById('cdm-sub').textContent=parts.join(' · ');
+  document.getElementById('closeDoneModal').classList.add('on');
+}
+function closeCdm(){document.getElementById('closeDoneModal').classList.remove('on');}
+function cdmGoHistory(){closeCdm();goTabByName('crops');}
+function cdmGoPdf(){
+  closeCdm();
+  const p=pond(_cdmPondId);if(!p)return;
+  const idx=(p.cropHistory||[]).findIndex(c=>c.id===_cdmCropId);
+  goPdfForCrop(_cdmPondId,idx>=0?idx:null);
+}
+function cdmGoPrep(){
+  closeCdm();goTabByName('prep');
+  if(_cdmPondId&&typeof _prepPonds!=='undefined'&&!_prepPonds.includes(_cdmPondId)){
+    const p=pond(_cdmPondId);
+    if(p){if(!p.prepChecklist)p.prepChecklist={id:'prep_'+_cdmPondId+'_'+Date.now(),steps:{},stockDate:'',notes:''};_prepPonds=[..._prepPonds,_cdmPondId];save();renderPrep();}
+  }
+}
+// ── กระโดดไปหน้า PDF ปิดบ่อ พร้อมเลือกบ่อ+รอบให้เลย (ใช้จากปุ่ม 📄 ท้ายแถวประวัติ และ dialog หลังปิดรอบ) ──
+function goPdfForCrop(pondId,idx){
+  goTabByName('export');
+  const sel=document.getElementById('ex-pond');if(!sel)return;
+  sel.value=pondId;
+  onExPondChange();
+  if(idx!=null&&idx>=0){const cs=document.getElementById('ex-crop');if(cs){cs.value=String(idx);renderExPreview();}}
 }
 
 // ===== HARVEST =====
-function saveHarvest(){
-  const date=document.getElementById('hv-date').value;
-  const pondId=document.getElementById('hv-pond').value;
+function initHarvest(){
+  const dEl=document.getElementById('hv-date');if(dEl&&!dEl.value)dEl.value=today();
+  renderPartialList();renderHvRoundStrip();
+}
+function onHvPondChange(){renderPartialList();renderHvRoundStrip();}
+// ── แถบสรุปรอบปัจจุบันของบ่อที่เลือก — เห็นก่อนตัดสินใจจับ ไม่ต้องสลับหน้า (ต้นทุนสะสมโชว์เฉพาะ admin) ──
+function renderHvRoundStrip(){
+  const el=document.getElementById('hv-round-strip');if(!el)return;
+  const pid=document.getElementById('hv-pond')?.value||'';
+  const p=pond(pid);
+  if(!p){el.style.display='none';el.innerHTML='';return;}
+  const chip=t=>`<span style="display:inline-flex;align-items:center;gap:5px;background:var(--sf2);border:1px solid var(--bd);border-radius:16px;padding:3px 11px;font-size:12px">${t}</span>`;
+  const chips=[];
+  chips.push(chip(`📅 รอบ ${p.cropNum||1}/${yearBE(p.cropYear)||'-'}${p.startDate?` · เลี้ยงมา ${dDiff(p.startDate,today())} วัน`:' · ยังไม่ลงกุ้ง'}`));
+  const ph=p.partialHarvests||[];
+  const phKg=ph.reduce((s,r)=>s+(r.weight||0),0);
+  chips.push(chip(ph.length?`📦 พาเชียลแล้ว ${ph.length} ครั้ง · ${phKg.toLocaleString()} กก.`:'📦 ยังไม่มีพาเชียลรอบนี้'));
+  if(APP_ROLE==='admin'&&p.startDate){
+    const c=pondRunningCost(p);
+    if(c)chips.push(chip(`💰 ต้นทุนสะสม ~${c.total.toLocaleString()} บ.`));
+  }
+  el.innerHTML=chips.join('');
+  el.style.display='flex';
+}
+function onHvTypeChange(){
   const type=document.getElementById('hv-type').value;
+  document.getElementById('hv-partial-fields').style.display=type==='พาเชียล'?'':'none';
+  document.getElementById('hv-close-fields').style.display=type==='ปิดรอบ'?'':'none';
+}
+function openCropModalFromHarvest(){
+  const pid=document.getElementById('hv-pond').value;
+  if(!pid){alert('กรุณาเลือกบ่อก่อน');return;}
+  openCropModal(pid);
+}
+function savePartialHarvest(){
+  const pid=document.getElementById('hv-pond').value;
+  const date=document.getElementById('hv-date').value;
+  if(!pid){showMsg('hv-msg','warn','กรุณาเลือกบ่อ');return;}
+  if(!date){showMsg('hv-msg','warn','กรุณาระบุวันที่');return;}
+  const p=pond(pid);if(!p)return;
+  if(!p.partialHarvests)p.partialHarvests=[];
   const buyer=document.getElementById('hv-buyer').value.trim();
   const live=document.getElementById('hv-live').value;
   const size=document.getElementById('hv-size').value?parseInt(document.getElementById('hv-size').value):null;
   const weight=document.getElementById('hv-weight').value?parseFloat(document.getElementById('hv-weight').value):null;
   const price=document.getElementById('hv-price').value?parseFloat(document.getElementById('hv-price').value):null;
   const notes=document.getElementById('hv-notes').value.trim();
-  if(!date||!pondId){alert('กรุณาระบุวันที่และบ่อ');return;}
-  if(!D.harvestLog)D.harvestLog=[];
-  const p=pond(pondId);
-  D.harvestLog.push({id:'HV'+Date.now(),date,pondId,pondName:p?p.name:pondId,type,buyer,live,size,weight,price,notes});
-  D.harvestLog.sort((a,b)=>b.date.localeCompare(a.date));
+  p.partialHarvests.push({id:'PH'+Date.now(),date,buyer,live,size,weight,price,notes});
+  p.partialHarvests.sort((a,b)=>b.date.localeCompare(a.date));
   save();fbSave();
-  showMsg('hv-msg','ok',`✅ บันทึกการจับกุ้งบ่อ ${p?p.name:pondId} สำเร็จ`);
-  // clear form except date & pond
-  ['hv-type','hv-buyer','hv-live','hv-notes'].forEach(id=>{document.getElementById(id).value='';});
-  ['hv-size','hv-weight','hv-price'].forEach(id=>{document.getElementById(id).value='';});
-  renderHarvest();
+  showMsg('hv-msg','ok',`✅ บันทึกพาเชียลบ่อ ${p.name} สำเร็จ`);
+  ['hv-buyer','hv-live','hv-size','hv-weight','hv-price','hv-notes'].forEach(id=>{document.getElementById(id).value='';});
+  renderPartialList();
 }
-function deleteHarvest(id){
+function deletePartialHarvest(pid,id){
+  const p=pond(pid);if(!p)return;
   if(!confirm('ลบรายการนี้?'))return;
-  D.harvestLog=(D.harvestLog||[]).filter(r=>r.id!==id);
+  p.partialHarvests=(p.partialHarvests||[]).filter(r=>r.id!==id);
   D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
-  save();renderHarvest();
+  save();fbSave();renderPartialList();
 }
-function renderHarvest(){
-  if(!D.harvestLog)D.harvestLog=[];
-  // ── ตัวกรองปี — คำนวณใหม่ทุกครั้งที่ render (ไม่ใช่แค่ตอน populateAll) กันกรณีปีใหม่ถูกเพิ่มมาระหว่างหน้ายังเปิดอยู่ (เช่น หลังกดปุ่มซิงค์) ──
-  const hvYearEl=document.getElementById('hv-filter-year');
-  if(hvYearEl){
-    // ── ค่าเริ่มต้นเป็นปีปัจจุบันแค่ตอน dropdown ยังไม่เคย populate เท่านั้น (options.length===0) — รอบต่อๆ ไปคงค่าที่ผู้ใช้เลือกไว้เป๊ะๆ รวมถึง "" (ทุกปี) ด้วย กัน cur||curYr ตีความ "" เป็น falsy แล้วดีดกลับไปปีปัจจุบันทุกครั้งที่ render ──
-    const isFirstPopulate=hvYearEl.options.length===0;
-    const cur=hvYearEl.value;
-    const curYr=yearBE(new Date().getFullYear());
-    const yrs=[...new Set(D.harvestLog.map(r=>yearBE(r.date.slice(0,4))))];
-    if(!yrs.includes(curYr))yrs.push(curYr);
-    yrs.sort((a,b)=>b-a);
-    hvYearEl.innerHTML='<option value="">ทุกปี</option>'+yrs.map(y=>`<option value="${y}">ปี ${y}</option>`).join('');
-    hvYearEl.value=isFirstPopulate?String(curYr):cur;
-  }
-  const filterPond=document.getElementById('hv-filter-pond')?.value||'';
-  const filterYear=hvYearEl?.value||'';
-  const rows=D.harvestLog.filter(r=>(!filterPond||r.pondId===filterPond)&&(!filterYear||String(yearBE(r.date.slice(0,4)))===filterYear));
-  const tbody=document.getElementById('hv-tbody');
-  if(!tbody)return;
-  if(rows.length===0){
-    tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--tx3)">ยังไม่มีข้อมูลการจับกุ้ง</td></tr>';
-  } else {
-    tbody.innerHTML=rows.map(r=>{
-      const total=(r.weight&&r.price)?Math.round(r.weight*r.price):null;
-      const typeClr=r.type==='ปิดบ่อ'?'var(--d)':'var(--in)';
-      const liveClr=r.live==='กุ้งตาย'?'var(--tx3)':'var(--ok)';
-      return`<tr style="border-bottom:1px solid var(--bd)">
-        <td style="padding:8px 10px">${fD(r.date)}</td>
-        <td style="padding:8px 10px;font-weight:700">บ่อ ${r.pondName||r.pondId}</td>
-        <td style="padding:8px 10px"><span style="color:${typeClr};font-weight:700">${r.type||'-'}</span></td>
-        <td style="padding:8px 10px">${r.buyer||'-'}</td>
-        <td style="padding:8px 10px"><span style="color:${liveClr}">${r.live||'-'}</span></td>
-        <td style="padding:8px 10px;text-align:right">${r.size||'-'}</td>
-        <td style="padding:8px 10px;text-align:right;font-weight:700">${r.weight?r.weight.toLocaleString():'-'}</td>
-        <td style="padding:8px 10px;text-align:right">${r.price?r.price.toLocaleString():'-'}</td>
-        <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--ok)">${total?total.toLocaleString():'-'}</td>
-        <td style="padding:8px 10px;color:var(--tx3);font-size:12px">${r.notes||''}</td>
-        <td style="padding:8px 6px;text-align:center"><button onclick="deleteHarvest('${r.id}')" style="background:none;border:none;cursor:pointer;color:var(--d);font-size:14px" title="ลบ">🗑️</button></td>
-      </tr>`;
-    }).join('');
-  }
-}
-// ── ซิงค์ "ประวัติการจับกุ้ง" (D.harvestLog) ให้ตรงกับ "ประวัติรอบเลี้ยง (ปิดแล้ว)" (p.cropHistory) ──
-// confirmCloseCrop() ไม่เคย push เข้า D.harvestLog เอง — ปุ่มนี้ดึงรอบที่ปิดไปแล้วมาเติมเป็นรายการ "ปิดบ่อ" ให้ครบ (ข้ามรายการที่มีอยู่แล้ว กันซ้ำด้วย pondId+วันที่ปิดบ่อ)
-function syncHarvestLogFromCropHistory(targetYearBE){
-  if(!D.harvestLog)D.harvestLog=[];
-  const existingKeys=new Set(D.harvestLog.map(r=>r.pondId+'|'+r.date));
-  let added=0,skipped=0,scanned=0;
-  (D.ponds||[]).forEach(p=>{
-    (p.cropHistory||[]).forEach(c=>{
-      if(!c.harvestResult||!c.closeDate)return;
-      if(histRecYear(c)!==targetYearBE)return;
-      scanned++;
-      const key=p.id+'|'+c.closeDate;
-      if(existingKeys.has(key)){skipped++;return;}
-      const hr=c.harvestResult;
-      D.harvestLog.push({
-        id:'HVsync_'+p.id+'_'+c.closeDate,
-        date:c.closeDate,pondId:p.id,pondName:p.name,
-        type:'ปิดบ่อ',buyer:'',live:'',
-        size:hr.size||null,weight:hr.totalWeight||null,price:hr.price||null,
-        notes:(c.notes||'')+' (ซิงค์จากประวัติรอบเลี้ยง)'
-      });
-      existingKeys.add(key);added++;
-    });
-  });
-  if(!scanned){alert(`ไม่พบรอบเลี้ยงที่ปิดแล้วในปี ${targetYearBE} เลย`);return;}
-  D.harvestLog.sort((a,b)=>b.date.localeCompare(a.date));
-  save();fbSave();renderHarvest();
-  alert(`✅ ซิงค์เสร็จแล้ว — เพิ่มใหม่ ${added} รายการ (ข้าม ${skipped} รายการที่มีอยู่แล้ว)\nจากทั้งหมด ${scanned} รอบที่ปิดในปี ${targetYearBE}`);
+function renderPartialList(){
+  const pid=document.getElementById('hv-pond')?.value||'';
+  const nameEl=document.getElementById('hv-cur-pond-name');
+  const listEl=document.getElementById('hv-partial-list');if(!listEl)return;
+  if(!pid){if(nameEl)nameEl.textContent='';listEl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อก่อนเพื่อดูรายการ</p>';return;}
+  const p=pond(pid);if(!p)return;
+  if(nameEl)nameEl.textContent=' — บ่อ '+p.name;
+  const rows=(p.partialHarvests||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  if(!rows.length){listEl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีรายการพาเชียลในรอบนี้</p>';return;}
+  listEl.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:var(--sf2);border-bottom:2px solid var(--bd)">
+    <th style="text-align:left;padding:8px 10px;font-size:12px;color:var(--tx2)">วันที่</th>
+    <th style="text-align:left;padding:8px 10px;font-size:12px;color:var(--tx2)">แพ</th>
+    <th style="text-align:left;padding:8px 10px;font-size:12px;color:var(--tx2)">ลักษณะ</th>
+    <th style="text-align:right;padding:8px 10px;font-size:12px;color:var(--tx2)">ไซส์</th>
+    <th style="text-align:right;padding:8px 10px;font-size:12px;color:var(--tx2)">น้ำหนัก (กก.)</th>
+    <th style="text-align:right;padding:8px 10px;font-size:12px;color:var(--tx2)">ราคา/กก.</th>
+    <th style="text-align:right;padding:8px 10px;font-size:12px;color:var(--tx2)">รวม (บาท)</th>
+    <th style="text-align:left;padding:8px 10px;font-size:12px;color:var(--tx2)">หมายเหตุ</th>
+    <th style="padding:8px 6px"></th>
+  </tr></thead><tbody>${rows.map(r=>{
+    const total=(r.weight&&r.price)?Math.round(r.weight*r.price):null;
+    const liveClr=r.live==='กุ้งตาย'?'var(--tx3)':'var(--ok)';
+    return`<tr style="border-bottom:1px solid var(--bd)">
+      <td style="padding:8px 10px">${fD(r.date)}</td>
+      <td style="padding:8px 10px">${r.buyer||'-'}</td>
+      <td style="padding:8px 10px"><span style="color:${liveClr}">${r.live||'-'}</span></td>
+      <td style="padding:8px 10px;text-align:right">${r.size||'-'}</td>
+      <td style="padding:8px 10px;text-align:right;font-weight:700">${r.weight?r.weight.toLocaleString():'-'}</td>
+      <td style="padding:8px 10px;text-align:right">${r.price?r.price.toLocaleString():'-'}</td>
+      <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--ok)">${total?total.toLocaleString():'-'}</td>
+      <td style="padding:8px 10px;color:var(--tx3);font-size:12px">${r.notes||''}</td>
+      <td style="padding:8px 6px;text-align:center"><button onclick="deletePartialHarvest('${pid}','${r.id}')" style="background:none;border:none;cursor:pointer;color:var(--d);font-size:14px" title="ลบ">🗑️</button></td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
 }
 // ===== CEO DASHBOARD (role=ceo) =====
 const ceoMoney=v=>'฿'+Math.round(v||0).toLocaleString('th-TH');
@@ -8181,7 +8328,7 @@ function renderPLTable(rows){
     <th style="text-align:right">รายได้(฿)</th><th style="text-align:right">ต้นทุน(฿)</th>
     <th style="text-align:right">พัสดุ(฿)</th>
     <th style="text-align:right">กำไร(฿)</th><th style="text-align:right">Margin</th>
-    <th style="text-align:right">฿/กก.</th><th style="text-align:right">FCR</th>
+    <th style="text-align:right">฿/กก.</th><th style="text-align:right">FCR</th><th></th>
   </tr></thead><tbody>${rows.map(r=>{
     const cost=(r.costFry||0)+(r.costFeed||0)+(r.costChem||0)+(r.costLabor||0)+(r.costElec||0)+(r.costOther||0)+(r.costStock||0);
     const margin=r.revenue&&r.netProfit!=null?r.netProfit/r.revenue*100:null;
@@ -8210,7 +8357,16 @@ function renderPLTable(rows){
       <td style="text-align:right;color:${cl}">${margin!=null?margin.toFixed(1)+'%':'-'}</td>
       <td style="text-align:right">${cpk!=null?cpk.toFixed(1):'-'}</td>
       <td style="text-align:right">${r.fcr||'-'}</td>
+      <td><button onclick="goCropHistoryFor('${r.pondId}','${histRecYear(r)}')" style="background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;white-space:nowrap" title="ไปดูรอบนี้ในประวัติรอบเลี้ยง (หมายเหตุ/พาเชียล/สาเหตุปิดบ่อ)">ดูรายละเอียดรอบ →</button></td>
     </tr>`;}).join('')}</tbody></table>`;
+}
+// ── เจาะจาก P&L ไปประวัติรอบเลี้ยงปีนั้นๆ — เห็นรอบขาดทุนแล้วกดเดียวไปดูสาเหตุ (หมายเหตุ/FCR/พาเชียล) ──
+function goCropHistoryFor(pondId,yBE){
+  goTabByName('crops');
+  const sel=document.getElementById('cr-hist-year');
+  if(sel){sel.dataset.init='1';sel.value=String(yBE);if(sel.value!==String(yBE))sel.value='all';renderCrops();}
+  const histEl=document.getElementById('cr-history');
+  if(histEl)histEl.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function renderPLCostChart(rows){
   if(!rows.length){
@@ -8333,7 +8489,7 @@ async function forceInjectYear2569Round1(){
       id:'hist_A18_20260228',cropYear:2569,year:2569,cropNum:1,
       startDate:'2026-02-28',closeDate:'2026-04-03',closed:true,
       stock:594986,hatchery:'cp ชุมพร1',plType:'',plWeight:null,
-      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],prepChecklist:{},
+      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[],prepChecklist:{},
       notes:'นำเข้าจากแผนลงลูกกุ้ง',
       parchan:[{weightKg:4186,size:103}],
       totalWeight:4186,
@@ -8343,7 +8499,7 @@ async function forceInjectYear2569Round1(){
       id:'hist_A19_20260226',cropYear:2569,year:2569,cropNum:1,
       startDate:'2026-02-26',closeDate:'2026-04-04',closed:true,
       stock:555030,hatchery:'cp ชุมพร1',plType:'',plWeight:null,
-      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],prepChecklist:{},
+      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[],prepChecklist:{},
       notes:'นำเข้าจากแผนลงลูกกุ้ง',
       parchan:[{weightKg:3486,size:118}],
       totalWeight:3486,
@@ -8353,7 +8509,7 @@ async function forceInjectYear2569Round1(){
       id:'hist_A20_20260226',cropYear:2569,year:2569,cropNum:1,
       startDate:'2026-02-26',closeDate:'2026-04-07',closed:true,
       stock:564018,hatchery:'cp ชุมพร1',plType:'',plWeight:null,
-      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],prepChecklist:{},
+      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[],prepChecklist:{},
       notes:'นำเข้าจากแผนลงลูกกุ้ง',
       parchan:[{weightKg:4036,size:102}],
       totalWeight:4036,
@@ -8399,7 +8555,7 @@ async function fixA1Round3_2568(){
   let c=p.cropHistory.find(x=>x.cropYear===2568&&x.cropNum===3);
   if(!c){
     c={id:'hist_A1_20251124',cropYear:2568,year:2568,cropNum:3,stock:null,hatchery:'',plType:'',plWeight:null,
-       records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],prepChecklist:{},
+       records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[],prepChecklist:{},
        notes:'',parchan:[],totalWeight:null,harvestResult:null};
     p.cropHistory.push(c);
   }
