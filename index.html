@@ -1489,15 +1489,25 @@ body.role-ceo .main{max-width:640px}
         <div style="font-weight:700;font-size:13px;color:var(--in);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">💰 รายได้ & ต้นทุน</div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
           <div class="fg"><label class="fl">รายได้รวม (บาท)</label><input type="number" class="fi" id="cm-revenue" step="1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--sf2)"></div>
+          <div class="fg"><label class="fl">ต้นทุนอาหารกุ้ง (บาท)</label><input type="number" class="fi" id="cm-cost-feed" step="1" placeholder="คำนวณจาก feedLog" readonly style="background:var(--sf2)"></div>
           <div class="fg"><label class="fl">ต้นทุนลูกกุ้ง (บาท)</label><input type="number" class="fi" id="cm-cost-fry" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนอาหาร (บาท)</label><input type="number" class="fi" id="cm-cost-feed" step="1" placeholder="คำนวณจาก feedLog" readonly style="background:var(--sf2)"></div>
-          <div class="fg"><label class="fl">ต้นทุนสารเคมี (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากสต็อกอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-chem" step="1" placeholder="0"></div>
-          <div class="fg" id="cm-stock-breakdown-wrap" style="grid-column:1/-1;display:none">
-            <div id="cm-stock-breakdown" style="font-size:11.5px;color:var(--tx2);background:var(--sf2);border-radius:6px;padding:8px 10px"></div>
-          </div>
-          <div class="fg"><label class="fl">ต้นทุนค่าแรง (บาท)</label><input type="number" class="fi" id="cm-cost-labor" step="1" placeholder="ดึงจากแท็บค่าแรงอัตโนมัติ" style="background:var(--sf2)"></div>
+          <div class="fg"><label class="fl">ต้นทุนเวชภัณฑ์ (บาท) <span style="font-weight:400;color:var(--tx3)">(ยากิน+ยาลงน้ำ+จุลินทรีย์ ดึงจากสต็อก แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-med" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ต้นทุนปูน (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากสต็อก แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-lime" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ต้นทุนค่าแรง (บาท) <span style="font-weight:400;color:var(--tx3)">(กรอกเอง)</span></label><input type="number" class="fi" id="cm-cost-labor" step="1" placeholder="กรอกเอง"></div>
           <div class="fg"><label class="fl">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="cm-cost-elec" step="1" placeholder="ดึงอัตโนมัติ 2,500 บาท/วัน" style="background:var(--sf2)"></div>
-          <div class="fg"><label class="fl">ต้นทุนอื่นๆ (บาท)</label><input type="number" class="fi" id="cm-cost-other" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ต้นทุนน้ำมัน (บาท) <span style="font-weight:400;color:var(--tx3)">(กรอกเอง)</span></label><input type="number" class="fi" id="cm-cost-fuel" step="1" placeholder="กรอกเอง"></div>
+          <div class="fg"><label class="fl">อุปกรณ์ (บาท) <span style="font-weight:400;color:var(--tx3)">(ในสต็อก ดึงอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-equip" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">อุปกรณ์นอก (บาท) <span style="font-weight:400;color:var(--tx3)">(กรอกเอง)</span></label><input type="number" class="fi" id="cm-cost-equip-out" step="1" placeholder="กรอกเอง"></div>
+          <div class="fg"><label class="fl">ค่าจับกุ้ง (บาท) <span style="font-weight:400;color:var(--tx3)">(กรอกเอง)</span></label><input type="number" class="fi" id="cm-cost-catch" step="1" placeholder="กรอกเอง"></div>
+        </div>
+        <div style="font-weight:700;font-size:12px;color:var(--p);margin:14px 0 8px;padding-top:10px;border-top:1px dashed var(--bd)">🤝 ส่วนแบ่งกำไร <span style="font-weight:400;color:var(--tx3)">(กรอกเอง — % ของกำไรก่อนหักส่วนแบ่ง หักออกเป็นต้นทุน)</span></div>
+        <div class="fgrid" style="grid-template-columns:1fr 1fr">
+          <div class="fg"><label class="fl">% คนเลี้ยง</label><input type="number" class="fi" id="cm-pct-caretaker" step="0.1" placeholder="กรอกเอง"></div>
+          <div class="fg"><label class="fl">จำนวนเงินคนเลี้ยง (บาท)</label><input type="number" class="fi" id="cm-amt-caretaker" step="1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--sf2)"></div>
+          <div class="fg"><label class="fl">% ผู้จัดการ</label><input type="number" class="fi" id="cm-pct-manager" step="0.1" placeholder="กรอกเอง"></div>
+          <div class="fg"><label class="fl">จำนวนเงินผู้จัดการ (บาท)</label><input type="number" class="fi" id="cm-amt-manager" step="1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--sf2)"></div>
+        </div>
+        <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--bd)">
           <div class="fg"><label class="fl" style="color:var(--ok);font-weight:700">กำไรสุทธิ (บาท)</label><input type="number" class="fi" id="cm-profit" step="1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--ob);font-weight:700"></div>
         </div>
       </div>
@@ -1563,12 +1573,27 @@ body.role-ceo .main{max-width:640px}
         <div style="font-weight:700;font-size:13px;color:var(--in);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">💰 รายได้ & ต้นทุน</div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
           <div class="fg"><label class="fl">รายได้รวม (บาท)</label><input type="number" class="fi" id="ecm-revenue" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ต้นทุนอาหารกุ้ง (บาท)</label><input type="number" class="fi" id="ecm-cost-feed" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl">ต้นทุนลูกกุ้ง (บาท)</label><input type="number" class="fi" id="ecm-cost-fry" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนอาหาร (บาท)</label><input type="number" class="fi" id="ecm-cost-feed" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนสารเคมี (บาท)</label><input type="number" class="fi" id="ecm-cost-chem" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ต้นทุนเวชภัณฑ์ (บาท)</label><input type="number" class="fi" id="ecm-cost-med" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ต้นทุนปูน (บาท)</label><input type="number" class="fi" id="ecm-cost-lime" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl">ต้นทุนค่าแรง (บาท)</label><input type="number" class="fi" id="ecm-cost-labor" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="ecm-cost-elec" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนอื่นๆ (บาท)</label><input type="number" class="fi" id="ecm-cost-other" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ต้นทุนน้ำมัน (บาท)</label><input type="number" class="fi" id="ecm-cost-fuel" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">อุปกรณ์ (บาท)</label><input type="number" class="fi" id="ecm-cost-equip" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">อุปกรณ์นอก (บาท)</label><input type="number" class="fi" id="ecm-cost-equip-out" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ค่าจับกุ้ง (บาท)</label><input type="number" class="fi" id="ecm-cost-catch" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">% คนเลี้ยง</label><input type="number" class="fi" id="ecm-pct-caretaker" step="0.1" placeholder="0"></div>
+          <div class="fg"><label class="fl">จำนวนเงินคนเลี้ยง (บาท)</label><input type="number" class="fi" id="ecm-amt-caretaker" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">% ผู้จัดการ</label><input type="number" class="fi" id="ecm-pct-manager" step="0.1" placeholder="0"></div>
+          <div class="fg"><label class="fl">จำนวนเงินผู้จัดการ (บาท)</label><input type="number" class="fi" id="ecm-amt-manager" step="1" placeholder="0"></div>
+        </div>
+        <div style="font-weight:700;font-size:12px;color:var(--tx3);margin:14px 0 8px;padding-top:10px;border-top:1px dashed var(--bd)">🗄️ หมวดระบบเดิม (ก่อนแยกหมวดละเอียด — แก้ไขได้เผื่อรอบเก่าที่เคยกรอกแบบเดิม)</div>
+        <div class="fgrid" style="grid-template-columns:1fr 1fr">
+          <div class="fg"><label class="fl">ต้นทุนสารเคมี (เดิม, บาท)</label><input type="number" class="fi" id="ecm-cost-chem" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ต้นทุนอื่นๆ (เดิม, บาท)</label><input type="number" class="fi" id="ecm-cost-other" step="1" placeholder="0"></div>
+        </div>
+        <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--bd)">
           <div class="fg"><label class="fl" style="color:var(--ok);font-weight:700">กำไรสุทธิ (บาท)</label><input type="number" class="fi" id="ecm-profit" step="1" placeholder="คำนวณอัตโนมัติ" style="background:var(--ob);font-weight:700"></div>
         </div>
       </div>
@@ -6507,12 +6532,20 @@ function closeSummaryHtml(p,s,opt){
   </div>
   ${sectionHdr('💰 การเงิน')}<div style="${grid2}">
     ${row('รายได้รวม (บาท)',money(s.revenue))}
+    ${row('ต้นทุนอาหารกุ้ง (บาท)',s.hasCostData?money(s.costFeed)||'0':null)}
     ${row('ต้นทุนลูกกุ้ง (บาท)',s.hasCostData?money(s.costFry)||'0':null)}
-    ${row('ต้นทุนอาหาร (บาท)',s.hasCostData?money(s.costFeed)||'0':null)}
-    ${row('ต้นทุนสารเคมี (บาท)',s.hasCostData?money(s.costChem)||'0':null)}
+    ${row('ต้นทุนเวชภัณฑ์ (บาท)',s.hasCostData?money(s.costMed)||'0':null)}
+    ${row('ต้นทุนปูน (บาท)',s.hasCostData?money(s.costLime)||'0':null)}
     ${row('ต้นทุนค่าแรง (บาท)',s.hasCostData?money(s.costLabor)||'0':null)}
     ${row('ต้นทุนค่าไฟฟ้า (บาท)',s.hasCostData?money(s.costElec)||'0':null)}
-    ${row('ต้นทุนอื่นๆ (บาท)',s.hasCostData?money(s.costOther)||'0':null)}
+    ${row('ต้นทุนน้ำมัน (บาท)',s.hasCostData?money(s.costFuel)||'0':null)}
+    ${row('อุปกรณ์ (บาท)',s.hasCostData?money(s.costEquip)||'0':null)}
+    ${row('อุปกรณ์นอก (บาท)',s.hasCostData?money(s.costEquipOut)||'0':null)}
+    ${row('ค่าจับกุ้ง (บาท)',s.hasCostData?money(s.costCatch)||'0':null)}
+    ${s.costChemLegacy!=null?row('สารเคมี (เดิม, บาท)',money(s.costChemLegacy)):''}
+    ${s.costOtherLegacy!=null?row('อื่นๆ (เดิม, บาท)',money(s.costOtherLegacy)):''}
+    ${s.pctCaretaker!=null?row('ส่วนแบ่งคนเลี้ยง (บาท)',money(s.amtCaretaker)+' ('+s.pctCaretaker+'%)'):''}
+    ${s.pctManager!=null?row('ส่วนแบ่งผู้จัดการ (บาท)',money(s.amtManager)+' ('+s.pctManager+'%)'):''}
     ${row('รวมต้นทุน (บาท)',money(s.totalCost))}
     ${row('กำไรสุทธิ (บาท)',s.netProfit!=null?(s.netProfit>=0?'+':'')+money(s.netProfit):null,s.netProfit!=null?(s.netProfit>=0?okCol:dCol):null)}
     ${row('กำไร (%)',s.marginPct!=null?s.marginPct+'%':null,s.marginPct!=null?(s.marginPct>=0?okCol:dCol):null)}
@@ -6597,21 +6630,33 @@ function getCloseSummary(p,cropIdx){
   const yieldPerRai=(totalWeight&&p.size)?+(totalWeight/p.size).toFixed(1):null;
   const notesAll=[notesCrop,...rows.map(r=>r.notes).filter(Boolean)].filter(Boolean).join(' / ');
   const samples=lastCrop?(lastCrop.samples||[]):(p.samples||[]);
-  // ── สรุปการเงิน (ใช้ข้อมูลต้นทุน/กำไรที่กรอกไว้ตอนปิดรอบ) — เดิม PDF ไม่เคยดึงส่วนนี้มาแสดงเลย ──
+  // ── สรุปการเงิน (ใช้ข้อมูลต้นทุน/กำไรที่กรอกไว้ตอนปิดรอบ) — แยกหมวดละเอียด 10 ต้นทุนตรง + ส่วนแบ่งกำไร 2 รายการ
+  //    costChem/costOther เป็นหมวด "เดิม" ก่อนแยกละเอียด — รอบเก่าที่กรอกไว้แบบเดิมยังอ่านค่าได้ครบ ไม่หายไปจาก totalCost ──
   const costFry=harvestResult?.costFry??null;
   const costFeed=harvestResult?.costFeed??null;
-  const costChem=harvestResult?.costChem??null;
+  const costMed=harvestResult?.costMed??null;
+  const costLime=harvestResult?.costLime??null;
   const costLabor=harvestResult?.costLabor??null;
   const costElec=harvestResult?.costElec??null;
-  const costOther=harvestResult?.costOther??null;
-  const hasCostData=!!harvestResult&&[costFry,costFeed,costChem,costLabor,costElec,costOther].some(v=>v!=null);
-  const totalCost=hasCostData?[costFry,costFeed,costChem,costLabor,costElec,costOther].reduce((s,v)=>s+(v||0),0):null;
+  const costFuel=harvestResult?.costFuel??null;
+  const costEquip=harvestResult?.costEquip??null;
+  const costEquipOut=harvestResult?.costEquipOut??null;
+  const costCatch=harvestResult?.costCatch??null;
+  const pctCaretaker=harvestResult?.pctCaretaker??null;
+  const pctManager=harvestResult?.pctManager??null;
+  const amtCaretaker=harvestResult?.amtCaretaker??null;
+  const amtManager=harvestResult?.amtManager??null;
+  const costChemLegacy=harvestResult?.costChem??null;
+  const costOtherLegacy=harvestResult?.costOther??null;
+  const costFieldsAll=[costFry,costFeed,costMed,costLime,costLabor,costElec,costFuel,costEquip,costEquipOut,costCatch,costChemLegacy,costOtherLegacy];
+  const hasCostData=!!harvestResult&&costFieldsAll.some(v=>v!=null);
+  const totalCost=hasCostData?costFieldsAll.reduce((s,v)=>s+(v||0),0)+(amtCaretaker||0)+(amtManager||0):null;
   const revenue=(harvestResult&&harvestResult.revenue!=null)?harvestResult.revenue:(totalBaht||null);
   const netProfit=(harvestResult&&harvestResult.netProfit!=null)?harvestResult.netProfit:((revenue!=null&&totalCost!=null)?revenue-totalCost:null);
   const marginPct=(revenue&&netProfit!=null)?+((netProfit/revenue)*100).toFixed(1):null;
   const costPerKg=(totalWeight&&totalCost!=null)?+(totalCost/totalWeight).toFixed(1):null;
   return{pondName:p.name,cropLabel:lastCrop?`รอบที่ ${lastCrop.cropNum}/${yearBE(lastCrop.cropYear)}`:'(รอบปัจจุบัน ยังไม่ปิด)',hatchery,stock,buyer,price,totalWeight,totalBaht,partialCount,ageDays,totalFeed,fcr,closeSize,adg,survivalRate,yieldPerRai,notesAll,closeDate,startDate,rows,feedLog,samples,
-    costFry,costFeed,costChem,costLabor,costElec,costOther,hasCostData,totalCost,revenue,netProfit,marginPct,costPerKg};
+    costFry,costFeed,costMed,costLime,costLabor,costElec,costFuel,costEquip,costEquipOut,costCatch,pctCaretaker,pctManager,amtCaretaker,amtManager,costChemLegacy,costOtherLegacy,hasCostData,totalCost,revenue,netProfit,marginPct,costPerKg};
 }
 // ===== PDF หน้าเดียว (ใช้เมื่อเลือกบ่อเดียว) — 4 KPI + ข้อมูลย่อ 3 คอลัมน์ + 2 กราฟผู้บริหาร + ต้นทุนต่อกิโล =====
 // mockup: Mockup และ Prototype/mockup_pdf_ปิดบ่อ_หน้าเดียว.html (คอนเฟิมแล้ว)
@@ -6648,23 +6693,32 @@ function pdfProdTradeGridHtml(s){
 function pdfCostBreakdownHtml(s){
   if(!s.hasCostData)return'';
   const cats=[
-    {key:'costFeed',label:'อาหาร',color:'#3b82f6'},
+    {key:'costFeed',label:'อาหารกุ้ง',color:'#3b82f6'},
     {key:'costFry',label:'ลูกกุ้ง',color:'#9A6A04'},
+    {key:'costMed',label:'เวชภัณฑ์',color:'#7c3aed'},
+    {key:'costLime',label:'ปูน',color:'#a3a3a3'},
     {key:'costLabor',label:'ค่าแรง',color:'#0f6e56'},
-    {key:'costChem',label:'สารเคมี',color:'#7c3aed'},
     {key:'costElec',label:'ค่าไฟฟ้า',color:'#0ea5e9'},
-    {key:'costOther',label:'อื่นๆ',color:'#9AA1AB'},
-  ];
+    {key:'costFuel',label:'น้ำมัน',color:'#dc2626'},
+    {key:'costEquip',label:'อุปกรณ์',color:'#16a34a'},
+    {key:'costEquipOut',label:'อุปกรณ์นอก',color:'#65a30d'},
+    {key:'costCatch',label:'ค่าจับกุ้ง',color:'#c026d3'},
+    {key:'amtCaretaker',label:'ส่วนแบ่งคนเลี้ยง',color:'#f59e0b',pctKey:'pctCaretaker'},
+    {key:'amtManager',label:'ส่วนแบ่งผู้จัดการ',color:'#ea580c',pctKey:'pctManager'},
+    {key:'costChemLegacy',label:'สารเคมี(เดิม)',color:'#94a3b8'},
+    {key:'costOtherLegacy',label:'อื่นๆ(เดิม)',color:'#cbd5e1'},
+  ].filter(c=>s[c.key]!=null&&s[c.key]!==0);
   const w=s.totalWeight||0;
   const totalCost=s.totalCost||0;
   const bars=cats.map(c=>{
     const amt=s[c.key]||0;
     const pct=totalCost?Math.round(amt/totalCost*100):0;
     const perKg=w?(amt/w):null;
+    const pctSuffix=c.pctKey&&s[c.pctKey]!=null?` · ${s[c.pctKey]}%`:'';
     return `<div style="display:flex;align-items:center;gap:8px;font-size:11px">
-      <span style="width:64px;flex-shrink:0;color:#5a5a5a">${c.label}</span>
+      <span style="width:80px;flex-shrink:0;color:#5a5a5a">${c.label}</span>
       <span style="flex:1;background:#f1f3f5;border-radius:4px;height:14px;position:relative;overflow:hidden"><span style="display:block;height:100%;border-radius:4px;width:${pct}%;background:${c.color}"></span></span>
-      <span style="width:190px;flex-shrink:0;text-align:right;font-weight:700;white-space:nowrap">${Math.round(amt).toLocaleString()} บาท <span style="font-weight:400;color:#8a8a8a;font-size:10px">(${perKg!=null?perKg.toFixed(1):'-'} บ./กก. · ${pct}%)</span></span>
+      <span style="width:200px;flex-shrink:0;text-align:right;font-weight:700;white-space:nowrap">${Math.round(amt).toLocaleString()} บาท <span style="font-weight:400;color:#8a8a8a;font-size:10px">(${perKg!=null?perKg.toFixed(1):'-'} บ./กก. · ${pct}%${pctSuffix})</span></span>
     </div>`;
   }).join('');
   return `<div style="margin-top:8px;border:1px solid #e6efe9;border-radius:6px;padding:8px 10px">
@@ -6814,7 +6868,7 @@ async function genPDF(){
         const revData=job.hist.map(c=>c.harvestResult?.revenue??null);
         const costData=job.hist.map(c=>{
           const hr=c.harvestResult;if(!hr)return null;
-          const vals=[hr.costFry,hr.costFeed,hr.costChem,hr.costLabor,hr.costElec,hr.costOther];
+          const vals=[hr.costFry,hr.costFeed,hr.costMed,hr.costLime,hr.costLabor,hr.costElec,hr.costFuel,hr.costEquip,hr.costEquipOut,hr.costCatch,hr.costChem,hr.costOther,hr.amtCaretaker,hr.amtManager];
           if(vals.every(v=>v==null))return null;
           return vals.reduce((s,v)=>s+(v||0),0);
         });
@@ -7191,8 +7245,10 @@ function openAddCropModal(){
   document.getElementById('ecm-crop-id').value='';
   document.getElementById('ecm-crop-idx').value='-1';
   ['ecm-hatchery','ecm-pltype','ecm-plweight','ecm-weight','ecm-size','ecm-caught','ecm-survival','ecm-fcr',
-   'ecm-price','ecm-revenue','ecm-cost-fry','ecm-cost-feed','ecm-cost-chem','ecm-cost-labor','ecm-cost-elec',
-   'ecm-cost-other','ecm-profit','ecm-start-date','ecm-close-date','ecm-notes','ecm-new-cropnum','ecm-new-cropyear'
+   'ecm-price','ecm-revenue','ecm-cost-fry','ecm-cost-feed','ecm-cost-med','ecm-cost-lime','ecm-cost-labor','ecm-cost-elec',
+   'ecm-cost-fuel','ecm-cost-equip','ecm-cost-equip-out','ecm-cost-catch','ecm-pct-caretaker','ecm-amt-caretaker',
+   'ecm-pct-manager','ecm-amt-manager','ecm-cost-chem','ecm-cost-other',
+   'ecm-profit','ecm-start-date','ecm-close-date','ecm-notes','ecm-new-cropnum','ecm-new-cropyear'
   ].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
   const pondSel=document.getElementById('ecm-new-pond');
   if(pondSel)pondSel.innerHTML='<option value="">-- เลือกบ่อ --</option>'+sortedPonds().map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');
@@ -7217,19 +7273,32 @@ function openEditCropModal(pondId,cropId,idx){
   fv('ecm-weight',hr.totalWeight);fv('ecm-size',hr.size);fv('ecm-caught',hr.caught);
   fv('ecm-survival',hr.survivalRate);fv('ecm-fcr',hr.fcr);fv('ecm-price',hr.price);
   fv('ecm-revenue',hr.revenue);
-  fv('ecm-cost-fry',hr.costFry);fv('ecm-cost-feed',hr.costFeed);fv('ecm-cost-chem',hr.costChem);
-  fv('ecm-cost-labor',hr.costLabor);fv('ecm-cost-elec',hr.costElec);fv('ecm-cost-other',hr.costOther);
+  fv('ecm-cost-fry',hr.costFry);fv('ecm-cost-feed',hr.costFeed);
+  fv('ecm-cost-med',hr.costMed);fv('ecm-cost-lime',hr.costLime);
+  fv('ecm-cost-labor',hr.costLabor);fv('ecm-cost-elec',hr.costElec);
+  fv('ecm-cost-fuel',hr.costFuel);fv('ecm-cost-equip',hr.costEquip);fv('ecm-cost-equip-out',hr.costEquipOut);
+  fv('ecm-cost-catch',hr.costCatch);
+  fv('ecm-pct-caretaker',hr.pctCaretaker);fv('ecm-amt-caretaker',hr.amtCaretaker);
+  fv('ecm-pct-manager',hr.pctManager);fv('ecm-amt-manager',hr.amtManager);
+  fv('ecm-cost-chem',hr.costChem);fv('ecm-cost-other',hr.costOther);
   fv('ecm-profit',hr.netProfit);
   fv('ecm-start-date',c.startDate);fv('ecm-close-date',c.closeDate);fv('ecm-notes',c.notes||'');
   const msg=document.getElementById('ecm-msg');if(msg)msg.style.display='none';
-  // auto-calc profit on cost/revenue change
-  ['ecm-revenue','ecm-cost-fry','ecm-cost-feed','ecm-cost-chem','ecm-cost-labor','ecm-cost-elec','ecm-cost-other'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el)el.oninput=()=>{
-      const rev=parseFloat(document.getElementById('ecm-revenue').value)||0;
-      const cost=['ecm-cost-fry','ecm-cost-feed','ecm-cost-chem','ecm-cost-labor','ecm-cost-elec','ecm-cost-other'].reduce((s,i)=>s+(parseFloat(document.getElementById(i)?.value)||0),0);
-      const pp=document.getElementById('ecm-profit');if(pp&&rev)pp.value=Math.round(rev-cost);
-    };
+  // ── auto-calc กำไรสุทธิ: หักต้นทุนตรงทั้งหมดก่อน แล้วค่อยหักส่วนแบ่ง % (ของกำไรก่อนหักส่วนแบ่ง) เป็นขั้นสุดท้าย เหมือนฟอร์มปิดรอบ ──
+  const directCostIds=['ecm-cost-fry','ecm-cost-feed','ecm-cost-med','ecm-cost-lime','ecm-cost-labor','ecm-cost-elec','ecm-cost-fuel','ecm-cost-equip','ecm-cost-equip-out','ecm-cost-catch','ecm-cost-chem','ecm-cost-other'];
+  const recalc=()=>{
+    const gv=id=>parseFloat(document.getElementById(id)?.value)||0;
+    const rev=gv('ecm-revenue');
+    const directCost=directCostIds.reduce((s,i)=>s+gv(i),0);
+    const grossBeforeShare=rev-directCost;
+    const pctCare=gv('ecm-pct-caretaker'),pctMgr=gv('ecm-pct-manager');
+    const amtCare=grossBeforeShare*pctCare/100,amtMgr=grossBeforeShare*pctMgr/100;
+    document.getElementById('ecm-amt-caretaker').value=pctCare?Math.round(amtCare):'';
+    document.getElementById('ecm-amt-manager').value=pctMgr?Math.round(amtMgr):'';
+    const pp=document.getElementById('ecm-profit');if(pp&&rev)pp.value=Math.round(grossBeforeShare-amtCare-amtMgr);
+  };
+  ['ecm-revenue',...directCostIds,'ecm-pct-caretaker','ecm-pct-manager'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.oninput=recalc;
   });
   document.getElementById('editCropModal').classList.add('on');
 }
@@ -7263,8 +7332,14 @@ function saveEditCrop(){
       harvestResult:{
         totalWeight:gn('ecm-weight'),size:gn('ecm-size'),caught:gn('ecm-caught'),
         survivalRate:gn('ecm-survival'),fcr:gn('ecm-fcr'),price:gn('ecm-price'),revenue:gn('ecm-revenue'),
-        costFry:gn('ecm-cost-fry'),costFeed:gn('ecm-cost-feed'),costChem:gn('ecm-cost-chem'),
-        costLabor:gn('ecm-cost-labor'),costElec:gn('ecm-cost-elec'),costOther:gn('ecm-cost-other'),
+        costFry:gn('ecm-cost-fry'),costFeed:gn('ecm-cost-feed'),
+        costMed:gn('ecm-cost-med'),costLime:gn('ecm-cost-lime'),
+        costLabor:gn('ecm-cost-labor'),costElec:gn('ecm-cost-elec'),
+        costFuel:gn('ecm-cost-fuel'),costEquip:gn('ecm-cost-equip'),costEquipOut:gn('ecm-cost-equip-out'),
+        costCatch:gn('ecm-cost-catch'),
+        pctCaretaker:gn('ecm-pct-caretaker'),pctManager:gn('ecm-pct-manager'),
+        amtCaretaker:gn('ecm-amt-caretaker'),amtManager:gn('ecm-amt-manager'),
+        costChem:gn('ecm-cost-chem'),costOther:gn('ecm-cost-other'),
         netProfit:gn('ecm-profit'),
       },
       notes:document.getElementById('ecm-notes').value||'',
@@ -7293,8 +7368,14 @@ function saveEditCrop(){
   hr.totalWeight=gn('ecm-weight');hr.size=gn('ecm-size');hr.caught=gn('ecm-caught');
   hr.survivalRate=gn('ecm-survival');hr.fcr=gn('ecm-fcr');hr.price=gn('ecm-price');
   hr.revenue=gn('ecm-revenue');
-  hr.costFry=gn('ecm-cost-fry');hr.costFeed=gn('ecm-cost-feed');hr.costChem=gn('ecm-cost-chem');
-  hr.costLabor=gn('ecm-cost-labor');hr.costElec=gn('ecm-cost-elec');hr.costOther=gn('ecm-cost-other');
+  hr.costFry=gn('ecm-cost-fry');hr.costFeed=gn('ecm-cost-feed');
+  hr.costMed=gn('ecm-cost-med');hr.costLime=gn('ecm-cost-lime');
+  hr.costLabor=gn('ecm-cost-labor');hr.costElec=gn('ecm-cost-elec');
+  hr.costFuel=gn('ecm-cost-fuel');hr.costEquip=gn('ecm-cost-equip');hr.costEquipOut=gn('ecm-cost-equip-out');
+  hr.costCatch=gn('ecm-cost-catch');
+  hr.pctCaretaker=gn('ecm-pct-caretaker');hr.pctManager=gn('ecm-pct-manager');
+  hr.amtCaretaker=gn('ecm-amt-caretaker');hr.amtManager=gn('ecm-amt-manager');
+  hr.costChem=gn('ecm-cost-chem');hr.costOther=gn('ecm-cost-other');
   hr.netProfit=gn('ecm-profit');
   save();fbSave();
   const msg=document.getElementById('ecm-msg');
@@ -7686,36 +7767,33 @@ function openCropModal(pid){
   syncDateHint(document.getElementById('cm-close-date'));
   document.getElementById('cm-fcr').value='';
   // auto-fill revenue when price+weight change
-  ['cm-weight','cm-price','cm-caught','cm-cost-chem','cm-cost-other'].forEach(id=>{
+  ['cm-weight','cm-price','cm-caught'].forEach(id=>{
     document.getElementById(id).value='';
   });
   // ── ต้นทุนลูกกุ้ง/อาหาร ดึงจากข้อมูลที่มีอยู่แล้วในระบบมาให้ ไม่ต้องพิมพ์ซ้ำ (ลูกกุ้งยังแก้ไขได้ถ้าตัวเลขจริงต่างจากนี้) ──
   document.getElementById('cm-cost-fry').value=p.costFry||'';
   document.getElementById('cm-cost-feed').value=pondFeedCost(p)||'';
-  // ── ต้นทุนสารเคมี ดึงจากรายการเบิกพัสดุจริงของบ่อนี้ (หมวดยากิน/ยาลงน้ำ/จุลินทรีย์/ปูน/อุปกรณ์) แยกให้เห็นที่มาแต่ละหมวด แก้ไขตัวเลขรวมเองได้ ──
-  const stockBd=getStockCostBreakdownForPond(pid,p.startDate,today());
-  document.getElementById('cm-cost-chem').value=stockBd.total||'';
-  const bdWrap=document.getElementById('cm-stock-breakdown-wrap');
-  const bdEl=document.getElementById('cm-stock-breakdown');
-  const catKeys=Object.keys(stockBd.byCat);
-  if(catKeys.length){
-    bdWrap.style.display='';
-    bdEl.innerHTML='📦 แยกตามหมวด: '+catKeys.map(k=>`${STOCK_CAT_LABEL[k]||k} ${Math.round(stockBd.byCat[k]).toLocaleString()}฿`).join(' · ');
-  }else{
-    bdWrap.style.display='none';bdEl.innerHTML='';
-  }
-  const autoLabor=getLaborCostForPond(pid,p.startDate,today());
-  document.getElementById('cm-cost-labor').value=autoLabor||'';
+  // ── เวชภัณฑ์(ยากิน+ยาลงน้ำ+จุลินทรีย์กิน+จุลินทรีย์ลงน้ำ)/ปูน/อุปกรณ์ แยกหมวดจากรายการเบิกพัสดุจริงของบ่อนี้ แก้ไขตัวเลขเองได้ ──
+  const stockGroups=getStockCostGroupsForPond(pid,p.startDate,today());
+  document.getElementById('cm-cost-med').value=stockGroups.med||'';
+  document.getElementById('cm-cost-lime').value=stockGroups.lime||'';
+  document.getElementById('cm-cost-equip').value=stockGroups.equip||'';
   const autoElec=getElecCostForPeriod(p.startDate,today());
   document.getElementById('cm-cost-elec').value=autoElec||'';
+  // ── ค่าแรง/น้ำมัน/อุปกรณ์นอก/ค่าจับกุ้ง/% ส่วนแบ่ง — กรอกเองทั้งหมด เพราะต้องดึงตัวเลขจากนอกแอป ──
+  ['cm-cost-labor','cm-cost-fuel','cm-cost-equip-out','cm-cost-catch','cm-pct-caretaker','cm-pct-manager'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
   document.getElementById('cm-survival').value='';
   document.getElementById('cm-revenue').value='';
+  document.getElementById('cm-amt-caretaker').value='';
+  document.getElementById('cm-amt-manager').value='';
   document.getElementById('cm-profit').value='';
   document.getElementById('cm-notes').value='';
   // show modal
   document.getElementById('cropModal').classList.add('on');
   // wire up auto-calc
-  ['cm-weight','cm-size','cm-price','cm-cost-fry','cm-cost-chem','cm-cost-other'].forEach(id=>{
+  ['cm-weight','cm-size','cm-price','cm-cost-fry','cm-cost-med','cm-cost-lime','cm-cost-labor','cm-cost-elec','cm-cost-fuel','cm-cost-equip','cm-cost-equip-out','cm-cost-catch','cm-pct-caretaker','cm-pct-manager'].forEach(id=>{
     document.getElementById(id).oninput=calcCropEcon;
   });
   calcCropEcon();
@@ -7723,12 +7801,10 @@ function openCropModal(pid){
 function calcCropEcon(){
   const pid=document.getElementById('cm-pond-id').value;
   const p=pond(pid);if(!p)return;
-  const w=parseFloat(document.getElementById('cm-weight').value)||0;
-  const sz=parseFloat(document.getElementById('cm-size').value)||0;
-  const price=parseFloat(document.getElementById('cm-price').value)||0;
-  const costFry=parseFloat(document.getElementById('cm-cost-fry').value)||0;
-  const costChem=parseFloat(document.getElementById('cm-cost-chem').value)||0;
-  const costOther=parseFloat(document.getElementById('cm-cost-other').value)||0;
+  const gv=id=>parseFloat(document.getElementById(id)?.value)||0;
+  const w=gv('cm-weight');
+  const sz=gv('cm-size');
+  const price=gv('cm-price');
   // caught
   const caught=w&&sz?Math.round(w*sz):0;
   document.getElementById('cm-caught').value=caught||'';
@@ -7742,13 +7818,16 @@ function calcCropEcon(){
   // revenue
   const revenue=w*price;
   document.getElementById('cm-revenue').value=revenue?Math.round(revenue):'';
-  // profit
-  const costFeed=parseFloat(document.getElementById('cm-cost-feed').value)||0;
-  const costLabor=parseFloat(document.getElementById('cm-cost-labor').value)||0;
-  const costElec=parseFloat(document.getElementById('cm-cost-elec').value)||0;
-  const totalCost=costFry+costFeed+costChem+costLabor+costElec+costOther;
-  const profit=revenue-totalCost;
-  document.getElementById('cm-profit').value=(revenue||totalCost)?Math.round(profit):'';
+  // ── ต้นทุนตรง 10 หมวด รวมกันก่อน แล้วค่อยหักส่วนแบ่งกำไร (% ของกำไรก่อนหักส่วนแบ่ง) เป็นขั้นสุดท้าย ──
+  const totalCostDirect=gv('cm-cost-fry')+gv('cm-cost-feed')+gv('cm-cost-med')+gv('cm-cost-lime')+gv('cm-cost-labor')+gv('cm-cost-elec')+gv('cm-cost-fuel')+gv('cm-cost-equip')+gv('cm-cost-equip-out')+gv('cm-cost-catch');
+  const grossBeforeShare=revenue-totalCostDirect;
+  const pctCare=gv('cm-pct-caretaker'),pctMgr=gv('cm-pct-manager');
+  const amtCare=grossBeforeShare*pctCare/100;
+  const amtMgr=grossBeforeShare*pctMgr/100;
+  document.getElementById('cm-amt-caretaker').value=pctCare?Math.round(amtCare):'';
+  document.getElementById('cm-amt-manager').value=pctMgr?Math.round(amtMgr):'';
+  const netProfit=grossBeforeShare-amtCare-amtMgr;
+  document.getElementById('cm-profit').value=(revenue||totalCostDirect)?Math.round(netProfit):'';
 }
 function closeCropModal(){
   document.getElementById('cropModal').classList.remove('on');
@@ -7773,10 +7852,18 @@ function confirmCloseCrop(){
     revenue:parseFloat(document.getElementById('cm-revenue').value)||null,
     costFry:parseFloat(document.getElementById('cm-cost-fry').value)||null,
     costFeed:parseFloat(document.getElementById('cm-cost-feed').value)||null,
-    costChem:parseFloat(document.getElementById('cm-cost-chem').value)||null,
+    costMed:parseFloat(document.getElementById('cm-cost-med').value)||null,
+    costLime:parseFloat(document.getElementById('cm-cost-lime').value)||null,
     costLabor:parseFloat(document.getElementById('cm-cost-labor').value)||null,
     costElec:parseFloat(document.getElementById('cm-cost-elec').value)||null,
-    costOther:parseFloat(document.getElementById('cm-cost-other').value)||null,
+    costFuel:parseFloat(document.getElementById('cm-cost-fuel').value)||null,
+    costEquip:parseFloat(document.getElementById('cm-cost-equip').value)||null,
+    costEquipOut:parseFloat(document.getElementById('cm-cost-equip-out').value)||null,
+    costCatch:parseFloat(document.getElementById('cm-cost-catch').value)||null,
+    pctCaretaker:parseFloat(document.getElementById('cm-pct-caretaker').value)||null,
+    pctManager:parseFloat(document.getElementById('cm-pct-manager').value)||null,
+    amtCaretaker:parseFloat(document.getElementById('cm-amt-caretaker').value)||null,
+    amtManager:parseFloat(document.getElementById('cm-amt-manager').value)||null,
     netProfit:parseFloat(document.getElementById('cm-profit').value)||null,
   };
   const notes=document.getElementById('cm-notes').value;
@@ -8496,6 +8583,18 @@ function getStockCostBreakdownForPond(pondId,startDate,closeDate){
   });
   return{byCat,total};
 }
+// ── ต้นทุนพัสดุแยกกลุ่มสำหรับฟอร์มปิดรอบ: เวชภัณฑ์ (ยากิน+ยาลงน้ำ+จุลินทรีย์กิน+จุลินทรีย์ลงน้ำ + หมวด "เดิม" ยา/สารเคมี) / ปูน / อุปกรณ์
+//    ไม่รวมหมวด "ลูกกุ้ง (เดิม)" เพราะคิดแยกจาก p.costFry อยู่แล้ว กันนับซ้ำ ──
+function getStockCostGroupsForPond(pondId,startDate,closeDate){
+  const bd=getStockCostBreakdownForPond(pondId,startDate,closeDate);
+  const g={med:0,lime:0,equip:0};
+  Object.entries(bd.byCat).forEach(([cat,amt])=>{
+    if(cat==='chemOral'||cat==='chemWater'||cat==='probioOral'||cat==='probioWater'||cat==='chem')g.med+=amt;
+    else if(cat==='lime')g.lime+=amt;
+    else if(cat==='equip')g.equip+=amt;
+  });
+  return g;
+}
 let _plDonutChart=null;
 function initPL(){
   const years=new Set();
@@ -8530,7 +8629,7 @@ function renderPLKPI(rows){
   const el=document.getElementById('pl-kpi');if(!el)return;
   if(!rows.length){el.innerHTML='<div class="kpi-card" style="grid-column:1/-1;text-align:center;color:var(--tx3);padding:20px">ยังไม่มีข้อมูลรอบที่ปิดแล้วในช่วงที่เลือก</div>';return;}
   const totRev=rows.reduce((s,r)=>s+(r.revenue||0),0);
-  const totCost=rows.reduce((s,r)=>s+((r.costFry||0)+(r.costFeed||0)+(r.costChem||0)+(r.costLabor||0)+(r.costElec||0)+(r.costOther||0)+(r.costStock||0)),0);
+  const totCost=rows.reduce((s,r)=>s+((r.costFry||0)+(r.costFeed||0)+(r.costMed||0)+(r.costLime||0)+(r.costLabor||0)+(r.costElec||0)+(r.costFuel||0)+(r.costEquip||0)+(r.costEquipOut||0)+(r.costCatch||0)+(r.amtCaretaker||0)+(r.amtManager||0)+(r.costChem||0)+(r.costOther||0)+(r.costStock||0)),0);
   const totProfit=rows.reduce((s,r)=>s+(r.netProfit||0),0);
   const totWeight=rows.reduce((s,r)=>s+(r.totalWeight||0),0);
   const fcrRows=rows.filter(r=>r.fcr&&r.fcr>0);
@@ -8558,7 +8657,7 @@ function renderPLTable(rows){
     <th style="text-align:right">กำไร(฿)</th><th style="text-align:right">Margin</th>
     <th style="text-align:right">฿/กก.</th><th style="text-align:right">FCR</th><th></th>
   </tr></thead><tbody>${rows.map(r=>{
-    const cost=(r.costFry||0)+(r.costFeed||0)+(r.costChem||0)+(r.costLabor||0)+(r.costElec||0)+(r.costOther||0)+(r.costStock||0);
+    const cost=(r.costFry||0)+(r.costFeed||0)+(r.costMed||0)+(r.costLime||0)+(r.costLabor||0)+(r.costElec||0)+(r.costFuel||0)+(r.costEquip||0)+(r.costEquipOut||0)+(r.costCatch||0)+(r.amtCaretaker||0)+(r.amtManager||0)+(r.costChem||0)+(r.costOther||0)+(r.costStock||0);
     const margin=r.revenue&&r.netProfit!=null?r.netProfit/r.revenue*100:null;
     const cpk=r.totalWeight&&cost?cost/r.totalWeight:null;
     const prof=r.netProfit;
@@ -8605,16 +8704,24 @@ function renderPLCostChart(rows){
   }
   const totFry=rows.reduce((s,r)=>s+(r.costFry||0),0);
   const totFeed=rows.reduce((s,r)=>s+(r.costFeed||0),0);
-  const totChem=rows.reduce((s,r)=>s+(r.costChem||0),0);
+  const totMed=rows.reduce((s,r)=>s+(r.costMed||0),0);
+  const totLime=rows.reduce((s,r)=>s+(r.costLime||0),0);
   const totLabor=rows.reduce((s,r)=>s+(r.costLabor||0),0);
   const totElec=rows.reduce((s,r)=>s+(r.costElec||0),0);
+  const totFuel=rows.reduce((s,r)=>s+(r.costFuel||0),0);
+  const totEquip=rows.reduce((s,r)=>s+(r.costEquip||0),0);
+  const totEquipOut=rows.reduce((s,r)=>s+(r.costEquipOut||0),0);
+  const totCatch=rows.reduce((s,r)=>s+(r.costCatch||0),0);
+  const totAmtCare=rows.reduce((s,r)=>s+(r.amtCaretaker||0),0);
+  const totAmtMgr=rows.reduce((s,r)=>s+(r.amtManager||0),0);
+  const totChem=rows.reduce((s,r)=>s+(r.costChem||0),0);
   const totOther=rows.reduce((s,r)=>s+(r.costOther||0),0);
   const totStock=rows.reduce((s,r)=>s+(r.costStock||0),0);
-  const total=totFry+totFeed+totChem+totLabor+totElec+totOther+totStock;
+  const total=totFry+totFeed+totMed+totLime+totLabor+totElec+totFuel+totEquip+totEquipOut+totCatch+totAmtCare+totAmtMgr+totChem+totOther+totStock;
   const totWeight=rows.reduce((s,r)=>s+(r.totalWeight||0),0);
-  const labels=['ลูกกุ้ง','อาหาร','สารเคมี','ค่าแรง','ค่าไฟ','พัสดุ','อื่นๆ'];
-  const vals=[totFry,totFeed,totChem,totLabor,totElec,totStock,totOther];
-  const colors=['#1f6b42','#2f8f5b','#3f6212','#6b8e23','#f0a83a','#7f8c84','#20493a'];
+  const labels=['ลูกกุ้ง','อาหารกุ้ง','เวชภัณฑ์','ปูน','ค่าแรง','ค่าไฟฟ้า','น้ำมัน','อุปกรณ์','อุปกรณ์นอก','ค่าจับกุ้ง','ส่วนแบ่งคนเลี้ยง','ส่วนแบ่งผู้จัดการ','พัสดุ(ระบบเดิม)','สารเคมี(เดิม)','อื่นๆ(เดิม)'];
+  const vals=[totFry,totFeed,totMed,totLime,totLabor,totElec,totFuel,totEquip,totEquipOut,totCatch,totAmtCare,totAmtMgr,totStock,totChem,totOther];
+  const colors=['#9A6A04','#3b82f6','#7c3aed','#a3a3a3','#0f6e56','#0ea5e9','#dc2626','#16a34a','#65a30d','#c026d3','#f59e0b','#ea580c','#7f8c84','#94a3b8','#cbd5e1'];
   const canvas=document.getElementById('pl-donut');
   if(canvas){
     if(_plDonutChart){_plDonutChart.destroy();_plDonutChart=null;}
@@ -8642,10 +8749,15 @@ function exportPLCSV(){
     if(!c.harvestResult||!c.closeDate)return;
     if(yr&&!c.closeDate.startsWith(yr))return;
     const r=c.harvestResult;
-    rows.push([p.name,c.cropNum||'',c.closeDate,r.totalWeight||'',r.price||'',r.revenue||'',r.costFry||'',r.costFeed||'',r.costChem||'',r.costLabor||'',r.costElec||'',r.costOther||'',r.netProfit||'',r.fcr||'',r.survivalRate||'']);
+    rows.push([p.name,c.cropNum||'',c.closeDate,r.totalWeight||'',r.price||'',r.revenue||'',
+      r.costFry||'',r.costFeed||'',r.costMed||'',r.costLime||'',r.costLabor||'',r.costElec||'',
+      r.costFuel||'',r.costEquip||'',r.costEquipOut||'',r.costCatch||'',
+      r.pctCaretaker||'',r.amtCaretaker||'',r.pctManager||'',r.amtManager||'',
+      r.costChem||'',r.costOther||'',
+      r.netProfit||'',r.fcr||'',r.survivalRate||'']);
   });});
   if(!rows.length){alert('ไม่มีข้อมูลสำหรับ export');return;}
-  const hdr='บ่อ,รอบ,วันปิด,ผลผลิต(กก.),ราคา,รายได้,ต้นทุนลูกกุ้ง,ต้นทุนอาหาร,สารเคมี,ค่าแรง,ค่าไฟ,อื่นๆ,กำไรสุทธิ,FCR,อัตรารอด(%)';
+  const hdr='บ่อ,รอบ,วันปิด,ผลผลิต(กก.),ราคา,รายได้,ต้นทุนลูกกุ้ง,ต้นทุนอาหารกุ้ง,ต้นทุนเวชภัณฑ์,ต้นทุนปูน,ต้นทุนค่าแรง,ต้นทุนค่าไฟฟ้า,ต้นทุนน้ำมัน,อุปกรณ์,อุปกรณ์นอก,ค่าจับกุ้ง,%คนเลี้ยง,ส่วนแบ่งคนเลี้ยง,%ผู้จัดการ,ส่วนแบ่งผู้จัดการ,สารเคมี(เดิม),อื่นๆ(เดิม),กำไรสุทธิ,FCR,อัตรารอด(%)';
   const csv=hdr+'\n'+rows.map(r=>r.join(',')).join('\n');
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='TawanFarm_PL_'+(yr||'all')+'.csv';a.click();URL.revokeObjectURL(url);
