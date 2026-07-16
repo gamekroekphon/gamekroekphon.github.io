@@ -483,6 +483,30 @@ input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:
   .bnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--sf);border-top:1px solid var(--bd);z-index:150;padding:2px 0 max(2px,env(safe-area-inset-bottom))}
   body{padding-bottom:60px}
 }
+/* ── เมนู "เพิ่มเติม" บนมือถือ — bottom sheet เต็มจอ แทนแถบเมนูเดิมที่เด้งจากบน (กดยาก ต้องกดซ้อน 2 ชั้น) ── */
+.mob-sheet-scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:159}
+.mob-sheet-scrim.show{display:block}
+.mob-sheet{display:none;position:fixed;left:0;right:0;bottom:0;background:var(--sf);border-radius:18px 18px 0 0;max-height:82vh;z-index:160;flex-direction:column;box-shadow:0 -8px 24px rgba(0,0,0,.25)}
+.mob-sheet.show{display:flex}
+.mob-sheet-handle{width:36px;height:4px;background:var(--bd);border-radius:2px;margin:8px auto 4px;flex-shrink:0}
+.mob-sheet-hdr{display:flex;align-items:center;justify-content:space-between;padding:4px 16px 10px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.mob-sheet-hdr b{font-size:14.5px}
+.mob-sheet-close{width:28px;height:28px;border-radius:50%;background:var(--sf2);border:none;font-size:14px;color:var(--tx2);cursor:pointer}
+.mob-sheet-search{margin:10px 14px;position:relative;flex-shrink:0}
+.mob-sheet-search input{width:100%;border:1px solid var(--bd);border-radius:20px;padding:9px 14px 9px 34px;font-size:13px;background:var(--sf2);font-family:inherit}
+.mob-sheet-search .ic{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--tx3)}
+.mob-sheet-body{overflow-y:auto;padding:4px 8px calc(16px + env(safe-area-inset-bottom))}
+.mob-sheet-grp{font-size:10.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.04em;padding:12px 12px 4px}
+.mob-sheet-item{width:100%;display:flex;align-items:center;gap:12px;background:none;border:none;text-align:left;padding:11px 12px;border-radius:10px;font-size:13.5px;color:var(--tx);cursor:pointer;font-family:inherit;min-height:44px}
+.mob-sheet-item:active{background:var(--sf2)}
+.mob-sheet-item .ic{font-size:17px;width:22px;text-align:center;flex-shrink:0}
+.mob-sheet-item.on{background:var(--pl);color:var(--pd);font-weight:600}
+.mob-sheet-badge{margin-left:auto;background:var(--d);color:#fff;font-size:10px;font-weight:700;border-radius:9px;padding:1px 7px;display:none}
+.mob-sheet-badge.show{display:inline-block}
+/* admin-only ในนี้ต้องคง display:flex ไว้ตอนเป็น admin — ชน specificity กับ .mob-sheet-item{display:flex} ประกาศ !important ให้ชัดเจนทั้งสองทาง (บัคเดิมที่เคยเจอ) */
+.mob-sheet-item.admin-only{display:none!important}
+body.role-admin .mob-sheet-item.admin-only{display:flex!important}
+@media(min-width:601px){.mob-sheet,.mob-sheet-scrim{display:none!important}}
 .cat-tag{display:inline-flex;align-items:center;gap:4px;background:var(--sf2);border:1px solid var(--bd);border-radius:20px;padding:3px 10px;font-size:12px;margin:3px;}
 .cat-del{cursor:pointer;color:var(--d);font-weight:700;padding:0 2px;}
 .kpi-card{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
@@ -812,9 +836,46 @@ body.role-ceo .main{max-width:640px}
   <button class="bnav-btn on" id="bnav-overview" onclick="bnavGo('overview',this)"><span class="bnav-ic">🏠</span>ภาพรวม</button>
   <button class="bnav-btn" id="bnav-entry" onclick="bnavGo('entry',this)"><span class="bnav-ic">💧</span>กรอกน้ำ</button>
   <button class="bnav-btn" id="bnav-feed" onclick="bnavGo('feed',this)"><span class="bnav-ic">🍖</span>กรอกอาหาร</button>
-  <button class="bnav-btn" id="bnav-alerts" onclick="bnavAlerts(this)"><span class="bnav-ic">🔔<span class="bnav-badge" id="bnav-alert-badge"></span></span>เตือน</button>
-  <button class="bnav-btn" id="bnav-more" onclick="toggleMobMenu(this)"><span class="bnav-ic">☰</span>เพิ่มเติม</button>
+  <button class="bnav-btn" id="bnav-stock" onclick="bnavGo('stock',this)"><span class="bnav-ic">📦</span>สต็อก</button>
+  <button class="bnav-btn" id="bnav-more" onclick="toggleMobMenu(this)"><span class="bnav-ic">☰<span class="bnav-badge" id="bnav-alert-badge"></span></span>เพิ่มเติม</button>
 </nav>
+<div class="mob-sheet-scrim" id="mobSheetScrim" onclick="closeMobMenu()"></div>
+<div class="mob-sheet" id="mobSheet">
+  <div class="mob-sheet-handle"></div>
+  <div class="mob-sheet-hdr"><b>เมนูทั้งหมด</b><button class="mob-sheet-close" onclick="closeMobMenu()">✕</button></div>
+  <div class="mob-sheet-search"><span class="ic">🔍</span><input type="text" id="mobMenuSearch" placeholder="ค้นหาเมนู เช่น อาหาร, ค่าไฟ..." oninput="filterMobMenu(this.value)"></div>
+  <div class="mob-sheet-body" id="mobMenuBody">
+    <button class="mob-sheet-item" data-t="alerts" onclick="mobMenuGo(this)"><span class="ic">🔔</span>การแจ้งเตือน<span class="mob-sheet-badge" id="mobsheet-alert-badge"></span></button>
+    <div class="mob-sheet-grp">📅 รายวัน</div>
+    <button class="mob-sheet-item" data-t="tide" onclick="mobMenuGo(this)"><span class="ic">🌊</span>สภาพอากาศและน้ำขึ้นน้ำลง</button>
+    <button class="mob-sheet-item" data-t="entry" onclick="mobMenuGo(this)"><span class="ic">💧</span>คุณภาพน้ำ</button>
+    <button class="mob-sheet-item" data-t="feed" onclick="mobMenuGo(this)"><span class="ic">🍖</span>อาหาร &amp; FCR</button>
+    <button class="mob-sheet-item" data-t="stock" onclick="mobMenuGo(this)"><span class="ic">📦</span>สต็อก</button>
+    <button class="mob-sheet-item" data-t="sample" onclick="mobMenuGo(this)"><span class="ic">⚖️</span>สุ่มตัวอย่าง</button>
+    <button class="mob-sheet-item" data-t="watlog" onclick="mobMenuGo(this)"><span class="ic">💦</span>จัดการน้ำ</button>
+    <button class="mob-sheet-item" data-t="chem" onclick="mobMenuGo(this)"><span class="ic">🧪</span>สารเคมี</button>
+    <div class="mob-sheet-grp">🌾 รอบเลี้ยง</div>
+    <button class="mob-sheet-item" data-t="crops" onclick="mobMenuGo(this)"><span class="ic">🌾</span>รอบเลี้ยง</button>
+    <button class="mob-sheet-item" data-t="prep" onclick="mobMenuGo(this)"><span class="ic">🧹</span>เตรียมบ่อ</button>
+    <button class="mob-sheet-item" data-t="harvest" onclick="mobMenuGo(this)"><span class="ic">🦐</span>จับกุ้ง</button>
+    <button class="mob-sheet-item" data-t="harveststat" onclick="mobMenuGo(this)"><span class="ic">📊</span>สถิติจับกุ้ง</button>
+    <button class="mob-sheet-item" data-t="export" onclick="mobMenuGo(this)"><span class="ic">📄</span>PDF ปิดบ่อ</button>
+    <div class="mob-sheet-grp">📊 วิเคราะห์</div>
+    <button class="mob-sheet-item" data-t="lab" onclick="mobMenuGo(this)"><span class="ic">🔬</span>ผลแล็บ</button>
+    <button class="mob-sheet-item" data-t="compare" onclick="mobMenuGo(this)"><span class="ic">🔄</span>เปรียบเทียบ</button>
+    <button class="mob-sheet-item" data-t="risk" onclick="mobMenuGo(this)"><span class="ic">⚠️</span>ความเสี่ยง</button>
+    <button class="mob-sheet-item" data-t="wqfeed" onclick="mobMenuGo(this)"><span class="ic">🌡️</span>น้ำ-อาหาร</button>
+    <button class="mob-sheet-item" data-t="hatchery" onclick="mobMenuGo(this)"><span class="ic">🦐</span>โรงเพาะฟัก</button>
+    <div class="mob-sheet-grp">💰 ตลาด/ต้นทุน</div>
+    <button class="mob-sheet-item" data-t="labor" onclick="mobMenuGo(this)"><span class="ic">👷</span>ค่าแรง</button>
+    <button class="mob-sheet-item" data-t="elec" onclick="mobMenuGo(this)"><span class="ic">⚡</span>ค่าไฟฟ้า</button>
+    <button class="mob-sheet-item" data-t="abw" onclick="mobMenuGo(this)"><span class="ic">📈</span>ABW Growth</button>
+    <button class="mob-sheet-item" data-t="pl" onclick="mobMenuGo(this)"><span class="ic">📊</span>P&amp;L สรุป</button>
+    <div class="mob-sheet-grp">⚙️ ทั่วไป</div>
+    <button class="mob-sheet-item" data-t="manage" onclick="mobMenuGo(this)"><span class="ic">⚙️</span>จัดการบ่อ</button>
+    <button class="mob-sheet-item admin-only" data-t="users" onclick="mobMenuGo(this)"><span class="ic">👤</span>จัดการผู้ใช้</button>
+  </div>
+</div>
 <div class="main">
 <!-- CEO DASHBOARD (role=ceo เท่านั้น) -->
 <div id="sec-ceo" class="sec">
@@ -893,7 +954,7 @@ body.role-ceo .main{max-width:640px}
     <div class="mhd-top">
       <div class="mhd-av" id="mhd-av">?</div>
       <div><div class="mhd-greet" id="mhd-greet">สวัสดี 👋</div><small id="mhd-sub">ตะวันฟาร์ม</small></div>
-      <div class="mhd-bell" onclick="document.getElementById('bnav-alerts')?.click()">🔔<span class="mhd-bell-badge" id="mhd-bell-badge"></span></div>
+      <div class="mhd-bell" onclick="bnavAlerts(null)">🔔<span class="mhd-bell-badge" id="mhd-bell-badge"></span></div>
     </div>
     <div class="mhd-search" onclick="document.getElementById('bnav-more')?.click()">🔍 ค้นหาบ่อ / ข้อมูล...</div>
   </div>
@@ -3388,28 +3449,81 @@ function bnavAlerts(btn){
   const tabBtn=document.getElementById('tab-overview');
   if(tabBtn)tabBtn.click();
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
+  if(btn)btn.classList.add('on'); // เรียกจาก mhd-bell/เมนู "เพิ่มเติม" ก็ได้ ไม่ต้องมีปุ่ม bnav โดยเฉพาะแล้ว
   setTimeout(()=>{
     const ael=document.getElementById('ov-alerts');
     if(ael)ael.scrollIntoView({behavior:'smooth',block:'start'});
   },80);
 }
+// ── เมนู "เพิ่มเติม" บนมือถือ — เดิม toggle ให้แถบเมนูบน (ออกแบบไว้สำหรับ dropdown จอกว้าง) เด้งลงมาทับจากด้านบน กดยาก
+//    เปลี่ยนเป็น bottom sheet เต็มจอเลื่อนขึ้นจากล่างแทน (ดู mockup: Mockup และ Prototype/mockup_เมนูมือถือ_ใหม่.html) ──
 function toggleMobMenu(btn){
-  const tw=document.querySelector('.tabs-wrap');
-  const wasOpen=tw.classList.contains('mob-open');
-  tw.classList.toggle('mob-open');
-  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
-  if(!wasOpen)btn.classList.add('on');
+  const sheet=document.getElementById('mobSheet'),scrim=document.getElementById('mobSheetScrim');
+  if(!sheet||!scrim)return;
+  const willOpen=!sheet.classList.contains('show');
+  if(willOpen){
+    sheet.classList.add('show');scrim.classList.add('show');
+    document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    const se=document.getElementById('mobMenuSearch');if(se)se.value='';
+    filterMobMenu('');
+    highlightMobSheetCurrent();
+  }else{
+    closeMobMenu();
+  }
+}
+function closeMobMenu(){
+  document.getElementById('mobSheet')?.classList.remove('show');
+  document.getElementById('mobSheetScrim')?.classList.remove('show');
+  document.getElementById('bnav-more')?.classList.remove('on');
+}
+function mobMenuGo(el){
+  const t=el.dataset.t;
+  closeMobMenu();
+  if(t==='alerts'){bnavAlerts(null);return;}
+  const tabBtn=document.getElementById('tab-'+t);
+  if(tabBtn)tabBtn.click();
+}
+function filterMobMenu(q){
+  q=(q||'').trim().toLowerCase();
+  const body=document.getElementById('mobMenuBody');if(!body)return;
+  const items=[...body.children];
+  // ── ซ่อนด้วย setProperty(...,'important') ไม่ใช่ el.style.display เฉยๆ — เพราะ .mob-sheet-item.admin-only มี !important
+  //    (กันบัค CSS specificity เดิม) ถ้า inline style ธรรมดาจะแพ้ !important ของสไตล์ชีท ทำให้ค้นหาแล้วซ่อนไม่ได้สำหรับปุ่ม admin-only ──
+  for(let i=0;i<items.length;i++){
+    const el=items[i];
+    if(el.classList.contains('mob-sheet-grp')){
+      let hasMatch=false;
+      for(let j=i+1;j<items.length&&!items[j].classList.contains('mob-sheet-grp');j++){
+        if(items[j].textContent.toLowerCase().includes(q))hasMatch=true;
+      }
+      if(!q||hasMatch)el.style.removeProperty('display');else el.style.setProperty('display','none','important');
+    }else{
+      if(!q||el.textContent.toLowerCase().includes(q))el.style.removeProperty('display');else el.style.setProperty('display','none','important');
+    }
+  }
+}
+// ── ไฮไลต์รายการที่ตรงกับหน้าปัจจุบันในเมนู "เพิ่มเติม" ตอนเปิด ──
+function highlightMobSheetCurrent(){
+  const cur=document.querySelector('.sec.on');
+  document.querySelectorAll('.mob-sheet-item').forEach(b=>b.classList.remove('on'));
+  if(!cur)return;
+  const t=cur.id.replace('sec-','');
+  const btn=document.querySelector(`.mob-sheet-item[data-t="${t}"]`);
+  if(btn)btn.classList.add('on');
 }
 function updateAlertBadge(n){
   const b=document.getElementById('bnav-alert-badge');
   const mb=document.getElementById('mhd-bell-badge');
+  const sb=document.getElementById('mobsheet-alert-badge');
   if(n>0){
     if(b){b.textContent=n>99?'99+':n;b.classList.add('show');}
     if(mb){mb.textContent=n>99?'99+':n;mb.classList.add('show');}
+    if(sb){sb.textContent=n>99?'99+':n;sb.classList.add('show');}
   }else{
     if(b){b.textContent='';b.classList.remove('show');}
     if(mb){mb.textContent='';mb.classList.remove('show');}
+    if(sb){sb.textContent='';sb.classList.remove('show');}
   }
 }
 // ===== HARVEST STATISTICS (ปี 60-69) =====
@@ -3697,9 +3811,10 @@ function goTab(t,btn){
   if(t==='harveststat')initHarvestStat();
   // ── sync bottom nav (ข้อ 6) ──
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
-  const bnavMap={overview:'bnav-overview',entry:'bnav-entry',feed:'bnav-feed'};
+  const bnavMap={overview:'bnav-overview',entry:'bnav-entry',feed:'bnav-feed',stock:'bnav-stock'};
   if(bnavMap[t]){const bb=document.getElementById(bnavMap[t]);if(bb)bb.classList.add('on');}
   const tw=document.querySelector('.tabs-wrap');if(tw)tw.classList.remove('mob-open');
+  closeMobMenu();
   syncAllDateHints();
 }
 function updateTabsArrows(){
