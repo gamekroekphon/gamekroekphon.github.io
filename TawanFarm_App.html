@@ -6498,6 +6498,68 @@ function getCloseSummary(p,cropIdx){
   return{pondName:p.name,cropLabel:lastCrop?`รอบที่ ${lastCrop.cropNum}/${yearBE(lastCrop.cropYear)}`:'(รอบปัจจุบัน ยังไม่ปิด)',hatchery,stock,buyer,price,totalWeight,totalBaht,partialCount,ageDays,totalFeed,fcr,closeSize,adg,survivalRate,yieldPerRai,notesAll,closeDate,startDate,rows,feedLog,samples,
     costFry,costFeed,costChem,costLabor,costElec,costOther,hasCostData,totalCost,revenue,netProfit,marginPct,costPerKg};
 }
+// ===== PDF หน้าเดียว (ใช้เมื่อเลือกบ่อเดียว) — 4 KPI + ข้อมูลย่อ 3 คอลัมน์ + 2 กราฟผู้บริหาร + ต้นทุนต่อกิโล =====
+// mockup: Mockup และ Prototype/mockup_pdf_ปิดบ่อ_หน้าเดียว.html (คอนเฟิมแล้ว)
+function pdfKpiHtml(s){
+  const money=v=>v!=null?Math.round(v).toLocaleString():'-';
+  const kpi=(l,v,cls)=>`<div style="background:#f8fcfa;border:1px solid #e6efe9;border-radius:6px;padding:7px 10px">
+    <div style="font-size:9.5px;color:#8a8a8a;text-transform:uppercase;letter-spacing:.02em">${l}</div>
+    <div style="font-size:15px;font-weight:700;color:${cls||'#1e1e1e'};margin-top:1px">${v}</div>
+  </div>`;
+  const profitCls=s.netProfit!=null?(s.netProfit>=0?'#15803d':'#b91c1c'):null;
+  return `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">
+    ${kpi('ผลผลิตรวม',(s.totalWeight?s.totalWeight.toLocaleString():'-')+' <span style="font-size:10px;font-weight:400">กก.</span>')}
+    ${kpi('รายได้รวม',money(s.revenue)+' <span style="font-size:10px;font-weight:400">฿</span>')}
+    ${kpi('กำไรสุทธิ',(s.netProfit!=null?(s.netProfit>=0?'+':'')+money(s.netProfit):'-')+' <span style="font-size:10px;font-weight:400">฿</span>',profitCls)}
+    ${kpi('Margin',s.marginPct!=null?s.marginPct+'%':'-',profitCls)}
+  </div>`;
+}
+function pdfProdTradeGridHtml(s){
+  const row=(l,v)=>`<div style="display:flex;justify-content:space-between;gap:8px;background:#f8fcfa;border-bottom:1px solid #e6efe9;padding:4px 8px;font-size:11.5px"><span style="color:#787878">${l}</span><span style="font-weight:700;color:#1e1e1e">${v!=null&&v!==''?v:'-'}</span></div>`;
+  return `<div style="font-size:10.5px;font-weight:700;color:#0f6e56;text-transform:uppercase;letter-spacing:.03em;margin:10px 0 4px">🦐 ผลผลิต &amp; การซื้อขาย</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr)">
+    ${row('ลูกกุ้งจากที่ไหน',s.hatchery)}
+    ${row('จำนวนปล่อย',s.stock?s.stock.toLocaleString()+' ตัว':null)}
+    ${row('ไซส์ปิดบ่อ',s.closeSize?s.closeSize+' ตัว/กก.':null)}
+    ${row('อัตรารอด',s.survivalRate!=null?s.survivalRate+'%':null)}
+    ${row('FCR',s.fcr)}
+    ${row('ADG',s.adg!=null?s.adg+' ก./วัน':null)}
+    ${row('Yield/ไร่',s.yieldPerRai!=null?s.yieldPerRai+' กก./ไร่':null)}
+    ${row('ปิดบ่อกับแพ',s.buyer)}
+    ${row('ราคา',s.price!=null?s.price+' บ./กก.':null)}
+  </div>`;
+}
+// ── ต้นทุนแต่ละหมวด: โชว์ยอดรวม (บาท) ก่อน แล้วต่อด้วยต่อกิโลในวงเล็บ ──
+function pdfCostBreakdownHtml(s){
+  if(!s.hasCostData)return'';
+  const cats=[
+    {key:'costFeed',label:'อาหาร',color:'#3b82f6'},
+    {key:'costFry',label:'ลูกกุ้ง',color:'#9A6A04'},
+    {key:'costLabor',label:'ค่าแรง',color:'#0f6e56'},
+    {key:'costChem',label:'สารเคมี',color:'#7c3aed'},
+    {key:'costElec',label:'ค่าไฟฟ้า',color:'#0ea5e9'},
+    {key:'costOther',label:'อื่นๆ',color:'#9AA1AB'},
+  ];
+  const w=s.totalWeight||0;
+  const totalCost=s.totalCost||0;
+  const bars=cats.map(c=>{
+    const amt=s[c.key]||0;
+    const pct=totalCost?Math.round(amt/totalCost*100):0;
+    const perKg=w?(amt/w):null;
+    return `<div style="display:flex;align-items:center;gap:8px;font-size:11px">
+      <span style="width:64px;flex-shrink:0;color:#5a5a5a">${c.label}</span>
+      <span style="flex:1;background:#f1f3f5;border-radius:4px;height:14px;position:relative;overflow:hidden"><span style="display:block;height:100%;border-radius:4px;width:${pct}%;background:${c.color}"></span></span>
+      <span style="width:190px;flex-shrink:0;text-align:right;font-weight:700;white-space:nowrap">${Math.round(amt).toLocaleString()} บาท <span style="font-weight:400;color:#8a8a8a;font-size:10px">(${perKg!=null?perKg.toFixed(1):'-'} บ./กก. · ${pct}%)</span></span>
+    </div>`;
+  }).join('');
+  return `<div style="margin-top:8px;border:1px solid #e6efe9;border-radius:6px;padding:8px 10px">
+    <div style="font-size:10.5px;font-weight:700;color:#0f6e56;text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px">💰 ต้นทุนแยกตามหมวด — ยอดรวม &amp; ต่อกิโล</div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-top:4px">${bars}</div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;padding-top:6px;border-top:2px solid #0f6e56;font-size:12.5px;font-weight:700;color:#0f6e56">
+      <span>รวมต้นทุน</span><span>${Math.round(totalCost).toLocaleString()} บาท<span style="font-weight:400;font-size:10.5px;color:#8a8a8a;margin-left:6px">(${w?(totalCost/w).toFixed(1):'-'} บาท/กก.)</span></span>
+    </div>
+  </div>`;
+}
 async function genPDF(){
   const pid=document.getElementById('ex-pond').value;
   const ponds=pid==='all'?D.ponds:D.ponds.filter(p=>p.id===pid);
@@ -6519,8 +6581,39 @@ async function genPDF(){
     const selIdx=(pid!=='all'&&cropWrapEl&&cropWrapEl.style.display!=='none'&&cropSel&&cropSel.value!=='')?parseInt(cropSel.value):null;
     const typeLabel={'พาเชียล':'พาเชียล','ปิดบ่อ':'ปิดบ่อ'};
     const chartJobs=[]; // {canvasId, kind, s} — สร้างกราฟจริงหลังจากแปะ HTML ลง DOM แล้ว (ต้องมี canvas element ก่อน)
+    // ── เลือกบ่อเดียว = สรุปหน้าเดียว กระชับ (KPI+3คอลัมน์+2กราฟผู้บริหาร+ต้นทุนต่อกิโล) แทนแบบละเอียดหลายหน้า
+    //    เลือก "ทุกบ่อ" ยังคงพฤติกรรมเดิม เพราะใส่หลายบ่อในหน้าเดียวไม่ไหว (ดู mockup_pdf_ปิดบ่อ_หน้าเดียว.html) ──
+    const singlePage=ponds.length===1;
     ponds.forEach((p,pIdx)=>{
       const s=getCloseSummary(p,pid==='all'?null:selIdx);
+      if(singlePage){
+        const histClosed=(p.cropHistory||[]).filter(c=>c.harvestResult);
+        let chartsHtml='';
+        if(histClosed.length>=1){
+          const gChartId=`pdf-profit-${pIdx}`,cChartId=`pdf-fcr-${pIdx}`;
+          chartJobs.push({canvasId:gChartId,kind:'profit',hist:histClosed});
+          chartJobs.push({canvasId:cChartId,kind:'compare',hist:histClosed});
+          chartsHtml=`<div style="font-size:10.5px;font-weight:700;color:#0f6e56;text-transform:uppercase;letter-spacing:.03em;margin:10px 0 4px">📊 กราฟสำหรับผู้บริหาร</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="border:1px solid #e6efe9;border-radius:6px;padding:8px"><canvas id="${gChartId}" width="330" height="190"></canvas></div>
+            <div style="border:1px solid #e6efe9;border-radius:6px;padding:8px"><canvas id="${cChartId}" width="330" height="190"></canvas></div>
+          </div>`;
+        }
+        html+=`<div style="margin-bottom:16px;border:1px solid #e0e0e0;border-radius:6px;overflow:hidden;page-break-inside:avoid">
+          <div style="background:#e8f6f0;padding:8px 20px;display:flex;justify-content:space-between;align-items:center">
+            <strong style="color:#0f6e56;font-size:14px">🦐 บ่อ ${esc(p.name)}</strong>
+            <span style="font-size:11.5px;color:#787878">${esc(s.cropLabel)}${s.closeDate?' · ปิดบ่อ '+esc(fD(s.closeDate)):''}${s.ageDays?' · อายุ '+s.ageDays+' วัน':''}</span>
+          </div>
+          <div style="padding:12px 20px">
+            ${pdfKpiHtml(s)}
+            ${pdfProdTradeGridHtml(s)}
+            ${chartsHtml}
+            ${pdfCostBreakdownHtml(s)}
+            <div style="background:#fffbeb;padding:7px 10px;font-size:11px;line-height:1.5;margin-top:10px;border-radius:6px"><strong style="color:#787878">หมายเหตุ: </strong><span style="color:#1e1e1e">${esc(s.notesAll||'-')}</span></div>
+          </div>
+        </div>`;
+        return;
+      }
       const fieldsHtml=closeSummaryHtml(p,s,{compact:false});
       // ── ตารางรายละเอียดพาเชียล/ปิดบ่อแต่ละครั้ง ──
       const harvestRows=(s.rows||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
@@ -6600,6 +6693,26 @@ async function genPDF(){
           data:{labels,datasets:[{type:'line',label:'อาหารสะสม (กก.)',data:cumData,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.15)',fill:true,tension:.25}]},
           options:{responsive:false,animation:false,plugins:{title:{display:true,text:'อาหารสะสมตลอดรอบ',font:{family:'Kanit',size:13}},legend:{display:false}},
             scales:{y:{title:{display:true,text:'กก.'}}}}
+        }));
+      }else if(job.kind==='profit'){
+        const labels=job.hist.map(c=>`รอบ ${c.cropNum}/${yearBE(c.cropYear)}`);
+        const revData=job.hist.map(c=>c.harvestResult?.revenue??null);
+        const costData=job.hist.map(c=>{
+          const hr=c.harvestResult;if(!hr)return null;
+          const vals=[hr.costFry,hr.costFeed,hr.costChem,hr.costLabor,hr.costElec,hr.costOther];
+          if(vals.every(v=>v==null))return null;
+          return vals.reduce((s,v)=>s+(v||0),0);
+        });
+        const profitData=job.hist.map(c=>c.harvestResult?.netProfit??null);
+        pdfCharts.push(new Chart(cv.getContext('2d'),{
+          data:{labels,datasets:[
+            {type:'bar',label:'รายได้',data:revData,backgroundColor:'#93c5fd',order:2},
+            {type:'bar',label:'ต้นทุน',data:costData,backgroundColor:'#fca5a5',order:2},
+            {type:'line',label:'กำไรสุทธิ',data:profitData,borderColor:'#15803d',backgroundColor:'#15803d',tension:.3,pointRadius:4,pointBackgroundColor:'#15803d',order:1},
+          ]},
+          options:{responsive:false,animation:false,
+            plugins:{title:{display:true,text:'กำไร-ต้นทุน เทียบรอบก่อนหน้า',font:{family:'Kanit',size:12}},legend:{position:'bottom',labels:{font:{family:'Kanit',size:9.5}}}},
+            scales:{y:{ticks:{font:{size:9}}},x:{ticks:{font:{size:9}}}}}
         }));
       }else if(job.kind==='compare'){
         const labels=job.hist.map(c=>`รอบ ${c.cropNum}/${yearBE(c.cropYear)}`);
