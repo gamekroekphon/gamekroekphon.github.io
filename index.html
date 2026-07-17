@@ -1712,6 +1712,23 @@ body.role-ceo .main{max-width:640px}
       <label class="fl">เลือกรอบที่ปิด (ประวัติ)</label>
       <select class="fi" id="ex-crop" onchange="renderExPreview()"></select>
     </div>
+    <div class="fg" id="ex-chart-toggles" style="margin-bottom:16px;display:none">
+      <label class="fl">เลือกกราฟที่ต้องการแสดงใน PDF <span style="font-weight:400;color:var(--tx3)">(เฉพาะกราฟที่มีข้อมูลบันทึกไว้)</span></label>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+        <label id="ex-chk-growth-row" style="display:none;align-items:center;gap:7px;font-size:13px;color:var(--tx2);cursor:pointer">
+          <input type="checkbox" id="ex-chk-growth" checked onchange="this.dataset.touched='1'"> 📈 การเติบโต (ABW)
+        </label>
+        <label id="ex-chk-feed-row" style="display:none;align-items:center;gap:7px;font-size:13px;color:var(--tx2);cursor:pointer">
+          <input type="checkbox" id="ex-chk-feed" checked onchange="this.dataset.touched='1'"> 🍚 อาหารสะสมตลอดรอบ
+        </label>
+        <label id="ex-chk-profit-row" style="display:none;align-items:center;gap:7px;font-size:13px;color:var(--tx2);cursor:pointer">
+          <input type="checkbox" id="ex-chk-profit" checked onchange="this.dataset.touched='1'"> 💰 กำไร-ต้นทุน เทียบรอบก่อนหน้า
+        </label>
+        <label id="ex-chk-compare-row" style="display:none;align-items:center;gap:7px;font-size:13px;color:var(--tx2);cursor:pointer">
+          <input type="checkbox" id="ex-chk-compare" checked onchange="this.dataset.touched='1'"> 📊 FCR/อัตรารอด เทียบรอบก่อนหน้า
+        </label>
+      </div>
+    </div>
     <button class="btn btn-p" id="ex-pdf-btn" onclick="genPDF()" style="width:100%;justify-content:center;padding:13px;font-size:14px">
       📄 สร้าง PDF สรุปปิดบ่อ
     </button>
@@ -6587,6 +6604,7 @@ function initExport(){
 // เมื่อเปลี่ยนบ่อในการ์ด PDF ปิดบ่อ — โชว์ dropdown ประวัติรอบที่ปิดแล้ว (ถ้ามี) + preview
 function onExPondChange(){
   const pid=document.getElementById('ex-pond').value;
+  ['growth','feed','profit','compare'].forEach(k=>{const el=document.getElementById('ex-chk-'+k);if(el)delete el.dataset.touched;});
   const cropWrap=document.getElementById('ex-crop-wrap');
   const cropSel=document.getElementById('ex-crop');
   const exInfo=document.getElementById('ex-info');
@@ -6597,6 +6615,7 @@ function onExPondChange(){
     const totFeed=D.ponds.reduce((s,p)=>s+(p.feedLog||[]).length,0);
     if(exInfo)exInfo.innerHTML=`<div class="badge b-info">${D.ponds.length} บ่อ · ${total} ค่าน้ำ · ${totFeed} อาหาร</div>`;
     if(chartWrap)chartWrap.style.display='none';
+    renderExChartToggles();
     return;
   }
   const p=pond(pid);
@@ -6605,6 +6624,7 @@ function onExPondChange(){
     if(cropWrap)cropWrap.style.display='none';
     if(exInfo)exInfo.innerHTML='<p style="color:var(--tx3);font-size:13px">บ่อนี้ยังไม่มีประวัติปิดบ่อ</p>';
     if(chartWrap)chartWrap.style.display='none';
+    renderExChartToggles();
     return;
   }
   if(cropWrap)cropWrap.style.display='';
@@ -6614,12 +6634,38 @@ function onExPondChange(){
   }
   renderExPreview();
 }
+// ── กราฟที่มีให้เลือกต่างกันตามโหมด: เลือกบ่อเดียว = กำไร-ต้นทุน/FCR เทียบรอบก่อนหน้า (2 กราฟผู้บริหาร)
+//    เลือกทุกบ่อ = การเติบโต/อาหารสะสม/FCR เทียบรอบก่อนหน้า ต่อบ่อ (ดู genPDF) — โชว์เฉพาะตัวเลือกที่มีข้อมูลจริงให้ใช้ ──
+function renderExChartToggles(){
+  const box=document.getElementById('ex-chart-toggles');if(!box)return;
+  const pid=document.getElementById('ex-pond').value;
+  const setRow=(kind,available)=>{
+    const row=document.getElementById('ex-chk-'+kind+'-row');
+    const chk=document.getElementById('ex-chk-'+kind);
+    if(row)row.style.display=available?'flex':'none';
+    if(chk){chk.disabled=false;if(available&&chk.dataset.touched!=='1')chk.checked=true;}
+  };
+  if(pid==='all'){
+    const anyGrowth=D.ponds.some(p=>(p.samples||[]).some(x=>x.abw!=null));
+    const anyFeed=D.ponds.some(p=>(p.feedLog||[]).length);
+    const anyCompare=D.ponds.some(p=>(p.cropHistory||[]).filter(c=>c.harvestResult).length>=2);
+    setRow('growth',anyGrowth);setRow('feed',anyFeed);setRow('profit',false);setRow('compare',anyCompare);
+    box.style.display=(anyGrowth||anyFeed||anyCompare)?'':'none';
+    return;
+  }
+  const p=pond(pid);
+  const histClosed=p?(p.cropHistory||[]).filter(c=>c.harvestResult):[];
+  const hasHist=histClosed.length>=1;
+  setRow('growth',false);setRow('feed',false);setRow('profit',hasHist);setRow('compare',hasHist);
+  box.style.display=hasHist?'':'none';
+}
 // แสดง preview ของรอบที่เลือก + กราฟเปรียบเทียบ
 function renderExPreview(){
   const pid=document.getElementById('ex-pond').value;
   const exInfo=document.getElementById('ex-info');
   if(pid==='all'){return;}
   const p=pond(pid);if(!p){if(exInfo)exInfo.innerHTML='';return;}
+  renderExChartToggles();
   const cropSel=document.getElementById('ex-crop');
   const idx=cropSel&&cropSel.value!==''?parseInt(cropSel.value):null;
   const s=getCloseSummary(p,idx);
@@ -6872,6 +6918,8 @@ async function genPDF(){
     const selIdx=(pid!=='all'&&cropWrapEl&&cropWrapEl.style.display!=='none'&&cropSel&&cropSel.value!=='')?parseInt(cropSel.value):null;
     const typeLabel={'พาเชียล':'พาเชียล','ปิดบ่อ':'ปิดบ่อ'};
     const chartJobs=[]; // {canvasId, kind, s} — สร้างกราฟจริงหลังจากแปะ HTML ลง DOM แล้ว (ต้องมี canvas element ก่อน)
+    // ── ติ๊กเลือกกราฟที่ต้องการโชว์ใน PDF (ex-chart-toggles) — ถ้าไม่เจอ checkbox (ซ่อนเพราะไม่มีข้อมูล) ถือว่าอยากได้ตามปกติ ──
+    const chartWant=k=>{const el=document.getElementById('ex-chk-'+k);return el?el.checked:true;};
     // ── เลือกบ่อเดียว = สรุปหน้าเดียว กระชับ (KPI+3คอลัมน์+2กราฟผู้บริหาร+ต้นทุนต่อกิโล) แทนแบบละเอียดหลายหน้า
     //    เลือก "ทุกบ่อ" ยังคงพฤติกรรมเดิม เพราะใส่หลายบ่อในหน้าเดียวไม่ไหว (ดู mockup_pdf_ปิดบ่อ_หน้าเดียว.html) ──
     const singlePage=ponds.length===1;
@@ -6881,14 +6929,22 @@ async function genPDF(){
         const histClosed=(p.cropHistory||[]).filter(c=>c.harvestResult);
         let chartsHtml='';
         if(histClosed.length>=1){
-          const gChartId=`pdf-profit-${pIdx}`,cChartId=`pdf-fcr-${pIdx}`;
-          chartJobs.push({canvasId:gChartId,kind:'profit',hist:histClosed});
-          chartJobs.push({canvasId:cChartId,kind:'compare',hist:histClosed});
-          chartsHtml=`<div style="font-size:10.5px;font-weight:700;color:#0f6e56;text-transform:uppercase;letter-spacing:.03em;margin:10px 0 4px">📊 กราฟสำหรับผู้บริหาร</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div style="border:1px solid #e6efe9;border-radius:6px;padding:8px"><canvas id="${gChartId}" width="330" height="190"></canvas></div>
-            <div style="border:1px solid #e6efe9;border-radius:6px;padding:8px"><canvas id="${cChartId}" width="330" height="190"></canvas></div>
-          </div>`;
+          const wantProfit=chartWant('profit'),wantCompare=chartWant('compare');
+          let boxes='';
+          if(wantProfit){
+            const gChartId=`pdf-profit-${pIdx}`;
+            chartJobs.push({canvasId:gChartId,kind:'profit',hist:histClosed});
+            boxes+=`<div style="border:1px solid #e6efe9;border-radius:6px;padding:8px"><canvas id="${gChartId}" width="330" height="190"></canvas></div>`;
+          }
+          if(wantCompare){
+            const cChartId=`pdf-fcr-${pIdx}`;
+            chartJobs.push({canvasId:cChartId,kind:'compare',hist:histClosed});
+            boxes+=`<div style="border:1px solid #e6efe9;border-radius:6px;padding:8px"><canvas id="${cChartId}" width="330" height="190"></canvas></div>`;
+          }
+          if(boxes){
+            chartsHtml=`<div style="font-size:10.5px;font-weight:700;color:#0f6e56;text-transform:uppercase;letter-spacing:.03em;margin:10px 0 4px">📊 กราฟสำหรับผู้บริหาร</div>
+            <div style="display:grid;grid-template-columns:${wantProfit&&wantCompare?'1fr 1fr':'1fr'};gap:10px">${boxes}</div>`;
+          }
         }
         html+=`<div style="margin-bottom:16px;border:1px solid #e0e0e0;border-radius:6px;overflow:hidden;page-break-inside:avoid">
           <div style="background:#e8f6f0;padding:8px 20px;display:flex;justify-content:space-between;align-items:center">
@@ -6932,16 +6988,16 @@ async function genPDF(){
       const gChartId=`pdf-g-${pIdx}`,fChartId=`pdf-f-${pIdx}`,cChartId=`pdf-c-${pIdx}`;
       const samplesSorted=(s.samples||[]).slice().filter(x=>x.abw!=null).sort((a,b)=>(a.age||0)-(b.age||0));
       const feedSorted=(s.feedLog||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-      if(samplesSorted.length){
+      if(samplesSorted.length&&chartWant('growth')){
         chartJobs.push({canvasId:gChartId,kind:'growth',samples:samplesSorted});
         chartsHtml+=`<div style="margin-top:10px"><canvas id="${gChartId}" width="680" height="200"></canvas></div>`;
       }
-      if(feedSorted.length){
+      if(feedSorted.length&&chartWant('feed')){
         chartJobs.push({canvasId:fChartId,kind:'feed',feedLog:feedSorted});
         chartsHtml+=`<div style="margin-top:10px"><canvas id="${fChartId}" width="680" height="200"></canvas></div>`;
       }
       const histClosed=(p.cropHistory||[]).filter(c=>c.harvestResult);
-      if(histClosed.length>=2){
+      if(histClosed.length>=2&&chartWant('compare')){
         chartJobs.push({canvasId:cChartId,kind:'compare',hist:histClosed});
         chartsHtml+=`<div style="margin-top:10px"><canvas id="${cChartId}" width="680" height="200"></canvas></div>`;
       }
