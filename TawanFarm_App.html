@@ -2005,10 +2005,9 @@ body.role-ceo .main{max-width:640px}
         <div class="fg"><label class="fl">หน่วย</label><input class="fi" id="sk-unit" placeholder="กก., กระสอบ, ขวด..."></div>
         <div class="fg"><label class="fl">ราคาต้นทุน (บาท/หน่วย)</label><input type="number" class="fi" id="sk-price" placeholder="0" inputmode="decimal" step="any"></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div class="fg"><label class="fl">จำนวนเริ่มต้น</label><input type="number" class="fi" id="sk-qty" placeholder="0" inputmode="decimal"></div>
         <div class="fg"><label class="fl">ขั้นต่ำเตือน</label><input type="number" class="fi" id="sk-min" placeholder="5" inputmode="decimal"></div>
-        <div class="fg"><label class="fl">ราคาขายแนะนำ (บาท/หน่วย)</label><input type="number" class="fi" id="sk-sell" placeholder="0" inputmode="decimal" step="any"></div>
       </div>
       <div class="fg"><label class="fl">ผู้จำหน่าย/หมายเหตุ</label><input class="fi" id="sk-note-item" placeholder="—"></div>
       <div style="display:flex;gap:8px;margin-top:4px">
@@ -2201,6 +2200,12 @@ body.role-ceo .main{max-width:640px}
 <script>
 const SK='tawan_v3';
 let APP_ROLE='staff';
+// ── ชื่อผู้ใช้ที่ล็อกอินอยู่ ณ ขณะนี้ — ใช้แปะไว้กับ log ที่ต้องรู้ว่าใครเป็นคนบันทึก (เช่น ประวัติสต็อก) ──
+function curUserLabel(){
+  const u=firebase.auth&&firebase.auth().currentUser;
+  if(!u)return'';
+  return u.displayName||(u.email?u.email.split('@')[0]:'')||'';
+}
 
 // ═══════════════════════════════════════════════════════
 //  🔥 FIREBASE CONFIG — ตะวันฟาร์ม Project
@@ -5347,7 +5352,6 @@ function saveStockItem(){
     unitPrice:parseFloat(document.getElementById('sk-price').value)||0,
     qty:parseFloat(document.getElementById('sk-qty').value)||0,
     minQty:parseFloat(document.getElementById('sk-min').value)||0,
-    sellPrice:parseFloat(document.getElementById('sk-sell').value)||0,
     note:document.getElementById('sk-note-item').value.trim()
   };
   if(!D.inventoryItems)D.inventoryItems=[];
@@ -5360,7 +5364,7 @@ function saveStockItem(){
 }
 
 function clearStockItem(){
-  ['sk-name','sk-unit','sk-price','sk-qty','sk-min','sk-sell','sk-note-item'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';delete el.dataset.editId;}});
+  ['sk-name','sk-unit','sk-price','sk-qty','sk-min','sk-note-item'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';delete el.dataset.editId;}});
   document.getElementById('sk-cat').value='feed';
   showStockMsg('item','','');
 }
@@ -5374,7 +5378,6 @@ function editStockItem(id){
   document.getElementById('sk-price').value=item.unitPrice||0;
   document.getElementById('sk-qty').value=item.qty||0;
   document.getElementById('sk-min').value=item.minQty||0;
-  document.getElementById('sk-sell').value=item.sellPrice||0;
   document.getElementById('sk-note-item').value=item.note||'';
   stockTab('items',document.getElementById('skb-items'));
   document.getElementById('sk-name').focus();
@@ -5451,7 +5454,7 @@ function filterStockSearch(){
 function addStockToCart(itemId){
   const item=(D.inventoryItems||[]).find(i=>i.id===itemId);if(!item)return;
   if(!_stockCart.some(c=>c.itemId===itemId)){
-    _stockCart.push({itemId,itemName:item.name,unit:item.unit,qty:1,currentQty:item.qty,sellPrice:item.sellPrice||item.unitPrice||0,unitCost:item.unitPrice||0});
+    _stockCart.push({itemId,itemName:item.name,unit:item.unit,qty:1,currentQty:item.qty,sellPrice:null,unitCost:item.unitPrice||0});
   }
   const srch=document.getElementById('sk-tx-search');if(srch)srch.value='';
   hideStockDrop();
@@ -5474,7 +5477,7 @@ function updateCartQty(itemId,val){
 
 function updateCartPrice(itemId,val){
   const c=_stockCart.find(c=>c.itemId===itemId);
-  if(c)c.sellPrice=parseFloat(val)||0;
+  if(c)c.sellPrice=val!==''?parseFloat(val):null;
 }
 
 function renderStockCart(){
@@ -5489,7 +5492,7 @@ function renderStockCart(){
       <span class="sk-cart-name">${c.itemName}</span>
       <span class="sk-cart-unit">${c.unit}</span>
       <input type="number" id="sk-cart-qty-${c.itemId}" class="fi sk-cart-qty" min="0.01" step="any" value="${c.qty}" inputmode="decimal" onchange="updateCartQty('${c.itemId}',this.value)">
-      ${isSale?`<input type="number" id="sk-cart-price-${c.itemId}" class="fi sk-cart-price" min="0" step="any" value="${c.sellPrice||0}" inputmode="decimal" title="ราคาขาย/หน่วย" onchange="updateCartPrice('${c.itemId}',this.value)"><span class="sk-cart-price-lbl">฿/${c.unit}</span>`:''}
+      ${isSale?`<input type="number" id="sk-cart-price-${c.itemId}" class="fi sk-cart-price" min="0" step="any" value="${c.sellPrice!=null?c.sellPrice:''}" placeholder="ราคา" inputmode="decimal" title="ราคาขาย/หน่วย" onchange="updateCartPrice('${c.itemId}',this.value)"><span class="sk-cart-price-lbl">฿/${c.unit}</span>`:''}
       <button class="btn-sm btn-del" onclick="removeFromCart('${c.itemId}')">✕</button>
     </div>`).join('');
 }
@@ -5505,6 +5508,7 @@ function saveStockTxBatch(){
   if(mode==='sale'&&!custName){showStockMsg('tx','กรุณากรอกชื่อลูกค้า/ร้านก่อนบันทึก','err');return;}
   for(const c of _stockCart){
     if(!c.qty||c.qty<=0){showStockMsg('tx','จำนวน "'+c.itemName+'" ต้องมากกว่า 0','err');return;}
+    if(mode==='sale'&&!(c.sellPrice>0)){showStockMsg('tx','กรุณากรอกราคาขาย "'+c.itemName+'" ก่อนบันทึก','err');return;}
     if(mode!=='in'&&c.qty>c.currentQty){
       if(!confirm('จำนวนเบิก "'+c.itemName+'" ('+c.qty+') มากกว่าสต็อก ('+c.currentQty+') ยืนยัน?'))return;
     }
@@ -5519,7 +5523,7 @@ function saveStockTxBatch(){
     item.qty=Math.round(newQty*100)/100;
     const entry={id:'sl'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
       itemId:c.itemId,itemName:c.itemName,type:mode,qty:c.qty,date,note,pondId,
-      balanceAfter:item.qty,unit:c.unit};
+      balanceAfter:item.qty,unit:c.unit,by:curUserLabel()};
     if(mode==='sale'){
       entry.custName=custName;
       entry.sellPrice=c.sellPrice||0;
@@ -5568,7 +5572,7 @@ function renderStockInLog(){
   if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีประวัติรับเข้าส่วนกลาง</p>';return;}
   const byDate={};
   logs.forEach(l=>{if(!byDate[l.date])byDate[l.date]=[];byDate[l.date].push(l);});
-  tbl.innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>รายการ</th><th style="text-align:right">จำนวน</th><th>หน่วย</th><th>หมายเหตุ</th><th></th></tr></thead><tbody>'+
+  tbl.innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>รายการ</th><th style="text-align:right">จำนวน</th><th>หน่วย</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>'+
     Object.entries(byDate).sort((a,b)=>b[0].localeCompare(a[0])).flatMap(([date,ls])=>
       ls.map((l,i)=>`<tr>
         <td style="${i>0?'color:transparent':''};">${fD(date)}</td>
@@ -5576,6 +5580,7 @@ function renderStockInLog(){
         <td style="text-align:right">${l.qty}</td>
         <td style="color:var(--tx2)">${l.unit||''}</td>
         <td style="font-size:12px;color:var(--tx2)">${l.note||''}</td>
+        <td style="font-size:12px;color:var(--tx2)">${l.by||'-'}</td>
         <td><button class="btn-sm btn-del" onclick="deleteStockLog('${l.id}');renderStockInLog()">🗑️</button></td>
       </tr>`)
     ).join('')+
@@ -5607,7 +5612,7 @@ function renderStockOutLog(){
   if(month)logs=logs.filter(l=>l.date&&l.date.startsWith(month));
   logs=logs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ไม่มีประวัติเบิกออกไปบ่อ'+(pid||cat||month?'ตามตัวกรองนี้':'')+'</p>';return;}
-  tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>บ่อ</th><th>หมวด</th><th>รายการ</th><th style="text-align:right">จำนวน</th><th>หมายเหตุ</th><th></th></tr></thead><tbody>${
+  tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>บ่อ</th><th>หมวด</th><th>รายการ</th><th style="text-align:right">จำนวน</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
     logs.map(l=>{
       const it=itemMap[l.itemId];
       const catLbl=STOCK_CAT_LABEL[it?.category]||'-';
@@ -5619,6 +5624,7 @@ function renderStockOutLog(){
         <td>${l.itemName||'-'}</td>
         <td style="text-align:right">${l.qty} ${l.unit||''}</td>
         <td style="font-size:12px;color:var(--tx2)">${l.note||''}</td>
+        <td style="font-size:12px;color:var(--tx2)">${l.by||'-'}</td>
         <td><button class="btn-sm btn-del" onclick="deleteStockLog('${l.id}')">🗑️</button></td>
       </tr>`;
     }).join('')
@@ -5682,7 +5688,7 @@ function renderSalesReport(){
     <div class="kpi-card"><div class="kpi-lbl">จำนวนรายการ</div><div class="kpi-val">${rows.length}</div><div class="kpi-sub">รายการ</div></div>`;
   if(!rows.length){tblEl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ไม่มีรายการขายในช่วงที่เลือก</p>';return;}
   const moneyHdr=isMoney?'<th style="text-align:right">ต้นทุน</th><th style="text-align:right">กำไร</th>':'';
-  tblEl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>ลูกค้า</th><th>สินค้า</th><th style="text-align:right">จำนวน</th><th style="text-align:right">ราคาขาย</th><th style="text-align:right">ยอดขาย</th>${moneyHdr}</tr></thead><tbody>${
+  tblEl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>ลูกค้า</th><th>สินค้า</th><th style="text-align:right">จำนวน</th><th style="text-align:right">ราคาขาย</th><th style="text-align:right">ยอดขาย</th>${moneyHdr}<th>ผู้บันทึก</th></tr></thead><tbody>${
     rows.map(l=>{
       const sales=(l.sellPrice||0)*(l.qty||0);
       const cost=(l.unitCost||0)*(l.qty||0);
@@ -5696,6 +5702,7 @@ function renderSalesReport(){
         <td style="text-align:right">${(l.sellPrice||0).toLocaleString()}</td>
         <td style="text-align:right">${sales.toLocaleString()}</td>
         ${moneyTd}
+        <td style="font-size:12px;color:var(--tx2)">${l.by||'-'}</td>
       </tr>`;
     }).join('')
   }</tbody></table></div>`;
@@ -5704,11 +5711,11 @@ function exportSaleCSV(){
   const rows=saleLogs().filter(l=>_saleMonth==='all'||(l.date||'').slice(0,7)===_saleMonth)
     .sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   if(!rows.length){alert('ไม่มีข้อมูลสำหรับ export');return;}
-  const hdr='วันที่,ลูกค้า,สินค้า,จำนวน,หน่วย,ราคาขาย,ยอดขาย,ต้นทุน,กำไร';
+  const hdr='วันที่,ลูกค้า,สินค้า,จำนวน,หน่วย,ราคาขาย,ยอดขาย,ต้นทุน,กำไร,ผู้บันทึก';
   const csv=hdr+'\n'+rows.map(l=>{
     const sales=(l.sellPrice||0)*(l.qty||0);
     const cost=(l.unitCost||0)*(l.qty||0);
-    return [l.date,l.custName||'',l.itemName||'',l.qty,l.unit||'',l.sellPrice||0,sales,cost,sales-cost].join(',');
+    return [l.date,l.custName||'',l.itemName||'',l.qty,l.unit||'',l.sellPrice||0,sales,cost,sales-cost,l.by||''].join(',');
   }).join('\n');
   const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='TawanFarm_ขายลูกค้า_'+(_saleMonth==='all'?'all':_saleMonth)+'.csv';a.click();URL.revokeObjectURL(url);
@@ -5985,7 +5992,7 @@ function applyFeedStockDeduction(rec,pid,d,stockItemId,sacks){
   item.qty=Math.round((item.qty-sacks)*100)/100;
   if(!D.inventoryLog)D.inventoryLog=[];
   const logId='sl_fd_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-  D.inventoryLog.push({id:logId,itemId:item.id,itemName:item.name,type:'out',qty:sacks,date:d,note:'ตัดอัตโนมัติจากบันทึกอาหาร',pondId:pid,balanceAfter:item.qty,unit:item.unit||'กระสอบ'});
+  D.inventoryLog.push({id:logId,itemId:item.id,itemName:item.name,type:'out',qty:sacks,date:d,note:'ตัดอัตโนมัติจากบันทึกอาหาร',pondId:pid,balanceAfter:item.qty,unit:item.unit||'กระสอบ',by:curUserLabel()});
   rec.stockItemId=item.id;rec.stockQty=sacks;rec.stockLogId=logId;
 }
 function feedGridRow(p,d,feedItems){
