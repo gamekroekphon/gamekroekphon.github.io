@@ -2050,14 +2050,24 @@ body.role-ceo .main{max-width:640px}
         <button id="skl-mode-in" class="stock-mode-btn" onclick="setStockLogMode('in')">📥 รับเข้าส่วนกลาง</button>
       </div>
       <div id="skl-pane-out">
-        <div id="sk-log-pond-grid"></div>
-        <div id="sk-log-pond-detail" style="display:none">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-            <button onclick="backToStockPondGrid()" style="background:none;border:none;cursor:pointer;color:var(--p);font-size:13px">← กลับ</button>
-            <span id="sk-log-pond-name" style="font-weight:700;color:var(--tx);font-size:14px"></span>
-          </div>
-          <div id="sk-log-pond-table"></div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+          <select class="fi" id="skl-out-pond" style="width:170px" onchange="renderStockOutLog()">
+            <option value="">ทุกบ่อ</option>
+          </select>
+          <select class="fi" id="skl-out-cat" style="width:150px" onchange="renderStockOutLog()">
+            <option value="">ทุกหมวด</option>
+            <option value="feed">🍚 อาหารกุ้ง</option>
+            <option value="chemOral">💊 ยากิน</option>
+            <option value="chemWater">🧪 ยาลงน้ำ</option>
+            <option value="probioOral">🦠 จุลินทรีย์กิน</option>
+            <option value="probioWater">🧫 จุลินทรีย์ลงน้ำ</option>
+            <option value="lime">🪨 ปูน</option>
+            <option value="equip">🔧 อุปกรณ์</option>
+          </select>
+          <input type="month" class="fi" id="skl-out-month" style="width:150px" onchange="renderStockOutLog()">
+          <button class="btn" style="font-size:12px;padding:6px 12px;white-space:nowrap;background:var(--s1);color:var(--tx2)" onclick="clearStockOutFilter()">ล้างตัวกรอง</button>
         </div>
+        <div id="sk-log-out-table"></div>
       </div>
       <div id="skl-pane-in" style="display:none">
         <div id="sk-log-in-table"></div>
@@ -5110,7 +5120,7 @@ function stockTab(paneId,btn){
   document.querySelectorAll('.stock-sub-btn').forEach(b=>b.classList.remove('on'));
   const p=document.getElementById('skp-'+paneId);if(p)p.classList.add('on');
   if(btn)btn.classList.add('on');
-  if(paneId==='log'){backToStockPondGrid();setStockLogMode(_stockLogMode||'out');}
+  if(paneId==='log'){setStockLogMode(_stockLogMode||'out');}
   if(paneId==='tx'){setStockMode(_stockMode||'in');}
   if(paneId==='sale'){initSaleMonthPills();renderSalesReport();}
 }
@@ -5436,7 +5446,7 @@ function setStockLogMode(mode){
   const paneIn=document.getElementById('skl-pane-in');
   if(paneOut)paneOut.style.display=mode==='out'?'':'none';
   if(paneIn)paneIn.style.display=mode==='in'?'':'none';
-  if(mode==='out'){backToStockPondGrid();renderStockPondGrid();}
+  if(mode==='out'){populateStockOutFilters();renderStockOutLog();}
   else{renderStockInLog();}
 }
 function renderStockInLog(){
@@ -5458,57 +5468,51 @@ function renderStockInLog(){
     ).join('')+
   '</tbody></table></div>';
 }
-function renderStockPondGrid(){
-  const el=document.getElementById('sk-log-pond-grid');if(!el)return;
-  const actives=(D.ponds||[]).filter(p=>p.startDate&&!p.closed).sort((a,b)=>a.name.localeCompare(b.name,'th'));
-  if(!actives.length){
-    el.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ไม่มีบ่อที่กำลังเลี้ยง</p>';return;
-  }
-  const logs=D.inventoryLog||[];
-  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px">
-    ${actives.map(p=>{
-      const pLogs=logs.filter(l=>l.pondId===p.id&&l.type==='out');
-      const last=pLogs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
-      return `<div style="background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px;cursor:pointer;transition:border-color .15s"
-        onmouseover="this.style.borderColor='var(--p)'" onmouseout="this.style.borderColor='var(--bd)'"
-        onclick="showStockPondHist('${p.id}','${p.name}')">
-        <div style="font-size:14px;font-weight:700;color:var(--tx);margin-bottom:4px">${p.name}</div>
-        <div style="font-size:12px;color:var(--tx3)">เบิกแล้ว ${pLogs.length} ครั้ง</div>
-        <div style="font-size:11px;color:var(--tx3);margin-top:5px">${last?'ล่าสุด: '+fD(last.date):'ยังไม่มีประวัติ'}</div>
-      </div>`;
-    }).join('')}
-  </div>`;
+// ── ประวัติเบิกออก: ตารางรายการเดียวกรองด้วยบ่อ/หมวด/เดือน แทนกริดกดเข้าไปทีละบ่อ ──
+function populateStockOutFilters(){
+  const sel=document.getElementById('skl-out-pond');if(!sel)return;
+  const cur=sel.value;
+  const pondIds=[...new Set((D.inventoryLog||[]).filter(l=>l.type==='out'&&l.pondId).map(l=>l.pondId))];
+  const opts=pondIds.map(id=>({id,name:pondNameById(id)})).sort((a,b)=>a.name.localeCompare(b.name,'th'));
+  sel.innerHTML='<option value="">ทุกบ่อ</option>'+opts.map(o=>`<option value="${o.id}"${o.id===cur?' selected':''}>${o.name}</option>`).join('');
 }
-
-function showStockPondHist(pondId,pondName){
-  document.getElementById('sk-log-pond-grid').style.display='none';
-  document.getElementById('sk-log-pond-detail').style.display='';
-  document.getElementById('sk-log-pond-name').textContent=pondName;
-  const logs=[...(D.inventoryLog||[])].filter(l=>l.pondId===pondId&&l.type==='out').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  const tbl=document.getElementById('sk-log-pond-table');if(!tbl)return;
-  if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีประวัติรับเข้า</p>';return;}
-  const byDate={};
-  logs.forEach(l=>{if(!byDate[l.date])byDate[l.date]=[];byDate[l.date].push(l);});
-  tbl.innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>รายการ</th><th style="text-align:right">จำนวน</th><th>หน่วย</th><th>หมายเหตุ</th><th></th></tr></thead><tbody>'+
-    Object.entries(byDate).sort((a,b)=>b[0].localeCompare(a[0])).flatMap(([date,ls])=>
-      ls.map((l,i)=>`<tr>
-        <td style="${i>0?'color:transparent':''};">${fD(date)}</td>
+function clearStockOutFilter(){
+  const p=document.getElementById('skl-out-pond');if(p)p.value='';
+  const c=document.getElementById('skl-out-cat');if(c)c.value='';
+  const m=document.getElementById('skl-out-month');if(m)m.value='';
+  renderStockOutLog();
+}
+function renderStockOutLog(){
+  const tbl=document.getElementById('sk-log-out-table');if(!tbl)return;
+  const pid=document.getElementById('skl-out-pond')?.value||'';
+  const cat=document.getElementById('skl-out-cat')?.value||'';
+  const month=document.getElementById('skl-out-month')?.value||'';
+  const itemMap={};(D.inventoryItems||[]).forEach(i=>itemMap[i.id]=i);
+  let logs=(D.inventoryLog||[]).filter(l=>l.type==='out'&&l.pondId);
+  if(pid)logs=logs.filter(l=>l.pondId===pid);
+  if(cat)logs=logs.filter(l=>{const it=itemMap[l.itemId];return it&&it.category===cat;});
+  if(month)logs=logs.filter(l=>l.date&&l.date.startsWith(month));
+  logs=logs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ไม่มีประวัติเบิกออกไปบ่อ'+(pid||cat||month?'ตามตัวกรองนี้':'')+'</p>';return;}
+  tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>บ่อ</th><th>หมวด</th><th>รายการ</th><th style="text-align:right">จำนวน</th><th>หมายเหตุ</th><th></th></tr></thead><tbody>${
+    logs.map(l=>{
+      const it=itemMap[l.itemId];
+      const catLbl=STOCK_CAT_LABEL[it?.category]||'-';
+      const catCss=STOCK_CAT_CSS[it?.category]||'';
+      return `<tr>
+        <td>${fD(l.date)}</td>
+        <td><span class="badge b-info">${pondNameById(l.pondId)}</span></td>
+        <td><span class="badge ${catCss}">${catLbl}</span></td>
         <td>${l.itemName||'-'}</td>
-        <td style="text-align:right">${l.qty}</td>
-        <td style="color:var(--tx2)">${l.unit||''}</td>
+        <td style="text-align:right">${l.qty} ${l.unit||''}</td>
         <td style="font-size:12px;color:var(--tx2)">${l.note||''}</td>
-        <td><button class="btn-sm btn-del" onclick="deleteStockLog('${l.id}');showStockPondHist('${pondId}','${pondName}')">🗑️</button></td>
-      </tr>`)
-    ).join('')+
-  '</tbody></table></div>';
+        <td><button class="btn-sm btn-del" onclick="deleteStockLog('${l.id}')">🗑️</button></td>
+      </tr>`;
+    }).join('')
+  }</tbody></table></div>`;
 }
 
-function backToStockPondGrid(){
-  const g=document.getElementById('sk-log-pond-grid');if(g)g.style.display='';
-  const d=document.getElementById('sk-log-pond-detail');if(d)d.style.display='none';
-}
-
-function renderStockLog(){if(_stockLogMode==='in')renderStockInLog();else renderStockPondGrid();}// backward-compat stub
+function renderStockLog(){if(_stockLogMode==='in')renderStockInLog();else{populateStockOutFilters();renderStockOutLog();}}// backward-compat stub
 
 function deleteStockLog(id){
   const log=(D.inventoryLog||[]).find(l=>l.id===id);if(!log)return;
@@ -6149,7 +6153,6 @@ function renderChemHistory(){
   const month=document.getElementById('ch-hist-month')?.value||'';
   const wrap=document.getElementById('ch-hist-wrap');if(!wrap)return;
   const itemMap={};(D.inventoryItems||[]).forEach(i=>itemMap[i.id]=i);
-  const pondMap={};D.ponds.forEach(p=>pondMap[p.id]=p.name);
   let logs=(D.inventoryLog||[]).filter(r=>r.type==='out'&&r.pondId);
   if(pid)logs=logs.filter(r=>r.pondId===pid);
   if(cat)logs=logs.filter(r=>{const item=itemMap[r.itemId];return item&&item.category===cat;});
@@ -6162,7 +6165,7 @@ function renderChemHistory(){
       const catKey=item?.category||'';
       const catLbl=STOCK_CAT_LABEL[catKey]||'-';
       const catCss=STOCK_CAT_CSS[catKey]||'';
-      const pondName=pondMap[r.pondId]||r.pondId;
+      const pondName=pondNameById(r.pondId);
       return `<tr><td>${fD(r.date)}</td><td><span class="badge b-info">บ่อ ${pondName}</span></td><td><span class="stock-cat-badge ${catCss}">${catLbl}</span></td><td>${r.itemName||'-'}</td><td>${r.qty||'-'} ${r.unit||''}</td><td>${r.note||'-'}</td></tr>`;
     }).join('')
   }</tbody></table>`;
@@ -7149,9 +7152,18 @@ function computeNextCrop(p,baseDate){
 }
 function delPond(id){
   const p=pond(id);if(!confirm(`ลบบ่อ ${p.name} และข้อมูลทั้งหมด?`))return;
+  D.deletedPondNames=D.deletedPondNames||{};D.deletedPondNames[id]=p.name;
   D.ponds=D.ponds.filter(x=>x.id!==id);
   D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
   save();renderManage();populateAll();renderOv();
+}
+// ── ชื่อบ่อจาก pondId ที่โชว์ในตารางประวัติ — กันตัว id ดิบๆ โผล่เวลาบ่อถูกลบไปแล้ว (ดู D.deletedPondNames ที่ delPond() เก็บไว้) ──
+function pondNameById(pondId){
+  if(!pondId)return'';
+  const p=(D.ponds||[]).find(x=>x.id===pondId);
+  if(p)return p.name;
+  const dn=(D.deletedPondNames||{})[pondId];
+  return dn?dn+' (ลบแล้ว)':pondId;
 }
 // ===== CROP CYCLES =====
 const PREP_STEPS = [
