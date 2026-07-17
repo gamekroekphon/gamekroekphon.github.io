@@ -1488,6 +1488,7 @@ body.role-ceo .main{max-width:640px}
           <div class="fg"><label class="fl">อัตรารอด (%)</label><input type="number" class="fi" id="cm-survival" step="0.1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--sf2)"></div>
           <div class="fg"><label class="fl">FCR สุดท้าย <span style="font-weight:400;color:var(--tx3)">(อัตราแลกเนื้อ)</span></label><input type="number" class="fi" id="cm-fcr" step="0.01" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--sf2)"></div>
           <div class="fg"><label class="fl">ราคาขาย (บาท/กก.)</label><input type="number" class="fi" id="cm-price" step="0.5" placeholder="130"></div>
+          <div class="fg"><label class="fl">แพที่จับ / ผู้ซื้อ</label><input type="text" class="fi" id="cm-buyer" placeholder="ชื่อแพ / บริษัท"></div>
         </div>
       </div>
       <!-- Economics -->
@@ -1570,6 +1571,7 @@ body.role-ceo .main{max-width:640px}
           <div class="fg"><label class="fl">อัตรารอด (%)</label><input type="number" class="fi" id="ecm-survival" step="0.1" placeholder="0"></div>
           <div class="fg"><label class="fl">FCR สุดท้าย</label><input type="number" class="fi" id="ecm-fcr" step="0.01" placeholder="0"></div>
           <div class="fg"><label class="fl">ราคาขาย (บาท/กก.)</label><input type="number" class="fi" id="ecm-price" step="0.5" placeholder="130"></div>
+          <div class="fg"><label class="fl">แพที่จับ / ผู้ซื้อ</label><input type="text" class="fi" id="ecm-buyer" placeholder="ชื่อแพ / บริษัท"></div>
         </div>
       </div>
       <!-- Economics -->
@@ -6732,7 +6734,7 @@ function getCloseSummary(p,cropIdx){
   const notesCrop=lastCrop?lastCrop.notes:'';
   // ติด type/date ให้ครบ — ตาราง "รายละเอียดการจับแต่ละครั้ง" ใน PDF ใช้ทั้งสอง field แยกสี badge และเรียงลำดับ
   const partialRows=((lastCrop?lastCrop.partialHarvests:(p.partialHarvests||[]))||[]).map(r=>({...r,type:'พาเชียล'}));
-  const closeRows=harvestResult?[{type:'ปิดบ่อ',date:closeDate||'',weight:harvestResult.totalWeight,price:harvestResult.price,size:harvestResult.size,buyer:''}]:[];
+  const closeRows=harvestResult?[{type:'ปิดบ่อ',date:closeDate||'',weight:harvestResult.totalWeight,price:harvestResult.price,size:harvestResult.size,buyer:harvestResult.buyer||''}]:[];
   const rows=[...partialRows,...closeRows];
   const totalWeight=rows.reduce((s,r)=>s+(r.weight||0),0)||(harvestResult?harvestResult.totalWeight:null);
   const totalBaht=rows.reduce((s,r)=>s+(r.weight&&r.price?r.weight*r.price:0),0);
@@ -7401,6 +7403,7 @@ function openEditCropModal(pondId,cropId,idx){
   fv('ecm-hatchery',c.hatchery);fv('ecm-pltype',c.plType);fv('ecm-plweight',c.plWeight);
   fv('ecm-weight',hr.totalWeight);fv('ecm-size',hr.size);fv('ecm-caught',hr.caught);
   fv('ecm-survival',hr.survivalRate);fv('ecm-fcr',hr.fcr);fv('ecm-price',hr.price);
+  fv('ecm-buyer',hr.buyer);
   fv('ecm-revenue',hr.revenue);
   fv('ecm-cost-fry',hr.costFry);fv('ecm-cost-feed',hr.costFeed);
   fv('ecm-cost-med',hr.costMed);fv('ecm-cost-lime',hr.costLime);
@@ -7455,7 +7458,7 @@ function saveEditCrop(){
       records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[],prepChecklist:null,
       harvestResult:{
         totalWeight:gn('ecm-weight'),size:gn('ecm-size'),caught:gn('ecm-caught'),
-        survivalRate:gn('ecm-survival'),fcr:gn('ecm-fcr'),price:gn('ecm-price'),revenue:gn('ecm-revenue'),
+        survivalRate:gn('ecm-survival'),fcr:gn('ecm-fcr'),price:gn('ecm-price'),buyer:gs('ecm-buyer'),revenue:gn('ecm-revenue'),
         costFry:gn('ecm-cost-fry'),costFeed:gn('ecm-cost-feed'),
         costMed:gn('ecm-cost-med'),costLime:gn('ecm-cost-lime'),
         costLabor:gn('ecm-cost-labor'),costElec:gn('ecm-cost-elec'),
@@ -7491,6 +7494,7 @@ function saveEditCrop(){
   const hr=c.harvestResult;
   hr.totalWeight=gn('ecm-weight');hr.size=gn('ecm-size');hr.caught=gn('ecm-caught');
   hr.survivalRate=gn('ecm-survival');hr.fcr=gn('ecm-fcr');hr.price=gn('ecm-price');
+  hr.buyer=gs('ecm-buyer');
   hr.revenue=gn('ecm-revenue');
   hr.costFry=gn('ecm-cost-fry');hr.costFeed=gn('ecm-cost-feed');
   hr.costMed=gn('ecm-cost-med');hr.costLime=gn('ecm-cost-lime');
@@ -7894,6 +7898,9 @@ function openCropModal(pid){
   ['cm-weight','cm-price','cm-caught'].forEach(id=>{
     document.getElementById(id).value='';
   });
+  // ── แพที่จับ: ดึงจากพาเชียลล่าสุดของรอบนี้มาให้ (ถ้ามี) เผื่อจับที่แพเดิม แก้ไขได้ถ้าไม่ตรง ──
+  const lastPartial=(p.partialHarvests||[]).slice(-1)[0];
+  document.getElementById('cm-buyer').value=lastPartial?.buyer||'';
   // ── ต้นทุนลูกกุ้ง/อาหาร ดึงจากข้อมูลที่มีอยู่แล้วในระบบมาให้ ไม่ต้องพิมพ์ซ้ำ (ลูกกุ้งยังแก้ไขได้ถ้าตัวเลขจริงต่างจากนี้) ──
   document.getElementById('cm-cost-fry').value=p.costFry||'';
   document.getElementById('cm-cost-feed').value=pondFeedCost(p)||'';
@@ -7992,6 +7999,7 @@ function confirmCloseCrop(){
     survivalRate:parseFloat(document.getElementById('cm-survival').value)||null,
     fcr:parseFloat(document.getElementById('cm-fcr').value)||null,
     price:parseFloat(document.getElementById('cm-price').value)||null,
+    buyer:document.getElementById('cm-buyer').value.trim()||null,
     revenue:parseFloat(document.getElementById('cm-revenue').value)||null,
     costFry:parseFloat(document.getElementById('cm-cost-fry').value)||null,
     costFeed:parseFloat(document.getElementById('cm-cost-feed').value)||null,
