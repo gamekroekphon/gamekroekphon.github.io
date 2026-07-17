@@ -362,6 +362,10 @@ body.role-admin .home-quick .admin-only{display:flex!important}
 .stock-mode-btn{flex:1;padding:7px;font-size:13px;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--tx2);font-weight:500;transition:background .15s,color .15s}
 .stock-mode-btn.on-in{background:var(--ob);color:var(--ok)}
 .stock-mode-btn.on-out{background:var(--p);color:#fff}
+.stock-mode-btn.on-sale{background:#7c3aed;color:#fff}
+.badge-sale{background:#f3e8ff;color:#7c3aed}
+.month-pill{border:1px solid var(--bd);background:var(--sf);border-radius:16px;padding:6px 14px;font-size:12px;cursor:pointer;color:var(--tx2);font-family:inherit}
+.month-pill.on{background:#7c3aed;border-color:#7c3aed;color:#fff;font-weight:600}
 .sk-drop-item{padding:9px 12px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--sf2)}
 .sk-drop-item:last-child{border-bottom:none}
 .sk-drop-item:hover,.sk-drop-item:active{background:var(--sf2)}
@@ -371,6 +375,8 @@ body.role-admin .home-quick .admin-only{display:flex!important}
 .sk-cart-name{flex:1;font-size:13px;color:var(--tx);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sk-cart-unit{font-size:12px;color:var(--tx3);white-space:nowrap}
 input.sk-cart-qty{width:68px!important;text-align:center;font-size:13px;padding:5px 4px}
+input.sk-cart-price{width:90px!important;text-align:center;font-size:13px;padding:5px 4px}
+.sk-cart-price-lbl{font-size:11px;color:var(--tx3);white-space:nowrap}
 .meter-badge{display:inline-block;border-radius:6px;padding:2px 10px;font-size:12px;font-weight:700}
 .meter-badge-1{background:#FEF9E7;color:#92400E}
 .meter-badge-2{background:#EFF6FF;color:#1D4ED8}
@@ -1942,6 +1948,7 @@ body.role-ceo .main{max-width:640px}
     <button class="stock-sub-btn on" id="skb-items" onclick="stockTab('items',this)">รายการพัสดุ</button>
     <button class="stock-sub-btn" id="skb-tx" onclick="stockTab('tx',this)">บันทึกรับ-เบิก</button>
     <button class="stock-sub-btn" id="skb-log" onclick="stockTab('log',this)">ประวัติ</button>
+    <button class="stock-sub-btn" id="skb-sale" onclick="stockTab('sale',this)">🛒 ยอดขายลูกค้าภายนอก</button>
   </div>
   <!-- pane: รายการพัสดุ -->
   <div class="stock-pane on" id="skp-items">
@@ -1966,8 +1973,9 @@ body.role-ceo .main{max-width:640px}
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
         <div class="fg"><label class="fl">จำนวนเริ่มต้น</label><input type="number" class="fi" id="sk-qty" placeholder="0" inputmode="decimal"></div>
         <div class="fg"><label class="fl">ขั้นต่ำเตือน</label><input type="number" class="fi" id="sk-min" placeholder="5" inputmode="decimal"></div>
-        <div class="fg"><label class="fl">ผู้จำหน่าย/หมายเหตุ</label><input class="fi" id="sk-note-item" placeholder="—"></div>
+        <div class="fg"><label class="fl">ราคาขายแนะนำ (บาท/หน่วย)</label><input type="number" class="fi" id="sk-sell" placeholder="0" inputmode="decimal" step="any"></div>
       </div>
+      <div class="fg"><label class="fl">ผู้จำหน่าย/หมายเหตุ</label><input class="fi" id="sk-note-item" placeholder="—"></div>
       <div style="display:flex;gap:8px;margin-top:4px">
         <button onclick="saveStockItem()">💾 บันทึกรายการ</button>
         <button onclick="clearStockItem()" style="background:var(--sf2);color:var(--tx2)">ล้างฟอร์ม</button>
@@ -2003,11 +2011,16 @@ body.role-ceo .main{max-width:640px}
       <div style="display:flex;gap:0;background:var(--sf2);border-radius:8px;padding:3px;margin-bottom:12px">
         <button id="sk-mode-in" class="stock-mode-btn on-in" onclick="setStockMode('in')">+ รับเข้า สต็อกกลาง</button>
         <button id="sk-mode-out" class="stock-mode-btn" onclick="setStockMode('out')">− เบิกออก ไปบ่อ</button>
+        <button id="sk-mode-sale" class="stock-mode-btn" onclick="setStockMode('sale')">🛒 ขายลูกค้าภายนอก</button>
       </div>
       <div id="sk-tx-pond-row" style="display:none;margin-bottom:8px">
         <div class="fg"><label class="fl">บ่อปลายทาง * <span style="color:var(--tx3);font-weight:400">(เชื่อม P&amp;L)</span></label>
           <select class="fi" id="sk-tx-pond"><option value="">— เลือกบ่อ —</option></select>
         </div>
+      </div>
+      <div id="sk-tx-cust-row" style="display:none;margin-bottom:8px">
+        <div class="fg"><label class="fl">ชื่อลูกค้า / ร้าน *</label><input class="fi" id="sk-tx-cust" placeholder="เช่น ร้านฟาร์มสุข, คุณสมชาย"></div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:-2px">💡 โหมดนี้ไม่มีช่องเลือกบ่อ — รายการขายจะไม่ถูกนับเป็นต้นทุนบ่อไหนเลย</div>
       </div>
       <div class="fg" style="position:relative;margin-bottom:8px">
         <label class="fl">เพิ่มรายการพัสดุ <span id="sk-stk-note" style="font-weight:400;color:var(--tx3);font-size:11px;display:none">(แสดงเฉพาะมีสินค้า)</span></label>
@@ -2049,6 +2062,20 @@ body.role-ceo .main{max-width:640px}
       <div id="skl-pane-in" style="display:none">
         <div id="sk-log-in-table"></div>
       </div>
+    </div>
+  </div>
+  <!-- pane: ยอดขายลูกค้าภายนอก -->
+  <div class="stock-pane" id="skp-sale">
+    <div class="card">
+      <div style="font-weight:700;color:var(--tx);margin-bottom:10px">📊 ยอดขายลูกค้าภายนอก</div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:6px;font-weight:600">แบ่งรายเดือน</div>
+      <div id="sksr-months" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px"></div>
+      <div class="g4" id="sksr-kpi"></div>
+      <div id="sksr-staffnote" style="display:none;background:var(--sf2);border-radius:8px;padding:8px 12px;font-size:11.5px;color:var(--tx3);margin:10px 0">🔒 มุมมองพนักงานเห็นเฉพาะยอดขาย — ต้นทุน/กำไรแสดงเฉพาะ Admin/ผู้บริหาร</div>
+      <div style="display:flex;justify-content:flex-end;margin:10px 0 8px">
+        <button class="btn admin-only" style="font-size:12px;padding:6px 12px;white-space:nowrap" onclick="exportSaleCSV()">⬇️ Export CSV ส่งบัญชี (ตามเดือนที่เลือก)</button>
+      </div>
+      <div id="sksr-table"></div>
     </div>
   </div>
 </div>
@@ -5085,6 +5112,7 @@ function stockTab(paneId,btn){
   if(btn)btn.classList.add('on');
   if(paneId==='log'){backToStockPondGrid();setStockLogMode(_stockLogMode||'out');}
   if(paneId==='tx'){setStockMode(_stockMode||'in');}
+  if(paneId==='sale'){initSaleMonthPills();renderSalesReport();}
 }
 
 function initStock(){
@@ -5196,6 +5224,7 @@ function saveStockItem(){
     unitPrice:parseFloat(document.getElementById('sk-price').value)||0,
     qty:parseFloat(document.getElementById('sk-qty').value)||0,
     minQty:parseFloat(document.getElementById('sk-min').value)||0,
+    sellPrice:parseFloat(document.getElementById('sk-sell').value)||0,
     note:document.getElementById('sk-note-item').value.trim()
   };
   if(!D.inventoryItems)D.inventoryItems=[];
@@ -5208,7 +5237,7 @@ function saveStockItem(){
 }
 
 function clearStockItem(){
-  ['sk-name','sk-unit','sk-price','sk-qty','sk-min','sk-note-item'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';delete el.dataset.editId;}});
+  ['sk-name','sk-unit','sk-price','sk-qty','sk-min','sk-sell','sk-note-item'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';delete el.dataset.editId;}});
   document.getElementById('sk-cat').value='feed';
   showStockMsg('item','','');
 }
@@ -5222,6 +5251,7 @@ function editStockItem(id){
   document.getElementById('sk-price').value=item.unitPrice||0;
   document.getElementById('sk-qty').value=item.qty||0;
   document.getElementById('sk-min').value=item.minQty||0;
+  document.getElementById('sk-sell').value=item.sellPrice||0;
   document.getElementById('sk-note-item').value=item.note||'';
   stockTab('items',document.getElementById('skb-items'));
   document.getElementById('sk-name').focus();
@@ -5246,12 +5276,17 @@ function setStockMode(mode){
   _stockMode=mode;
   const btnIn=document.getElementById('sk-mode-in');
   const btnOut=document.getElementById('sk-mode-out');
+  const btnSale=document.getElementById('sk-mode-sale');
   if(btnIn){btnIn.className='stock-mode-btn'+(mode==='in'?' on-in':'');}
   if(btnOut){btnOut.className='stock-mode-btn'+(mode==='out'?' on-out':'');}
+  if(btnSale){btnSale.className='stock-mode-btn'+(mode==='sale'?' on-sale':'');}
   const pr=document.getElementById('sk-tx-pond-row');
   if(pr)pr.style.display=mode==='out'?'':'none';
+  const cr=document.getElementById('sk-tx-cust-row');
+  if(cr)cr.style.display=mode==='sale'?'':'none';
   const note=document.getElementById('sk-stk-note');
   if(note)note.style.display=mode==='out'?'':'none';
+  renderStockCart();
   if(mode==='out'){
     const sel=document.getElementById('sk-tx-pond');if(!sel)return;
     const cur=sel.value;
@@ -5270,7 +5305,7 @@ function filterStockSearch(){
   const q=(document.getElementById('sk-tx-search')?.value||'').trim().toLowerCase();
   const items=(D.inventoryItems||[])
     .filter(i=>{
-      if(_stockMode==='out'&&(i.qty||0)<=0)return false;
+      if(_stockMode!=='in'&&(i.qty||0)<=0)return false;
       if(q&&!i.name.toLowerCase().includes(q)&&!(i.note||'').toLowerCase().includes(q))return false;
       return true;
     })
@@ -5293,7 +5328,7 @@ function filterStockSearch(){
 function addStockToCart(itemId){
   const item=(D.inventoryItems||[]).find(i=>i.id===itemId);if(!item)return;
   if(!_stockCart.some(c=>c.itemId===itemId)){
-    _stockCart.push({itemId,itemName:item.name,unit:item.unit,qty:1,currentQty:item.qty});
+    _stockCart.push({itemId,itemName:item.name,unit:item.unit,qty:1,currentQty:item.qty,sellPrice:item.sellPrice||item.unitPrice||0,unitCost:item.unitPrice||0});
   }
   const srch=document.getElementById('sk-tx-search');if(srch)srch.value='';
   hideStockDrop();
@@ -5314,17 +5349,24 @@ function updateCartQty(itemId,val){
   if(c)c.qty=parseFloat(val)||0;
 }
 
+function updateCartPrice(itemId,val){
+  const c=_stockCart.find(c=>c.itemId===itemId);
+  if(c)c.sellPrice=parseFloat(val)||0;
+}
+
 function renderStockCart(){
   const wrap=document.getElementById('sk-cart-wrap');
   const list=document.getElementById('sk-cart-list');
   if(!wrap||!list)return;
   if(!_stockCart.length){wrap.style.display='none';return;}
   wrap.style.display='';
+  const isSale=_stockMode==='sale';
   list.innerHTML=_stockCart.map(c=>`
     <div class="sk-cart-item">
       <span class="sk-cart-name">${c.itemName}</span>
       <span class="sk-cart-unit">${c.unit}</span>
       <input type="number" id="sk-cart-qty-${c.itemId}" class="fi sk-cart-qty" min="0.01" step="any" value="${c.qty}" inputmode="decimal" onchange="updateCartQty('${c.itemId}',this.value)">
+      ${isSale?`<input type="number" id="sk-cart-price-${c.itemId}" class="fi sk-cart-price" min="0" step="any" value="${c.sellPrice||0}" inputmode="decimal" title="ราคาขาย/หน่วย" onchange="updateCartPrice('${c.itemId}',this.value)"><span class="sk-cart-price-lbl">฿/${c.unit}</span>`:''}
       <button class="btn-sm btn-del" onclick="removeFromCart('${c.itemId}')">✕</button>
     </div>`).join('');
 }
@@ -5335,10 +5377,12 @@ function saveStockTxBatch(){
   const date=document.getElementById('sk-tx-date').value||today();
   const note=document.getElementById('sk-tx-note').value.trim();
   const pondId=mode==='out'?(document.getElementById('sk-tx-pond')?.value||''):'';
+  const custName=mode==='sale'?(document.getElementById('sk-tx-cust')?.value||'').trim():'';
   if(mode==='out'&&!pondId){showStockMsg('tx','กรุณาเลือกบ่อปลายทางก่อนบันทึก (ไม่งั้นจะตามหาต้นทุนย้อนหลังไม่ได้)','err');return;}
+  if(mode==='sale'&&!custName){showStockMsg('tx','กรุณากรอกชื่อลูกค้า/ร้านก่อนบันทึก','err');return;}
   for(const c of _stockCart){
     if(!c.qty||c.qty<=0){showStockMsg('tx','จำนวน "'+c.itemName+'" ต้องมากกว่า 0','err');return;}
-    if(mode==='out'&&c.qty>c.currentQty){
+    if(mode!=='in'&&c.qty>c.currentQty){
       if(!confirm('จำนวนเบิก "'+c.itemName+'" ('+c.qty+') มากกว่าสต็อก ('+c.currentQty+') ยืนยัน?'))return;
     }
   }
@@ -5350,16 +5394,24 @@ function saveStockTxBatch(){
     if(mode==='in')newQty+=c.qty;
     else newQty=Math.max(0,item.qty-c.qty);
     item.qty=Math.round(newQty*100)/100;
-    D.inventoryLog.push({id:'sl'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+    const entry={id:'sl'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
       itemId:c.itemId,itemName:c.itemName,type:mode,qty:c.qty,date,note,pondId,
-      balanceAfter:item.qty,unit:c.unit});
+      balanceAfter:item.qty,unit:c.unit};
+    if(mode==='sale'){
+      entry.custName=custName;
+      entry.sellPrice=c.sellPrice||0;
+      entry.unitCost=item.unitPrice||0;
+    }
+    D.inventoryLog.push(entry);
     saved.push(c.itemName);
   }
   save();
-  showStockMsg('tx','✅ '+(mode==='in'?'รับเข้า':'เบิกออก')+' '+saved.length+' รายการแล้ว','ok');
+  const modeLbl=mode==='in'?'รับเข้า':mode==='out'?'เบิกออก':'บันทึกการขาย';
+  showStockMsg('tx','✅ '+modeLbl+' '+saved.length+' รายการแล้ว','ok');
   _stockCart=[];renderStockCart();
   document.getElementById('sk-tx-note').value='';
   document.getElementById('sk-tx-date').value=today();
+  const custEl=document.getElementById('sk-tx-cust');if(custEl)custEl.value='';
   renderStockKPI();renderStockWarn();renderStockItems();
 }
 
@@ -5368,6 +5420,7 @@ function clearStockTx(){
   const srch=document.getElementById('sk-tx-search');if(srch)srch.value='';
   const note=document.getElementById('sk-tx-note');if(note)note.value='';
   const date=document.getElementById('sk-tx-date');if(date)date.value=today();
+  const cust=document.getElementById('sk-tx-cust');if(cust)cust.value='';
   hideStockDrop();
 }
 
@@ -5463,7 +5516,7 @@ function deleteStockLog(id){
   const item=(D.inventoryItems||[]).find(i=>i.id===log.itemId);
   if(item){
     // out ที่เคยตัดออกไป → บวกคืน / in ที่เคยรับเข้ามา → หักออก
-    item.qty=Math.round(((item.qty||0)+(log.type==='out'?(log.qty||0):-(log.qty||0)))*100)/100;
+    item.qty=Math.round(((item.qty||0)+(log.type==='out'||log.type==='sale'?(log.qty||0):-(log.qty||0)))*100)/100;
   }
   D.inventoryLog=(D.inventoryLog||[]).filter(l=>l.id!==id);
   D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
@@ -5474,6 +5527,74 @@ function showStockMsg(area,msg,type){
   const el=document.getElementById('sk-msg-'+area);if(!el)return;
   el.innerHTML=msg?`<div class="msg ${type}">${msg}</div>`:'';
   if(msg)setTimeout(()=>{el.innerHTML='';},4000);
+}
+// ── ยอดขายลูกค้าภายนอก: รายงานแบ่งรายเดือน + ซ่อนต้นทุน/กำไรจาก staff ─────────
+let _saleMonth='all';
+function saleLogs(){return (D.inventoryLog||[]).filter(l=>l.type==='sale');}
+function initSaleMonthPills(){
+  const wrap=document.getElementById('sksr-months');if(!wrap)return;
+  const months=[...new Set(saleLogs().map(l=>(l.date||'').slice(0,7)))].filter(Boolean).sort().reverse();
+  if(_saleMonth!=='all'&&!months.includes(_saleMonth))_saleMonth='all';
+  wrap.innerHTML=['all',...months].map(m=>{
+    const label=m==='all'?'ทั้งหมด':`${HV_MONTHS_S[+m.slice(5,7)-1]||m.slice(5,7)} ${yearBE(+m.slice(0,4))}`;
+    return `<button class="month-pill${m===_saleMonth?' on':''}" onclick="selectSaleMonth('${m}',this)">${label}</button>`;
+  }).join('');
+}
+function selectSaleMonth(m,btn){
+  _saleMonth=m;
+  document.querySelectorAll('#sksr-months .month-pill').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  renderSalesReport();
+}
+function renderSalesReport(){
+  const kpiEl=document.getElementById('sksr-kpi');
+  const tblEl=document.getElementById('sksr-table');
+  if(!kpiEl||!tblEl)return;
+  const rows=saleLogs().filter(l=>_saleMonth==='all'||(l.date||'').slice(0,7)===_saleMonth)
+    .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const isMoney=APP_ROLE!=='staff';
+  const staffNote=document.getElementById('sksr-staffnote');
+  if(staffNote)staffNote.style.display=isMoney?'none':'';
+  let totSales=0,totCost=0;
+  rows.forEach(l=>{totSales+=(l.sellPrice||0)*(l.qty||0);totCost+=(l.unitCost||0)*(l.qty||0);});
+  const totProfit=totSales-totCost;
+  kpiEl.innerHTML=`
+    <div class="kpi-card"><div class="kpi-lbl">ยอดขายรวม</div><div class="kpi-val">${totSales?totSales.toLocaleString():'-'}</div><div class="kpi-sub">บาท</div></div>
+    ${isMoney?`<div class="kpi-card"><div class="kpi-lbl">ต้นทุนรวม</div><div class="kpi-val">${totCost?totCost.toLocaleString():'-'}</div><div class="kpi-sub">บาท</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">กำไรรวม</div><div class="kpi-val" style="color:${totProfit>=0?'var(--ok)':'#DC2626'}">${(totProfit>=0?'+':'')+totProfit.toLocaleString()}</div><div class="kpi-sub">บาท</div></div>`:''}
+    <div class="kpi-card"><div class="kpi-lbl">จำนวนรายการ</div><div class="kpi-val">${rows.length}</div><div class="kpi-sub">รายการ</div></div>`;
+  if(!rows.length){tblEl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ไม่มีรายการขายในช่วงที่เลือก</p>';return;}
+  const moneyHdr=isMoney?'<th style="text-align:right">ต้นทุน</th><th style="text-align:right">กำไร</th>':'';
+  tblEl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>ลูกค้า</th><th>สินค้า</th><th style="text-align:right">จำนวน</th><th style="text-align:right">ราคาขาย</th><th style="text-align:right">ยอดขาย</th>${moneyHdr}</tr></thead><tbody>${
+    rows.map(l=>{
+      const sales=(l.sellPrice||0)*(l.qty||0);
+      const cost=(l.unitCost||0)*(l.qty||0);
+      const profit=sales-cost;
+      const moneyTd=isMoney?`<td style="text-align:right">${cost.toLocaleString()}</td><td style="text-align:right;color:${profit>=0?'var(--ok)':'#DC2626'};font-weight:700">${(profit>=0?'+':'')+profit.toLocaleString()}</td>`:'';
+      return `<tr>
+        <td>${fD(l.date)}</td>
+        <td>${l.custName||'-'}</td>
+        <td>${l.itemName||'-'}</td>
+        <td style="text-align:right">${l.qty} ${l.unit||''}</td>
+        <td style="text-align:right">${(l.sellPrice||0).toLocaleString()}</td>
+        <td style="text-align:right">${sales.toLocaleString()}</td>
+        ${moneyTd}
+      </tr>`;
+    }).join('')
+  }</tbody></table></div>`;
+}
+function exportSaleCSV(){
+  const rows=saleLogs().filter(l=>_saleMonth==='all'||(l.date||'').slice(0,7)===_saleMonth)
+    .sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  if(!rows.length){alert('ไม่มีข้อมูลสำหรับ export');return;}
+  const hdr='วันที่,ลูกค้า,สินค้า,จำนวน,หน่วย,ราคาขาย,ยอดขาย,ต้นทุน,กำไร';
+  const csv=hdr+'\n'+rows.map(l=>{
+    const sales=(l.sellPrice||0)*(l.qty||0);
+    const cost=(l.unitCost||0)*(l.qty||0);
+    return [l.date,l.custName||'',l.itemName||'',l.qty,l.unit||'',l.sellPrice||0,sales,cost,sales-cost].join(',');
+  }).join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='TawanFarm_ขายลูกค้า_'+(_saleMonth==='all'?'all':_saleMonth)+'.csv';a.click();URL.revokeObjectURL(url);
 }
 /* ===== END INVENTORY / STOCK ===== */
 
