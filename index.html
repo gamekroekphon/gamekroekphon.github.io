@@ -1503,8 +1503,7 @@ body.role-ceo .main{max-width:640px}
         <div style="font-weight:700;font-size:12px;color:var(--p);margin:14px 0 8px;padding-top:10px;border-top:1px dashed var(--bd)">🤝 ส่วนแบ่งกำไร <span style="font-weight:400;color:var(--tx3)">(หักออกเป็นต้นทุน)</span></div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
           <div class="fg"><label class="fl">% คนเลี้ยง (บาท) <span style="font-weight:400;color:var(--tx3)">(คำนวณจากไซส์กุ้ง+น้ำหนักจับ — ตัวเลขในช่องเป็นแค่คำแนะนำ กรอกยืนยันเอง)</span></label><input type="number" class="fi" id="cm-pct-caretaker" step="1" placeholder="กรอกเอง"></div>
-          <div class="fg"><label class="fl">% ผู้จัดการ</label><input type="number" class="fi" id="cm-pct-manager" step="0.1" placeholder="กรอกเอง"></div>
-          <div class="fg" style="grid-column:1/-1"><label class="fl">จำนวนเงินผู้จัดการ (บาท)</label><input type="number" class="fi" id="cm-amt-manager" step="1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--sf2)"></div>
+          <div class="fg" style="grid-column:1/-1"><label class="fl">ส่วนแบ่งผู้จัดการ (บาท) <span style="font-weight:400;color:var(--tx3)">(กรอกเอง — ยังไม่ผูกสูตร ต้องดึงข้อมูลจากไฟล์อื่น)</span></label><input type="number" class="fi" id="cm-pct-manager" step="1" placeholder="กรอกเอง"></div>
         </div>
         <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--bd)">
           <div class="fg"><label class="fl" style="color:var(--ok);font-weight:700">กำไรสุทธิ (บาท)</label><input type="number" class="fi" id="cm-profit" step="1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--ob);font-weight:700"></div>
@@ -1583,8 +1582,7 @@ body.role-ceo .main{max-width:640px}
           <div class="fg"><label class="fl">อุปกรณ์นอก (บาท)</label><input type="number" class="fi" id="ecm-cost-equip-out" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl">ค่าจับกุ้ง (บาท)</label><input type="number" class="fi" id="ecm-cost-catch" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl">% คนเลี้ยง (บาท) <span style="font-weight:400;color:var(--tx3)">(ยอดเงิน ไม่ใช่ %)</span></label><input type="number" class="fi" id="ecm-pct-caretaker" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">% ผู้จัดการ</label><input type="number" class="fi" id="ecm-pct-manager" step="0.1" placeholder="0"></div>
-          <div class="fg"><label class="fl">จำนวนเงินผู้จัดการ (บาท)</label><input type="number" class="fi" id="ecm-amt-manager" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl">ส่วนแบ่งผู้จัดการ (บาท)</label><input type="number" class="fi" id="ecm-pct-manager" step="1" placeholder="0"></div>
         </div>
         <div style="font-weight:700;font-size:12px;color:var(--tx3);margin:14px 0 8px;padding-top:10px;border-top:1px dashed var(--bd)">🗄️ หมวดระบบเดิม (ก่อนแยกหมวดละเอียด — แก้ไขได้เผื่อรอบเก่าที่เคยกรอกแบบเดิม)</div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
@@ -6543,7 +6541,7 @@ function closeSummaryHtml(p,s,opt){
     ${s.costChemLegacy!=null?row('สารเคมี (เดิม, บาท)',money(s.costChemLegacy)):''}
     ${s.costOtherLegacy!=null?row('อื่นๆ (เดิม, บาท)',money(s.costOtherLegacy)):''}
     ${s.amtCaretaker!=null?row('ส่วนแบ่งคนเลี้ยง (บาท)',money(s.amtCaretaker)+(s.pctCaretaker!=null?' ('+s.pctCaretaker+'%)':'')):''}
-    ${s.pctManager!=null?row('ส่วนแบ่งผู้จัดการ (บาท)',money(s.amtManager)+' ('+s.pctManager+'%)'):''}
+    ${s.amtManager!=null?row('ส่วนแบ่งผู้จัดการ (บาท)',money(s.amtManager)+(s.pctManager!=null?' ('+s.pctManager+'%)':'')):''}
     ${row('รวมต้นทุน (บาท)',money(s.totalCost))}
     ${row('กำไรสุทธิ (บาท)',s.netProfit!=null?(s.netProfit>=0?'+':'')+money(s.netProfit):null,s.netProfit!=null?(s.netProfit>=0?okCol:dCol):null)}
     ${row('กำไร (%)',s.marginPct!=null?s.marginPct+'%':null,s.marginPct!=null?(s.marginPct>=0?okCol:dCol):null)}
@@ -7245,7 +7243,7 @@ function openAddCropModal(){
   ['ecm-hatchery','ecm-pltype','ecm-plweight','ecm-weight','ecm-size','ecm-caught','ecm-survival','ecm-fcr',
    'ecm-price','ecm-revenue','ecm-cost-fry','ecm-cost-feed','ecm-cost-med','ecm-cost-lime','ecm-cost-labor','ecm-cost-elec',
    'ecm-cost-fuel','ecm-cost-equip','ecm-cost-equip-out','ecm-cost-catch','ecm-pct-caretaker',
-   'ecm-pct-manager','ecm-amt-manager','ecm-cost-chem','ecm-cost-other',
+   'ecm-pct-manager','ecm-cost-chem','ecm-cost-other',
    'ecm-profit','ecm-start-date','ecm-close-date','ecm-notes','ecm-new-cropnum','ecm-new-cropyear'
   ].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
   const pondSel=document.getElementById('ecm-new-pond');
@@ -7277,24 +7275,20 @@ function openEditCropModal(pondId,cropId,idx){
   fv('ecm-cost-fuel',hr.costFuel);fv('ecm-cost-equip',hr.costEquip);fv('ecm-cost-equip-out',hr.costEquipOut);
   fv('ecm-cost-catch',hr.costCatch);
   fv('ecm-pct-caretaker',hr.amtCaretaker);
-  fv('ecm-pct-manager',hr.pctManager);fv('ecm-amt-manager',hr.amtManager);
+  fv('ecm-pct-manager',hr.amtManager);
   fv('ecm-cost-chem',hr.costChem);fv('ecm-cost-other',hr.costOther);
   fv('ecm-profit',hr.netProfit);
   fv('ecm-start-date',c.startDate);fv('ecm-close-date',c.closeDate);fv('ecm-notes',c.notes||'');
   const msg=document.getElementById('ecm-msg');if(msg)msg.style.display='none';
-  // ── auto-calc กำไรสุทธิ: หักต้นทุนตรงทั้งหมด (รวม "% คนเลี้ยง" ที่เป็นยอดเงินแล้ว) ก่อน แล้วค่อยหักส่วนแบ่งผู้จัดการ (% ของกำไรก่อนหักส่วนแบ่ง) เป็นขั้นสุดท้าย เหมือนฟอร์มปิดรอบ ──
-  const directCostIds=['ecm-cost-fry','ecm-cost-feed','ecm-cost-med','ecm-cost-lime','ecm-cost-labor','ecm-cost-elec','ecm-cost-fuel','ecm-cost-equip','ecm-cost-equip-out','ecm-cost-catch','ecm-pct-caretaker','ecm-cost-chem','ecm-cost-other'];
+  // ── auto-calc กำไรสุทธิ: หักต้นทุนตรงทั้งหมด รวม "% คนเลี้ยง" กับ "ส่วนแบ่งผู้จัดการ" ที่เป็นยอดเงินกรอกเองล้วนแล้วทั้งคู่ ไม่มีสูตร % เหมือนฟอร์มปิดรอบ ──
+  const directCostIds=['ecm-cost-fry','ecm-cost-feed','ecm-cost-med','ecm-cost-lime','ecm-cost-labor','ecm-cost-elec','ecm-cost-fuel','ecm-cost-equip','ecm-cost-equip-out','ecm-cost-catch','ecm-pct-caretaker','ecm-pct-manager','ecm-cost-chem','ecm-cost-other'];
   const recalc=()=>{
     const gv=id=>parseFloat(document.getElementById(id)?.value)||0;
     const rev=gv('ecm-revenue');
     const directCost=directCostIds.reduce((s,i)=>s+gv(i),0);
-    const grossBeforeShare=rev-directCost;
-    const pctMgr=gv('ecm-pct-manager');
-    const amtMgr=grossBeforeShare*pctMgr/100;
-    document.getElementById('ecm-amt-manager').value=pctMgr?Math.round(amtMgr):'';
-    const pp=document.getElementById('ecm-profit');if(pp&&rev)pp.value=Math.round(grossBeforeShare-amtMgr);
+    const pp=document.getElementById('ecm-profit');if(pp&&rev)pp.value=Math.round(rev-directCost);
   };
-  ['ecm-revenue',...directCostIds,'ecm-pct-manager'].forEach(id=>{
+  ['ecm-revenue',...directCostIds].forEach(id=>{
     const el=document.getElementById(id);if(el)el.oninput=recalc;
   });
   document.getElementById('editCropModal').classList.add('on');
@@ -7334,8 +7328,8 @@ function saveEditCrop(){
         costLabor:gn('ecm-cost-labor'),costElec:gn('ecm-cost-elec'),
         costFuel:gn('ecm-cost-fuel'),costEquip:gn('ecm-cost-equip'),costEquipOut:gn('ecm-cost-equip-out'),
         costCatch:gn('ecm-cost-catch'),
-        amtCaretaker:gn('ecm-pct-caretaker'),pctManager:gn('ecm-pct-manager'),
-        amtManager:gn('ecm-amt-manager'),
+        amtCaretaker:gn('ecm-pct-caretaker'),
+        amtManager:gn('ecm-pct-manager'),
         costChem:gn('ecm-cost-chem'),costOther:gn('ecm-cost-other'),
         netProfit:gn('ecm-profit'),
       },
@@ -7370,8 +7364,8 @@ function saveEditCrop(){
   hr.costLabor=gn('ecm-cost-labor');hr.costElec=gn('ecm-cost-elec');
   hr.costFuel=gn('ecm-cost-fuel');hr.costEquip=gn('ecm-cost-equip');hr.costEquipOut=gn('ecm-cost-equip-out');
   hr.costCatch=gn('ecm-cost-catch');
-  hr.amtCaretaker=gn('ecm-pct-caretaker');hr.pctManager=gn('ecm-pct-manager');
-  hr.amtManager=gn('ecm-amt-manager');
+  hr.amtCaretaker=gn('ecm-pct-caretaker');
+  hr.amtManager=gn('ecm-pct-manager');
   hr.costChem=gn('ecm-cost-chem');hr.costOther=gn('ecm-cost-other');
   hr.netProfit=gn('ecm-profit');
   save();fbSave();
@@ -7783,7 +7777,6 @@ function openCropModal(pid){
   });
   document.getElementById('cm-survival').value='';
   document.getElementById('cm-revenue').value='';
-  document.getElementById('cm-amt-manager').value='';
   document.getElementById('cm-profit').value='';
   document.getElementById('cm-notes').value='';
   // show modal
@@ -7841,13 +7834,9 @@ function calcCropEcon(){
     const catchSuggest=catchCostByWeight(w);
     catchEl.placeholder=catchSuggest?`แนะนำ ${catchSuggest.toLocaleString()}`:'กรอกเอง';
   }
-  // ── ต้นทุนตรง 10 หมวด (รวม "% คนเลี้ยง" ที่ตอนนี้คือยอดเงินยืนยันเอง ไม่ใช่ % แล้ว) รวมกันก่อน แล้วค่อยหักส่วนแบ่งผู้จัดการ (% ของกำไรก่อนหักส่วนแบ่ง) เป็นขั้นสุดท้าย ──
-  const totalCostDirect=gv('cm-cost-fry')+gv('cm-cost-feed')+gv('cm-cost-med')+gv('cm-cost-lime')+gv('cm-cost-labor')+gv('cm-cost-elec')+gv('cm-cost-fuel')+gv('cm-cost-equip')+gv('cm-cost-equip-out')+gv('cm-cost-catch')+gv('cm-pct-caretaker');
-  const grossBeforeShare=revenue-totalCostDirect;
-  const pctMgr=gv('cm-pct-manager');
-  const amtMgr=grossBeforeShare*pctMgr/100;
-  document.getElementById('cm-amt-manager').value=pctMgr?Math.round(amtMgr):'';
-  const netProfit=grossBeforeShare-amtMgr;
+  // ── ต้นทุนตรงทั้งหมด รวม "% คนเลี้ยง" กับ "ส่วนแบ่งผู้จัดการ" ที่ตอนนี้เป็นยอดเงินกรอกเองล้วน ไม่มีสูตร % แล้วทั้งคู่ ──
+  const totalCostDirect=gv('cm-cost-fry')+gv('cm-cost-feed')+gv('cm-cost-med')+gv('cm-cost-lime')+gv('cm-cost-labor')+gv('cm-cost-elec')+gv('cm-cost-fuel')+gv('cm-cost-equip')+gv('cm-cost-equip-out')+gv('cm-cost-catch')+gv('cm-pct-caretaker')+gv('cm-pct-manager');
+  const netProfit=revenue-totalCostDirect;
   document.getElementById('cm-profit').value=(revenue||totalCostDirect)?Math.round(netProfit):'';
 }
 function closeCropModal(){
@@ -7883,8 +7872,8 @@ function confirmCloseCrop(){
     costCatch:parseFloat(document.getElementById('cm-cost-catch').value)||null,
     // "% คนเลี้ยง" ไม่ใช่เปอร์เซ็นต์แล้ว — เป็นยอดเงิน (บาท) ที่คำนวณแนะนำจากไซส์+น้ำหนักจับ แล้ว admin พิมพ์ยืนยันเอง
     amtCaretaker:parseFloat(document.getElementById('cm-pct-caretaker').value)||null,
-    pctManager:parseFloat(document.getElementById('cm-pct-manager').value)||null,
-    amtManager:parseFloat(document.getElementById('cm-amt-manager').value)||null,
+    // ส่วนแบ่งผู้จัดการ — กรอกเองล้วน ยังไม่ผูกสูตร (ต้องดึงข้อมูลจากไฟล์อื่น)
+    amtManager:parseFloat(document.getElementById('cm-pct-manager').value)||null,
     netProfit:parseFloat(document.getElementById('cm-profit').value)||null,
   };
   const notes=document.getElementById('cm-notes').value;
