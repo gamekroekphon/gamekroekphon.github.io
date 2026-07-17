@@ -1240,10 +1240,17 @@ body.role-ceo .main{max-width:640px}
         </div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
           <div class="fg">
-            <label class="fl">TVC — Total Viable Count</label>
+            <label class="fl">TVC — น้ำ (Total Viable Count)</label>
             <input type="number" class="fi" id="lb-tvc" placeholder="CFU/mL" oninput="updateLabStatus()">
             <span class="lbl-std">ปกติ: &lt;10^5</span>
           </div>
+          <div class="fg">
+            <label class="fl">TVC — ตับ (Total Viable Count)</label>
+            <input type="number" class="fi" id="lb-tvc-hep" placeholder="CFU/g" oninput="updateLabStatus()">
+            <span class="lbl-std">ปกติ: &lt;10^5</span>
+          </div>
+        </div>
+        <div class="fgrid" style="grid-template-columns:1fr 1fr">
           <div class="fg"><label class="fl">EHP / Microsporidian (% พบเชื้อ)</label><input type="number" class="fi" id="lb-ehp" placeholder="0" min="0" max="100" step="0.1" oninput="updateLabStatus()"><span class="lbl-std">ปลอดภัย: 0% | เฝ้าระวัง: 0–5% | อันตราย: &gt;5%</span></div>
           <div class="fg"><label class="fl">ตัวอ่อน EHP (% พบเชื้อ)</label><input type="number" class="fi" id="lb-ehp-larva" placeholder="0" min="0" max="100" step="0.1" oninput="updateLabStatus()"><span class="lbl-std">ปลอดภัย: 0% | เฝ้าระวัง: 0–25% | อันตราย: &gt;25%</span></div>
         </div>
@@ -1295,7 +1302,7 @@ body.role-ceo .main{max-width:640px}
     <div id="cmp-sel" style="display:none;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
     <div id="cmp-param-row" style="display:none" class="fg" style="max-width:250px"><label class="fl">พารามิเตอร์</label><select class="fi" id="cmp-param" onchange="renderCompare()"></select></div>
     <div id="cmp-feed-row" class="fg" style="max-width:280px;display:none"><label class="fl">ชนิดข้อมูล</label><select class="fi" id="cmp-feed-param" onchange="renderCompare()"><option value="per100k">การกิน (กก./แสน)</option><option value="daily">อาหารต่อวัน (กก.)</option><option value="cumulative">อาหารสะสม (กก.)</option></select></div>
-    <div id="cmp-lab-row" class="fg" style="max-width:280px;display:none"><label class="fl">ผลตรวจ</label><select class="fi" id="cmp-lab-param" onchange="renderCompare()"><option value="tcbsGreen">🟢 เชื้อเขียว - น้ำ (CFU/mL)</option><option value="tcbsYellow">🟡 เชื้อเหลือง - น้ำ (CFU/mL)</option><option value="hepatoGreen">🟢 เชื้อเขียว - ตับ (CFU/g)</option><option value="hepatoYellow">🟡 เชื้อเหลือง - ตับ (CFU/g)</option><option value="tvc">TVC (CFU/mL)</option></select></div>
+    <div id="cmp-lab-row" class="fg" style="max-width:280px;display:none"><label class="fl">ผลตรวจ</label><select class="fi" id="cmp-lab-param" onchange="renderCompare()"><option value="tcbsGreen">🟢 เชื้อเขียว - น้ำ (CFU/mL)</option><option value="tcbsYellow">🟡 เชื้อเหลือง - น้ำ (CFU/mL)</option><option value="hepatoGreen">🟢 เชื้อเขียว - ตับ (CFU/g)</option><option value="hepatoYellow">🟡 เชื้อเหลือง - ตับ (CFU/g)</option><option value="tvc">TVC - น้ำ (CFU/mL)</option><option value="tvcHepato">TVC - ตับ (CFU/g)</option></select></div>
     <div id="cmp-water-row" class="fg" style="max-width:280px;display:none"><label class="fl">ชนิดกิจกรรม</label><select class="fi" id="cmp-water-param" onchange="renderCompare()"><option value="all">ทุกกิจกรรม</option><option value="exchange">เปลี่ยนถ่ายน้ำ</option><option value="add">เติมน้ำ</option><option value="drain">ระบายน้ำ</option></select></div>
   </div>
 
@@ -5963,6 +5970,7 @@ function editLab(pid,d){
     document.getElementById('lb-hep-g').value=r.hepatoGreen!=null?r.hepatoGreen:'';
     document.getElementById('lb-hep-y').value=r.hepatoYellow!=null?r.hepatoYellow:'';
     document.getElementById('lb-tvc').value=r.tvc!=null?r.tvc:'';
+    document.getElementById('lb-tvc-hep').value=r.tvcHepato!=null?r.tvcHepato:'';
     const ehpEl=document.getElementById('lb-ehp');if(ehpEl)ehpEl.value=(typeof r.ehp==='number')?r.ehp:'';
     const ehpLarvaEl=document.getElementById('lb-ehp-larva');if(ehpLarvaEl)ehpLarvaEl.value=(typeof r.ehpLarva==='number')?r.ehpLarva:'';
     const gutEl=document.getElementById('lb-gut');if(gutEl)gutEl.value=(typeof r.gutInflam==='number')?r.gutInflam:'';
@@ -6304,6 +6312,7 @@ function updateLabStatus(){
   const tg=parseFloat(document.getElementById('lb-tcbs-g').value)||null;
   const ty=parseFloat(document.getElementById('lb-tcbs-y').value)||null;
   const tvc=parseFloat(document.getElementById('lb-tvc').value)||null;
+  const tvcHep=parseFloat(document.getElementById('lb-tvc-hep').value)||null;
   const el=document.getElementById('lb-status-display');const msgs=[];
   if(tg!==null){const s=tg>1000?'danger':tg>100?'warn':'ok';msgs.push({s,m:`🟢 เชื้อเขียว: ${tg.toLocaleString()} CFU/mL — ${s==='ok'?'ปลอดภัย':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย AHPND!'}`})}
   if(ty!==null){const s=ty>1000?'warn':'ok';msgs.push({s,m:`🟡 เชื้อเหลือง: ${ty.toLocaleString()} CFU/mL — ${s==='ok'?'ปกติ':'เฝ้าระวัง'}`})}
@@ -6311,7 +6320,8 @@ function updateLabStatus(){
   const hy=parseFloat(document.getElementById('lb-hep-y').value)||null;
   if(hg!==null){const s=hg>1000?'danger':hg>100?'warn':'ok';msgs.push({s,m:`🟢 เชื้อเขียวในตับ: ${hg.toLocaleString()} CFU/g — ${s==='ok'?'ปลอดภัย':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย AHPND!'}`})}
   if(hy!==null){const s=hy>1000?'warn':'ok';msgs.push({s,m:`🟡 เชื้อเหลืองในตับ: ${hy.toLocaleString()} CFU/g — ${s==='ok'?'ปกติ':'เฝ้าระวัง'}`})}
-  if(tvc!==null){const s=tvc>1e7?'danger':tvc>1e5?'warn':'ok';msgs.push({s,m:`TVC: ${tvc.toExponential(1)} CFU/mL — ${s==='ok'?'ปกติ':s==='warn'?'เริ่มสูง':'สูงมาก'}`})}
+  if(tvc!==null){const s=tvc>1e7?'danger':tvc>1e5?'warn':'ok';msgs.push({s,m:`TVC น้ำ: ${tvc.toExponential(1)} CFU/mL — ${s==='ok'?'ปกติ':s==='warn'?'เริ่มสูง':'สูงมาก'}`})}
+  if(tvcHep!==null){const s=tvcHep>1e7?'danger':tvcHep>1e5?'warn':'ok';msgs.push({s,m:`TVC ตับ: ${tvcHep.toExponential(1)} CFU/g — ${s==='ok'?'ปกติ':s==='warn'?'เริ่มสูง':'สูงมาก'}`})}
   const ehpRaw=document.getElementById('lb-ehp')?.value;const ehp=ehpRaw!==''&&ehpRaw!=null?parseFloat(ehpRaw):null;
   if(ehp!==null&&!isNaN(ehp)){const s=ehp>5?'danger':ehp>0?'warn':'ok';msgs.push({s,m:`EHP: พบ ${ehp}% — ${s==='ok'?'ไม่พบเชื้อ':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย เสี่ยง stunted growth'}`})}
   const ehpLarvaRaw=document.getElementById('lb-ehp-larva')?.value;const ehpLarva=ehpLarvaRaw!==''&&ehpLarvaRaw!=null?parseFloat(ehpLarvaRaw):null;
@@ -6333,6 +6343,7 @@ function saveLab(){
   const rec={id:'lb_'+pid+'_'+d,date:d,age:parseInt(document.getElementById('lb-age').value)||0,
     labName:document.getElementById('lb-lab').value,tcbsGreen:tg,tcbsYellow:ty,hepatoGreen:hg,hepatoYellow:hy,
     tvc:parseFloat(document.getElementById('lb-tvc').value)||null,
+    tvcHepato:parseFloat(document.getElementById('lb-tvc-hep').value)||null,
     ehp:document.getElementById('lb-ehp').value!==''?parseFloat(document.getElementById('lb-ehp').value):null,
     ehpLarva:document.getElementById('lb-ehp-larva').value!==''?parseFloat(document.getElementById('lb-ehp-larva').value):null,
     gutInflam:document.getElementById('lb-gut').value!==''?parseFloat(document.getElementById('lb-gut').value):null,
@@ -6347,7 +6358,7 @@ function saveLab(){
 }
 function clearLab(){
   document.getElementById('lb-date').value=today();
-  ['lb-lab','lb-tcbs-g','lb-tcbs-y','lb-hep-g','lb-hep-y','lb-tvc','lb-notes'].forEach(id=>{document.getElementById(id).value=''});
+  ['lb-lab','lb-tcbs-g','lb-tcbs-y','lb-hep-g','lb-hep-y','lb-tvc','lb-tvc-hep','lb-notes'].forEach(id=>{document.getElementById(id).value=''});
   document.getElementById('lb-ehp').value='';document.getElementById('lb-ehp-larva').value='';
   document.getElementById('lb-gut').value='';document.getElementById('lb-lipid').value='';
   document.getElementById('lb-hepato').value='normal';
@@ -6359,7 +6370,7 @@ function renderLabTable(){
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
   const p=pond(pid);const rows=(p?.labResults||[]).slice().reverse();
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีผลแล็บ</p>';return}
-  wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>แล็บ</th><th>🟢 เชื้อเขียว (น้ำ)</th><th>🟡 เชื้อเหลือง (น้ำ)</th><th>🟢 เชื้อเขียว (ตับ)</th><th>🟡 เชื้อเหลือง (ตับ)</th><th>TVC</th><th>EHP</th><th>ตัวอ่อน EHP</th><th>ลำไส้อักเสบ</th><th>เม็ดไขมันรวม</th><th>ตับอ่อน</th><th>หมายเหตุ</th></tr></thead><tbody>${
+  wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>แล็บ</th><th>🟢 เชื้อเขียว (น้ำ)</th><th>🟡 เชื้อเหลือง (น้ำ)</th><th>🟢 เชื้อเขียว (ตับ)</th><th>🟡 เชื้อเหลือง (ตับ)</th><th>TVC (น้ำ)</th><th>TVC (ตับ)</th><th>EHP</th><th>ตัวอ่อน EHP</th><th>ลำไส้อักเสบ</th><th>เม็ดไขมันรวม</th><th>ตับอ่อน</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rows.map((r,i)=>{
       const sg=r.tcbsGreen!=null?(r.tcbsGreen>1000?'danger':r.tcbsGreen>100?'warn':'ok'):'ok';
       const shg=r.hepatoGreen!=null?(r.hepatoGreen>1000?'danger':r.hepatoGreen>100?'warn':'ok'):'ok';
@@ -6371,7 +6382,7 @@ function renderLabTable(){
       const gutCls=(typeof r.gutInflam==='number')?(r.gutInflam>30?'b-danger':r.gutInflam>10?'b-warn':'b-ok'):'b-na';
       const lipidDisp=(typeof r.lipidDroplet==='number')?`${r.lipidDroplet}%`:'-';
       const lipidCls=(typeof r.lipidDroplet==='number')?(r.lipidDroplet>=70?'b-ok':r.lipidDroplet>=50?'b-warn':'b-danger'):'b-na';
-      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editLab('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteLab('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.labName||'-'}</td><td style="font-weight:700;color:${sc(sg)}">${r.tcbsGreen!=null?r.tcbsGreen.toLocaleString():'-'}</td><td>${r.tcbsYellow!=null?r.tcbsYellow.toLocaleString():'-'}</td><td style="font-weight:700;color:${sc(shg)}">${r.hepatoGreen!=null?r.hepatoGreen.toLocaleString():'-'}</td><td>${r.hepatoYellow!=null?r.hepatoYellow.toLocaleString():'-'}</td><td>${r.tvc?r.tvc.toExponential(1):'-'}</td><td><span class="badge ${ehpCls}">${ehpDisp}</span></td><td><span class="badge ${ehpLarvaCls}">${ehpLarvaDisp}</span></td><td><span class="badge ${gutCls}">${gutDisp}</span></td><td><span class="badge ${lipidCls}">${lipidDisp}</span></td><td><span class="badge ${r.hepato==='normal'?'b-ok':r.hepato==='pale'?'b-warn':'b-danger'}">${HEPATO_LBL[r.hepato]||r.hepato}</span></td><td>${r.notes||'-'}</td></tr>`;
+      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editLab('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteLab('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.labName||'-'}</td><td style="font-weight:700;color:${sc(sg)}">${r.tcbsGreen!=null?r.tcbsGreen.toLocaleString():'-'}</td><td>${r.tcbsYellow!=null?r.tcbsYellow.toLocaleString():'-'}</td><td style="font-weight:700;color:${sc(shg)}">${r.hepatoGreen!=null?r.hepatoGreen.toLocaleString():'-'}</td><td>${r.hepatoYellow!=null?r.hepatoYellow.toLocaleString():'-'}</td><td>${r.tvc?r.tvc.toExponential(1):'-'}</td><td>${r.tvcHepato?r.tvcHepato.toExponential(1):'-'}</td><td><span class="badge ${ehpCls}">${ehpDisp}</span></td><td><span class="badge ${ehpLarvaCls}">${ehpLarvaDisp}</span></td><td><span class="badge ${gutCls}">${gutDisp}</span></td><td><span class="badge ${lipidCls}">${lipidDisp}</span></td><td><span class="badge ${r.hepato==='normal'?'b-ok':r.hepato==='pale'?'b-warn':'b-danger'}">${HEPATO_LBL[r.hepato]||r.hepato}</span></td><td>${r.notes||'-'}</td></tr>`;
     }).join('')}</tbody></table>`;
 }
 function deleteLab(pid,id){
@@ -6473,7 +6484,7 @@ function renderCmpSize(){
 function renderCmpLab(){
   const metric=document.getElementById('cmp-lab-param')?.value||'tcbsGreen';
   if(cmpCh){cmpCh.destroy();cmpCh=null;}
-  const labLbls={tcbsGreen:'🟢 เชื้อเขียว - น้ำ (CFU/mL)',tcbsYellow:'🟡 เชื้อเหลือง - น้ำ (CFU/mL)',hepatoGreen:'🟢 เชื้อเขียว - ตับ (CFU/g)',hepatoYellow:'🟡 เชื้อเหลือง - ตับ (CFU/g)',tvc:'TVC (CFU/mL)'};
+  const labLbls={tcbsGreen:'🟢 เชื้อเขียว - น้ำ (CFU/mL)',tcbsYellow:'🟡 เชื้อเหลือง - น้ำ (CFU/mL)',hepatoGreen:'🟢 เชื้อเขียว - ตับ (CFU/g)',hepatoYellow:'🟡 เชื้อเหลือง - ตับ (CFU/g)',tvc:'TVC - น้ำ (CFU/mL)',tvcHepato:'TVC - ตับ (CFU/g)'};
   const datasets=getSelPonds().map((p,i)=>{const col=COLORS[i%COLORS.length];const pts=(p.labResults||[]).filter(r=>r[metric]!=null&&r.age!=null).map(r=>({x:r.age,y:r[metric]}));return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'33',tension:.3,pointRadius:4,fill:false};});
   document.getElementById('cmp-title').textContent=`เปรียบเทียบ ${labLbls[metric]||metric} ระหว่างบ่อ`;
   cmpCh=new Chart(document.getElementById('cmpChart'),{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,scales:{x:{type:'linear',title:{display:true,text:'อายุ (วัน)'}},y:{title:{display:true,text:labLbls[metric]||metric}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:12}}}}});
