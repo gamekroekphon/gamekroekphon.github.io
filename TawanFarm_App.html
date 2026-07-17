@@ -4002,6 +4002,20 @@ function _tExtremaMixed(s0,s1){
   }
   return out.filter(e=>e.ms>=s0&&e.ms<=s1).sort((a,b)=>a.ms-b.ms);
 }
+// สรุปน้ำขึ้นสูงสุด/ลงต่ำสุดของ "วันนี้" — ใช้โชว์การ์ดสภาพอากาศหน้าภาพรวม (ov-weather-card)
+function _tTodaySummary(){
+  const TZ=7*3600000,now=Date.now();
+  const key=_tDateKey(now);
+  const row=TIDE_TABLE[key];
+  if(row)return{hiT:row.hiT,hiV:row.hiV,loT:row.loT,loV:row.loV};
+  const dayStart=new Date(now+TZ);dayStart.setUTCHours(0,0,0,0);
+  const dayStartMs=dayStart.getTime()-TZ,dayEndMs=dayStartMs+24*3600*1000;
+  const ex=_tExtrema(dayStartMs,dayEndMs).filter(e=>e.ms>=dayStartMs&&e.ms<dayEndMs);
+  const hi=ex.filter(e=>e.type==='high').sort((a,b)=>b.h-a.h)[0];
+  const lo=ex.filter(e=>e.type==='low').sort((a,b)=>a.h-b.h)[0];
+  const fT=ms=>{const d=new Date(ms+TZ);return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0');};
+  return{hiT:hi?fT(hi.ms):null,hiV:hi?hi.h:null,loT:lo?fT(lo.ms):null,loV:lo?lo.h:null};
+}
 function renderTideWeatherCard(){
   const el=document.getElementById('tide-weather-card');if(!el)return;
   if(!_wxToday){el.innerHTML=`<div class="ov-weather"><div style="font-size:12px;opacity:.85">สภาพอากาศวันนี้</div><div style="font-size:13px;margin-top:8px">กำลังโหลด...</div></div>`;fetchWx().catch(()=>{});return;}
@@ -4583,11 +4597,14 @@ function renderOv(){
 // ══════ เฟส 1 (ดีไซน์ใหม่พี่แพรว): การ์ดสภาพอากาศ + บ่อเสี่ยงสูงสุด + โดนัทสถานะบ่อ ในหน้าภาพรวม ══════
 function renderOvWeatherCard(){
   const el=document.getElementById('ov-weather-card');if(!el)return;
-  if(!_wxToday){el.innerHTML=`<div class="ov-weather"><div style="font-size:12px;opacity:.85">สภาพอากาศวันนี้</div><div style="font-size:13px;margin-top:8px">กำลังโหลด...</div></div>`;return;}
+  const tide=_tTodaySummary();
+  const tideLine=(tide.hiT||tide.loT)?`<div style="font-size:12.5px;margin-top:4px;opacity:.9">🌊 ${tide.hiT?`ขึ้น ${tide.hiT} น. (${tide.hiV.toFixed(1)} ม.)`:''}${tide.hiT&&tide.loT?' · ':''}${tide.loT?`ลง ${tide.loT} น. (${tide.loV.toFixed(1)} ม.)`:''}</div>`:'';
+  if(!_wxToday){el.innerHTML=`<div class="ov-weather"><div style="font-size:12px;opacity:.85">สภาพอากาศวันนี้</div><div style="font-size:13px;margin-top:8px">กำลังโหลด...</div>${tideLine}</div>`;return;}
   el.innerHTML=`<div class="ov-weather">
     <div style="font-size:12px;opacity:.85">สภาพอากาศวันนี้</div>
     <div class="ov-weather-big">${_wxToday.tMax.toFixed(0)}° / ${_wxToday.tMin.toFixed(0)}°C</div>
     <div style="font-size:12.5px">🌧️ ฝน ${_wxToday.rain.toFixed(0)} มม. · 💨 ${_wxToday.wind.toFixed(0)} กม./ชม.</div>
+    ${tideLine}
   </div>`;
 }
 let _riskPondMaxCache=null; // cache ล่าสุดจาก renderRisk() ใช้แสดง "บ่อเสี่ยงสูงสุด" ในหน้าภาพรวม
