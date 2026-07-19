@@ -325,6 +325,16 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .lbl-std{font-size:10px;color:var(--tx3);margin-top:1px}
 .lbl-std-warn{font-size:10px;color:var(--w);margin-top:1px;font-weight:700}
 .lbl-std-danger{font-size:10px;color:var(--d);margin-top:1px;font-weight:700}
+.lb-src-toggle{display:flex;gap:0;background:var(--sf2);border-radius:10px;padding:4px}
+.lb-src-btn{flex:1;border:none;background:none;border-radius:7px;padding:10px;font-size:13px;font-weight:600;color:var(--tx2);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
+.lb-src-btn.on-water{background:var(--in);color:#fff}
+.lb-src-btn.on-hep{background:#7c3aed;color:#fff}
+.lb-src-count{font-size:10px;font-weight:700;background:rgba(255,255,255,.25);border-radius:10px;padding:1px 6px}
+.lb-src-btn:not(.on-water):not(.on-hep) .lb-src-count{background:var(--bd);color:var(--tx2)}
+.lb-src-pane{display:none}
+.lb-src-pane.on{display:block}
+.lb-sect-hdr{font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.03em;margin:12px 0 8px;padding-top:8px;border-top:1px solid var(--bd)}
+.lb-sect-hdr:first-child{margin-top:0;padding-top:0;border-top:none}
 .pond-chk{display:flex;align-items:center;gap:6px;padding:5px 12px;border:1.5px solid var(--bd);border-radius:20px;cursor:pointer;font-size:13px;user-select:none;transition:all .15s}
 .pond-chk input{display:none}.pond-chk.on{background:var(--p);color:#fff;border-color:var(--p)}
 .pond-chk.wq-done{background:var(--ob);border-color:#bfe3cc;color:var(--ok)}
@@ -1212,59 +1222,77 @@ body.role-ceo .main{max-width:640px}
           <div class="fg"><label class="fl">อายุ (วัน)</label><input type="number" class="fi" id="lb-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
           <div class="fg"><label class="fl">ห้องแล็บ / ผู้ตรวจ</label><input type="text" class="fi" id="lb-lab" placeholder="CP Lab, มหาวิทยาลัย..."></div>
         </div>
-        <div class="card-t" style="font-size:12px;margin-bottom:4px">🦠 จดบันทึกแบคทีเรียในน้ำ (TCBS)</div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg">
-            <label class="fl">เชื้อเขียว — V. parahaemolyticus</label>
-            <input type="number" class="fi" id="lb-tcbs-g" placeholder="CFU/mL" oninput="updateLabStatus()">
-            <span class="lbl-std">ปลอดภัย: &lt;100 | เฝ้าระวัง: 100–1,000 | อันตราย: &gt;1,000</span>
-          </div>
-          <div class="fg">
-            <label class="fl">เชื้อเหลือง — V. alginolyticus / cholerae</label>
-            <input type="number" class="fi" id="lb-tcbs-y" placeholder="CFU/mL" oninput="updateLabStatus()">
-            <span class="lbl-std">ปลอดภัย: &lt;1,000 | เฝ้าระวัง: &gt;1,000</span>
-          </div>
+        <div class="lb-src-toggle">
+          <button type="button" class="lb-src-btn on-water" id="lb-src-water" onclick="setLabSrc('water',this)">🌊 ตรวจจากน้ำ <span class="lb-src-count" id="lb-cnt-water">0/3</span></button>
+          <button type="button" class="lb-src-btn" id="lb-src-hep" onclick="setLabSrc('hep',this)">🦐 ตรวจจากตับ-ตัวกุ้ง <span class="lb-src-count" id="lb-cnt-hep">0/8</span></button>
         </div>
-        <div class="card-t" style="font-size:12px;margin-bottom:4px">🦠 จดบันทึกแบคทีเรียในตับ (Hepatopancreas)</div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg">
-            <label class="fl">เชื้อเขียว — V. parahaemolyticus</label>
-            <input type="number" class="fi" id="lb-hep-g" placeholder="CFU/g" oninput="updateLabStatus()">
-            <span class="lbl-std">ปลอดภัย: &lt;100 | เฝ้าระวัง: 100–1,000 | อันตราย: &gt;1,000</span>
+        <div class="lb-src-pane on" id="lb-pane-water">
+          <div class="lb-sect-hdr">🦠 TCBS — เชื้อในน้ำ</div>
+          <div class="fgrid" style="grid-template-columns:1fr 1fr">
+            <div class="fg">
+              <label class="fl">เชื้อเขียว — V. parahaemolyticus</label>
+              <input type="number" class="fi" id="lb-tcbs-g" placeholder="CFU/mL" oninput="onLabInput('water')">
+              <span class="lbl-std">ปลอดภัย: &lt;100 | เฝ้าระวัง: 100–1,000 | อันตราย: &gt;1,000</span>
+            </div>
+            <div class="fg">
+              <label class="fl">เชื้อเหลือง — V. alginolyticus / cholerae</label>
+              <input type="number" class="fi" id="lb-tcbs-y" placeholder="CFU/mL" oninput="onLabInput('water')">
+              <span class="lbl-std">ปลอดภัย: &lt;1,000 | เฝ้าระวัง: &gt;1,000</span>
+            </div>
           </div>
+          <div class="lb-sect-hdr">🧫 Total Viable Count — น้ำ</div>
           <div class="fg">
-            <label class="fl">เชื้อเหลือง — V. alginolyticus / cholerae</label>
-            <input type="number" class="fi" id="lb-hep-y" placeholder="CFU/g" oninput="updateLabStatus()">
-            <span class="lbl-std">ปลอดภัย: &lt;1,000 | เฝ้าระวัง: &gt;1,000</span>
-          </div>
-        </div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg">
-            <label class="fl">TVC — น้ำ (Total Viable Count)</label>
-            <input type="number" class="fi" id="lb-tvc" placeholder="CFU/mL" oninput="updateLabStatus()">
-            <span class="lbl-std">ปกติ: &lt;10^5</span>
-          </div>
-          <div class="fg">
-            <label class="fl">TVC — ตับ (Total Viable Count)</label>
-            <input type="number" class="fi" id="lb-tvc-hep" placeholder="CFU/g" oninput="updateLabStatus()">
+            <label class="fl">TVC น้ำ (CFU/mL)</label>
+            <input type="number" class="fi" id="lb-tvc" placeholder="0" oninput="onLabInput('water')">
             <span class="lbl-std">ปกติ: &lt;10^5</span>
           </div>
         </div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">EHP / Microsporidian (% พบเชื้อ)</label><input type="number" class="fi" id="lb-ehp" placeholder="0" min="0" max="100" step="0.1" oninput="updateLabStatus()"><span class="lbl-std">ปลอดภัย: 0% | เฝ้าระวัง: 0–5% | อันตราย: &gt;5%</span></div>
-          <div class="fg"><label class="fl">ตัวอ่อน EHP (% พบเชื้อ)</label><input type="number" class="fi" id="lb-ehp-larva" placeholder="0" min="0" max="100" step="0.1" oninput="updateLabStatus()"><span class="lbl-std">ปลอดภัย: 0% | เฝ้าระวัง: 0–25% | อันตราย: &gt;25%</span></div>
+        <div class="lb-src-pane" id="lb-pane-hep">
+          <div class="lb-sect-hdr">🦠 TCBS — เชื้อในตับ</div>
+          <div class="fgrid" style="grid-template-columns:1fr 1fr">
+            <div class="fg">
+              <label class="fl">เชื้อเขียว — V. parahaemolyticus</label>
+              <input type="number" class="fi" id="lb-hep-g" placeholder="CFU/g" oninput="onLabInput('hep')">
+              <span class="lbl-std">ปลอดภัย: &lt;100 | เฝ้าระวัง: 100–1,000 | อันตราย: &gt;1,000</span>
+            </div>
+            <div class="fg">
+              <label class="fl">เชื้อเหลือง — V. alginolyticus / cholerae</label>
+              <input type="number" class="fi" id="lb-hep-y" placeholder="CFU/g" oninput="onLabInput('hep')">
+              <span class="lbl-std">ปลอดภัย: &lt;1,000 | เฝ้าระวัง: &gt;1,000</span>
+            </div>
+          </div>
+          <div class="lb-sect-hdr">🧫 Total Viable Count — ตับ</div>
+          <div class="fg">
+            <label class="fl">TVC ตับ (CFU/g)</label>
+            <input type="number" class="fi" id="lb-tvc-hep" placeholder="0" oninput="onLabInput('hep')">
+            <span class="lbl-std">ปกติ: &lt;10^5</span>
+          </div>
+          <div class="lb-sect-hdr">🔬 EHP / Microsporidian</div>
+          <div class="fgrid" style="grid-template-columns:1fr 1fr">
+            <div class="fg"><label class="fl">EHP (% พบเชื้อ)</label><input type="number" class="fi" id="lb-ehp" placeholder="0" min="0" max="100" step="0.1" oninput="onLabInput('hep')"><span class="lbl-std">ปลอดภัย: 0% | เฝ้าระวัง: 0–5% | อันตราย: &gt;5%</span></div>
+            <div class="fg"><label class="fl">ตัวอ่อน EHP (%)</label><input type="number" class="fi" id="lb-ehp-larva" placeholder="0" min="0" max="100" step="0.1" oninput="onLabInput('hep')"><span class="lbl-std">ปลอดภัย: 0% | เฝ้าระวัง: 0–25% | อันตราย: &gt;25%</span></div>
+          </div>
+          <div class="lb-sect-hdr">🍽️ เนื้อเยื่อตับ-ลำไส้</div>
+          <div class="fgrid" style="grid-template-columns:1fr 1fr">
+            <div class="fg"><label class="fl">ลำไส้อักเสบ (%)</label><input type="number" class="fi" id="lb-gut" placeholder="0" min="0" max="100" step="0.1" oninput="onLabInput('hep')"><span class="lbl-std">ปกติ: 0–10% | เฝ้าระวัง: 10–30% | อันตราย: &gt;30%</span></div>
+            <div class="fg"><label class="fl">เม็ดไขมันรวม (%)</label><input type="number" class="fi" id="lb-lipid" placeholder="0" min="0" max="100" step="0.1" oninput="onLabInput('hep')"><span class="lbl-std">ดี: &gt;70% | เฝ้าระวัง: 50–70% | อันตราย: &lt;50%</span></div>
+          </div>
+          <div class="fg" style="margin-top:8px">
+            <label class="fl">ลักษณะตับอ่อน (มองด้วยตา)</label>
+            <select class="fi" id="lb-hepato" onchange="onLabInput('hep')">
+              <option value="">-- เลือก --</option>
+              <option value="normal">ปกติ — สีน้ำตาลเข้ม เต่ง</option>
+              <option value="pale">ซีด — อาจเป็น AHPND</option>
+              <option value="atrophy">ฝ่อ / เล็กลง</option>
+              <option value="swollen">บวม / อักเสบ</option>
+              <option value="black">ดำ / เน่า</option>
+            </select>
+          </div>
         </div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">ลำไส้อักเสบ (%)</label><input type="number" class="fi" id="lb-gut" placeholder="0" min="0" max="100" step="0.1" oninput="updateLabStatus()"><span class="lbl-std">ปกติ: 0–10% | เฝ้าระวัง: 10–30% | อันตราย: &gt;30%</span></div>
-          <div class="fg"><label class="fl">เม็ดไขมันรวม (%)</label><input type="number" class="fi" id="lb-lipid" placeholder="0" min="0" max="100" step="0.1" oninput="updateLabStatus()"><span class="lbl-std">ดี: &gt;70% | เฝ้าระวัง: 50–70% | อันตราย: &lt;50%</span></div>
-        </div>
-        <div class="fg">
-          <label class="fl">ลักษณะตับอ่อน (Hepatopancreas)</label>
-          <select class="fi" id="lb-hepato"><option value="normal">ปกติ — สีน้ำตาลเข้ม เต่ง</option><option value="pale">ซีด — อาจเป็น AHPND</option><option value="atrophy">ฝ่อ / เล็กลง</option><option value="swollen">บวม / อักเสบ</option><option value="black">ดำ / เน่า</option></select>
-        </div>
+        <div class="lb-sect-hdr">📋 สรุปสถานะ (รวมทั้ง 2 แหล่ง)</div>
         <div id="lb-status-display" style="margin-top:4px"></div>
         <div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="lb-notes" placeholder="ข้อสังเกตจากแล็บ..."></div>
-        <div style="display:flex;gap:10px"><button class="btn btn-p" onclick="saveLab()">💾 บันทึก</button><button class="btn btn-s" onclick="clearLab()">🗑️ ล้าง</button></div>
+        <div style="display:flex;gap:10px"><button class="btn btn-p" onclick="saveLab()">💾 บันทึกทั้งหมด</button><button class="btn btn-s" onclick="clearLab()">🗑️ ล้าง</button></div>
         <div id="lb-msg"></div>
       </div>
     </div>
@@ -1846,8 +1874,8 @@ body.role-ceo .main{max-width:640px}
 <div id="sec-labor" class="sec">
   <div class="sec-hdr"><div class="sec-title">👷 ต้นทุนแรงงาน / ค่าแรงต่อรอบ</div></div>
   <div class="g4" id="lb-kpi" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px"></div>
-  <div class="link-note" id="lb-link-note" style="background:var(--ob);border:1px solid var(--ok);color:var(--ok);border-radius:10px;padding:10px 14px;font-size:12.5px;margin-bottom:16px;line-height:1.6">
-    🔗 <strong>เชื่อมกับ "ปิดรอบ"</strong> — ค่าแรงรายบ่อที่บันทึกไว้ตั้งแต่เริ่มรอบจะถูกดึงไปรวมในต้นทุนอัตโนมัติตอนปิดบ่อ ส่วนเงินเดือนประจำจะหารเฉลี่ยตามสัดส่วนวันของรอบ
+  <div class="link-note" id="lb-link-note" style="background:var(--wb);border:1px solid var(--w);color:var(--w-tx);border-radius:10px;padding:10px 14px;font-size:12.5px;margin-bottom:16px;line-height:1.6">
+    ⚠️ <strong>ไม่เชื่อมกับ "ปิดรอบ" อัตโนมัติ</strong> — ค่าแรงรายบ่อที่บันทึกไว้หน้านี้เป็นข้อมูลอ้างอิงเท่านั้น ตอนปิดบ่อต้อง<strong>กรอกยอดต้นทุนค่าแรงเองอีกครั้ง</strong> (ตามที่ยืนยันไว้ เพราะต้องดึงตัวเลขจริงจากนอกแอปมาเทียบก่อน)
   </div>
   <div class="labor-sub">
     <button class="labor-sub-btn on" onclick="laborTab('lp-staff',this)">🧑‍💼 เงินเดือนประจำ</button>
@@ -2060,7 +2088,7 @@ body.role-ceo .main{max-width:640px}
         </div>
       </div>
       <div id="sk-tx-cust-row" style="display:none;margin-bottom:8px">
-        <div class="fg"><label class="fl">ชื่อลูกค้า / ร้าน *</label><input class="fi" id="sk-tx-cust" placeholder="เช่น ร้านฟาร์มสุข, คุณสมชาย"></div>
+        <div class="fg"><label class="fl">ชื่อลูกค้า / ร้าน *</label><input class="fi" id="sk-tx-cust" list="sk-cust-list" placeholder="เช่น ร้านฟาร์มสุข, คุณสมชาย" autocomplete="off"><datalist id="sk-cust-list"></datalist></div>
         <div style="font-size:11px;color:var(--tx3);margin-top:-2px">💡 โหมดนี้ไม่มีช่องเลือกบ่อ — รายการขายจะไม่ถูกนับเป็นต้นทุนบ่อไหนเลย</div>
       </div>
       <div class="fg" style="position:relative;margin-bottom:8px">
@@ -5428,6 +5456,13 @@ function setStockMode(mode){
       sel.innerHTML+=`<option value="${p.id}"${p.id===cur?' selected':''}>${p.name}</option>`;
     });
   }
+  if(mode==='sale')populateCustList();
+}
+// ── รายชื่อลูกค้าที่เคยขายให้แล้ว — autocomplete กันพิมพ์ชื่อไม่ตรงกัน (เช่น "ร้านฟาร์มสุข" vs "ฟาร์มสุข") ไม่บังคับเลือก ยังพิมพ์ชื่อใหม่ได้ตามปกติ ──
+function populateCustList(){
+  const dl=document.getElementById('sk-cust-list');if(!dl)return;
+  const names=[...new Set((D.inventoryLog||[]).filter(l=>l.type==='sale'&&l.custName).map(l=>l.custName))].sort((a,b)=>a.localeCompare(b,'th'));
+  dl.innerHTML=names.map(n=>`<option value="${n}">`).join('');
 }
 
 function showStockDrop(){filterStockSearch();document.getElementById('sk-tx-drop').style.display='';}
@@ -5546,6 +5581,7 @@ function saveStockTxBatch(){
   document.getElementById('sk-tx-note').value='';
   document.getElementById('sk-tx-date').value=today();
   const custEl=document.getElementById('sk-tx-cust');if(custEl)custEl.value='';
+  if(mode==='sale')populateCustList();
   renderStockKPI();renderStockWarn();renderStockItems();
 }
 
@@ -5975,9 +6011,10 @@ function editLab(pid,d){
     const ehpLarvaEl=document.getElementById('lb-ehp-larva');if(ehpLarvaEl)ehpLarvaEl.value=(typeof r.ehpLarva==='number')?r.ehpLarva:'';
     const gutEl=document.getElementById('lb-gut');if(gutEl)gutEl.value=(typeof r.gutInflam==='number')?r.gutInflam:'';
     const lipidEl=document.getElementById('lb-lipid');if(lipidEl)lipidEl.value=(typeof r.lipidDroplet==='number')?r.lipidDroplet:'';
-    const hpEl=document.getElementById('lb-hepato');if(hpEl)hpEl.value=r.hepato||'normal';
+    const hpEl=document.getElementById('lb-hepato');if(hpEl)hpEl.value=r.hepato||'';
     document.getElementById('lb-notes').value=r.notes||'';
     updateLabStatus();
+    updateLabSrcCount('water');updateLabSrcCount('hep');
   }
   const el=document.getElementById('lb-pond');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -6307,7 +6344,7 @@ function clearChemFilter(){
   renderChemHistory();
 }
 // ===== LAB RESULTS =====
-function initLab(){populateAll();document.getElementById('lb-date').value=today();calcAge('lb');renderLabTable();}
+function initLab(){populateAll();document.getElementById('lb-date').value=today();calcAge('lb');renderLabTable();updateLabSrcCount('water');updateLabSrcCount('hep');}
 function updateLabStatus(){
   const tg=parseFloat(document.getElementById('lb-tcbs-g').value)||null;
   const ty=parseFloat(document.getElementById('lb-tcbs-y').value)||null;
@@ -6348,7 +6385,7 @@ function saveLab(){
     ehpLarva:document.getElementById('lb-ehp-larva').value!==''?parseFloat(document.getElementById('lb-ehp-larva').value):null,
     gutInflam:document.getElementById('lb-gut').value!==''?parseFloat(document.getElementById('lb-gut').value):null,
     lipidDroplet:document.getElementById('lb-lipid').value!==''?parseFloat(document.getElementById('lb-lipid').value):null,
-    hepato:document.getElementById('lb-hepato').value,
+    hepato:document.getElementById('lb-hepato').value||null,
     notes:document.getElementById('lb-notes').value};
   const idx=p.labResults.findIndex(r=>r.id===rec.id||r.date===d);
   const sg=tg!==null?(tg>1000?'danger':tg>100?'warn':'ok'):'ok';
@@ -6361,9 +6398,25 @@ function clearLab(){
   ['lb-lab','lb-tcbs-g','lb-tcbs-y','lb-hep-g','lb-hep-y','lb-tvc','lb-tvc-hep','lb-notes'].forEach(id=>{document.getElementById(id).value=''});
   document.getElementById('lb-ehp').value='';document.getElementById('lb-ehp-larva').value='';
   document.getElementById('lb-gut').value='';document.getElementById('lb-lipid').value='';
-  document.getElementById('lb-hepato').value='normal';
+  document.getElementById('lb-hepato').value='';
   document.getElementById('lb-status-display').innerHTML='';document.getElementById('lb-msg').innerHTML='';calcAge('lb');
+  updateLabSrcCount('water');updateLabSrcCount('hep');
 }
+// ── การ์ดผลแล็บแยก 2 แท็บตามแหล่งตัวอย่าง (น้ำ/ตับ-ตัวกุ้ง) — สลับแท็บไม่ล้างค่าที่กรอกไว้ ──
+function setLabSrc(src,btn){
+  document.querySelectorAll('.lb-src-btn').forEach(b=>b.classList.remove('on-water','on-hep'));
+  btn.classList.add(src==='water'?'on-water':'on-hep');
+  document.getElementById('lb-pane-water').classList.toggle('on',src==='water');
+  document.getElementById('lb-pane-hep').classList.toggle('on',src==='hep');
+}
+function updateLabSrcCount(src){
+  const pane=document.getElementById('lb-pane-'+src);if(!pane)return;
+  const els=[...pane.querySelectorAll('input,select')];
+  const filled=els.filter(el=>el.value!=='').length;
+  const cnt=document.getElementById('lb-cnt-'+src);
+  if(cnt)cnt.textContent=filled+'/'+els.length;
+}
+function onLabInput(src){updateLabStatus();updateLabSrcCount(src);}
 function renderLabTable(){
   const pid=document.getElementById('lb-pond')?.value;
   const wrap=document.getElementById('lb-tbl-wrap');if(!wrap)return;
@@ -6382,7 +6435,7 @@ function renderLabTable(){
       const gutCls=(typeof r.gutInflam==='number')?(r.gutInflam>30?'b-danger':r.gutInflam>10?'b-warn':'b-ok'):'b-na';
       const lipidDisp=(typeof r.lipidDroplet==='number')?`${r.lipidDroplet}%`:'-';
       const lipidCls=(typeof r.lipidDroplet==='number')?(r.lipidDroplet>=70?'b-ok':r.lipidDroplet>=50?'b-warn':'b-danger'):'b-na';
-      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editLab('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteLab('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.labName||'-'}</td><td style="font-weight:700;color:${sc(sg)}">${r.tcbsGreen!=null?r.tcbsGreen.toLocaleString():'-'}</td><td>${r.tcbsYellow!=null?r.tcbsYellow.toLocaleString():'-'}</td><td style="font-weight:700;color:${sc(shg)}">${r.hepatoGreen!=null?r.hepatoGreen.toLocaleString():'-'}</td><td>${r.hepatoYellow!=null?r.hepatoYellow.toLocaleString():'-'}</td><td>${r.tvc?r.tvc.toExponential(1):'-'}</td><td>${r.tvcHepato?r.tvcHepato.toExponential(1):'-'}</td><td><span class="badge ${ehpCls}">${ehpDisp}</span></td><td><span class="badge ${ehpLarvaCls}">${ehpLarvaDisp}</span></td><td><span class="badge ${gutCls}">${gutDisp}</span></td><td><span class="badge ${lipidCls}">${lipidDisp}</span></td><td><span class="badge ${r.hepato==='normal'?'b-ok':r.hepato==='pale'?'b-warn':'b-danger'}">${HEPATO_LBL[r.hepato]||r.hepato}</span></td><td>${r.notes||'-'}</td></tr>`;
+      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editLab('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteLab('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.labName||'-'}</td><td style="font-weight:700;color:${sc(sg)}">${r.tcbsGreen!=null?r.tcbsGreen.toLocaleString():'-'}</td><td>${r.tcbsYellow!=null?r.tcbsYellow.toLocaleString():'-'}</td><td style="font-weight:700;color:${sc(shg)}">${r.hepatoGreen!=null?r.hepatoGreen.toLocaleString():'-'}</td><td>${r.hepatoYellow!=null?r.hepatoYellow.toLocaleString():'-'}</td><td>${r.tvc?r.tvc.toExponential(1):'-'}</td><td>${r.tvcHepato?r.tvcHepato.toExponential(1):'-'}</td><td><span class="badge ${ehpCls}">${ehpDisp}</span></td><td><span class="badge ${ehpLarvaCls}">${ehpLarvaDisp}</span></td><td><span class="badge ${gutCls}">${gutDisp}</span></td><td><span class="badge ${lipidCls}">${lipidDisp}</span></td><td><span class="badge ${!r.hepato?'b-na':r.hepato==='normal'?'b-ok':r.hepato==='pale'?'b-warn':'b-danger'}">${r.hepato?(HEPATO_LBL[r.hepato]||r.hepato):'-'}</span></td><td>${r.notes||'-'}</td></tr>`;
     }).join('')}</tbody></table>`;
 }
 function deleteLab(pid,id){
