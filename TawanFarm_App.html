@@ -274,6 +274,51 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .ai{display:flex;align-items:flex-start;gap:10px;padding:9px 14px;border-radius:6px;margin-bottom:6px;font-size:13px}
 .ai.danger{background:var(--db);border-left:3px solid var(--d)}.ai.warn{background:var(--wb);border-left:3px solid var(--w)}.ai.ok{background:var(--ob);border-left:3px solid var(--ok)}
 
+/* ── Micro-feedback ตอนบันทึกสำเร็จ (จาก mockup ที่พี่คอนเฟิม) ── */
+@keyframes mfPopIcon{0%{transform:scale(0)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes mfToastShrink{from{width:100%}to{width:0%}}
+.msg-box,.msg{
+  padding:9px 13px;border-radius:6px;font-size:13px;display:flex;align-items:center;gap:8px;
+  max-height:0;opacity:0;transform:translateY(-4px);overflow:hidden;
+  transition:max-height .25s ease,opacity .25s ease,transform .25s ease,margin .25s ease;
+}
+.msg-box.show,.msg.show{max-height:60px;opacity:1;transform:translateY(0);}
+.msg-box.fading,.msg.fading{opacity:0;transform:translateY(-4px);}
+.msg.ok{background:var(--ob);border-left:3px solid var(--ok);color:var(--tx)}
+.msg.err{background:var(--db);border-left:3px solid var(--d);color:var(--tx)}
+.mf-icon{width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;animation:mfPopIcon .35s ease}
+/* ปุ่มบันทึก -> กลายเป็นเครื่องหมายถูก */
+.mf-savebtn{position:relative}
+.mf-savebtn .mf-default,.mf-savebtn .mf-ok{transition:opacity .18s,transform .18s;display:inline-flex;align-items:center;gap:6px}
+.mf-savebtn .mf-ok{position:absolute;inset:0;justify-content:center;opacity:0;transform:scale(.6);background:var(--ok);border-radius:6px}
+.mf-savebtn.mf-success{background:var(--ok)!important}
+.mf-savebtn.mf-success .mf-default{opacity:0;transform:scale(.6)}
+.mf-savebtn.mf-success .mf-ok{opacity:1;transform:scale(1)}
+.mf-savebtn .mf-check{stroke-dasharray:20;stroke-dashoffset:20;transition:stroke-dashoffset .3s ease .1s}
+.mf-savebtn.mf-success .mf-check{stroke-dashoffset:0}
+/* toast มุมจอ */
+#mfToastHost{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.mf-toast{
+  pointer-events:auto;background:var(--sf);border:1px solid var(--bd);border-left:3px solid var(--ok);
+  border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:12px 14px;min-width:220px;max-width:300px;
+  display:flex;align-items:flex-start;gap:10px;transform:translateX(120%);opacity:0;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .3s ease;position:relative
+}
+.mf-toast.in{transform:translateX(0);opacity:1}
+.mf-toast.out{transform:translateX(120%);opacity:0}
+.mf-toast .mf-t-icon{width:20px;height:20px;border-radius:50%;background:var(--ok);color:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;font-size:11px}
+.mf-toast .mf-t-body b{display:block;font-size:13px;font-weight:600;margin-bottom:2px}
+.mf-toast .mf-t-body span{font-size:12px;color:var(--tx2)}
+.mf-toast .mf-t-bar{position:absolute;left:0;bottom:0;height:2.5px;background:var(--ok);border-radius:0 0 0 10px;width:100%;animation:mfToastShrink 2.4s linear forwards}
+/* แถวตารางกะพริบเขียวตอนบันทึกสำเร็จ */
+.mf-row-flash{border-color:var(--ok)!important;background:var(--ob)!important;box-shadow:0 0 0 3px rgba(21,128,61,.15);transition:box-shadow .25s ease,border-color .25s ease,background .25s ease}
+@media(max-width:600px){
+  #mfToastHost{left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+  .mf-toast{max-width:none;width:100%;transform:translateY(120%)}
+  .mf-toast.in{transform:translateY(0)}
+  .mf-toast.out{transform:translateY(120%)}
+}
+
 /* ── Forms ── */
 .fg{display:flex;flex-direction:column;gap:4px}.fl{font-size:12px;color:var(--tx2);font-weight:600}
 .fi{padding:8px 10px;border:1.5px solid var(--bd);border-radius:6px;font-size:13px;color:var(--tx);background:var(--sf);transition:border-color .15s;width:100%}
@@ -1127,7 +1172,7 @@ body.role-ceo .main{max-width:640px}
           </div>
         </div>
         <div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="sp-notes" placeholder="กุ้งสวย/ซีด/เปลือกนิ่ม..."></div>
-        <div style="display:flex;gap:10px"><button class="btn btn-p" onclick="saveSample()">💾 บันทึก</button><button class="btn btn-s" onclick="clearSample()">🗑️ ล้าง</button></div>
+        <div style="display:flex;gap:10px"><button class="btn btn-p" id="sp-save-btn" onclick="saveSample()">💾 บันทึก</button><button class="btn btn-s" onclick="clearSample()">🗑️ ล้าง</button></div>
         <div id="sp-msg"></div>
         <div id="sp-result" style="display:none;margin-top:10px"></div>
       </div>
@@ -1292,7 +1337,7 @@ body.role-ceo .main{max-width:640px}
         <div class="lb-sect-hdr">📋 สรุปสถานะ (รวมทั้ง 2 แหล่ง)</div>
         <div id="lb-status-display" style="margin-top:4px"></div>
         <div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="lb-notes" placeholder="ข้อสังเกตจากแล็บ..."></div>
-        <div style="display:flex;gap:10px"><button class="btn btn-p" onclick="saveLab()">💾 บันทึกทั้งหมด</button><button class="btn btn-s" onclick="clearLab()">🗑️ ล้าง</button></div>
+        <div style="display:flex;gap:10px"><button class="btn btn-p" id="lb-save-btn" onclick="saveLab()">💾 บันทึกทั้งหมด</button><button class="btn btn-s" onclick="clearLab()">🗑️ ล้าง</button></div>
         <div id="lb-msg"></div>
       </div>
     </div>
@@ -1935,7 +1980,7 @@ body.role-ceo .main{max-width:640px}
         <div class="fg" style="grid-column:1/-1"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="lc-note" placeholder="เช่น ทีมเหมาจับกุ้ง 3 คน"></div>
       </div>
       <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn btn-p" onclick="saveLaborCost()">💾 บันทึกค่าแรง</button>
+        <button class="btn btn-p" id="lc-save-btn" onclick="saveLaborCost()">💾 บันทึกค่าแรง</button>
         <button class="btn btn-s" onclick="clearLaborCost()">🗑️ ล้างฟอร์ม</button>
       </div>
       <div id="lc-msg" style="margin-top:10px"></div>
@@ -1998,7 +2043,7 @@ body.role-ceo .main{max-width:640px}
     </div>
     <div class="fg" style="margin-top:12px"><label class="fl">หมายเหตุ</label><input class="fi" id="el-note" placeholder="เพิ่มเติม..."></div>
     <div style="display:flex;gap:8px;margin-top:4px">
-      <button onclick="saveElecBill()">💾 บันทึกบิลค่าไฟ</button>
+      <button id="el-save-btn" onclick="saveElecBill()">💾 บันทึกบิลค่าไฟ</button>
       <button onclick="clearElecBill()" style="background:var(--sf2);color:var(--tx2)">🗑️ ล้างฟอร์ม</button>
     </div>
     <div id="el-msg"></div>
@@ -3461,10 +3506,49 @@ function waterLineOv(last){
 function bcl(s){return s==='danger'?'b-danger':s==='warn'?'b-warn':s==='ok'?'b-ok':'b-na'}
 function showMsg(id,type,msg){
   const el=document.getElementById(id);if(!el)return;
+  clearTimeout(el._mfT1);clearTimeout(el._mfT2);
   const bg={ok:'var(--ob)',warn:'var(--wb)',danger:'var(--db)'};
   const bc={ok:'var(--ok)',warn:'var(--w)',danger:'var(--d)'};
-  el.innerHTML=`<div style="padding:9px 13px;background:${bg[type]};border-left:3px solid ${bc[type]};border-radius:6px;font-size:13px">${msg}</div>`;
-  setTimeout(()=>{el.innerHTML=''},5000);
+  const ic={ok:'✓',warn:'!',danger:'!'};
+  el.innerHTML=`<div class="msg-box" style="background:${bg[type]};border-left:3px solid ${bc[type]}"><span class="mf-icon" style="background:${bc[type]}">${ic[type]}</span><span>${msg}</span></div>`;
+  const box=el.firstElementChild;
+  void box.offsetWidth;
+  box.classList.add('show');
+  el._mfT1=setTimeout(()=>box.classList.add('fading'),4750);
+  el._mfT2=setTimeout(()=>{el.innerHTML=''},5000);
+}
+// ── Micro-feedback helpers: ปุ่ม -> เครื่องหมายถูก / toast มุมจอ / แถวกะพริบเขียว ──
+function flashSaveBtn(btn){
+  if(!btn||btn.classList.contains('mf-success'))return;
+  if(!btn.querySelector('.mf-ok')){
+    const defaultSpan=document.createElement('span');
+    defaultSpan.className='mf-default';
+    while(btn.firstChild)defaultSpan.appendChild(btn.firstChild);
+    const okSpan=document.createElement('span');
+    okSpan.className='mf-ok';
+    okSpan.innerHTML='<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path class="mf-check" d="M3 8.5L6.5 12L13 4.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>&nbsp;บันทึกแล้ว';
+    btn.appendChild(defaultSpan);btn.appendChild(okSpan);
+    btn.classList.add('mf-savebtn');
+  }
+  btn.classList.add('mf-success');
+  clearTimeout(btn._mfT);
+  btn._mfT=setTimeout(()=>btn.classList.remove('mf-success'),1600);
+}
+function showToast(title,detail){
+  let host=document.getElementById('mfToastHost');
+  if(!host){host=document.createElement('div');host.id='mfToastHost';document.body.appendChild(host);}
+  const t=document.createElement('div');
+  t.className='mf-toast';
+  t.innerHTML=`<div class="mf-t-icon">✓</div><div class="mf-t-body"><b>${title}</b><span>${detail||''}</span></div><div class="mf-t-bar"></div>`;
+  host.appendChild(t);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('in')));
+  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),320);},2400);
+}
+function flashRow(el){
+  if(!el)return;
+  el.classList.add('mf-row-flash');
+  clearTimeout(el._mfT);
+  el._mfT=setTimeout(()=>el.classList.remove('mf-row-flash'),1400);
 }
 function calcAge(pfx){
   const pid=document.getElementById(pfx+'-pond')?.value;
@@ -4781,6 +4865,7 @@ function saveLaborCost(){
   renderLaborTable();
   renderLaborKPI();
   renderLaborMonthSummary();
+  flashSaveBtn(document.getElementById('lc-save-btn'));
 }
 function clearLaborCost(keepMsg){
   document.getElementById('lc-pond').value='';
@@ -4936,6 +5021,7 @@ function saveElecBill(){
   save();
   showElecMsg('✅ บันทึกบิลค่าไฟ '+fmtMonth(month)+' แล้ว','ok');
   renderElecKPI();renderElecChart();renderElecHistory();
+  flashSaveBtn(document.getElementById('el-save-btn'));
 }
 function clearElecBill(silent){
   [1,2,3].forEach(n=>{document.getElementById('el-m'+n+'-kwh').value='';document.getElementById('el-m'+n+'-baht').value='';document.getElementById('el-m'+n+'-rate').value='';});
@@ -4952,8 +5038,14 @@ function deleteElecBill(month){
 }
 function showElecMsg(msg,type){
   const el=document.getElementById('el-msg');if(!el)return;
-  el.innerHTML=msg?'<div class="msg '+type+'">'+msg+'</div>':'';
-  if(msg)setTimeout(()=>{el.innerHTML='';},4000);
+  clearTimeout(el._mfT1);clearTimeout(el._mfT2);
+  if(!msg){el.innerHTML='';return;}
+  el.innerHTML='<div class="msg '+type+'"><span class="mf-icon" style="background:'+(type==='ok'?'var(--ok)':'var(--d)')+'">'+(type==='ok'?'✓':'!')+'</span><span>'+msg+'</span></div>';
+  const box=el.firstElementChild;
+  void box.offsetWidth;
+  box.classList.add('show');
+  el._mfT1=setTimeout(()=>box.classList.add('fading'),3750);
+  el._mfT2=setTimeout(()=>{el.innerHTML='';},4000);
 }
 function fmtMonth(ym){
   if(!ym)return '';
@@ -5577,6 +5669,7 @@ function saveStockTxBatch(){
   save();
   const modeLbl=mode==='in'?'รับเข้า':mode==='out'?'เบิกออก':'บันทึกการขาย';
   showStockMsg('tx','✅ '+modeLbl+' '+saved.length+' รายการแล้ว','ok');
+  showToast('บันทึกสำเร็จ',modeLbl+' '+saved.length+' รายการ — '+fD(date));
   _stockCart=[];renderStockCart();
   document.getElementById('sk-tx-note').value='';
   document.getElementById('sk-tx-date').value=today();
@@ -5691,8 +5784,14 @@ function deleteStockLog(id){
 
 function showStockMsg(area,msg,type){
   const el=document.getElementById('sk-msg-'+area);if(!el)return;
-  el.innerHTML=msg?`<div class="msg ${type}">${msg}</div>`:'';
-  if(msg)setTimeout(()=>{el.innerHTML='';},4000);
+  clearTimeout(el._mfT1);clearTimeout(el._mfT2);
+  if(!msg){el.innerHTML='';return;}
+  el.innerHTML=`<div class="msg ${type}"><span class="mf-icon" style="background:${type==='ok'?'var(--ok)':'var(--d)'}">${type==='ok'?'✓':'!'}</span><span>${msg}</span></div>`;
+  const box=el.firstElementChild;
+  void box.offsetWidth;
+  box.classList.add('show');
+  el._mfT1=setTimeout(()=>box.classList.add('fading'),3750);
+  el._mfT2=setTimeout(()=>{el.innerHTML='';},4000);
 }
 // ── ยอดขายลูกค้าภายนอก: รายงานแบ่งรายเดือน + ซ่อนต้นทุน/กำไรจาก staff ─────────
 let _saleMonth='all';
@@ -5909,6 +6008,7 @@ function saveWQ(){
   }
   else{p.records.push(rec);p.records.sort((a,b)=>new Date(a.date)-new Date(b.date));msg=`✅ บันทึกสำเร็จ บ่อ ${p.name}`;}
   save();renderWQTable();renderOv();
+  showToast('บันทึกสำเร็จ',`คุณภาพน้ำ บ่อ ${p.name} — ${fD(d)}`);
   const next=epNextUnfilled(pid);
   if(next){selectEPond(next.id);showMsg('ep-msg','ok',msg);}
   else{renderEpChips();updateEpHeader();showMsg('ep-msg','ok',`${msg} — 🎉 ครบทุกบ่อวันที่ ${fD(d)} แล้ว`);}
@@ -6123,6 +6223,7 @@ function saveFeedGridAll(){
   const parts=[];if(saved)parts.push(`บันทึกอาหาร ${saved} บ่อ`);if(deleted)parts.push(`ลบ ${deleted} บ่อ`);
   showMsg('fd-grid-msg','ok',parts.length?`✅ ${parts.join(' · ')} วันที่ ${fD(d)}`:'ไม่มีการเปลี่ยนแปลง');
   renderFeedGrid();renderOv();renderStockKPI();renderStockWarn();renderStockItems();
+  if(saved)ponds.forEach((p,i)=>{const totalEl=document.getElementById(`fdg-${p.id}-total`);if(!totalEl||totalEl.value==='')return;setTimeout(()=>flashRow(document.querySelector(`tr[data-pond="${p.id}"]`)),i*80);});
 }
 // ===== POND CHANGE HANDLERS =====
 function onSpPond(){clearSample();renderSampleTable();renderSampleChart();const pid=document.getElementById('sp-pond').value;if(pid)renderSampleMetrics(pid);}
@@ -6181,6 +6282,7 @@ function saveSample(){
   else{p.samples.push(rec);p.samples.sort((a,b)=>new Date(a.date)-new Date(b.date));showMsg('sp-msg','ok',`✅ บันทึกสุ่มตัวอย่าง บ่อ ${p.name} สำเร็จ`)}
   renderSampleResult(p,rec);
   save();renderSampleTable();renderSampleMetrics(pid);renderSampleChart();renderOv();
+  flashSaveBtn(document.getElementById('sp-save-btn'));
 }
 // ── ผลทันทีหลังบันทึกสุ่ม — แปลผลให้เลยว่ากุ้งโตตามเกณฑ์อายุไหม ไม่ต้องเทียบตารางเอง + ทางลัดไปดู FCR/กราฟที่หน้ารายละเอียดบ่อ (FCR โชว์ที่เดียวตามนโยบายเดิม) ──
 function renderSampleResult(p,rec){
@@ -6392,6 +6494,7 @@ function saveLab(){
   if(idx>=0){p.labResults[idx]=rec;showMsg('lb-msg','warn',`อัปเดต ${fD(d)}`)}
   else{p.labResults.push(rec);p.labResults.sort((a,b)=>new Date(a.date)-new Date(b.date));showMsg('lb-msg',sg==='danger'?'danger':sg==='warn'?'warn':'ok',`✅ บันทึกผลแล็บ บ่อ ${p.name} 🟢${tg||'-'} 🟡${ty||'-'} CFU/mL`)}
   save();renderLabTable();renderOv();
+  flashSaveBtn(document.getElementById('lb-save-btn'));
 }
 function clearLab(){
   document.getElementById('lb-date').value=today();
