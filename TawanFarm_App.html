@@ -8894,11 +8894,6 @@ function renderWQHeatmap(){
 // ══════════════════════════════════════════════════════════════════════════
 
 // ─── P&L DASHBOARD ────────────────────────────────────────────────────────
-function getStockCostForPond(pondId,startDate,closeDate){
-  if(!pondId||!startDate||!closeDate)return 0;
-  return (D.inventoryLog||[]).filter(l=>l.type==='out'&&l.pondId===pondId&&l.date>=startDate&&l.date<=closeDate)
-    .reduce((s,l)=>{const item=(D.inventoryItems||[]).find(i=>i.id===l.itemId);return s+(item?.unitPrice||0)*(l.qty||0);},0);
-}
 // ── ต้นทุนพัสดุแยกตามหมวดหมู่สต็อก (ไม่รวมอาหาร — คิดแยกจาก pondFeedCost อยู่แล้ว) ──
 function getStockCostBreakdownForPond(pondId,startDate,closeDate){
   const byCat={};let total=0;
@@ -8944,8 +8939,7 @@ function renderPL(){
     (p.cropHistory||[]).forEach(c=>{
       if(!c.harvestResult||!c.closeDate)return;
       if(yr&&!c.closeDate.startsWith(yr))return;
-      const costStock=getStockCostForPond(p.id,c.startDate,c.closeDate);
-      rows.push({...c.harvestResult,pondName:p.name,pondId:p.id,cropNum:c.cropNum,cropYear:c.cropYear,startDate:c.startDate,closeDate:c.closeDate,stock:c.stock,costStock});
+      rows.push({...c.harvestResult,pondName:p.name,pondId:p.id,cropNum:c.cropNum,cropYear:c.cropYear,startDate:c.startDate,closeDate:c.closeDate,stock:c.stock});
     });
   });
   rows.sort((a,b)=>(b.closeDate||'').localeCompare(a.closeDate||''));
@@ -8981,7 +8975,6 @@ function renderPLTable(rows){
     <th>บ่อ</th><th>รอบ/ปี</th><th>วันปิด</th>
     <th style="text-align:right">ผลผลิต(กก.)</th><th style="text-align:right">ราคา(฿/กก.)</th>
     <th style="text-align:right">รายได้(฿)</th><th style="text-align:right">ต้นทุน(฿)</th>
-    <th style="text-align:right">พัสดุ(฿) <span title="ยอดเบิกสต็อกทั้งหมดของบ่อนี้ (อ้างอิง) — เป็นข้อมูลชุดเดียวกับเวชภัณฑ์/ปูน/อุปกรณ์ในคอลัมน์ต้นทุน ไม่ได้บวกซ้ำเข้าไปในคอลัมน์ต้นทุน" style="cursor:help">ℹ️</span></th>
     <th style="text-align:right">กำไร(฿)</th><th style="text-align:right">Margin</th>
     <th style="text-align:right">฿/กก.</th><th style="text-align:right">FCR</th><th></th>
   </tr></thead><tbody>${rows.map(r=>{
@@ -9007,7 +9000,6 @@ function renderPLTable(rows){
       <td style="text-align:right">${r.price?r.price.toLocaleString():'-'}</td>
       <td style="text-align:right">${r.revenue?Math.round(r.revenue).toLocaleString():'-'}</td>
       <td style="text-align:right">${cost?Math.round(cost).toLocaleString():'-'}</td>
-      <td style="text-align:right;color:${r.costStock?'var(--tx2)':'var(--tx3)'}">${r.costStock?Math.round(r.costStock).toLocaleString():'-'}</td>
       <td style="text-align:right;font-weight:700;color:${cl}">${prof!=null?Math.round(prof).toLocaleString():'-'}</td>
       <td style="text-align:right;color:${cl}">${margin!=null?margin.toFixed(1)+'%':'-'}</td>
       <td style="text-align:right">${cpk!=null?cpk.toFixed(1):'-'}</td>
@@ -9044,7 +9036,6 @@ function renderPLCostChart(rows){
   const totAmtMgr=rows.reduce((s,r)=>s+(r.amtManager||0),0);
   const totChem=rows.reduce((s,r)=>s+(r.costChem||0),0);
   const totOther=rows.reduce((s,r)=>s+(r.costOther||0),0);
-  // costStock (ยอดเบิกสต็อกดิบรวม) ไม่รวมในกราฟ/ผลรวมนี้แล้ว — ข้อมูลชุดเดียวกับ totMed/totLime/totEquip ข้างบน นับซ้ำถ้าบวกเพิ่ม (ดู CLAUDE.md)
   const total=totFry+totFeed+totMed+totLime+totLabor+totElec+totFuel+totEquip+totEquipOut+totCatch+totAmtCare+totAmtMgr+totChem+totOther;
   const totWeight=rows.reduce((s,r)=>s+(r.totalWeight||0),0);
   const labels=['ลูกกุ้ง','อาหารกุ้ง','เวชภัณฑ์','ปูน','ค่าแรง','ค่าไฟฟ้า','น้ำมัน','อุปกรณ์','อุปกรณ์นอก','ค่าจับกุ้ง','ส่วนแบ่งคนเลี้ยง','ส่วนแบ่งผู้จัดการ','สารเคมี(เดิม)','อื่นๆ(เดิม)'];
