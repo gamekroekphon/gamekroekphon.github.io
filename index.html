@@ -662,6 +662,36 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .ovd-d-card-chks{display:flex;gap:14px;margin-bottom:6px}
 .ovd-d-card-chk{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2)}
 @media(max-width:680px){.card .ovd-table{display:none}.ovd-cards{display:flex}}
+/* ── Farm Card: ความเสี่ยง 5 หมวด + สิ่งที่ต้องทำวันนี้ (จาก mockup ที่พี่คอนเฟิม + สูตรจากเอกสารวิชาการ) ── */
+.fc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:14px}
+.fc-item{border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:5px;border:1.5px solid var(--bd);background:var(--sf2);cursor:pointer;transition:border-color .15s,transform .1s}
+.fc-item:hover{transform:translateY(-1px)}
+.fc-item.ok{border-color:var(--ok);background:var(--ob)}
+.fc-item.warn{border-color:var(--w);background:var(--wb)}
+.fc-item.danger{border-color:var(--d);background:var(--db)}
+.fc-item.sel{box-shadow:0 0 0 3px rgba(154,106,4,.25)}
+.fc-item-top{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.fc-item-lbl{font-size:11.5px;font-weight:700}
+.fc-item-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;white-space:nowrap}
+.fc-item-badge.ok{background:var(--ok);color:#fff}
+.fc-item-badge.warn{background:var(--w);color:#fff}
+.fc-item-badge.danger{background:var(--d);color:#fff}
+.fc-item-reason{font-size:10.5px;color:var(--tx2);line-height:1.35}
+.fc-act-progress{font-size:12px;color:var(--tx2);margin-bottom:8px}
+.fc-act-bar{height:5px;background:var(--sf2);border-radius:3px;overflow:hidden;margin-bottom:12px}
+.fc-act-bar-fill{height:100%;background:var(--ok);border-radius:3px;transition:width .3s}
+.fc-act-list{display:flex;flex-direction:column;gap:7px}
+.fc-act-item{display:flex;align-items:flex-start;gap:9px;background:var(--sf2);border:1px solid var(--bd);border-radius:9px;padding:9px 10px;cursor:pointer;transition:background .15s,border-color .15s}
+.fc-act-item.done{background:var(--ob);border-color:var(--ok)}
+.fc-act-chk{width:19px;height:19px;border-radius:5px;border:1.5px solid var(--bd);background:var(--sf);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;margin-top:1px;transition:all .15s}
+.fc-act-item.done .fc-act-chk{background:var(--ok);border-color:var(--ok)}
+.fc-act-body b{display:block;font-size:12.5px;font-weight:600}
+.fc-act-item.done .fc-act-body b{text-decoration:line-through;color:var(--tx3)}
+.fc-act-body span{font-size:11px;color:var(--tx3)}
+.fc-act-src{display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:5px;margin-top:3px}
+.fc-act-src.warn{background:var(--wb);color:var(--w)}
+.fc-act-src.danger{background:var(--db);color:var(--d)}
+.fc-act-empty{text-align:center;padding:14px;color:var(--ok);font-size:12.5px}
 .login-screen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center}
 .login-box{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:32px 28px;width:320px;max-width:90vw}
 .login-logo{text-align:center;margin-bottom:20px}
@@ -4398,6 +4428,175 @@ function reasonOv(p,last,age){
   const dir=warnDir(pick.k,pick.v);const sfx=dir==='low'?(level==='danger'?'ต่ำกว่าเกณฑ์อันตราย':'ต่ำกว่าเกณฑ์'):(level==='danger'?'เกินเกณฑ์อันตราย':'เกินเกณฑ์');
   return`${lbl[pick.k]} ${pick.v} ${sfx}`;
 }
+// ══════ Farm Card: ความเสี่ยง 5 หมวด + สิ่งที่ต้องทำวันนี้ (จาก mockup ที่พี่คอนเฟิม + สูตร/เกณฑ์จากเอกสารวิชาการที่ ดร.พุทธ ให้มา — trend ใช้ประวัติที่มีอยู่แล้ว ไม่ต้องมีเซนเซอร์เพิ่ม) ══════
+const FC_LBL={ok:'ปกติ',warn:'เฝ้าระวัง',danger:'ต้องดู!'};
+const FC_ICON={ok:'✅',warn:'⚠️',danger:'🔴'};
+const FC_CATS=[
+  {key:'do',icon:'💨',label:'DO Risk',calc:(p,last)=>pondRiskDO(p,last)},
+  {key:'stab',icon:'⚖️',label:'Pond Stability',calc:(p,last)=>pondRiskStability(p,last)},
+  {key:'disease',icon:'🦐',label:'Disease Risk',calc:(p,last)=>pondRiskDisease(p,last)},
+  {key:'feed',icon:'🍖',label:'Feed Risk',calc:(p,last)=>pondRiskFeed(p,last)},
+  {key:'econ',icon:'💰',label:'Economic Risk',calc:(p)=>pondRiskEconomic(p)},
+];
+// ── การกระทำแนะนำผูกกับหมวด/ระดับความเสี่ยง — อ้างอิงจากเอกสาร Pond dynamics / ไนไตรท์สะสม / Precision feeding / shrimp health management ──
+const FC_ACTIONS={
+  do:{danger:[{t:'เปิดเครื่องตีน้ำเพิ่มทันที',d:'DO ต่ำกว่าเกณฑ์ปลอดภัย เสี่ยงกุ้งลอยหัว'},{t:'ลดอาหาร 20–50%',d:'ลดภาระออกซิเจนจากการย่อยอาหาร'},{t:'ตรวจ DO ซ้ำหลังเปิดเครื่องตีน้ำ',d:'ยืนยันว่าค่ากลับมาปกติ'}],
+      warn:[{t:'เฝ้าระวัง DO ช่วงเช้ามืด (ตี 3–5 น.)',d:'ช่วงที่ DO ต่ำสุดตามธรรมชาติ แอปยังไม่มีข้อมูลช่วงนี้'}]},
+  stab:{danger:[{t:'ตรวจ pH และ DO เช้า–บ่ายให้ครบทุกวัน',d:'ยืนยันแนวโน้มการแกว่งของระบบ'},{t:'ตรวจ Alkalinity',d:'เช็คว่าลดลงจนต้องเติมด่างหรือไม่'}],
+        warn:[{t:'เพิ่มความถี่ตรวจคุณภาพน้ำ',d:'บ่อเริ่มไม่นิ่ง ควรติดตามใกล้ชิดขึ้น'}]},
+  disease:{danger:[{t:'สังเกตพฤติกรรมกุ้งใกล้ชิด (ลอยหัว ว่ายผิดปกติ)',d:'สัญญาณเตือนโรคล่วงหน้าหลายตัวขึ้นพร้อมกัน'},{t:'แจ้งที่ปรึกษาฟาร์ม',d:'ขอความเห็นผู้เชี่ยวชาญก่อนลุกลาม'}],
+           warn:[{t:'ตรวจการกินอาหารและคุณภาพน้ำเพิ่มเติม',d:'เฝ้าระวังสัญญาณเริ่มต้นก่อนกุ้งป่วยจริง'}]},
+  feed:{danger:[{t:'ตรวจยอกินอาหารและของเสียในยอ',d:'ประเมินว่าให้อาหารเกินความต้องการหรือไม่'},{t:'ปรับปริมาณอาหารใหม่ตามผลตรวจยอ',d:'ลดตามผลจริง ไม่ใช้ความรู้สึก'}],
+        warn:[{t:'ตรวจยอกินอาหารวันนี้',d:'ยืนยันแนวโน้มการกิน/FCR ที่เปลี่ยนไป'}]},
+  econ:{danger:[{t:'ทบทวนต้นทุนอาหารและ FCR ทั้งรอบ',d:'FCR สูงกระทบกำไรโดยตรง'}],
+        warn:[{t:'ติดตาม FCR สะสมสัปดาห์นี้',d:'เริ่มเบี่ยงจากเป้าหมาย'}]},
+};
+function _fcPick(candidates,okReason){
+  const rk={ok:0,warn:1,danger:2};
+  let best=null;
+  candidates.forEach(c=>{if(c&&(!best||rk[c.level]>rk[best.level]))best=c;});
+  return best?best:{level:'ok',reason:okReason};
+}
+function _fcVals(arr,key,n){return(arr||[]).filter(r=>r&&r[key]!=null&&r[key]!=='').slice(-n).map(r=>parseFloat(r[key]));}
+function _fcTrend(vals,margin){
+  if(vals.length<3)return{dir:'flat',delta:0};
+  const prior=vals.slice(0,-1).reduce((s,v)=>s+v,0)/(vals.length-1);
+  const delta=vals[vals.length-1]-prior;
+  if(delta<=-margin)return{dir:'down',delta};
+  if(delta>=margin)return{dir:'up',delta};
+  return{dir:'flat',delta};
+}
+function fcDoTrend(p){return _fcTrend(_fcVals(p.records,'doM',4),0.5)}
+function fcFeedTrend(p){
+  const vals=_fcVals(p.feedLog,'totalFeed',4);
+  const avg=vals.length?vals.reduce((s,v)=>s+v,0)/vals.length:0;
+  return _fcTrend(vals,Math.max(0.5,avg*0.1));
+}
+function fcRisingTrend(p,key,margin){return _fcTrend(_fcVals(p.records,key,4),margin).dir==='up'}
+// FCR เฉพาะช่วงระหว่าง 2 ครั้งสุ่มล่าสุด (ไม่ใช่ FCR สะสม) — เผยประสิทธิภาพอาหารล่าสุดที่ FCR สะสมอาจกลบไว้ (ตามหลัก "แนวโน้มสำคัญกว่าค่าสะสม")
+function fcPeriodFCR(p){
+  const samples=(p.samples||[]).filter(s=>s.date&&s.abw!=null&&s.abw!==''&&s.survivalRate!=null&&s.survivalRate!=='').slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  if(samples.length<2||!p.stock)return null;
+  const a=samples[samples.length-2],b=samples[samples.length-1];
+  const bioA=a.abw*(a.survivalRate/100)*p.stock/1000;
+  const bioB=b.abw*(b.survivalRate/100)*p.stock/1000;
+  const gain=bioB-bioA;if(gain<=0)return null;
+  const feedSum=(p.feedLog||[]).filter(r=>r.date>a.date&&r.date<=b.date).reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0);
+  if(feedSum<=0)return null;
+  return feedSum/gain;
+}
+function pondRiskDO(p,last){
+  const cands=[];
+  if(last){
+    const sM=classifyOv('doM',last.doM);
+    if(sM==='danger')cands.push({level:'danger',reason:`DO เช้า ${last.doM} mg/L ต่ำกว่าเกณฑ์อันตราย`});
+    else if(sM==='warn')cands.push({level:'warn',reason:`DO เช้า ${last.doM} mg/L เริ่มต่ำ`});
+    const sA=classifyOv('doA',last.doA);
+    if(sA==='danger')cands.push({level:'danger',reason:`DO บ่าย ${last.doA} mg/L ต่ำกว่าเกณฑ์อันตราย`});
+    else if(sA==='warn')cands.push({level:'warn',reason:`DO บ่าย ${last.doA} mg/L เริ่มต่ำ`});
+  }
+  if(fcDoTrend(p).dir==='down')cands.push({level:'warn',reason:'DO มีแนวโน้มลดลงต่อเนื่องหลายวัน แม้ค่าล่าสุดยังไม่ต่ำกว่าเกณฑ์'});
+  return _fcPick(cands,'DO อยู่ในเกณฑ์ปกติ');
+}
+function pondRiskStability(p,last){
+  if(!last)return{level:'ok',reason:'ยังไม่มีข้อมูลคุณภาพน้ำ'};
+  const cands=[];
+  const sAlk=classifyOv('alk',last.alk);
+  if(sAlk==='danger')cands.push({level:'danger',reason:`อัลคาไลน์ ${last.alk} mg/L ผิดเกณฑ์มาก`});
+  else if(sAlk==='warn')cands.push({level:'warn',reason:`อัลคาไลน์ ${last.alk} mg/L เริ่มผิดเกณฑ์`});
+  const sSal=classifyOv('sal',last.sal);
+  if(sSal==='danger')cands.push({level:'danger',reason:`ความเค็ม ${last.sal} ppt สูงเกินเกณฑ์`});
+  else if(sSal==='warn')cands.push({level:'warn',reason:`ความเค็ม ${last.sal} ppt เริ่มสูง`});
+  if(last.phM!=null&&last.phA!=null&&last.phM!==''&&last.phA!==''){
+    const sw=Math.abs(last.phM-last.phA);const s=classifyOv('phSwing',sw);
+    if(s==='danger')cands.push({level:'danger',reason:`pH แกว่ง ${sw.toFixed(2)} ระหว่างเช้า-บ่าย — บ่อไม่นิ่งมาก`});
+    else if(s==='warn')cands.push({level:'warn',reason:`pH แกว่ง ${sw.toFixed(2)} ระหว่างเช้า-บ่าย — เริ่มไม่นิ่ง`});
+  }
+  if(last.doM!=null&&last.doA!=null&&last.doM!==''&&last.doA!==''){
+    const dsw=Math.abs(last.doM-last.doA);
+    if(dsw>2)cands.push({level:'danger',reason:`DO แกว่ง ${dsw.toFixed(1)} mg/L ระหว่างเช้า-บ่าย — ระบบไม่เสถียรมาก`});
+    else if(dsw>=1.2)cands.push({level:'warn',reason:`DO แกว่ง ${dsw.toFixed(1)} mg/L ระหว่างเช้า-บ่าย — เริ่มไม่เสถียร`});
+  }
+  return _fcPick(cands,'คุณภาพน้ำเสถียรดี');
+}
+function pondRiskDisease(p,last){
+  const cands=[];
+  const lab=(p.labResults||[]).slice(-1)[0];
+  if(lab){
+    [['tcbsGreen','TCBS เขียว'],['tcbsYellow','TCBS เหลือง'],['tvc','TVC'],['ehp','EHP'],['ehpLarva','EHP ตัวอ่อน'],['hepato','ตับอ่อน']].forEach(([k,lbl])=>{
+      const v=lab[k];if(v==null||v==='')return;
+      const s=classifyOv(k,v);
+      if(s==='danger')cands.push({level:'danger',reason:`${lbl} ผิดปกติจากผลแล็บล่าสุด`});
+      else if(s==='warn')cands.push({level:'warn',reason:`${lbl} เริ่มผิดปกติจากผลแล็บล่าสุด`});
+    });
+  }
+  const doT=fcDoTrend(p),feedT=fcFeedTrend(p);
+  const nh4Up=fcRisingTrend(p,'nh4',0.05),no2Up=fcRisingTrend(p,'no2',0.3);
+  if(feedT.dir==='down'&&doT.dir==='down')cands.push({level:'danger',reason:'กินอาหารลดลง + DO ลดลงพร้อมกัน — สัญญาณเตือนโรคล่วงหน้าตามหลักวิชาการ'});
+  else if(feedT.dir==='down')cands.push({level:'warn',reason:'กินอาหารมีแนวโน้มลดลงต่อเนื่อง — สัญญาณเตือนโรคที่ดีที่สุดอย่างหนึ่ง'});
+  if(nh4Up||no2Up)cands.push({level:'warn',reason:`${nh4Up?'แอมโมเนีย':'ไนไตรท์'}มีแนวโน้มสูงขึ้น — เสี่ยงต่อภูมิคุ้มกันกุ้ง`});
+  return _fcPick(cands,'ไม่พบสัญญาณเตือนโรคล่วงหน้า');
+}
+function pondRiskFeed(p,last){
+  const cands=[];
+  if(fcFeedTrend(p).dir==='down')cands.push({level:'warn',reason:'ปริมาณอาหารที่กินได้ลดลงต่อเนื่อง — ควรตรวจยอและคุณภาพน้ำ'});
+  const pFcr=fcPeriodFCR(p),cumFcr=getFCR(p);
+  if(pFcr!=null&&cumFcr!=null&&pFcr>parseFloat(cumFcr)*1.3)
+    cands.push({level:'warn',reason:`FCR ช่วงล่าสุด (${pFcr.toFixed(2)}) สูงกว่า FCR สะสม (${cumFcr}) ชัดเจน — ประสิทธิภาพอาหารเริ่มแย่ลง`});
+  return _fcPick(cands,'การให้อาหารอยู่ในเกณฑ์ปกติ');
+}
+function pondRiskEconomic(p){
+  const cands=[];
+  const fcr=getFCR(p);
+  if(fcr!=null){
+    const f=parseFloat(fcr);
+    if(f>2.0)cands.push({level:'danger',reason:`FCR สะสม ${fcr} สูงมาก — ต้นทุนอาหารบานปลาย`});
+    else if(f>1.6)cands.push({level:'warn',reason:`FCR สะสม ${fcr} เริ่มสูง — ควรทบทวนการให้อาหาร`});
+  }
+  return _fcPick(cands,'ต้นทุนอยู่ในแผน');
+}
+let _fcSelRisk=null,_fcCurPond=null;
+const _fcDoneSet=new Set();
+function fcSetFilter(key){_fcSelRisk=_fcSelRisk===key?null:key;renderFarmCard(_fcCurPond);}
+function fcToggleAction(id){if(_fcDoneSet.has(id))_fcDoneSet.delete(id);else _fcDoneSet.add(id);renderFarmCard(_fcCurPond);}
+function renderFarmCard(p){
+  const gridEl=document.getElementById('fc-grid');if(!gridEl||!p)return;
+  _fcCurPond=p;
+  const last=p.records&&p.records.length?p.records[p.records.length-1]:null;
+  const results=FC_CATS.map(c=>({...c,res:c.calc(p,last)}));
+  gridEl.innerHTML=results.map(r=>`
+    <div class="fc-item ${r.res.level} ${_fcSelRisk===r.key?'sel':''}" onclick="fcSetFilter('${r.key}')">
+      <div class="fc-item-top"><span class="fc-item-lbl">${r.icon} ${r.label}</span></div>
+      <span class="fc-item-badge ${r.res.level}">${FC_ICON[r.res.level]} ${FC_LBL[r.res.level]}</span>
+      <div class="fc-item-reason">${r.res.reason}</div>
+    </div>`).join('');
+  let actions=[];
+  results.forEach(r=>{
+    if(r.res.level==='ok')return;
+    const list=(FC_ACTIONS[r.key]&&FC_ACTIONS[r.key][r.res.level])||[];
+    list.forEach((a,i)=>actions.push({id:p.id+'-'+r.key+'-'+i,riskKey:r.key,riskLabel:r.label,level:r.res.level,...a}));
+  });
+  const rank={danger:0,warn:1};
+  actions.sort((a,b)=>rank[a.level]-rank[b.level]);
+  if(_fcSelRisk)actions=actions.filter(a=>a.riskKey===_fcSelRisk);
+  const doneCount=actions.filter(a=>_fcDoneSet.has(a.id)).length;
+  const progEl=document.getElementById('fc-act-progress');
+  if(progEl)progEl.textContent=actions.length?`ทำแล้ว ${doneCount} / ${actions.length} รายการ`:'';
+  const barEl=document.getElementById('fc-act-bar-fill');
+  if(barEl)barEl.style.width=actions.length?(doneCount/actions.length*100)+'%':'0%';
+  const listEl=document.getElementById('fc-act-list');if(!listEl)return;
+  if(!actions.length){
+    listEl.innerHTML=`<div class="fc-act-empty">✅ ไม่มีสิ่งที่ต้องทำเพิ่มเติม${_fcSelRisk?'ในหมวดนี้':''} — ทุกอย่างอยู่ในเกณฑ์ปกติ</div>`;
+    return;
+  }
+  listEl.innerHTML=actions.map(a=>{
+    const done=_fcDoneSet.has(a.id);
+    return`<div class="fc-act-item ${done?'done':''}" onclick="fcToggleAction('${a.id}')">
+      <div class="fc-act-chk">${done?'✓':''}</div>
+      <div class="fc-act-body"><b>${a.t}</b><span>${a.d}</span><br/><span class="fc-act-src ${a.level}">${a.riskLabel}</span></div>
+    </div>`;
+  }).join('');
+}
 function homeRow(p,age,cls,reason){
   const dot=cls==='danger'?'var(--d)':cls==='warn'?'var(--w)':cls==='prep'?'var(--in)':'var(--ok)';
   return`<div class="home-row" onclick="openPondDetail('${p.id}')">
@@ -4546,6 +4745,14 @@ function renderPondDetail(id){
     </div>
     <div style="display:inline-flex;align-items:center;gap:6px;background:var(--a1);color:var(--a);font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;margin-bottom:12px">⏱ อายุ ${age} วัน</div>
     ${reason?`<div class="pd-alert"><div class="ai ${cls==='prep'?'ok':cls}"><span>${cls==='danger'?'🔴':cls==='warn'?'⚠️':'✅'}</span><div>${reason}</div></div></div>`:''}
+    ${cls!=='prep'?`<div class="card" style="margin-bottom:12px">
+      <div class="card-t">🚦 ความเสี่ยงหลักของบ่อ</div>
+      <div class="fc-grid" id="fc-grid"></div>
+      <div class="card-t" style="font-size:13px">✅ สิ่งที่ต้องทำวันนี้</div>
+      <div class="fc-act-progress" id="fc-act-progress"></div>
+      <div class="fc-act-bar"><div class="fc-act-bar-fill" id="fc-act-bar-fill"></div></div>
+      <div class="fc-act-list" id="fc-act-list"></div>
+    </div>`:''}
     <div class="pd-gauges" id="pd-gauges"></div>
     ${kpiHero}
     <div class="card" style="margin-top:12px">
@@ -4586,6 +4793,7 @@ function renderPondDetail(id){
     </div>`;
   renderPdGauges(p,last);
   renderPdCharts(p);
+  if(cls!=='prep')renderFarmCard(p);
 }
 // ══════ เฟส 2 (ดีไซน์ใหม่พี่แพรว): เกจค่าน้ำ + กราฟรายบ่อ ══════
 const PD_GAUGE_RANGE={phM:[6.5,9.5],doM:[0,10],nh4:[0,1],no2:[0,5],tM:[20,38]};
