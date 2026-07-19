@@ -8957,7 +8957,7 @@ function renderPLKPI(rows){
   const el=document.getElementById('pl-kpi');if(!el)return;
   if(!rows.length){el.innerHTML='<div class="kpi-card" style="grid-column:1/-1;text-align:center;color:var(--tx3);padding:20px">ยังไม่มีข้อมูลรอบที่ปิดแล้วในช่วงที่เลือก</div>';return;}
   const totRev=rows.reduce((s,r)=>s+(r.revenue||0),0);
-  const totCost=rows.reduce((s,r)=>s+((r.costFry||0)+(r.costFeed||0)+(r.costMed||0)+(r.costLime||0)+(r.costLabor||0)+(r.costElec||0)+(r.costFuel||0)+(r.costEquip||0)+(r.costEquipOut||0)+(r.costCatch||0)+(r.amtCaretaker||0)+(r.amtManager||0)+(r.costChem||0)+(r.costOther||0)+(r.costStock||0)),0);
+  const totCost=rows.reduce((s,r)=>s+((r.costFry||0)+(r.costFeed||0)+(r.costMed||0)+(r.costLime||0)+(r.costLabor||0)+(r.costElec||0)+(r.costFuel||0)+(r.costEquip||0)+(r.costEquipOut||0)+(r.costCatch||0)+(r.amtCaretaker||0)+(r.amtManager||0)+(r.costChem||0)+(r.costOther||0)),0);
   const totProfit=rows.reduce((s,r)=>s+(r.netProfit||0),0);
   const totWeight=rows.reduce((s,r)=>s+(r.totalWeight||0),0);
   const fcrRows=rows.filter(r=>r.fcr&&r.fcr>0);
@@ -8981,11 +8981,11 @@ function renderPLTable(rows){
     <th>บ่อ</th><th>รอบ/ปี</th><th>วันปิด</th>
     <th style="text-align:right">ผลผลิต(กก.)</th><th style="text-align:right">ราคา(฿/กก.)</th>
     <th style="text-align:right">รายได้(฿)</th><th style="text-align:right">ต้นทุน(฿)</th>
-    <th style="text-align:right">พัสดุ(฿)</th>
+    <th style="text-align:right">พัสดุ(฿) <span title="ยอดเบิกสต็อกทั้งหมดของบ่อนี้ (อ้างอิง) — เป็นข้อมูลชุดเดียวกับเวชภัณฑ์/ปูน/อุปกรณ์ในคอลัมน์ต้นทุน ไม่ได้บวกซ้ำเข้าไปในคอลัมน์ต้นทุน" style="cursor:help">ℹ️</span></th>
     <th style="text-align:right">กำไร(฿)</th><th style="text-align:right">Margin</th>
     <th style="text-align:right">฿/กก.</th><th style="text-align:right">FCR</th><th></th>
   </tr></thead><tbody>${rows.map(r=>{
-    const cost=(r.costFry||0)+(r.costFeed||0)+(r.costMed||0)+(r.costLime||0)+(r.costLabor||0)+(r.costElec||0)+(r.costFuel||0)+(r.costEquip||0)+(r.costEquipOut||0)+(r.costCatch||0)+(r.amtCaretaker||0)+(r.amtManager||0)+(r.costChem||0)+(r.costOther||0)+(r.costStock||0);
+    const cost=(r.costFry||0)+(r.costFeed||0)+(r.costMed||0)+(r.costLime||0)+(r.costLabor||0)+(r.costElec||0)+(r.costFuel||0)+(r.costEquip||0)+(r.costEquipOut||0)+(r.costCatch||0)+(r.amtCaretaker||0)+(r.amtManager||0)+(r.costChem||0)+(r.costOther||0);
     const margin=r.revenue&&r.netProfit!=null?r.netProfit/r.revenue*100:null;
     const cpk=r.totalWeight&&cost?cost/r.totalWeight:null;
     const prof=r.netProfit;
@@ -9044,12 +9044,12 @@ function renderPLCostChart(rows){
   const totAmtMgr=rows.reduce((s,r)=>s+(r.amtManager||0),0);
   const totChem=rows.reduce((s,r)=>s+(r.costChem||0),0);
   const totOther=rows.reduce((s,r)=>s+(r.costOther||0),0);
-  const totStock=rows.reduce((s,r)=>s+(r.costStock||0),0);
-  const total=totFry+totFeed+totMed+totLime+totLabor+totElec+totFuel+totEquip+totEquipOut+totCatch+totAmtCare+totAmtMgr+totChem+totOther+totStock;
+  // costStock (ยอดเบิกสต็อกดิบรวม) ไม่รวมในกราฟ/ผลรวมนี้แล้ว — ข้อมูลชุดเดียวกับ totMed/totLime/totEquip ข้างบน นับซ้ำถ้าบวกเพิ่ม (ดู CLAUDE.md)
+  const total=totFry+totFeed+totMed+totLime+totLabor+totElec+totFuel+totEquip+totEquipOut+totCatch+totAmtCare+totAmtMgr+totChem+totOther;
   const totWeight=rows.reduce((s,r)=>s+(r.totalWeight||0),0);
-  const labels=['ลูกกุ้ง','อาหารกุ้ง','เวชภัณฑ์','ปูน','ค่าแรง','ค่าไฟฟ้า','น้ำมัน','อุปกรณ์','อุปกรณ์นอก','ค่าจับกุ้ง','ส่วนแบ่งคนเลี้ยง','ส่วนแบ่งผู้จัดการ','พัสดุ(ระบบเดิม)','สารเคมี(เดิม)','อื่นๆ(เดิม)'];
-  const vals=[totFry,totFeed,totMed,totLime,totLabor,totElec,totFuel,totEquip,totEquipOut,totCatch,totAmtCare,totAmtMgr,totStock,totChem,totOther];
-  const colors=['#9A6A04','#3b82f6','#7c3aed','#a3a3a3','#0f6e56','#0ea5e9','#dc2626','#16a34a','#65a30d','#c026d3','#f59e0b','#ea580c','#7f8c84','#94a3b8','#cbd5e1'];
+  const labels=['ลูกกุ้ง','อาหารกุ้ง','เวชภัณฑ์','ปูน','ค่าแรง','ค่าไฟฟ้า','น้ำมัน','อุปกรณ์','อุปกรณ์นอก','ค่าจับกุ้ง','ส่วนแบ่งคนเลี้ยง','ส่วนแบ่งผู้จัดการ','สารเคมี(เดิม)','อื่นๆ(เดิม)'];
+  const vals=[totFry,totFeed,totMed,totLime,totLabor,totElec,totFuel,totEquip,totEquipOut,totCatch,totAmtCare,totAmtMgr,totChem,totOther];
+  const colors=['#9A6A04','#3b82f6','#7c3aed','#a3a3a3','#0f6e56','#0ea5e9','#dc2626','#16a34a','#65a30d','#c026d3','#f59e0b','#ea580c','#94a3b8','#cbd5e1'];
   const canvas=document.getElementById('pl-donut');
   if(canvas){
     if(_plDonutChart){_plDonutChart.destroy();_plDonutChart=null;}
