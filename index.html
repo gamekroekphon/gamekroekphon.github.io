@@ -400,7 +400,7 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .stock-sub-btn{padding:8px 14px;font-size:12.5px;font-weight:600;color:var(--tx2);cursor:pointer;border-bottom:3px solid transparent;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
 .stock-sub-btn.on{color:var(--p);border-bottom-color:var(--p)}
 .stock-pane{display:none}.stock-pane.on{display:block}
-.stock-warn{background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:8px 12px;font-size:12.5px;color:#DC2626;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.stock-warn{background:var(--db);border:1px solid var(--d);border-radius:8px;padding:8px 12px;font-size:12.5px;color:var(--d);margin-bottom:12px;display:flex;align-items:center;gap:6px}
 .stock-cat-seed{background:#FCE7F3;color:#9D174D}
 .admin-only{display:none}
 body.role-admin .admin-only{display:revert!important}
@@ -416,7 +416,7 @@ body.role-admin .home-quick .admin-only{display:flex!important}
 .stock-cat-probioOral{background:#F3E8FF;color:#7E22CE}
 .stock-cat-probioWater{background:#EDE9FE;color:#5B21B6}
 .stock-cat-lime{background:#F5F5F4;color:#57534E}
-.stock-qty-low{color:#DC2626;font-weight:700}
+.stock-qty-low{color:var(--d);font-weight:700}
 .stock-mode-btn{flex:1;padding:7px;font-size:13px;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--tx2);font-weight:500;transition:background .15s,color .15s}
 .stock-mode-btn.on-in{background:var(--ob);color:var(--ok)}
 .stock-mode-btn.on-out{background:var(--p);color:#fff}
@@ -467,14 +467,14 @@ input.sk-cart-price{width:90px!important;text-align:center;font-size:13px;paddin
 .wq-cell{padding:5px 8px;display:block;min-width:60px;text-align:center;font-weight:600;font-size:11px;line-height:1.3}
 .wq-ok{background:#F0FDF4;color:#15803D}
 .wq-warn{background:#FFFBEB;color:#B45309}
-.wq-danger{background:#FEF2F2;color:#DC2626}
+.wq-danger{background:var(--db);color:var(--d)}
 .wq-na{background:transparent;color:#CBD5E1;font-weight:400;font-size:11px}
 .wq-chip{padding:3px 10px;border-radius:16px;border:1.5px solid var(--bd);background:none;font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
 .wq-chip.on{border-color:var(--in);background:var(--ib);color:var(--in);font-weight:600}
-.wq-arrow-up-ok{color:#15803D;font-size:9px;margin-left:1px}
-.wq-arrow-up-bad{color:#DC2626;font-size:9px;margin-left:1px}
-.wq-arrow-down-ok{color:#15803D;font-size:9px;margin-left:1px}
-.wq-arrow-down-bad{color:#DC2626;font-size:9px;margin-left:1px}
+.wq-arrow-up-ok{color:var(--ok);font-size:9px;margin-left:1px}
+.wq-arrow-up-bad{color:var(--d);font-size:9px;margin-left:1px}
+.wq-arrow-down-ok{color:var(--ok);font-size:9px;margin-left:1px}
+.wq-arrow-down-bad{color:var(--d);font-size:9px;margin-left:1px}
 .wq-arrow-neutral{color:#94A3B8;font-size:9px;margin-left:1px}
 .wx-day{background:var(--sf2);border:1px solid var(--bd);border-radius:var(--r);padding:15px;text-align:center}
 .risk-ring{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:900;flex-shrink:0}
@@ -4545,7 +4545,7 @@ function renderPondDetail(id){
       <span class="${badgeCls}" style="padding:5px 12px;border-radius:14px;font-size:12px;font-weight:600;flex:none">${badgeTxt}</span>
     </div>
     <div style="display:inline-flex;align-items:center;gap:6px;background:var(--a1);color:var(--a);font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;margin-bottom:12px">⏱ อายุ ${age} วัน</div>
-    ${reason?`<div class="pd-alert"><div class="ai ${cls==='prep'?'ok':cls}"><span>${cls==='danger'?'🔴':cls==='warn'?'🟡':'ℹ️'}</span><div>${reason}</div></div></div>`:''}
+    ${reason?`<div class="pd-alert"><div class="ai ${cls==='prep'?'ok':cls}"><span>${cls==='danger'?'🔴':cls==='warn'?'⚠️':'✅'}</span><div>${reason}</div></div></div>`:''}
     <div class="pd-gauges" id="pd-gauges"></div>
     ${kpiHero}
     <div class="card" style="margin-top:12px">
@@ -4743,7 +4743,7 @@ function renderOv(){
   });
   meta.sort((a,b)=>b.age-a.age);
   const dcP=meta.filter(m=>m.cls==='danger').length,wcP=meta.filter(m=>m.cls==='warn').length;
-  document.getElementById('hdr-alert').textContent=dcP>0&&wcP>0?`🔴 ${dcP} ต้องดู · 🟡 ${wcP} เฝ้าระวัง`:dcP>0?`🔴 ${dcP} ต้องดู`:wcP>0?`🟡 ${wcP} เฝ้าระวัง`:'✅ ทุกบ่อปกติ';
+  document.getElementById('hdr-alert').textContent=dcP>0&&wcP>0?`🔴 ${dcP} ต้องดู · ⚠️ ${wcP} เฝ้าระวัง`:dcP>0?`🔴 ${dcP} ต้องดู`:wcP>0?`⚠️ ${wcP} เฝ้าระวัง`:'✅ ทุกบ่อปกติ';
   const active=meta.filter(m=>m.cls!=='prep');
   const prepM=meta.filter(m=>m.cls==='prep');
   const warnM=meta.filter(m=>m.cls==='warn'||m.cls==='danger');
@@ -4771,7 +4771,7 @@ function renderOv(){
   const alerts=allAlerts();
   updateAlertBadge(alerts.length);
   const trendIco={up:'<span style="color:var(--ok)">↓ ดีขึ้น</span>',down:'<span style="color:var(--d)">↑ แย่ลง</span>',flat:'<span style="color:var(--tx3)">→ เท่าเดิม</span>'};
-  document.getElementById('ov-alerts').innerHTML=alerts.length>0?`<div class="card" style="margin-top:24px"><div class="card-t">🔔 การแจ้งเตือน</div>${alerts.slice(0,8).map(a=>`<div class="ai ${a.level}"><span>${a.level==='danger'?'🔴':'🟡'}</span><div><strong>บ่อ ${a.pond}</strong> · ${a.param}: <strong>${a.val!==null?a.val+a.unit:'-'}</strong>${a.trend&&trendIco[a.trend]?' · '+trendIco[a.trend]:''}</div></div>`).join('')}</div>`:'';
+  document.getElementById('ov-alerts').innerHTML=alerts.length>0?`<div class="card" style="margin-top:24px"><div class="card-t">🔔 การแจ้งเตือน</div>${alerts.slice(0,8).map(a=>`<div class="ai ${a.level}"><span>${a.level==='danger'?'🔴':'⚠️'}</span><div><strong>บ่อ ${a.pond}</strong> · ${a.param}: <strong>${a.val!==null?a.val+a.unit:'-'}</strong>${a.trend&&trendIco[a.trend]?' · '+trendIco[a.trend]:''}</div></div>`).join('')}</div>`:'';
   document.getElementById('ov-ts').textContent=new Date().toLocaleString('th-TH');
   renderChecklist();
   renderOvDashboard(active);
@@ -4808,7 +4808,7 @@ function renderOvDashboard(active){
   const okN=rows.filter(r=>r.cls==='ok'&&r.hasWQ&&r.hasFeed&&r.hasStock).length;
   sumEl.innerHTML=`
     <div class="ovd-sum-chip danger"><div class="n">${dangerN}</div><div class="l">🔴 ต้องดูด่วน</div></div>
-    <div class="ovd-sum-chip warn"><div class="n">${warnN}</div><div class="l">🟡 เฝ้าระวัง</div></div>
+    <div class="ovd-sum-chip warn"><div class="n">${warnN}</div><div class="l">⚠️ เฝ้าระวัง</div></div>
     <div class="ovd-sum-chip na"><div class="n">${missingN}</div><div class="l">⏳ ยังไม่กรอกวันนี้</div></div>
     <div class="ovd-sum-chip ok"><div class="n">${okN}</div><div class="l">✅ ปกติครบถ้วน</div></div>`;
   const urgentN=rows.filter(r=>r.cls==='warn'||r.cls==='danger').length;
@@ -4816,7 +4816,7 @@ function renderOvDashboard(active){
   document.getElementById('ovd-filters').innerHTML=chips.map(c=>`<button class="ovd-f-chip ${_ovdFilter===c.key?'on':''}" onclick="setOvdFilter('${c.key}')">${c.lbl} <span class="cnt">${c.cnt}</span></button>`).join('');
   const list=_ovdSort(_ovdFiltered(rows));
   const STATUS_LBL={ok:'ปกติ',warn:'เฝ้าระวัง',danger:'ต้องดู!'};
-  const STATUS_ICON={ok:'✅',warn:'🟡',danger:'🔴'};
+  const STATUS_ICON={ok:'✅',warn:'⚠️',danger:'🔴'};
   if(!list.length){
     document.getElementById('ovd-tbl-body').innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--tx3);padding:16px;font-style:italic">ไม่มีบ่อที่ตรงเงื่อนไข</td></tr>`;
     document.getElementById('ovd-cards-body').innerHTML=`<p style="text-align:center;color:var(--tx3);padding:16px;font-style:italic">ไม่มีบ่อที่ตรงเงื่อนไข</p>`;
@@ -5567,7 +5567,7 @@ function renderStockItems(){
     sorted.map(i=>{
       const isLow=i.minQty>0&&i.qty<=i.minQty;
       const statusBadge=isLow
-        ?'<span class="badge" style="background:#FEE2E2;color:#DC2626">ใกล้หมด</span>'
+        ?'<span class="badge" style="background:var(--db);color:var(--d)">ใกล้หมด</span>'
         :'<span class="badge" style="background:var(--ob);color:var(--ok)">ปกติ</span>';
       const catCss=STOCK_CAT_CSS[i.category]||'';
       const price=i.unitPrice||0;
@@ -5951,7 +5951,7 @@ function renderSalesReport(){
   kpiEl.innerHTML=`
     <div class="kpi-card"><div class="kpi-lbl">ยอดขายรวม</div><div class="kpi-val">${totSales?totSales.toLocaleString():'-'}</div><div class="kpi-sub">บาท</div></div>
     ${isMoney?`<div class="kpi-card"><div class="kpi-lbl">ต้นทุนรวม</div><div class="kpi-val">${totCost?totCost.toLocaleString():'-'}</div><div class="kpi-sub">บาท</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">กำไรรวม</div><div class="kpi-val" style="color:${totProfit>=0?'var(--ok)':'#DC2626'}">${(totProfit>=0?'+':'')+totProfit.toLocaleString()}</div><div class="kpi-sub">บาท</div></div>`:''}
+    <div class="kpi-card"><div class="kpi-lbl">กำไรรวม</div><div class="kpi-val" style="color:${totProfit>=0?'var(--ok)':'var(--d)'}">${(totProfit>=0?'+':'')+totProfit.toLocaleString()}</div><div class="kpi-sub">บาท</div></div>`:''}
     <div class="kpi-card"><div class="kpi-lbl">จำนวนรายการ</div><div class="kpi-val">${rows.length}</div><div class="kpi-sub">รายการ</div></div>`;
   if(!rows.length){tblEl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ไม่มีรายการขายในช่วงที่เลือก</p>';return;}
   const moneyHdr=isMoney?'<th style="text-align:right">ต้นทุน</th><th style="text-align:right">กำไร</th>':'';
@@ -5960,7 +5960,7 @@ function renderSalesReport(){
       const sales=(l.sellPrice||0)*(l.qty||0);
       const cost=(l.unitCost||0)*(l.qty||0);
       const profit=sales-cost;
-      const moneyTd=isMoney?`<td style="text-align:right">${cost.toLocaleString()}</td><td style="text-align:right;color:${profit>=0?'var(--ok)':'#DC2626'};font-weight:700">${(profit>=0?'+':'')+profit.toLocaleString()}</td>`:'';
+      const moneyTd=isMoney?`<td style="text-align:right">${cost.toLocaleString()}</td><td style="text-align:right;color:${profit>=0?'var(--ok)':'var(--d)'};font-weight:700">${(profit>=0?'+':'')+profit.toLocaleString()}</td>`:'';
       return `<tr>
         <td>${fD(l.date)}</td>
         <td>${l.custName||'-'}</td>
@@ -6297,7 +6297,7 @@ function renderFeedGrid(){
   const feedItems=(D.inventoryItems||[]).filter(i=>i.category==='feed').sort((a,b)=>a.name.localeCompare(b.name,'th'));
   // ── เตือนบ่อที่ยังไม่ได้กรอกอาหารของวันที่เลือก — มองปราดเดียวรู้ว่าขาดบ่อไหน ──
   const missing=ponds.filter(p=>!(p.feedLog||[]).some(r=>r.date===d));
-  const banner=missing.length?`<div style="background:var(--wb);border:1px solid #f0d9a8;border-radius:8px;padding:8px 12px;font-size:12.5px;margin-bottom:10px">⚠️ ${d===today()?'วันนี้':'วันที่ '+fD(d)}ยังไม่ได้กรอกอาหาร ${missing.length} บ่อ: <b>${missing.map(p=>p.name).join(', ')}</b></div>`:'';
+  const banner=missing.length?`<div style="background:var(--wb);border:1px solid var(--w);border-radius:8px;padding:8px 12px;font-size:12.5px;margin-bottom:10px">⚠️ ${d===today()?'วันนี้':'วันที่ '+fD(d)}ยังไม่ได้กรอกอาหาร ${missing.length} บ่อ: <b>${missing.map(p=>p.name).join(', ')}</b></div>`:'';
   // คอลัมน์ "ต้นทุนอาหารสะสม" เห็นเฉพาะ admin (ข้อมูลการเงิน) — เลขชุดเดียวกับที่ auto-fill ตอนปิดรอบ
   wrap.innerHTML=banner+`<table class="tbl" style="white-space:nowrap"><thead><tr>
     <th>บ่อ</th><th>อายุ</th><th style="text-align:right">Biomass</th><th style="text-align:right">เมื่อวาน</th>
@@ -6594,7 +6594,7 @@ function updateLabStatus(){
   if(gut!==null&&!isNaN(gut)){const s=gut>30?'danger':gut>10?'warn':'ok';msgs.push({s,m:`ลำไส้อักเสบ: ${gut}% — ${s==='ok'?'ปกติ':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย'}`})}
   const lipidRaw=document.getElementById('lb-lipid')?.value;const lipid=lipidRaw!==''&&lipidRaw!=null?parseFloat(lipidRaw):null;
   if(lipid!==null&&!isNaN(lipid)){const s=lipid>=70?'ok':lipid>=50?'warn':'danger';msgs.push({s,m:`เม็ดไขมันรวม: ${lipid}% — ${s==='ok'?'ยังดีอยู่':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย'}`})}
-  el.innerHTML=msgs.map(m=>`<div class="ai ${m.s}" style="margin-bottom:5px"><span>${m.s==='danger'?'🔴':m.s==='warn'?'🟡':'✅'}</span><span>${m.m}</span></div>`).join('');
+  el.innerHTML=msgs.map(m=>`<div class="ai ${m.s}" style="margin-bottom:5px"><span>${m.s==='danger'?'🔴':m.s==='warn'?'⚠️':'✅'}</span><span>${m.m}</span></div>`).join('');
 }
 function saveLab(){
   const pid=document.getElementById('lb-pond').value,d=document.getElementById('lb-date').value;
@@ -6937,7 +6937,7 @@ function renderRiskWeatherBanner(weatherDays){
   const bg=maxW>=5?'var(--db)':'var(--wb)',bd=maxW>=5?'var(--d)':'var(--w)';
   el.innerHTML=`<div class="card" style="background:${bg};border:1px solid ${bd}">
     <div style="font-weight:800;font-size:13px;color:${bd};margin-bottom:4px">🌤️ ความเสี่ยงระดับฟาร์ม (สภาพอากาศ — เหมือนกันทุกบ่อ)</div>
-    ${msgs.map(r=>`<div style="font-size:12px;padding:1px 0;color:${r.l==='danger'?'var(--d)':r.l==='warn'?'var(--w)':'var(--tx3)'}">${r.l==='danger'?'🔴':r.l==='warn'?'🟡':'⚪'} ${r.m}</div>`).join('')}
+    ${msgs.map(r=>`<div style="font-size:12px;padding:1px 0;color:${r.l==='danger'?'var(--d)':r.l==='warn'?'var(--w)':'var(--tx3)'}">${r.l==='danger'?'🔴':r.l==='warn'?'⚠️':'✅'} ${r.m}</div>`).join('')}
   </div>`;
 }
 function renderRiskFarmSummary(pondMax){
@@ -6953,12 +6953,12 @@ function renderRiskFarmSummary(pondMax){
   const topReason=Object.entries(reasonCount).sort((a,b)=>b[1]-a[1])[0];
   const headline=high.length>0
     ?`🔴 ${high.length} บ่อเสี่ยงสูงใน 3 วันข้างหน้า${topReason?' — ระวัง'+topReason[0]:''}`
-    :`🟡 ${mid.length} บ่อเสี่ยงปานกลางใน 3 วันข้างหน้า`;
+    :`⚠️ ${mid.length} บ่อเสี่ยงปานกลางใน 3 วันข้างหน้า`;
   const bg=high.length>0?'var(--db)':'var(--wb)',bd=high.length>0?'var(--d)':'var(--w)';
   const names=(high.length>0?high:mid).map(x=>x.p.name).slice(0,8).join(', ');
   el.innerHTML=`<div class="card" style="background:${bg};border:1px solid ${bd}">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <span style="font-size:26px">${high.length>0?'⚠️':'🟡'}</span>
+      <span style="font-size:26px">${high.length>0?'🔴':'⚠️'}</span>
       <div><div style="font-weight:800;font-size:15px;color:${bd}">${headline}</div>
       <div style="font-size:12px;color:var(--tx3);margin-top:2px">บ่อที่ต้องเฝ้าระวัง: ${names}${(high.length>0?high:mid).length>8?' ...':''}</div></div>
     </div>
@@ -6977,8 +6977,8 @@ function renderRisk(d){
     // ── โชว์เฉพาะความเสี่ยง "ของบ่อนี้เอง" ในการ์ด (ALK/DO/แอมโมเนีย/ไนไตรท์/TCBS) — อากาศไปอยู่แบนเนอร์ด้านบนแทน (ตามรายงาน UX พีแพรว ข้อ 2) ──
     const pondOnly=[];days.forEach(r=>r.pondReasons.forEach(x=>{if(!pondOnly.some(y=>y.m===x.m))pondOnly.push(x)}));
     return`<div class="card"><div style="display:flex;align-items:center;gap:12px;margin-bottom:10px"><div class="risk-ring ${rc}">${maxS}</div><div><div style="font-weight:800;font-size:15px">บ่อ ${p.name}</div><div style="font-size:12px;font-weight:700;color:${maxS>=6?'var(--d)':maxS>=3?'var(--w)':'var(--ok)'}">ความเสี่ยง${maxS>=6?'สูง':maxS>=3?'ปานกลาง':'ต่ำ'}</div></div></div>
-      ${days.map((r,i)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="font-size:11px;color:var(--tx3);width:48px">วันที่ ${i+1}</div><div style="flex:1;height:7px;background:var(--bd);border-radius:4px;overflow:hidden"><div style="height:100%;width:${Math.min(100,r.score/8*100)}%;background:${r.score>=6?'#e53e3e':r.score>=3?'#dd6b20':'#2f855a'};border-radius:4px"></div></div><div style="font-size:11px;font-weight:700;width:14px">${r.score}</div></div>`).join('')}
-      <div style="margin-top:8px;border-top:1px solid var(--bd);padding-top:8px">${pondOnly.length>0?pondOnly.slice(0,3).map(r=>`<div style="font-size:11px;padding:2px 0;color:${r.l==='danger'?'var(--d)':r.l==='warn'?'var(--w)':'var(--tx3)'}">${r.l==='danger'?'🔴':r.l==='warn'?'🟡':'⚪'} ${r.m}</div>`).join(''):'<div style="font-size:11px;padding:2px 0;color:var(--ok)">✅ ไม่มีความเสี่ยงเฉพาะบ่อนี้</div>'}</div>
+      ${days.map((r,i)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="font-size:11px;color:var(--tx3);width:48px">วันที่ ${i+1}</div><div style="flex:1;height:7px;background:var(--bd);border-radius:4px;overflow:hidden"><div style="height:100%;width:${Math.min(100,r.score/8*100)}%;background:${r.score>=6?'var(--d)':r.score>=3?'var(--w)':'var(--ok)'};border-radius:4px"></div></div><div style="font-size:11px;font-weight:700;width:14px">${r.score}</div></div>`).join('')}
+      <div style="margin-top:8px;border-top:1px solid var(--bd);padding-top:8px">${pondOnly.length>0?pondOnly.slice(0,3).map(r=>`<div style="font-size:11px;padding:2px 0;color:${r.l==='danger'?'var(--d)':r.l==='warn'?'var(--w)':'var(--tx3)'}">${r.l==='danger'?'🔴':r.l==='warn'?'⚠️':'✅'} ${r.m}</div>`).join(''):'<div style="font-size:11px;padding:2px 0;color:var(--ok)">✅ ไม่มีความเสี่ยงเฉพาะบ่อนี้</div>'}</div>
     </div>`;
   }).join('');
   // ── แบนเนอร์อากาศระดับฟาร์ม (ครั้งเดียว) + สรุปรวมทั้งฟาร์มด้านบน — ผู้บริหารเห็นภาพรวมในตาเดียว ──
