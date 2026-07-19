@@ -618,6 +618,50 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .pc-ov-step{display:flex;align-items:center;gap:4px;margin-bottom:2px}
 .pc-ov-empty{text-align:center;padding:8px 0;color:var(--tx3);font-size:11px}
 @media(max-width:480px){.ov-kpi-bar{grid-template-columns:repeat(2,1fr)}.ov-grid{grid-template-columns:repeat(2,1fr)}}
+/* ── การ์ดใหม่: แดชบอร์ดสถานะบ่อทั้งหมด (จาก mockup ที่พี่คอนเฟิม) — รวมสถานะ/เช็คลิสต์/ค่าผิดปกติทุกบ่อในตารางเดียว ── */
+.ovd-sum-strip{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.ovd-sum-chip{flex:1;min-width:110px;border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.ovd-sum-chip .n{font-size:22px;font-weight:700;line-height:1.1}
+.ovd-sum-chip .l{font-size:11px}
+.ovd-sum-chip.danger{background:var(--db);color:var(--d)}
+.ovd-sum-chip.warn{background:var(--wb);color:var(--w)}
+.ovd-sum-chip.ok{background:var(--ob);color:var(--ok)}
+.ovd-sum-chip.na{background:var(--sf2);color:var(--tx2)}
+.ovd-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.ovd-f-chip{border:1.5px solid var(--bd);background:var(--sf);color:var(--tx2);border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:6px}
+.ovd-f-chip .cnt{background:var(--sf2);border-radius:999px;padding:0 6px;font-size:11px;color:var(--tx3)}
+.ovd-f-chip.on{background:var(--p);color:#fff;border-color:var(--p)}
+.ovd-f-chip.on .cnt{background:rgba(255,255,255,.25);color:#fff}
+.ovd-table{width:100%;border-collapse:separate;border-spacing:0 8px}
+.ovd-table thead th{text-align:left;font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.02em;padding:0 10px 4px}
+.ovd-table tbody tr{background:var(--sf2);cursor:pointer;transition:transform .1s,box-shadow .15s}
+.ovd-table tbody tr:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.ovd-table tbody tr.ovd-row-danger{background:var(--db)}
+.ovd-table tbody tr.ovd-row-warn{background:var(--wb)}
+.ovd-table td{padding:10px;font-size:13px;vertical-align:middle}
+.ovd-table td:first-child{border-radius:8px 0 0 8px}
+.ovd-table td:last-child{border-radius:0 8px 8px 0}
+.ovd-pond-name{font-weight:700;font-size:13.5px}
+.ovd-pond-age{font-size:11px;color:var(--tx3)}
+.ovd-st-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:6px;font-size:11.5px;font-weight:600}
+.ovd-st-badge.ok{background:var(--ob);color:var(--ok)}
+.ovd-st-badge.warn{background:var(--wb);color:var(--w)}
+.ovd-st-badge.danger{background:var(--db);color:var(--d)}
+.ovd-chk{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700}
+.ovd-chk.yes{background:var(--ob);color:var(--ok)}
+.ovd-chk.no{background:var(--sf);color:var(--tx3);border:1.5px dashed var(--bd)}
+.ovd-reason{font-size:12px;color:var(--d);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ovd-reason-ok{font-size:12px;color:var(--tx3)}
+.ovd-row-arrow{color:var(--tx3);font-size:14px;text-align:right}
+.ovd-cards{display:none;flex-direction:column;gap:10px}
+.ovd-d-card{background:var(--sf2);border-radius:10px;padding:12px;cursor:pointer;border-left:4px solid var(--bd)}
+.ovd-d-card.ovd-row-danger{border-left-color:var(--d);background:var(--db)}
+.ovd-d-card.ovd-row-warn{border-left-color:var(--w);background:var(--wb)}
+.ovd-d-card.ovd-row-ok{border-left-color:var(--ok)}
+.ovd-d-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.ovd-d-card-chks{display:flex;gap:14px;margin-bottom:6px}
+.ovd-d-card-chk{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2)}
+@media(max-width:680px){.card .ovd-table{display:none}.ovd-cards{display:flex}}
 .login-screen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center}
 .login-box{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:32px 28px;width:320px;max-width:90vw}
 .login-logo{text-align:center;margin-bottom:20px}
@@ -1023,6 +1067,16 @@ body.role-ceo .main{max-width:640px}
     <div class="mhd-search" onclick="document.getElementById('bnav-more')?.click()">🔍 ค้นหาบ่อ / ข้อมูล...</div>
   </div>
   <div class="ov-kpi-bar" id="ov-kpi-bar"></div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-t">📊 สถานะบ่อทั้งหมด</div>
+    <div class="ovd-sum-strip" id="ovd-sum-strip"></div>
+    <div class="ovd-filters" id="ovd-filters"></div>
+    <table class="ovd-table">
+      <thead><tr><th>บ่อ</th><th>สถานะ</th><th style="text-align:center">น้ำ</th><th style="text-align:center">อาหาร</th><th style="text-align:center">สต็อก</th><th>เหตุผล / ค่าผิดปกติ</th><th></th></tr></thead>
+      <tbody id="ovd-tbl-body"></tbody>
+    </table>
+    <div class="ovd-cards" id="ovd-cards-body"></div>
+  </div>
   <div class="ov-main-grid">
     <div id="ov-sections"></div>
     <div class="ov-side">
@@ -4720,6 +4774,77 @@ function renderOv(){
   document.getElementById('ov-alerts').innerHTML=alerts.length>0?`<div class="card" style="margin-top:24px"><div class="card-t">🔔 การแจ้งเตือน</div>${alerts.slice(0,8).map(a=>`<div class="ai ${a.level}"><span>${a.level==='danger'?'🔴':'🟡'}</span><div><strong>บ่อ ${a.pond}</strong> · ${a.param}: <strong>${a.val!==null?a.val+a.unit:'-'}</strong>${a.trend&&trendIco[a.trend]?' · '+trendIco[a.trend]:''}</div></div>`).join('')}</div>`:'';
   document.getElementById('ov-ts').textContent=new Date().toLocaleString('th-TH');
   renderChecklist();
+  renderOvDashboard(active);
+}
+// ── การ์ดใหม่: แดชบอร์ดสถานะบ่อทั้งหมด (จาก mockup ที่พี่คอนเฟิม) — รวมสถานะ/เช็คลิสต์วันนี้/ค่าผิดปกติทุกบ่อไว้ตารางเดียว เรียงบ่อที่ต้องดูก่อนไว้บนสุด ──
+let _ovdFilter='all';
+function _ovdRows(active){
+  const td=today();
+  return active.map(({p,last,age,cls})=>{
+    const hasWQ=(p.records||[]).some(r=>r.date===td);
+    const hasFeed=(p.feedLog||[]).some(r=>r.date===td);
+    const hasStock=(D.inventoryLog||[]).some(r=>r.date===td&&r.type==='out'&&(!r.pondId||r.pondId===p.id));
+    const reason=(cls==='warn'||cls==='danger')?reasonOv(p,last,age):'';
+    return{id:p.id,name:p.name,age,cls,hasWQ,hasFeed,hasStock,reason};
+  });
+}
+function _ovdFiltered(rows){
+  if(_ovdFilter==='urgent')return rows.filter(r=>r.cls==='warn'||r.cls==='danger');
+  if(_ovdFilter==='missing')return rows.filter(r=>!r.hasWQ||!r.hasFeed||!r.hasStock);
+  return rows;
+}
+function _ovdSort(rows){
+  const rank={danger:0,warn:1,ok:2};
+  return rows.slice().sort((a,b)=>(rank[a.cls]??2)-(rank[b.cls]??2)||b.age-a.age);
+}
+function setOvdFilter(key){_ovdFilter=key;renderOv();}
+function _ovdChk(v){return `<span class="ovd-chk ${v?'yes':'no'}">${v?'✓':'–'}</span>`;}
+function renderOvDashboard(active){
+  const sumEl=document.getElementById('ovd-sum-strip');if(!sumEl)return;
+  const rows=_ovdRows(active||[]);
+  const dangerN=rows.filter(r=>r.cls==='danger').length;
+  const warnN=rows.filter(r=>r.cls==='warn').length;
+  const missingN=rows.filter(r=>!r.hasWQ||!r.hasFeed||!r.hasStock).length;
+  const okN=rows.filter(r=>r.cls==='ok'&&r.hasWQ&&r.hasFeed&&r.hasStock).length;
+  sumEl.innerHTML=`
+    <div class="ovd-sum-chip danger"><div class="n">${dangerN}</div><div class="l">🔴 ต้องดูด่วน</div></div>
+    <div class="ovd-sum-chip warn"><div class="n">${warnN}</div><div class="l">🟡 เฝ้าระวัง</div></div>
+    <div class="ovd-sum-chip na"><div class="n">${missingN}</div><div class="l">⏳ ยังไม่กรอกวันนี้</div></div>
+    <div class="ovd-sum-chip ok"><div class="n">${okN}</div><div class="l">✅ ปกติครบถ้วน</div></div>`;
+  const urgentN=rows.filter(r=>r.cls==='warn'||r.cls==='danger').length;
+  const chips=[{key:'all',lbl:'ทั้งหมด',cnt:rows.length},{key:'urgent',lbl:'⚠️ ต้องดูก่อน',cnt:urgentN},{key:'missing',lbl:'⏳ ยังไม่กรอกวันนี้',cnt:missingN}];
+  document.getElementById('ovd-filters').innerHTML=chips.map(c=>`<button class="ovd-f-chip ${_ovdFilter===c.key?'on':''}" onclick="setOvdFilter('${c.key}')">${c.lbl} <span class="cnt">${c.cnt}</span></button>`).join('');
+  const list=_ovdSort(_ovdFiltered(rows));
+  const STATUS_LBL={ok:'ปกติ',warn:'เฝ้าระวัง',danger:'ต้องดู!'};
+  const STATUS_ICON={ok:'✅',warn:'🟡',danger:'🔴'};
+  if(!list.length){
+    document.getElementById('ovd-tbl-body').innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--tx3);padding:16px;font-style:italic">ไม่มีบ่อที่ตรงเงื่อนไข</td></tr>`;
+    document.getElementById('ovd-cards-body').innerHTML=`<p style="text-align:center;color:var(--tx3);padding:16px;font-style:italic">ไม่มีบ่อที่ตรงเงื่อนไข</p>`;
+    return;
+  }
+  document.getElementById('ovd-tbl-body').innerHTML=list.map(r=>`
+    <tr class="ovd-row-${r.cls}" onclick="openPondDetail('${r.id}')">
+      <td><div class="ovd-pond-name">${r.name}</div><div class="ovd-pond-age">อายุ ${r.age>0?r.age+' วัน':'-'}</div></td>
+      <td><span class="ovd-st-badge ${r.cls}">${STATUS_ICON[r.cls]} ${STATUS_LBL[r.cls]}</span></td>
+      <td style="text-align:center">${_ovdChk(r.hasWQ)}</td>
+      <td style="text-align:center">${_ovdChk(r.hasFeed)}</td>
+      <td style="text-align:center">${_ovdChk(r.hasStock)}</td>
+      <td>${r.reason?`<span class="ovd-reason">⚠ ${r.reason}</span>`:`<span class="ovd-reason-ok">–</span>`}</td>
+      <td class="ovd-row-arrow">›</td>
+    </tr>`).join('');
+  document.getElementById('ovd-cards-body').innerHTML=list.map(r=>`
+    <div class="ovd-d-card ovd-row-${r.cls}" onclick="openPondDetail('${r.id}')">
+      <div class="ovd-d-card-top">
+        <div><div class="ovd-pond-name">${r.name}</div><div class="ovd-pond-age">อายุ ${r.age>0?r.age+' วัน':'-'}</div></div>
+        <span class="ovd-st-badge ${r.cls}">${STATUS_ICON[r.cls]} ${STATUS_LBL[r.cls]}</span>
+      </div>
+      <div class="ovd-d-card-chks">
+        <span class="ovd-d-card-chk">${_ovdChk(r.hasWQ)} น้ำ</span>
+        <span class="ovd-d-card-chk">${_ovdChk(r.hasFeed)} อาหาร</span>
+        <span class="ovd-d-card-chk">${_ovdChk(r.hasStock)} สต็อก</span>
+      </div>
+      ${r.reason?`<div class="ovd-reason" style="white-space:normal">⚠ ${r.reason}</div>`:''}
+    </div>`).join('');
 }
 // ══════ เฟส 1 (ดีไซน์ใหม่พี่แพรว): การ์ดสภาพอากาศ + บ่อเสี่ยงสูงสุด + โดนัทสถานะบ่อ ในหน้าภาพรวม ══════
 function renderOvWeatherCard(){
