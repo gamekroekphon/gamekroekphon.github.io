@@ -699,6 +699,47 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .fc-act-body span{font-size:11px;color:var(--tx3)}
 .fc-act-src{display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:5px;margin-top:3px}
 .fc-act-empty{text-align:center;padding:14px;color:var(--ok);font-size:12.5px}
+/* ── ข้างขึ้นข้างแรม/วันพระ-วันโกน + การ์ดเทียบรอบก่อน ── */
+.moon-strip{display:flex;align-items:center;gap:12px;background:var(--sf2);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.moon-ico{font-size:28px;line-height:1}
+.moon-txt{flex:1}
+.moon-txt .t1{font-size:13px;font-weight:600}
+.moon-txt .t2{font-size:11.5px;color:var(--tx3)}
+.wp-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px}
+.wp-day{flex-shrink:0;min-width:60px;border-radius:10px;padding:8px 6px;text-align:center;background:var(--sf2);border:1.5px solid transparent}
+.wp-day.today{border-color:var(--p)}
+.wp-day.kon{background:var(--wb);border-color:var(--w)}
+.wp-day.kon2{background:var(--ib);border-color:var(--in)}
+.wp-day.phra{background:var(--pl);border-color:var(--p)}
+.wp-day .wd{font-size:10.5px;color:var(--tx3)}
+.wp-day .dd{font-size:15px;font-weight:700;margin:2px 0}
+.wp-day .tag{font-size:9px;font-weight:700;padding:1px 4px;border-radius:99px;display:inline-block}
+.wp-day.kon .tag{background:var(--w);color:#fff}
+.wp-day.kon2 .tag{background:var(--in);color:#fff}
+.wp-day.phra .tag{background:var(--p);color:#fff}
+.bm-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.bm-tab{flex:1;text-align:center;padding:8px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:var(--sf2);color:var(--tx2);min-width:140px}
+.bm-tab.on{background:var(--p);color:#fff}
+.bm-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:560px){.bm-kpi-grid{grid-template-columns:1fr}}
+.bm-kpi{border:1.5px solid var(--bd);border-radius:10px;padding:12px;text-align:center}
+.bm-kpi .k-lbl{font-size:11.5px;color:var(--tx3);margin-bottom:6px}
+.bm-kpi .k-cur{font-size:20px;font-weight:700;color:var(--p)}
+.bm-kpi .k-prev{font-size:11.5px;color:var(--tx3);margin-top:2px}
+.bm-kpi .k-delta{font-size:12px;font-weight:700;margin-top:4px;display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px}
+.bm-kpi .k-delta.up{background:var(--ob);color:var(--ok)}
+.bm-kpi .k-delta.down{background:var(--db);color:var(--d)}
+.bm-kpi .k-delta.flat{background:var(--sf2);color:var(--tx3)}
+.bm-chart-wrap{position:relative;height:200px;margin-top:6px}
+.bm-legend{display:flex;gap:16px;justify-content:center;margin-top:8px;font-size:11.5px;flex-wrap:wrap}
+.bm-legend span{display:flex;align-items:center;gap:5px}
+.bm-legend .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.bm-extra-row{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:7px 0;border-bottom:1px solid var(--bd)}
+.bm-extra-row:last-child{border-bottom:none}
+.bm-extra-row .lbl{color:var(--tx2)}
+.bm-extra-row .vals{display:flex;gap:14px;font-weight:600}
+.bm-extra-row .vals .cur{color:var(--p)}
+.bm-extra-row .vals .ref{color:var(--tx3);font-weight:500}
 .login-screen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center}
 .login-box{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:32px 28px;width:320px;max-width:90vw}
 .login-logo{text-align:center;margin-bottom:20px}
@@ -4553,6 +4594,34 @@ function fcPeriodFCR(p){
   if(feedSum<=0)return null;
   return feedSum/gain;
 }
+// ── ข้างขึ้นข้างแรม (สูตร synodic month มาตรฐาน ไม่ต้องเรียก API) ──
+function moonPhase(date){
+  const synodic=29.530588853;
+  const knownNewMoon=new Date('2000-01-06T18:14:00Z').getTime();
+  const days=(date.getTime()-knownNewMoon)/86400000;
+  return((days%synodic)+synodic)%synodic; // 0=จันทร์ดับ, synodic/2≈14.77=จันทร์เต็ม
+}
+function moonInfo(date){
+  const synodic=29.530588853,half=synodic/2;
+  const p=moonPhase(date);
+  const distToFull=Math.abs(p-half),distToNew=Math.min(p,synodic-p);
+  if(distToFull<=1.5)return{ico:'🌕',txt:'พระจันทร์เต็ม',near:true};
+  if(distToNew<=1.5)return{ico:'🌑',txt:'พระจันทร์ดับ',near:true};
+  return{ico:p<half?'🌔':'🌘',txt:p<half?'ข้างขึ้น':'ข้างแรม',near:false};
+}
+// ── วันพระ/วันโกน — ตารางวันพระตรวจสอบแล้วของปี 2569 (ที่มา: thaipbs.or.th/now/content/3498)
+//    ⚠️ ต้องอัปเดตตารางนี้ทุกปี (ปีอธิกมาส/อธิกวารทำให้เดือนจันทรคติไม่สม่ำเสมอ คำนวณเองด้วยสูตรง่ายๆจะคลาดเคลื่อนได้) ──
+const WANPHRA_TABLE={2026:['2026-01-03','2026-01-11','2026-01-18','2026-01-26','2026-02-02','2026-02-10','2026-02-16','2026-02-24','2026-03-03','2026-03-11','2026-03-18','2026-03-26','2026-04-02','2026-04-10','2026-04-16','2026-04-24','2026-05-01','2026-05-09','2026-05-16','2026-05-24','2026-05-31','2026-06-08','2026-06-14','2026-06-22','2026-06-29','2026-07-07','2026-07-14','2026-07-22','2026-07-29','2026-08-06','2026-08-13','2026-08-21','2026-08-28','2026-09-05','2026-09-11','2026-09-19','2026-09-26','2026-10-04','2026-10-11','2026-10-19','2026-10-26','2026-11-03','2026-11-09','2026-11-17','2026-11-24','2026-12-02','2026-12-09','2026-12-17','2026-12-24']};
+function ymdLocal(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function addDaysLocal(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
+function wanphraInfo(date){
+  const table=WANPHRA_TABLE[date.getFullYear()];if(!table)return null;
+  const ds=ymdLocal(date);
+  if(table.includes(ds))return'phra';
+  if(table.includes(ymdLocal(addDaysLocal(date,1))))return'kon2'; // วันโกน (1 วันก่อนวันพระ)
+  if(table.includes(ymdLocal(addDaysLocal(date,2))))return'kon'; // ก่อนวันโกน (2 วันก่อนวันพระ)
+  return null;
+}
 function pondRiskDO(p,last){
   const cands=[];
   if(last){
@@ -4564,6 +4633,11 @@ function pondRiskDO(p,last){
     else if(sA==='warn')cands.push({level:'warn',reason:`DO บ่าย ${last.doA} mg/L เริ่มต่ำ`});
   }
   if(fcDoTrend(p).dir==='down')cands.push({level:'warn',reason:'DO มีแนวโน้มลดลงต่อเนื่องหลายวัน แม้ค่าล่าสุดยังไม่ต่ำกว่าเกณฑ์'});
+  // ── สัญญาณอากาศพรุ่งนี้ (ใช้ cache _wxDaily จาก fetchWx ที่โหลดไว้แล้วตอนเปิดแอป ไม่ยิง fetch เพิ่ม) ──
+  if(_wxDaily&&_wxDaily.precipitation_probability_max&&_wxDaily.precipitation_probability_max[1]!=null){
+    const rainP=_wxDaily.precipitation_probability_max[1],rainMm=_wxDaily.precipitation_sum[1]||0,wind=_wxDaily.wind_gusts_10m_max?_wxDaily.wind_gusts_10m_max[1]:0;
+    if(rainP>=70&&rainMm>=30)cands.push({level:'warn',reason:`ฝนหนักคาดการณ์พรุ่งนี้ (${Math.round(rainP)}%, ${Math.round(rainMm)}mm)${wind>=30?` + ลมกระโชก ${Math.round(wind)} กม./ชม.`:''} — เฝ้าระวัง DO ตกช่วงเช้ามืด`});
+  }
   return _fcPick(cands,'DO อยู่ในเกณฑ์ปกติ');
 }
 function pondRiskStability(p,last){
@@ -4614,11 +4688,19 @@ function pondRiskDisease(p,last){
 }
 function pondRiskFeed(p,last){
   const cands=[];
-  if(fcFeedTrend(p).dir==='down')cands.push({level:'warn',reason:'ปริมาณอาหารที่กินได้ลดลงต่อเนื่อง — ควรตรวจยอและคุณภาพน้ำ'});
+  const feedDown=fcFeedTrend(p).dir==='down';
+  if(feedDown)cands.push({level:'warn',reason:'ปริมาณอาหารที่กินได้ลดลงต่อเนื่อง — ควรตรวจยอและคุณภาพน้ำ'});
   const pFcr=fcPeriodFCR(p),cumFcr=getFCR(p);
   if(pFcr!=null&&cumFcr!=null&&pFcr>parseFloat(cumFcr)*1.3)
     cands.push({level:'warn',reason:`FCR ช่วงล่าสุด (${pFcr.toFixed(2)}) สูงกว่า FCR สะสม (${cumFcr}) ชัดเจน — ประสิทธิภาพอาหารเริ่มแย่ลง`});
-  return _fcPick(cands,'การให้อาหารอยู่ในเกณฑ์ปกติ');
+  const res=_fcPick(cands,'การให้อาหารอยู่ในเกณฑ์ปกติ');
+  // ── ผสานสัญญาณข้างขึ้นข้างแรม: ถ้าใกล้จันทร์เต็ม/ดับ อาหารลดเป็นพฤติกรรมปกติ ไม่ใช่สัญญาณโรค — เติมข้อความอธิบายแทนการเปลี่ยนระดับความเสี่ยง ──
+  const moon=moonInfo(new Date());
+  if(moon.near){
+    if(res.level==='ok')res.reason+=` (ใกล้ช่วง${moon.txt} กินอาหารลดลงได้เป็นปกติ)`;
+    else if(feedDown)res.reason+=` — ตรงกับช่วง${moon.txt} อาจเป็นพฤติกรรมปกติ ไม่ใช่สัญญาณโรคเสมอไป`;
+  }
+  return res;
 }
 function pondRiskEconomic(p){
   const cands=[];
@@ -4634,9 +4716,33 @@ let _fcSelRisk=null,_fcCurPond=null;
 const _fcDoneSet=new Set();
 function fcSetFilter(key){_fcSelRisk=_fcSelRisk===key?null:key;renderFarmCard(_fcCurPond);}
 function fcToggleAction(id){if(_fcDoneSet.has(id))_fcDoneSet.delete(id);else _fcDoneSet.add(id);renderFarmCard(_fcCurPond);}
+const WD_TH=['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+function renderMoonWanphra(){
+  const moonEl=document.getElementById('moon-strip');if(!moonEl)return;
+  const today=new Date();today.setHours(0,0,0,0);
+  const info=moonInfo(today);
+  moonEl.innerHTML=`<div class="moon-ico">${info.ico}</div><div class="moon-txt"><div class="t1">${info.txt}${info.near?' — วันนี้':''}</div><div class="t2">${info.near?'กุ้งมักลอกคราบ+กินอาหารลดลงช่วง 1-2 วันก่อน-หลังพระจันทร์เต็ม/ดับ เป็นพฤติกรรมปกติตามธรรมชาติ':'ยังไม่ใกล้ช่วงพระจันทร์เต็ม/ดับ'}</div></div>`;
+  const days=Array.from({length:10},(_,i)=>addDaysLocal(today,i));
+  document.getElementById('wp-strip').innerHTML=days.map(d=>{
+    const info2=wanphraInfo(d);
+    const cls=['wp-day',ymdLocal(d)===ymdLocal(today)?'today':'',info2||''].filter(Boolean).join(' ');
+    const tag=info2==='phra'?'🙏 วันพระ':info2==='kon2'?'🧂🧂 วันโกน':info2==='kon'?'🧂 ก่อนวันโกน':'';
+    return`<div class="${cls}"><div class="wd">${WD_TH[d.getDay()]}</div><div class="dd">${d.getDate()}/${d.getMonth()+1}</div>${tag?`<div class="tag">${tag}</div>`:''}</div>`;
+  }).join('');
+  const todayInfo=wanphraInfo(today),tmrInfo=wanphraInfo(addDaysLocal(today,1));
+  const alertEl=document.getElementById('wp-alert');
+  if(todayInfo==='kon2'||todayInfo==='kon'){
+    alertEl.innerHTML=`<div class="ai warn"><span>🧂</span><div><b>วันนี้เป็น${todayInfo==='kon2'?'วันโกน':'ก่อนวันโกน'}</b> — อย่าลืมลงแร่ธาตุรวมในบ่อตามรอบปกติของฟาร์ม</div></div>`;
+  }else if(tmrInfo==='kon2'||tmrInfo==='kon'){
+    alertEl.innerHTML=`<div class="ai warn"><span>🧂</span><div><b>พรุ่งนี้เป็น${tmrInfo==='kon2'?'วันโกน':'ก่อนวันโกน'}</b> — เตรียมแร่ธาตุรวมไว้ล่วงหน้าได้เลย</div></div>`;
+  }else{
+    alertEl.innerHTML='';
+  }
+}
 function renderFarmCard(p){
   const gridEl=document.getElementById('fc-grid');if(!gridEl||!p)return;
   _fcCurPond=p;
+  renderMoonWanphra();
   const last=p.records&&p.records.length?p.records[p.records.length-1]:null;
   const results=FC_CATS.map(c=>({...c,res:c.calc(p,last)}));
   gridEl.innerHTML=results.map(r=>`
@@ -4822,6 +4928,10 @@ function renderPondDetail(id){
     ${reason?`<div class="pd-alert"><div class="ai ${cls==='prep'?'ok':cls}"><span>${cls==='danger'?'🔴':cls==='warn'?'⚠️':'✅'}</span><div>${reason}</div></div></div>`:''}
     ${cls!=='prep'?`<div class="card" style="margin-bottom:12px">
       <div class="card-t">🚦 ความเสี่ยงหลักของบ่อ</div>
+      <div class="moon-strip" id="moon-strip"></div>
+      <div id="wp-alert"></div>
+      <div class="wp-strip" id="wp-strip"></div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">🧂 = ก่อนวันโกน · 🧂🧂 = วันโกน (ลงแร่ธาตุรวม) · 🙏 = วันพระ</div>
       <div class="fc-grid" id="fc-grid"></div>
       <div class="card-t" style="font-size:13px">✅ สิ่งที่ต้องทำวันนี้</div>
       <div class="fc-act-progress" id="fc-act-progress"></div>
@@ -4843,6 +4953,7 @@ function renderPondDetail(id){
       ${sizeHtml}
     </div>
     <div class="card" style="margin-top:12px" id="pd-biocompare-card"></div>
+    <div class="card" style="margin-top:12px" id="pd-benchmark-card"></div>
     <div class="card" style="margin-top:12px">
       <div class="card-t">🚰 การจัดการน้ำล่าสุด${latWater&&latWater.date?` · ${fD(latWater.date)}`:''}</div>
       ${wmHtml}
@@ -4871,6 +4982,7 @@ function renderPondDetail(id){
   renderPdCharts(p);
   if(cls!=='prep')renderFarmCard(p);
   renderBioCompare(p);
+  if(cls!=='prep')renderCropBenchmark(p);
 }
 // ══════ เปรียบเทียบ Biomass 2 วิธี: แบบฟาร์ม (อัตรารอดกรอกเอง) vs แบบเอกสาร (ไขว้ตรวจจากอาหารที่ให้จริง) ══════
 const _bcFeedRateOverride={}; // เก็บค่าที่ผู้ใช้แก้เอง ต่อบ่อ ระหว่างอยู่ในหน้านี้ (ไม่บันทึกลง DB — เป็นแค่เครื่องมือช่วยตัดสินใจ)
@@ -4940,6 +5052,118 @@ function renderBioCompare(p){
 }
 function bcEditFeedRate(pid,v){_bcFeedRateOverride[pid]=parseFloat(v)||0;renderBioCompare(pond(pid));}
 function bcResetFeedRate(pid){delete _bcFeedRateOverride[pid];renderBioCompare(pond(pid));}
+// ══════ เทียบกับรอบก่อน: ตอบคำถาม "รอบนี้โตช้ากว่ารอบที่แล้วไหม" โดยเทียบที่ DOC เดียวกัน ══════
+const _bmMode={}; // เก็บโหมดที่เลือก (prev/sibling) ต่อบ่อ ระหว่างอยู่ในหน้านี้
+function bmBuildSeries(samples,feedLog,release){
+  const s=(samples||[]).filter(x=>x.age!=null&&x.abw!=null&&x.abw!==''&&x.survivalRate!=null&&x.survivalRate!=='').slice().sort((a,b)=>a.age-b.age);
+  const f=(feedLog||[]).filter(x=>x.age!=null&&x.totalFeed!=null&&x.totalFeed!=='').slice().sort((a,b)=>a.age-b.age);
+  const cumFeedAtAge=age=>f.filter(x=>x.age<=age).reduce((sum,x)=>sum+parseFloat(x.totalFeed),0);
+  const sampleAtAge=age=>{const cand=s.filter(x=>x.age<=age);return cand.length?cand[cand.length-1]:(s.length?s[0]:null);};
+  const feedAtAge=age=>{const cand=f.filter(x=>x.age<=age);return cand.length?cand[cand.length-1]:null;};
+  return{
+    samples:s,release,
+    abwAtAge(age){const x=sampleAtAge(age);return x?x.abw:null;},
+    survivalAtAge(age){const x=sampleAtAge(age);return x?x.survivalRate:null;},
+    fcrAtAge(age){
+      const x=sampleAtAge(age);if(!x||!release)return null;
+      const bio=x.abw*release*(x.survivalRate/100)/1000;if(bio<=0)return null;
+      const feed=cumFeedAtAge(age);return feed>0?feed/bio:null;
+    },
+    feed100kAtAge(age){const x=feedAtAge(age);return x?feedPer100k(x.totalFeed,release):null;}
+  };
+}
+function bmFindSibling(p){
+  const curAge=p.startDate?dDiff(p.startDate,today()):null;if(curAge==null)return null;
+  let best=null,bestDiff=Infinity;
+  D.ponds.forEach(o=>{
+    if(o.id===p.id||!o.startDate||o.size!==p.size)return;
+    const oAge=dDiff(o.startDate,today());if(oAge==null||oAge<0)return;
+    const diff=Math.abs(oAge-curAge);
+    if(diff<bestDiff){bestDiff=diff;best=o;}
+  });
+  return best;
+}
+function bmGetRef(mode,p){
+  if(mode==='prev'){
+    const hist=(p.cropHistory||[]).filter(c=>(c.samples||[]).length);
+    if(!hist.length)return null;
+    const c=hist[hist.length-1];
+    return{series:bmBuildSeries(c.samples,c.feedLog,(c.stock||0)+(c.stockBonus||0)),hatchery:c.hatchery||'-',label:`รอบที่ ${c.cropNum}/${yearBE(c.cropYear)} (ปิดแล้ว)`};
+  }
+  if(mode==='sibling'){
+    const sib=bmFindSibling(p);if(!sib)return null;
+    return{series:bmBuildSeries(sib.samples,sib.feedLog,pRelease(sib)),hatchery:sib.hatchery||'-',label:`บ่อ ${sib.name} (กำลังเลี้ยง)`};
+  }
+  return null;
+}
+function bmKpiHtml(lbl,cur,ref,unit,invert){
+  if(cur==null||ref==null)return`<div class="bm-kpi"><div class="k-lbl">${lbl}</div><div class="k-cur">-</div></div>`;
+  const d=ref?((cur-ref)/ref*100):0;
+  const isGood=invert?d<=0:d>=0;
+  const cls=Math.abs(d)<3?'flat':(isGood?'up':'down');
+  const arrow=Math.abs(d)<3?'≈':(d>0?'▲':'▼');
+  return`<div class="bm-kpi"><div class="k-lbl">${lbl}</div><div class="k-cur">${cur}${unit}</div><div class="k-prev">เทียบ: ${ref}${unit}</div><div class="k-delta ${cls}">${arrow} ${Math.abs(d).toFixed(1)}%</div></div>`;
+}
+function drawBmChart(elId,curPts,refPts){
+  const w=680,h=200,padL=38,padR=10,padT=10,padB=24;
+  const allPts=[...curPts,...refPts];if(!allPts.length){document.getElementById(elId).innerHTML='';return;}
+  const maxAge=Math.max(...allPts.map(pt=>pt.age),1),maxAbw=Math.max(...allPts.map(pt=>pt.abw))*1.1||1;
+  const x=age=>padL+(age/maxAge)*(w-padL-padR);
+  const y=v=>padT+(1-v/maxAbw)*(h-padT-padB);
+  const path=pts=>pts.map((pt,i)=>`${i===0?'M':'L'}${x(pt.age).toFixed(1)},${y(pt.abw).toFixed(1)}`).join(' ');
+  const yTicks=[0,maxAbw*0.5,maxAbw].map(v=>`<line x1="${padL}" y1="${y(v).toFixed(1)}" x2="${w-padR}" y2="${y(v).toFixed(1)}" stroke="var(--bd)" stroke-width="1"/><text x="2" y="${(y(v)+4).toFixed(1)}" font-size="10" fill="var(--tx3)">${v.toFixed(0)}</text>`).join('');
+  document.getElementById(elId).innerHTML=`<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%">
+    ${yTicks}
+    <text x="${w-padR}" y="${h-6}" font-size="10" fill="var(--tx3)" text-anchor="end">DOC ${maxAge}</text>
+    ${refPts.length?`<path d="${path(refPts)}" fill="none" stroke="#9AA1AB" stroke-width="2" stroke-dasharray="5,4"/>`:''}
+    ${curPts.length?`<path d="${path(curPts)}" fill="none" stroke="#9A6A04" stroke-width="2.5"/>`:''}
+    ${curPts.length?`<circle cx="${x(curPts[curPts.length-1].age).toFixed(1)}" cy="${y(curPts[curPts.length-1].abw).toFixed(1)}" r="4" fill="#9A6A04"/>`:''}
+    ${refPts.length?`<circle cx="${x(refPts[refPts.length-1].age).toFixed(1)}" cy="${y(refPts[refPts.length-1].abw).toFixed(1)}" r="4" fill="#9AA1AB"/>`:''}
+  </svg>`;
+}
+function bmSetMode(pid,mode){_bmMode[pid]=mode;renderCropBenchmark(pond(pid));}
+function renderCropBenchmark(p){
+  const card=document.getElementById('pd-benchmark-card');if(!card)return;
+  const curAge=p.startDate?dDiff(p.startDate,today()):null;
+  const availPrev=!!(p.cropHistory||[]).filter(c=>(c.samples||[]).length).length;
+  const availSibling=!!bmFindSibling(p);
+  if(curAge==null||(!availPrev&&!availSibling)){
+    card.innerHTML=`<div class="card-t">📊 เทียบกับรอบก่อน</div><div style="color:var(--tx3);font-size:13px;padding:7px 0">ยังไม่มีรอบก่อนของบ่อนี้ หรือบ่อพี่น้องขนาดเดียวกันที่กำลังเลี้ยงอยู่ให้เทียบ</div>`;
+    return;
+  }
+  let mode=_bmMode[p.id]||(availPrev?'prev':'sibling');
+  if(mode==='prev'&&!availPrev)mode='sibling';
+  if(mode==='sibling'&&!availSibling)mode='prev';
+  const ref=bmGetRef(mode,p);
+  const curSeries=bmBuildSeries(p.samples,p.feedLog,pRelease(p));
+  const curAbw=curSeries.abwAtAge(curAge),refAbw=ref.series.abwAtAge(curAge);
+  const curSurv=curSeries.survivalAtAge(curAge),refSurv=ref.series.survivalAtAge(curAge);
+  const curFcr=getFCR(p),refFcrRaw=ref.series.fcrAtAge(curAge);
+  const curFeed100k=curSeries.feed100kAtAge(curAge),refFeed100k=ref.series.feed100kAtAge(curAge);
+  card.innerHTML=`
+    <div class="card-t">📊 เทียบกับรอบก่อน — บ่อ ${p.name} (DOC วันนี้ = ${curAge} วัน)</div>
+    <div class="card-sub">ตอบคำถาม "รอบนี้โตช้ากว่ารอบที่แล้วไหม" โดยเทียบที่ DOC เดียวกัน ไม่ใช่เทียบวันที่ปัจจุบัน</div>
+    <div class="bm-tabs">
+      ${availPrev?`<div class="bm-tab ${mode==='prev'?'on':''}" onclick="bmSetMode('${p.id}','prev')">🔁 รอบก่อนของบ่อนี้</div>`:''}
+      ${availSibling?`<div class="bm-tab ${mode==='sibling'?'on':''}" onclick="bmSetMode('${p.id}','sibling')">🐟 บ่อพี่น้องขนาดเดียวกัน</div>`:''}
+    </div>
+    <div class="bm-kpi-grid">
+      ${bmKpiHtml('ABW ที่ DOC '+curAge,curAbw,refAbw,' ก.',false)}
+      ${bmKpiHtml('FCR สะสม',curFcr!=null?parseFloat(curFcr):null,refFcrRaw!=null?+refFcrRaw.toFixed(2):null,'',true)}
+      ${bmKpiHtml('อัตรารอด',curSurv,refSurv,'%',false)}
+    </div>
+    <div class="bm-chart-wrap" id="bm-chart-${p.id}"></div>
+    <div class="bm-legend">
+      <span><span class="dot" style="background:#9A6A04"></span>รอบนี้ (กำลังเลี้ยง)</span>
+      <span><span class="dot" style="background:#9AA1AB"></span>${ref.label}</span>
+    </div>
+    <div style="margin-top:14px;border-top:1px solid var(--bd);padding-top:10px">
+      <div class="bm-extra-row"><span class="lbl">🦐 ลูกกุ้งจากโรงเพาะ</span><span class="vals"><span class="cur">${p.hatchery||'-'}</span><span class="ref">${ref.hatchery}</span></span></div>
+      <div class="bm-extra-row"><span class="lbl">🍖 อาหาร ณ DOC ${curAge} (กก./แสนตัว)</span><span class="vals"><span class="cur">${curFeed100k!=null?curFeed100k.toFixed(1):'-'}</span><span class="ref">${refFeed100k!=null?refFeed100k.toFixed(1):'-'}</span></span></div>
+    </div>
+  `;
+  drawBmChart('bm-chart-'+p.id,curSeries.samples.map(s=>({age:s.age,abw:s.abw})),ref.series.samples.map(s=>({age:s.age,abw:s.abw})));
+}
 // ══════ เฟส 2 (ดีไซน์ใหม่พี่แพรว): เกจค่าน้ำ + กราฟรายบ่อ ══════
 const PD_GAUGE_RANGE={phM:[6.5,9.5],doM:[0,10],nh4:[0,1],no2:[0,5],tM:[20,38]};
 let _pdGaugeCharts={};
