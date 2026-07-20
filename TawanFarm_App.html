@@ -5072,14 +5072,19 @@ function bmBuildSeries(samples,feedLog,release){
     feed100kAtAge(age){const x=feedAtAge(age);return x?feedPer100k(x.totalFeed,release):null;}
   };
 }
+// ── หาบ่อพี่น้อง: ต้องขนาดไร่เท่ากันก่อน (บังคับ) แล้วให้คะแนนตามความใกล้เคียง — อายุ(DOC), ความหนาแน่น(ตัว/ตรม.), แหล่งลูกกุ้งเดียวกัน (ให้น้ำหนักมากสุดเพราะกระทบอัตราการโต/รอดโดยตรง) ──
 function bmFindSibling(p){
   const curAge=p.startDate?dDiff(p.startDate,today()):null;if(curAge==null)return null;
-  let best=null,bestDiff=Infinity;
+  const curDens=dens(p);
+  let best=null,bestScore=Infinity;
   D.ponds.forEach(o=>{
     if(o.id===p.id||!o.startDate||o.size!==p.size)return;
     const oAge=dDiff(o.startDate,today());if(oAge==null||oAge<0)return;
-    const diff=Math.abs(oAge-curAge);
-    if(diff<bestDiff){bestDiff=diff;best=o;}
+    const ageDiff=Math.abs(oAge-curAge);
+    const densDiff=Math.abs(dens(o)-curDens);
+    const sameHatchery=!!(p.hatchery&&p.hatchery.trim()&&o.hatchery&&o.hatchery.trim().toLowerCase()===p.hatchery.trim().toLowerCase());
+    const score=ageDiff/5+densDiff/10+(sameHatchery?0:3);
+    if(score<bestScore){bestScore=score;best=o;}
   });
   return best;
 }
@@ -5092,7 +5097,9 @@ function bmGetRef(mode,p){
   }
   if(mode==='sibling'){
     const sib=bmFindSibling(p);if(!sib)return null;
-    return{series:bmBuildSeries(sib.samples,sib.feedLog,pRelease(sib)),hatchery:sib.hatchery||'-',label:`บ่อ ${sib.name} (กำลังเลี้ยง)`};
+    const sameHatchery=!!(p.hatchery&&p.hatchery.trim()&&sib.hatchery&&sib.hatchery.trim().toLowerCase()===p.hatchery.trim().toLowerCase());
+    const densNote=`หนาแน่น ${dens(sib)} ตัว/ตรม.`;
+    return{series:bmBuildSeries(sib.samples,sib.feedLog,pRelease(sib)),hatchery:sib.hatchery||'-',label:`บ่อ ${sib.name} (กำลังเลี้ยง — ${densNote}${sameHatchery?', แหล่งลูกกุ้งเดียวกัน':''})`};
   }
   return null;
 }
