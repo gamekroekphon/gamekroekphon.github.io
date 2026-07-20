@@ -2404,7 +2404,9 @@ body.role-ceo .main{max-width:640px}
     <div style="display:flex;flex-direction:column;gap:14px">
       <input type="hidden" id="mdl-id">
       <div class="fg"><label class="fl">ชื่อบ่อ * (A.1, B.3)</label><input type="text" class="fi" id="mdl-name" placeholder="A.1"></div>
-      <div class="fg"><label class="fl">ยอดปล่อย (ตัว) *</label><input type="number" class="fi" id="mdl-stock" placeholder="500000"></div>
+      <div class="fg"><label class="fl">ยอดสั่งซื้อ (ตัว) *</label><input type="number" class="fi" id="mdl-stock" placeholder="500000" oninput="syncMdlTotal()"></div>
+      <div class="fg"><label class="fl">ยอดแถม (ตัว)</label><input type="number" class="fi" id="mdl-stockbonus" placeholder="0" oninput="syncMdlTotal()"></div>
+      <div class="fg"><label class="fl">ยอดปล่อยจริง (ตัว)</label><input type="text" class="fi" id="mdl-total" readonly style="background:var(--sf2);color:var(--p);font-weight:700"><span class="lbl-std">ใช้คำนวณ Biomass/FCR/อัตรารอด/ความหนาแน่นทั้งระบบ</span></div>
       <div class="fg"><label class="fl">ขนาดบ่อ (ไร่) *</label><input type="number" class="fi" id="mdl-size" step="0.1" placeholder="4.0"></div>
       <div class="fg"><label class="fl">วันที่ปล่อยกุ้ง *</label><input type="date" class="fi" id="mdl-start"></div>
       <div class="fg"><label class="fl">โรงเพาะ / บริษัทลูกกุ้ง</label><input type="text" class="fi" id="mdl-hatchery" placeholder="ซีพี, ซายอควา, ไทยแปซิฟิก..." list="hatchery-list"><datalist id="hatchery-list"><option value="ซีพี"><option value="ซายอควา"><option value="ไทยแปซิฟิก"><option value="เจริญโภคภัณฑ์"><option value="SIS"></datalist></div>
@@ -3557,7 +3559,8 @@ function syncDateHint(el){
 }
 function syncAllDateHints(){document.querySelectorAll('input[type="date"]').forEach(syncDateHint)}
 function fN(v,d){return v!==null&&v!==undefined&&v!==''?parseFloat(v).toFixed(d):'-'}
-function dens(p){return p.size>0?Math.round(p.stock/(p.size*1600)):0}
+function pRelease(p){return(p.stock||0)+(p.stockBonus||0)}
+function dens(p){return p.size>0?Math.round(pRelease(p)/(p.size*1600)):0}
 function st(key,v){
   if(v===null||v===undefined||v==='')return'na';
   const p=PARAMS.find(x=>x.key===key);if(!p)return'ok';
@@ -3726,7 +3729,7 @@ function getCumFeed(p){return(p.feedLog||[]).reduce((s,r)=>s+(r.totalFeed||0),0)
 function getLatestBiomass(p){
   const s=(p.samples||[]);if(!s.length)return null;
   const lat=s[s.length-1];if(!lat.abw||!lat.survivalRate)return null;
-  return lat.abw*p.stock*(lat.survivalRate/100)/1000;
+  return lat.abw*pRelease(p)*(lat.survivalRate/100)/1000;
 }
 function getFCR(p){const f=getCumFeed(p);const b=getLatestBiomass(p);if(!b||b<=0||f<=0)return null;return(f/b).toFixed(2)}
 function getPDG(samples){
@@ -4541,10 +4544,10 @@ function fcRisingTrend(p,key,margin){return _fcTrend(_fcVals(p.records,key,4),ma
 // FCR เฉพาะช่วงระหว่าง 2 ครั้งสุ่มล่าสุด (ไม่ใช่ FCR สะสม) — เผยประสิทธิภาพอาหารล่าสุดที่ FCR สะสมอาจกลบไว้ (ตามหลัก "แนวโน้มสำคัญกว่าค่าสะสม")
 function fcPeriodFCR(p){
   const samples=(p.samples||[]).filter(s=>s.date&&s.abw!=null&&s.abw!==''&&s.survivalRate!=null&&s.survivalRate!=='').slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
-  if(samples.length<2||!p.stock)return null;
+  if(samples.length<2||!pRelease(p))return null;
   const a=samples[samples.length-2],b=samples[samples.length-1];
-  const bioA=a.abw*(a.survivalRate/100)*p.stock/1000;
-  const bioB=b.abw*(b.survivalRate/100)*p.stock/1000;
+  const bioA=a.abw*(a.survivalRate/100)*pRelease(p)/1000;
+  const bioB=b.abw*(b.survivalRate/100)*pRelease(p)/1000;
   const gain=bioB-bioA;if(gain<=0)return null;
   const feedSum=(p.feedLog||[]).filter(r=>r.date>a.date&&r.date<=b.date).reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0);
   if(feedSum<=0)return null;
@@ -4711,13 +4714,13 @@ function renderPondDetail(id){
   const fcr=getFCR(p);
   const biomass=getLatestBiomass(p);
   const feedLog=p.feedLog||[];const latFeed=feedLog.length?feedLog[feedLog.length-1]:null;
-  const per100k=latFeed&&latFeed.totalFeed?feedPer100k(latFeed.totalFeed,p.stock):null;
+  const per100k=latFeed&&latFeed.totalFeed?feedPer100k(latFeed.totalFeed,pRelease(p)):null;
   const waterLog=p.waterLog||[];const latWater=waterLog.length?waterLog[waterLog.length-1]:null;
   const pdg=getPDG(samples);
   const sizeCount=lat&&lat.abw&&lat.abw>0?Math.round(1000/lat.abw):null;
 
   const subParts=[];
-  if(p.stock)subParts.push(p.stock.toLocaleString()+' ตัว');
+  if(p.stock)subParts.push(pRelease(p).toLocaleString()+' ตัว'+(p.stockBonus?` (สั่ง ${p.stock.toLocaleString()}+แถม ${p.stockBonus.toLocaleString()})`:''));
   if(p.size)subParts.push(p.size+' ไร่');
   if(p.hatchery)subParts.push(p.hatchery);
   if(p.startDate)subParts.push('ลงกุ้ง '+fD(p.startDate));
@@ -4839,6 +4842,7 @@ function renderPondDetail(id){
       <div class="card-t">📏 ไซส์ล่าสุด${lat&&lat.date?` · ${fD(lat.date)}`:''}</div>
       ${sizeHtml}
     </div>
+    <div class="card" style="margin-top:12px" id="pd-biocompare-card"></div>
     <div class="card" style="margin-top:12px">
       <div class="card-t">🚰 การจัดการน้ำล่าสุด${latWater&&latWater.date?` · ${fD(latWater.date)}`:''}</div>
       ${wmHtml}
@@ -4866,7 +4870,76 @@ function renderPondDetail(id){
   renderPdGauges(p,last);
   renderPdCharts(p);
   if(cls!=='prep')renderFarmCard(p);
+  renderBioCompare(p);
 }
+// ══════ เปรียบเทียบ Biomass 2 วิธี: แบบฟาร์ม (อัตรารอดกรอกเอง) vs แบบเอกสาร (ไขว้ตรวจจากอาหารที่ให้จริง) ══════
+const _bcFeedRateOverride={}; // เก็บค่าที่ผู้ใช้แก้เอง ต่อบ่อ ระหว่างอยู่ในหน้านี้ (ไม่บันทึกลง DB — เป็นแค่เครื่องมือช่วยตัดสินใจ)
+function bcFeedRateSuggestion(abw){
+  if(abw<3)return[8,10];
+  if(abw<8)return[5,8];
+  if(abw<15)return[3,5];
+  if(abw<25)return[2,3.5];
+  return[1.5,2.5];
+}
+function bcFeedRateMid(abw){const[lo,hi]=bcFeedRateSuggestion(abw);return Math.round((lo+hi)/2*10)/10;}
+function renderBioCompare(p){
+  const card=document.getElementById('pd-biocompare-card');if(!card)return;
+  const samples=p.samples||[];
+  const lat=samples.length?samples[samples.length-1]:null;
+  const feedLog=p.feedLog||[];const latFeed=feedLog.length?feedLog[feedLog.length-1]:null;
+  if(!lat||!lat.abw||lat.survivalRate==null||!latFeed||!latFeed.totalFeed){
+    card.innerHTML=`<div class="card-t">⚖️ เปรียบเทียบ Biomass 2 วิธี</div><div style="color:var(--tx3);font-size:13px;padding:7px 0">ต้องมีข้อมูล ABW + อัตรารอด (จากสุ่มตัวอย่าง) และอาหารที่ให้ล่าสุด ก่อนเปรียบเทียบได้</div>`;
+    return;
+  }
+  const abw=lat.abw,todayFeed=latFeed.totalFeed,release=pRelease(p);
+  const auto=!(p.id in _bcFeedRateOverride);
+  const feedRate=auto?bcFeedRateMid(abw):_bcFeedRateOverride[p.id];
+  const [lo,hi]=bcFeedRateSuggestion(abw);
+  const farmSurvival=lat.survivalRate;
+  const farmBiomass=abw*release*(farmSurvival/100)/1000;
+  const farmCount=release*(farmSurvival/100);
+  const farmImpliedRate=farmBiomass>0?(todayFeed/farmBiomass*100):0;
+  const docBiomass=feedRate>0?(todayFeed/(feedRate/100)):0;
+  const docCount=abw>0?(docBiomass*1000/abw):0;
+  const docImpliedSurvival=release>0?(docCount/release*100):0;
+  const delta=farmBiomass>0?Math.abs(farmBiomass-docBiomass)/farmBiomass*100:0;
+  let bannerCls='ok',bannerIcon='✅',bannerTxt=`ตัวเลข 2 แบบใกล้เคียงกัน (ต่างกัน ${delta.toFixed(1)}%) — อัตรารอดที่กรอกเองน่าเชื่อถือได้`;
+  if(delta>=25){bannerCls='danger';bannerIcon='🔴';bannerTxt=`ตัวเลข 2 แบบต่างกันมาก (${delta.toFixed(1)}%) — ควรตรวจสอบทั้งอัตรารอดที่กรอกและยอดอาหารที่บันทึกโดยด่วน อาจมีข้อผิดพลาดในการกรอกข้อมูล`;}
+  else if(delta>=10){bannerCls='warn';bannerIcon='⚠️';bannerTxt=`ตัวเลข 2 แบบต่างกันพอสมควร (${delta.toFixed(1)}%) — ${farmBiomass>docBiomass?'อัตรารอดที่กรอกเองอาจสูงเกินจริง (feeding rate ที่ได้จริงต่ำผิดปกติ)':'อัตรารอดที่กรอกเองอาจต่ำเกินจริง (feeding rate ที่ได้จริงสูงผิดปกติ)'} — แนะนำสุ่มตัวอย่างเช็คซ้ำ`;}
+  card.innerHTML=`
+    <div class="card-t">⚖️ เปรียบเทียบ Biomass 2 วิธี</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+      <div class="fg"><label class="fl">อัตรารอด (%) — กรอกเอง (แบบฟาร์ม)</label><input type="text" class="fi" value="${farmSurvival}" readonly style="background:var(--sf2)"></div>
+      <div class="fg">
+        <label class="fl">Feeding Rate (%) ที่ควรจะเป็น <span style="color:${auto?'var(--ok)':'var(--w)'};font-weight:400">— ${auto?'auto (ค่ากลางตามไซส์กุ้ง)':'แก้ไขเองแล้ว'}</span></label>
+        <div style="display:flex;gap:6px">
+          <input type="number" class="fi" id="bc-feedrate-${p.id}" step="0.1" value="${feedRate}" onchange="bcEditFeedRate('${p.id}',this.value)">
+          <button type="button" class="btn btn-s" style="white-space:nowrap" onclick="bcResetFeedRate('${p.id}')">↺ ค่าแนะนำ</button>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">ช่วงอ้างอิงทั่วไปสำหรับกุ้ง ABW ${abw} กรัม/ตัว: ประมาณ ${lo}–${hi}% ของน้ำหนักตัว/วัน (ปรับได้ตามคำแนะนำจริงของฟาร์ม/นักวิชาการ — ยังไม่ใช่ตารางจากเอกสารฉบับเต็ม รอข้อมูลเพิ่ม)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div style="border-radius:10px;padding:14px;border:1.5px solid var(--bd);background:var(--sf2)">
+        <div style="font-size:12.5px;font-weight:700;color:var(--tx2);margin-bottom:10px">🏠 แบบฟาร์ม (อัตรารอดกรอกเอง)</div>
+        <div style="font-size:26px;font-weight:700;color:var(--p);line-height:1.1">${farmBiomass.toFixed(0)}</div>
+        <div style="font-size:11px;color:var(--tx3)">กก.</div>
+        <div style="font-size:12px;color:var(--tx2);margin-top:8px;display:flex;justify-content:space-between"><span>จำนวนกุ้งโดยประมาณ</span><span>${Math.round(farmCount).toLocaleString()} ตัว</span></div>
+        <div style="font-size:12px;color:var(--tx2);margin-top:4px;display:flex;justify-content:space-between"><span>Feeding Rate ที่ได้จริง</span><span>${farmImpliedRate.toFixed(2)}%</span></div>
+      </div>
+      <div style="border-radius:10px;padding:14px;border:1.5px solid var(--bd);background:var(--sf2)">
+        <div style="font-size:12.5px;font-weight:700;color:var(--tx2);margin-bottom:10px">📄 แบบเอกสาร (ไขว้ตรวจจากอาหาร)</div>
+        <div style="font-size:26px;font-weight:700;color:var(--p);line-height:1.1">${docBiomass.toFixed(0)}</div>
+        <div style="font-size:11px;color:var(--tx3)">กก.</div>
+        <div style="font-size:12px;color:var(--tx2);margin-top:8px;display:flex;justify-content:space-between"><span>จำนวนกุ้งโดยประมาณ</span><span>${Math.round(docCount).toLocaleString()} ตัว</span></div>
+        <div style="font-size:12px;color:var(--tx2);margin-top:4px;display:flex;justify-content:space-between"><span>อัตรารอดที่ควรจะเป็น</span><span>${docImpliedSurvival.toFixed(1)}%</span></div>
+      </div>
+    </div>
+    <div class="ai ${bannerCls}" style="margin-top:12px"><span>${bannerIcon}</span><div>${bannerTxt}</div></div>
+  `;
+}
+function bcEditFeedRate(pid,v){_bcFeedRateOverride[pid]=parseFloat(v)||0;renderBioCompare(pond(pid));}
+function bcResetFeedRate(pid){delete _bcFeedRateOverride[pid];renderBioCompare(pond(pid));}
 // ══════ เฟส 2 (ดีไซน์ใหม่พี่แพรว): เกจค่าน้ำ + กราฟรายบ่อ ══════
 const PD_GAUGE_RANGE={phM:[6.5,9.5],doM:[0,10],nh4:[0,1],no2:[0,5],tM:[20,38]};
 let _pdGaugeCharts={};
@@ -6659,7 +6732,7 @@ function calcBiomass(){
   const el=document.getElementById('sp-biomass');
   if(!pid||!abw||!surv){el.value='';return}
   const p=pond(pid);if(!p)return;
-  el.value=(p.stock*(surv/100)*abw/1000).toFixed(0);
+  el.value=(pRelease(p)*(surv/100)*abw/1000).toFixed(0);
   const samps=p.samples||[];const pdgEl=document.getElementById('sp-pdg-info');
   if(samps.length>0){
     const last=samps[samps.length-1];const days=parseInt(document.getElementById('sp-age').value)-last.age;
@@ -6733,7 +6806,7 @@ function renderSampleChart(){
   const pid=document.getElementById('sp-pond').value;if(!pid)return;
   const p=pond(pid);if(spCh){spCh.destroy();spCh=null;}
   const sizePts=(p.samples||[]).filter(r=>r.plCount).map(r=>({x:r.age,y:r.plCount}));
-  const feedPts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.age!=null).map(r=>{const v=feedPer100k(r.totalFeed,p.stock);return v!=null?{x:r.age,y:parseFloat(v.toFixed(2))}:null}).filter(Boolean);
+  const feedPts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.age!=null).map(r=>{const v=feedPer100k(r.totalFeed,pRelease(p));return v!=null?{x:r.age,y:parseFloat(v.toFixed(2))}:null}).filter(Boolean);
   spCh=new Chart(document.getElementById('sampleChart'),{type:'line',data:{datasets:[
     {label:'ไซส์ (ตัว/กก.)',data:sizePts,borderColor:'#0f6e56',backgroundColor:'#0f6e5622',tension:.3,pointRadius:5,fill:true,yAxisID:'y'},
     {label:'การกิน (กก./แสน)',data:feedPts,borderColor:'#EA580C',backgroundColor:'transparent',tension:.3,pointRadius:3,fill:false,borderDash:[4,3],yAxisID:'y2'},
@@ -6870,7 +6943,7 @@ function renderMtSummary(){
   const log=p.mortalityLog||[];
   const todayCount=log.filter(r=>r.date===today()).reduce((s,r)=>s+(r.count||0),0);
   const cumCount=log.reduce((s,r)=>s+(r.count||0),0);
-  const pct=p.stock>0?(cumCount/p.stock*100):null;
+  const pct=pRelease(p)>0?(cumCount/pRelease(p)*100):null;
   const todayCls=todayCount>0?(todayCount>=mtAvg7(p)*2&&todayCount>=3?'danger':'warn'):'ok';
   el.innerHTML=`<div class="ovd-sum-strip">
     <div class="ovd-sum-chip ${todayCls}"><div class="n">${todayCount}</div><div class="l">ตายวันนี้</div></div>
@@ -7140,7 +7213,7 @@ function renderCmpFeed(){
   const lblMap={per100k:'การกิน (กก./แสน)',daily:'อาหารต่อวัน (กก.)',cumulative:'อาหารสะสม (กก.)'};
   const datasets=getSelPonds().map((p,i)=>{
     const col=COLORS[i%COLORS.length];let pts=[];
-    if(metric==='per100k'){pts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.age!=null).map(r=>{const v=feedPer100k(r.totalFeed,p.stock);return v!=null?{x:r.age,y:parseFloat(v.toFixed(2))}:null}).filter(Boolean);}
+    if(metric==='per100k'){pts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.age!=null).map(r=>{const v=feedPer100k(r.totalFeed,pRelease(p));return v!=null?{x:r.age,y:parseFloat(v.toFixed(2))}:null}).filter(Boolean);}
     else if(metric==='daily'){pts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.age!=null).map(r=>({x:r.age,y:r.totalFeed}));}
     else{let cum=0;pts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.age!=null).sort((a,b)=>a.age-b.age).map(r=>{cum+=r.totalFeed;return{x:r.age,y:parseFloat(cum.toFixed(1))};});}
     return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'33',tension:.3,pointRadius:3,fill:false};
@@ -7565,7 +7638,9 @@ function getCloseSummary(p,cropIdx){
     lastCrop=(cropIdx!=null&&p.cropHistory[cropIdx])?p.cropHistory[cropIdx]:p.cropHistory[p.cropHistory.length-1];
   }
   const hatchery=lastCrop?lastCrop.hatchery:(p.hatchery||'');
-  const stock=lastCrop?lastCrop.stock:(p.stock||null);
+  const stockOrder=lastCrop?lastCrop.stock:(p.stock||null);
+  const stockBonus=(lastCrop?lastCrop.stockBonus:p.stockBonus)||0;
+  const stock=stockOrder?stockOrder+stockBonus:null;
   const startDate=lastCrop?lastCrop.startDate:(p.startDate||'');
   const closeDate=lastCrop?lastCrop.closeDate:null;
   const plWeight=lastCrop?lastCrop.plWeight:(p.plWeight||null);
@@ -7942,19 +8017,25 @@ function renderManage(){
     return`<tr><td><strong style="color:var(--p)">${p.name}</strong></td><td>${p.stock.toLocaleString()}</td><td>${p.size}</td><td>${dens(p)} ตัว/ตรม.</td><td>${p.startDate?fD(p.startDate):'-'}</td><td>${ageCell}</td><td>${mgCountCell(p.records.length,active)}</td><td>${mgCountCell((p.feedLog||[]).length,active)}</td><td>${mgCountCell((p.samples||[]).length,active)}</td><td>${mgCountCell((p.labResults||[]).length,active)}</td><td>${adgCell}</td><td style="display:flex;gap:6px"><button class="btn btn-s btn-sm" onclick="editPond('${p.id}')">✏️</button><button class="btn btn-d btn-sm" onclick="delPond('${p.id}')">🗑️</button></td></tr>`;
   }).join('');
 }
+function syncMdlTotal(){
+  const stock=parseInt(document.getElementById('mdl-stock').value)||0;
+  const bonus=parseInt(document.getElementById('mdl-stockbonus').value)||0;
+  document.getElementById('mdl-total').value=(stock+bonus).toLocaleString();
+}
 function openAddPond(){
   document.getElementById('mdl-title').textContent='➕ เพิ่มบ่อใหม่';
-  ['mdl-id','mdl-name','mdl-stock','mdl-size','mdl-hatchery','mdl-plWeight'].forEach(id=>document.getElementById(id).value='');
+  ['mdl-id','mdl-name','mdl-stock','mdl-stockbonus','mdl-size','mdl-hatchery','mdl-plWeight'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('mdl-plType').value='';
   document.getElementById('mdl-start').value=today();
   document.getElementById('pondModal').classList.add('on');
   syncDateHint(document.getElementById('mdl-start'));
+  syncMdlTotal();
 }
 function editPond(id){
   const p=pond(id);if(!p)return;
   document.getElementById('mdl-title').textContent=`✏️ แก้ไขบ่อ ${p.name}`;
   document.getElementById('mdl-id').value=id;document.getElementById('mdl-name').value=p.name;
-  document.getElementById('mdl-stock').value=p.stock;document.getElementById('mdl-size').value=p.size;
+  document.getElementById('mdl-stock').value=p.stock;document.getElementById('mdl-stockbonus').value=p.stockBonus||'';document.getElementById('mdl-size').value=p.size;
   document.getElementById('mdl-start').value=p.startDate;
   document.getElementById('mdl-hatchery').value=p.hatchery||'';
   document.getElementById('mdl-plType').value=p.plType||'';
@@ -7962,10 +8043,11 @@ function editPond(id){
   document.getElementById('mdl-costfry').value=p.costFry||'';
   document.getElementById('pondModal').classList.add('on');
   syncDateHint(document.getElementById('mdl-start'));
+  syncMdlTotal();
 }
 function closePond(){document.getElementById('pondModal').classList.remove('on')}
 function savePond(){
-  const id=document.getElementById('mdl-id').value,name=document.getElementById('mdl-name').value.trim(),stock=parseInt(document.getElementById('mdl-stock').value),size=parseFloat(document.getElementById('mdl-size').value),startDate=document.getElementById('mdl-start').value;
+  const id=document.getElementById('mdl-id').value,name=document.getElementById('mdl-name').value.trim(),stock=parseInt(document.getElementById('mdl-stock').value),stockBonus=parseInt(document.getElementById('mdl-stockbonus').value)||0,size=parseFloat(document.getElementById('mdl-size').value),startDate=document.getElementById('mdl-start').value;
   const hatchery=document.getElementById('mdl-hatchery').value.trim();
   const plType=document.getElementById('mdl-plType').value;
   const plWeight=document.getElementById('mdl-plWeight').value?parseFloat(document.getElementById('mdl-plWeight').value):null;
@@ -7974,7 +8056,7 @@ function savePond(){
   if(id){
     const p=pond(id);
     const wasIdle=!p.startDate; // ลงลูกกุ้งรอบใหม่ (เดิมว่างจากการปิดรอบ) — ไม่ใช่แค่แก้ไขข้อมูลรอบเดิม
-    Object.assign(p,{name,stock,size,startDate,hatchery,plType,plWeight,costFry});
+    Object.assign(p,{name,stock,stockBonus,size,startDate,hatchery,plType,plWeight,costFry});
     if(wasIdle){
       const nxt=computeNextCrop(p,startDate);
       p.cropNum=nxt.cropNum;p.cropYear=nxt.cropYear;
@@ -7987,7 +8069,7 @@ function savePond(){
     }
   }
   else{
-    const np={id:'P'+Date.now(),name,stock,size,startDate,hatchery,plType,plWeight,costFry,records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[]};
+    const np={id:'P'+Date.now(),name,stock,stockBonus,size,startDate,hatchery,plType,plWeight,costFry,records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[]};
     const nxt=computeNextCrop(np,startDate);
     np.cropNum=nxt.cropNum;np.cropYear=nxt.cropYear;
     D.ponds.push(np);
@@ -8646,7 +8728,8 @@ function startCropFromPrep(pid){
   document.getElementById('mdl-title').textContent=`🦐 ลงลูกกุ้ง — เริ่มรอบใหม่ บ่อ ${p.name}`;
   const sd=(p.prepChecklist&&p.prepChecklist.stockDate)||today();
   document.getElementById('mdl-start').value=sd;syncDateHint(document.getElementById('mdl-start'));
-  ['mdl-stock','mdl-hatchery','mdl-plWeight','mdl-costfry'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['mdl-stock','mdl-stockbonus','mdl-hatchery','mdl-plWeight','mdl-costfry'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  syncMdlTotal();
   const pt=document.getElementById('mdl-plType');if(pt)pt.value='';
 }
 function renderPrep(){
@@ -8803,7 +8886,7 @@ function calcCropEcon(){
   const caught=w&&sz?Math.round(w*sz):0;
   document.getElementById('cm-caught').value=caught||'';
   // survival rate
-  const survival=caught&&p.stock?(caught/p.stock*100):0;
+  const survival=caught&&pRelease(p)?(caught/pRelease(p)*100):0;
   document.getElementById('cm-survival').value=survival?survival.toFixed(1):'';
   // fcr
   const cumFeed=getCumFeed(p);
@@ -8877,6 +8960,7 @@ function confirmCloseCrop(){
     startDate:p.startDate,
     closeDate,
     stock:p.stock,
+    stockBonus:p.stockBonus||0,
     hatchery:p.hatchery||'',
     plType:p.plType||'',
     plWeight:p.plWeight||null,
@@ -8905,7 +8989,7 @@ function confirmCloseCrop(){
   const nxt=computeNextCrop(p,closeDate);
   p.cropNum=nxt.cropNum;p.cropYear=nxt.cropYear;
   p.startDate='';
-  p.stock=0;
+  p.stock=0;p.stockBonus=0;
   p.hatchery='';p.plType='';p.plWeight=null;
   p.records=[];p.feedLog=[];p.samples=[];p.plankton=[];
   p.waterLog=[];p.chemLog=[];p.labResults=[];p.partialHarvests=[];
@@ -9070,8 +9154,8 @@ function ceoFeedDisplay(p){
   return prev?{val:prev.totalFeed,isToday:false,date:prev.date}:{val:0,isToday:true};
 }
 function ceoFeedPer100k(p){
-  if(!p.stock)return'-';
-  return(ceoFeedDisplay(p).val/(p.stock/100000)).toFixed(1);
+  if(!pRelease(p))return'-';
+  return(ceoFeedDisplay(p).val/(pRelease(p)/100000)).toFixed(1);
 }
 // ── รายการเบิกสต็อกจริงของบ่อ ไม่รวมอาหาร (คิดแยกจาก pondFeedCost อยู่แล้ว) เรียงล่าสุดก่อน ──
 function getStockItemsForPond(pondId,startDate,endDate){
