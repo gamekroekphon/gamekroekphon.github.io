@@ -270,9 +270,14 @@ body.role-admin .sn-link.admin-only{display:block!important}
 
 /* ── Badges & Alerts ── */
 .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
-.b-ok{background:var(--ob);color:var(--ok)}.b-warn{background:var(--wb);color:var(--w-tx)}.b-danger{background:var(--db);color:var(--d)}.b-na{background:var(--sf2);color:var(--tx3)}.b-info{background:var(--ib);color:var(--in)}
 .ai{display:flex;align-items:flex-start;gap:10px;padding:9px 14px;border-radius:6px;margin-bottom:6px;font-size:13px}
-.ai.danger{background:var(--db);border-left:3px solid var(--d)}.ai.warn{background:var(--wb);border-left:3px solid var(--w)}.ai.ok{background:var(--ob);border-left:3px solid var(--ok)}
+/* ── สีสถานะ ok/warn/danger ใช้ร่วมกันทุก badge family กันเกณฑ์สีเพี้ยนกันถ้าแก้จุดเดียวไม่ครบทุกที่ (เดิมมี .b-*/.pcb-*/.ovd-st-badge.*/.ai.*/.fc-act-src.* เขียนสีซ้ำกัน 5 ที่แยกกัน) ──*/
+.b-ok,.pcb-ok,.ovd-st-badge.ok,.ai.ok{background:var(--ob);color:var(--ok)}
+.b-warn,.pcb-warn,.ovd-st-badge.warn,.ai.warn,.fc-act-src.warn{background:var(--wb);color:var(--w)}
+.b-danger,.pcb-danger,.ovd-st-badge.danger,.ai.danger,.fc-act-src.danger{background:var(--db);color:var(--d)}
+.b-na,.pcb-empty{background:var(--sf2);color:var(--tx3)}
+.b-info,.pcb-prep{background:var(--ib);color:var(--in)}
+.ai.ok,.ai.warn,.ai.danger{border-left:3px solid currentColor}
 
 /* ── Micro-feedback ตอนบันทึกสำเร็จ (จาก mockup ที่พี่คอนเฟิม) ── */
 @keyframes mfPopIcon{0%{transform:scale(0)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
@@ -607,7 +612,6 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .pc-ov-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .pc-ov-name{font-size:12px;font-weight:700;color:var(--tx)}
 .pc-ov-badge{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:500}
-.pcb-ok{background:var(--ob);color:var(--ok)}.pcb-warn{background:var(--wb);color:var(--w)}.pcb-danger{background:var(--db);color:var(--d)}.pcb-prep{background:var(--ib);color:var(--in)}.pcb-empty{background:var(--sf2);color:var(--tx3)}
 .pc-ov-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}
 .pc-ov-lbl{font-size:10px;color:var(--tx3)}
 .pc-ov-val{font-size:12px;font-weight:500;color:var(--tx)}
@@ -644,9 +648,6 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .ovd-pond-name{font-weight:700;font-size:13.5px}
 .ovd-pond-age{font-size:11px;color:var(--tx3)}
 .ovd-st-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:6px;font-size:11.5px;font-weight:600}
-.ovd-st-badge.ok{background:var(--ob);color:var(--ok)}
-.ovd-st-badge.warn{background:var(--wb);color:var(--w)}
-.ovd-st-badge.danger{background:var(--db);color:var(--d)}
 .ovd-chk{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700}
 .ovd-chk.yes{background:var(--ob);color:var(--ok)}
 .ovd-chk.no{background:var(--sf);color:var(--tx3);border:1.5px dashed var(--bd)}
@@ -662,6 +663,14 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .ovd-d-card-chks{display:flex;gap:14px;margin-bottom:6px}
 .ovd-d-card-chk{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2)}
 @media(max-width:680px){.card .ovd-table{display:none}.ovd-cards{display:flex}}
+/* ── กุ้งตายรายวัน: กราฟแท่งเล็ก 7 วันล่าสุด ── */
+.mt-bars{display:flex;align-items:flex-end;gap:6px;height:70px;margin-top:10px}
+.mt-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.mt-bar{width:100%;border-radius:3px 3px 0 0;background:var(--bd);min-height:2px}
+.mt-bar.has{background:var(--p)}
+.mt-bar.hi{background:var(--d)}
+.mt-bar-lbl{font-size:9px;color:var(--tx3)}
+.mt-bar-val{font-size:10px;font-weight:700;color:var(--tx2)}
 /* ── Farm Card: ความเสี่ยง 5 หมวด + สิ่งที่ต้องทำวันนี้ (จาก mockup ที่พี่คอนเฟิม + สูตรจากเอกสารวิชาการ) ── */
 .fc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:14px}
 .fc-item{border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:5px;border:1.5px solid var(--bd);background:var(--sf2);cursor:pointer;transition:border-color .15s,transform .1s}
@@ -689,8 +698,6 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .fc-act-item.done .fc-act-body b{text-decoration:line-through;color:var(--tx3)}
 .fc-act-body span{font-size:11px;color:var(--tx3)}
 .fc-act-src{display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:5px;margin-top:3px}
-.fc-act-src.warn{background:var(--wb);color:var(--w)}
-.fc-act-src.danger{background:var(--db);color:var(--d)}
 .fc-act-empty{text-align:center;padding:14px;color:var(--ok);font-size:12.5px}
 .login-screen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center}
 .login-box{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:32px 28px;width:320px;max-width:90vw}
@@ -854,6 +861,7 @@ body.role-ceo .main{max-width:640px}
       <button class="sn-link tab-item" onclick="goTab('sample',this)">⚖️ สุ่มตัวอย่าง</button>
       <button class="sn-link tab-item" onclick="goTab('watlog',this)">💦 จัดการน้ำ</button>
       <button class="sn-link tab-item" onclick="goTab('chem',this)">🧪 สารเคมี</button>
+      <button class="sn-link tab-item" onclick="goTab('mortality',this)">🦐 กุ้งตาย</button>
     </div>
 
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-crop')"><span>🌾</span> รอบเลี้ยง <span class="sn-caret">▾</span></button>
@@ -929,6 +937,7 @@ body.role-ceo .main{max-width:640px}
       <button class="tab-item" id="tab-sample" onclick="goTab('sample',this)">⚖️ สุ่มตัวอย่าง</button>
       <button class="tab-item" id="tab-watlog" onclick="goTab('watlog',this)">💦 จัดการน้ำ</button>
       <button class="tab-item" id="tab-chem" onclick="goTab('chem',this)">🧪 สารเคมี</button>
+      <button class="tab-item" id="tab-mortality" onclick="goTab('mortality',this)">🦐 กุ้งตาย</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-crop">
@@ -992,6 +1001,7 @@ body.role-ceo .main{max-width:640px}
     <button class="mob-sheet-item" data-t="sample" onclick="mobMenuGo(this)"><span class="ic">⚖️</span>สุ่มตัวอย่าง</button>
     <button class="mob-sheet-item" data-t="watlog" onclick="mobMenuGo(this)"><span class="ic">💦</span>จัดการน้ำ</button>
     <button class="mob-sheet-item" data-t="chem" onclick="mobMenuGo(this)"><span class="ic">🧪</span>สารเคมี</button>
+    <button class="mob-sheet-item" data-t="mortality" onclick="mobMenuGo(this)"><span class="ic">🦐</span>กุ้งตาย</button>
     <div class="mob-sheet-grp">🌾 รอบเลี้ยง</div>
     <button class="mob-sheet-item" data-t="crops" onclick="mobMenuGo(this)"><span class="ic">🌾</span>รอบเลี้ยง</button>
     <button class="mob-sheet-item" data-t="prep" onclick="mobMenuGo(this)"><span class="ic">🧹</span>เตรียมบ่อ</button>
@@ -1334,6 +1344,50 @@ body.role-ceo .main{max-width:640px}
   <div class="card">
     <div class="card-t">📋 ประวัติรับจากสต็อก</div>
     <div class="tbl-wrap" id="ch-hist-wrap"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">กำลังโหลด...</p></div>
+  </div>
+</div>
+<!-- MORTALITY LOG -->
+<div id="sec-mortality" class="sec">
+  <div class="sec-hdr">
+    <div class="sec-title">🦐 กุ้งตายรายวัน</div>
+    <div style="font-size:12px;color:var(--tx3);margin-top:2px">บันทึกทุกวันช่วยจับความผิดปกติได้เร็วก่อนสูญเสียมาก</div>
+  </div>
+  <div class="g2" style="margin-bottom:16px;align-items:start">
+    <div class="card">
+      <div class="card-t">📝 บันทึกจำนวนกุ้งตาย</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="fgrid" style="grid-template-columns:1fr 1fr">
+          <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="mt-pond" onchange="onMtPond()"><option value="">-- เลือกบ่อ --</option></select></div>
+          <div class="fg"><label class="fl">วันที่ *</label><input type="date" class="fi" id="mt-date" onchange="calcAge('mt')"></div>
+        </div>
+        <div class="fgrid" style="grid-template-columns:1fr 1fr">
+          <div class="fg"><label class="fl">อายุ (วัน)</label><input type="number" class="fi" id="mt-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
+          <div class="fg"><label class="fl">จำนวนกุ้งตาย (ตัว) *</label><input type="number" class="fi" id="mt-count" placeholder="0" oninput="onMtCountInput()"></div>
+        </div>
+        <div class="fg"><label class="fl">สาเหตุที่สังเกตได้</label>
+          <select class="fi" id="mt-cause">
+            <option value="">-- ไม่ทราบ/ไม่ระบุ --</option>
+            <option value="do">คาดว่า DO ต่ำ</option>
+            <option value="disease">คาดว่าโรค/เชื้อ</option>
+            <option value="weather">สภาพอากาศ/ฝนตก</option>
+            <option value="predator">ศัตรูธรรมชาติ</option>
+            <option value="other">อื่นๆ</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="mt-notes" placeholder="เช่น ลอยหัวตอนเช้า, พบบริเวณมุมบ่อ..."></div>
+        <div id="mt-warn"></div>
+        <div style="display:flex;gap:10px"><button class="btn btn-p" id="mt-save-btn" onclick="saveMortality()">💾 บันทึก</button><button class="btn btn-s" onclick="clearMortality()">🗑️ ล้าง</button></div>
+        <div id="mt-msg"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-t">📊 สรุปการตายรอบนี้</div>
+      <div id="mt-summary"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อเพื่อดูสรุป</p></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-t">📋 ประวัติ</div>
+    <div class="tbl-wrap" id="mt-tbl-wrap"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อเพื่อดูข้อมูล</p></div>
   </div>
 </div>
 <!-- LAB RESULTS -->
@@ -3533,11 +3587,13 @@ function classifyOv(key,v){
     case'tM':case'tA':if(v>33||v<26)return'danger';if(v>32||v<28)return'warn';return'ok';
     case'alk':if(v<80||v>250)return'danger';if(v<100||v>200)return'warn';return'ok';
     case'sal':return v>35?'danger':v>30?'warn':'ok';
-    case'tcbsGreen':return v>1000?'danger':v>100?'warn':'ok';
-    case'tcbsYellow':return v>1000?'warn':'ok';
-    case'tvc':return v>1e7?'danger':v>=1e5?'warn':'ok';
+    case'tcbsGreen':case'hepatoGreen':return v>1000?'danger':v>100?'warn':'ok';
+    case'tcbsYellow':case'hepatoYellow':return v>1000?'warn':'ok';
+    case'tvc':case'tvcHepato':return v>1e7?'danger':v>=1e5?'warn':'ok';
     case'ehp':return v>5?'danger':v>0?'warn':'ok';
     case'ehpLarva':return v>25?'danger':v>0?'warn':'ok';
+    case'gutInflam':return v>30?'danger':v>10?'warn':'ok';
+    case'lipidDroplet':return v>=70?'ok':v>=50?'warn':'danger';
     case'hepato':return v==='normal'?'ok':v==='swollen'?'warn':(v?'danger':'ok');
     default:return'ok';
   }
@@ -3695,7 +3751,7 @@ function projHarvest(p,target=22){
 }
 function populateAll(){
   const simple={
-    'sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all','lc-pond':'',
+    'sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all','lc-pond':'','mt-pond':'',
   };
   Object.entries(simple).forEach(([id,def])=>{
     const el=document.getElementById(id);if(!el)return;const cur=el.value;
@@ -4102,7 +4158,7 @@ function goTab(t,btn){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));document.getElementById('sec-'+t).classList.add('on');
   if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='stock')initStock();if(t==='abw')initAbw();if(t==='feed')initFeed();if(t==='pl')initPL();
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
-  if(t==='chem')initChem();if(t==='lab')initLab();
+  if(t==='chem')initChem();if(t==='lab')initLab();if(t==='mortality')initMortality();
   if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();if(t==='wqfeed')initWqFeed();if(t==='hatchery')initHatchery();
   if(t==='manage')renderManage();
   if(t==='users')renderUsers();
@@ -4444,7 +4500,7 @@ const FC_ACTIONS={
       warn:[{t:'เฝ้าระวัง DO ช่วงเช้ามืด (ตี 3–5 น.)',d:'ช่วงที่ DO ต่ำสุดตามธรรมชาติ แอปยังไม่มีข้อมูลช่วงนี้'}]},
   stab:{danger:[{t:'ตรวจ pH และ DO เช้า–บ่ายให้ครบทุกวัน',d:'ยืนยันแนวโน้มการแกว่งของระบบ'},{t:'ตรวจ Alkalinity',d:'เช็คว่าลดลงจนต้องเติมด่างหรือไม่'}],
         warn:[{t:'เพิ่มความถี่ตรวจคุณภาพน้ำ',d:'บ่อเริ่มไม่นิ่ง ควรติดตามใกล้ชิดขึ้น'}]},
-  disease:{danger:[{t:'สังเกตพฤติกรรมกุ้งใกล้ชิด (ลอยหัว ว่ายผิดปกติ)',d:'สัญญาณเตือนโรคล่วงหน้าหลายตัวขึ้นพร้อมกัน'},{t:'แจ้งที่ปรึกษาฟาร์ม',d:'ขอความเห็นผู้เชี่ยวชาญก่อนลุกลาม'}],
+  disease:{danger:[{t:'ตรวจสาเหตุกุ้งตายผิดปกติทันที',d:'จำนวนตายสูงกว่าค่าเฉลี่ยชัดเจน — เช็ค DO/พฤติกรรม/พื้นบ่อ'},{t:'สังเกตพฤติกรรมกุ้งใกล้ชิด (ลอยหัว ว่ายผิดปกติ)',d:'สัญญาณเตือนโรคล่วงหน้าหลายตัวขึ้นพร้อมกัน'},{t:'แจ้งที่ปรึกษาฟาร์ม',d:'ขอความเห็นผู้เชี่ยวชาญก่อนลุกลาม'}],
            warn:[{t:'ตรวจการกินอาหารและคุณภาพน้ำเพิ่มเติม',d:'เฝ้าระวังสัญญาณเริ่มต้นก่อนกุ้งป่วยจริง'}]},
   feed:{danger:[{t:'ตรวจยอกินอาหารและของเสียในยอ',d:'ประเมินว่าให้อาหารเกินความต้องการหรือไม่'},{t:'ปรับปริมาณอาหารใหม่ตามผลตรวจยอ',d:'ลดตามผลจริง ไม่ใช้ความรู้สึก'}],
         warn:[{t:'ตรวจยอกินอาหารวันนี้',d:'ยืนยันแนวโน้มการกิน/FCR ที่เปลี่ยนไป'}]},
@@ -4535,6 +4591,13 @@ function pondRiskDisease(p,last){
   if(feedT.dir==='down'&&doT.dir==='down')cands.push({level:'danger',reason:'กินอาหารลดลง + DO ลดลงพร้อมกัน — สัญญาณเตือนโรคล่วงหน้าตามหลักวิชาการ'});
   else if(feedT.dir==='down')cands.push({level:'warn',reason:'กินอาหารมีแนวโน้มลดลงต่อเนื่อง — สัญญาณเตือนโรคที่ดีที่สุดอย่างหนึ่ง'});
   if(nh4Up||no2Up)cands.push({level:'warn',reason:`${nh4Up?'แอมโมเนีย':'ไนไตรท์'}มีแนวโน้มสูงขึ้น — เสี่ยงต่อภูมิคุ้มกันกุ้ง`});
+  const mLog=p.mortalityLog||[];
+  if(mLog.length){
+    const todayDead=mLog.filter(r=>r.date===today()).reduce((s,r)=>s+(r.count||0),0);
+    const avg7=mtAvg7(p);
+    if(todayDead>0&&avg7>0&&todayDead>=avg7*2&&todayDead>=3)
+      cands.push({level:'danger',reason:`กุ้งตายวันนี้ ${todayDead} ตัว สูงกว่าค่าเฉลี่ย 7 วัน (${avg7.toFixed(1)} ตัว) เกิน 2 เท่า`});
+  }
   return _fcPick(cands,'ไม่พบสัญญาณเตือนโรคล่วงหน้า');
 }
 function pondRiskFeed(p,last){
@@ -6741,6 +6804,118 @@ function deleteWaterLog(pid,id){
   D.deletedIds=D.deletedIds||[];if(target.id)D.deletedIds.push(target.id);
   save();renderWaterTable();renderWaterSummary();
 }
+// ===== MORTALITY LOG (กุ้งตายรายวัน — จากเอกสารวิชาการ ดร.พุทธ: 1 ใน 5 ข้อมูลหลักที่ควรบันทึกทุกวัน) =====
+function initMortality(){populateAll();document.getElementById('mt-date').value=today();calcAge('mt');renderMtSummary();renderMtBars();renderMtTable();}
+function onMtPond(){clearMortality();renderMtSummary();renderMtBars();renderMtTable();}
+function mtLast7(p){
+  const end=new Date(today()+'T00:00:00');
+  const days=Array.from({length:7},(_,i)=>{const d=new Date(end);d.setDate(end.getDate()-(6-i));return d.toISOString().slice(0,10);});
+  return days.map(d=>({date:d,count:(p.mortalityLog||[]).filter(r=>r.date===d).reduce((s,r)=>s+(r.count||0),0)}));
+}
+function mtAvg7(p){const last7=mtLast7(p);return last7.reduce((s,r)=>s+r.count,0)/7;}
+function onMtCountInput(){
+  const pid=document.getElementById('mt-pond').value;
+  const input=document.getElementById('mt-count');
+  const el=document.getElementById('mt-warn');
+  const v=parseFloat(input.value)||0;
+  if(!pid){input.classList.remove('fi-danger');el.innerHTML='';return;}
+  const p=pond(pid);if(!p)return;
+  const avg=mtAvg7(p);
+  if(v>0&&v>=avg*2&&v>=3){
+    input.classList.add('fi-danger');
+    el.innerHTML=`<div style="background:var(--db);border-left:3px solid var(--d);border-radius:6px;padding:8px 12px;font-size:12.5px;color:var(--d)">⚠️ จำนวนตายวันนี้ (${v} ตัว) สูงกว่าค่าเฉลี่ย 7 วัน (${avg.toFixed(1)} ตัว) มากกว่า 2 เท่า — ควรตรวจ DO/พฤติกรรมกุ้งเพิ่มเติม</div>`;
+  }else{
+    input.classList.remove('fi-danger');
+    el.innerHTML='';
+  }
+}
+function saveMortality(){
+  const pid=document.getElementById('mt-pond').value,d=document.getElementById('mt-date').value;
+  if(!pid||!d){showMsg('mt-msg','warn','กรุณาเลือกบ่อและวันที่');return}
+  const p=pond(pid);if(!p)return;if(!p.mortalityLog)p.mortalityLog=[];
+  const count=parseFloat(document.getElementById('mt-count').value);
+  if(!count||count<=0){showMsg('mt-msg','warn','กรุณาระบุจำนวนกุ้งตาย');return}
+  const rec={id:'mt_'+pid+'_'+d,date:d,age:parseInt(document.getElementById('mt-age').value)||0,
+    count,cause:document.getElementById('mt-cause').value,notes:document.getElementById('mt-notes').value,by:curUserLabel()};
+  const idx=p.mortalityLog.findIndex(r=>r.id===rec.id||r.date===d);
+  if(idx>=0){p.mortalityLog[idx]=rec;showMsg('mt-msg','warn',`อัปเดต ${fD(d)} บ่อ ${p.name}: ${count} ตัว`);}
+  else{p.mortalityLog.push(rec);p.mortalityLog.sort((a,b)=>new Date(a.date)-new Date(b.date));showMsg('mt-msg','ok',`✅ บันทึก ${fD(d)} บ่อ ${p.name}: ${count} ตัว`);}
+  save();renderMtTable();renderMtSummary();renderMtBars();
+  flashSaveBtn(document.getElementById('mt-save-btn'));
+}
+function clearMortality(){
+  document.getElementById('mt-date').value=today();
+  document.getElementById('mt-count').value='';
+  document.getElementById('mt-cause').value='';
+  document.getElementById('mt-notes').value='';
+  document.getElementById('mt-count').classList.remove('fi-danger');
+  document.getElementById('mt-warn').innerHTML='';
+  document.getElementById('mt-msg').innerHTML='';calcAge('mt');
+}
+const MT_CAUSE_LBL={do:'DO ต่ำ',disease:'โรค/เชื้อ',weather:'สภาพอากาศ',predator:'ศัตรูธรรมชาติ',other:'อื่นๆ'};
+function renderMtSummary(){
+  const pid=document.getElementById('mt-pond')?.value;
+  const el=document.getElementById('mt-summary');if(!el)return;
+  if(!pid){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อเพื่อดูสรุป</p>';return}
+  const p=pond(pid);if(!p)return;
+  const log=p.mortalityLog||[];
+  const todayCount=log.filter(r=>r.date===today()).reduce((s,r)=>s+(r.count||0),0);
+  const cumCount=log.reduce((s,r)=>s+(r.count||0),0);
+  const pct=p.stock>0?(cumCount/p.stock*100):null;
+  const todayCls=todayCount>0?(todayCount>=mtAvg7(p)*2&&todayCount>=3?'danger':'warn'):'ok';
+  el.innerHTML=`<div class="ovd-sum-strip">
+    <div class="ovd-sum-chip ${todayCls}"><div class="n">${todayCount}</div><div class="l">ตายวันนี้</div></div>
+    <div class="ovd-sum-chip na"><div class="n">${cumCount.toLocaleString()}</div><div class="l">สะสมรอบนี้</div></div>
+    <div class="ovd-sum-chip ${pct!=null&&pct>1?'warn':'ok'}"><div class="n">${pct!=null?pct.toFixed(3)+'%':'-'}</div><div class="l">% จากจำนวนปล่อย</div></div>
+  </div>`;
+}
+function renderMtBars(){
+  const pid=document.getElementById('mt-pond')?.value;
+  const wrap=document.getElementById('mt-summary');if(!wrap)return;
+  const existing=document.getElementById('mt-bars');if(existing)existing.remove();
+  if(!pid)return;
+  const p=pond(pid);if(!p)return;
+  const last7=mtLast7(p);
+  const avg=mtAvg7(p);
+  const max=Math.max(...last7.map(r=>r.count),1);
+  const days=['อา','จ','อ','พ','พฤ','ศ','ส'];
+  const barsHtml=`<div class="mt-bars" id="mt-bars">${last7.map(r=>{
+    const h=Math.max(4,(r.count/max)*60);
+    const cls=r.count>0&&avg>0&&r.count>=avg*2?'hi':(r.count>0?'has':'');
+    const dow=days[new Date(r.date+'T00:00:00').getDay()];
+    return `<div class="mt-bar-col"><div class="mt-bar-val">${r.count}</div><div class="mt-bar ${cls}" style="height:${h}px"></div><div class="mt-bar-lbl">${dow}</div></div>`;
+  }).join('')}</div>`;
+  wrap.insertAdjacentHTML('beforeend',barsHtml);
+}
+function renderMtTable(){
+  const pid=document.getElementById('mt-pond')?.value;
+  const wrap=document.getElementById('mt-tbl-wrap');if(!wrap)return;
+  if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
+  const p=pond(pid);const rows=(p?.mortalityLog||[]).slice().reverse();
+  if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
+  wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>จำนวนตาย</th><th>สาเหตุ</th><th>หมายเหตุ</th></tr></thead><tbody>${
+    rows.map(r=>`<tr><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editMortality('${pid}','${r.id}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteMortality('${pid}','${r.id}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age>0?r.age+' วัน':'-'}</td><td style="font-weight:700${r.count>=3?';color:var(--w)':''}">${r.count} ตัว</td><td>${r.cause?`<span class="badge b-warn">${MT_CAUSE_LBL[r.cause]||r.cause}</span>`:'<span style="color:var(--tx3)">-</span>'}</td><td style="color:var(--tx2)">${r.notes||'-'}</td></tr>`).join('')
+  }</tbody></table>`;
+}
+function editMortality(pid,id){
+  const p=pond(pid);const rec=(p?.mortalityLog||[]).find(r=>r.id===id);if(!rec)return;
+  document.getElementById('mt-pond').value=pid;
+  document.getElementById('mt-date').value=rec.date;
+  document.getElementById('mt-count').value=rec.count;
+  document.getElementById('mt-cause').value=rec.cause||'';
+  document.getElementById('mt-notes').value=rec.notes||'';
+  calcAge('mt');onMtCountInput();
+  showMsg('mt-msg','warn',`✏️ กำลังแก้ไขข้อมูลวันที่ ${fD(rec.date)} — แก้ค่าแล้วกด "บันทึก" เพื่ออัปเดต`);
+}
+function deleteMortality(pid,id){
+  const p=pond(pid);if(!p)return;
+  const target=(p.mortalityLog||[]).find(r=>r.id===id);
+  if(!target){alert('ไม่พบรายการ');return;}
+  if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(target.date)+' ใช่หรือไม่?'))return;
+  p.mortalityLog=(p.mortalityLog||[]).filter(r=>r!==target);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(target.id);
+  save();renderMtTable();renderMtSummary();renderMtBars();
+}
 // ===== CHEMICAL LOG =====
 function initChem(){
   const pondSel=document.getElementById('ch-hist-pond');
@@ -6786,22 +6961,22 @@ function updateLabStatus(){
   const tvc=parseFloat(document.getElementById('lb-tvc').value)||null;
   const tvcHep=parseFloat(document.getElementById('lb-tvc-hep').value)||null;
   const el=document.getElementById('lb-status-display');const msgs=[];
-  if(tg!==null){const s=tg>1000?'danger':tg>100?'warn':'ok';msgs.push({s,m:`🟢 เชื้อเขียว: ${tg.toLocaleString()} CFU/mL — ${s==='ok'?'ปลอดภัย':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย AHPND!'}`})}
-  if(ty!==null){const s=ty>1000?'warn':'ok';msgs.push({s,m:`🟡 เชื้อเหลือง: ${ty.toLocaleString()} CFU/mL — ${s==='ok'?'ปกติ':'เฝ้าระวัง'}`})}
+  if(tg!==null){const s=classifyOv('tcbsGreen',tg);msgs.push({s,m:`🟢 เชื้อเขียว: ${tg.toLocaleString()} CFU/mL — ${s==='ok'?'ปลอดภัย':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย AHPND!'}`})}
+  if(ty!==null){const s=classifyOv('tcbsYellow',ty);msgs.push({s,m:`🟡 เชื้อเหลือง: ${ty.toLocaleString()} CFU/mL — ${s==='ok'?'ปกติ':'เฝ้าระวัง'}`})}
   const hg=parseFloat(document.getElementById('lb-hep-g').value)||null;
   const hy=parseFloat(document.getElementById('lb-hep-y').value)||null;
-  if(hg!==null){const s=hg>1000?'danger':hg>100?'warn':'ok';msgs.push({s,m:`🟢 เชื้อเขียวในตับ: ${hg.toLocaleString()} CFU/g — ${s==='ok'?'ปลอดภัย':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย AHPND!'}`})}
-  if(hy!==null){const s=hy>1000?'warn':'ok';msgs.push({s,m:`🟡 เชื้อเหลืองในตับ: ${hy.toLocaleString()} CFU/g — ${s==='ok'?'ปกติ':'เฝ้าระวัง'}`})}
-  if(tvc!==null){const s=tvc>1e7?'danger':tvc>1e5?'warn':'ok';msgs.push({s,m:`TVC น้ำ: ${tvc.toExponential(1)} CFU/mL — ${s==='ok'?'ปกติ':s==='warn'?'เริ่มสูง':'สูงมาก'}`})}
-  if(tvcHep!==null){const s=tvcHep>1e7?'danger':tvcHep>1e5?'warn':'ok';msgs.push({s,m:`TVC ตับ: ${tvcHep.toExponential(1)} CFU/g — ${s==='ok'?'ปกติ':s==='warn'?'เริ่มสูง':'สูงมาก'}`})}
+  if(hg!==null){const s=classifyOv('hepatoGreen',hg);msgs.push({s,m:`🟢 เชื้อเขียวในตับ: ${hg.toLocaleString()} CFU/g — ${s==='ok'?'ปลอดภัย':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย AHPND!'}`})}
+  if(hy!==null){const s=classifyOv('hepatoYellow',hy);msgs.push({s,m:`🟡 เชื้อเหลืองในตับ: ${hy.toLocaleString()} CFU/g — ${s==='ok'?'ปกติ':'เฝ้าระวัง'}`})}
+  if(tvc!==null){const s=classifyOv('tvc',tvc);msgs.push({s,m:`TVC น้ำ: ${tvc.toExponential(1)} CFU/mL — ${s==='ok'?'ปกติ':s==='warn'?'เริ่มสูง':'สูงมาก'}`})}
+  if(tvcHep!==null){const s=classifyOv('tvcHepato',tvcHep);msgs.push({s,m:`TVC ตับ: ${tvcHep.toExponential(1)} CFU/g — ${s==='ok'?'ปกติ':s==='warn'?'เริ่มสูง':'สูงมาก'}`})}
   const ehpRaw=document.getElementById('lb-ehp')?.value;const ehp=ehpRaw!==''&&ehpRaw!=null?parseFloat(ehpRaw):null;
-  if(ehp!==null&&!isNaN(ehp)){const s=ehp>5?'danger':ehp>0?'warn':'ok';msgs.push({s,m:`EHP: พบ ${ehp}% — ${s==='ok'?'ไม่พบเชื้อ':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย เสี่ยง stunted growth'}`})}
+  if(ehp!==null&&!isNaN(ehp)){const s=classifyOv('ehp',ehp);msgs.push({s,m:`EHP: พบ ${ehp}% — ${s==='ok'?'ไม่พบเชื้อ':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย เสี่ยง stunted growth'}`})}
   const ehpLarvaRaw=document.getElementById('lb-ehp-larva')?.value;const ehpLarva=ehpLarvaRaw!==''&&ehpLarvaRaw!=null?parseFloat(ehpLarvaRaw):null;
-  if(ehpLarva!==null&&!isNaN(ehpLarva)){const s=ehpLarva>25?'danger':ehpLarva>0?'warn':'ok';msgs.push({s,m:`ตัวอ่อน EHP: พบ ${ehpLarva}% — ${s==='ok'?'ไม่พบเชื้อ':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย เสี่ยง stunted growth'}`})}
+  if(ehpLarva!==null&&!isNaN(ehpLarva)){const s=classifyOv('ehpLarva',ehpLarva);msgs.push({s,m:`ตัวอ่อน EHP: พบ ${ehpLarva}% — ${s==='ok'?'ไม่พบเชื้อ':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย เสี่ยง stunted growth'}`})}
   const gutRaw=document.getElementById('lb-gut')?.value;const gut=gutRaw!==''&&gutRaw!=null?parseFloat(gutRaw):null;
-  if(gut!==null&&!isNaN(gut)){const s=gut>30?'danger':gut>10?'warn':'ok';msgs.push({s,m:`ลำไส้อักเสบ: ${gut}% — ${s==='ok'?'ปกติ':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย'}`})}
+  if(gut!==null&&!isNaN(gut)){const s=classifyOv('gutInflam',gut);msgs.push({s,m:`ลำไส้อักเสบ: ${gut}% — ${s==='ok'?'ปกติ':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย'}`})}
   const lipidRaw=document.getElementById('lb-lipid')?.value;const lipid=lipidRaw!==''&&lipidRaw!=null?parseFloat(lipidRaw):null;
-  if(lipid!==null&&!isNaN(lipid)){const s=lipid>=70?'ok':lipid>=50?'warn':'danger';msgs.push({s,m:`เม็ดไขมันรวม: ${lipid}% — ${s==='ok'?'ยังดีอยู่':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย'}`})}
+  if(lipid!==null&&!isNaN(lipid)){const s=classifyOv('lipidDroplet',lipid);msgs.push({s,m:`เม็ดไขมันรวม: ${lipid}% — ${s==='ok'?'ยังดีอยู่':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย'}`})}
   el.innerHTML=msgs.map(m=>`<div class="ai ${m.s}" style="margin-bottom:5px"><span>${m.s==='danger'?'🔴':m.s==='warn'?'⚠️':'✅'}</span><span>${m.m}</span></div>`).join('');
 }
 function saveLab(){
