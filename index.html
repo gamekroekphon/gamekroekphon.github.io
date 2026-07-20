@@ -87,7 +87,7 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .sn-caret{margin-left:auto;font-size:9px;transition:transform .15s}
 .sn-grp-btn.open .sn-caret{transform:rotate(180deg)}
 .sn-sub{max-height:0;overflow:hidden;transition:max-height .2s}
-.sn-sub.open{max-height:320px}
+.sn-sub.open{max-height:600px}
 .sn-link{display:block;width:100%;background:none;border:none;text-align:left;padding:7px 11px 7px 34px;color:#a9c3b0;font-family:inherit;font-size:12px;border-radius:8px;cursor:pointer}
 .sn-link:hover{background:var(--sn-bg2);color:#fff}
 .sn-link.on{color:var(--sn-lime);font-weight:600}
@@ -4135,11 +4135,19 @@ function goStatForCropYear(){
 }
 // ===== END HARVEST STATISTICS =====
 
+// ── บั๊กเรนเดอร์: max-height ของ .sn-sub บางครั้งค้างที่ค่าเดิม (ทั้งตอนเปิดและปิด) หลัง toggle class เร็วๆ ต้องบังคับ style recalc ด้วยการสลับ display ──
+function snForceReflow(el){if(el){el.style.display='none';void el.offsetHeight;el.style.display='';}}
 function snToggleGrp(btn,id){
   const wasOpen=btn.classList.contains('open');
   document.querySelectorAll('.sn-grp-btn').forEach(b=>b.classList.remove('open'));
-  document.querySelectorAll('.sn-sub').forEach(s=>s.classList.remove('open'));
-  if(!wasOpen){btn.classList.add('open');const sub=document.getElementById(id);if(sub)sub.classList.add('open');}
+  const allSub=document.querySelectorAll('.sn-sub');
+  allSub.forEach(s=>s.classList.remove('open'));
+  allSub.forEach(snForceReflow);
+  if(!wasOpen){
+    btn.classList.add('open');
+    const sub=document.getElementById(id);
+    if(sub){sub.classList.add('open');snForceReflow(sub);}
+  }
 }
 function goTab(t,btn){
   document.querySelectorAll('.tab,.tab-item,.sn-top,.sn-link').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
@@ -4151,6 +4159,7 @@ function goTab(t,btn){
   if(snSub){
     document.querySelectorAll('.sn-sub').forEach(s=>{if(s!==snSub)s.classList.remove('open')});
     snSub.classList.add('open');
+    snForceReflow(snSub);
     const gb=document.querySelector(`.sn-grp-btn[onclick*="'${snSub.id}'"]`);
     if(gb){gb.classList.add('open','sn-has-active');}
   }
