@@ -7596,8 +7596,8 @@ function calcRisk(d,ix,p){
   let score=w.score;const pondReasons=[];
   const last=p.records[p.records.length-1];
   if(last){
-    if(last.alk&&last.alk<120){score+=1;pondReasons.push({l:'warn',m:`ALK ต่ำ (${last.alk}) เสี่ยงฝน`})}
-    if(last.doM&&last.doM<5.5){score+=1;pondReasons.push({l:'warn',m:`DO เช้าต่ำ (${last.doM})`})}
+    if(last.alk!=null&&last.alk!==''&&last.alk<120){score+=1;pondReasons.push({l:'warn',m:`ALK ต่ำ (${last.alk}) เสี่ยงฝน`})}
+    if(last.doM!=null&&last.doM!==''&&last.doM<5.5){score+=1;pondReasons.push({l:'warn',m:`DO เช้าต่ำ (${last.doM})`})}
     if(last.nh4!=null&&last.nh4!==''){
       if(last.nh4>0.5){score+=3;pondReasons.push({l:'danger',m:`แอมโมเนีย (NH4+) เกินเกณฑ์อันตราย (${last.nh4})`})}
       else if(last.nh4>=0.25){score+=1;pondReasons.push({l:'warn',m:`แอมโมเนีย (NH4+) เริ่มสูง (${last.nh4})`})}
@@ -7658,7 +7658,18 @@ function renderRisk(d){
   const pondMax=[]; // เก็บ maxS ต่อบ่อไว้สรุปรวมทั้งฟาร์ม
   // ── อากาศ 3 วันข้างหน้า — คำนวณครั้งเดียว ใช้ร่วมกันทุกบ่อ (ไม่ใช่ของรายบ่อ) ──
   const weatherDays=d.time.slice(1,4).map((_,i)=>calcWeatherRisk(d,i+1));
-  document.getElementById('risk-grid').innerHTML=D.ponds.map(p=>{
+  // ── เฉพาะบ่อที่กำลังเลี้ยงอยู่จริง (ตัดบ่อที่จับไปแล้ว/ยังไม่ลงกุ้ง ออกจากการประเมินความเสี่ยง — เดิมใช้ D.ponds ตรงๆ ทำให้บ่อที่ปิดรอบแล้วยังโชว์ค่าความเสี่ยงค้าง) ──
+  const activePonds=wqfeedActivePonds();
+  if(!activePonds.length){
+    document.getElementById('risk-grid').innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic;grid-column:1/-1">ยังไม่มีบ่อที่กำลังเลี้ยงอยู่ให้ประเมินความเสี่ยง</p>';
+    renderRiskWeatherBanner(weatherDays);
+    document.getElementById('risk-farm-summary').innerHTML='<div class="card" style="background:var(--sf2)"><div style="color:var(--tx3);font-size:13px;text-align:center">ยังไม่มีบ่อที่กำลังเลี้ยงอยู่</div></div>';
+    _riskPondMaxCache=[];
+    renderOvRiskList();
+    document.getElementById('risk-recs').innerHTML='<p style="color:var(--tx3);font-size:13px;padding:10px">ยังไม่มีบ่อที่กำลังเลี้ยงอยู่</p>';
+    return;
+  }
+  document.getElementById('risk-grid').innerHTML=activePonds.map(p=>{
     const days=d.time.slice(1,4).map((_,i)=>calcRisk(d,i+1,p));
     const maxS=Math.max(...days.map(r=>r.score));const rc=maxS>=6?'rh':maxS>=3?'rm':'rl';
     days.forEach(r=>r.reasons.forEach(x=>allR.push(x)));
