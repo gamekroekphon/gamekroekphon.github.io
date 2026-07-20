@@ -8014,8 +8014,27 @@ function renderManage(){
     const active=age!==null&&age>=0; // ลงกุ้งแล้วและไม่ได้อยู่ระหว่างเตรียมบ่อ — ใช้ตัดสินว่า "ควรมีข้อมูล" หรือยัง
     const adg=getPDG(p.samples||[]);
     const adgCell=adg?`${adg}`:'<span style="color:var(--tx3)">-</span>';
-    return`<tr><td><strong style="color:var(--p)">${p.name}</strong></td><td>${p.stock.toLocaleString()}</td><td>${p.size}</td><td>${dens(p)} ตัว/ตรม.</td><td>${p.startDate?fD(p.startDate):'-'}</td><td>${ageCell}</td><td>${mgCountCell(p.records.length,active)}</td><td>${mgCountCell((p.feedLog||[]).length,active)}</td><td>${mgCountCell((p.samples||[]).length,active)}</td><td>${mgCountCell((p.labResults||[]).length,active)}</td><td>${adgCell}</td><td style="display:flex;gap:6px"><button class="btn btn-s btn-sm" onclick="editPond('${p.id}')">✏️</button><button class="btn btn-d btn-sm" onclick="delPond('${p.id}')">🗑️</button></td></tr>`;
+    // ── บ่อที่ "ยังไม่ลงกุ้ง" (startDate ว่าง) แต่ log ยังไม่ว่างจริง — ข้อมูลรอบเก่าค้างจากปิดรอบ (เช่น sync ดันกลับ) ไม่ได้ตั้งใจ ──
+    const orphaned=!active&&!p.startDate&&[p.records.length,(p.feedLog||[]).length,(p.samples||[]).length,(p.labResults||[]).length,(p.plankton||[]).length,(p.waterLog||[]).length,(p.chemLog||[]).length,(p.partialHarvests||[]).length].some(n=>n>0);
+    const cleanupBtn=orphaned?`<button class="btn btn-d btn-sm" title="ล้างข้อมูลค้างจากรอบก่อน" onclick="cleanupOrphanData('${p.id}')">🧹</button>`:'';
+    return`<tr><td><strong style="color:var(--p)">${p.name}</strong></td><td>${p.stock.toLocaleString()}</td><td>${p.size}</td><td>${dens(p)} ตัว/ตรม.</td><td>${p.startDate?fD(p.startDate):'-'}</td><td>${ageCell}</td><td>${mgCountCell(p.records.length,active)}</td><td>${mgCountCell((p.feedLog||[]).length,active)}</td><td>${mgCountCell((p.samples||[]).length,active)}</td><td>${mgCountCell((p.labResults||[]).length,active)}</td><td>${adgCell}</td><td style="display:flex;gap:6px">${cleanupBtn}<button class="btn btn-s btn-sm" onclick="editPond('${p.id}')">✏️</button><button class="btn btn-d btn-sm" onclick="delPond('${p.id}')">🗑️</button></td></tr>`;
   }).join('');
+}
+// ── ล้างข้อมูลค้าง (feedLog/samples/labResults ฯลฯ) ของบ่อที่ปิดรอบไปแล้วแต่ log ไม่ถูกเคลียร์ตาม (เช่น sync ดันข้อมูลรอบเก่ากลับมา) — ใช้ path เดียวกับตอนปิดรอบจริง (tombstone แล้วล้าง array) ──
+function cleanupOrphanData(id){
+  const p=pond(id);if(!p)return;
+  if(p.startDate||p.stock){alert('บ่อนี้มีข้อมูลรอบปัจจุบันอยู่ ไม่ใช่ข้อมูลค้าง — ยกเลิกการล้าง');return}
+  const counts={records:p.records.length,feedLog:(p.feedLog||[]).length,samples:(p.samples||[]).length,labResults:(p.labResults||[]).length,plankton:(p.plankton||[]).length,waterLog:(p.waterLog||[]).length,chemLog:(p.chemLog||[]).length,partialHarvests:(p.partialHarvests||[]).length};
+  const summary=Object.entries(counts).filter(([,n])=>n>0).map(([k,n])=>`${k}: ${n}`).join(', ');
+  if(!confirm(`บ่อ ${p.name} ยังไม่ลงกุ้ง แต่มีข้อมูลค้างจากรอบก่อน (${summary})\n\nยืนยันล้างข้อมูลเหล่านี้ทิ้ง? (ถ้าเคยปิดรอบไปแล้วข้อมูลจะยังอยู่ใน "ประวัติรอบเลี้ยง" ไม่หายไปไหน — นี่แค่ล้าง log ที่ค้างในรอบปัจจุบัน)`))return;
+  D.deletedIds=D.deletedIds||[];
+  ['records','feedLog','samples','plankton','waterLog','chemLog','labResults','partialHarvests'].forEach(k=>{
+    (p[k]||[]).forEach(r=>{if(r&&r.id)D.deletedIds.push(r.id);});
+    p[k]=[];
+  });
+  save();fbSave();
+  renderManage();populateAll();renderOv();
+  alert('ล้างข้อมูลค้างเรียบร้อย');
 }
 function syncMdlTotal(){
   const stock=parseInt(document.getElementById('mdl-stock').value)||0;
