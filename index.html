@@ -1348,9 +1348,6 @@ body.role-ceo .main{max-width:640px}
           <div class="fg"><label class="fl">อายุ (วัน)</label><input type="number" class="fi" id="wl-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
           <div class="fg"><label class="fl">การดำเนินการ</label><select class="fi" id="wl-action"><option value="exchange">เปลี่ยนถ่ายน้ำ</option><option value="add">เติมน้ำ</option><option value="drain">ระบายน้ำ</option><option value="treat">บำบัดน้ำ</option></select></div>
         </div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">ปริมาณ (เซนติเมตร)</label><input type="number" step="1" class="fi" id="wl-vol" placeholder="10"></div>
-        </div>
         <div class="fg"><label class="fl">เหตุผล / หมายเหตุ</label><input type="text" class="fi" id="wl-notes" placeholder="เหตุผลในการเปลี่ยนน้ำ..."></div>
         <div style="display:flex;gap:10px"><button class="btn btn-p" onclick="saveWaterLog()">💾 บันทึก</button><button class="btn btn-s" onclick="clearWaterLog()">🗑️ ล้าง</button></div>
         <div id="wl-msg"></div>
@@ -6803,7 +6800,6 @@ function editWaterLog(pid,idx){
   syncDateHint(document.getElementById('wl-date'));
   calcAge('wl');
   const aEl=document.getElementById('wl-action');if(aEl)aEl.value=r.action||'in';
-  document.getElementById('wl-vol').value=r.vol||'';
   document.getElementById('wl-notes').value=r.notes||'';
   const el=document.getElementById('wl-pond');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -7083,11 +7079,11 @@ function saveWaterLog(){
   const p=pond(pid);if(!p)return;if(!p.waterLog)p.waterLog=[];
   const editId=document.getElementById('wl-edit-id').value;
   const rec={id:editId||('wl_'+pid+'_'+d+'_'+Date.now()),date:d,age:parseInt(document.getElementById('wl-age').value)||0,
-    action:document.getElementById('wl-action').value,vol:parseFloat(document.getElementById('wl-vol').value)||null,
+    action:document.getElementById('wl-action').value,vol:null,
     notes:document.getElementById('wl-notes').value};
   const idx=editId?p.waterLog.findIndex(r=>r.id===editId):-1;
-  if(idx>=0){p.waterLog[idx]=rec;showMsg('wl-msg','warn',`อัปเดต ${WL_ACT[rec.action]||rec.action} ${rec.vol||'-'} ซม. บ่อ ${p.name}`);}
-  else{p.waterLog.push(rec);showMsg('wl-msg','ok',`✅ ${WL_ACT[rec.action]||rec.action} ${rec.vol||'-'} ซม. บ่อ ${p.name}`);}
+  if(idx>=0){p.waterLog[idx]=rec;showMsg('wl-msg','warn',`อัปเดต ${WL_ACT[rec.action]||rec.action} บ่อ ${p.name}`);}
+  else{p.waterLog.push(rec);showMsg('wl-msg','ok',`✅ ${WL_ACT[rec.action]||rec.action} บ่อ ${p.name}`);}
   p.waterLog.sort((a,b)=>new Date(a.date)-new Date(b.date));
   document.getElementById('wl-edit-id').value='';
   save();renderWaterTable();renderWaterSummary();
@@ -7095,7 +7091,7 @@ function saveWaterLog(){
 function clearWaterLog(){
   document.getElementById('wl-date').value=today();
   document.getElementById('wl-edit-id').value='';
-  ['wl-vol','wl-notes'].forEach(id=>{document.getElementById(id).value=''});
+  document.getElementById('wl-notes').value='';
   document.getElementById('wl-msg').innerHTML='';calcAge('wl');
 }
 function renderWaterSummary(){
