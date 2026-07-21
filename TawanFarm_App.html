@@ -807,7 +807,7 @@ body.role-ceo .main{max-width:640px}
 .ceo-sheet-handle{width:36px;height:4px;background:var(--bd);border-radius:99px;margin:10px auto 4px;flex-shrink:0}
 .ceo-sheet-hd{padding:6px 20px 14px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0}
 .ceo-sheet-name{font-size:19px;font-weight:700}
-.ceo-sheet-meta{font-size:11.5px;color:var(--tx3);margin-top:2px}
+.ceo-sheet-meta{font-size:15px;font-weight:600;color:var(--tx2);margin-top:3px}
 .ceo-sheet-close{width:30px;height:30px;border-radius:99px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:13px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .ceo-sheet-body{padding:16px 20px 40px;overflow-y:auto;flex:1}
 .ceo-block-title{font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 9px}
@@ -818,7 +818,7 @@ body.role-ceo .main{max-width:640px}
 .ceo-plain-row .lbl{color:var(--tx2)}
 .ceo-plain-row .src{font-size:10px;color:var(--tx3);display:block;margin-top:1px}
 .ceo-plain-row .val{font-weight:700;font-variant-numeric:tabular-nums}
-.ceo-stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.ceo-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .ceo-wq-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
 .ceo-wq-cell{background:var(--sf2);border-radius:10px;padding:10px 11px}
 .ceo-wq-lbl{font-size:10px;color:var(--tx3);margin-bottom:3px}
@@ -827,9 +827,9 @@ body.role-ceo .main{max-width:640px}
 .ceo-wq-arrow.up{color:var(--ok)}
 .ceo-wq-arrow.down{color:var(--d)}
 .ceo-wq-arrow.flat{color:var(--tx3)}
-.ceo-stat{background:var(--sf2);border-radius:10px;padding:10px 10px}
-.ceo-stat-lbl{font-size:10px;color:var(--tx3);margin-bottom:3px}
-.ceo-stat-val{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.ceo-stat{background:var(--sf2);border-radius:10px;padding:14px}
+.ceo-stat-lbl{font-size:12.5px;font-weight:600;color:var(--tx3);margin-bottom:4px}
+.ceo-stat-val{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
 .ceo-growth-note{font-size:11.5px;color:var(--tx3);line-height:1.6;margin-bottom:22px}
 .ceo-acc{border:1px solid var(--bd);border-radius:10px;margin-bottom:10px;overflow:hidden}
 .ceo-acc-hd{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;background:var(--sf)}
@@ -1099,11 +1099,12 @@ body.role-ceo .main{max-width:640px}
       <div class="ceo-block-title">ค่าน้ำล่าสุด <span id="ceo-p-waterdate" style="text-transform:none;font-weight:400;color:var(--tx3)"></span></div>
       <div class="ceo-wq-grid" id="ceo-p-watergrid"></div>
 
-      <div class="ceo-block-title">การเติบโต</div>
+      <div class="ceo-block-title">สรุปบ่อ</div>
       <div class="ceo-stat-grid">
         <div class="ceo-stat"><div class="ceo-stat-lbl">Biomass</div><div class="ceo-stat-val" id="ceo-p-bio">—</div></div>
         <div class="ceo-stat"><div class="ceo-stat-lbl">ไซส์</div><div class="ceo-stat-val" id="ceo-p-size">—</div></div>
         <div class="ceo-stat"><div class="ceo-stat-lbl">FCR ประเมิน</div><div class="ceo-stat-val" id="ceo-p-fcr">—</div></div>
+        <div class="ceo-stat"><div class="ceo-stat-lbl">Yield/ไร่</div><div class="ceo-stat-val" id="ceo-p-yield">—</div></div>
       </div>
       <div class="ceo-growth-note" id="ceo-p-growthnote">—</div>
 
@@ -9555,6 +9556,7 @@ function ceoOpenSheet(pid){
   document.getElementById('ceo-p-size').textContent=lastSample&&lastSample.plCount?lastSample.plCount+' ตัว/กก.':'-';
   const fcrVal=getFCR(p);
   document.getElementById('ceo-p-fcr').textContent=fcrVal||'-';
+  document.getElementById('ceo-p-yield').textContent=(bio&&p.size)?Math.round(bio/p.size).toLocaleString()+' กก.':'-';
 
   const growth=(p.samples||[]).filter(s=>s.abw).map(s=>s.abw);
   if(growth.length>=2){
