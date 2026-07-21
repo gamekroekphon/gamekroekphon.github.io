@@ -770,6 +770,11 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 /* role=ceo: ซ่อนเมนู/แถบแท็บ/bottom-nav ทั้งหมด แสดงแค่หน้า CEO เต็มจอ ไม่ต้องกดหลายขั้น */
 body.role-ceo .side-nav,body.role-ceo .tabs-wrap,body.role-ceo #bnav{display:none!important}
 body.role-ceo .main{max-width:640px}
+/* ── บั๊ก: sidebar ซ่อนไปแล้วแต่กฎจอง margin-left 230px (บรรทัด ~76 สำหรับ .side-nav) ยัง !important ทับอยู่ทุกจอ ≥601px (รวม iPad) ทำให้เนื้อหาเบี้ยวไปทางขวา ไม่กึ่งกลางจอ — รีเซ็ตกลับด้วย selector ที่ specificity สูงกว่า ── */
+@media(min-width:601px){
+  body.role-ceo .hdr{margin-left:0!important;width:100%!important}
+  body.role-ceo .main{margin-left:auto!important;margin-right:auto!important;width:100%!important;max-width:640px!important}
+}
 .ceo-hdr{margin-bottom:16px}
 .ceo-hdr-title{font-size:14px;font-weight:700;color:var(--tx2)}
 .ceo-kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px}
@@ -861,13 +866,13 @@ body.role-ceo .main{max-width:640px}
 .ceo-empty{color:var(--tx3);padding:14px;font-style:italic;text-align:center;font-size:12.5px}
 /* iPad/แท็บเล็ต: กว้างขึ้น การ์ดบ่อเรียงหลายคอลัมน์ ไม่ยืดเป็นแถวเดียวยาวๆ เหมือนมือถือ (วางท้าย section กัน base rule ทับ) */
 @media(min-width:700px){
-  body.role-ceo .main{max-width:900px}
+  body.role-ceo .main{margin-left:auto!important;margin-right:auto!important;width:100%!important;max-width:900px!important}
   .ceo-kpi-grid{grid-template-columns:repeat(4,1fr)}
   .ceo-pond-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
   .ceo-sheet{left:50%;right:auto;transform:translateX(-50%);width:560px;border-radius:20px;bottom:16px;max-height:calc(100% - 32px)}
 }
 @media(min-width:1000px){
-  body.role-ceo .main{max-width:1180px}
+  body.role-ceo .main{margin-left:auto!important;margin-right:auto!important;width:100%!important;max-width:1180px!important}
   .ceo-kpi-grid{grid-template-columns:repeat(5,1fr)}
   .ceo-pond-list{grid-template-columns:repeat(3,1fr)}
 }
