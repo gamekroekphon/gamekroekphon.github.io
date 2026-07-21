@@ -9577,16 +9577,24 @@ function ceoOpenSheet(pid){
   const elecCost=getElecCostForPeriod(p.startDate,today());
   const totalCost=fryCost+feedCost+stockCostSum+laborCost+elecCost;
   document.getElementById('ceo-cost-total-mini').textContent=ceoMoney(totalCost);
-  const itemsHtml=stockItems.map(it=>{
+  // ── สรุปรวมต่อสินค้า (ไม่โชว่ประวัติว่าใช้วันไหน — CEO ไม่จำเป็นต้องเห็นระดับนั้น) ──
+  const itemsGrouped={};
+  stockItems.forEach(it=>{
+    const key=it.name+'|'+it.category+'|'+it.unit;
+    if(!itemsGrouped[key])itemsGrouped[key]={name:it.name,category:it.category,unit:it.unit,qty:0,total:0};
+    itemsGrouped[key].qty+=it.qty;
+    itemsGrouped[key].total+=it.qty*it.unitPrice;
+  });
+  const itemsHtml=Object.values(itemsGrouped).map(it=>{
     const catLbl=STOCK_CAT_LABEL[it.category]||it.category||'-';
     const dotColor=CEO_CAT_DOT[it.category]||'var(--tx3)';
     return`<div class="ceo-item-row">
       <span class="ceo-cat-dot" style="background:${dotColor}"></span>
       <div class="ceo-item-main">
         <div class="ceo-item-name">${it.name}</div>
-        <div class="ceo-item-sub">${catLbl} · ${fD(it.date)} · ${it.qty} ${it.unit} × ${it.unitPrice.toLocaleString()}฿</div>
+        <div class="ceo-item-sub">${catLbl} · รวม ${it.qty} ${it.unit}</div>
       </div>
-      <span class="ceo-item-val">${ceoMoney(it.qty*it.unitPrice)}</span>
+      <span class="ceo-item-val">${ceoMoney(it.total)}</span>
     </div>`;
   }).join('');
   document.getElementById('ceo-cost-detail').innerHTML=`
