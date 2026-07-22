@@ -2143,11 +2143,11 @@ body.role-ceo .main{max-width:640px}
   <!-- SUB-PANE: พนักงานรายวัน (รายสัปดาห์) -->
   <div class="labor-pane" id="lp-cost">
     <div class="card" style="margin-bottom:16px">
-      <div class="card-t">👷 บันทึกยอดจ่ายจริง — พนักงานรายวัน (จ่ายทุกวันพฤหัสบดี ตัดรอบทุกวันพุธ)</div>
-      <div class="card-sub" style="font-size:11.5px;color:var(--tx3);margin-bottom:12px">แต่ละแถว = ยอดที่จ่ายจริงในวันพฤหัสบดีนั้น ครอบคลุมช่วงทำงาน 7 วันก่อนหน้า (พฤหัสบดี–พุธ ที่เพิ่งตัดรอบจบ) สัปดาห์ที่จ่ายไปแล้วจะล็อกไว้ ไม่ถูกคำนวณย้อนหลังใหม่ ต่อให้สัปดาห์ถัดไปยอดเปลี่ยน</div>
+      <div class="card-t">👷 บันทึกยอดจ่ายจริง — พนักงานรายวัน (ตัดรอบทุกวันพุธ จ่ายจริงวันพฤหัสบดี)</div>
+      <div class="card-sub" style="font-size:11.5px;color:var(--tx3);margin-bottom:12px">แต่ละแถว = ยอดของสัปดาห์ที่ตัดรอบวันพุธนั้น ครอบคลุมช่วงทำงาน 7 วัน (พฤหัสบดี–พุธ) กรอกวันที่ตัดรอบ (วันพุธ) เป็นตัวระบุสัปดาห์ สัปดาห์ที่ตัดรอบไปแล้วจะล็อกไว้ ไม่ถูกคำนวณย้อนหลังใหม่ ต่อให้สัปดาห์ถัดไปยอดเปลี่ยน</div>
       <input type="hidden" id="dw-edit-id">
       <div class="fgrid">
-        <div class="fg"><label class="fl">วันจ่ายจริง (ต้องเป็นวันพฤหัสบดี) *</label><input type="date" class="fi" id="dw-start" onchange="checkDwThursday()"></div>
+        <div class="fg"><label class="fl">วันตัดรอบ (ต้องเป็นวันพุธ) *</label><input type="date" class="fi" id="dw-start" onchange="checkDwWednesday()"></div>
         <div class="fg"><label class="fl">จำนวนคนทำงานจริง</label><input type="number" class="fi" id="dw-people" placeholder="เช่น 32"></div>
         <div class="fg"><label class="fl">ยอดจ่ายจริง (บาท) *</label><input type="number" class="fi" id="dw-amount" placeholder="เช่น 61500" inputmode="decimal"></div>
       </div>
@@ -2164,7 +2164,7 @@ body.role-ceo .main{max-width:640px}
     <div class="card">
       <div class="card-t">📋 ประวัติจ่ายค่าแรงรายสัปดาห์</div>
       <div id="dw-table"></div>
-      <div class="hint" style="margin-top:10px">* 🔒 = จ่ายจริงแล้ว (ถึงวันพฤหัสบดีนั้นแล้ว) ไม่ถูกคำนวณย้อนหลังใหม่ · 📅 = ยังไม่ถึงวันจ่าย/ประมาณการ</div>
+      <div class="hint" style="margin-top:10px">* 🔒 = ตัดรอบแล้ว (จ่ายจริงแล้ว) ไม่ถูกคำนวณย้อนหลังใหม่ · 📅 = ยังไม่ถึงวันตัดรอบ/ประมาณการ</div>
     </div>
   </div>
 
@@ -5563,41 +5563,41 @@ function renderStaffTable(){
     list.map(r=>`<tr><td>${r.name}</td><td><span class="pr-size-tag">${r.position}</span></td><td>${r.salary.toLocaleString()}</td><td>${fD(r.startDate)}</td><td><button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="deleteStaff('${r.id}')">🗑️</button></td></tr>`).join('')
   }</tbody></table>`;
 }
-// ── หาวันพฤหัสบดีที่ใกล้ที่สุดกับวันที่กำหนด (ใช้ validate ช่องกรอกวันจ่ายจริง — เดินหน้าหาก่อน เพราะถ้าพิมพ์วันพุธผิดมามักหมายถึงวันตัดรอบ ซึ่งจ่ายจริงวันถัดไป ไม่ใช่พฤหัสของสัปดาห์ก่อนหน้า) ──
-function mostRecentThursdayOf(dateStr){
+// ── หาวันพุธที่ใกล้ที่สุดกับวันที่กำหนด (ใช้ validate ช่องกรอกวันตัดรอบ — หาทั้งเดินหน้า/ถอยหลังแล้วเลือกที่ใกล้กว่า) ──
+function mostRecentWednesdayOf(dateStr){
   const fwd=new Date(dateStr+'T00:00:00');
-  while(fwd.getDay()!==4)fwd.setDate(fwd.getDate()+1);
+  while(fwd.getDay()!==3)fwd.setDate(fwd.getDate()+1);
   const back=new Date(dateStr+'T00:00:00');
-  while(back.getDay()!==4)back.setDate(back.getDate()-1);
+  while(back.getDay()!==3)back.setDate(back.getDate()-1);
   const orig=new Date(dateStr+'T00:00:00');
   const diffFwd=fwd-orig, diffBack=orig-back;
   return ymdLocal(diffFwd<=diffBack?fwd:back);
 }
-function checkDwThursday(){
+function checkDwWednesday(){
   const val=document.getElementById('dw-start').value;
   const warnEl=document.getElementById('dw-wed-warn');
   if(!val){warnEl.innerHTML='';return;}
   const d=new Date(val+'T00:00:00');
-  if(d.getDay()!==4){
-    const thu=mostRecentThursdayOf(val);
-    warnEl.innerHTML=`<div class="ai warn" style="border-radius:8px;padding:8px 12px;font-size:12.5px;background:var(--wb);color:var(--w);border:1.5px solid var(--w)">⚠️ วันที่เลือกไม่ใช่วันพฤหัสบดี — ต้องกรอกวันที่จ่ายจริง (จ่ายทุกวันพฤหัสบดี) ลองเลือก ${fD(thu)} แทน</div>`;
+  if(d.getDay()!==3){
+    const wed=mostRecentWednesdayOf(val);
+    warnEl.innerHTML=`<div class="ai warn" style="border-radius:8px;padding:8px 12px;font-size:12.5px;background:var(--wb);color:var(--w);border:1.5px solid var(--w)">⚠️ วันที่เลือกไม่ใช่วันพุธ — ต้องกรอกวันที่ตัดรอบ (ตัดรอบทุกวันพุธ) ลองเลือก ${fD(wed)} แทน</div>`;
   }else{
     warnEl.innerHTML='';
   }
 }
 function saveDailyWeek(){
-  const payDate=document.getElementById('dw-start').value;
+  const weekEnd=document.getElementById('dw-start').value;
   const people=parseInt(document.getElementById('dw-people').value)||null;
   const amount=parseFloat(document.getElementById('dw-amount').value);
   const note=document.getElementById('dw-note').value.trim();
   const editId=document.getElementById('dw-edit-id').value;
   const msg=document.getElementById('dw-msg');
-  if(!payDate){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุวันที่จ่ายจริง</span>';return;}
-  if(new Date(payDate+'T00:00:00').getDay()!==4){msg.innerHTML='<span style="color:var(--d)">วันที่ต้องเป็นวันพฤหัสบดี</span>';return;}
+  if(!weekEnd){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุวันที่ตัดรอบ</span>';return;}
+  if(new Date(weekEnd+'T00:00:00').getDay()!==3){msg.innerHTML='<span style="color:var(--d)">วันที่ต้องเป็นวันพุธ</span>';return;}
   if(!amount||amount<=0){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุยอดจ่ายจริง</span>';return;}
   if(!D.dailyLaborWeeks)D.dailyLaborWeeks=[];
-  const rec={id:editId||('dw_'+payDate+'_'+Date.now()),payDate,people,amount,note};
-  const idx=editId?D.dailyLaborWeeks.findIndex(r=>r.id===editId):D.dailyLaborWeeks.findIndex(r=>r.payDate===payDate);
+  const rec={id:editId||('dw_'+weekEnd+'_'+Date.now()),weekEnd,people,amount,note};
+  const idx=editId?D.dailyLaborWeeks.findIndex(r=>r.id===editId):D.dailyLaborWeeks.findIndex(r=>r.weekEnd===weekEnd);
   if(idx>=0)D.dailyLaborWeeks[idx]=rec;else D.dailyLaborWeeks.push(rec);
   save();
   msg.innerHTML='<span style="color:var(--ok)">✅ บันทึกเรียบร้อย</span>';
@@ -5621,7 +5621,7 @@ function clearDailyWeek(keepMsg){
 function editDailyWeek(id){
   const r=(D.dailyLaborWeeks||[]).find(x=>x.id===id);if(!r)return;
   document.getElementById('dw-edit-id').value=r.id;
-  document.getElementById('dw-start').value=r.payDate;
+  document.getElementById('dw-start').value=r.weekEnd;
   document.getElementById('dw-people').value=r.people||'';
   document.getElementById('dw-amount').value=r.amount;
   document.getElementById('dw-note').value=r.note||'';
@@ -5639,15 +5639,14 @@ function addDaysStr(dateStr,days){
 }
 function renderDailyWeekTable(){
   const el=document.getElementById('dw-table');if(!el)return;
-  const list=(D.dailyLaborWeeks||[]).slice().sort((a,b)=>b.payDate.localeCompare(a.payDate));
+  const list=(D.dailyLaborWeeks||[]).slice().sort((a,b)=>b.weekEnd.localeCompare(a.weekEnd));
   if(!list.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return;}
   const todayStr=today();
-  el.innerHTML=`<table class="tbl"><thead><tr><th>วันจ่ายจริง</th><th>ช่วงที่คุม</th><th>สถานะ</th><th>จำนวนคน</th><th>ยอดจ่ายจริง (บาท)</th><th>เฉลี่ย/วัน</th><th></th></tr></thead><tbody>${
+  el.innerHTML=`<table class="tbl"><thead><tr><th>วันตัดรอบ (พุธ)</th><th>ช่วงที่คุม</th><th>สถานะ</th><th>จำนวนคน</th><th>ยอดจ่ายจริง (บาท)</th><th>เฉลี่ย/วัน</th><th></th></tr></thead><tbody>${
     list.map(r=>{
-      const periodStart=addDaysStr(r.payDate,-7);
-      const periodEnd=addDaysStr(r.payDate,-1);
-      const locked=r.payDate<=todayStr;
-      return`<tr><td>${fD(r.payDate)}</td><td style="font-size:12px;color:var(--tx3)">${fD(periodStart)} – ${fD(periodEnd)}</td><td>${locked?'🔒 จ่ายจริงแล้ว':'📅 ประมาณการ'}</td><td>${r.people?r.people+' คน':'-'}</td><td>${r.amount.toLocaleString()}</td><td>${Math.round(r.amount/7).toLocaleString()}</td><td style="display:flex;gap:6px"><button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="editDailyWeek('${r.id}')">✏️</button><button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="deleteDailyWeek('${r.id}')">🗑️</button></td></tr>`;
+      const periodStart=addDaysStr(r.weekEnd,-6);
+      const locked=r.weekEnd<=todayStr;
+      return`<tr><td>${fD(r.weekEnd)}</td><td style="font-size:12px;color:var(--tx3)">${fD(periodStart)} – ${fD(r.weekEnd)}</td><td>${locked?'🔒 ตัดรอบแล้ว':'📅 ประมาณการ'}</td><td>${r.people?r.people+' คน':'-'}</td><td>${r.amount.toLocaleString()}</td><td>${Math.round(r.amount/7).toLocaleString()}</td><td style="display:flex;gap:6px"><button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="editDailyWeek('${r.id}')">✏️</button><button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="deleteDailyWeek('${r.id}')">🗑️</button></td></tr>`;
     }).join('')
   }</tbody></table>`;
 }
@@ -5674,16 +5673,15 @@ function dailyFixedStaffRate(dateStr){
   const monthlyTotal=Object.values(staffMap).reduce((s,x)=>s+x.salary,0);
   return monthlyTotal*12/365;
 }
-// ── ค่าแรงพนักงานรายวัน: จ่ายจริงทุกวันพฤหัสบดี คุมช่วงทำงาน 7 วันก่อนหน้า (พฤหัส–พุธที่เพิ่งตัดรอบจบ) หาสัปดาห์ที่ช่วงคุมครอบวันที่ต้องการ ถ้าไม่มี (ช่วงปัจจุบันยังไม่ถึงวันจ่าย) ใช้ยอดของสัปดาห์ล่าสุดที่มีอยู่ยืดไปข้างหน้าเป็นค่าประมาณการ ──
+// ── ค่าแรงพนักงานรายวัน: ตัดรอบทุกวันพุธ คุมช่วงทำงาน 7 วัน (พฤหัส–พุธ จบที่วันพุธที่กรอก) หาสัปดาห์ที่ช่วงคุมครอบวันที่ต้องการ ถ้าไม่มี (ช่วงปัจจุบันยังไม่ถึงวันตัดรอบ) ใช้ยอดของสัปดาห์ล่าสุดที่มีอยู่ยืดไปข้างหน้าเป็นค่าประมาณการ ──
 function weekOfDate(dateStr){
-  const weeks=(D.dailyLaborWeeks||[]).filter(w=>w.payDate).slice().sort((a,b)=>a.payDate.localeCompare(b.payDate));
+  const weeks=(D.dailyLaborWeeks||[]).filter(w=>w.weekEnd).slice().sort((a,b)=>a.weekEnd.localeCompare(b.weekEnd));
   if(!weeks.length)return null;
   for(const w of weeks){
-    const periodStart=addDaysStr(w.payDate,-7);
-    const periodEnd=addDaysStr(w.payDate,-1);
-    if(dateStr>=periodStart&&dateStr<=periodEnd)return w;
+    const periodStart=addDaysStr(w.weekEnd,-6);
+    if(dateStr>=periodStart&&dateStr<=w.weekEnd)return w;
   }
-  const prior=weeks.filter(w=>w.payDate<=dateStr);
+  const prior=weeks.filter(w=>w.weekEnd<=dateStr);
   return prior.length?prior[prior.length-1]:null;
 }
 function dailyWeeklyWorkerRate(dateStr){
