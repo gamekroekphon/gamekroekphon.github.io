@@ -5520,6 +5520,7 @@ function initLabor(){
   populateAll();
   document.getElementById('st-start').value=today();
   renderStaffTable();
+  normalizeDailyLaborWeeks();
   renderDailyWeekTable();
   renderLaborKPI();
   renderLaborActiveSection();
@@ -5637,9 +5638,20 @@ function addDaysStr(dateStr,days){
   x.setDate(x.getDate()+days);
   return ymdLocal(x);
 }
+// ── ระหว่างพัฒนาฟีเจอร์นี้เคยเปลี่ยนชื่อฟิลด์ระบุสัปดาห์ 3 รอบ (weekStart→payDate→weekEnd) — เผื่อมีรายการเก่าที่ยังค้างชื่อฟิลด์เดิมอยู่ใน Firebase จริง แปลงให้เป็น weekEnd อัตโนมัติตอนโหลด กันไม่ให้ .sort()/.filter() ที่คาดว่ามี weekEnd เจอ undefined แล้วพังทั้งฟังก์ชัน (บั๊กที่พี่เจอ: กรอกแล้ว "ไม่มีอะไรเกิดขึ้น" เพราะ renderDailyWeekTable() throw กลางฟังก์ชัน saveDailyWeek() ทำให้โค้ดหลังจากนั้น รวมถึงการอัปเดตแท็บ "ประวัติ/สรุป" ไม่ทำงานเลย) ──
+function normalizeDailyLaborWeeks(){
+  let changed=false;
+  (D.dailyLaborWeeks||[]).forEach(r=>{
+    if(!r.weekEnd&&r.payDate){r.weekEnd=addDaysStr(r.payDate,-1);changed=true;}
+  });
+  const before=(D.dailyLaborWeeks||[]).length;
+  D.dailyLaborWeeks=(D.dailyLaborWeeks||[]).filter(r=>!!r.weekEnd);
+  if(D.dailyLaborWeeks.length!==before)changed=true;
+  if(changed)save();
+}
 function renderDailyWeekTable(){
   const el=document.getElementById('dw-table');if(!el)return;
-  const list=(D.dailyLaborWeeks||[]).slice().sort((a,b)=>b.weekEnd.localeCompare(a.weekEnd));
+  const list=(D.dailyLaborWeeks||[]).filter(r=>r.weekEnd).slice().sort((a,b)=>b.weekEnd.localeCompare(a.weekEnd));
   if(!list.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return;}
   const todayStr=today();
   el.innerHTML=`<table class="tbl"><thead><tr><th>วันตัดรอบ (พุธ)</th><th>ช่วงที่คุม</th><th>สถานะ</th><th>จำนวนคน</th><th>ยอดจ่ายจริง (บาท)</th><th>เฉลี่ย/วัน</th><th></th></tr></thead><tbody>${
