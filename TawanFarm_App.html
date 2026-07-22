@@ -5732,14 +5732,18 @@ function renderLaborKPI(){
   const wk=weekOfDate(today());
   const monthlyDailyEquiv=wk?wk.amount*365/12/7:0; // แปลงยอดรายสัปดาห์ล่าสุดกลับเป็น "เทียบเท่ารายเดือน" ไว้โชว่คู่กับเงินเดือนประจำ
   // ค่าแรง/กก. จากรอบที่ปิดแล้ว — เฉพาะรอบที่ปิดตั้งแต่วันที่มีข้อมูลรายสัปดาห์จริงเป็นต้นมา (กันรอบเก่าที่ไม่มีข้อมูลจริงมาฉุดค่าเฉลี่ยลง)
+  // น้ำหนักจับจริงเก็บอยู่ที่ c.harvestResult.totalWeight (ตามที่ confirmCloseCrop() บันทึกจริง) ไม่ใช่ c.totalWeight ตรงๆ (ฟิลด์นั้นมีแค่ใน seed data เก่า) — ถ้าอ่านผิดฟิลด์ รอบที่ปิดจริงผ่านแอปทั้งหมดจะหายจากการคำนวณ
   const laborStart=laborDataStartDate();
   const closed=[];
-  D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{if(c.closeDate&&c.totalWeight&&(!laborStart||c.closeDate>=laborStart))closed.push({...c,pondId:p.id});}));
+  D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{
+    const w=c.totalWeight||(c.harvestResult||{}).totalWeight;
+    if(c.closeDate&&w&&(!laborStart||c.closeDate>=laborStart))closed.push({...c,pondId:p.id,_w:w});
+  }));
   let avgPerKg=null;
   if(closed.length){
     const vals=closed.map(c=>{
       const lc=getLaborCostForPond(c.pondId,c.startDate,c.closeDate);
-      return c.totalWeight?lc/c.totalWeight:null;
+      return c._w?lc/c._w:null;
     }).filter(v=>v!==null&&v>0);
     if(vals.length)avgPerKg=vals.reduce((s,v)=>s+v,0)/vals.length;
   }
@@ -5808,10 +5812,11 @@ function renderLaborCropSummary(){
   const laborStart=laborDataStartDate();
   const rows=[];
   D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{
-    if(!c.closeDate||!c.totalWeight)return;
+    const w=c.totalWeight||(c.harvestResult||{}).totalWeight; // น้ำหนักจับจริงเก็บที่ c.harvestResult.totalWeight (ตามที่ confirmCloseCrop() บันทึกจริง) ไม่ใช่ c.totalWeight — c.totalWeight มีแค่ใน seed data เก่าเท่านั้น
+    if(!c.closeDate||!w)return;
     if(laborStart&&c.closeDate<laborStart)return; // ตัดรอบที่ปิดก่อนมีข้อมูลรายสัปดาห์จริง (ค่าแรง/กก. จะต่ำเกินจริงเพราะไม่มีข้อมูลพนักงานรายวันของช่วงนั้น)
     const lc=getLaborCostForPond(p.id,c.startDate,c.closeDate);
-    rows.push({name:p.name,cropNum:c.cropNum,closeDate:c.closeDate,weight:c.totalWeight,labor:lc,perKg:lc&&c.totalWeight?lc/c.totalWeight:null});
+    rows.push({name:p.name,cropNum:c.cropNum,closeDate:c.closeDate,weight:w,labor:lc,perKg:lc&&w?lc/w:null});
   }));
   rows.sort((a,b)=>new Date(b.closeDate)-new Date(a.closeDate));
   if(!rows.length){el.innerHTML=`<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีรอบที่ปิดแล้วตั้งแต่มีข้อมูลรายสัปดาห์จริง${laborStart?' ('+fD(laborStart)+' เป็นต้นไป)':''}</p>`;return;}
