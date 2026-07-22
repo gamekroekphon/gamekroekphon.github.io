@@ -5995,14 +5995,30 @@ function fmtMonth(ym){
   const months=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   return months[parseInt(m,10)-1]+' '+(parseInt(y,10)+543);
 }
-// ── ต้นทุนค่าไฟรายบ่อ: ประมาณคร่าวๆ 2,500 บาท/วัน × จำนวนวันที่เลี้ยง ──
-// เดิมหารจากบิลจริง/D.electricityBills เฉลี่ยทั้งฟาร์ม แต่ตัวเลขเพี้ยนเพราะมีวันที่ไม่ได้เลี้ยงกุ้งในรอบปีปนอยู่ในค่าเฉลี่ยด้วย
-// ข้อมูลบิลค่าไฟ (D.electricityBills, หน้า "ค่าไฟฟ้า") ยังเก็บไว้เป็นประวัติเหมือนเดิม ไม่ได้ใช้คำนวณต้นทุนต่อบ่อจุดนี้แล้ว
-const ELEC_RATE_PER_DAY=2500;
+// ── ต้นทุนค่าไฟรายบ่อ: ใช้บิลไฟจริงรายเดือน (D.electricityBills) หารด้วยจำนวนบ่อที่กำลังเลี้ยงอยู่จริงรายวัน — สูตรเดียวกับค่าแรง (getLaborCostForPond) แทนอัตราคงที่เดิม (2,500 บ./วัน ไม่สนใจว่าเลี้ยงกี่บ่อพร้อมกัน) ──
+// ── หาบิลไฟจริงของเดือนที่ครอบวันที่กำหนด แปลงเป็นอัตรา/วัน — ถ้าเดือนนั้นยังไม่มีบิลจริง (เช่นเดือนปัจจุบันที่บิลยังไม่ออก) ใช้บิลเดือนล่าสุดที่มีจริงยืดไปเป็นค่าประมาณการ (แบบเดียวกับ weekOfDate ของค่าแรง) ──
+function dailyElecRate(dateStr){
+  const ym=dateStr.slice(0,7);
+  const bills=(D.electricityBills||[]).filter(b=>b.month<=ym).sort((a,b)=>b.month.localeCompare(a.month));
+  const bill=bills[0];
+  if(!bill)return 0;
+  const [y,m]=bill.month.split('-').map(Number);
+  const daysInMonth=new Date(y,m,0).getDate();
+  return bill.totalBaht/daysInMonth;
+}
 function getElecCostForPeriod(fromDate,toDate){
   if(!fromDate||!toDate)return 0;
-  const days=dDiff(fromDate,toDate);
-  return Math.max(0,days)*ELEC_RATE_PER_DAY;
+  if(fromDate>toDate)return 0;
+  let total=0;
+  let d=new Date(fromDate+'T00:00:00');
+  const endD=new Date(toDate+'T00:00:00');
+  while(d<=endD){
+    const ds=ymdLocal(d);
+    const activeCount=activePondCountOnDate(ds)||1;
+    total+=dailyElecRate(ds)/activeCount;
+    d.setDate(d.getDate()+1);
+  }
+  return total;
 }
 function renderElecKPI(){
   const el=document.getElementById('el-kpi');if(!el)return;
