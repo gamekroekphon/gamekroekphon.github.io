@@ -1778,7 +1778,7 @@ body.role-ceo .main{max-width:640px}
           <div class="fg"><label class="fl">ต้นทุนลูกกุ้ง (บาท)</label><input type="number" class="fi" id="cm-cost-fry" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl">ต้นทุนเวชภัณฑ์ (บาท) <span style="font-weight:400;color:var(--tx3)">(ยากิน+ยาลงน้ำ+จุลินทรีย์ ดึงจากสต็อก แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-med" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl">ต้นทุนปูน (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากสต็อก แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-lime" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนค่าแรง (บาท) <span style="font-weight:400;color:var(--tx3)">(กรอกเอง)</span></label><input type="number" class="fi" id="cm-cost-labor" step="1" placeholder="กรอกเอง"></div>
+          <div class="fg"><label class="fl">ต้นทุนค่าแรง (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากข้อมูลเงินเดือน+ค่าแรงรายสัปดาห์ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-labor" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="cm-cost-elec" step="1" placeholder="ดึงอัตโนมัติ 2,500 บาท/วัน" style="background:var(--sf2)"></div>
           <div class="fg"><label class="fl">ต้นทุนน้ำมัน (บาท) <span style="font-weight:400;color:var(--tx3)">(กรอกเอง)</span></label><input type="number" class="fi" id="cm-cost-fuel" step="1" placeholder="กรอกเอง"></div>
           <div class="fg"><label class="fl">อุปกรณ์ (บาท) <span style="font-weight:400;color:var(--tx3)">(ในสต็อก ดึงอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-equip" step="1" placeholder="0"></div>
@@ -9267,10 +9267,14 @@ function openCropModal(pid){
   document.getElementById('cm-cost-equip').value=stockGroups.equip||'';
   const autoElec=getElecCostForPeriod(p.startDate,today());
   document.getElementById('cm-cost-elec').value=autoElec||'';
-  // ── ค่าแรง/น้ำมัน/อุปกรณ์นอก/ค่าจับกุ้ง/% ส่วนแบ่ง — กรอกเองทั้งหมด เพราะต้องดึงตัวเลขจากนอกแอป ──
-  ['cm-cost-labor','cm-cost-fuel','cm-cost-equip-out','cm-cost-catch','cm-pct-caretaker','cm-pct-manager'].forEach(id=>{
+  // ── ค่าแรง: ดึงจาก getLaborCostForPond (เงินเดือนประจำ+พนักงานรายวัน หารตามบ่อ active จริงรายวัน) แทนกรอกเองแล้ว — พี่ยืนยันแล้วว่าเทียบตัวเลขที่กรอกเองไว้ก่อนหน้ากับสูตรนี้ไม่ต่างกัน แก้ไขได้ถ้าจำเป็น ──
+  const autoLabor=getLaborCostForPond(pid,p.startDate,today());
+  document.getElementById('cm-cost-labor').value=autoLabor?Math.round(autoLabor):'';
+  // ── น้ำมัน/อุปกรณ์นอก/ค่าจับกุ้ง/% ส่วนแบ่ง — ยังกรอกเองทั้งหมด เพราะต้องดึงตัวเลขจากนอกแอป ──
+  ['cm-cost-fuel','cm-cost-equip-out','cm-pct-caretaker','cm-pct-manager'].forEach(id=>{
     document.getElementById(id).value='';
   });
+  document.getElementById('cm-cost-catch').value='';
   document.getElementById('cm-survival').value='';
   document.getElementById('cm-revenue').value='';
   document.getElementById('cm-profit').value='';
