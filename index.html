@@ -5654,11 +5654,12 @@ function renderDailyWeekTable(){
   const list=(D.dailyLaborWeeks||[]).filter(r=>r.weekEnd).slice().sort((a,b)=>b.weekEnd.localeCompare(a.weekEnd));
   if(!list.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return;}
   const todayStr=today();
-  el.innerHTML=`<table class="tbl"><thead><tr><th>วันตัดรอบ (พุธ)</th><th>ช่วงที่คุม</th><th>สถานะ</th><th>จำนวนคน</th><th>ยอดจ่ายจริง (บาท)</th><th>เฉลี่ย/วัน</th><th></th></tr></thead><tbody>${
+  el.innerHTML=`<table class="tbl"><thead><tr><th>วันตัดรอบ (พุธ)</th><th>ช่วงที่คุม</th><th>สถานะ</th><th>บ่อที่กำลังเลี้ยง</th><th>จำนวนคน</th><th>ยอดจ่ายจริง (บาท)</th><th>เฉลี่ย/วัน</th><th></th></tr></thead><tbody>${
     list.map(r=>{
       const periodStart=addDaysStr(r.weekEnd,-6);
       const locked=r.weekEnd<=todayStr;
-      return`<tr><td>${fD(r.weekEnd)}</td><td style="font-size:12px;color:var(--tx3)">${fD(periodStart)} – ${fD(r.weekEnd)}</td><td>${locked?'🔒 ตัดรอบแล้ว':'📅 ประมาณการ'}</td><td>${r.people?r.people+' คน':'-'}</td><td>${r.amount.toLocaleString()}</td><td>${Math.round(r.amount/7).toLocaleString()}</td><td style="display:flex;gap:6px"><button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="editDailyWeek('${r.id}')">✏️</button><button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="deleteDailyWeek('${r.id}')">🗑️</button></td></tr>`;
+      const activePonds=activePondCountOnDate(r.weekEnd); // จำนวนบ่อที่กำลังเลี้ยงอยู่จริง ณ วันตัดรอบ (วันสุดท้าย) ของสัปดาห์นั้น
+      return`<tr><td>${fD(r.weekEnd)}</td><td style="font-size:12px;color:var(--tx3)">${fD(periodStart)} – ${fD(r.weekEnd)}</td><td>${locked?'🔒 ตัดรอบแล้ว':'📅 ประมาณการ'}</td><td>${activePonds} บ่อ</td><td>${r.people?r.people+' คน':'-'}</td><td>${r.amount.toLocaleString()}</td><td>${Math.round(r.amount/7).toLocaleString()}</td><td style="display:flex;gap:6px"><button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="editDailyWeek('${r.id}')">✏️</button><button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="deleteDailyWeek('${r.id}')">🗑️</button></td></tr>`;
     }).join('')
   }</tbody></table>`;
 }
@@ -5816,7 +5817,8 @@ function renderLaborCropSummary(){
     if(!c.closeDate||!w)return;
     if(laborStart&&c.closeDate<laborStart)return; // ตัดรอบที่ปิดก่อนมีข้อมูลรายสัปดาห์จริง (ค่าแรง/กก. จะต่ำเกินจริงเพราะไม่มีข้อมูลพนักงานรายวันของช่วงนั้น)
     const lc=getLaborCostForPond(p.id,c.startDate,c.closeDate);
-    rows.push({name:p.name,cropNum:c.cropNum,closeDate:c.closeDate,weight:w,labor:lc,perKg:lc&&w?lc/w:null});
+    const days=c.startDate?dDiff(c.startDate,c.closeDate)+1:null; // +1 นับรวมวันลงกุ้ง
+    rows.push({name:p.name,cropNum:c.cropNum,closeDate:c.closeDate,weight:w,labor:lc,perKg:lc&&w?lc/w:null,days});
   }));
   rows.sort((a,b)=>new Date(b.closeDate)-new Date(a.closeDate));
   if(!rows.length){el.innerHTML=`<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีรอบที่ปิดแล้วตั้งแต่มีข้อมูลรายสัปดาห์จริง${laborStart?' ('+fD(laborStart)+' เป็นต้นไป)':''}</p>`;return;}
@@ -5826,7 +5828,7 @@ function renderLaborCropSummary(){
     <div class="kpi-card"><div class="kpi-label">ค่าแรง/กก. เฉลี่ยทั้งฟาร์ม</div><div class="kpi-val">${avg.toFixed(2)} <span class="kpi-unit">บาท/กก.</span></div></div>
     <div class="kpi-card"><div class="kpi-label">รอบที่ปิดแล้ว (ใช้คำนวณ)</div><div class="kpi-val">${rows.length} <span class="kpi-unit">รอบ</span></div><div class="kpi-sub">${laborStart?'ตั้งแต่ '+fD(laborStart):''}</div></div>
   </div>`:'';
-  el.innerHTML=kpiHtml+`<table class="tbl"><thead><tr><th>บ่อ</th><th>รอบ</th><th>วันปิดรอบ</th><th>น้ำหนักจับ (กก.)</th><th>ค่าแรงรวมรอบ (บาท)</th><th>ค่าแรง/กก.</th><th></th></tr></thead><tbody>${
+  el.innerHTML=kpiHtml+`<table class="tbl"><thead><tr><th>บ่อ</th><th>รอบ</th><th>วันปิดรอบ</th><th>จำนวนวันที่เลี้ยง</th><th>น้ำหนักจับ (กก.)</th><th>ค่าแรงรวมรอบ (บาท)</th><th>ค่าแรง/กก.</th><th></th></tr></thead><tbody>${
     rows.map(r=>{
       let badge='';
       if(r.perKg!==null&&avg){
@@ -5835,7 +5837,7 @@ function renderLaborCropSummary(){
         const lbl=ratio>1.4?'สูงผิดปกติ':ratio>1.15?'สูงกว่าเฉลี่ย':'ปกติ';
         badge=`<span class="badge ${cls}">${lbl}</span>`;
       }
-      return`<tr><td>${r.name}</td><td>รอบ ${r.cropNum}</td><td>${fD(r.closeDate)}</td><td>${r.weight.toLocaleString()}</td><td>${Math.round(r.labor).toLocaleString()}</td><td>${r.perKg!==null?r.perKg.toFixed(2)+' บาท':'-'}</td><td>${badge}</td></tr>`;
+      return`<tr><td>${r.name}</td><td>รอบ ${r.cropNum}</td><td>${fD(r.closeDate)}</td><td>${r.days!=null?r.days+' วัน':'-'}</td><td>${r.weight.toLocaleString()}</td><td>${Math.round(r.labor).toLocaleString()}</td><td>${r.perKg!==null?r.perKg.toFixed(2)+' บาท':'-'}</td><td>${badge}</td></tr>`;
     }).join('')
   }</tbody></table>`;
 }
