@@ -389,6 +389,21 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .pond-chk input{display:none}.pond-chk.on{background:var(--p);color:#fff;border-color:var(--p)}
 .pond-chk.wq-done{background:var(--ob);border-color:#bfe3cc;color:var(--ok)}
 .pond-chk.wq-done.on{background:var(--p);border-color:var(--p);color:#fff}
+/* ── ทดลองเวชภัณฑ์ ── */
+.metric-check{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;cursor:pointer;font-size:13px;background:var(--sf);transition:all .15s}
+.metric-check.on{border-color:var(--p);background:var(--pl)}
+.metric-check input{width:16px;height:16px;accent-color:var(--p)}
+.picked-row{display:flex;align-items:center;gap:10px;border:1px solid var(--bd);border-radius:8px;padding:8px 12px;background:var(--sf2);flex-wrap:wrap}
+.picked-name{font-weight:700;font-size:13px;width:56px}
+.picked-doc{font-size:11px;color:var(--tx3);width:76px}
+.mini-card{border:1px solid var(--bd);border-radius:10px;padding:12px 14px;background:var(--sf)}
+.mini-title{font-size:12px;font-weight:600;color:var(--tx2);margin-bottom:10px}
+.mbar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.mbar-name{font-size:11px;width:54px;flex-shrink:0;font-weight:600}
+.mbar-track{flex:1;height:16px;background:var(--sf2);border-radius:4px;overflow:hidden}
+.mbar-fill{height:100%;border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:5px}
+.mbar-val{font-size:9.5px;color:#fff;font-weight:700}
+.grp-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10.5px;font-weight:700}
 .dw-chip{border:1px solid var(--border-input);border-radius:16px;padding:5px 12px;font-size:12px;background:var(--sf);color:var(--tx);cursor:pointer;font-family:inherit}
 .dw-chip-on{border-color:var(--d);background:var(--db);color:var(--d)}
 .dw-sev{border:1px solid var(--border-input);border-radius:6px;padding:3px 10px;font-size:11px;background:var(--sf);color:var(--tx);cursor:pointer;font-family:inherit}
@@ -1553,6 +1568,7 @@ body.role-ceo .main{max-width:640px}
       <button class="cmp-cat-btn" id="cmp-cat-size" onclick="setCmpCat('size',this)">⚖️ ไซส์</button>
       <button class="cmp-cat-btn" id="cmp-cat-lab" onclick="setCmpCat('lab',this)">🔬 แล็บ</button>
       <button class="cmp-cat-btn" id="cmp-cat-water" onclick="setCmpCat('water',this)">💦 น้ำ</button>
+      <button class="cmp-cat-btn" id="cmp-cat-trial" onclick="setCmpCat('trial',this)">🧪 ทดลองเวชภัณฑ์</button>
     </div>
     <div id="cmp-sel" style="display:none;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
     <div id="cmp-param-row" style="display:none" class="fg" style="max-width:250px"><label class="fl">พารามิเตอร์</label><select class="fi" id="cmp-param" onchange="renderCompare()"></select></div>
@@ -1603,6 +1619,60 @@ body.role-ceo .main{max-width:640px}
       </div>
     </div>
     <div class="chart-wrap" style="height:380px"><canvas id="cmpChart"></canvas></div>
+  </div>
+
+  <!-- ── ทดลองเวชภัณฑ์: เทียบบ่อที่ใช้/ไม่ใช้ 2-4 บ่อ จากรอบที่กำลังเลี้ยงอยู่ตอนนี้เท่านั้น (ไม่ดึงรอบเก่าที่ปิดแล้ว) ── -->
+  <div id="cmp-trial" style="display:none">
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-t">📁 การทดลองที่บันทึกไว้</div>
+      <div class="fgrid" style="grid-template-columns:2fr 1fr">
+        <div class="fg"><label class="fl">เลือกการทดลอง</label><select class="fi" id="trial-select" onchange="loadTrial(this.value)"><option value="">— สร้างการทดลองใหม่ —</option></select></div>
+        <div class="fg" style="display:flex;align-items:flex-end"><button class="btn btn-s" onclick="newTrial()" style="width:100%">➕ ทดลองใหม่</button></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-t">🧪 ตั้งชื่อการทดลอง</div>
+      <div class="card-sub">พิมพ์ชื่อเวชภัณฑ์/สิ่งที่ต้องการทดลองเอง — ไม่บังคับว่าต้องเป็นสินค้าที่เคยเบิกในระบบสต็อก (มีคำแนะนำจากประวัติเบิกให้เลือกด้วยถ้ามี)</div>
+      <div class="fg"><label class="fl">ชื่อเวชภัณฑ์/สิ่งที่ทดลอง</label><input class="fi" id="trial-name" list="trial-suggest" placeholder="เช่น โปรไบโอติกบำรุงตับ สูตร B"></div>
+      <datalist id="trial-suggest"></datalist>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-t">🐟 เลือกบ่อที่ต้องการเปรียบเทียบ (2-4 บ่อ)</div>
+      <div class="card-sub">แสดงเฉพาะบ่อที่ <strong>กำลังเลี้ยงอยู่ตอนนี้</strong> เท่านั้น (ไม่ดึงรอบเก่าที่ปิดไปแล้วมาเทียบ) เลือกได้ 2-4 บ่อ แล้วพิมพ์ชื่อสินค้าที่ใช้ในแต่ละบ่อ — พิมพ์ชื่อเดียวกันในหลายบ่อเพื่อจัดกลุ่ม หรือพิมพ์คนละชื่อเพื่อเทียบสินค้า A กับสินค้า B พร้อมกันได้ในการทดลองเดียว (เว้นว่างไว้ = ไม่ได้ใช้อะไรเลย)</div>
+      <div id="trial-pond-picker" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+      <div id="trial-picked-list" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div class="hint" id="trial-doc-hint" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-t">📊 ตัวชี้วัดที่ต้องการเปรียบเทียบ</div>
+      <div id="trial-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px"></div>
+      <div class="fg" id="trial-water-row" style="max-width:250px;margin-top:12px"><label class="fl">พารามิเตอร์น้ำ</label><select class="fi" id="trial-water-param" onchange="renderTrialResults()"></select></div>
+      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-p" id="trial-save-btn" onclick="saveTrial()">💾 บันทึกการทดลอง</button>
+        <button class="btn btn-s" onclick="deleteTrial()" id="trial-del-btn" style="display:none">🗑️ ลบการทดลองนี้</button>
+      </div>
+      <div id="trial-msg" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px" id="trial-growth-card">
+      <div class="card-t">📈 การเติบโต — เทียบที่อายุกุ้ง (DOC) เดียวกัน</div>
+      <div id="trial-growth-legend" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:11.5px"></div>
+      <div class="chart-wrap" style="height:280px"><canvas id="trialGrowthChart"></canvas></div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px" id="trial-mini-card">
+      <div class="card-t">🧮 ตัวชี้วัดอื่น — รายบ่อ</div>
+      <div id="trial-mini-compare" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-t">📋 รายละเอียดรายบ่อ</div>
+      <div id="trial-table"></div>
+    </div>
+    <div class="hint" style="margin-top:10px">⚠️ เทียบจากบ่อจริงที่กำลังเลี้ยงอยู่ ไม่ใช่การทดลองแบบควบคุมทางวิทยาศาสตร์ — ปัจจัยอื่น (สายพันธุ์ลูกกุ้ง ความหนาแน่น สภาพอากาศ) อาจมีผลปนด้วย ใช้เป็นข้อมูลอ้างอิงประกอบการตัดสินใจ ไม่ใช่ข้อสรุปเด็ดขาด</div>
   </div>
 </div>
 <!-- RISK -->
@@ -7542,19 +7612,25 @@ function setCmpCat(cat,btn){
   document.getElementById('cmp-lab-row').style.display=cat==='lab'?'':'none';
   document.getElementById('cmp-water-row').style.display=cat==='water'?'':'none';
   const isWq=cat==='wq';
-  const hmEl=document.getElementById('cmp-wq-heatmap');if(hmEl)hmEl.style.display=isWq?'':'none';
-  const chEl=document.getElementById('cmp-chart-card');if(chEl)chEl.style.display=isWq?'none':'';
-  const selEl=document.getElementById('cmp-sel');if(selEl)selEl.style.display=isWq?'none':'flex';
+  const isTrial=cat==='trial';
+  const hmEl=document.getElementById('cmp-wq-heatmap');if(hmEl)hmEl.style.display=(isWq&&!isTrial)?'':'none';
+  const chEl=document.getElementById('cmp-chart-card');if(chEl)chEl.style.display=(!isWq&&!isTrial)?'':'none';
+  const selEl=document.getElementById('cmp-sel');if(selEl)selEl.style.display=(isWq||isTrial)?'none':'flex';
+  const trEl=document.getElementById('cmp-trial');if(trEl)trEl.style.display=isTrial?'':'none';
+  if(isTrial){initTrialTab();return;}
   renderCompare();
 }
 function initCompare(){
   if(!_wqHmDate)_wqHmDate=today();
+  const isTrial0=cmpCat==='trial';
   const selEl=document.getElementById('cmp-sel');
-  if(selEl){selEl.innerHTML=sortedPonds().map(p=>`<span class="pond-chk${cmpP.has(p.id)?' on':''}" onclick="tglCmp('${p.id}',this)"><input type="checkbox"${cmpP.has(p.id)?' checked':''}>บ่อ ${p.name}</span>`).join('');selEl.style.display=cmpCat==='wq'?'none':'flex';}
+  if(selEl){selEl.innerHTML=sortedPonds().map(p=>`<span class="pond-chk${cmpP.has(p.id)?' on':''}" onclick="tglCmp('${p.id}',this)"><input type="checkbox"${cmpP.has(p.id)?' checked':''}>บ่อ ${p.name}</span>`).join('');selEl.style.display=(cmpCat==='wq'||isTrial0)?'none':'flex';}
   const pmEl=document.getElementById('cmp-param');if(pmEl)pmEl.innerHTML=PARAMS.map(p=>`<option value="${p.key}">${p.lbl}</option>`).join('');
   const isWq=cmpCat==='wq';
-  const hmEl=document.getElementById('cmp-wq-heatmap');if(hmEl)hmEl.style.display=isWq?'':'none';
-  const chEl=document.getElementById('cmp-chart-card');if(chEl)chEl.style.display=isWq?'none':'';
+  const hmEl=document.getElementById('cmp-wq-heatmap');if(hmEl)hmEl.style.display=(isWq&&!isTrial0)?'':'none';
+  const chEl=document.getElementById('cmp-chart-card');if(chEl)chEl.style.display=(!isWq&&!isTrial0)?'':'none';
+  const trEl=document.getElementById('cmp-trial');if(trEl)trEl.style.display=isTrial0?'':'none';
+  if(isTrial0){initTrialTab();return;}
   renderCompare();
 }
 function tglCmp(id,el){cmpP.has(id)?cmpP.delete(id):cmpP.add(id);el.classList.toggle('on');renderCompare()}
@@ -7599,6 +7675,212 @@ function cmpExportPNG(){
   if(!cmpCh){alert('ไม่มีกราฟให้บันทึก');return}
   const a=document.createElement('a');a.href=cmpCh.toBase64Image();
   a.download=`tawanfarm_compare_${today()}.png`;a.click();
+}
+// ══════ ทดลองเวชภัณฑ์ — เทียบ 2-4 บ่อที่กำลังเลี้ยงอยู่ตอนนี้ (ใช้/ไม่ใช้) ที่ DOC เดียวกัน ══════
+let trialCh=null;
+let _trialDraft={id:null,name:'',waterParam:'doM',metrics:{growth:true,fcr:true,mortality:false,lab:true,water:true},ponds:{}};
+const TRIAL_METRICS=[{key:'growth',lbl:'การเติบโต (ABW/ADG)'},{key:'fcr',lbl:'FCR ประเมิน'},{key:'mortality',lbl:'กุ้งตายสะสม (%)'},{key:'lab',lbl:'ผลแล็บ (TCBS/ตับ)'},{key:'water',lbl:'ค่าน้ำ'}];
+function trialActivePonds(){return wqfeedActivePonds();}
+function initTrialTab(){
+  const selEl=document.getElementById('trial-select');
+  if(selEl){
+    selEl.innerHTML='<option value="">— สร้างการทดลองใหม่ —</option>'+(D.medTrials||[]).map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+    if((D.medTrials||[]).some(t=>t.id===_trialDraft.id))selEl.value=_trialDraft.id;
+  }
+  const dl=document.getElementById('trial-suggest');
+  if(dl){
+    const names=[...new Set((D.inventoryLog||[]).filter(r=>r.type==='out'&&r.pondId).map(r=>r.itemName||r.name).filter(Boolean))];
+    dl.innerHTML=names.map(n=>`<option value="${n}">`).join('');
+  }
+  const nameEl=document.getElementById('trial-name');if(nameEl)nameEl.value=_trialDraft.name;
+  const wpEl=document.getElementById('trial-water-param');
+  if(wpEl)wpEl.innerHTML=PARAMS.map(p=>`<option value="${p.key}"${p.key===_trialDraft.waterParam?' selected':''}>${p.lbl}</option>`).join('');
+  document.getElementById('trial-del-btn').style.display=_trialDraft.id?'':'none';
+  renderTrialMetricChecks();
+  renderTrialPondPicker();
+  renderTrialResults();
+}
+function renderTrialMetricChecks(){
+  const el=document.getElementById('trial-metrics');if(!el)return;
+  el.innerHTML=TRIAL_METRICS.map(m=>`<label class="metric-check${_trialDraft.metrics[m.key]?' on':''}"><input type="checkbox" ${_trialDraft.metrics[m.key]?'checked':''} onchange="toggleTrialMetric('${m.key}',this)"> ${m.lbl}</label>`).join('');
+  const wRow=document.getElementById('trial-water-row');if(wRow)wRow.style.display=_trialDraft.metrics.water?'':'none';
+}
+function toggleTrialMetric(key,el){
+  _trialDraft.metrics[key]=el.checked;
+  el.closest('.metric-check').classList.toggle('on',el.checked);
+  const wRow=document.getElementById('trial-water-row');if(wRow)wRow.style.display=_trialDraft.metrics.water?'':'none';
+  renderTrialResults();
+}
+function renderTrialPondPicker(){
+  const pickEl=document.getElementById('trial-pond-picker');if(!pickEl)return;
+  const active=trialActivePonds();
+  pickEl.innerHTML=active.length?active.map(p=>{
+    const doc=p.startDate?dDiff(p.startDate,today()):null;
+    const picked=!!_trialDraft.ponds[p.id];
+    return `<span class="pond-chk${picked?' on':''}" onclick="toggleTrialPond('${p.id}')">${p.name} <span style="font-size:10.5px;opacity:.75">DOC ${doc!=null?doc:'-'}</span></span>`;
+  }).join(''):'<p style="color:var(--tx3);font-style:italic;font-size:12.5px">ไม่มีบ่อที่กำลังเลี้ยงอยู่ตอนนี้</p>';
+  renderTrialPickedList();
+}
+function toggleTrialPond(pid){
+  if(pid in _trialDraft.ponds){delete _trialDraft.ponds[pid];}
+  else{
+    if(Object.keys(_trialDraft.ponds).length>=4){alert('เลือกได้สูงสุด 4 บ่อ');return;}
+    _trialDraft.ponds[pid]='';
+  }
+  renderTrialPondPicker();
+  renderTrialResults();
+}
+// ── ติดป้าย "สินค้าที่ใช้" ต่อบ่อเป็นข้อความอิสระ (แทนปุ่มใช้/ไม่ใช้เดิม) รองรับเทียบได้มากกว่า 2 สินค้าในการทดลองเดียว เช่น สินค้า A vs สินค้า B vs ไม่ใช้อะไร — ไม่ re-render รายการทั้งหมดตอนพิมพ์ กันช่องกรอกเสียโฟกัส แค่รีเฟรชผลลัพธ์ด้านล่าง ──
+function setTrialLabel(pid,val){
+  _trialDraft.ponds[pid]=val;
+  renderTrialResults();
+}
+function renderTrialPickedList(){
+  const el=document.getElementById('trial-picked-list');if(!el)return;
+  const ids=Object.keys(_trialDraft.ponds);
+  const existingLabels=[...new Set(ids.map(pid=>(_trialDraft.ponds[pid]||'').trim()).filter(Boolean))];
+  const dlId='trial-label-suggest';
+  let dl=document.getElementById(dlId);
+  if(!dl){dl=document.createElement('datalist');dl.id=dlId;document.body.appendChild(dl);}
+  dl.innerHTML=existingLabels.map(l=>`<option value="${l}">`).join('');
+  el.innerHTML=ids.map(pid=>{
+    const p=pond(pid);if(!p)return'';
+    const doc=p.startDate?dDiff(p.startDate,today()):null;
+    const label=_trialDraft.ponds[pid]||'';
+    return `<div class="picked-row">
+      <span class="picked-name">${p.name}</span><span class="picked-doc">DOC ${doc!=null?doc:'-'} วัน</span>
+      <input class="fi" list="${dlId}" style="max-width:200px;padding:6px 10px;font-size:12.5px" placeholder="ชื่อสินค้าที่ใช้ (เว้นว่าง=ไม่ใช้อะไร)" value="${label}" oninput="setTrialLabel('${pid}',this.value)">
+    </div>`;
+  }).join('');
+  const hintEl=document.getElementById('trial-doc-hint');
+  if(hintEl){
+    const docs=ids.map(pid=>{const p=pond(pid);return p&&p.startDate?dDiff(p.startDate,today()):null}).filter(v=>v!=null);
+    const spread=docs.length>1?Math.max(...docs)-Math.min(...docs):0;
+    hintEl.innerHTML=spread>10?`⚠️ บ่อที่เลือกอายุ (DOC) ต่างกัน ${spread} วัน — กราฟการเติบโตด้านล่างเทียบตามแกน "อายุกุ้ง (DOC)" ไม่ใช่วันที่ปฏิทิน เพื่อเทียบกันได้อย่างยุติธรรม`:'';
+  }
+}
+function trialAbwSeries(p){return(p.samples||[]).filter(s=>s.age!=null&&s.abw!=null).map(s=>({age:s.age,abw:s.abw})).sort((a,b)=>a.age-b.age);}
+function trialMiniBlock(title,vals,fmt,maxHint){
+  const nums=vals.map(v=>v.v).filter(v=>v!=null);
+  const max=nums.length?Math.max(...nums,maxHint||0):(maxHint||1);
+  return `<div class="mini-card"><div class="mini-title">${title}</div>${
+    vals.map(v=>{
+      const pct=(v.v!=null&&max>0)?Math.max(6,Math.min(100,v.v/max*100)):0;
+      return `<div class="mbar-row"><span class="mbar-name">${v.name}</span><div class="mbar-track"><div class="mbar-fill" style="width:${pct}%;background:${v.color}"><span class="mbar-val">${fmt(v.v)}</span></div></div></div>`;
+    }).join('')
+  }</div>`;
+}
+const TRIAL_LABEL_COLORS=['#185FA5','#D85A30','#1D9E75','#D4537E','#8B6914'];
+function renderTrialResults(){
+  const ids=Object.keys(_trialDraft.ponds);
+  const m=_trialDraft.metrics;
+  const growthCard=document.getElementById('trial-growth-card');if(growthCard)growthCard.style.display=m.growth?'':'none';
+  const miniCard=document.getElementById('trial-mini-card');if(miniCard)miniCard.style.display=(m.fcr||m.mortality||m.lab||m.water)?'':'none';
+  if(ids.length<2){
+    const lgEl=document.getElementById('trial-growth-legend');if(lgEl)lgEl.innerHTML='';
+    if(trialCh){trialCh.destroy();trialCh=null;}
+    const miEl=document.getElementById('trial-mini-compare');if(miEl)miEl.innerHTML='';
+    document.getElementById('trial-table').innerHTML='<p style="color:var(--tx3);text-align:center;padding:16px;font-style:italic">เลือกอย่างน้อย 2 บ่อเพื่อเริ่มเปรียบเทียบ</p>';
+    return;
+  }
+  const ponds=ids.map(pid=>({p:pond(pid),label:(_trialDraft.ponds[pid]||'').trim()||'ไม่ระบุ'})).filter(x=>x.p);
+  const labelOrder=[...new Set(ponds.map(x=>x.label).filter(l=>l!=='ไม่ระบุ'))];
+  const withColor=ponds.map(x=>({...x,color:x.label==='ไม่ระบุ'?'#9AA1AB':TRIAL_LABEL_COLORS[labelOrder.indexOf(x.label)%TRIAL_LABEL_COLORS.length]}));
+
+  if(m.growth){
+    const legendEl=document.getElementById('trial-growth-legend');
+    if(legendEl)legendEl.innerHTML=withColor.map(x=>`<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${x.color};margin-right:5px;vertical-align:middle"></span>${x.p.name} (${x.label})</span>`).join('');
+    if(trialCh){trialCh.destroy();trialCh=null;}
+    const datasets=withColor.map(x=>({label:x.p.name,data:trialAbwSeries(x.p).map(s=>({x:s.age,y:s.abw})),borderColor:x.color,backgroundColor:x.color+'33',tension:.3,pointRadius:3,fill:false}));
+    const cvs=document.getElementById('trialGrowthChart');
+    if(cvs)trialCh=new Chart(cvs,{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,scales:{x:{type:'linear',title:{display:true,text:'อายุกุ้ง (DOC)'}},y:{title:{display:true,text:'ABW (กรัม)'}}},plugins:{legend:{display:false}}}});
+  }
+
+  const blocks=[];
+  if(m.fcr){
+    const vals=withColor.map(x=>({name:x.p.name,color:x.color,v:parseFloat(getFCR(x.p))||null}));
+    blocks.push(trialMiniBlock('FCR ประเมิน (ล่าสุด)',vals,v=>v!=null?v.toFixed(2):'-',1.6));
+  }
+  if(m.mortality){
+    const vals=withColor.map(x=>{
+      const total=(x.p.mortalityLog||[]).reduce((s,r)=>s+(r.count||0),0);
+      const pct=pRelease(x.p)?total/pRelease(x.p)*100:null;
+      return{name:x.p.name,color:x.color,v:pct};
+    });
+    blocks.push(trialMiniBlock('กุ้งตายสะสม (%)',vals,v=>v!=null?v.toFixed(2)+'%':'-',10));
+  }
+  if(m.lab){
+    const vals=withColor.map(x=>{
+      const last=(x.p.labResults||[]).slice(-1)[0];
+      return{name:x.p.name,color:x.color,v:last&&last.hepatoGreen!=null?last.hepatoGreen:null};
+    });
+    blocks.push(trialMiniBlock('TCBS เชื้อเขียว-ตับ ล่าสุด (CFU/g)',vals,v=>v!=null?v.toLocaleString():'-',1000));
+  }
+  if(m.water){
+    const key=document.getElementById('trial-water-param')?.value||'doM';
+    const pm=PARAMS.find(x=>x.key===key);
+    const vals=withColor.map(x=>{
+      const nums=(x.p.records||[]).map(r=>r[key]).filter(v=>v!=null&&v!=='');
+      const avg=nums.length?nums.reduce((s,v)=>s+parseFloat(v),0)/nums.length:null;
+      return{name:x.p.name,color:x.color,v:avg};
+    });
+    blocks.push(trialMiniBlock((pm?pm.lbl:key)+' เฉลี่ย',vals,v=>v!=null?v.toFixed(2):'-',pm?pm.max:null));
+  }
+  const miniEl=document.getElementById('trial-mini-compare');if(miniEl)miniEl.innerHTML=blocks.join('');
+
+  const tblEl=document.getElementById('trial-table');
+  if(tblEl){
+    tblEl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>บ่อ</th><th>กลุ่ม</th><th>DOC</th><th>ABW ล่าสุด</th><th>FCR ประเมิน</th><th>กุ้งตายสะสม</th><th>TCBS ตับ</th></tr></thead><tbody>${
+      withColor.map(x=>{
+        const doc=x.p.startDate?dDiff(x.p.startDate,today()):null;
+        const abwSeries=trialAbwSeries(x.p);const lastAbw=abwSeries.length?abwSeries[abwSeries.length-1].abw:null;
+        const fcr=parseFloat(getFCR(x.p))||null;
+        const totalDead=(x.p.mortalityLog||[]).reduce((s,r)=>s+(r.count||0),0);
+        const pct=pRelease(x.p)?totalDead/pRelease(x.p)*100:null;
+        const lastLab=(x.p.labResults||[]).slice(-1)[0];
+        return `<tr><td>${x.p.name}</td><td><span class="grp-tag" style="background:${x.color}22;color:${x.color}">${x.label}</span></td><td>${doc!=null?doc:'-'}</td><td>${lastAbw!=null?lastAbw+' g':'-'}</td><td>${fcr!=null?fcr.toFixed(2):'-'}</td><td>${pct!=null?pct.toFixed(2)+'%':'-'}</td><td>${lastLab&&lastLab.hepatoGreen!=null?lastLab.hepatoGreen.toLocaleString():'-'}</td></tr>`;
+      }).join('')
+    }</tbody></table></div>`;
+  }
+}
+function newTrial(){
+  _trialDraft={id:null,name:'',waterParam:'doM',metrics:{growth:true,fcr:true,mortality:false,lab:true,water:true},ponds:{}};
+  const selEl=document.getElementById('trial-select');if(selEl)selEl.value='';
+  const msgEl=document.getElementById('trial-msg');if(msgEl)msgEl.innerHTML='';
+  initTrialTab();
+}
+function loadTrial(id){
+  if(!id){newTrial();return;}
+  const t=(D.medTrials||[]).find(x=>x.id===id);if(!t)return;
+  _trialDraft={id:t.id,name:t.name,waterParam:t.waterParam||'doM',metrics:{...t.metrics},ponds:{...t.ponds}};
+  const msgEl=document.getElementById('trial-msg');if(msgEl)msgEl.innerHTML='';
+  initTrialTab();
+}
+function saveTrial(){
+  const name=document.getElementById('trial-name').value.trim();
+  const msg=document.getElementById('trial-msg');
+  if(!name){msg.innerHTML='<span style="color:var(--d)">กรุณาตั้งชื่อการทดลอง</span>';return;}
+  const ids=Object.keys(_trialDraft.ponds);
+  if(ids.length<2||ids.length>4){msg.innerHTML='<span style="color:var(--d)">กรุณาเลือก 2-4 บ่อ</span>';return;}
+  _trialDraft.name=name;
+  _trialDraft.waterParam=document.getElementById('trial-water-param')?.value||'doM';
+  if(!D.medTrials)D.medTrials=[];
+  const rec={id:_trialDraft.id||('trial_'+Date.now()),name:_trialDraft.name,waterParam:_trialDraft.waterParam,metrics:{..._trialDraft.metrics},ponds:{..._trialDraft.ponds}};
+  const idx=D.medTrials.findIndex(t=>t.id===rec.id);
+  if(idx>=0)D.medTrials[idx]=rec;else D.medTrials.push(rec);
+  _trialDraft.id=rec.id;
+  save();
+  msg.innerHTML='<span style="color:var(--ok)">✅ บันทึกเรียบร้อย</span>';
+  initTrialTab();
+  flashSaveBtn(document.getElementById('trial-save-btn'));
+}
+function deleteTrial(){
+  if(!_trialDraft.id)return;
+  if(!confirm('ลบการทดลองนี้?'))return;
+  D.medTrials=(D.medTrials||[]).filter(t=>t.id!==_trialDraft.id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(_trialDraft.id);
+  save();
+  newTrial();
 }
 function renderCmpFeed(){
   const metric=document.getElementById('cmp-feed-param')?.value||'per100k';
