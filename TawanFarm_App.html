@@ -5674,6 +5674,13 @@ function allCropWindows(){
 function activePondCountOnDate(dateStr){
   return allCropWindows().filter(w=>w.start<=dateStr&&(w.end===null||dateStr<=w.end)).length;
 }
+// ── วันแรกที่มีข้อมูล "ประวัติจ่ายค่าแรงรายสัปดาห์" จริงย้อนหลังสุด (ต้นช่วงของสัปดาห์แรกที่บันทึกไว้) — ใช้ตัดรอบที่ปิดไปแล้วก่อนหน้านี้ออกจากค่าเฉลี่ย ค่าแรง/กก. เพราะรอบที่ปิดก่อนมีข้อมูลรายสัปดาห์จริง จะคำนวณส่วนพนักงานรายวันเป็น 0 (ไม่มีข้อมูล) ทำให้ค่าแรง/กก. ต่ำเกินจริงและฉุดค่าเฉลี่ยทั้งฟาร์มลง ──
+function laborDataStartDate(){
+  const weeks=(D.dailyLaborWeeks||[]).filter(w=>w.weekEnd);
+  if(!weeks.length)return null;
+  const earliestWeekEnd=weeks.reduce((min,w)=>w.weekEnd<min?w.weekEnd:min,weeks[0].weekEnd);
+  return addDaysStr(earliestWeekEnd,-6);
+}
 // ── เงินเดือนพนักงานประจำ ณ วันใดๆ (ใช้ค่าที่มีผลล่าสุด ณ วันนั้น — แบบเดียวกับที่ renderStaffTable ใช้อยู่แล้ว) แปลงเป็นอัตรา/วันด้วย ×12÷365 (แม่นกว่า ÷30 เพราะเฉลี่ยทั้งปีคือ 30.4 วัน/เดือน) ──
 function dailyFixedStaffRate(dateStr){
   const staffMap={};
@@ -5724,9 +5731,10 @@ function renderLaborKPI(){
   const staffCount=Object.keys(staffMap).length;
   const wk=weekOfDate(today());
   const monthlyDailyEquiv=wk?wk.amount*365/12/7:0; // แปลงยอดรายสัปดาห์ล่าสุดกลับเป็น "เทียบเท่ารายเดือน" ไว้โชว่คู่กับเงินเดือนประจำ
-  // ค่าแรง/กก. จากรอบที่ปิดแล้ว
+  // ค่าแรง/กก. จากรอบที่ปิดแล้ว — เฉพาะรอบที่ปิดตั้งแต่วันที่มีข้อมูลรายสัปดาห์จริงเป็นต้นมา (กันรอบเก่าที่ไม่มีข้อมูลจริงมาฉุดค่าเฉลี่ยลง)
+  const laborStart=laborDataStartDate();
   const closed=[];
-  D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{if(c.closeDate&&c.totalWeight)closed.push({...c,pondId:p.id});}));
+  D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{if(c.closeDate&&c.totalWeight&&(!laborStart||c.closeDate>=laborStart))closed.push({...c,pondId:p.id});}));
   let avgPerKg=null;
   if(closed.length){
     const vals=closed.map(c=>{
@@ -5739,7 +5747,7 @@ function renderLaborKPI(){
     <div class="kpi-card"><div class="kpi-label">เงินเดือนประจำ/เดือน</div><div class="kpi-val">${monthlyStaff.toLocaleString()} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">${staffCount} คน</div></div>
     <div class="kpi-card"><div class="kpi-label">พนักงานรายวัน (เทียบเท่า/เดือน)</div><div class="kpi-val">${Math.round(monthlyDailyEquiv).toLocaleString()} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">จากยอดสัปดาห์ล่าสุดที่บันทึก</div></div>
     <div class="kpi-card"><div class="kpi-label">รวมค่าแรงทั้งหมด (เทียบเท่า/เดือน)</div><div class="kpi-val">${Math.round(monthlyStaff+monthlyDailyEquiv).toLocaleString()} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">เงินเดือน + รายวัน</div></div>
-    <div class="kpi-card"><div class="kpi-label">ค่าแรง/กก. เฉลี่ย (รอบที่ปิด)</div><div class="kpi-val">${avgPerKg!==null?avgPerKg.toFixed(2):'-'} <span class="kpi-unit">บาท/กก.</span></div><div class="kpi-sub">${closed.length} รอบ</div></div>`;
+    <div class="kpi-card"><div class="kpi-label">ค่าแรง/กก. เฉลี่ย (รอบที่ปิด)</div><div class="kpi-val">${avgPerKg!==null?avgPerKg.toFixed(2):'-'} <span class="kpi-unit">บาท/กก.</span></div><div class="kpi-sub">${closed.length} รอบ${laborStart?' · ตั้งแต่ปิดรอบ '+fD(laborStart)+' เป็นต้นไป':''}</div></div>`;
 }
 // ── ส่วน 1 ของ "ประวัติ/สรุป": แถบตรวจสอบบ่อ active วันนี้ + ค่าแรง/บ่อ/วัน ปัจจุบัน ──
 function renderLaborActiveSection(){
@@ -5797,19 +5805,21 @@ const MO_TH_SHORT=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.',
 // ── ส่วน 3: ค่าแรง/กก. เทียบรอบที่ปิดแล้ว (ใช้ getLaborCostForPond สูตรใหม่ — เงินเดือนประจำ+รายวัน จัดสรรตามบ่อ active จริง) ──
 function renderLaborCropSummary(){
   const el=document.getElementById('lb-crop-summary');if(!el)return;
+  const laborStart=laborDataStartDate();
   const rows=[];
   D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{
     if(!c.closeDate||!c.totalWeight)return;
+    if(laborStart&&c.closeDate<laborStart)return; // ตัดรอบที่ปิดก่อนมีข้อมูลรายสัปดาห์จริง (ค่าแรง/กก. จะต่ำเกินจริงเพราะไม่มีข้อมูลพนักงานรายวันของช่วงนั้น)
     const lc=getLaborCostForPond(p.id,c.startDate,c.closeDate);
     rows.push({name:p.name,cropNum:c.cropNum,closeDate:c.closeDate,weight:c.totalWeight,labor:lc,perKg:lc&&c.totalWeight?lc/c.totalWeight:null});
   }));
   rows.sort((a,b)=>new Date(b.closeDate)-new Date(a.closeDate));
-  if(!rows.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีรอบที่ปิดแล้ว</p>';return;}
+  if(!rows.length){el.innerHTML=`<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีรอบที่ปิดแล้วตั้งแต่มีข้อมูลรายสัปดาห์จริง${laborStart?' ('+fD(laborStart)+' เป็นต้นไป)':''}</p>`;return;}
   const validPerKg=rows.map(r=>r.perKg).filter(v=>v!==null&&v>0);
   const avg=validPerKg.length?validPerKg.reduce((s,v)=>s+v,0)/validPerKg.length:null;
   const kpiHtml=avg!==null?`<div class="kpi-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
     <div class="kpi-card"><div class="kpi-label">ค่าแรง/กก. เฉลี่ยทั้งฟาร์ม</div><div class="kpi-val">${avg.toFixed(2)} <span class="kpi-unit">บาท/กก.</span></div></div>
-    <div class="kpi-card"><div class="kpi-label">รอบที่ปิดแล้ว (ใช้คำนวณ)</div><div class="kpi-val">${rows.length} <span class="kpi-unit">รอบ</span></div></div>
+    <div class="kpi-card"><div class="kpi-label">รอบที่ปิดแล้ว (ใช้คำนวณ)</div><div class="kpi-val">${rows.length} <span class="kpi-unit">รอบ</span></div><div class="kpi-sub">${laborStart?'ตั้งแต่ '+fD(laborStart):''}</div></div>
   </div>`:'';
   el.innerHTML=kpiHtml+`<table class="tbl"><thead><tr><th>บ่อ</th><th>รอบ</th><th>วันปิดรอบ</th><th>น้ำหนักจับ (กก.)</th><th>ค่าแรงรวมรอบ (บาท)</th><th>ค่าแรง/กก.</th><th></th></tr></thead><tbody>${
     rows.map(r=>{
