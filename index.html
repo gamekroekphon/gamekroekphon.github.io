@@ -6070,15 +6070,27 @@ function renderElecHistory(){
     <div style="font-weight:700;color:var(--tx)">📋 ประวัติบิลค่าไฟ</div>
     <select class="fi" id="el-hist-year" onchange="elHistYearSel=this.value;renderElecHistory()" style="width:180px;font-size:12px;padding:4px 8px">${opts}</select>
   </div>
-  ${!bills.length?'<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ไม่มีข้อมูลในปีที่เลือก</p>':`<table class="tbl"><thead><tr><th>เดือน</th><th>หม้อ 1 (หน่วย/฿)</th><th>หม้อ 2 (หน่วย/฿)</th><th>หม้อ 3 (หน่วย/฿)</th><th>รวม (฿)</th><th></th></tr></thead><tbody>${
-    bills.map(b=>`<tr>
+  ${!bills.length?'<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ไม่มีข้อมูลในปีที่เลือก</p>':`<table class="tbl"><thead><tr><th>เดือน</th><th>หม้อ 1 (หน่วย/฿)</th><th>หม้อ 2 (หน่วย/฿)</th><th>หม้อ 3 (หน่วย/฿)</th><th>รวม (฿)</th><th>อัตรา/วัน (฿)</th><th>บ่อที่กำลังเลี้ยง</th><th>อัตรา/บ่อ/วัน (฿)</th><th></th></tr></thead><tbody>${
+    bills.map(b=>{
+      const [y,m]=b.month.split('-').map(Number);
+      const daysInMonth=new Date(y,m,0).getDate();
+      const ratePerDay=b.totalBaht/daysInMonth;
+      const lastDayStr=b.month+'-'+String(daysInMonth).padStart(2,'0');
+      const countDate=lastDayStr<today()?lastDayStr:today(); // เดือนปัจจุบันที่ยังไม่จบเดือน ให้นับบ่อ ณ วันนี้แทนวันสุดท้ายของเดือน (ยังมาไม่ถึง)
+      const activePonds=activePondCountOnDate(countDate);
+      const ratePerPondDay=activePonds?ratePerDay/activePonds:null;
+      return `<tr>
       <td>${fmtMonth(b.month)}</td>
       <td>${b.m1kwh?b.m1kwh+' / '+b.m1baht.toLocaleString():'-'}</td>
       <td>${b.m2kwh?b.m2kwh+' / '+b.m2baht.toLocaleString():'-'}</td>
       <td>${b.m3kwh?b.m3kwh+' / '+b.m3baht.toLocaleString():'-'}</td>
       <td><strong>${b.totalBaht.toLocaleString()}</strong></td>
+      <td>${Math.round(ratePerDay).toLocaleString()}</td>
+      <td>${activePonds} บ่อ</td>
+      <td>${ratePerPondDay!=null?Math.round(ratePerPondDay).toLocaleString():'-'}</td>
       <td><button class="btn-sm btn-del" onclick="deleteElecBill('${b.month}')">🗑️</button></td>
-    </tr>`).join('')
+    </tr>`;
+    }).join('')
   }</tbody></table>`}`;
 }
 // ===== นำเข้าบิลค่าไฟย้อนหลัง 2563-2569 (ยอดรวม 3 หม้อ ไม่แยกหม้อ) =====
