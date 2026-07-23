@@ -1,6 +1,29 @@
 {
   "rules": {
-    ".read": "auth != null",
-    ".write": "auth != null"
+    "users": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        "email": {
+          ".write": "auth != null && ($uid === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+        },
+        "displayName": {
+          ".write": "auth != null && ($uid === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+        },
+        "createdAt": {
+          ".write": "auth != null && ($uid === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+        },
+        "lastLogin": {
+          ".write": "auth != null && $uid === auth.uid"
+        },
+        "role": {
+          ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || ($uid === auth.uid && !data.exists() && newData.val() === 'staff'))"
+        }
+      }
+    },
+    "tawan_app": {
+      ".read": "auth != null && root.child('users').child(auth.uid).exists()",
+      ".write": "auth != null && root.child('users').child(auth.uid).exists()"
+    }
   }
 }
