@@ -7779,8 +7779,8 @@ function cmpExportPNG(){
 }
 // ══════ ทดลองเวชภัณฑ์ — เทียบ 2-4 บ่อที่กำลังเลี้ยงอยู่ตอนนี้ (ใช้/ไม่ใช้) ที่ DOC เดียวกัน ══════
 let trialCh=null;
-let _trialDraft={id:null,name:'',waterParam:'doM',metrics:{growth:true,fcr:true,mortality:false,lab:true,water:true},ponds:{}};
-const TRIAL_METRICS=[{key:'growth',lbl:'การเติบโต (ABW/ADG)'},{key:'fcr',lbl:'FCR ประเมิน'},{key:'mortality',lbl:'กุ้งตายสะสม (%)'},{key:'lab',lbl:'ผลแล็บ (TCBS/ตับ)'},{key:'water',lbl:'ค่าน้ำ'}];
+let _trialDraft={id:null,name:'',waterParam:'doM',metrics:{growth:true,fcr:true,mortality:false,lab:true,water:true,ehp:true,gutLipid:true},ponds:{}};
+const TRIAL_METRICS=[{key:'growth',lbl:'การเติบโต (ABW/ADG)'},{key:'fcr',lbl:'FCR ประเมิน'},{key:'mortality',lbl:'กุ้งตายสะสม (%)'},{key:'lab',lbl:'ผลแล็บ (TCBS/ตับ)'},{key:'water',lbl:'ค่าน้ำ'},{key:'ehp',lbl:'EHP — ตัวอ่อน (%)'},{key:'gutLipid',lbl:'เนื้อเยื่อตับ-ลำไส้'}];
 function trialActivePonds(){return wqfeedActivePonds();}
 function initTrialTab(){
   const selEl=document.getElementById('trial-select');
@@ -7876,7 +7876,7 @@ function renderTrialResults(){
   const ids=Object.keys(_trialDraft.ponds);
   const m=_trialDraft.metrics;
   const growthCard=document.getElementById('trial-growth-card');if(growthCard)growthCard.style.display=m.growth?'':'none';
-  const miniCard=document.getElementById('trial-mini-card');if(miniCard)miniCard.style.display=(m.fcr||m.mortality||m.lab||m.water)?'':'none';
+  const miniCard=document.getElementById('trial-mini-card');if(miniCard)miniCard.style.display=(m.fcr||m.mortality||m.lab||m.water||m.ehp||m.gutLipid)?'':'none';
   if(ids.length<2){
     const lgEl=document.getElementById('trial-growth-legend');if(lgEl)lgEl.innerHTML='';
     if(trialCh){trialCh.destroy();trialCh=null;}
@@ -7927,11 +7927,30 @@ function renderTrialResults(){
     });
     blocks.push(trialMiniBlock((pm?pm.lbl:key)+' เฉลี่ย',vals,v=>v!=null?v.toFixed(2):'-',pm?pm.max:null));
   }
+  if(m.ehp){
+    const vals=withColor.map(x=>{
+      const last=(x.p.labResults||[]).slice(-1)[0];
+      return{name:x.p.name,color:x.color,v:last&&last.ehpLarva!=null?last.ehpLarva:null};
+    });
+    blocks.push(trialMiniBlock('EHP — ตัวอ่อน (%) ล่าสุด',vals,v=>v!=null?v+'%':'-',25));
+  }
+  if(m.gutLipid){
+    const gutVals=withColor.map(x=>{
+      const last=(x.p.labResults||[]).slice(-1)[0];
+      return{name:x.p.name,color:x.color,v:last&&last.gutInflam!=null?last.gutInflam:null};
+    });
+    blocks.push(trialMiniBlock('ลำไส้อักเสบ (%) ล่าสุด',gutVals,v=>v!=null?v+'%':'-',30));
+    const lipidVals=withColor.map(x=>{
+      const last=(x.p.labResults||[]).slice(-1)[0];
+      return{name:x.p.name,color:x.color,v:last&&last.lipidDroplet!=null?last.lipidDroplet:null};
+    });
+    blocks.push(trialMiniBlock('เม็ดไขมันรวม (%) ล่าสุด (ยิ่งสูงยิ่งดี)',lipidVals,v=>v!=null?v+'%':'-',100));
+  }
   const miniEl=document.getElementById('trial-mini-compare');if(miniEl)miniEl.innerHTML=blocks.join('');
 
   const tblEl=document.getElementById('trial-table');
   if(tblEl){
-    tblEl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>บ่อ</th><th>กลุ่ม</th><th>DOC</th><th>ABW ล่าสุด</th><th>FCR ประเมิน</th><th>กุ้งตายสะสม</th><th>TCBS ตับ</th></tr></thead><tbody>${
+    tblEl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>บ่อ</th><th>กลุ่ม</th><th>DOC</th><th>ABW ล่าสุด</th><th>FCR ประเมิน</th><th>กุ้งตายสะสม</th><th>TCBS ตับ</th><th>EHP ตัวอ่อน</th><th>ลำไส้อักเสบ</th><th>ไขมันรวม</th></tr></thead><tbody>${
       withColor.map(x=>{
         const doc=x.p.startDate?dDiff(x.p.startDate,today()):null;
         const abwSeries=trialAbwSeries(x.p);const lastAbw=abwSeries.length?abwSeries[abwSeries.length-1].abw:null;
@@ -7939,13 +7958,13 @@ function renderTrialResults(){
         const totalDead=(x.p.mortalityLog||[]).reduce((s,r)=>s+(r.count||0),0);
         const pct=pRelease(x.p)?totalDead/pRelease(x.p)*100:null;
         const lastLab=(x.p.labResults||[]).slice(-1)[0];
-        return `<tr><td>${x.p.name}</td><td><span class="grp-tag" style="background:${x.color}22;color:${x.color}">${x.label}</span></td><td>${doc!=null?doc:'-'}</td><td>${lastAbw!=null?lastAbw+' g':'-'}</td><td>${fcr!=null?fcr.toFixed(2):'-'}</td><td>${pct!=null?pct.toFixed(2)+'%':'-'}</td><td>${lastLab&&lastLab.hepatoGreen!=null?lastLab.hepatoGreen.toLocaleString():'-'}</td></tr>`;
+        return `<tr><td>${x.p.name}</td><td><span class="grp-tag" style="background:${x.color}22;color:${x.color}">${x.label}</span></td><td>${doc!=null?doc:'-'}</td><td>${lastAbw!=null?lastAbw+' g':'-'}</td><td>${fcr!=null?fcr.toFixed(2):'-'}</td><td>${pct!=null?pct.toFixed(2)+'%':'-'}</td><td>${lastLab&&lastLab.hepatoGreen!=null?lastLab.hepatoGreen.toLocaleString():'-'}</td><td>${lastLab&&lastLab.ehpLarva!=null?lastLab.ehpLarva+'%':'-'}</td><td>${lastLab&&lastLab.gutInflam!=null?lastLab.gutInflam+'%':'-'}</td><td>${lastLab&&lastLab.lipidDroplet!=null?lastLab.lipidDroplet+'%':'-'}</td></tr>`;
       }).join('')
     }</tbody></table></div>`;
   }
 }
 function newTrial(){
-  _trialDraft={id:null,name:'',waterParam:'doM',metrics:{growth:true,fcr:true,mortality:false,lab:true,water:true},ponds:{}};
+  _trialDraft={id:null,name:'',waterParam:'doM',metrics:{growth:true,fcr:true,mortality:false,lab:true,water:true,ehp:true,gutLipid:true},ponds:{}};
   const selEl=document.getElementById('trial-select');if(selEl)selEl.value='';
   const msgEl=document.getElementById('trial-msg');if(msgEl)msgEl.innerHTML='';
   initTrialTab();
