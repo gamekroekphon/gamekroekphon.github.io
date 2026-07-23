@@ -5052,14 +5052,13 @@ function renderPondDetail(id){
 }
 // ══════ เปรียบเทียบ Biomass 2 วิธี: แบบฟาร์ม (อัตรารอดกรอกเอง) vs แบบเอกสาร (ไขว้ตรวจจากอาหารที่ให้จริง) ══════
 const _bcFeedRateOverride={}; // เก็บค่าที่ผู้ใช้แก้เอง ต่อบ่อ ระหว่างอยู่ในหน้านี้ (ไม่บันทึกลง DB — เป็นแค่เครื่องมือช่วยตัดสินใจ)
-function bcFeedRateSuggestion(abw){
-  if(abw<3)return[8,10];
-  if(abw<8)return[5,8];
-  if(abw<15)return[3,5];
-  if(abw<25)return[2,3.5];
-  return[1.5,2.5];
+// ── สูตร Feeding Rate จริงจากเอกสาร "Precision Feeding ในการเลี้ยงกุ้งขาว" (ดร.พุทธ ส่องแสงจินดา หน้า 16) — regression จากข้อมูลภาคสนาม ขึ้นกับทั้งอายุ+น้ำหนักกุ้ง ไม่ใช่น้ำหนักอย่างเดียว
+//    Feeding rate(%) = e^(4.055 - 0.799×ln(อายุ วัน) + 0.129×ln(น้ำหนักกุ้ง กรัม)) — ตรวจสอบสูตรกับตัวอย่างในเอกสารแล้วตรง (DOC60/ABW15.4g → 3.09%)
+function bcFeedRateFormula(age,abw){
+  if(!age||age<=0||!abw||abw<=0)return null;
+  const rate=Math.exp(4.055-0.799*Math.log(age)+0.129*Math.log(abw));
+  return Math.round(rate*10)/10;
 }
-function bcFeedRateMid(abw){const[lo,hi]=bcFeedRateSuggestion(abw);return Math.round((lo+hi)/2*10)/10;}
 function renderBioCompare(p){
   const card=document.getElementById('pd-biocompare-card');if(!card)return;
   const samples=p.samples||[];
@@ -5070,9 +5069,10 @@ function renderBioCompare(p){
     return;
   }
   const abw=lat.abw,todayFeed=latFeed.totalFeed,release=pRelease(p);
+  const age=lat.age||(p.startDate?dDiff(p.startDate,lat.date||today()):null);
+  const docRate=bcFeedRateFormula(age,abw);
   const auto=!(p.id in _bcFeedRateOverride);
-  const feedRate=auto?bcFeedRateMid(abw):_bcFeedRateOverride[p.id];
-  const [lo,hi]=bcFeedRateSuggestion(abw);
+  const feedRate=auto?(docRate!=null?docRate:2.5):_bcFeedRateOverride[p.id];
   const farmSurvival=lat.survivalRate;
   const farmBiomass=abw*release*(farmSurvival/100)/1000;
   const farmCount=release*(farmSurvival/100);
@@ -5089,14 +5089,14 @@ function renderBioCompare(p){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
       <div class="fg"><label class="fl">อัตรารอด (%) — กรอกเอง (แบบฟาร์ม)</label><input type="text" class="fi" value="${farmSurvival}" readonly style="background:var(--sf2)"></div>
       <div class="fg">
-        <label class="fl">Feeding Rate (%) ที่ควรจะเป็น <span style="color:${auto?'var(--ok)':'var(--w)'};font-weight:400">— ${auto?'auto (ค่ากลางตามไซส์กุ้ง)':'แก้ไขเองแล้ว'}</span></label>
+        <label class="fl">Feeding Rate (%) ที่ควรจะเป็น <span style="color:${auto?'var(--ok)':'var(--w)'};font-weight:400">— ${auto?'auto (สูตร ดร.พุทธ ตามอายุ+น้ำหนัก)':'แก้ไขเองแล้ว'}</span></label>
         <div style="display:flex;gap:6px">
           <input type="number" class="fi" id="bc-feedrate-${p.id}" step="0.1" value="${feedRate}" onchange="bcEditFeedRate('${p.id}',this.value)">
           <button type="button" class="btn btn-s" style="white-space:nowrap" onclick="bcResetFeedRate('${p.id}')">↺ ค่าแนะนำ</button>
         </div>
       </div>
     </div>
-    <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">ช่วงอ้างอิงทั่วไปสำหรับกุ้ง ABW ${abw} กรัม/ตัว: ประมาณ ${lo}–${hi}% ของน้ำหนักตัว/วัน (ปรับได้ตามคำแนะนำจริงของฟาร์ม/นักวิชาการ — ยังไม่ใช่ตารางจากเอกสารฉบับเต็ม รอข้อมูลเพิ่ม)</div>
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">${docRate!=null?`คำนวณจากสูตร Precision Feeding (ดร.พุทธ ส่องแสงจินดา): อายุ ${age} วัน + ABW ${abw} กรัม/ตัว → ${docRate}% ของน้ำหนักตัว/วัน — เป็นสมการถดถอยจากข้อมูลภาคสนามจริง ยังปรับแก้เองได้ตามคำแนะนำของฟาร์ม/นักวิชาการ`:'ไม่มีข้อมูลอายุกุ้ง (age) ของการสุ่มครั้งล่าสุด คำนวณสูตรอัตโนมัติไม่ได้ ใช้ค่าประมาณ 2.5% ไปก่อน — กรอกอายุกุ้งตอนสุ่มตัวอย่างเพื่อให้คำนวณได้แม่นยำขึ้น'}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
       <div style="border-radius:10px;padding:14px;border:1.5px solid var(--bd);background:var(--sf2)">
         <div style="font-size:12.5px;font-weight:700;color:var(--tx2);margin-bottom:10px">🏠 แบบฟาร์ม (อัตรารอดกรอกเอง)</div>
