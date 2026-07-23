@@ -8978,7 +8978,6 @@ function renderCrops(){
   const tbody=document.getElementById('cr-tbody');if(!tbody)return;
   tbody.innerHTML=D.ponds.map(p=>{
     const history=(p.cropHistory||[]).filter(c=>yearBE(c.cropYear||c.year||curY)===selYear).sort((a,b)=>(a.cropNum||1)-(b.cropNum||1));
-    const c1=history[0]||null;const c2=history[1]||null;
     const isCurYear=yearBE(p.cropYear||curY)===selYear;
     const curAge=p.startDate?dDiff(p.startDate,today()):0;
     const hasStarted=!!p.startDate&&curAge>=0;
@@ -9007,14 +9006,21 @@ function renderCrops(){
       }
       return`<td style="padding:8px 10px;text-align:center;color:var(--tx3)">-</td><td style="padding:8px 10px;text-align:center;color:var(--tx3)">-</td><td style="padding:8px 10px;text-align:center;color:var(--tx3)">-</td>`;
     }
-    // which slot is current?
-    const c1slot=(c1||(!c2&&isCurYear))?c1:null;
-    const c2slot=c2||(c1&&isCurYear?null:null);
-    const showCurAt=totalClosed==0?1:totalClosed==1?2:null;
+    // ── 2 ช่องในตารางนี้แสดงได้แค่ 2 รอบ/บ่อ/ปี — เดิมเลือกช่องแสดงผลจาก "totalClosed" ตรงๆ (0→ช่อง1, 1→ช่อง2, ≥2→ไม่โชว่ที่ไหนเลย) ทำให้บ่อที่ปิดไปแล้ว ≥2 รอบแล้วกำลังเลี้ยงรอบถัดไปอยู่ รอบที่กำลังเลี้ยงหายไปจากตารางเงียบๆ (มองไม่เห็นว่าบ่อนี้กำลังเลี้ยงรอบอะไรอยู่เลย) — แก้ให้รอบปัจจุบัน (กำลังเลี้ยง/เตรียมบ่อ) ต้องโชว่เสมอถ้ามี ไม่ว่าจะเคยปิดไปแล้วกี่รอบ ช่องที่เหลือโชว่รอบปิด "ล่าสุด" (ไม่ใช่รอบเก่าสุด) ประวัติรอบเก่ากว่านั้นยังดูครบได้ที่ตาราง "ประวัติรอบเลี้ยง" ด้านล่างซึ่งไม่จำกัดจำนวน ──
+    const hasCurrentRound=isCurYear&&(onTrackNow||isPrepNow);
+    let leftCrop,rightCrop,rightIsCurrent;
+    if(hasCurrentRound){
+      leftCrop=history.length?history[history.length-1]:null;
+      rightCrop=null;rightIsCurrent=true;
+    }else{
+      leftCrop=history.length>=2?history[history.length-2]:(history[0]||null);
+      rightCrop=history.length>=2?history[history.length-1]:null;
+      rightIsCurrent=false;
+    }
     return`<tr style="border-bottom:1px solid var(--bd);${isCurYear?'background:var(--pl)':''}">
       <td style="padding:8px 12px;font-weight:800">บ่อ ${p.name}</td>
-      ${cropCells(c1,showCurAt===1)}
-      ${cropCells(c2,showCurAt===2)}
+      ${cropCells(leftCrop,false)}
+      ${cropCells(rightCrop,rightIsCurrent)}
       <td style="padding:8px 10px;text-align:center;font-size:20px;font-weight:800;color:${progColor}">${totalClosed}/2</td>
       <td style="padding:8px 10px;text-align:center"><span class="badge ${prog>=2?'b-ok':prog>=1?'b-warn':'b-danger'}">${prog>=2?'✅ ครบ':prog>=1?'⏳ 1/2':'⚠️ ยังไม่มี'}</span></td>
       <td style="padding:8px 6px;text-align:center">${isCurYear&&hasStarted?`<button class="btn btn-sm" style="background:var(--p);color:#fff;border:none;font-size:12px" onclick="openCropModal('${p.id}')">ปิดรอบ</button>${(()=>{
@@ -9534,8 +9540,8 @@ function initPrep(){
     if(!cl)return false;
     const hasData=cl.stockDate||(cl.steps&&Object.keys(cl.steps).length>0);
     if(!hasData)return false;
-    // ถ้า startDate ตรงกับ stockDate = ปล่อยกุ้งแล้ว → ซ่อน
-    if(cl.stockDate&&p.startDate&&p.startDate===cl.stockDate)return false;
+    // เดิมเช็คว่า startDate ต้องตรงกับ stockDate เป๊ะๆ ถึงจะถือว่าปล่อยกุ้งแล้วซ่อนออก — ถ้าวันลงจริงคลาดจากแผนแม้แค่วันเดียว (เรื่องปกติมาก) เงื่อนไขจะไม่ตรง บ่อที่ลงกุ้งเลี้ยงจริงแล้วเลยยังค้างโผล่ในหน้าเตรียมบ่อ ── เปลี่ยนไปใช้มาตรฐานเดียวกับ pondStatusOv() ที่หน้าอื่นในแอปใช้กันหมด (ไม่ใช่ 'prep' แล้ว = ลงกุ้งเลี้ยงจริงแล้ว ไม่ว่าจะตรงแผนเป๊ะหรือไม่)
+    if(pondStatusOv(p)!=='prep')return false;
     return true;
   }).map(p=>p.id);
   // merge auto + manually added, no duplicates
