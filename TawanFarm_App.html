@@ -866,6 +866,13 @@ body.role-ceo .main{max-width:640px}
 .ceo-item-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ceo-item-sub{font-size:10.5px;color:var(--tx3)}
 .ceo-item-val{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;flex-shrink:0}
+.ceo-cat-row{cursor:pointer}
+.ceo-cat-caret{font-size:9px;color:var(--tx3);display:inline-block;transition:transform .15s}
+.ceo-cat-caret.open{transform:rotate(180deg)}
+.ceo-cat-items{display:none;padding:0 0 8px 17px}
+.ceo-cat-items.show{display:block}
+.ceo-cat-item-row{display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:11px;color:var(--tx2);border-bottom:1px dashed var(--bd)}
+.ceo-cat-item-row:last-child{border-bottom:none}
 .ceo-cost-total-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0 2px;margin-top:4px;border-top:2px solid var(--bd)}
 .ceo-cost-total-row .lbl{font-size:12.5px;font-weight:700}
 .ceo-cost-total-row .val{font-size:16px;font-weight:700;color:var(--p)}
@@ -1119,6 +1126,7 @@ body.role-ceo .main{max-width:640px}
         <div class="ceo-stat"><div class="ceo-stat-lbl">ไซส์</div><div class="ceo-stat-val" id="ceo-p-size">—</div></div>
         <div class="ceo-stat"><div class="ceo-stat-lbl">FCR ประเมิน</div><div class="ceo-stat-val" id="ceo-p-fcr">—</div></div>
         <div class="ceo-stat"><div class="ceo-stat-lbl">Yield/ไร่</div><div class="ceo-stat-val" id="ceo-p-yield">—</div></div>
+        <div class="ceo-stat"><div class="ceo-stat-lbl">อาหาร/แสนตัว</div><div class="ceo-stat-val" id="ceo-p-feed100k">—</div></div>
       </div>
 
       <div class="ceo-block-title">ค่าน้ำล่าสุด <span id="ceo-p-waterdate" style="text-transform:none;font-weight:400;color:var(--tx3)"></span></div>
@@ -10124,6 +10132,9 @@ function ceoOpenSheet(pid){
   const fcrVal=getFCR(p);
   document.getElementById('ceo-p-fcr').textContent=fcrVal||'-';
   document.getElementById('ceo-p-yield').textContent=(bio&&p.size)?Math.round(bio/p.size).toLocaleString()+' กก.':'-';
+  const cumFeedForRatio=getCumFeed(p);
+  const f100k=feedPer100k(cumFeedForRatio,pRelease(p));
+  document.getElementById('ceo-p-feed100k').textContent=f100k?Math.round(f100k).toLocaleString()+' กก.':'-';
 
   const growth=(p.samples||[]).filter(s=>s.abw).map(s=>s.abw);
   if(growth.length>=2){
@@ -10145,16 +10156,28 @@ function ceoOpenSheet(pid){
   const totalCost=fryCost+feedCost+stockCostSum+laborCost+elecCost;
   document.getElementById('ceo-cost-total-mini').textContent=ceoMoney(totalCost);
   // ── สรุปแยกตามหมวดต้นทุน (อาหารกุ้ง/ยากิน/ยาลงน้ำ/จุลินทรีย์กิน/จุลินทรีย์ลงน้ำ/ปูน/อุปกรณ์/ลูกกุ้ง/ค่าแรง/ค่าไฟ) แทนการไล่ทีละรายการสินค้า — เดิมยิ่งเบิกสต็อกหลายรายการยิ่งยาว ดันแถวท้าย (ค่าไฟ) หลุด max-height ของ accordion จนเลื่อนดูไม่ได้ ──
-  const catSums={};
+  // แต่ละหมวดที่มาจากสต็อก (มีรายชื่อสินค้าจริง) กดแตะแล้วขยายดู list สินค้าในหมวดนั้นได้ — หมวดที่เป็นค่าคำนวณล้วน (อาหาร/ลูกกุ้ง/ค่าแรง/ค่าไฟ) ไม่มี list ให้ขยาย
+  const catSums={},catItems={};
   stockItems.forEach(it=>{
     const cat=STOCK_CATEGORIES.some(c=>c.key===it.category)?it.category:'other';
     catSums[cat]=(catSums[cat]||0)+it.qty*it.unitPrice;
+    if(!catItems[cat])catItems[cat]={};
+    const key=it.name+'|'+it.unit;
+    if(!catItems[cat][key])catItems[cat][key]={name:it.name,unit:it.unit,qty:0,total:0};
+    catItems[cat][key].qty+=it.qty;
+    catItems[cat][key].total+=it.qty*it.unitPrice;
   });
-  const costCatRow=(key,lbl,val)=>`<div class="ceo-item-row">
+  const costCatRow=(key,lbl,val)=>{
+    const items=Object.values(catItems[key]||{});
+    const hasItems=items.length>0;
+    return`<div class="ceo-item-row${hasItems?' ceo-cat-row':''}"${hasItems?` onclick="ceoToggleCatItems('${key}')"`:''}>
       <span class="ceo-cat-dot" style="background:${CEO_CAT_DOT[key]||'var(--tx3)'}"></span>
-      <div class="ceo-item-main"><div class="ceo-item-name">${lbl}</div></div>
+      <div class="ceo-item-main"><div class="ceo-item-name">${lbl}${hasItems?' <span class="ceo-cat-caret" id="ceo-cat-caret-'+key+'">▾</span>':''}</div></div>
       <span class="ceo-item-val">${ceoMoney(val)}</span>
-    </div>`;
+    </div>${hasItems?`<div class="ceo-cat-items" id="ceo-cat-items-${key}">${items.map(it=>
+      `<div class="ceo-cat-item-row"><span>${it.name}</span><span>${it.qty} ${it.unit} · ${ceoMoney(it.total)}</span></div>`
+    ).join('')}</div>`:''}`;
+  };
   const catOrder=['chemOral','chemWater','probioOral','probioWater','lime','equip'];
   const catRowsHtml=costCatRow('feed','อาหารกุ้ง',feedCost)
     +catOrder.map(k=>costCatRow(k,STOCK_CAT_LABEL[k],catSums[k]||0)).join('')
@@ -10193,6 +10216,10 @@ function ceoCloseSheet(){
   document.getElementById('ceo-sheet')?.classList.remove('on');
 }
 function ceoToggleAcc(id){document.getElementById(id)?.classList.toggle('open')}
+function ceoToggleCatItems(key){
+  document.getElementById('ceo-cat-items-'+key)?.classList.toggle('show');
+  document.getElementById('ceo-cat-caret-'+key)?.classList.toggle('open');
+}
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded',()=>{
