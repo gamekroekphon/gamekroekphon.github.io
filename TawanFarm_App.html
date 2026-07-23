@@ -2596,7 +2596,7 @@ function setSyncStatus(type, msg) {
 function normalizeD(d) {
   const curYear = new Date().getFullYear();
   d.ponds.forEach(p => {
-    ['feedLog','samples','plankton','waterLog','chemLog','labResults','partialHarvests'].forEach(k => {
+    ['feedLog','samples','waterLog','chemLog','labResults','partialHarvests'].forEach(k => {
       if (!p[k]) p[k] = [];
     });
     if (!p.cropHistory) p.cropHistory = [];
@@ -2615,14 +2615,11 @@ function normalizeD(d) {
     (p.waterLog||[]).forEach((r,i)=>{ if(!r.id) r.id='wl_'+(p.id||'')+'_'+(r.date||'')+'_'+(r.action||'')+'_'+i; });
     (p.chemLog||[]).forEach((r,i)=>{ if(!r.id) r.id='ch_'+(p.id||'')+'_'+(r.date||'')+'_'+(r.product||'')+'_'+i; });
     (p.labResults||[]).forEach((r,i)=>{ if(!r.id) r.id='lb_'+(p.id||'')+'_'+(r.date||'')+'_'+i; });
-    (p.plankton||[]).forEach((r,i)=>{ if(!r.id) r.id='pk_'+(p.id||'')+'_'+(r.date||'')+'_'+i; });
   });
   if (!d.categories) d.categories = [...DEFAULT_CATS];
-  if (!d.harvestLog) d.harvestLog = [];
   if (!d.settings) d.settings = {};
   if (!d.settings.cropsPerYear) d.settings.cropsPerYear = 2;
   if (!d.staff) d.staff = [];
-  if (!d.laborCosts) d.laborCosts = [];
   if (!d.electricityBills) d.electricityBills = [];
   if (!d.inventoryItems) d.inventoryItems = [];
   if (!d.inventoryLog) d.inventoryLog = [];
@@ -2838,7 +2835,7 @@ async function initFirebase() {
       setSyncStatus('sync-load', '🔄 กำลัง migrate ข้อมูลเก่า...');
       const oldPonds = Array.isArray(val.ponds) ? val.ponds : Object.values(val.ponds);
       oldPonds.forEach(p => {
-        ['feedLog','samples','plankton','waterLog','chemLog','labResults','partialHarvests'].forEach(k => { if (!p[k]) p[k] = []; });
+        ['feedLog','samples','waterLog','chemLog','labResults','partialHarvests'].forEach(k => { if (!p[k]) p[k] = []; });
         if (!p.hatchery) p.hatchery = '';
         if (!p.plType)   p.plType   = '';
         if (!p.plWeight) p.plWeight = '';
@@ -2940,13 +2937,13 @@ const DEFAULT={ponds:[
     {date:'2026-05-21',age:0,phM:null,phA:7.99,tM:null,tA:30.4,doM:6.83,doA:null,alk:136,sal:31,ca:320,mg_:900,hard:4800,k:null,nh4:0,no2:0,no3:null,po4:null,notes:''},
     {date:'2026-05-23',age:1,phM:7.99,phA:null,tM:29,tA:null,doM:5.92,doA:null,alk:136,sal:31,ca:320,mg_:900,hard:4800,k:null,nh4:0,no2:0,no3:null,po4:null,notes:'น้ำใส'},
     {date:'2026-05-24',age:2,phM:8.08,phA:8.15,tM:28.5,tA:30.4,doM:6.15,doA:6.35,alk:136,sal:31,ca:280,mg_:900,hard:4800,k:null,nh4:0,no2:0,no3:null,po4:null,notes:'น้ำใส'},
-  ],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[]},
+  ],feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[]},
   {id:'B2',name:'A.2',stock:696000,size:5.8,startDate:'2026-05-21',records:[
     {date:'2026-05-21',age:0,phM:null,phA:8.06,tM:null,tA:30.3,doM:5.79,doA:null,alk:136,sal:31,ca:320,mg_:900,hard:4800,k:null,nh4:0,no2:0,no3:null,po4:null,notes:''},
     {date:'2026-05-23',age:1,phM:7.99,phA:null,tM:29,tA:null,doM:5.92,doA:null,alk:136,sal:31,ca:320,mg_:900,hard:4800,k:null,nh4:0,no2:0,no3:null,po4:null,notes:'น้ำใส'},
     {date:'2026-05-24',age:2,phM:8.08,phA:8.15,tM:28.5,tA:30.4,doM:6.16,doA:6.35,alk:136,sal:32,ca:280,mg_:900,hard:4800,k:null,nh4:0,no2:0,no3:null,po4:null,notes:'น้ำใส'},
-  ],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[]},
-  {id:'A12',name:'A.12',stock:408000,size:3.4,startDate:'2026-05-21',records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[]},
+  ],feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[]},
+  {id:'A12',name:'A.12',stock:408000,size:3.4,startDate:'2026-05-21',records:[],feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[]},
 ]};
 function seedPonds(){
   function r(dt,ag,phM,phA,tM,tA,doM,doA,alk,sal,ca,mg,hd,nh4,no2,no3){
@@ -3305,11 +3302,11 @@ const A23rec=[
     r('2026-06-10', 64, 7.64, null, 27.6, null, 6.95, null, 170, null, null, null, null, 3.5, null, null),
   ];
   const toAdd=[
-    {id:'A14',name:'A.14',stock:660000,size:5.5,startDate:'2026-03-29',records:A14rec,feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[]},
-    {id:'A15',name:'A.15',stock:480000,size:4.8,startDate:'2026-04-06',records:A15rec,feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[]},
-    {id:'A21',name:'A.21',stock:350000,size:4.0,startDate:'2026-04-07',records:A21rec,feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[]},
-    {id:'A22',name:'A.22',stock:365000,size:4.2,startDate:'2026-04-06',records:A22rec,feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[]},
-    {id:'A23',name:'A.23',stock:365000,size:4.2,startDate:'2026-04-07',records:A23rec,feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[]},
+    {id:'A14',name:'A.14',stock:660000,size:5.5,startDate:'2026-03-29',records:A14rec,feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[]},
+    {id:'A15',name:'A.15',stock:480000,size:4.8,startDate:'2026-04-06',records:A15rec,feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[]},
+    {id:'A21',name:'A.21',stock:350000,size:4.0,startDate:'2026-04-07',records:A21rec,feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[]},
+    {id:'A22',name:'A.22',stock:365000,size:4.2,startDate:'2026-04-06',records:A22rec,feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[]},
+    {id:'A23',name:'A.23',stock:365000,size:4.2,startDate:'2026-04-07',records:A23rec,feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[]},
   ];
   let changed=false;
   toAdd.forEach(np=>{if(!D.ponds.find(p=>p.id===np.id)){D.ponds.push(np);changed=true;}});
@@ -3323,13 +3320,12 @@ function loadData(){
   try{const s=localStorage.getItem(SK);if(s){
     const d=JSON.parse(s);
     const _cy=new Date().getFullYear();
-    d.ponds.forEach(p=>{['feedLog','samples','plankton','waterLog','chemLog','labResults','records','partialHarvests'].forEach(k=>{if(!p[k])p[k]=[]});if(!p.cropHistory)p.cropHistory=[];if(!p.cropNum)p.cropNum=1;if(!p.cropYear)p.cropYear=_cy;if(p.prepChecklist===undefined)p.prepChecklist=null;});
+    d.ponds.forEach(p=>{['feedLog','samples','waterLog','chemLog','labResults','records','partialHarvests'].forEach(k=>{if(!p[k])p[k]=[]});if(!p.cropHistory)p.cropHistory=[];if(!p.cropNum)p.cropNum=1;if(!p.cropYear)p.cropYear=_cy;if(p.prepChecklist===undefined)p.prepChecklist=null;});
     if(!d.categories)d.categories=[...DEFAULT_CATS];
-    if(!d.harvestLog)d.harvestLog=[];
     if(!d.settings)d.settings={};
     if(!d.settings.cropsPerYear)d.settings.cropsPerYear=2;
     return d;
-  }const d=cln(DEFAULT);d.categories=[...DEFAULT_CATS];d.harvestLog=[];d.settings={cropsPerYear:2};return d}catch{const d=cln(DEFAULT);d.categories=[...DEFAULT_CATS];d.harvestLog=[];d.settings={cropsPerYear:2};return d}
+  }const d=cln(DEFAULT);d.categories=[...DEFAULT_CATS];d.settings={cropsPerYear:2};return d}catch{const d=cln(DEFAULT);d.categories=[...DEFAULT_CATS];d.settings={cropsPerYear:2};return d}
 }
 function mergeArr(localArr, remoteArr) {
   if (!Array.isArray(remoteArr)) return localArr || [];
@@ -3375,7 +3371,7 @@ function mergeRemote(local, remote) {
   merged.deletedIds = [...new Set([...(local.deletedIds||[]), ...(remote.deletedIds||[])])];
   const dead = new Set(merged.deletedIds);
   const dropDead = arr => (arr||[]).filter(x => !x || x.id===undefined || !dead.has(x.id));
-  const LOG_KEYS = ['feedLog','samples','plankton','waterLog','chemLog','labResults','partialHarvests','cropHistory'];
+  const LOG_KEYS = ['feedLog','samples','waterLog','chemLog','labResults','partialHarvests','cropHistory'];
   const remotePonds = {};
   (remote.ponds||[]).forEach(p => { remotePonds[p.id] = p; });
   merged.ponds.forEach(p => {
@@ -3392,11 +3388,7 @@ function mergeRemote(local, remote) {
   });
   const localIds = new Set(merged.ponds.map(p=>p.id));
   (remote.ponds||[]).forEach(rp => { if (!localIds.has(rp.id) && !dead.has(rp.id)) merged.ponds.push(rp); });
-  merged.harvestLog = dropDead(mergeArr(merged.harvestLog, remote.harvestLog));
-  merged.sales = dropDead(mergeArr(merged.sales, remote.sales));
-  merged.marketPrices = mergeByDate(merged.marketPrices, remote.marketPrices);
   merged.staff = dropDead(mergeArr(merged.staff, remote.staff));
-  merged.laborCosts = dropDead(mergeArr(merged.laborCosts, remote.laborCosts));
   merged.electricityBills = mergeByMonth(merged.electricityBills||[], remote.electricityBills||[], dead);
   merged.inventoryItems = dropDead(mergeArr(merged.inventoryItems||[], remote.inventoryItems||[]));
   merged.inventoryLog = dropDead(mergeArr(merged.inventoryLog||[], remote.inventoryLog||[]));
@@ -3409,14 +3401,6 @@ function mergeByMonth(localArr, remoteArr, dead) {
   remoteArr.forEach(r => { if (r && r.month && !(dead&&dead.has('elec_'+r.month))) map[r.month] = r; });
   localArr.forEach(l => { if (l && l.month && !(dead&&dead.has('elec_'+l.month))) map[l.month] = l; }); // local wins
   return Object.values(map);
-}
-function mergeByDate(localArr, remoteArr) {
-  if (!Array.isArray(remoteArr)) return localArr || [];
-  if (!Array.isArray(localArr)) return remoteArr || [];
-  const byDate = {};
-  remoteArr.forEach(r => { if (r && r.date) byDate[r.date] = r; });
-  localArr.forEach(l => { if (l && l.date) byDate[l.date] = l; }); // local wins on same date (most recent save)
-  return Object.values(byDate).sort((a,b)=>new Date(a.date)-new Date(b.date));
 }
 async function save() {
   localStorage.setItem(SK, JSON.stringify(D));
@@ -4285,7 +4269,7 @@ function goTab(t,btn){
   if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='stock')initStock();if(t==='abw')initAbw();if(t==='feed')initFeed();if(t==='pl')initPL();
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
   if(t==='chem')initChem();if(t==='lab')initLab();if(t==='mortality')initMortality();
-  if(t==='compare')initCompare();if(t==='risk')fetchWx();if(t==='export')initExport();if(t==='wqfeed')initWqFeed();if(t==='hatchery')initHatchery();
+  if(t==='compare')initCompare();if(t==='risk'){if(_wxDaily)renderRisk(_wxDaily);else fetchWx();}if(t==='export')initExport();if(t==='wqfeed')initWqFeed();if(t==='hatchery')initHatchery();
   if(t==='manage')renderManage();
   if(t==='users')renderUsers();
   if(t==='harvest')initHarvest();
@@ -7357,7 +7341,6 @@ function deleteSample(pid,id){
   D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
   save();renderSampleTable();renderSampleChart();
 }
-// plankton section removed
 // ===== WATER LOG =====
 function initWaterLog(){populateAll();document.getElementById('wl-date').value=today();calcAge('wl');renderWaterSummary();renderWaterTable();}
 function saveWaterLog(){
@@ -8760,7 +8743,7 @@ function exportJSON(){dl(JSON.stringify(D,null,2),'application/json',`TawanFarm_
 function importJSON(inp){
   const f=inp.files[0];if(!f)return;
   const reader=new FileReader();
-  reader.onload=e=>{try{const data=JSON.parse(e.target.result);if(data.ponds){data.ponds.forEach(p=>{['feedLog','samples','plankton','waterLog','chemLog','labResults','partialHarvests'].forEach(k=>{if(!p[k])p[k]=[]})});D=data;save();alert(`นำเข้าสำเร็จ! ${data.ponds.length} บ่อ`);populateAll();renderOv()}}catch{alert('ไฟล์ JSON ไม่ถูกต้อง')}};
+  reader.onload=e=>{try{const data=JSON.parse(e.target.result);if(data.ponds){data.ponds.forEach(p=>{['feedLog','samples','waterLog','chemLog','labResults','partialHarvests'].forEach(k=>{if(!p[k])p[k]=[]})});D=data;save();alert(`นำเข้าสำเร็จ! ${data.ponds.length} บ่อ`);populateAll();renderOv()}}catch{alert('ไฟล์ JSON ไม่ถูกต้อง')}};
   reader.readAsText(f);
 }
 // ===== POND MANAGEMENT =====
@@ -8777,7 +8760,7 @@ function renderManage(){
     const adg=getPDG(p.samples||[]);
     const adgCell=adg?`${adg}`:'<span style="color:var(--tx3)">-</span>';
     // ── บ่อที่ "ยังไม่ลงกุ้ง" (startDate ว่าง) แต่ log ยังไม่ว่างจริง — ข้อมูลรอบเก่าค้างจากปิดรอบ (เช่น sync ดันกลับ) ไม่ได้ตั้งใจ ──
-    const orphaned=!active&&!p.startDate&&[p.records.length,(p.feedLog||[]).length,(p.samples||[]).length,(p.labResults||[]).length,(p.plankton||[]).length,(p.waterLog||[]).length,(p.chemLog||[]).length,(p.partialHarvests||[]).length].some(n=>n>0);
+    const orphaned=!active&&!p.startDate&&[p.records.length,(p.feedLog||[]).length,(p.samples||[]).length,(p.labResults||[]).length,(p.waterLog||[]).length,(p.chemLog||[]).length,(p.partialHarvests||[]).length].some(n=>n>0);
     const cleanupBtn=orphaned?`<button class="btn btn-d btn-sm" title="ล้างข้อมูลค้างจากรอบก่อน" onclick="cleanupOrphanData('${p.id}')">🧹</button>`:'';
     return`<tr><td><strong style="color:var(--p)">${p.name}</strong></td><td>${p.stock.toLocaleString()}</td><td>${p.size}</td><td>${dens(p)} ตัว/ตรม.</td><td>${p.startDate?fD(p.startDate):'-'}</td><td>${ageCell}</td><td>${mgCountCell(p.records.length,active)}</td><td>${mgCountCell((p.feedLog||[]).length,active)}</td><td>${mgCountCell((p.samples||[]).length,active)}</td><td>${mgCountCell((p.labResults||[]).length,active)}</td><td>${adgCell}</td><td style="display:flex;gap:6px">${cleanupBtn}<button class="btn btn-s btn-sm" onclick="editPond('${p.id}')">✏️</button><button class="btn btn-d btn-sm" onclick="delPond('${p.id}')">🗑️</button></td></tr>`;
   }).join('');
@@ -8786,11 +8769,11 @@ function renderManage(){
 function cleanupOrphanData(id){
   const p=pond(id);if(!p)return;
   if(p.startDate||p.stock){alert('บ่อนี้มีข้อมูลรอบปัจจุบันอยู่ ไม่ใช่ข้อมูลค้าง — ยกเลิกการล้าง');return}
-  const counts={records:p.records.length,feedLog:(p.feedLog||[]).length,samples:(p.samples||[]).length,labResults:(p.labResults||[]).length,plankton:(p.plankton||[]).length,waterLog:(p.waterLog||[]).length,chemLog:(p.chemLog||[]).length,partialHarvests:(p.partialHarvests||[]).length};
+  const counts={records:p.records.length,feedLog:(p.feedLog||[]).length,samples:(p.samples||[]).length,labResults:(p.labResults||[]).length,waterLog:(p.waterLog||[]).length,chemLog:(p.chemLog||[]).length,partialHarvests:(p.partialHarvests||[]).length};
   const summary=Object.entries(counts).filter(([,n])=>n>0).map(([k,n])=>`${k}: ${n}`).join(', ');
   if(!confirm(`บ่อ ${p.name} ยังไม่ลงกุ้ง แต่มีข้อมูลค้างจากรอบก่อน (${summary})\n\nยืนยันล้างข้อมูลเหล่านี้ทิ้ง? (ถ้าเคยปิดรอบไปแล้วข้อมูลจะยังอยู่ใน "ประวัติรอบเลี้ยง" ไม่หายไปไหน — นี่แค่ล้าง log ที่ค้างในรอบปัจจุบัน)`))return;
   D.deletedIds=D.deletedIds||[];
-  ['records','feedLog','samples','plankton','waterLog','chemLog','labResults','partialHarvests'].forEach(k=>{
+  ['records','feedLog','samples','waterLog','chemLog','labResults','partialHarvests'].forEach(k=>{
     (p[k]||[]).forEach(r=>{if(r&&r.id)D.deletedIds.push(r.id);});
     p[k]=[];
   });
@@ -8850,7 +8833,7 @@ function savePond(){
     }
   }
   else{
-    const np={id:'P'+Date.now(),name,stock,stockBonus,size,startDate,hatchery,plType,plWeight,costFry,records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[]};
+    const np={id:'P'+Date.now(),name,stock,stockBonus,size,startDate,hatchery,plType,plWeight,costFry,records:[],feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[]};
     const nxt=computeNextCrop(np,startDate);
     np.cropNum=nxt.cropNum;np.cropYear=nxt.cropYear;
     D.ponds.push(np);
@@ -9174,7 +9157,7 @@ function saveEditCrop(){
       hatchery:document.getElementById('ecm-hatchery').value.trim(),
       plType:document.getElementById('ecm-pltype').value,
       plWeight:gn('ecm-plweight'),
-      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[],prepChecklist:null,
+      records:[],feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[],prepChecklist:null,
       harvestResult:{
         totalWeight:gn('ecm-weight'),size:gn('ecm-size'),caught:gn('ecm-caught'),
         survivalRate:gn('ecm-survival'),fcr:gn('ecm-fcr'),price:gn('ecm-price'),buyer:gs('ecm-buyer'),revenue:gn('ecm-revenue'),
@@ -9789,7 +9772,6 @@ function confirmCloseCrop(){
     records:[...(p.records||[])],
     feedLog:[...(p.feedLog||[])],
     samples:[...(p.samples||[])],
-    plankton:[...(p.plankton||[])],
     waterLog:[...(p.waterLog||[])],
     chemLog:[...(p.chemLog||[])],
     labResults:[...(p.labResults||[])],
@@ -9803,7 +9785,7 @@ function confirmCloseCrop(){
   p.cropHistory.push(archived);
   // ── tombstone ทุก log ของรอบที่ปิด — save() ทำ merge แบบ union กับ remote เสมอ ถ้าไม่ tombstone ข้อมูลรอบเก่าจากเครื่องอื่น/remote จะถูกดันกลับเข้า array สดของรอบใหม่ (สำเนาใน cropHistory ไม่โดนกรอง เพราะ dropDead กรองเฉพาะ item ชั้นบนสุด) ──
   D.deletedIds=D.deletedIds||[];
-  ['feedLog','samples','plankton','waterLog','chemLog','labResults','partialHarvests'].forEach(k=>{
+  ['feedLog','samples','waterLog','chemLog','labResults','partialHarvests'].forEach(k=>{
     (p[k]||[]).forEach(r=>{if(r&&r.id)D.deletedIds.push(r.id);});
   });
   if(p.prepChecklist&&p.prepChecklist.id)D.deletedIds.push(p.prepChecklist.id);
@@ -9813,7 +9795,7 @@ function confirmCloseCrop(){
   p.startDate='';
   p.stock=0;p.stockBonus=0;
   p.hatchery='';p.plType='';p.plWeight=null;
-  p.records=[];p.feedLog=[];p.samples=[];p.plankton=[];
+  p.records=[];p.feedLog=[];p.samples=[];
   p.waterLog=[];p.chemLog=[];p.labResults=[];p.partialHarvests=[];
   p.prepChecklist=null;
   save();fbSave();
@@ -9993,8 +9975,7 @@ function getStockItemsForPond(pondId,startDate,endDate){
 function ceoTotalCost(p){
   const fryCost=p.costFry||0;
   const feedCost=pondFeedCost(p);
-  const stockItems=getStockItemsForPond(p.id,p.startDate,today());
-  const stockCost=stockItems.reduce((s,i)=>s+i.qty*i.unitPrice,0);
+  const stockCost=getStockCostBreakdownForPond(p.id,p.startDate,today()).total;
   const laborCost=getLaborCostForPond(p.id,p.startDate,today());
   const elecCost=getElecCostForPeriod(p.startDate,today());
   return fryCost+feedCost+stockCost+laborCost+elecCost;
@@ -10494,14 +10475,14 @@ function renderWQHeatmap(){
 // ══════════════════════════════════════════════════════════════════════════
 
 // ─── P&L DASHBOARD ────────────────────────────────────────────────────────
-// ── ต้นทุนพัสดุแยกตามหมวดหมู่สต็อก (ไม่รวมอาหาร — คิดแยกจาก pondFeedCost อยู่แล้ว) ──
+// ── ต้นทุนพัสดุแยกตามหมวดหมู่สต็อก (ไม่รวมอาหาร — คิดแยกจาก pondFeedCost อยู่แล้ว) — ต่อยอดจาก getStockItemsForPond() เพื่อไม่ให้เกณฑ์กรอง D.inventoryLog (type/pondId/ช่วงวันที่/ไม่รวมอาหาร) ถูกเขียนซ้ำคนละที่ ──
 function getStockCostBreakdownForPond(pondId,startDate,closeDate){
   const byCat={};let total=0;
   if(!pondId||!startDate||!closeDate)return{byCat,total};
-  (D.inventoryLog||[]).filter(l=>l.type==='out'&&l.pondId===pondId&&l.date>=startDate&&l.date<=closeDate).forEach(l=>{
-    const item=(D.inventoryItems||[]).find(i=>i.id===l.itemId);if(!item||item.category==='feed')return;
-    const cost=(item.unitPrice||0)*(l.qty||0);
-    byCat[item.category]=(byCat[item.category]||0)+cost;
+  getStockItemsForPond(pondId,startDate,closeDate).forEach(i=>{
+    if(!i.category)return;
+    const cost=i.qty*i.unitPrice;
+    byCat[i.category]=(byCat[i.category]||0)+cost;
     total+=cost;
   });
   return{byCat,total};
@@ -10748,7 +10729,7 @@ async function forceInjectYear2569Round1(){
       id:'hist_A18_20260228',cropYear:2569,year:2569,cropNum:1,
       startDate:'2026-02-28',closeDate:'2026-04-03',closed:true,
       stock:594986,hatchery:'cp ชุมพร1',plType:'',plWeight:null,
-      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[],prepChecklist:{},
+      records:[],feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[],prepChecklist:{},
       notes:'นำเข้าจากแผนลงลูกกุ้ง',
       parchan:[{weightKg:4186,size:103}],
       totalWeight:4186,
@@ -10758,7 +10739,7 @@ async function forceInjectYear2569Round1(){
       id:'hist_A19_20260226',cropYear:2569,year:2569,cropNum:1,
       startDate:'2026-02-26',closeDate:'2026-04-04',closed:true,
       stock:555030,hatchery:'cp ชุมพร1',plType:'',plWeight:null,
-      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[],prepChecklist:{},
+      records:[],feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[],prepChecklist:{},
       notes:'นำเข้าจากแผนลงลูกกุ้ง',
       parchan:[{weightKg:3486,size:118}],
       totalWeight:3486,
@@ -10768,7 +10749,7 @@ async function forceInjectYear2569Round1(){
       id:'hist_A20_20260226',cropYear:2569,year:2569,cropNum:1,
       startDate:'2026-02-26',closeDate:'2026-04-07',closed:true,
       stock:564018,hatchery:'cp ชุมพร1',plType:'',plWeight:null,
-      records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[],prepChecklist:{},
+      records:[],feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[],prepChecklist:{},
       notes:'นำเข้าจากแผนลงลูกกุ้ง',
       parchan:[{weightKg:4036,size:102}],
       totalWeight:4036,
@@ -10814,7 +10795,7 @@ async function fixA1Round3_2568(){
   let c=p.cropHistory.find(x=>x.cropYear===2568&&x.cropNum===3);
   if(!c){
     c={id:'hist_A1_20251124',cropYear:2568,year:2568,cropNum:3,stock:null,hatchery:'',plType:'',plWeight:null,
-       records:[],feedLog:[],samples:[],plankton:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[],prepChecklist:{},
+       records:[],feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[],prepChecklist:{},
        notes:'',parchan:[],totalWeight:null,harvestResult:null};
     p.cropHistory.push(c);
   }
