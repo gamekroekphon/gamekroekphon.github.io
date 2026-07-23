@@ -4061,14 +4061,30 @@ const HV_MKG={
   68:[8068,29368,103408,20924,108414,29253,15155,84370,110678,58816,16695,13779],
   69:[61694,24424,0,11708,0,18766,10422,0,0,0,0,0]
 };
-// แพ/ห้องเย็น: [ชื่อ, ยอดเงิน, กก.]
-const HV_BUYERS={
-  69:[['โชคศิริชัย',8988244,65018],['SIFCO',5497182,33997],['พี่ไข่',1062543,12812],['สุทธิรัตน์',542246,4765]],
-  68:[['โชคศิริชัย',41852934,182697],['มะลิหอม',35814291,155943],['เดวิด (จีน)',10301896,35369],['เจ้สาว',8733118,42306],['SIFCO',5463119,37720],['สุทธิรัตน์',4536160,29000],['เอ็กวัฒน์',1629567,9970],['เก้าเก',1553850,6000]],
-  67:[['มะลิหอม',77084187,330206],['จงอนันต์',27216977,127302],['เอ็กวัฒน์',14056837,61573],['CP',9163562,38712],['SIFCO',3096342,25567],['โชคศิริชัย',2410153,14288],['พี่สัน พี่เต๋า',2064810,8639],['พี่ไข่',482106,6050]],
-  66:[['มะลิหอม',55826877,229821],['จงอนันต์',46043158,193746],['CP',42370560,134640],['โชคศิริชัย',14338063,79698],['เก้าเก',10010060,48582],['เอ็ก (จีน)',2811608,7200],['หลีเฮง',2261262,9862],['พี่สัน พี่เต๋า',2110231,7404],['เจ้สาว',1774277,10595],['ป.มหาชัย',1456860,9907]],
-  65:[['CP',45398518,142494],['มะลิหอม',36276598,133542],['จงอนันต์',32010674,138280],['Tem Seafood',23239250,66394],['เจ้สาว',6492518,33567],['หลีเฮง',4874932,13541],['ซากิฟ',3977334,21720],['ซีเฟรช',4347693,20646],['พัฒนา',3343575,15395],['SIFCO',1672955,8925]]
-};
+// ── "แพ/ห้องเย็น" เดิมดึงจาก Google Sheets ภายนอก (ต้องมีชีท "ยอดรายแพ" ที่ไม่มีจริง) หรือไม่งั้น fallback เป็นตัวเลข hardcode นิ่งค้างจากตอนสร้างฟีเจอร์ — ไม่ตรงกับข้อมูลจริงเลย เปลี่ยนมารวมจากข้อมูลที่บันทึกจริงในแอปแทน (ดู hsBuyersFromApp) ──
+// ── รวมยอด "แพ/ห้องเย็น" จากข้อมูลจริงที่บันทึกในแอป (ไม่พึ่ง Google Sheets/ตัวเลข hardcode อีกต่อไป) — รวมทั้งพาเชียลของรอบที่กำลังเลี้ยงอยู่ + พาเชียล/ปิดรอบของรอบที่ปิดแล้วในประวัติ (cropHistory) ──
+function hsBuyersFromApp(shortYr){
+  const byName={};
+  const add=(dateStr,buyer,weight,revenue)=>{
+    if(!dateStr||!buyer||!weight)return;
+    const y=parseInt(String(dateStr).slice(0,4));if(isNaN(y))return;
+    if(yearBE(y)-2500!==shortYr)return;
+    const name=String(buyer).trim();if(!name)return;
+    if(!byName[name])byName[name]={rev:0,kg:0};
+    byName[name].rev+=revenue||0;
+    byName[name].kg+=weight;
+  };
+  (D.ponds||[]).forEach(p=>{
+    (p.partialHarvests||[]).forEach(r=>add(r.date,r.buyer,r.weight,(r.weight&&r.price)?r.weight*r.price:0));
+    (p.cropHistory||[]).forEach(c=>{
+      (c.partialHarvests||[]).forEach(r=>add(r.date,r.buyer,r.weight,(r.weight&&r.price)?r.weight*r.price:0));
+      const hr=c.harvestResult||{};
+      const rev=hr.revenue!=null?hr.revenue:((hr.totalWeight&&hr.price)?hr.totalWeight*hr.price:0);
+      add(c.closeDate,hr.buyer,hr.totalWeight,rev);
+    });
+  });
+  return Object.entries(byName).map(([name,v])=>[name,Math.round(v.rev),Math.round(v.kg)]).sort((a,b)=>b[1]-a[1]);
+}
 const HV_MONTHS_S=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 let _hsYr=69;
 let _hsChartAnnual=null;
@@ -4107,16 +4123,6 @@ function initHarvestStat(){
             data.years.forEach(y=>{if(!HV_YRS.includes(+y))HV_YRS.push(+y);});
             HV_YRS.sort((a,b)=>a-b);
           }
-        }
-        // อัปเดตข้อมูลแพ
-        if(Array.isArray(data.buyers)){
-          const byYr={};
-          data.buyers.forEach(row=>{
-            const yr=+row.yr;if(!yr||!row.name)return;
-            if(!byYr[yr])byYr[yr]=[];
-            if(+row.rev>0)byYr[yr].push([row.name,+row.rev,+row.kg||0]);
-          });
-          Object.assign(HV_BUYERS,byYr);
         }
         const ts=new Date().toLocaleTimeString('th-TH');
         if(statusEl)statusEl.innerHTML=`✅ ซิงค์สำเร็จ เวลา ${ts}`;
@@ -4221,7 +4227,7 @@ function hsRenderYear(){
       <th style="padding:8px 10px;text-align:right;font-size:12px;color:var(--tx2)">ราคา/กก.</th>
     </thead><tbody>${rows}</tbody></table>`;
   // Buyers
-  const buyers=HV_BUYERS[yr];
+  const buyers=hsBuyersFromApp(yr);
   const bCard=document.getElementById('hs-buyers-card');
   const bEl=document.getElementById('hs-buyers');
   if(!buyers||!buyers.length){if(bEl)bEl.innerHTML='<div style="color:var(--tx3);font-size:13px;padding:16px 0">ไม่มีข้อมูลสรุปแพสำหรับปีนี้</div>';return;}
