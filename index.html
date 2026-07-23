@@ -10132,9 +10132,8 @@ function ceoOpenSheet(pid){
   const fcrVal=getFCR(p);
   document.getElementById('ceo-p-fcr').textContent=fcrVal||'-';
   document.getElementById('ceo-p-yield').textContent=(bio&&p.size)?Math.round(bio/p.size).toLocaleString()+' กก.':'-';
-  const cumFeedForRatio=getCumFeed(p);
-  const f100k=feedPer100k(cumFeedForRatio,pRelease(p));
-  document.getElementById('ceo-p-feed100k').textContent=f100k?Math.round(f100k).toLocaleString()+' กก.':'-';
+  const f100k=ceoFeedPer100k(p);
+  document.getElementById('ceo-p-feed100k').textContent=f100k!=='-'?f100k+' กก.':'-';
 
   const growth=(p.samples||[]).filter(s=>s.abw).map(s=>s.abw);
   if(growth.length>=2){
