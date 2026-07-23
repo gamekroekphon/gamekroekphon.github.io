@@ -5366,8 +5366,9 @@ function renderPrepPondCard(p){
     return`<div class="pc-ov-step"><span style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:${done?'var(--ok)':'var(--bd)'}"></span><span style="${done?'':'color:var(--tx3)'}">${s.label}</span></div>`;
   }).join('');
   const done=cl?PREP_STEPS.filter(s=>cl.steps&&cl.steps[s.key]?.done).length:0;
+  const overdueN=prepOverdueSteps(p).length;
   return`<div class="pc-ov" onclick="openPondDetail('${p.id}')">
-    <div class="pc-ov-top"><span class="pc-ov-name">${p.name}</span><span style="display:flex;gap:5px;align-items:center"><span class="pc-ov-badge pcb-prep">เตรียมบ่อ</span><button class="admin-only" onclick="event.stopPropagation();resetPrepPond('${p.id}')" title="ล้างแผนเตรียมบ่อ (ใช้เมื่อเปลี่ยนแผนการเลี้ยง)" style="background:none;border:none;cursor:pointer;color:var(--d);font-size:14px;padding:6px;margin:-6px;line-height:1;min-width:28px;min-height:28px;display:inline-flex;align-items:center;justify-content:center">🗑️</button></span></div>
+    <div class="pc-ov-top"><span class="pc-ov-name">${p.name}</span><span style="display:flex;gap:5px;align-items:center">${overdueN?`<span class="pc-ov-badge" style="background:var(--db);color:var(--d)">⚠️ เลยกำหนด ${overdueN}</span>`:''}<span class="pc-ov-badge pcb-prep">เตรียมบ่อ</span><button class="admin-only" onclick="event.stopPropagation();resetPrepPond('${p.id}')" title="ล้างแผนเตรียมบ่อ (ใช้เมื่อเปลี่ยนแผนการเลี้ยง)" style="background:none;border:none;cursor:pointer;color:var(--d);font-size:14px;padding:6px;margin:-6px;line-height:1;min-width:28px;min-height:28px;display:inline-flex;align-items:center;justify-content:center">🗑️</button></span></div>
     <div style="font-size:10px;color:var(--tx2);margin-bottom:4px">เตรียมแล้ว <b style="color:${done===PREP_STEPS.length?'var(--ok)':done>=PREP_STEPS.length/2?'var(--w)':'var(--d)'}">${done}/${PREP_STEPS.length}</b>${cl?.stockDate?` · ลงกุ้ง ${fD(cl.stockDate)}`:''}${done===PREP_STEPS.length?' ✅ พร้อมลง':''}</div>
     <div style="background:var(--bd);border-radius:3px;height:4px;margin-bottom:6px"><div style="background:${done===PREP_STEPS.length?'var(--ok)':done>=PREP_STEPS.length/2?'var(--w)':'var(--p)'};height:4px;border-radius:3px;width:${Math.round(done/PREP_STEPS.length*100)}%"></div></div>
     <div class="pc-ov-prep">${steps}</div>
@@ -9518,9 +9519,22 @@ function startCropFromPrep(pid){
   syncMdlTotal();
   const pt=document.getElementById('mdl-plType');if(pt)pt.value='';
 }
+// ── เดิม renderPrep() วางการ์ดเต็ม (ตาราง 10 ขั้นตอน) ของทุกบ่อต่อกันยาวๆ — ถ้าเตรียมหลายบ่อพร้อมกันจะเลื่อนยาวเหมือนปัญหาที่เจอในหน้าภาพรวม (ข้อ 91) แก้ด้วยแพทเทิร์นเดียวกัน: ยุบเหลือแถวสรุปเป็นค่าเริ่มต้น เปิดเต็มอัตโนมัติเฉพาะบ่อที่มีขั้นตอนเลยกำหนดจริง (ครั้งแรกที่เจอ) ที่เหลือกดเปิด/ปิดเองได้ ──
+let _prepOpen=new Set();
+let _prepSeenDefault=new Set();
+function togglePrepOpen(pid){
+  if(_prepOpen.has(pid))_prepOpen.delete(pid);else _prepOpen.add(pid);
+  renderPrep();
+}
 function renderPrep(){
   const wrap=document.getElementById('prep-checklist-wrap');if(!wrap)return;
   if(!_prepPonds.length){wrap.innerHTML='<div style="color:var(--tx3);text-align:center;padding:40px;font-size:14px">ยังไม่มีบ่อที่กำลังเตรียม · คลิก "+ เพิ่มบ่อ" เพื่อเริ่ม</div>';return}
+  _prepPonds.forEach(pid=>{
+    if(_prepSeenDefault.has(pid))return;
+    _prepSeenDefault.add(pid);
+    const p=pond(pid);
+    if(p&&prepOverdueSteps(p).length>0)_prepOpen.add(pid);
+  });
   wrap.innerHTML=_prepPonds.map(pid=>renderPrepCard(pid)).join('');
   syncAllDateHints();
 }
@@ -9531,25 +9545,30 @@ function renderPrepCard(pid){
   const stockDate=cl.stockDate||p.startDate||'';
   const checked=PREP_STEPS.filter(s=>cl.steps[s.key]?.done).length;
   const pct=Math.round(checked/PREP_STEPS.length*100);
+  const overdue=prepOverdueSteps(p);
+  const isOpen=_prepOpen.has(pid);
   return`<div class="card" style="margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div style="display:flex;align-items:center;gap:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;cursor:pointer" onclick="togglePrepOpen('${pid}')">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span class="prep-caret" style="display:inline-block;font-size:11px;color:var(--tx3);transition:transform .15s;transform:rotate(${isOpen?90:0}deg)">▸</span>
         <span style="font-weight:500;font-size:14px">🧹 บ่อ ${p.name}</span>
         <span style="font-size:12px;color:var(--tx3)">รอบ ${p.cropNum||1}</span>
         <span style="font-size:12px;font-weight:500;color:${pct===100?'var(--ok)':pct>=50?'var(--w)':'var(--d)'}">${checked}/${PREP_STEPS.length} (${pct}%)${pct===100?' ✅':''}</span>
+        ${overdue.length?`<span style="font-size:11px;font-weight:700;color:var(--d);background:var(--db);padding:2px 8px;border-radius:99px">⚠️ เลยกำหนด ${overdue.length} ขั้นตอน</span>`:''}
       </div>
-      <div style="display:flex;align-items:center;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px" onclick="event.stopPropagation()">
         <label style="font-size:11px;color:var(--tx3)">วันลงกุ้ง:</label>
         <input type="date" class="fi" id="prep-stock-date-${pid}" value="${stockDate}" onchange="updatePrepStockDate('${pid}')" style="width:120px;padding:3px 7px;font-size:11px">
         <button onclick="resetPrepPond('${pid}')" title="ล้างแผนเตรียมบ่อ (ใช้เมื่อเปลี่ยนแผนการเลี้ยง)" style="background:none;border:1px solid var(--bd);border-radius:5px;padding:2px 8px;font-size:13px;cursor:pointer;color:var(--d);line-height:1.4">🗑️ ล้างแผน</button>
       </div>
     </div>
-    <div style="background:var(--bd);border-radius:3px;height:5px;margin-bottom:8px"><div style="background:${pct===100?'var(--ok)':pct>=50?'var(--w)':'var(--p)'};height:5px;border-radius:3px;width:${pct}%;transition:width .3s"></div></div>
-    ${pct===100&&!p.startDate?`<div style="background:var(--ob);border:1px solid #bbe3c8;border-radius:8px;padding:12px;text-align:center;margin-bottom:10px">
+    <div style="background:var(--bd);border-radius:3px;height:5px;margin-top:8px"><div style="background:${pct===100?'var(--ok)':pct>=50?'var(--w)':'var(--p)'};height:5px;border-radius:3px;width:${pct}%;transition:width .3s"></div></div>
+    ${isOpen?`
+    ${pct===100&&!p.startDate?`<div style="background:var(--ob);border:1px solid #bbe3c8;border-radius:8px;padding:12px;text-align:center;margin:10px 0">
       <button class="btn" style="background:var(--ok);color:#fff;font-weight:600;font-size:13.5px;padding:9px 20px;border:none;border-radius:8px;cursor:pointer" onclick="startCropFromPrep('${pid}')">🦐 ลงลูกกุ้ง — เริ่มรอบใหม่บ่อนี้</button>
       <div style="font-size:11px;color:var(--tx2);margin-top:6px">เปิดฟอร์มลงกุ้งพร้อมวันลงจากเช็คลิสต์ · บันทึกแล้วระบบล้างเช็คลิสต์และเริ่มรอบใหม่ให้เอง</div>
     </div>`:''}
-    <div style="overflow-x:auto">
+    <div style="overflow-x:auto;margin-top:10px">
     <table style="width:100%;border-collapse:collapse;font-size:12px">
       <thead><tr style="background:var(--sf2)">
         <th style="padding:5px 8px;text-align:center;width:24px;border-bottom:1px solid var(--bd)">✓</th>
@@ -9562,20 +9581,33 @@ function renderPrepCard(pid){
         const step=cl.steps[s.key]||{done:false,date:'',notes:''};
         const targetDate=stockDate&&s.daysBeforeStock!==undefined?addDays(stockDate,s.daysBeforeStock):'';
         const isDone=step.done;
-        return`<tr style="background:${isDone?'var(--ob)':'transparent'};border-bottom:1px solid var(--bd)">
+        const isOverdue=overdue.some(o=>o.key===s.key);
+        return`<tr style="background:${isOverdue?'var(--db)':isDone?'var(--ob)':'transparent'};border-bottom:1px solid var(--bd)">
           <td style="padding:5px 8px;text-align:center"><input type="checkbox" ${isDone?'checked':''} onchange="togglePrepStep('${pid}','${s.key}',this.checked)" style="width:14px;height:14px;cursor:pointer;accent-color:var(--ok)"></td>
           <td style="padding:5px 8px;${isDone?'text-decoration:line-through;color:var(--tx3)':''}"><span style="font-weight:600">${i+1}. ${s.label}</span><br><span style="font-size:11px;color:var(--tx3)">${s.detail}</span></td>
-          <td style="padding:5px 8px;text-align:center;color:var(--in);font-size:11px">${targetDate?fD(targetDate):'-'}</td>
+          <td style="padding:5px 8px;text-align:center;font-size:11px;${isOverdue?'color:var(--d);font-weight:700':'color:var(--in)'}">${targetDate?fD(targetDate):'-'}${isOverdue?'<br>⚠ เลยกำหนด':''}</td>
           <td style="padding:3px 6px"><input type="date" class="fi" value="${step.date||''}" onchange="updatePrepStepDate('${pid}','${s.key}',this.value)" style="width:112px;padding:3px 5px;font-size:11px"></td>
           <td style="padding:3px 6px"><input type="text" class="fi" value="${step.notes||''}" onchange="updatePrepStepNotes('${pid}','${s.key}',this.value)" style="width:100%;padding:3px 5px;font-size:11px" placeholder="หมายเหตุ"></td>
         </tr>`;
       }).join('')}</tbody>
-    </table></div>
+    </table></div>`:''}
   </div>`;
 }
 function addDays(dateStr,days){
   if(!dateStr)return'';
   const d=new Date(dateStr);d.setDate(d.getDate()+days);return d.toISOString().split('T')[0];
+}
+// ── ขั้นตอนเตรียมบ่อที่เลยกำหนด (มีวันที่เป้าหมายแล้ว + ยังไม่ติ๊กว่าทำ + วันนี้เลยเป้าหมายไปแล้ว) — ใช้ทั้งการ์ดเต็มหน้า "เตรียมบ่อ" และการ์ดย่อในหน้าภาพรวม กันเขียนเกณฑ์ซ้ำ 2 ที่ ──
+function prepOverdueSteps(p){
+  const cl=p&&p.prepChecklist;if(!cl)return[];
+  const stockDate=cl.stockDate||p.startDate||'';if(!stockDate)return[];
+  const td=today();
+  return PREP_STEPS.filter(s=>{
+    const step=cl.steps[s.key];
+    if(step&&step.done)return false;
+    const targetDate=s.daysBeforeStock!==undefined?addDays(stockDate,s.daysBeforeStock):'';
+    return targetDate&&targetDate<td;
+  });
 }
 function updatePrepStockDate(pid){
   const p=pond(pid);if(!p)return;
