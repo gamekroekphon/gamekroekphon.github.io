@@ -857,7 +857,7 @@ body.role-ceo .main{max-width:640px}
 .ceo-acc-caret{font-size:11px;color:var(--tx3);transition:transform .18s;flex-shrink:0}
 .ceo-acc.open .ceo-acc-caret{transform:rotate(180deg)}
 .ceo-acc-panel{max-height:0;overflow:hidden;transition:max-height .24s ease}
-.ceo-acc.open .ceo-acc-panel{max-height:900px}
+.ceo-acc.open .ceo-acc-panel{max-height:3000px}
 .ceo-acc-inner{padding:2px 14px 14px;border-top:1px solid var(--bd)}
 .ceo-item-row{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--sf2)}
 .ceo-item-row:last-child{border-bottom:none}
@@ -9965,7 +9965,7 @@ function renderPartialList(){
 // ===== CEO DASHBOARD (role=ceo) =====
 const ceoMoney=v=>'฿'+Math.round(v||0).toLocaleString('th-TH');
 // ── สีจุดหมวดหมู่ ใช้ค่าเดียวกับสีตัวหนังสือใน STOCK_CAT_CSS (badge เดิมเป็นพื้นอ่อน+ตัวหนังสือเข้ม ไม่เหมาะกับจุดกลมเล็กๆ) ──
-const CEO_CAT_DOT={seed:'#9D174D',chem:'#1D4ED8',feed:'#92400E',chemOral:'#1D4ED8',chemWater:'#0369A1',probioOral:'#7E22CE',probioWater:'#5B21B6',lime:'#57534E',equip:'#166534'};
+const CEO_CAT_DOT={seed:'#9D174D',chem:'#1D4ED8',feed:'#92400E',chemOral:'#1D4ED8',chemWater:'#0369A1',probioOral:'#7E22CE',probioWater:'#5B21B6',lime:'#57534E',equip:'#166534',fry:'#9D174D',labor:'#0F766E',elec:'#B45309'};
 // ── สถานะ "ควรติดตาม" ถ้า ABW ล่าสุดต่ำกว่ามาตรฐานตามอายุเกิน 15% ──
 function ceoStatus(p){
   const s=p.samples||[];if(!s.length)return'ok';
@@ -10144,32 +10144,26 @@ function ceoOpenSheet(pid){
   const elecCost=getElecCostForPeriod(p.startDate,today());
   const totalCost=fryCost+feedCost+stockCostSum+laborCost+elecCost;
   document.getElementById('ceo-cost-total-mini').textContent=ceoMoney(totalCost);
-  // ── สรุปรวมต่อสินค้า (ไม่โชว่ประวัติว่าใช้วันไหน — CEO ไม่จำเป็นต้องเห็นระดับนั้น) ──
-  const itemsGrouped={};
+  // ── สรุปแยกตามหมวดต้นทุน (อาหารกุ้ง/ยากิน/ยาลงน้ำ/จุลินทรีย์กิน/จุลินทรีย์ลงน้ำ/ปูน/อุปกรณ์/ลูกกุ้ง/ค่าแรง/ค่าไฟ) แทนการไล่ทีละรายการสินค้า — เดิมยิ่งเบิกสต็อกหลายรายการยิ่งยาว ดันแถวท้าย (ค่าไฟ) หลุด max-height ของ accordion จนเลื่อนดูไม่ได้ ──
+  const catSums={};
   stockItems.forEach(it=>{
-    const key=it.name+'|'+it.category+'|'+it.unit;
-    if(!itemsGrouped[key])itemsGrouped[key]={name:it.name,category:it.category,unit:it.unit,qty:0,total:0};
-    itemsGrouped[key].qty+=it.qty;
-    itemsGrouped[key].total+=it.qty*it.unitPrice;
+    const cat=STOCK_CATEGORIES.some(c=>c.key===it.category)?it.category:'other';
+    catSums[cat]=(catSums[cat]||0)+it.qty*it.unitPrice;
   });
-  const itemsHtml=Object.values(itemsGrouped).map(it=>{
-    const catLbl=STOCK_CAT_LABEL[it.category]||it.category||'-';
-    const dotColor=CEO_CAT_DOT[it.category]||'var(--tx3)';
-    return`<div class="ceo-item-row">
-      <span class="ceo-cat-dot" style="background:${dotColor}"></span>
-      <div class="ceo-item-main">
-        <div class="ceo-item-name">${it.name}</div>
-        <div class="ceo-item-sub">${catLbl} · รวม ${it.qty} ${it.unit}</div>
-      </div>
-      <span class="ceo-item-val">${ceoMoney(it.total)}</span>
+  const costCatRow=(key,lbl,val)=>`<div class="ceo-item-row">
+      <span class="ceo-cat-dot" style="background:${CEO_CAT_DOT[key]||'var(--tx3)'}"></span>
+      <div class="ceo-item-main"><div class="ceo-item-name">${lbl}</div></div>
+      <span class="ceo-item-val">${ceoMoney(val)}</span>
     </div>`;
-  }).join('');
+  const catOrder=['chemOral','chemWater','probioOral','probioWater','lime','equip'];
+  const catRowsHtml=costCatRow('feed','อาหารกุ้ง',feedCost)
+    +catOrder.map(k=>costCatRow(k,STOCK_CAT_LABEL[k],catSums[k]||0)).join('')
+    +(catSums.other?costCatRow('other','อื่นๆ (เดิม)',catSums.other):'')
+    +costCatRow('fry','ลูกกุ้ง',fryCost)
+    +costCatRow('labor','ค่าแรง',laborCost)
+    +costCatRow('elec','ค่าไฟ',elecCost);
   document.getElementById('ceo-cost-detail').innerHTML=`
-    ${itemsHtml||'<div class="ceo-empty">ยังไม่มีรายการเบิกสต็อก (นอกเหนืออาหาร) ให้บ่อนี้</div>'}
-    <div class="ceo-plain-row"><span class="lbl">อาหาร<span class="src">คำนวณจากบันทึกอาหารรายวัน</span></span><span class="val">${ceoMoney(feedCost)}</span></div>
-    <div class="ceo-plain-row"><span class="lbl">ลูกกุ้ง<span class="src">กรอกตอนลงกุ้ง</span></span><span class="val">${ceoMoney(fryCost)}</span></div>
-    <div class="ceo-plain-row"><span class="lbl">ค่าแรง<span class="src">ดึงจากระบบค่าแรง</span></span><span class="val">${ceoMoney(laborCost)}</span></div>
-    <div class="ceo-plain-row"><span class="lbl">ค่าไฟฟ้า<span class="src">ดึงจากระบบค่าไฟ</span></span><span class="val">${ceoMoney(elecCost)}</span></div>
+    ${catRowsHtml}
     <div class="ceo-cost-total-row"><span class="lbl">รวมต้นทุนสะสม</span><span class="val">${ceoMoney(totalCost)}</span></div>`;
 
   // ── ค่าน้ำย้อนหลัง 7 วัน ──
