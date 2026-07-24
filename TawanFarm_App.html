@@ -1350,8 +1350,9 @@ body.role-ceo .main{max-width:640px}
         </div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
           <div class="fg"><label class="fl">อายุ (วัน)</label><input type="number" class="fi" id="wl-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
-          <div class="fg"><label class="fl">การดำเนินการ</label><select class="fi" id="wl-action"><option value="exchange">เปลี่ยนถ่ายน้ำ</option><option value="add">เติมน้ำ</option><option value="drain">ระบายน้ำ</option><option value="treat">บำบัดน้ำ</option></select></div>
+          <div class="fg"><label class="fl">การดำเนินการ</label><select class="fi" id="wl-action" onchange="toggleWlShockHint()"><option value="exchange">เปลี่ยนถ่ายน้ำ</option><option value="add">เติมน้ำ</option><option value="drain">ระบายน้ำ</option><option value="treat">บำบัดน้ำ</option></select></div>
         </div>
+        <div class="hint" id="wl-shock-hint" style="display:none">⚠️ ถ่ายน้ำปริมาณมากรวดเดียว เสี่ยงกุ้งช็อกถ้าน้ำใหม่อุณหภูมิ/ความเค็มต่างจากบ่อเดิมเกิน 5°C — ควรทยอยเปลี่ยนทีละน้อยแทนครั้งเดียว</div>
         <div class="fg"><label class="fl">เหตุผล / หมายเหตุ</label><input type="text" class="fi" id="wl-notes" placeholder="เหตุผลในการเปลี่ยนน้ำ..."></div>
         <div style="display:flex;gap:10px"><button class="btn btn-p" onclick="saveWaterLog()">💾 บันทึก</button><button class="btn btn-s" onclick="clearWaterLog()">🗑️ ล้าง</button></div>
         <div id="wl-msg"></div>
@@ -2925,6 +2926,61 @@ const PARAMS=[
   {key:'no2',lbl:'NO2',        unit:'mg/L',min:0,  max:0.5,dMin:0,  dMax:1.0,dec:3,color:'#9b2335',inv:true},
   {key:'no3',lbl:'NO3',        unit:'mg/L',min:0,  max:20, dMin:0,  dMax:40, dec:1,color:'#702459',inv:true},
 ];
+// ── ความต้องการ Mg/Ca ขึ้นกับความเค็มโดยตรง (ต่างกันได้หลายเท่าตัวระหว่างความเค็มต่ำ-สูง) — เกณฑ์คงที่ตัวเดียวของ PARAMS ด้านบนใช้ได้แค่ช่วงความเค็มกลางๆ เท่านั้น
+// อ้างอิงตาราง "The Amount of Mineral for Shrimp Farm" (อินโฟกราฟิกที่พี่ส่งมาเช็ค 24/7/69) — ค่า Hardness ในตารางต้นฉบับให้มาเป็นค่ากลางค่าเดียวไม่ใช่ช่วง จึงยังไม่ปรับ (คงเกณฑ์คงที่เดิมของ PARAMS ไว้ก่อน กันเดาช่วงยอมรับเอง)
+const MINERAL_BY_SALINITY=[
+  {sal:3, mgLo:120, mgHi:140, caLo:40,  caHi:47},
+  {sal:4, mgLo:160, mgHi:186, caLo:53,  caHi:62},
+  {sal:5, mgLo:200, mgHi:233, caLo:67,  caHi:78},
+  {sal:6, mgLo:240, mgHi:280, caLo:80,  caHi:93},
+  {sal:7, mgLo:280, mgHi:326, caLo:93,  caHi:109},
+  {sal:8, mgLo:320, mgHi:373, caLo:106, caHi:124},
+  {sal:9, mgLo:360, mgHi:419, caLo:120, caHi:140},
+  {sal:10,mgLo:400, mgHi:466, caLo:133, caHi:155},
+  {sal:11,mgLo:440, mgHi:513, caLo:146, caHi:171},
+  {sal:12,mgLo:480, mgHi:559, caLo:160, caHi:186},
+  {sal:13,mgLo:520, mgHi:606, caLo:173, caHi:202},
+  {sal:14,mgLo:560, mgHi:652, caLo:186, caHi:217},
+  {sal:15,mgLo:600, mgHi:699, caLo:200, caHi:233},
+  {sal:16,mgLo:640, mgHi:746, caLo:213, caHi:264},
+  {sal:17,mgLo:680, mgHi:792, caLo:226, caHi:264},
+  {sal:18,mgLo:720, mgHi:889, caLo:239, caHi:275},
+  {sal:19,mgLo:760, mgHi:885, caLo:253, caHi:295},
+  {sal:20,mgLo:800, mgHi:932, caLo:266, caHi:310},
+  {sal:21,mgLo:840, mgHi:979, caLo:279, caHi:326},
+  {sal:22,mgLo:880, mgHi:1025,caLo:293, caHi:341},
+  {sal:23,mgLo:920, mgHi:1072,caLo:306, caHi:357},
+  {sal:24,mgLo:960, mgHi:1118,caLo:319, caHi:372},
+  {sal:25,mgLo:1000,mgHi:1165,caLo:333, caHi:383},
+  {sal:26,mgLo:1040,mgHi:1212,caLo:346, caHi:403},
+  {sal:27,mgLo:1080,mgHi:1258,caLo:372, caHi:434},
+  {sal:28,mgLo:1120,mgHi:1305,caLo:372, caHi:434},
+  {sal:29,mgLo:1160,mgHi:1351,caLo:386, caHi:540},
+  {sal:30,mgLo:1200,mgHi:1398,caLo:399, caHi:465},
+  {sal:31,mgLo:1240,mgHi:1445,caLo:412, caHi:481},
+  {sal:32,mgLo:1280,mgHi:1491,caLo:426, caHi:496},
+  {sal:33,mgLo:1320,mgHi:1538,caLo:439, caHi:512},
+  {sal:34,mgLo:1360,mgHi:1584,caLo:452, caHi:527},
+  {sal:35,mgLo:1400,mgHi:1631,caLo:466, caHi:543},
+  {sal:36,mgLo:1440,mgHi:1678,caLo:497, caHi:558},
+  {sal:37,mgLo:1480,mgHi:1724,caLo:492, caHi:574},
+  {sal:38,mgLo:1524,mgHi:1771,caLo:505, caHi:589},
+  {sal:39,mgLo:1560,mgHi:1871,caLo:519, caHi:605},
+  {sal:40,mgLo:1600,mgHi:1864,caLo:532, caHi:620},
+];
+function mineralRangeAtSalinity(sal){
+  if(sal==null||sal==='')return null;
+  const s=Math.max(3,Math.min(40,parseFloat(sal)));if(isNaN(s))return null;
+  const rows=MINERAL_BY_SALINITY;
+  let lo=rows[0],hi=rows[rows.length-1];
+  for(let i=0;i<rows.length-1;i++){if(s>=rows[i].sal&&s<=rows[i+1].sal){lo=rows[i];hi=rows[i+1];break;}}
+  const t=hi.sal===lo.sal?0:(s-lo.sal)/(hi.sal-lo.sal);
+  const lerp=(a,b)=>Math.round(a+(b-a)*t);
+  return{
+    mg:{min:lerp(lo.mgLo,hi.mgLo),max:lerp(lo.mgHi,hi.mgHi)},
+    ca:{min:lerp(lo.caLo,hi.caLo),max:lerp(lo.caHi,hi.caHi)},
+  };
+}
 const WC=[
   {v:'brown_green',lbl:'น้ำตาลเขียว',hex:'#7a8c3e',s:'ok',   note:'ดีที่สุด — diatom+green mix'},
   {v:'brown',      lbl:'น้ำตาล',     hex:'#8B6914',s:'ok',   note:'ดี — diatom dominant'},
@@ -3687,8 +3743,19 @@ function syncAllDateHints(){document.querySelectorAll('input[type="date"]').forE
 function fN(v,d){return v!==null&&v!==undefined&&v!==''?parseFloat(v).toFixed(d):'-'}
 function pRelease(p){return(p.stock||0)+(p.stockBonus||0)}
 function dens(p){return p.size>0?Math.round(pRelease(p)/(p.size*1600)):0}
-function st(key,v){
+// ── rec (ถ้ามี) คือ record/ค่าที่กำลังกรอกอยู่ทั้งชุด ใช้แค่กับ mg_/ca เพื่อดึง .sal มาคำนวณช่วงยอมรับที่ปรับตามความเค็ม — ไม่ได้ใส่ rec หรือไม่มี sal ในนั้น จะ fallback ไปใช้เกณฑ์คงที่ของ PARAMS เหมือนเดิมทุกประการ ──
+function st(key,v,rec){
   if(v===null||v===undefined||v==='')return'na';
+  if((key==='mg_'||key==='ca')&&rec&&rec.sal!=null&&rec.sal!==''){
+    const mr=mineralRangeAtSalinity(rec.sal);
+    if(mr){
+      const band=key==='mg_'?mr.mg:mr.ca;
+      const w=band.max-band.min;
+      if(v<band.min-w*0.45||v>band.max+w*0.45)return'danger';
+      if(v<band.min-w*0.2||v>band.max+w*0.2)return'warn';
+      return'ok';
+    }
+  }
   const p=PARAMS.find(x=>x.key===key);if(!p)return'ok';
   if(p.inv){if(v>=p.dMax)return'danger';if(v>=p.max)return'warn';return'ok';}
   if(v<p.dMin||v>p.dMax)return'danger';if(v<p.min||v>p.max)return'warn';return'ok';
@@ -4754,6 +4821,22 @@ function pondRiskDisease(p,last){
   if(feedT.dir==='down'&&doT.dir==='down')cands.push({level:'danger',reason:'กินอาหารลดลง + DO ลดลงพร้อมกัน — สัญญาณเตือนโรคล่วงหน้าตามหลักวิชาการ'});
   else if(feedT.dir==='down')cands.push({level:'warn',reason:'กินอาหารมีแนวโน้มลดลงต่อเนื่อง — สัญญาณเตือนโรคที่ดีที่สุดอย่างหนึ่ง'});
   if(nh4Up||no2Up)cands.push({level:'warn',reason:`${nh4Up?'แอมโมเนีย':'ไนไตรท์'}มีแนวโน้มสูงขึ้น — เสี่ยงต่อภูมิคุ้มกันกุ้ง`});
+  // ── ไนไตรท์เป็นพิษกว่าปกติมากที่ความเค็มต่ำ (เหงือกลำเลียงไอออนไม่ดี → ไนไตรท์เข้าตัวกุ้งง่ายขึ้น) — อ้างอิงอินโฟกราฟิก Aqua Paathashala ที่พี่ส่งมาเช็ค 24/7/69 — เป็นสัญญาณเสริมเฉพาะกรณีความเค็มต่ำ ไม่ได้แก้เกณฑ์ NO2 พื้นฐานของ classifyOv (ยืนยันแล้ว 16 มิ.ย. 69)
+  if(last.sal!=null&&last.sal!==''&&last.no2!=null&&last.no2!==''){
+    const salV=parseFloat(last.sal),no2V=parseFloat(last.no2);
+    if(salV<5){
+      if(no2V>=0.5)cands.push({level:'danger',reason:`ไนไตรท์ ${no2V} mg/L ที่ความเค็มต่ำ (${salV} ppt) — เป็นพิษกว่าปกติมาก เพราะเหงือกลำเลียงไอออนได้แย่ลงเมื่อเค็มต่ำ`});
+      else if(no2V>=0.2)cands.push({level:'warn',reason:`ไนไตรท์ ${no2V} mg/L เริ่มสูงขณะความเค็มต่ำ (${salV} ppt) — เสี่ยงเป็นพิษมากกว่าค่าเดียวกันตอนความเค็มปกติ`});
+    }
+  }
+  // ── ไนไตรท์สูงแต่ DO ผิวน้ำปกติ = สัญญาณว่าพื้นบ่ออาจขาดออกซิเจน (Bottom DO) — ไนตริฟิเคชันขั้นที่ 2 (ไนไตรท์→ไนเตรท) ต้องใช้ออกซิเจนที่พื้นบ่อ ถ้าพื้นบ่อขาดจะค้างที่ไนไตรท์ทั้งที่ผิวน้ำดูปกติ (อ้างอิง ดร.พุทธ + อินโฟกราฟิกเดียวกัน)
+  {
+    const no2Lvl=classifyOv('no2',last.no2);
+    const doSurfaceVal=last.doM!=null&&last.doM!==''?last.doM:(last.doA!=null&&last.doA!==''?last.doA:null);
+    const doSurfaceOk=doSurfaceVal!=null&&classifyOv('doM',doSurfaceVal)==='ok';
+    if((no2Lvl==='warn'||no2Lvl==='danger')&&doSurfaceOk)
+      cands.push({level:no2Lvl,reason:'ไนไตรท์สูงแต่ DO ผิวน้ำปกติ — อาจเป็นสัญญาณว่าพื้นบ่อขาดออกซิเจน (Bottom DO) ทั้งที่ผิวน้ำดูดี ควรเพิ่มการกระจายออกซิเจนให้ถึงพื้นบ่อ'});
+  }
   const mLog=p.mortalityLog||[];
   if(mLog.length){
     const todayDead=mLog.filter(r=>r.date===today()).reduce((s,r)=>s+(r.count||0),0);
@@ -6965,25 +7048,40 @@ function prefillWQ(){
   document.getElementById('ep-notes').value=rec.notes||'';
   showMsg('ep-msg','warn',`✏️ กำลังแก้ไขข้อมูลวันที่ ${fD(d)} บ่อ ${p.name} — แก้ค่าแล้วกด "บันทึก" เพื่ออัปเดต`);
 }
-function stdText(p){return(p.inv?'ต่ำกว่า '+p.max:p.min+'–'+p.max)+(p.unit?' '+p.unit:'')}
-function fiWarnMsg(p,v){
-  if(p.inv){return v>=p.dMax?`${v} — เกินเกณฑ์อันตราย (>${p.dMax})`:`${v} — เกินเกณฑ์ (>${p.max})`}
-  if(v<p.dMin)return`${v} — ต่ำกว่าเกณฑ์อันตราย (<${p.dMin})`;
-  if(v>p.dMax)return`${v} — เกินเกณฑ์อันตราย (>${p.dMax})`;
-  if(v<p.min)return`${v} — ต่ำกว่าเกณฑ์ (<${p.min})`;
-  return`${v} — เกินเกณฑ์ (>${p.max})`;
+// ── dyn (ถ้ามี) คือช่วง {min,max} ที่คำนวณจากความเค็มสำหรับ mg_/ca แทนที่ p.min/p.max คงที่ ──
+function stdText(p,dyn){
+  if(dyn)return`${dyn.min}–${dyn.max} ${p.unit||''} (ตามความเค็มที่กรอก)`.trim();
+  return(p.inv?'ต่ำกว่า '+p.max:p.min+'–'+p.max)+(p.unit?' '+p.unit:'')
 }
+function fiWarnMsg(p,v,dyn){
+  const min=dyn?dyn.min:p.min,max=dyn?dyn.max:p.max;
+  if(p.inv){return v>=p.dMax?`${v} — เกินเกณฑ์อันตราย (>${p.dMax})`:`${v} — เกินเกณฑ์ (>${max})`}
+  if(!dyn&&v<p.dMin)return`${v} — ต่ำกว่าเกณฑ์อันตราย (<${p.dMin})`;
+  if(!dyn&&v>p.dMax)return`${v} — เกินเกณฑ์อันตราย (>${p.dMax})`;
+  if(v<min)return`${v} — ต่ำกว่าเกณฑ์ (<${min})`;
+  return`${v} — เกินเกณฑ์ (>${max})`;
+}
+// ── ความเค็มที่กรอกในฟอร์มเดียวกันตอนนี้ (ถ้ามี) — ใช้คำนวณช่วง Mg/Ca ที่ปรับตามความเค็มแบบสด ไม่ต้องกดบันทึกก่อน ──
+function fiCurSal(){const el=document.getElementById('ef-sal');const v=el&&el.value!==''?parseFloat(el.value):null;return v!=null&&!isNaN(v)?v:null;}
 function onFI(key,inp){
   const v=inp.value===''?null:parseFloat(inp.value);
   const p=PARAMS.find(x=>x.key===key);
   const std=document.getElementById('std-'+key);
-  if(v===null){inp.className='fi';if(std){std.textContent=stdText(p);std.className='lbl-std'}return}
-  const s=st(key,v);
+  const isMineral=(key==='mg_'||key==='ca');
+  const sal=isMineral?fiCurSal():null;
+  const mr=sal!=null?mineralRangeAtSalinity(sal):null;
+  const dyn=mr?(key==='mg_'?mr.mg:mr.ca):null;
+  if(v===null){inp.className='fi';if(std){std.textContent=stdText(p,dyn);std.className='lbl-std'}return}
+  const s=isMineral?st(key,v,{sal}):st(key,v);
   inp.className='fi'+(s!=='na'?' fi-'+s:'');
   if(std){
     // ข้อ3: คงป้ายช่วงเกณฑ์ปกติให้เห็นเสมอ ต่อท้ายด้วยคำเตือนถ้ามี — ไม่ให้ป้ายเกณฑ์หายไปตอนเตือน
-    if(s==='warn'||s==='danger'){std.textContent=`${stdText(p)} · ${fiWarnMsg(p,v)}`;std.className='lbl-std-'+s}
-    else{std.textContent=stdText(p);std.className='lbl-std'}
+    if(s==='warn'||s==='danger'){std.textContent=`${stdText(p,dyn)} · ${fiWarnMsg(p,v,dyn)}`;std.className='lbl-std-'+s}
+    else{std.textContent=stdText(p,dyn);std.className='lbl-std'}
+  }
+  // ความเค็มเปลี่ยน → รีเฟรชป้าย Mg/Ca ให้ตามทันแม้ยังไม่ได้แตะช่องนั้นซ้ำ
+  if(key==='sal'){
+    ['mg_','ca'].forEach(k=>{const e=document.getElementById('ef-'+k);if(e&&e.value!=='')onFI(k,e);});
   }
 }
 function saveWQ(){
@@ -7031,7 +7129,7 @@ function renderWQTable(){
     rec.map((r,i)=>{
       // ข้อ 1: คำนวณอายุจากวันปล่อย ไม่ใช้ค่าที่เก็บไว้ (ป้องกันค่าผิดจากการกรอกมือ)
       const ageCalc=p.startDate?dDiff(p.startDate,r.date):r.age;
-      return`<tr class="${i===0?'hi':''}""><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editWQ('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteWQ('${pid}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc}</td>${show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v);
+      return`<tr class="${i===0?'hi':''}""><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="editWQ('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="deleteWQ('${pid}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc}</td>${show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v,r);
         // ข้อ 5: null (ยังไม่กรอก) แสดง – สีเทา / 0 (ค่าจริง) แสดง 0 ตามสถานะ
         const cell=v===null||v===undefined
           ?`<span style="color:var(--tx3);font-size:12px" title="ยังไม่ได้กรอก">–</span>`
@@ -7082,6 +7180,7 @@ function editWaterLog(pid,idx){
   syncDateHint(document.getElementById('wl-date'));
   calcAge('wl');
   const aEl=document.getElementById('wl-action');if(aEl)aEl.value=r.action||'in';
+  toggleWlShockHint();
   document.getElementById('wl-notes').value=r.notes||'';
   const el=document.getElementById('wl-pond');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -7353,7 +7452,13 @@ function deleteSample(pid,id){
   save();renderSampleTable();renderSampleChart();
 }
 // ===== WATER LOG =====
-function initWaterLog(){populateAll();document.getElementById('wl-date').value=today();calcAge('wl');renderWaterSummary();renderWaterTable();}
+function initWaterLog(){populateAll();document.getElementById('wl-date').value=today();calcAge('wl');renderWaterSummary();renderWaterTable();toggleWlShockHint();}
+// ── เตือนความเสี่ยงกุ้งช็อกเมื่อเลือก "เปลี่ยนถ่ายน้ำ" — แอปไม่มีข้อมูลอุณหภูมิ/ความเค็มของน้ำใหม่ที่จะเติมเข้ามา (ไม่ได้วัดตอนสูบเข้า) จึงแจ้งเป็นข้อควรระวังทั่วไปแทนการคำนวณเทียบจริง
+function toggleWlShockHint(){
+  const act=document.getElementById('wl-action')?.value;
+  const el=document.getElementById('wl-shock-hint');
+  if(el)el.style.display=act==='exchange'?'':'none';
+}
 function saveWaterLog(){
   const pid=document.getElementById('wl-pond').value,d=document.getElementById('wl-date').value;
   if(!pid||!d){showMsg('wl-msg','warn','กรุณาเลือกบ่อและวันที่');return}
@@ -10536,7 +10641,7 @@ function renderWQHeatmap(){
     // Overall status for sorting
     let worst='na';
     if(rec){
-      visParams.forEach(pm=>{const s=st(pm.key,rec[pm.key]);if(s==='danger')worst='danger';else if(s==='warn'&&worst!=='danger')worst='warn';else if(s==='ok'&&worst==='na')worst='ok';});
+      visParams.forEach(pm=>{const s=st(pm.key,rec[pm.key],rec);if(s==='danger')worst='danger';else if(s==='warn'&&worst!=='danger')worst='warn';else if(s==='ok'&&worst==='na')worst='ok';});
     }
     return{p,rec,prev,worst};
   });
@@ -10575,7 +10680,7 @@ function renderWQHeatmap(){
     const cells=visParams.map(pm=>{
       if(!rec||rec[pm.key]==null)return`<td><span class="wq-cell wq-na">—</span></td>`;
       const v=rec[pm.key];
-      const s=st(pm.key,v);
+      const s=st(pm.key,v,rec);
       const cls='wq-'+s;
       const pm2=PARAMS.find(x=>x.key===pm.key);
       const dec=pm2?pm2.dec:2;
