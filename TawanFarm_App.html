@@ -242,6 +242,7 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .pd-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
 .pd-water-row{display:flex;justify-content:space-between;padding:7px 0;border-top:.5px solid var(--bd);font-size:13px}
 .pd-actions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.pd-admin-tag{font-size:10px;font-weight:700;color:var(--pd);background:var(--pl);padding:2px 9px;border-radius:99px}
 @media(max-width:600px){.pd-metrics{grid-template-columns:repeat(2,1fr)}}
 /* ── เฟส 2 (พี่แพรว): เกจค่าน้ำ + กราฟรายบ่อ ในหน้าวิเคราะห์รายบ่อ ── */
 .pd-gauges{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
@@ -5076,6 +5077,51 @@ function renderPondDetail(id){
       <div style="font-size:10px;color:#16a34a;margin-top:3px">เป้า &lt; 1.5</div>
     </div>
   </div>`;
+
+  // ===== ต้นทุนสะสม (admin เท่านั้น) — ใช้สูตร/building block เดียวกับหน้า CEO (ceoOpenSheet) ไม่สร้างคำนวณคู่ขนาน =====
+  let costCardHtml='';
+  if(APP_ROLE==='admin'&&cls!=='prep'){
+    const pdStockItems=getStockItemsForPond(p.id,p.startDate,today());
+    const pdFeedCost=pondFeedCost(p);
+    const pdFryCost=p.costFry||0;
+    const pdLaborCost=getLaborCostForPond(p.id,p.startDate,today());
+    const pdElecCost=getElecCostForPeriod(p.startDate,today());
+    const pdCatSums={},pdCatItems={};
+    pdStockItems.forEach(it=>{
+      const cat=STOCK_CATEGORIES.some(c=>c.key===it.category)?it.category:'other';
+      pdCatSums[cat]=(pdCatSums[cat]||0)+it.qty*it.unitPrice;
+      if(!pdCatItems[cat])pdCatItems[cat]={};
+      const key=it.name+'|'+it.unit;
+      if(!pdCatItems[cat][key])pdCatItems[cat][key]={name:it.name,unit:it.unit,qty:0,total:0};
+      pdCatItems[cat][key].qty+=it.qty;
+      pdCatItems[cat][key].total+=it.qty*it.unitPrice;
+    });
+    const pdCostTotal=pdFryCost+pdFeedCost+pdStockItems.reduce((s,i)=>s+i.qty*i.unitPrice,0)+pdLaborCost+pdElecCost;
+    const pdCostCatRow=(key,lbl,val)=>{
+      const items=Object.values(pdCatItems[key]||{});
+      const hasItems=items.length>0;
+      return`<div class="ceo-item-row${hasItems?' ceo-cat-row':''}"${hasItems?` onclick="pdToggleCatItems('${key}')"`:''}>
+        <span class="ceo-cat-dot" style="background:${CEO_CAT_DOT[key]||'var(--tx3)'}"></span>
+        <div class="ceo-item-main"><div class="ceo-item-name">${lbl}${hasItems?' <span class="ceo-cat-caret" id="pd-cat-caret-'+key+'">▾</span>':''}</div></div>
+        <span class="ceo-item-val">${ceoMoney(val)}</span>
+      </div>${hasItems?`<div class="ceo-cat-items" id="pd-cat-items-${key}">${items.map(it=>
+        `<div class="ceo-cat-item-row"><span>${it.name}</span><span>${it.qty} ${it.unit} · ${ceoMoney(it.total)}</span></div>`
+      ).join('')}</div>`:''}`;
+    };
+    const pdCatOrder=['chemOral','chemWater','probioOral','probioWater','lime','equip'];
+    const pdCatRowsHtml=pdCostCatRow('feed','อาหารกุ้ง',pdFeedCost)
+      +pdCatOrder.map(k=>pdCostCatRow(k,STOCK_CAT_LABEL[k],pdCatSums[k]||0)).join('')
+      +(pdCatSums.other?pdCostCatRow('other','อื่นๆ (เดิม)',pdCatSums.other):'')
+      +pdCostCatRow('fry','ลูกกุ้ง',pdFryCost)
+      +pdCostCatRow('labor','ค่าแรง',pdLaborCost)
+      +pdCostCatRow('elec','ค่าไฟ',pdElecCost);
+    costCardHtml=`<div class="card" style="margin-bottom:12px">
+      <div class="card-t" style="justify-content:space-between"><span>💰 ต้นทุนสะสม</span><span class="pd-admin-tag">ADMIN เท่านั้น</span></div>
+      <div class="ceo-cost-total-row" style="border-top:none;padding-top:0"><span class="lbl">รวมต้นทุนสะสมของบ่อนี้</span><span class="val">${ceoMoney(pdCostTotal)}</span></div>
+      ${pdCatRowsHtml}
+    </div>`;
+  }
+
   el.innerHTML=`
     <div class="pd-head">
       <div>
@@ -5085,6 +5131,7 @@ function renderPondDetail(id){
       <span class="${badgeCls}" style="padding:5px 12px;border-radius:14px;font-size:12px;font-weight:600;flex:none">${badgeTxt}</span>
     </div>
     <div style="display:inline-flex;align-items:center;gap:6px;background:var(--a1);color:var(--a);font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;margin-bottom:12px">⏱ อายุ ${age} วัน</div>
+    ${costCardHtml}
     ${reason?`<div class="pd-alert"><div class="ai ${cls==='prep'?'ok':cls}"><span>${cls==='danger'?'🔴':cls==='warn'?'⚠️':'✅'}</span><div>${reason}</div></div></div>`:''}
     ${cls!=='prep'?`<div class="card" style="margin-bottom:12px">
       <div class="card-t">🚦 ความเสี่ยงหลักของบ่อ</div>
@@ -5143,6 +5190,10 @@ function renderPondDetail(id){
   if(cls!=='prep')renderFarmCard(p);
   renderBioCompare(p);
   if(cls!=='prep')renderCropBenchmark(p);
+}
+function pdToggleCatItems(key){
+  document.getElementById('pd-cat-items-'+key)?.classList.toggle('show');
+  document.getElementById('pd-cat-caret-'+key)?.classList.toggle('open');
 }
 // ══════ เปรียบเทียบ Biomass 2 วิธี: แบบฟาร์ม (อัตรารอดกรอกเอง) vs แบบเอกสาร (ไขว้ตรวจจากอาหารที่ให้จริง) ══════
 const _bcFeedRateOverride={}; // เก็บค่าที่ผู้ใช้แก้เอง ต่อบ่อ ระหว่างอยู่ในหน้านี้ (ไม่บันทึกลง DB — เป็นแค่เครื่องมือช่วยตัดสินใจ)
@@ -5470,11 +5521,15 @@ function renderOv(){
   const td=today();
   const yd=new Date(new Date(td).getTime()-86400000).toISOString().slice(0,10);
   const totalFeedToday=D.ponds.reduce((s,p)=>s+(p.feedLog||[]).filter(r=>r.date===yd).reduce((ss,r)=>ss+(parseFloat(r.totalFeed)||0),0),0);
+  // ── การ์ดที่ 4: admin เห็นต้นทุนสะสมรวมทั้งฟาร์มแทน "บ่อต้องดู" (staff เห็นของเดิมไม่เปลี่ยน — ข้อมูลนี้ยังดูซ้ำได้จากตาราง "สถานะบ่อทั้งหมด" ด้านล่างอยู่แล้ว) ──
+  const kk4=APP_ROLE==='admin'
+    ?`<div class="ov-kk ov-kk-dark" style="background:linear-gradient(135deg,#4a3208,#382608)"><div class="ov-kk-l" style="color:#e7cf94">💰 ต้นทุนสะสมรวมทั้งฟาร์ม</div><div class="ov-kk-v">${(active.reduce((s,{p})=>s+ceoTotalCost(p),0)/1e6).toFixed(2)}<span class="ov-kk-u"> ล้าน฿</span></div><div style="font-size:10px;color:#e7cf94">${active.length} บ่อที่กำลังเลี้ยงอยู่ตอนนี้</div></div>`
+    :`<div class="ov-kk ov-kk-dark"><div class="ov-kk-l">⚠️ บ่อต้องดู</div><div class="ov-kk-v" style="color:${dcP>0?'#ff8a70':'inherit'}">${dcP}<span class="ov-kk-u"> / เฝ้าระวัง ${wcP}</span></div></div>`;
   document.getElementById('ov-kpi-bar').innerHTML=`
     <div class="ov-kk ov-kk-dark"><div class="ov-kk-l">🦐 บ่อที่เลี้ยงอยู่</div><div class="ov-kk-v">${active.length}<span class="ov-kk-u"> / ${TOTAL_PONDS} บ่อ</span></div><div class="ov-kk-sub">เตรียมบ่อ ${prepM.length} · ว่าง ${closedCount}</div></div>
     <div class="ov-kk ov-kk-dark"><div class="ov-kk-l">⚖️ Biomass รวม</div><div class="ov-kk-v">${totalBio>0?(totalBio/1000).toFixed(1):'-'}<span class="ov-kk-u"> ตัน</span></div></div>
     <div class="ov-kk ov-kk-dark"><div class="ov-kk-l">🍖 อาหารรวมต่อวัน</div><div class="ov-kk-v">${totalFeedToday>0?totalFeedToday.toFixed(0):'-'}<span class="ov-kk-u"> กก./วัน</span></div><div style="font-size:10px;color:#a9c9b3">ทั้งฟาร์ม</div></div>
-    <div class="ov-kk ov-kk-dark"><div class="ov-kk-l">⚠️ บ่อต้องดู</div><div class="ov-kk-v" style="color:${dcP>0?'#ff8a70':'inherit'}">${dcP}<span class="ov-kk-u"> / เฝ้าระวัง ${wcP}</span></div></div>`;
+    ${kk4}`;
   renderOvWeatherCard();
   renderOvRiskList();
   renderOvDonut(active.length,prepM.length,closedCount);
