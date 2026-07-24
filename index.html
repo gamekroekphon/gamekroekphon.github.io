@@ -9068,9 +9068,8 @@ function renderCrops(){
       ${cropCells(rightCrop,rightIsCurrent)}
       <td style="padding:8px 10px;text-align:center;font-size:20px;font-weight:800;color:${progColor}">${totalClosed}/2</td>
       <td style="padding:8px 10px;text-align:center"><span class="badge ${prog>=2?'b-ok':prog>=1?'b-warn':'b-danger'}">${prog>=2?'✅ ครบ':prog>=1?'⏳ 1/2':'⚠️ ยังไม่มี'}</span></td>
-      <td style="padding:8px 6px;text-align:center">${isCurYear&&hasStarted?`<button class="btn btn-sm" style="background:var(--p);color:#fff;border:none;font-size:12px" onclick="openCropModal('${p.id}')">ปิดรอบ</button>${(()=>{
+      <td style="padding:8px 6px;text-align:center">${isCurYear&&hasStarted&&APP_ROLE==='admin'?`<button class="btn btn-sm" style="background:var(--p);color:#fff;border:none;font-size:12px" onclick="openCropModal('${p.id}')">ปิดรอบ</button>${(()=>{
         // ต้นทุนสะสม realtime (admin) — เลขชุดเดียวกับ auto-fill ตอนปิดรอบ เห็นก่อนตัดสินใจโดยไม่ต้องเปิดฟอร์มปิดรอบเสี่ยงกดยืนยันพลาด
-        if(APP_ROLE!=='admin')return'';
         const rc=pondRunningCost(p);if(!rc)return'';
         return`<div style="font-size:10.5px;color:var(--pd);margin-top:4px;white-space:nowrap;cursor:help" title="ลูกกุ้ง ${rc.fry.toLocaleString()} · อาหาร ${rc.feed.toLocaleString()} · เคมี ${rc.chem.toLocaleString()} · แรงงาน ${rc.labor.toLocaleString()} · ไฟ ${rc.elec.toLocaleString()} บาท (สูตรเดียวกับตอนปิดรอบ)">💰 ${rc.total.toLocaleString()} บ.</div>`;
       })()}`:''}</td>
@@ -9384,13 +9383,14 @@ function renderClosedDetail(){
   const lastPartial=partialRows.length?partialRows[partialRows.length-1]:null;
   const lastClose=closeRows.length?closeRows[closeRows.length-1]:null;
   const esc=v=>v==null?'':String(v).replace(/</g,'&lt;');
+  const isAdminCh=APP_ROLE==='admin';
   wrap.innerHTML=`
     <div class="g5" style="margin-bottom:16px">
       <div class="metric-card metric-card-accent"><div class="mv">${s.totalWeight?s.totalWeight.toLocaleString():'-'}</div><div class="ml">ผลผลิตรวม (กก.)</div></div>
       <div class="metric-card metric-card-accent"><div class="mv">${s.survivalRate!=null?s.survivalRate.toFixed(1)+'%':'-'}</div><div class="ml">อัตรารอด</div></div>
       <div class="metric-card metric-card-accent"><div class="mv">${s.fcr||'-'}</div><div class="ml">FCR</div></div>
       <div class="metric-card metric-card-accent"><div class="mv">${s.ageDays||'-'} วัน</div><div class="ml">ระยะเลี้ยง</div></div>
-      <div class="metric-card metric-card-accent"><div class="mv" style="color:var(--ok)">${netSales!=null?Math.round(netSales).toLocaleString():'-'}</div><div class="ml">ยอดขายสุทธิ (บาท)</div></div>
+      ${isAdminCh?`<div class="metric-card metric-card-accent"><div class="mv" style="color:var(--ok)">${netSales!=null?Math.round(netSales).toLocaleString():'-'}</div><div class="ml">ยอดขายสุทธิ (บาท)</div></div>`:''}
     </div>
     <div class="g2" style="margin-bottom:16px">
       <div style="background:var(--sf2);border-radius:var(--r);padding:12px">
@@ -9435,7 +9435,7 @@ function renderClosedDetail(){
       <div id="ch-sec-chem" style="display:none;margin-bottom:10px"></div>
       <div id="ch-sec-lab" style="display:none;margin-bottom:10px"></div>
     </div>
-    <button class="btn btn-p" onclick="exportChPdf('${pid}',${idx})">📄 ดาวน์โหลด PDF สรุปรอบนี้</button>
+    ${isAdminCh?`<button class="btn btn-p" onclick="exportChPdf('${pid}',${idx})">📄 ดาวน์โหลด PDF สรุปรอบนี้</button>`:''}
   `;
   _chCompareSel=[{pondId:pid,idx}];
   setChCompareMode(_chCompareMode);
