@@ -5115,9 +5115,13 @@ function renderPondDetail(id){
       +pdCostCatRow('fry','ลูกกุ้ง',pdFryCost)
       +pdCostCatRow('labor','ค่าแรง',pdLaborCost)
       +pdCostCatRow('elec','ค่าไฟ',pdElecCost);
+    // ── ประมาณต้นทุนบาท/กก. ณ วันนี้ = ต้นทุนสะสมทั้งหมด ÷ น้ำหนักกุ้งที่มีตอนนี้ (biomass ประเมิน, ตัวเดียวกับที่ใช้ใน kpiHero) — เป็นค่าประมาณระหว่างเลี้ยง ไม่ใช่ต้นทุน/กก. สุดท้ายตอนปิดรอบ (คำนวณจากน้ำหนักจับจริง คนละค่ากันโดยตั้งใจ) ──
+    const pdCostPerKg=(biomass&&biomass>0)?pdCostTotal/biomass:null;
     costCardHtml=`<div class="card" style="margin-bottom:12px">
       <div class="card-t" style="justify-content:space-between"><span>💰 ต้นทุนสะสม</span><span class="pd-admin-tag">ADMIN เท่านั้น</span></div>
       <div class="ceo-cost-total-row" style="border-top:none;padding-top:0"><span class="lbl">รวมต้นทุนสะสมของบ่อนี้</span><span class="val">${ceoMoney(pdCostTotal)}</span></div>
+      <div class="pd-water-row" style="border-top:1px dashed var(--bd)"><span style="color:var(--tx2)">ต้นทุน/กก. ประมาณ (ณ วันนี้)</span><span style="font-weight:700;color:var(--p)">${pdCostPerKg!=null?'฿'+pdCostPerKg.toFixed(1)+'/กก.':'-'}</span></div>
+      ${pdCostPerKg==null?`<div style="font-size:11px;color:var(--tx3);padding:2px 0 6px">ยังไม่มีข้อมูลสุ่มตัวอย่าง คำนวณ Biomass ประเมินไม่ได้</div>`:`<div style="font-size:11px;color:var(--tx3);padding:2px 0 6px">= ต้นทุนสะสม ÷ Biomass ประเมิน ${Math.round(biomass).toLocaleString()} กก. — เป็นค่าประมาณระหว่างเลี้ยง ไม่ใช่ต้นทุน/กก. สุดท้ายตอนปิดรอบ</div>`}
       ${pdCatRowsHtml}
     </div>`;
   }
@@ -10424,9 +10428,12 @@ function ceoOpenSheet(pid){
     +costCatRow('fry','ลูกกุ้ง',fryCost)
     +costCatRow('labor','ค่าแรง',laborCost)
     +costCatRow('elec','ค่าไฟ',elecCost);
+  // ── ต้นทุน/กก. ประมาณ (ณ วันนี้) = ต้นทุนสะสมทั้งหมด ÷ Biomass ประเมิน (ตัวแปร bio เดียวกับที่ใช้ในบล็อก "สรุปบ่อ" ด้านบน) สูตรเดียวกับที่ใช้ในหน้ารายละเอียดบ่อของ admin (ข้อ 99) ──
+  const costPerKg=(bio&&bio>0)?totalCost/bio:null;
   document.getElementById('ceo-cost-detail').innerHTML=`
     ${catRowsHtml}
-    <div class="ceo-cost-total-row"><span class="lbl">รวมต้นทุนสะสม</span><span class="val">${ceoMoney(totalCost)}</span></div>`;
+    <div class="ceo-cost-total-row"><span class="lbl">รวมต้นทุนสะสม</span><span class="val">${ceoMoney(totalCost)}</span></div>
+    <div class="pd-water-row" style="border-top:1px dashed var(--bd)"><span style="color:var(--tx2)">ต้นทุน/กก. ประมาณ (ณ วันนี้)</span><span style="font-weight:700;color:var(--p)">${costPerKg!=null?'฿'+costPerKg.toFixed(1)+'/กก.':'-'}</span></div>`;
 
   // ── ค่าน้ำย้อนหลัง 7 วัน ──
   const waterRows=(p.records||[]).slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7);
