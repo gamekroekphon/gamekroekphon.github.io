@@ -5500,7 +5500,7 @@ function renderPrepPondCard(p){
   }).join('');
   const done=cl?PREP_STEPS.filter(s=>cl.steps&&cl.steps[s.key]?.done).length:0;
   const overdueN=prepOverdueSteps(p).length;
-  return`<div class="pc-ov" onclick="openPondDetail('${p.id}')">
+  return`<div class="pc-ov" onclick="jumpPrep('${p.id}')">
     <div class="pc-ov-top"><span class="pc-ov-name">${p.name}</span><span style="display:flex;gap:5px;align-items:center">${overdueN?`<span class="pc-ov-badge" style="background:var(--db);color:var(--d)">⚠️ เลยกำหนด ${overdueN}</span>`:''}<span class="pc-ov-badge pcb-prep">เตรียมบ่อ</span><button class="admin-only" onclick="event.stopPropagation();resetPrepPond('${p.id}')" title="ล้างแผนเตรียมบ่อ (ใช้เมื่อเปลี่ยนแผนการเลี้ยง)" style="background:none;border:none;cursor:pointer;color:var(--d);font-size:14px;padding:6px;margin:-6px;line-height:1;min-width:28px;min-height:28px;display:inline-flex;align-items:center;justify-content:center">🗑️</button></span></div>
     <div style="font-size:10px;color:var(--tx2);margin-bottom:4px">เตรียมแล้ว <b style="color:${done===PREP_STEPS.length?'var(--ok)':done>=PREP_STEPS.length/2?'var(--w)':'var(--d)'}">${done}/${PREP_STEPS.length}</b>${cl?.stockDate?` · ลงกุ้ง ${fD(cl.stockDate)}`:''}${done===PREP_STEPS.length?' ✅ พร้อมลง':''}</div>
     <div style="background:var(--bd);border-radius:3px;height:4px;margin-bottom:6px"><div style="background:${done===PREP_STEPS.length?'var(--ok)':done>=PREP_STEPS.length/2?'var(--w)':'var(--p)'};height:4px;border-radius:3px;width:${Math.round(done/PREP_STEPS.length*100)}%"></div></div>
@@ -5693,6 +5693,21 @@ function renderOvDonut(activeCount,prepCount,emptyCount){
   _ovDonutChart=new Chart(canvas,{type:'doughnut',data:{labels:['กำลังเลี้ยง','เตรียมบ่อ','ว่าง/พักบ่อ'],datasets:[{data:[activeCount,prepCount,emptyCount],backgroundColor:['#2f8f5b','#3f6212','#d7ded8'],borderWidth:0}]},options:{cutout:'70%',plugins:{legend:{display:false}}}});
 }
 function jumpEntry(id){document.getElementById('tab-entry').click();setTimeout(()=>{selectEPond(id);},80)}
+// ── การ์ดเตรียมบ่อในหน้าภาพรวม กดแล้วเด้งไปหน้า "เตรียมบ่อ" ตรงๆ (แทนหน้ารายละเอียดบ่อ) เพราะบ่อยังไม่มีกุ้ง ไม่มีอะไรให้ดูในหน้ารายละเอียดบ่อ — เปิดการ์ดของบ่อนั้นให้อัตโนมัติ+เลื่อนไปหาให้เลย ──
+function jumpPrep(pid){
+  const p=pond(pid);
+  // บ่อสถานะ "เตรียมบ่อ" (startDate ตั้งไว้ล่วงหน้า) บางบ่ออาจยังไม่เคยเริ่มเช็คลิสต์เลย (ไม่มี prepChecklist) — หน้า "เตรียมบ่อ" แสดงเฉพาะบ่อที่เริ่มแล้วเท่านั้น (initPrep()) ต้องเริ่มให้อัตโนมัติเหมือน addPrepPond() ไม่งั้นการ์ดที่จะเด้งไปจะไม่มีอยู่จริงในหน้าปลายทาง
+  if(p){
+    if(!p.prepChecklist)p.prepChecklist={id:'prep_'+pid+'_'+Date.now(),steps:{},stockDate:p.startDate||'',notes:''};
+    if(!_prepPonds.includes(pid)){_prepPonds=[..._prepPonds,pid];save();}
+  }
+  document.getElementById('tab-prep').click();
+  setTimeout(()=>{
+    _prepOpen.add(pid);
+    renderPrep();
+    document.getElementById('prep-card-'+pid)?.scrollIntoView({behavior:'smooth',block:'start'});
+  },80);
+}
 // ===== ค่าแรง / แรงงาน =====
 function laborTab(paneId, btn) {
   document.querySelectorAll('.labor-sub-btn').forEach(b=>b.classList.remove('on'));
@@ -9808,7 +9823,7 @@ function renderPrepCard(pid){
   const pct=Math.round(checked/PREP_STEPS.length*100);
   const overdue=prepOverdueSteps(p);
   const isOpen=_prepOpen.has(pid);
-  return`<div class="card" style="margin-bottom:12px">
+  return`<div class="card" id="prep-card-${pid}" style="margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;cursor:pointer" onclick="togglePrepOpen('${pid}')">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span class="prep-caret" style="display:inline-block;font-size:11px;color:var(--tx3);transition:transform .15s;transform:rotate(${isOpen?90:0}deg)">▸</span>
