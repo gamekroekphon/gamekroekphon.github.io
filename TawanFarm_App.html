@@ -1621,15 +1621,23 @@ body.role-ceo .main{max-width:640px}
     </div>
 
     <div class="card" style="margin-bottom:12px">
-      <div class="card-t">🧪 ตั้งชื่อการทดลอง</div>
-      <div class="card-sub">พิมพ์ชื่อเวชภัณฑ์/สิ่งที่ต้องการทดลองเอง — ไม่บังคับว่าต้องเป็นสินค้าที่เคยเบิกในระบบสต็อก (มีคำแนะนำจากประวัติเบิกให้เลือกด้วยถ้ามี)</div>
-      <div class="fg"><label class="fl">ชื่อเวชภัณฑ์/สิ่งที่ทดลอง</label><input class="fi" id="trial-name" list="trial-suggest" placeholder="เช่น โปรไบโอติกบำรุงตับ สูตร B"></div>
+      <div class="card-t">🧪 ชื่อการทดลอง + ช่วงเวลาที่ทดลอง</div>
+      <div class="card-sub">ระบุ "ช่วงเวลาที่ลงเวชภัณฑ์จริง" ไม่ใช่ทั้งรอบเลี้ยง — ระบบจะกรองข้อมูลอาหาร/สุ่มตัวอย่าง/กุ้งตาย/ค่าน้ำ/ผลแล็บของทุกบ่อให้เหลือเฉพาะช่วงนี้ก่อนเทียบ</div>
+      <div class="fg" style="margin-bottom:14px"><label class="fl">ชื่อเวชภัณฑ์/สิ่งที่ทดลอง</label><input class="fi" id="trial-name" list="trial-suggest" placeholder="เช่น โปรไบโอติกบำรุงตับ สูตร B"></div>
       <datalist id="trial-suggest"></datalist>
+      <div class="fgrid" style="grid-template-columns:1fr 1fr">
+        <div class="fg"><label class="fl">วันที่เริ่มทดลอง <span style="color:var(--d)">*</span></label><input type="date" class="fi" id="trial-start" onchange="setTrialPeriod()"></div>
+        <div class="fg"><label class="fl">วันที่สิ้นสุดทดลอง</label><input type="date" class="fi" id="trial-end" onchange="setTrialPeriod()"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">
+        <button type="button" class="btn btn-s" onclick="trialSetOngoing()">ยังดำเนินอยู่ (ตั้งเป็นวันนี้)</button>
+        <span id="trial-duration" style="font-size:12.5px;color:var(--tx2);font-weight:600"></span>
+      </div>
     </div>
 
     <div class="card" style="margin-bottom:12px">
       <div class="card-t">🐟 เลือกบ่อที่ต้องการเปรียบเทียบ (2-4 บ่อ)</div>
-      <div class="card-sub">แสดงเฉพาะบ่อที่ <strong>กำลังเลี้ยงอยู่ตอนนี้</strong> เท่านั้น (ไม่ดึงรอบเก่าที่ปิดไปแล้วมาเทียบ) เลือกได้ 2-4 บ่อ แล้วพิมพ์ชื่อสินค้าที่ใช้ในแต่ละบ่อ — พิมพ์ชื่อเดียวกันในหลายบ่อเพื่อจัดกลุ่ม หรือพิมพ์คนละชื่อเพื่อเทียบสินค้า A กับสินค้า B พร้อมกันได้ในการทดลองเดียว (เว้นว่างไว้ = ไม่ได้ใช้อะไรเลย)</div>
+      <div class="card-sub">แสดงเฉพาะบ่อที่ <strong>กำลังเลี้ยงอยู่ตอนนี้</strong> เท่านั้น (ไม่ดึงรอบเก่าที่ปิดไปแล้วมาเทียบ) เลือกได้ 2-4 บ่อ แล้วพิมพ์ชื่อสินค้าที่ใช้ในแต่ละบ่อ — พิมพ์ชื่อเดียวกันในหลายบ่อเพื่อจัดกลุ่ม หรือพิมพ์คนละชื่อเพื่อเทียบสินค้า A กับสินค้า B พร้อมกันได้ในการทดลองเดียว (เว้นว่างไว้ = ไม่ได้ใช้อะไรเลย) — แต่ละบ่อลงกุ้งคนละวัน ช่วงทดลองเดียวกันจึงตรงกับอายุกุ้ง (DOC) คนละช่วงกัน ระบบคำนวณให้อัตโนมัติ</div>
       <div id="trial-pond-picker" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
       <div id="trial-picked-list" style="display:flex;flex-direction:column;gap:8px"></div>
       <div class="hint" id="trial-doc-hint" style="margin-top:10px"></div>
@@ -1647,14 +1655,17 @@ body.role-ceo .main{max-width:640px}
     </div>
 
     <div class="card" style="margin-bottom:12px" id="trial-growth-card">
-      <div class="card-t">📈 การเติบโต — เทียบที่อายุกุ้ง (DOC) เดียวกัน</div>
+      <div class="card-t">📈 การเติบโตในช่วงทดลอง</div>
+      <div class="card-sub">แกน X = วันที่ปฏิทิน — แถบสีอ่อนคือช่วงทดลองที่เลือกไว้ด้านบน</div>
       <div id="trial-growth-legend" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:11.5px"></div>
       <div class="chart-wrap" style="height:280px"><canvas id="trialGrowthChart"></canvas></div>
+      <div id="trial-adg-chips" style="margin-top:12px"></div>
     </div>
 
     <div class="card" style="margin-bottom:12px" id="trial-mini-card">
-      <div class="card-t">🧮 ตัวชี้วัดอื่น — รายบ่อ</div>
+      <div class="card-t">🧮 ตัวชี้วัดในช่วงทดลอง — รายบ่อ</div>
       <div id="trial-mini-compare" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px"></div>
+      <div id="trial-lab-note" style="margin-top:10px"></div>
     </div>
 
     <div class="card">
@@ -7718,9 +7729,44 @@ function cmpExportPNG(){
 }
 // ══════ ทดลองเวชภัณฑ์ — เทียบ 2-4 บ่อที่กำลังเลี้ยงอยู่ตอนนี้ (ใช้/ไม่ใช้) ที่ DOC เดียวกัน ══════
 let trialCh=null;
-let _trialDraft={id:null,name:'',waterParam:'doM',metrics:{growth:true,fcr:true,mortality:false,lab:true,water:true,ehp:true,gutLipid:true},ponds:{}};
+let _trialDraft={id:null,name:'',startDate:'',endDate:'',waterParam:'doM',metrics:{growth:true,fcr:true,mortality:false,lab:true,water:true,ehp:true,gutLipid:true},ponds:{}};
 const TRIAL_METRICS=[{key:'growth',lbl:'การเติบโต (ABW/ADG)'},{key:'fcr',lbl:'FCR ประเมิน'},{key:'mortality',lbl:'กุ้งตายสะสม (%)'},{key:'lab',lbl:'ผลแล็บ (TCBS/ตับ)'},{key:'water',lbl:'ค่าน้ำ'},{key:'ehp',lbl:'EHP — ตัวอ่อน (%)'},{key:'gutLipid',lbl:'เนื้อเยื่อตับ-ลำไส้'}];
 function trialActivePonds(){return wqfeedActivePonds();}
+// ── ช่วงเวลาที่ทดลอง — ทุกตัวชี้วัดด้านล่างกรองข้อมูลตามช่วงนี้เท่านั้น ไม่ใช่ล่าสุด/สะสมทั้งรอบแบบเดิม ──
+function trialResolvedRange(){
+  let s=_trialDraft.startDate||today();
+  let e=_trialDraft.endDate||today();
+  if(e<s)e=s;
+  return{start:s,end:e};
+}
+function trialClamp(d,lo,hi){return d<lo?lo:(d>hi?hi:d);}
+// ── ช่วงวันที่ที่ "มีข้อมูลจริง" ของบ่อนั้นภายในช่วงทดลอง (ตัดขอบถ้าทดลองเริ่มก่อนบ่อลงกุ้ง หรือเกินวันนี้) ──
+function trialPondRange(p){
+  const{start,end}=trialResolvedRange();
+  const outOfRange=!p.startDate||start>today()||end<p.startDate;
+  if(outOfRange)return{lo:start,hi:end,outOfRange:true,clippedStart:false,clippedEnd:false};
+  const lo=trialClamp(start,p.startDate,today());
+  const hi=trialClamp(end,p.startDate,today());
+  return{lo,hi,outOfRange:false,clippedStart:start<p.startDate,clippedEnd:end>today()};
+}
+function setTrialPeriod(){
+  _trialDraft.startDate=document.getElementById('trial-start').value;
+  _trialDraft.endDate=document.getElementById('trial-end').value;
+  updateTrialDurationLabel();
+  renderTrialPondPicker();
+  renderTrialResults();
+}
+function trialSetOngoing(){
+  document.getElementById('trial-end').value=today();
+  setTrialPeriod();
+}
+function updateTrialDurationLabel(){
+  const el=document.getElementById('trial-duration');if(!el)return;
+  if(!_trialDraft.startDate){el.textContent='';return;}
+  const{start,end}=trialResolvedRange();
+  const days=dDiff(start,end)+1;
+  el.textContent=`📅 ${days} วัน${!_trialDraft.endDate?' (ยังดำเนินอยู่)':''}`;
+}
 function initTrialTab(){
   const selEl=document.getElementById('trial-select');
   if(selEl){
@@ -7733,6 +7779,9 @@ function initTrialTab(){
     dl.innerHTML=names.map(n=>`<option value="${n}">`).join('');
   }
   const nameEl=document.getElementById('trial-name');if(nameEl)nameEl.value=_trialDraft.name;
+  const startEl=document.getElementById('trial-start');if(startEl)startEl.value=_trialDraft.startDate;
+  const endEl=document.getElementById('trial-end');if(endEl)endEl.value=_trialDraft.endDate;
+  updateTrialDurationLabel();
   const wpEl=document.getElementById('trial-water-param');
   if(wpEl)wpEl.innerHTML=PARAMS.map(p=>`<option value="${p.key}"${p.key===_trialDraft.waterParam?' selected':''}>${p.lbl}</option>`).join('');
   document.getElementById('trial-del-btn').style.display=_trialDraft.id?'':'none';
@@ -7785,21 +7834,63 @@ function renderTrialPickedList(){
   dl.innerHTML=existingLabels.map(l=>`<option value="${l}">`).join('');
   el.innerHTML=ids.map(pid=>{
     const p=pond(pid);if(!p)return'';
-    const doc=p.startDate?dDiff(p.startDate,today()):null;
     const label=_trialDraft.ponds[pid]||'';
+    const rng=trialPondRange(p);
+    const docTxt=rng.outOfRange?'ไม่มีข้อมูลในช่วงทดลอง':`DOC ${dDiff(p.startDate,rng.lo)}–${dDiff(p.startDate,rng.hi)} ในช่วงทดลอง`;
+    const warnTxt=rng.clippedEnd?'⚠️ เกินวันนี้ — ตัดที่วันนี้':(rng.clippedStart?'⚠️ ก่อนวันลงกุ้งบ่อนี้ — ตัดที่วันลง':'');
     return `<div class="picked-row">
-      <span class="picked-name">${p.name}</span><span class="picked-doc">DOC ${doc!=null?doc:'-'} วัน</span>
+      <span class="picked-name">${p.name}</span><span class="picked-doc">${docTxt}${warnTxt?' · '+warnTxt:''}</span>
       <input class="fi" list="${dlId}" style="max-width:200px;padding:6px 10px;font-size:12.5px" placeholder="ชื่อสินค้าที่ใช้ (เว้นว่าง=ไม่ใช้อะไร)" value="${label}" oninput="setTrialLabel('${pid}',this.value)">
     </div>`;
   }).join('');
   const hintEl=document.getElementById('trial-doc-hint');
   if(hintEl){
-    const docs=ids.map(pid=>{const p=pond(pid);return p&&p.startDate?dDiff(p.startDate,today()):null}).filter(v=>v!=null);
-    const spread=docs.length>1?Math.max(...docs)-Math.min(...docs):0;
-    hintEl.innerHTML=spread>10?`⚠️ บ่อที่เลือกอายุ (DOC) ต่างกัน ${spread} วัน — กราฟการเติบโตด้านล่างเทียบตามแกน "อายุกุ้ง (DOC)" ไม่ใช่วันที่ปฏิทิน เพื่อเทียบกันได้อย่างยุติธรรม`:'';
+    if(!_trialDraft.startDate){hintEl.innerHTML='⚠️ ยังไม่ได้กรอกวันที่เริ่มทดลอง — ตัวชี้วัดด้านล่างจะใช้ข้อมูลของวันนี้แทน';}
+    else{
+      const outIds=ids.filter(pid=>{const p=pond(pid);return p&&trialPondRange(p).outOfRange;});
+      hintEl.innerHTML=outIds.length?`⚠️ บ่อ ${outIds.map(pid=>pond(pid)?.name).filter(Boolean).join(', ')} ไม่มีข้อมูลในช่วงทดลองที่เลือก (ยังไม่ลงกุ้ง หรือช่วงทดลองอยู่นอกช่วงเวลาที่เลี้ยงจริง)`:'';
+    }
   }
 }
-function trialAbwSeries(p){return(p.samples||[]).filter(s=>s.age!=null&&s.abw!=null).map(s=>({age:s.age,abw:s.abw})).sort((a,b)=>a.age-b.age);}
+// ── helper ที่กรองข้อมูลรายบ่อให้เหลือเฉพาะช่วงทดลอง (ใช้ร่วมกันทุกตัวชี้วัดด้านล่าง) ──
+function trialInRange(arr,lo,hi){return(arr||[]).filter(r=>r.date>=lo&&r.date<=hi);}
+function trialNearestSampleAtOrBefore(samples,dateStr){
+  const cand=(samples||[]).filter(s=>s.date<=dateStr&&s.abw!=null&&s.survivalRate!=null);
+  return cand.length?cand[cand.length-1]:null;
+}
+function trialBiomassAt(sample,release){return sample&&sample.abw!=null&&sample.survivalRate!=null?sample.abw*release*(sample.survivalRate/100)/1000:null;}
+function trialAdgInRange(p,lo,hi){
+  const rows=trialInRange(p.samples,lo,hi).filter(s=>s.abw!=null).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  if(rows.length<2)return null;
+  const days=dDiff(rows[0].date,rows[rows.length-1].date);if(days<=0)return null;
+  return(rows[rows.length-1].abw-rows[0].abw)/days;
+}
+function trialFcrInRange(p,lo,hi){
+  const release=pRelease(p);if(!release)return null;
+  const sStart=trialNearestSampleAtOrBefore(p.samples,lo),sEnd=trialNearestSampleAtOrBefore(p.samples,hi);
+  if(!sStart||!sEnd||sStart===sEnd)return null;
+  const bStart=trialBiomassAt(sStart,release),bEnd=trialBiomassAt(sEnd,release);
+  const gain=bEnd-bStart;if(!(gain>0))return null;
+  const feed=trialInRange(p.feedLog,lo,hi).reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0);
+  return feed>0?feed/gain:null;
+}
+function trialMortalityPctInRange(p,lo,hi){
+  const release=pRelease(p);if(!release)return null;
+  const dead=trialInRange(p.mortalityLog,lo,hi).reduce((s,r)=>s+(r.count||0),0);
+  return dead/release*100;
+}
+function trialWaterAvgInRange(p,key,lo,hi){
+  const nums=trialInRange(p.records,lo,hi).map(r=>r[key]).filter(v=>v!=null&&v!=='');
+  return nums.length?nums.reduce((s,v)=>s+parseFloat(v),0)/nums.length:null;
+}
+// ── ผลแล็บในช่วงทดลอง — ถ้าไม่มีตรวจในช่วงพอดี fallback ไปใช้ค่าล่าสุดก่อนช่วง (พร้อม flag inWindow บอกที่มา) ──
+function trialLabInRange(p,lo,hi){
+  const logs=(p.labResults||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const inWindow=trialInRange(logs,lo,hi);
+  if(inWindow.length)return{...inWindow[inWindow.length-1],inWindow:true};
+  const before=logs.filter(l=>l.date<lo).slice(-1)[0];
+  return before?{...before,inWindow:false}:null;
+}
 function trialMiniBlock(title,vals,fmt,maxHint){
   const nums=vals.map(v=>v.v).filter(v=>v!=null);
   const max=nums.length?Math.max(...nums,maxHint||0):(maxHint||1);
@@ -7820,90 +7911,112 @@ function renderTrialResults(){
     const lgEl=document.getElementById('trial-growth-legend');if(lgEl)lgEl.innerHTML='';
     if(trialCh){trialCh.destroy();trialCh=null;}
     const miEl=document.getElementById('trial-mini-compare');if(miEl)miEl.innerHTML='';
+    const adgEl0=document.getElementById('trial-adg-chips');if(adgEl0)adgEl0.innerHTML='';
+    const labNoteEl0=document.getElementById('trial-lab-note');if(labNoteEl0)labNoteEl0.innerHTML='';
     document.getElementById('trial-table').innerHTML='<p style="color:var(--tx3);text-align:center;padding:16px;font-style:italic">เลือกอย่างน้อย 2 บ่อเพื่อเริ่มเปรียบเทียบ</p>';
     return;
   }
   const ponds=ids.map(pid=>({p:pond(pid),label:(_trialDraft.ponds[pid]||'').trim()||'ไม่ระบุ'})).filter(x=>x.p);
   const labelOrder=[...new Set(ponds.map(x=>x.label).filter(l=>l!=='ไม่ระบุ'))];
   const withColor=ponds.map(x=>({...x,color:x.label==='ไม่ระบุ'?'#9AA1AB':TRIAL_LABEL_COLORS[labelOrder.indexOf(x.label)%TRIAL_LABEL_COLORS.length]}));
+  const{start,end}=trialResolvedRange();
+  const withRange=withColor.map(x=>({...x,rng:trialPondRange(x.p)}));
 
   if(m.growth){
     const legendEl=document.getElementById('trial-growth-legend');
     if(legendEl)legendEl.innerHTML=withColor.map(x=>`<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${x.color};margin-right:5px;vertical-align:middle"></span>${x.p.name} (${x.label})</span>`).join('');
     if(trialCh){trialCh.destroy();trialCh=null;}
-    const datasets=withColor.map(x=>({label:x.p.name,data:trialAbwSeries(x.p).map(s=>({x:s.age,y:s.abw})),borderColor:x.color,backgroundColor:x.color+'33',tension:.3,pointRadius:3,fill:false}));
+    const allDates=withColor.flatMap(x=>(x.p.samples||[]).filter(s=>s.abw!=null).map(s=>s.date));
     const cvs=document.getElementById('trialGrowthChart');
-    if(cvs)trialCh=new Chart(cvs,{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,scales:{x:{type:'linear',title:{display:true,text:'อายุกุ้ง (DOC)'}},y:{title:{display:true,text:'ABW (กรัม)'}}},plugins:{legend:{display:false}}}});
+    if(cvs&&allDates.length){
+      const minDate=allDates.reduce((a,b)=>a<b?a:b);
+      const toX=d=>dDiff(minDate,d);
+      const bandLo=toX(trialClamp(start,minDate,today())),bandHi=toX(trialClamp(end,minDate,today()));
+      const datasets=withColor.map(x=>({label:x.p.name,data:(x.p.samples||[]).filter(s=>s.abw!=null).map(s=>({x:toX(s.date),y:s.abw})),borderColor:x.color,backgroundColor:x.color+'33',tension:.3,pointRadius:3,fill:false}));
+      const bandPlugin={id:'trialBand',beforeDatasetsDraw(chart){
+        const{ctx,chartArea,scales}=chart;
+        const x0=scales.x.getPixelForValue(bandLo),x1=scales.x.getPixelForValue(bandHi);
+        ctx.save();ctx.fillStyle='#FEF6E0';ctx.fillRect(x0,chartArea.top,Math.max(1,x1-x0),chartArea.bottom-chartArea.top);
+        ctx.strokeStyle='#C99A2E';ctx.setLineDash([3,3]);ctx.lineWidth=1.2;
+        ctx.beginPath();ctx.moveTo(x0,chartArea.top);ctx.lineTo(x0,chartArea.bottom);ctx.moveTo(x1,chartArea.top);ctx.lineTo(x1,chartArea.bottom);ctx.stroke();
+        ctx.restore();
+      }};
+      trialCh=new Chart(cvs,{type:'line',data:{datasets},plugins:[bandPlugin],options:{responsive:true,maintainAspectRatio:false,parsing:false,scales:{x:{type:'linear',title:{display:true,text:'วันที่'},ticks:{callback:v=>fD(addDays(minDate,v))}},y:{title:{display:true,text:'ABW (กรัม)'}}},plugins:{legend:{display:false}}}});
+    }
+    const adgEl=document.getElementById('trial-adg-chips');
+    if(adgEl)adgEl.innerHTML=withRange.map(x=>{
+      const adg=x.rng.outOfRange?null:trialAdgInRange(x.p,x.rng.lo,x.rng.hi);
+      return `<div style="display:inline-flex;align-items:center;gap:7px;font-size:11.5px;border:1px solid var(--bd);border-radius:9px;padding:6px 11px;background:var(--sf2);margin:3px 6px 0 0"><span style="width:8px;height:8px;border-radius:50%;background:${x.color};display:inline-block"></span>${x.p.name}: ADG ในช่วงทดลอง <b>${adg!=null?adg.toFixed(2)+' ก./วัน':'-'}</b></div>`;
+    }).join('');
   }
 
   const blocks=[];
   if(m.fcr){
-    const vals=withColor.map(x=>({name:x.p.name,color:x.color,v:parseFloat(getFCR(x.p))||null}));
-    blocks.push(trialMiniBlock('FCR ประเมิน (ล่าสุด)',vals,v=>v!=null?v.toFixed(2):'-',1.6));
+    const vals=withRange.map(x=>({name:x.p.name,color:x.color,v:x.rng.outOfRange?null:trialFcrInRange(x.p,x.rng.lo,x.rng.hi)}));
+    blocks.push(trialMiniBlock('FCR ในช่วงทดลอง',vals,v=>v!=null?v.toFixed(2):'-',1.6));
   }
   if(m.mortality){
-    const vals=withColor.map(x=>{
-      const total=(x.p.mortalityLog||[]).reduce((s,r)=>s+(r.count||0),0);
-      const pct=pRelease(x.p)?total/pRelease(x.p)*100:null;
-      return{name:x.p.name,color:x.color,v:pct};
-    });
-    blocks.push(trialMiniBlock('กุ้งตายสะสม (%)',vals,v=>v!=null?v.toFixed(2)+'%':'-',10));
+    const vals=withRange.map(x=>({name:x.p.name,color:x.color,v:x.rng.outOfRange?null:trialMortalityPctInRange(x.p,x.rng.lo,x.rng.hi)}));
+    blocks.push(trialMiniBlock('กุ้งตายในช่วงทดลอง (%)',vals,v=>v!=null?v.toFixed(2)+'%':'-',2));
   }
+  let labFallbackNames=[];
   if(m.lab){
-    const vals=withColor.map(x=>{
-      const last=(x.p.labResults||[]).slice(-1)[0];
-      return{name:x.p.name,color:x.color,v:last&&last.hepatoGreen!=null?last.hepatoGreen:null};
+    const vals=withRange.map(x=>{
+      const lab=x.rng.outOfRange?null:trialLabInRange(x.p,x.rng.lo,x.rng.hi);
+      if(lab&&!lab.inWindow)labFallbackNames.push(x.p.name);
+      return{name:x.p.name,color:x.color,v:lab&&lab.hepatoGreen!=null?lab.hepatoGreen:null};
     });
-    blocks.push(trialMiniBlock('TCBS เชื้อเขียว-ตับ ล่าสุด (CFU/g)',vals,v=>v!=null?v.toLocaleString():'-',1000));
+    blocks.push(trialMiniBlock('TCBS เชื้อเขียว-ตับ ในช่วง (CFU/g)',vals,v=>v!=null?v.toLocaleString():'-',1000));
   }
   if(m.water){
     const key=document.getElementById('trial-water-param')?.value||'doM';
     const pm=PARAMS.find(x=>x.key===key);
-    const vals=withColor.map(x=>{
-      const nums=(x.p.records||[]).map(r=>r[key]).filter(v=>v!=null&&v!=='');
-      const avg=nums.length?nums.reduce((s,v)=>s+parseFloat(v),0)/nums.length:null;
-      return{name:x.p.name,color:x.color,v:avg};
-    });
-    blocks.push(trialMiniBlock((pm?pm.lbl:key)+' เฉลี่ย',vals,v=>v!=null?v.toFixed(2):'-',pm?pm.max:null));
+    const vals=withRange.map(x=>({name:x.p.name,color:x.color,v:x.rng.outOfRange?null:trialWaterAvgInRange(x.p,key,x.rng.lo,x.rng.hi)}));
+    blocks.push(trialMiniBlock((pm?pm.lbl:key)+' เฉลี่ยในช่วง',vals,v=>v!=null?v.toFixed(2):'-',pm?pm.max:null));
   }
   if(m.ehp){
-    const vals=withColor.map(x=>{
-      const last=(x.p.labResults||[]).slice(-1)[0];
-      return{name:x.p.name,color:x.color,v:last&&last.ehpLarva!=null?last.ehpLarva:null};
+    const vals=withRange.map(x=>{
+      const lab=x.rng.outOfRange?null:trialLabInRange(x.p,x.rng.lo,x.rng.hi);
+      if(lab&&!lab.inWindow&&!labFallbackNames.includes(x.p.name))labFallbackNames.push(x.p.name);
+      return{name:x.p.name,color:x.color,v:lab&&lab.ehpLarva!=null?lab.ehpLarva:null};
     });
-    blocks.push(trialMiniBlock('EHP — ตัวอ่อน (%) ล่าสุด',vals,v=>v!=null?v+'%':'-',25));
+    blocks.push(trialMiniBlock('EHP — ตัวอ่อน (%) ในช่วง',vals,v=>v!=null?v+'%':'-',25));
   }
   if(m.gutLipid){
-    const gutVals=withColor.map(x=>{
-      const last=(x.p.labResults||[]).slice(-1)[0];
-      return{name:x.p.name,color:x.color,v:last&&last.gutInflam!=null?last.gutInflam:null};
+    const gutVals=withRange.map(x=>{
+      const lab=x.rng.outOfRange?null:trialLabInRange(x.p,x.rng.lo,x.rng.hi);
+      if(lab&&!lab.inWindow&&!labFallbackNames.includes(x.p.name))labFallbackNames.push(x.p.name);
+      return{name:x.p.name,color:x.color,v:lab&&lab.gutInflam!=null?lab.gutInflam:null};
     });
-    blocks.push(trialMiniBlock('ลำไส้อักเสบ (%) ล่าสุด',gutVals,v=>v!=null?v+'%':'-',30));
-    const lipidVals=withColor.map(x=>{
-      const last=(x.p.labResults||[]).slice(-1)[0];
-      return{name:x.p.name,color:x.color,v:last&&last.lipidDroplet!=null?last.lipidDroplet:null};
+    blocks.push(trialMiniBlock('ลำไส้อักเสบ (%) ในช่วง',gutVals,v=>v!=null?v+'%':'-',30));
+    const lipidVals=withRange.map(x=>{
+      const lab=x.rng.outOfRange?null:trialLabInRange(x.p,x.rng.lo,x.rng.hi);
+      return{name:x.p.name,color:x.color,v:lab&&lab.lipidDroplet!=null?lab.lipidDroplet:null};
     });
-    blocks.push(trialMiniBlock('เม็ดไขมันรวม (%) ล่าสุด (ยิ่งสูงยิ่งดี)',lipidVals,v=>v!=null?v+'%':'-',100));
+    blocks.push(trialMiniBlock('เม็ดไขมันรวม (%) ในช่วง (ยิ่งสูงยิ่งดี)',lipidVals,v=>v!=null?v+'%':'-',100));
   }
   const miniEl=document.getElementById('trial-mini-compare');if(miniEl)miniEl.innerHTML=blocks.join('');
+  const labNoteEl=document.getElementById('trial-lab-note');
+  if(labNoteEl)labNoteEl.innerHTML=labFallbackNames.length?`<div class="hint">⚠️ บ่อ ${labFallbackNames.join(', ')} ไม่มีผลแล็บอยู่ในช่วงทดลองพอดี — ตัวเลขที่แสดงเป็นผลตรวจล่าสุด<strong>ก่อน</strong>ช่วงทดลอง ไม่ใช่ผลระหว่างทดลองจริง</div>`:'';
 
   const tblEl=document.getElementById('trial-table');
   if(tblEl){
-    tblEl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>บ่อ</th><th>กลุ่ม</th><th>DOC</th><th>ABW ล่าสุด</th><th>FCR ประเมิน</th><th>กุ้งตายสะสม</th><th>TCBS ตับ</th><th>EHP ตัวอ่อน</th><th>ลำไส้อักเสบ</th><th>ไขมันรวม</th></tr></thead><tbody>${
-      withColor.map(x=>{
-        const doc=x.p.startDate?dDiff(x.p.startDate,today()):null;
-        const abwSeries=trialAbwSeries(x.p);const lastAbw=abwSeries.length?abwSeries[abwSeries.length-1].abw:null;
-        const fcr=parseFloat(getFCR(x.p))||null;
-        const totalDead=(x.p.mortalityLog||[]).reduce((s,r)=>s+(r.count||0),0);
-        const pct=pRelease(x.p)?totalDead/pRelease(x.p)*100:null;
-        const lastLab=(x.p.labResults||[]).slice(-1)[0];
-        return `<tr><td>${x.p.name}</td><td><span class="grp-tag" style="background:${x.color}22;color:${x.color}">${x.label}</span></td><td>${doc!=null?doc:'-'}</td><td>${lastAbw!=null?lastAbw+' g':'-'}</td><td>${fcr!=null?fcr.toFixed(2):'-'}</td><td>${pct!=null?pct.toFixed(2)+'%':'-'}</td><td>${lastLab&&lastLab.hepatoGreen!=null?lastLab.hepatoGreen.toLocaleString():'-'}</td><td>${lastLab&&lastLab.ehpLarva!=null?lastLab.ehpLarva+'%':'-'}</td><td>${lastLab&&lastLab.gutInflam!=null?lastLab.gutInflam+'%':'-'}</td><td>${lastLab&&lastLab.lipidDroplet!=null?lastLab.lipidDroplet+'%':'-'}</td></tr>`;
+    tblEl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>บ่อ</th><th>กลุ่ม</th><th>ช่วงที่มีข้อมูลจริง</th><th>DOC ในช่วง</th><th>ADG ในช่วง</th><th>FCR ในช่วง</th><th>กุ้งตายในช่วง</th><th>TCBS ตับ</th><th>EHP ตัวอ่อน</th><th>ลำไส้อักเสบ</th><th>ไขมันรวม</th></tr></thead><tbody>${
+      withRange.map(x=>{
+        if(x.rng.outOfRange)return `<tr><td>${x.p.name}</td><td><span class="grp-tag" style="background:${x.color}22;color:${x.color}">${x.label}</span></td><td colspan="8" style="color:var(--tx3);font-style:italic">ไม่มีข้อมูลในช่วงทดลองนี้</td></tr>`;
+        const docLo=dDiff(x.p.startDate,x.rng.lo),docHi=dDiff(x.p.startDate,x.rng.hi);
+        const adg=trialAdgInRange(x.p,x.rng.lo,x.rng.hi);
+        const fcr=trialFcrInRange(x.p,x.rng.lo,x.rng.hi);
+        const mort=trialMortalityPctInRange(x.p,x.rng.lo,x.rng.hi);
+        const lab=trialLabInRange(x.p,x.rng.lo,x.rng.hi);
+        const clipped=x.rng.clippedStart||x.rng.clippedEnd;
+        return `<tr><td>${x.p.name}</td><td><span class="grp-tag" style="background:${x.color}22;color:${x.color}">${x.label}</span></td><td>${fD(x.rng.lo)}–${fD(x.rng.hi)}${clipped?'<br><small style="color:var(--w)">ตัดขอบตามข้อมูลจริง</small>':''}</td><td>${docLo}–${docHi}</td><td>${adg!=null?adg.toFixed(2)+' ก./วัน':'-'}</td><td>${fcr!=null?fcr.toFixed(2):'-'}</td><td>${mort!=null?mort.toFixed(2)+'%':'-'}</td><td>${lab&&lab.hepatoGreen!=null?lab.hepatoGreen.toLocaleString()+(lab.inWindow?'':' *'):'-'}</td><td>${lab&&lab.ehpLarva!=null?lab.ehpLarva+'%'+(lab.inWindow?'':' *'):'-'}</td><td>${lab&&lab.gutInflam!=null?lab.gutInflam+'%'+(lab.inWindow?'':' *'):'-'}</td><td>${lab&&lab.lipidDroplet!=null?lab.lipidDroplet+'%'+(lab.inWindow?'':' *'):'-'}</td></tr>`;
       }).join('')
-    }</tbody></table></div>`;
+    }</tbody></table></div><div class="hint" style="margin-top:6px">* = ไม่มีผลตรวจในช่วงทดลอง ใช้ค่าล่าสุดก่อนช่วงแทน</div>`;
   }
 }
 function newTrial(){
-  _trialDraft={id:null,name:'',waterParam:'doM',metrics:{growth:true,fcr:true,mortality:false,lab:true,water:true,ehp:true,gutLipid:true},ponds:{}};
+  _trialDraft={id:null,name:'',startDate:'',endDate:'',waterParam:'doM',metrics:{growth:true,fcr:true,mortality:false,lab:true,water:true,ehp:true,gutLipid:true},ponds:{}};
   const selEl=document.getElementById('trial-select');if(selEl)selEl.value='';
   const msgEl=document.getElementById('trial-msg');if(msgEl)msgEl.innerHTML='';
   initTrialTab();
@@ -7911,7 +8024,7 @@ function newTrial(){
 function loadTrial(id){
   if(!id){newTrial();return;}
   const t=(D.medTrials||[]).find(x=>x.id===id);if(!t)return;
-  _trialDraft={id:t.id,name:t.name,waterParam:t.waterParam||'doM',metrics:{...t.metrics},ponds:{...t.ponds}};
+  _trialDraft={id:t.id,name:t.name,startDate:t.startDate||'',endDate:t.endDate||'',waterParam:t.waterParam||'doM',metrics:{...t.metrics},ponds:{...t.ponds}};
   const msgEl=document.getElementById('trial-msg');if(msgEl)msgEl.innerHTML='';
   initTrialTab();
 }
@@ -7921,10 +8034,11 @@ function saveTrial(){
   if(!name){msg.innerHTML='<span style="color:var(--d)">กรุณาตั้งชื่อการทดลอง</span>';return;}
   const ids=Object.keys(_trialDraft.ponds);
   if(ids.length<2||ids.length>4){msg.innerHTML='<span style="color:var(--d)">กรุณาเลือก 2-4 บ่อ</span>';return;}
+  if(!_trialDraft.startDate){msg.innerHTML='<span style="color:var(--d)">กรุณากรอกวันที่เริ่มทดลอง</span>';return;}
   _trialDraft.name=name;
   _trialDraft.waterParam=document.getElementById('trial-water-param')?.value||'doM';
   if(!D.medTrials)D.medTrials=[];
-  const rec={id:_trialDraft.id||('trial_'+Date.now()),name:_trialDraft.name,waterParam:_trialDraft.waterParam,metrics:{..._trialDraft.metrics},ponds:{..._trialDraft.ponds}};
+  const rec={id:_trialDraft.id||('trial_'+Date.now()),name:_trialDraft.name,startDate:_trialDraft.startDate,endDate:_trialDraft.endDate,waterParam:_trialDraft.waterParam,metrics:{..._trialDraft.metrics},ponds:{..._trialDraft.ponds}};
   const idx=D.medTrials.findIndex(t=>t.id===rec.id);
   if(idx>=0)D.medTrials[idx]=rec;else D.medTrials.push(rec);
   _trialDraft.id=rec.id;
