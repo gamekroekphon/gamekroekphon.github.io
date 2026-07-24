@@ -5468,8 +5468,8 @@ function renderPdCharts(p){
   const wkLbls=buckets.map(b=>'สัปดาห์ '+b.week);
   const fwEl=document.getElementById('pd-c-feedweek');
   if(fwEl&&buckets.length)_pdCharts.feedWeek=new Chart(fwEl,{data:{labels:wkLbls,datasets:[
-    {type:'bar',label:'อาหาร/สัปดาห์ (กก.)',data:buckets.map(b=>Math.round(b.feedTotal)),backgroundColor:'#7fbf7a',borderRadius:4,yAxisID:'y'},
-    {type:'line',label:'ADG (ก./วัน)',data:buckets.map(b=>b.adg),borderColor:'#1f6b42',tension:.35,spanGaps:true,yAxisID:'y1'}
+    {type:'bar',label:'อาหาร/สัปดาห์ (กก.)',data:buckets.map(b=>Math.round(b.feedTotal)),backgroundColor:'#7fbf7a',borderRadius:4,yAxisID:'y',order:2},
+    {type:'line',label:'ADG (ก./วัน)',data:buckets.map(b=>b.adg),borderColor:'#1f6b42',tension:.35,spanGaps:true,yAxisID:'y1',order:1}
   ]},options:{maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{boxWidth:10,font:{size:9}}}},scales:{y:{ticks:{font:{size:9}}},y1:{position:'right',grid:{drawOnChartArea:false},ticks:{font:{size:9}}},x:{ticks:{font:{size:8}}}}}});
   const gEl=document.getElementById('pd-c-growth');
   if(gEl&&buckets.some(b=>b.abw!=null))_pdCharts.growth=new Chart(gEl,{type:'line',data:{labels:wkLbls,datasets:[{label:'กรัม/ตัว',data:buckets.map(b=>b.abw),borderColor:'#2f8f5b',backgroundColor:'rgba(63,98,18,.18)',fill:true,tension:.35,spanGaps:true,pointRadius:3,pointBackgroundColor:'#2f8f5b'}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8}}},y:{ticks:{font:{size:9}}}}}});
@@ -6206,8 +6206,8 @@ function renderElecTrendChart(){
   });
   elecTrendCh=new Chart(cvs,{
     data:{labels,datasets:[
-      {type:'bar',label:'บิลรวม (บาท)',data:totals,backgroundColor:'#9A6A04',yAxisID:'y'},
-      {type:'line',label:'อัตรา/บ่อ/วัน (บาท)',data:perPondDayVals,borderColor:'#185FA5',backgroundColor:'#185FA5',tension:.3,pointRadius:4,yAxisID:'y2',fill:false}
+      {type:'bar',label:'บิลรวม (บาท)',data:totals,backgroundColor:'#9A6A04',yAxisID:'y',order:2},
+      {type:'line',label:'อัตรา/บ่อ/วัน (บาท)',data:perPondDayVals,borderColor:'#185FA5',backgroundColor:'#185FA5',tension:.3,pointRadius:4,yAxisID:'y2',fill:false,order:1}
     ]},
     options:{responsive:true,maintainAspectRatio:false,scales:{y:{position:'left',title:{display:true,text:'บิลรวม (บาท)'}},y2:{position:'right',title:{display:true,text:'อัตรา/บ่อ/วัน (บาท)'},grid:{drawOnChartArea:false}}},plugins:{legend:{display:false}}}
   });
@@ -8959,8 +8959,8 @@ async function genPDF(){
         const survData=job.hist.map(c=>c.harvestResult?.survivalRate??null);
         pdfCharts.push(new Chart(cv.getContext('2d'),{
           data:{labels,datasets:[
-            {type:'bar',label:'FCR',data:fcrData,backgroundColor:'#3b82f6',yAxisID:'y1'},
-            {type:'line',label:'อัตรารอด (%)',data:survData,borderColor:'#22c55e',backgroundColor:'#22c55e',yAxisID:'y2',tension:.3,pointRadius:4,pointBackgroundColor:'#22c55e'},
+            {type:'bar',label:'FCR',data:fcrData,backgroundColor:'#3b82f6',yAxisID:'y1',order:2},
+            {type:'line',label:'อัตรารอด (%)',data:survData,borderColor:'#22c55e',backgroundColor:'#22c55e',yAxisID:'y2',tension:.3,pointRadius:4,pointBackgroundColor:'#22c55e',order:1},
           ]},
           options:{responsive:false,animation:false,
             plugins:{title:{display:true,text:'เทียบกับรอบก่อนหน้าของบ่อนี้',font:{family:'Kanit',size:13}},legend:{position:'bottom',labels:{font:{family:'Kanit',size:10}}}},
