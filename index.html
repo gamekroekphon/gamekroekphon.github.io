@@ -438,6 +438,7 @@ body.role-admin .home-quick .admin-only{display:flex!important}
 .stock-mode-btn{flex:1;padding:7px;font-size:13px;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--tx2);font-weight:500;transition:background .15s,color .15s}
 .stock-mode-btn.on-in{background:var(--ob);color:var(--ok)}
 .stock-mode-btn.on-out{background:var(--p);color:#fff}
+.stock-mode-btn.on-shared{background:#0d9488;color:#fff}
 .stock-mode-btn.on-sale{background:#7c3aed;color:#fff}
 .badge-sale{background:#f3e8ff;color:#7c3aed}
 .month-pill{border:1px solid var(--bd);background:var(--sf);border-radius:16px;padding:6px 14px;font-size:12px;cursor:pointer;color:var(--tx2);font-family:inherit}
@@ -1854,7 +1855,7 @@ body.role-ceo .main{max-width:640px}
           <div class="fg"><label class="fl">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="cm-cost-elec" step="1" placeholder="ดึงอัตโนมัติ 2,500 บาท/วัน" style="background:var(--sf2)"></div>
           <div class="fg"><label class="fl">ต้นทุนน้ำมัน (บาท) <span style="font-weight:400;color:var(--tx3)">(กรอกเอง)</span></label><input type="number" class="fi" id="cm-cost-fuel" step="1" placeholder="กรอกเอง"></div>
           <div class="fg"><label class="fl">อุปกรณ์ (บาท) <span style="font-weight:400;color:var(--tx3)">(ในสต็อก ดึงอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-equip" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">อุปกรณ์นอก (บาท) <span style="font-weight:400;color:var(--tx3)">(กรอกเอง)</span></label><input type="number" class="fi" id="cm-cost-equip-out" step="1" placeholder="กรอกเอง"></div>
+          <div class="fg"><label class="fl">อุปกรณ์นอก (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากโหมด "แชร์ทุกบ่อ" ในสต็อกอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-equip-out" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl">ค่าจับกุ้ง (บาท) <span style="font-weight:400;color:var(--tx3)">(1.5 บ./กก. ถ้าจับไม่ถึง 4 ตันคิด 6,000 บ. — ตัวเลขในช่องเป็นแค่คำแนะนำ กรอกยืนยันเอง)</span></label><input type="number" class="fi" id="cm-cost-catch" step="1" placeholder="กรอกเอง"></div>
         </div>
         <div style="font-weight:700;font-size:12px;color:var(--p);margin:14px 0 8px;padding-top:10px;border-top:1px dashed var(--bd)">🤝 ส่วนแบ่งกำไร <span style="font-weight:400;color:var(--tx3)">(หักออกเป็นต้นทุน)</span></div>
@@ -2404,9 +2405,10 @@ body.role-ceo .main{max-width:640px}
   <div class="stock-pane" id="skp-tx">
     <div class="card">
       <div style="font-weight:700;color:var(--tx);margin-bottom:10px">บันทึกรับเข้า / เบิกออก</div>
-      <div style="display:flex;gap:0;background:var(--sf2);border-radius:8px;padding:3px;margin-bottom:12px">
+      <div style="display:flex;gap:0;background:var(--sf2);border-radius:8px;padding:3px;margin-bottom:12px;flex-wrap:wrap">
         <button id="sk-mode-in" class="stock-mode-btn on-in" onclick="setStockMode('in')">+ รับเข้า สต็อกกลาง</button>
         <button id="sk-mode-out" class="stock-mode-btn" onclick="setStockMode('out')">− เบิกออก ไปบ่อ</button>
+        <button id="sk-mode-shared" class="stock-mode-btn" onclick="setStockMode('shared')">🔧 แชร์ทุกบ่อ</button>
         <button id="sk-mode-sale" class="stock-mode-btn" onclick="setStockMode('sale')">🛒 ขายลูกค้าภายนอก</button>
       </div>
       <div id="sk-tx-pond-row" style="display:none;margin-bottom:8px">
@@ -2418,10 +2420,39 @@ body.role-ceo .main{max-width:640px}
         <div class="fg"><label class="fl">ชื่อลูกค้า / ร้าน *</label><input class="fi" id="sk-tx-cust" list="sk-cust-list" placeholder="เช่น ร้านฟาร์มสุข, คุณสมชาย" autocomplete="off"><datalist id="sk-cust-list"></datalist></div>
         <div style="font-size:11px;color:var(--tx3);margin-top:-2px">💡 โหมดนี้ไม่มีช่องเลือกบ่อ — รายการขายจะไม่ถูกนับเป็นต้นทุนบ่อไหนเลย</div>
       </div>
+      <div id="sk-shared-note-row" style="display:none;margin-bottom:8px">
+        <div style="font-size:11.5px;color:var(--tx2);background:var(--ib);border:1px solid #cfe1f5;border-radius:8px;padding:9px 11px;line-height:1.6">ℹ️ โหมดนี้ไม่มีช่องเลือกบ่อ — เลือกสินค้าได้จากสต็อกทั้งหมด (ไม่จำกัดหมวด) ยอดจะถูกหารเฉลี่ยอัตโนมัติให้ทุกบ่อที่มีกุ้งอยู่ ณ วันที่บันทึกรายการนี้ ใช้กับของที่ซื้อมาใช้ร่วมทั้งฟาร์ม ระบุลงบ่อใดบ่อหนึ่งไม่ได้ (เช่น อะมิโน, โพแทสเซียม, อุปกรณ์ซ่อมบำรุงทั่วไป)</div>
+      </div>
       <div class="fg" style="position:relative;margin-bottom:8px">
         <label class="fl">เพิ่มรายการพัสดุ <span id="sk-stk-note" style="font-weight:400;color:var(--tx3);font-size:11px;display:none">(แสดงเฉพาะมีสินค้า)</span></label>
         <input class="fi" id="sk-tx-search" placeholder="พิมพ์ชื่อเพื่อค้นหา..." autocomplete="off" oninput="filterStockSearch()" onfocus="showStockDrop()" onblur="setTimeout(hideStockDrop,200)">
         <div id="sk-tx-drop" style="display:none;position:absolute;left:0;right:0;z-index:50;background:var(--sf);border:1px solid var(--bd);border-radius:8px;margin-top:2px;max-height:200px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.12)"></div>
+      </div>
+      <div id="sk-manual-toggle-row" style="display:none;margin:-2px 0 10px">
+        <span onclick="toggleManualStockItem()" style="font-size:12px;font-weight:600;color:var(--p);cursor:pointer;text-decoration:underline;text-decoration-style:dashed;text-underline-offset:3px">➕ สินค้านี้ไม่มีในสต็อก — พิมพ์ชื่อ/ราคาเองแทนการค้นหา</span>
+      </div>
+      <div id="sk-manual-box" style="display:none;background:var(--sf2);border:1px dashed var(--bd);border-radius:10px;padding:12px;margin-bottom:10px">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px">
+          <div class="fg" style="margin:0"><label class="fl">ชื่อสินค้า</label><input class="fi" id="sk-manual-name" placeholder="เช่น หัวเชื้อน้ำยาฆ่าเชื้อ"></div>
+          <div class="fg" style="margin:0"><label class="fl">หมวด</label>
+            <select class="fi" id="sk-manual-cat">
+              <option value="">— เลือก —</option>
+              <option value="feed">อาหารกุ้ง</option>
+              <option value="chemOral">ยากิน</option>
+              <option value="chemWater">ยาลงน้ำ</option>
+              <option value="probioOral">จุลินทรีย์กิน</option>
+              <option value="probioWater">จุลินทรีย์ลงน้ำ</option>
+              <option value="lime">ปูน</option>
+              <option value="equip">อุปกรณ์</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
+          <div class="fg" style="margin:0"><label class="fl">จำนวน</label><input class="fi" id="sk-manual-qty" type="number" min="0.01" step="any" inputmode="decimal"></div>
+          <div class="fg" style="margin:0"><label class="fl">หน่วย</label><input class="fi" id="sk-manual-unit" placeholder="เช่น ขวด"></div>
+          <div class="fg" style="margin:0"><label class="fl">ราคา/หน่วย (฿)</label><input class="fi" id="sk-manual-price" type="number" min="0" step="any" inputmode="decimal"></div>
+        </div>
+        <button onclick="addManualItemToCart()" style="width:100%;margin-top:10px;background:var(--sf);color:var(--p);border:1px solid var(--bd);border-radius:6px;padding:8px;font-weight:600;font-size:13px;cursor:pointer">+ เพิ่มลงตะกร้า</button>
       </div>
       <div id="sk-cart-wrap" style="display:none;margin-bottom:8px">
         <div style="font-size:12px;color:var(--tx3);margin-bottom:5px;font-weight:500">รายการที่เพิ่ม</div>
@@ -5086,7 +5117,17 @@ function renderPondDetail(id){
     const pdFryCost=p.costFry||0;
     const pdLaborCost=getLaborCostForPond(p.id,p.startDate,today());
     const pdElecCost=getElecCostForPeriod(p.startDate,today());
-    const pdCatSums={},pdCatItems={};
+    // ── ต้นทุนแชร์ (โหมด "แชร์ทุกบ่อ" หน้าสต็อก) — แต่ละรายการหารด้วยจำนวนบ่อ active ณ วันที่บันทึก ──
+    const pdSharedItems=getSharedItemsInRange(p.startDate,today());
+    let pdSharedCost=0;
+    const pdSharedCatItems={};
+    pdSharedItems.forEach(l=>{
+      const ac=activePondCountOnDate(l.date)||1;
+      const share=((l.qty||0)*(l.unitCost||0))/ac;
+      pdSharedCost+=share;
+      pdSharedCatItems[l.id]={name:l.itemName,unit:`แชร์ ${ac} บ่อ`,qty:fD(l.date),total:share};
+    });
+    const pdCatSums={},pdCatItems={shared:pdSharedCatItems};
     pdStockItems.forEach(it=>{
       const cat=STOCK_CATEGORIES.some(c=>c.key===it.category)?it.category:'other';
       pdCatSums[cat]=(pdCatSums[cat]||0)+it.qty*it.unitPrice;
@@ -5096,7 +5137,7 @@ function renderPondDetail(id){
       pdCatItems[cat][key].qty+=it.qty;
       pdCatItems[cat][key].total+=it.qty*it.unitPrice;
     });
-    const pdCostTotal=pdFryCost+pdFeedCost+pdStockItems.reduce((s,i)=>s+i.qty*i.unitPrice,0)+pdLaborCost+pdElecCost;
+    const pdCostTotal=pdFryCost+pdFeedCost+pdStockItems.reduce((s,i)=>s+i.qty*i.unitPrice,0)+pdLaborCost+pdElecCost+pdSharedCost;
     const pdCostCatRow=(key,lbl,val)=>{
       const items=Object.values(pdCatItems[key]||{});
       const hasItems=items.length>0;
@@ -5112,6 +5153,7 @@ function renderPondDetail(id){
     const pdCatRowsHtml=pdCostCatRow('feed','อาหารกุ้ง',pdFeedCost)
       +pdCatOrder.map(k=>pdCostCatRow(k,STOCK_CAT_LABEL[k],pdCatSums[k]||0)).join('')
       +(pdCatSums.other?pdCostCatRow('other','อื่นๆ (เดิม)',pdCatSums.other):'')
+      +pdCostCatRow('shared','อุปกรณ์นอก (แชร์)',pdSharedCost)
       +pdCostCatRow('fry','ลูกกุ้ง',pdFryCost)
       +pdCostCatRow('labor','ค่าแรง',pdLaborCost)
       +pdCostCatRow('elec','ค่าไฟ',pdElecCost);
@@ -6681,13 +6723,21 @@ function setStockMode(mode){
   const btnIn=document.getElementById('sk-mode-in');
   const btnOut=document.getElementById('sk-mode-out');
   const btnSale=document.getElementById('sk-mode-sale');
+  const btnShared=document.getElementById('sk-mode-shared');
   if(btnIn){btnIn.className='stock-mode-btn'+(mode==='in'?' on-in':'');}
   if(btnOut){btnOut.className='stock-mode-btn'+(mode==='out'?' on-out':'');}
   if(btnSale){btnSale.className='stock-mode-btn'+(mode==='sale'?' on-sale':'');}
+  if(btnShared){btnShared.className='stock-mode-btn'+(mode==='shared'?' on-shared':'');}
   const pr=document.getElementById('sk-tx-pond-row');
   if(pr)pr.style.display=mode==='out'?'':'none';
   const cr=document.getElementById('sk-tx-cust-row');
   if(cr)cr.style.display=mode==='sale'?'':'none';
+  const sr=document.getElementById('sk-shared-note-row');
+  if(sr)sr.style.display=mode==='shared'?'':'none';
+  const mtr=document.getElementById('sk-manual-toggle-row');
+  if(mtr)mtr.style.display=mode==='shared'?'':'none';
+  const mbx=document.getElementById('sk-manual-box');
+  if(mbx)mbx.style.display='none'; // ยุบกล่องกรอกเองไว้เสมอเวลาสลับโหมด
   const note=document.getElementById('sk-stk-note');
   if(note)note.style.display=mode==='out'?'':'none';
   renderStockCart();
@@ -6736,10 +6786,11 @@ function filterStockSearch(){
   drop.style.display='';
 }
 
+// ── cartId: ตัวระบุแถวในตะกร้าที่ไม่ซ้ำเสมอ (สินค้าจากแคตตาล็อกใช้ itemId ตรงๆ, สินค้าที่พิมพ์เอง/ไม่มีในสต็อกไม่มี itemId เลยต้องมีตัวระบุแยกให้แก้ไข/ลบแถวได้ถูกต้อง) ──
 function addStockToCart(itemId){
   const item=(D.inventoryItems||[]).find(i=>i.id===itemId);if(!item)return;
   if(!_stockCart.some(c=>c.itemId===itemId)){
-    _stockCart.push({itemId,itemName:item.name,unit:item.unit,qty:1,currentQty:item.qty,sellPrice:null,unitCost:item.unitPrice||0});
+    _stockCart.push({cartId:itemId,itemId,itemName:item.name,unit:item.unit,qty:1,currentQty:item.qty,sellPrice:null,unitCost:item.unitPrice||0,category:item.category||''});
   }
   const srch=document.getElementById('sk-tx-search');if(srch)srch.value='';
   hideStockDrop();
@@ -6750,18 +6801,41 @@ function addStockToCart(itemId){
   },50);
 }
 
-function removeFromCart(itemId){
-  _stockCart=_stockCart.filter(c=>c.itemId!==itemId);
+// ── โหมด "แชร์ทุกบ่อ" — เพิ่มสินค้าที่ไม่มีในแคตตาล็อกสต็อกเลย (ซื้อมาจากข้างนอกใช้ครั้งเดียว) พิมพ์ชื่อ/หมวด/ราคาเองแทนการค้นหา ไม่ผูกกับ D.inventoryItems ใดๆ (ไม่มีสต็อกให้ตัด ไม่ต้องเช็คยอดคงเหลือ) ──
+function toggleManualStockItem(){
+  const box=document.getElementById('sk-manual-box');
+  if(box)box.style.display=box.style.display==='none'?'':'none';
+}
+function addManualItemToCart(){
+  const name=(document.getElementById('sk-manual-name')?.value||'').trim();
+  const category=document.getElementById('sk-manual-cat')?.value||'';
+  const qty=parseFloat(document.getElementById('sk-manual-qty')?.value)||0;
+  const unit=(document.getElementById('sk-manual-unit')?.value||'').trim()||'หน่วย';
+  const unitPrice=parseFloat(document.getElementById('sk-manual-price')?.value)||0;
+  if(!name){showStockMsg('tx','กรุณากรอกชื่อสินค้า','err');return;}
+  if(!category){showStockMsg('tx','กรุณาเลือกหมวดสินค้า','err');return;}
+  if(!qty||qty<=0){showStockMsg('tx','กรุณากรอกจำนวนให้ถูกต้อง','err');return;}
+  if(!unitPrice||unitPrice<=0){showStockMsg('tx','กรุณากรอกราคาต่อหน่วยให้ถูกต้อง','err');return;}
+  const cartId='m'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  _stockCart.push({cartId,itemId:null,itemName:name,unit,qty,currentQty:Infinity,sellPrice:null,unitCost:unitPrice,category,manual:true});
+  ['sk-manual-name','sk-manual-qty','sk-manual-unit','sk-manual-price'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const catEl=document.getElementById('sk-manual-cat');if(catEl)catEl.value='';
+  document.getElementById('sk-manual-box').style.display='none';
   renderStockCart();
 }
 
-function updateCartQty(itemId,val){
-  const c=_stockCart.find(c=>c.itemId===itemId);
+function removeFromCart(cartId){
+  _stockCart=_stockCart.filter(c=>c.cartId!==cartId);
+  renderStockCart();
+}
+
+function updateCartQty(cartId,val){
+  const c=_stockCart.find(c=>c.cartId===cartId);
   if(c)c.qty=parseFloat(val)||0;
 }
 
-function updateCartPrice(itemId,val){
-  const c=_stockCart.find(c=>c.itemId===itemId);
+function updateCartPrice(cartId,val){
+  const c=_stockCart.find(c=>c.cartId===cartId);
   if(c)c.sellPrice=val!==''?parseFloat(val):null;
 }
 
@@ -6772,13 +6846,16 @@ function renderStockCart(){
   if(!_stockCart.length){wrap.style.display='none';return;}
   wrap.style.display='';
   const isSale=_stockMode==='sale';
+  const isShared=_stockMode==='shared';
   list.innerHTML=_stockCart.map(c=>`
     <div class="sk-cart-item">
-      <span class="sk-cart-name">${c.itemName}</span>
+      ${isShared?`<span class="ceo-cat-dot" style="background:${CEO_CAT_DOT[c.category]||'var(--tx3)'}"></span>`:''}
+      <span class="sk-cart-name">${c.itemName}${c.manual?' <span style="font-size:10px;font-weight:700;color:var(--p)">(ของใหม่)</span>':''}</span>
       <span class="sk-cart-unit">${c.unit}</span>
-      <input type="number" id="sk-cart-qty-${c.itemId}" class="fi sk-cart-qty" min="0.01" step="any" value="${c.qty}" inputmode="decimal" onchange="updateCartQty('${c.itemId}',this.value)">
-      ${isSale?`<input type="number" id="sk-cart-price-${c.itemId}" class="fi sk-cart-price" min="0" step="any" value="${c.sellPrice!=null?c.sellPrice:''}" placeholder="ราคา" inputmode="decimal" title="ราคาขาย/หน่วย" onchange="updateCartPrice('${c.itemId}',this.value)"><span class="sk-cart-price-lbl">฿/${c.unit}</span>`:''}
-      <button class="btn-sm btn-del" onclick="removeFromCart('${c.itemId}')">✕</button>
+      <input type="number" id="sk-cart-qty-${c.cartId}" class="fi sk-cart-qty" min="0.01" step="any" value="${c.qty}" inputmode="decimal" onchange="updateCartQty('${c.cartId}',this.value)">
+      ${isSale?`<input type="number" id="sk-cart-price-${c.cartId}" class="fi sk-cart-price" min="0" step="any" value="${c.sellPrice!=null?c.sellPrice:''}" placeholder="ราคา" inputmode="decimal" title="ราคาขาย/หน่วย" onchange="updateCartPrice('${c.cartId}',this.value)"><span class="sk-cart-price-lbl">฿/${c.unit}</span>`:''}
+      ${isShared?`<span class="sk-cart-price-lbl">฿${c.unitCost.toLocaleString()}/${c.unit}</span>`:''}
+      <button class="btn-sm btn-del" onclick="removeFromCart('${c.cartId}')">✕</button>
     </div>`).join('');
 }
 
@@ -6794,6 +6871,7 @@ function saveStockTxBatch(){
   for(const c of _stockCart){
     if(!c.qty||c.qty<=0){showStockMsg('tx','จำนวน "'+c.itemName+'" ต้องมากกว่า 0','err');return;}
     if(mode==='sale'&&!(c.sellPrice>0)){showStockMsg('tx','กรุณากรอกราคาขาย "'+c.itemName+'" ก่อนบันทึก','err');return;}
+    if(mode==='shared'&&!(c.unitCost>0)){showStockMsg('tx','กรุณากรอกราคาต่อหน่วยของ "'+c.itemName+'" ก่อนบันทึก','err');return;}
     if(mode!=='in'&&c.qty>c.currentQty){
       if(!confirm('จำนวนเบิก "'+c.itemName+'" ('+c.qty+') มากกว่าสต็อก ('+c.currentQty+') ยืนยัน?'))return;
     }
@@ -6801,6 +6879,19 @@ function saveStockTxBatch(){
   if(!D.inventoryLog)D.inventoryLog=[];
   const saved=[];
   for(const c of _stockCart){
+    // ── โหมด "แชร์ทุกบ่อ": สินค้าจากแคตตาล็อก (itemId มีค่า) ตัดสต็อกตามปกติ, สินค้าที่พิมพ์เอง (itemId ว่าง ไม่มีในสต็อก) แค่บันทึกเป็นรายการเฉยๆ ไม่มีสต็อกให้ตัด — snapshot หมวด/ราคาต่อหน่วยลงในรายการเองเสมอ (ต่างจากโหมดอื่นที่ join กับ D.inventoryItems เอาตอนอ่าน) เพราะสินค้าที่พิมพ์เองไม่มี itemId ให้ join ย้อนหลังได้ ──
+    if(mode==='shared'){
+      const item=c.itemId?(D.inventoryItems||[]).find(i=>i.id===c.itemId):null;
+      if(c.itemId&&!item)continue;
+      if(item)item.qty=Math.round(Math.max(0,item.qty-c.qty)*100)/100;
+      const entry={id:'sl'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+        itemId:c.itemId||null,itemName:c.itemName,type:'shared',qty:c.qty,date,note,pondId:'',
+        balanceAfter:item?item.qty:null,unit:c.unit,by:curUserLabel(),
+        category:c.category||item?.category||'',unitCost:c.unitCost||0};
+      D.inventoryLog.push(entry);
+      saved.push(c.itemName);
+      continue;
+    }
     const item=(D.inventoryItems||[]).find(i=>i.id===c.itemId);if(!item)continue;
     let newQty=item.qty;
     if(mode==='in')newQty+=c.qty;
@@ -6818,7 +6909,7 @@ function saveStockTxBatch(){
     saved.push(c.itemName);
   }
   save();
-  const modeLbl=mode==='in'?'รับเข้า':mode==='out'?'เบิกออก':'บันทึกการขาย';
+  const modeLbl=mode==='in'?'รับเข้า':mode==='out'?'เบิกออก':mode==='shared'?'แชร์ทุกบ่อ':'บันทึกการขาย';
   showStockMsg('tx','✅ '+modeLbl+' '+saved.length+' รายการแล้ว','ok');
   showToast('บันทึกสำเร็จ',modeLbl+' '+saved.length+' รายการ — '+fD(date));
   _stockCart=[];renderStockCart();
@@ -6835,6 +6926,7 @@ function clearStockTx(){
   const note=document.getElementById('sk-tx-note');if(note)note.value='';
   const date=document.getElementById('sk-tx-date');if(date)date.value=today();
   const cust=document.getElementById('sk-tx-cust');if(cust)cust.value='';
+  const mbx=document.getElementById('sk-manual-box');if(mbx)mbx.style.display='none';
   hideStockDrop();
 }
 
@@ -9941,8 +10033,11 @@ function openCropModal(pid){
   // ── ค่าแรง: ดึงจาก getLaborCostForPond (เงินเดือนประจำ+พนักงานรายวัน หารตามบ่อ active จริงรายวัน) แทนกรอกเองแล้ว — พี่ยืนยันแล้วว่าเทียบตัวเลขที่กรอกเองไว้ก่อนหน้ากับสูตรนี้ไม่ต่างกัน แก้ไขได้ถ้าจำเป็น ──
   const autoLabor=getLaborCostForPond(pid,p.startDate,today());
   document.getElementById('cm-cost-labor').value=autoLabor?Math.round(autoLabor):'';
-  // ── น้ำมัน/อุปกรณ์นอก/ค่าจับกุ้ง/% ส่วนแบ่ง — ยังกรอกเองทั้งหมด เพราะต้องดึงตัวเลขจากนอกแอป ──
-  ['cm-cost-fuel','cm-cost-equip-out','cm-pct-caretaker','cm-pct-manager'].forEach(id=>{
+  // ── อุปกรณ์นอก: ดึงจาก getSharedCostForPond (ส่วนแบ่งจากโหมด "แชร์ทุกบ่อ" หน้าสต็อก) แทนกรอกเองแล้ว — แก้ไขได้ถ้าจำเป็น ──
+  const autoSharedCost=getSharedCostForPond(pid,p.startDate,today());
+  document.getElementById('cm-cost-equip-out').value=autoSharedCost?Math.round(autoSharedCost):'';
+  // ── น้ำมัน/ค่าจับกุ้ง/% ส่วนแบ่ง — ยังกรอกเองทั้งหมด เพราะต้องดึงตัวเลขจากนอกแอป ──
+  ['cm-cost-fuel','cm-pct-caretaker','cm-pct-manager'].forEach(id=>{
     document.getElementById(id).value='';
   });
   document.getElementById('cm-cost-catch').value='';
@@ -10233,7 +10328,7 @@ function renderPartialList(){
 // ===== CEO DASHBOARD (role=ceo) =====
 const ceoMoney=v=>'฿'+Math.round(v||0).toLocaleString('th-TH');
 // ── สีจุดหมวดหมู่ ใช้ค่าเดียวกับสีตัวหนังสือใน STOCK_CAT_CSS (badge เดิมเป็นพื้นอ่อน+ตัวหนังสือเข้ม ไม่เหมาะกับจุดกลมเล็กๆ) ──
-const CEO_CAT_DOT={seed:'#9D174D',chem:'#1D4ED8',feed:'#92400E',chemOral:'#1D4ED8',chemWater:'#0369A1',probioOral:'#7E22CE',probioWater:'#5B21B6',lime:'#57534E',equip:'#166534',fry:'#9D174D',labor:'#0F766E',elec:'#B45309'};
+const CEO_CAT_DOT={seed:'#9D174D',chem:'#1D4ED8',feed:'#92400E',chemOral:'#1D4ED8',chemWater:'#0369A1',probioOral:'#7E22CE',probioWater:'#5B21B6',lime:'#57534E',equip:'#166534',fry:'#9D174D',labor:'#0F766E',elec:'#B45309',shared:'#9333EA'};
 // ── สถานะ "ควรติดตาม" ถ้า ABW ล่าสุดต่ำกว่ามาตรฐานตามอายุเกิน 15% ──
 function ceoStatus(p){
   const s=p.samples||[];if(!s.length)return'ok';
@@ -10264,6 +10359,20 @@ function getStockItemsForPond(pondId,startDate,endDate){
     })
     .filter(i=>i.category!=='feed')
     .sort((a,b)=>b.date.localeCompare(a.date));
+}
+// ── ต้นทุนที่แชร์ให้ทุกบ่อ (โหมด "แชร์ทุกบ่อ" หน้าสต็อก, D.inventoryLog type='shared') — คนละแนวคิดกับ getStockItemsForPond (ที่ผูก pondId เดียว) เพราะรายการเดียวต้องแบ่งให้หลายบ่อ ไม่ผูก pondId ใน log เลย จึงอ่าน "รายการที่แชร์ทั้งหมด" ก่อนแล้วค่อยหารส่วนแบ่งต่อบ่อทีหลัง ──
+function getSharedItemsInRange(fromDate,toDate){
+  if(!fromDate)return[];
+  const end=toDate||today();
+  return(D.inventoryLog||[]).filter(l=>l.type==='shared'&&l.date>=fromDate&&l.date<=end);
+}
+// ── ส่วนแบ่งต้นทุนแชร์ของบ่อนี้ = แต่ละรายการ ÷ จำนวนบ่อที่ active ณ วันที่บันทึกรายการนั้น (สูตรเดียวกับค่าไฟ/ค่าแรง — activePondCountOnDate — ต่างแค่คิดเป็นรายรายการแทนรายวัน เพราะเป็นเหตุการณ์ที่ไม่ต่อเนื่องแบบบิลรายเดือน) ──
+function getSharedCostForPond(pondId,fromDate,toDate){
+  if(!pondId||!fromDate)return 0;
+  return getSharedItemsInRange(fromDate,toDate).reduce((s,l)=>{
+    const activeCount=activePondCountOnDate(l.date)||1;
+    return s+((l.qty||0)*(l.unitCost||0))/activeCount;
+  },0);
 }
 function ceoTotalCost(p){
   const fryCost=p.costFry||0;
@@ -10411,11 +10520,21 @@ function ceoOpenSheet(pid){
   const fryCost=p.costFry||0;
   const laborCost=getLaborCostForPond(p.id,p.startDate,today());
   const elecCost=getElecCostForPeriod(p.startDate,today());
-  const totalCost=fryCost+feedCost+stockCostSum+laborCost+elecCost;
+  // ── ต้นทุนแชร์ (โหมด "แชร์ทุกบ่อ" หน้าสต็อก) — สูตรเดียวกับหน้ารายละเอียดบ่อของ admin (ข้อ 102) ──
+  const sharedItems=getSharedItemsInRange(p.startDate,today());
+  let sharedCost=0;
+  const sharedCatItems={};
+  sharedItems.forEach(l=>{
+    const ac=activePondCountOnDate(l.date)||1;
+    const share=((l.qty||0)*(l.unitCost||0))/ac;
+    sharedCost+=share;
+    sharedCatItems[l.id]={name:l.itemName,unit:`แชร์ ${ac} บ่อ`,qty:fD(l.date),total:share};
+  });
+  const totalCost=fryCost+feedCost+stockCostSum+laborCost+elecCost+sharedCost;
   document.getElementById('ceo-cost-total-mini').textContent=ceoMoney(totalCost);
   // ── สรุปแยกตามหมวดต้นทุน (อาหารกุ้ง/ยากิน/ยาลงน้ำ/จุลินทรีย์กิน/จุลินทรีย์ลงน้ำ/ปูน/อุปกรณ์/ลูกกุ้ง/ค่าแรง/ค่าไฟ) แทนการไล่ทีละรายการสินค้า — เดิมยิ่งเบิกสต็อกหลายรายการยิ่งยาว ดันแถวท้าย (ค่าไฟ) หลุด max-height ของ accordion จนเลื่อนดูไม่ได้ ──
   // แต่ละหมวดที่มาจากสต็อก (มีรายชื่อสินค้าจริง) กดแตะแล้วขยายดู list สินค้าในหมวดนั้นได้ — หมวดที่เป็นค่าคำนวณล้วน (อาหาร/ลูกกุ้ง/ค่าแรง/ค่าไฟ) ไม่มี list ให้ขยาย
-  const catSums={},catItems={};
+  const catSums={},catItems={shared:sharedCatItems};
   stockItems.forEach(it=>{
     const cat=STOCK_CATEGORIES.some(c=>c.key===it.category)?it.category:'other';
     catSums[cat]=(catSums[cat]||0)+it.qty*it.unitPrice;
@@ -10440,6 +10559,7 @@ function ceoOpenSheet(pid){
   const catRowsHtml=costCatRow('feed','อาหารกุ้ง',feedCost)
     +catOrder.map(k=>costCatRow(k,STOCK_CAT_LABEL[k],catSums[k]||0)).join('')
     +(catSums.other?costCatRow('other','อื่นๆ (เดิม)',catSums.other):'')
+    +costCatRow('shared','อุปกรณ์นอก (แชร์)',sharedCost)
     +costCatRow('fry','ลูกกุ้ง',fryCost)
     +costCatRow('labor','ค่าแรง',laborCost)
     +costCatRow('elec','ค่าไฟ',elecCost);
