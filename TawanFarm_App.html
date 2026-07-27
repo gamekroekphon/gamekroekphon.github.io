@@ -6795,10 +6795,9 @@ function addStockToCart(itemId){
   const srch=document.getElementById('sk-tx-search');if(srch)srch.value='';
   hideStockDrop();
   renderStockCart();
-  setTimeout(()=>{
-    const inp=document.getElementById('sk-cart-qty-'+itemId);
-    if(inp){inp.select();inp.focus();}
-  },50);
+  // ── โฟกัสช่องจำนวนทันทีแบบ synchronous (ไม่ผ่าน setTimeout) — มือถือส่วนใหญ่จะไม่เด้งแป้นตัวเลขขึ้นถ้า .focus() ถูกเรียกนอกช่วง event handler เดิม (user activation หมดอายุ) ต้องอยู่ใน call stack เดียวกับ click ที่กดเลือกสินค้า ──
+  const inp=document.getElementById('sk-cart-qty-'+itemId);
+  if(inp){inp.focus();inp.select();}
 }
 
 // ── โหมด "แชร์ทุกบ่อ" — เพิ่มสินค้าที่ไม่มีในแคตตาล็อกสต็อกเลย (ซื้อมาจากข้างนอกใช้ครั้งเดียว) พิมพ์ชื่อ/หมวด/ราคาเองแทนการค้นหา ไม่ผูกกับ D.inventoryItems ใดๆ (ไม่มีสต็อกให้ตัด ไม่ต้องเช็คยอดคงเหลือ) ──
