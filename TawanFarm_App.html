@@ -34,6 +34,7 @@ if(window.Chart){Chart.defaults.animation=false;Chart.defaults.responsiveAnimati
   --p:#9A6A04;--pl:#FEF6E0;--pd:#7A5503;
   --d:#DC2626;--db:#FDECEC;--w:#B45309;--wb:#FEF9E7;
   --ok:#15803D;--ob:#F4FBF6;--in:#185FA5;--ib:#E6F1FB;
+  --lab:#0d9488;--labl:#E6F7F5;--labd:#0a6b62;
   --hdr-bg:#FFFFFF;--hdr-accent:#FEF6E0;
   --r:10px;--sh:0 1px 2px rgba(16,24,40,.05);
   --w-tx:#B45309;--ok-tx:#14532D;--d-hov:#B91C1C;
@@ -398,6 +399,23 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .mbar-fill{height:100%;border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:5px}
 .mbar-val{font-size:9.5px;color:#fff;font-weight:700}
 .grp-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10.5px;font-weight:700}
+/* ── ทดลองเวชภัณฑ์: ประเภททดลอง (บ่อ/แล็บ) + บันทึกประจำการทดลอง ── */
+.type-row{display:flex;gap:0;background:var(--sf2);border-radius:10px;padding:4px;margin-bottom:4px}
+.type-btn{flex:1;border:none;background:none;padding:12px 10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--tx2);font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}
+.type-btn .ic{font-size:20px}
+.type-btn.on-pond{background:var(--sf);color:var(--p);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.type-btn.on-lab{background:var(--sf);color:var(--lab);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.type-desc{font-size:11.5px;color:var(--tx3);text-align:center;margin-top:8px;line-height:1.6}
+.lab-tag{font-size:10px;font-weight:700;color:var(--labd);background:var(--labl);padding:2px 9px;border-radius:99px}
+.jr-add-toggle{font-size:12.5px;font-weight:600;color:var(--p);cursor:pointer;text-decoration:underline;text-decoration-style:dashed;text-underline-offset:3px;display:inline-block;margin-bottom:10px}
+.jr-add-box{background:var(--sf2);border:1px dashed var(--bd);border-radius:10px;padding:12px;margin-bottom:14px}
+.jr-entry{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--sf2)}
+.jr-entry:last-child{border-bottom:none}
+.jr-date-col{flex:none;width:64px;text-align:center}
+.jr-date-d{font-size:18px;font-weight:700;color:var(--p);line-height:1}
+.jr-date-m{font-size:10.5px;color:var(--tx3);margin-top:2px}
+.jr-body{flex:1;min-width:0}
+.jr-text{font-size:13px;line-height:1.6;white-space:pre-wrap}
 .dw-chip{border:1px solid var(--border-input);border-radius:16px;padding:5px 12px;font-size:12px;background:var(--sf);color:var(--tx);cursor:pointer;font-family:inherit}
 .dw-chip-on{border-color:var(--d);background:var(--db);color:var(--d)}
 .dw-sev{border:1px solid var(--border-input);border-radius:6px;padding:3px 10px;font-size:11px;background:var(--sf);color:var(--tx);cursor:pointer;font-family:inherit}
@@ -927,6 +945,7 @@ body.role-ceo .main{max-width:640px}
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-analyze')"><span>📊</span> วิเคราะห์ <span class="sn-caret">▾</span></button>
     <div class="sn-sub" id="sn-g-analyze">
       <button class="sn-link tab-item" onclick="goTab('lab',this)">🔬 ผลแล็บ</button>
+      <button class="sn-link tab-item" onclick="goTab('trial',this)">🧪 ทดลองเวชภัณฑ์</button>
       <button class="sn-link tab-item" onclick="goTab('compare',this)">🔄 เปรียบเทียบ</button>
       <button class="sn-link tab-item" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
       <button class="sn-link tab-item" onclick="goTab('wqfeed',this)">🌡️ น้ำ-อาหาร</button>
@@ -1005,6 +1024,7 @@ body.role-ceo .main{max-width:640px}
     <button class="grp-btn" onclick="toggleGrp('analyze')">📊 วิเคราะห์ <span class="grp-caret">▾</span></button>
     <div class="tab-dropdown">
       <button class="tab-item" id="tab-lab" onclick="goTab('lab',this)">🔬 ผลแล็บ</button>
+      <button class="tab-item" id="tab-trial" onclick="goTab('trial',this)">🧪 ทดลองเวชภัณฑ์</button>
       <button class="tab-item" id="tab-compare" onclick="goTab('compare',this)">🔄 เปรียบเทียบ</button>
       <button class="tab-item" id="tab-risk" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
       <button class="tab-item" id="tab-wqfeed" onclick="goTab('wqfeed',this)">🌡️ น้ำ-อาหาร</button>
@@ -1061,6 +1081,7 @@ body.role-ceo .main{max-width:640px}
     <button class="mob-sheet-item" data-t="export" onclick="mobMenuGo(this)"><span class="ic">📄</span>PDF ปิดบ่อ</button>
     <div class="mob-sheet-grp">📊 วิเคราะห์</div>
     <button class="mob-sheet-item" data-t="lab" onclick="mobMenuGo(this)"><span class="ic">🔬</span>ผลแล็บ</button>
+    <button class="mob-sheet-item" data-t="trial" onclick="mobMenuGo(this)"><span class="ic">🧪</span>ทดลองเวชภัณฑ์</button>
     <button class="mob-sheet-item" data-t="compare" onclick="mobMenuGo(this)"><span class="ic">🔄</span>เปรียบเทียบ</button>
     <button class="mob-sheet-item" data-t="risk" onclick="mobMenuGo(this)"><span class="ic">⚠️</span>ความเสี่ยง</button>
     <button class="mob-sheet-item" data-t="wqfeed" onclick="mobMenuGo(this)"><span class="ic">🌡️</span>น้ำ-อาหาร</button>
@@ -1549,6 +1570,104 @@ body.role-ceo .main{max-width:640px}
     <div class="tbl-wrap" id="lb-tbl-wrap"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อเพื่อดูข้อมูล</p></div>
   </div>
 </div>
+<!-- TRIAL -->
+<div id="sec-trial" class="sec">
+  <div class="sec-hdr"><div class="sec-title">🧪 ทดลองเวชภัณฑ์</div></div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-t">📁 การทดลองที่บันทึกไว้</div>
+    <div class="fgrid" style="grid-template-columns:2fr 1fr">
+      <div class="fg"><label class="fl">เลือกการทดลอง</label><select class="fi" id="trial-select" onchange="loadTrial(this.value)"><option value="">— สร้างการทดลองใหม่ —</option></select></div>
+      <div class="fg" style="display:flex;align-items:flex-end"><button class="btn btn-s" onclick="newTrial()" style="width:100%">➕ ทดลองใหม่</button></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-t">ประเภทการทดลอง</div>
+    <div class="card-sub">เลือกก่อนเพื่อให้ระบบแสดงเฉพาะช่องที่เกี่ยวข้อง</div>
+    <div class="type-row">
+      <button type="button" class="type-btn" id="tb-pond" onclick="setTrialType('pond')"><span class="ic">🦐</span> ทดลองในบ่อเลี้ยง</button>
+      <button type="button" class="type-btn" id="tb-lab" onclick="setTrialType('lab')"><span class="ic">🧪</span> ทดลองในห้องแล็บ</button>
+    </div>
+    <div class="type-desc" id="trial-type-desc"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-t">🧪 ชื่อการทดลอง + ช่วงเวลาที่ทดลอง</div>
+    <div class="card-sub" id="trial-period-sub"></div>
+    <div class="fg" style="margin-bottom:14px"><label class="fl">ชื่อเวชภัณฑ์/สิ่งที่ทดลอง</label><input class="fi" id="trial-name" list="trial-suggest" placeholder="เช่น โปรไบโอติกบำรุงตับ สูตร B"></div>
+    <datalist id="trial-suggest"></datalist>
+    <div class="fgrid" style="grid-template-columns:1fr 1fr">
+      <div class="fg"><label class="fl">วันที่เริ่มทดลอง <span style="color:var(--d)">*</span></label><input type="date" class="fi" id="trial-start" onchange="setTrialPeriod()"></div>
+      <div class="fg"><label class="fl">วันที่สิ้นสุดทดลอง</label><input type="date" class="fi" id="trial-end" onchange="setTrialPeriod()"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">
+      <button type="button" class="btn btn-s" onclick="trialSetOngoing()">ยังดำเนินอยู่ (ตั้งเป็นวันนี้)</button>
+      <span id="trial-duration" style="font-size:12.5px;color:var(--tx2);font-weight:600"></span>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px" id="trial-lab-only-card">
+    <div class="card-t">🎯 รายละเอียดการทดลอง (เฉพาะแล็บ) <span class="lab-tag">แล็บ</span></div>
+    <div class="fg" style="margin-bottom:12px"><label class="fl">วัตถุประสงค์ / สิ่งที่ต้องการทดสอบ</label><textarea class="fi" id="trial-objective" rows="2" placeholder="เช่น เปรียบเทียบอัตราการรอดของเชื้อจุลินทรีย์ 2 สูตร เมื่อผสมในน้ำเค็ม 15 ppt"></textarea></div>
+    <div class="fg" style="margin:0"><label class="fl">ผลสรุปเบื้องต้น (กรอกเพิ่มได้ภายหลัง)</label><textarea class="fi" id="trial-conclusion" rows="2" placeholder="เช่น สูตร B รอดในน้ำเค็มได้ดีกว่าสูตร A ประมาณ 20%..."></textarea></div>
+  </div>
+
+  <div id="trial-pond-section">
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-t">🐟 เลือกบ่อที่ต้องการเปรียบเทียบ (2-4 บ่อ)</div>
+    <div class="card-sub">แสดงเฉพาะบ่อที่ <strong>กำลังเลี้ยงอยู่ตอนนี้</strong> เท่านั้น (ไม่ดึงรอบเก่าที่ปิดไปแล้วมาเทียบ) เลือกได้ 2-4 บ่อ แล้วพิมพ์ชื่อสินค้าที่ใช้ในแต่ละบ่อ — พิมพ์ชื่อเดียวกันในหลายบ่อเพื่อจัดกลุ่ม หรือพิมพ์คนละชื่อเพื่อเทียบสินค้า A กับสินค้า B พร้อมกันได้ในการทดลองเดียว (เว้นว่างไว้ = ไม่ได้ใช้อะไรเลย) — แต่ละบ่อลงกุ้งคนละวัน ช่วงทดลองเดียวกันจึงตรงกับอายุกุ้ง (DOC) คนละช่วงกัน ระบบคำนวณให้อัตโนมัติ</div>
+    <div id="trial-pond-picker" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+    <div id="trial-picked-list" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div class="hint" id="trial-doc-hint" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-t">📊 ตัวชี้วัดที่ต้องการเปรียบเทียบ</div>
+    <div id="trial-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px"></div>
+    <div class="fg" id="trial-water-row" style="max-width:250px;margin-top:12px"><label class="fl">พารามิเตอร์น้ำ</label><select class="fi" id="trial-water-param" onchange="renderTrialResults()"></select></div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px" id="trial-growth-card">
+    <div class="card-t">📈 การเติบโตในช่วงทดลอง</div>
+    <div class="card-sub">แกน X = วันที่ปฏิทิน — แถบสีอ่อนคือช่วงทดลองที่เลือกไว้ด้านบน</div>
+    <div id="trial-growth-legend" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:11.5px"></div>
+    <div class="chart-wrap" style="height:280px"><canvas id="trialGrowthChart"></canvas></div>
+    <div id="trial-adg-chips" style="margin-top:12px"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px" id="trial-mini-card">
+    <div class="card-t">🧮 ตัวชี้วัดในช่วงทดลอง — รายบ่อ</div>
+    <div id="trial-mini-compare" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px"></div>
+    <div id="trial-lab-note" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-t">📋 รายละเอียดรายบ่อ</div>
+    <div id="trial-table"></div>
+  </div>
+  <div class="hint" style="margin-bottom:12px">⚠️ เทียบจากบ่อจริงที่กำลังเลี้ยงอยู่ ไม่ใช่การทดลองแบบควบคุมทางวิทยาศาสตร์ — ปัจจัยอื่น (สายพันธุ์ลูกกุ้ง ความหนาแน่น สภาพอากาศ) อาจมีผลปนด้วย ใช้เป็นข้อมูลอ้างอิงประกอบการตัดสินใจ ไม่ใช่ข้อสรุปเด็ดขาด</div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-t">📝 บันทึกประจำการทดลอง</div>
+    <div class="card-sub">จดบันทึกความคืบหน้า/ข้อสังเกตระหว่างทดลองเป็นข้อความ — ใช้ได้ทั้งทดลองในบ่อและในแล็บ</div>
+    <span class="jr-add-toggle" onclick="toggleTrialJournalAdd()">+ เพิ่มบันทึกใหม่</span>
+    <div class="jr-add-box" id="jr-add-box" style="display:none">
+      <div class="fgrid" style="margin-bottom:8px">
+        <div class="fg" style="margin:0"><label class="fl">วันที่</label><input type="date" class="fi" id="jr-date"></div>
+      </div>
+      <div class="fg" style="margin:0"><label class="fl">บันทึก</label><textarea class="fi" id="jr-note" rows="2" placeholder="เช่น วันนี้สังเกตเห็นตะกอนตกในบีกเกอร์สูตร B มากกว่าสูตร A"></textarea></div>
+      <div style="margin-top:12px"><button type="button" class="btn btn-p" onclick="addTrialJournalEntry()">บันทึก</button></div>
+    </div>
+    <div id="jr-list"></div>
+  </div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn btn-p" id="trial-save-btn" onclick="saveTrial()">💾 บันทึกการทดลอง</button>
+    <button class="btn btn-s" onclick="deleteTrial()" id="trial-del-btn" style="display:none">🗑️ ลบการทดลองนี้</button>
+  </div>
+  <div id="trial-msg" style="margin-top:8px"></div>
+</div>
 <!-- COMPARE -->
 <div id="sec-compare" class="sec">
   <div class="sec-hdr"><div class="sec-title">💧 เปรียบเทียบค่าน้ำข้ามบ่อ</div></div>
@@ -1560,7 +1679,6 @@ body.role-ceo .main{max-width:640px}
       <button class="cmp-cat-btn" id="cmp-cat-size" onclick="setCmpCat('size',this)">⚖️ ไซส์</button>
       <button class="cmp-cat-btn" id="cmp-cat-lab" onclick="setCmpCat('lab',this)">🔬 แล็บ</button>
       <button class="cmp-cat-btn" id="cmp-cat-water" onclick="setCmpCat('water',this)">💦 น้ำ</button>
-      <button class="cmp-cat-btn" id="cmp-cat-trial" onclick="setCmpCat('trial',this)">🧪 ทดลองเวชภัณฑ์</button>
     </div>
     <div id="cmp-sel" style="display:none;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
     <div id="cmp-param-row" style="display:none" class="fg" style="max-width:250px"><label class="fl">พารามิเตอร์</label><select class="fi" id="cmp-param" onchange="renderCompare()"></select></div>
@@ -1613,70 +1731,6 @@ body.role-ceo .main{max-width:640px}
     <div class="chart-wrap" style="height:380px"><canvas id="cmpChart"></canvas></div>
   </div>
 
-  <!-- ── ทดลองเวชภัณฑ์: เทียบบ่อที่ใช้/ไม่ใช้ 2-4 บ่อ จากรอบที่กำลังเลี้ยงอยู่ตอนนี้เท่านั้น (ไม่ดึงรอบเก่าที่ปิดแล้ว) ── -->
-  <div id="cmp-trial" style="display:none">
-    <div class="card" style="margin-bottom:12px">
-      <div class="card-t">📁 การทดลองที่บันทึกไว้</div>
-      <div class="fgrid" style="grid-template-columns:2fr 1fr">
-        <div class="fg"><label class="fl">เลือกการทดลอง</label><select class="fi" id="trial-select" onchange="loadTrial(this.value)"><option value="">— สร้างการทดลองใหม่ —</option></select></div>
-        <div class="fg" style="display:flex;align-items:flex-end"><button class="btn btn-s" onclick="newTrial()" style="width:100%">➕ ทดลองใหม่</button></div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-bottom:12px">
-      <div class="card-t">🧪 ชื่อการทดลอง + ช่วงเวลาที่ทดลอง</div>
-      <div class="card-sub">ระบุ "ช่วงเวลาที่ลงเวชภัณฑ์จริง" ไม่ใช่ทั้งรอบเลี้ยง — ระบบจะกรองข้อมูลอาหาร/สุ่มตัวอย่าง/กุ้งตาย/ค่าน้ำ/ผลแล็บของทุกบ่อให้เหลือเฉพาะช่วงนี้ก่อนเทียบ</div>
-      <div class="fg" style="margin-bottom:14px"><label class="fl">ชื่อเวชภัณฑ์/สิ่งที่ทดลอง</label><input class="fi" id="trial-name" list="trial-suggest" placeholder="เช่น โปรไบโอติกบำรุงตับ สูตร B"></div>
-      <datalist id="trial-suggest"></datalist>
-      <div class="fgrid" style="grid-template-columns:1fr 1fr">
-        <div class="fg"><label class="fl">วันที่เริ่มทดลอง <span style="color:var(--d)">*</span></label><input type="date" class="fi" id="trial-start" onchange="setTrialPeriod()"></div>
-        <div class="fg"><label class="fl">วันที่สิ้นสุดทดลอง</label><input type="date" class="fi" id="trial-end" onchange="setTrialPeriod()"></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">
-        <button type="button" class="btn btn-s" onclick="trialSetOngoing()">ยังดำเนินอยู่ (ตั้งเป็นวันนี้)</button>
-        <span id="trial-duration" style="font-size:12.5px;color:var(--tx2);font-weight:600"></span>
-      </div>
-    </div>
-
-    <div class="card" style="margin-bottom:12px">
-      <div class="card-t">🐟 เลือกบ่อที่ต้องการเปรียบเทียบ (2-4 บ่อ)</div>
-      <div class="card-sub">แสดงเฉพาะบ่อที่ <strong>กำลังเลี้ยงอยู่ตอนนี้</strong> เท่านั้น (ไม่ดึงรอบเก่าที่ปิดไปแล้วมาเทียบ) เลือกได้ 2-4 บ่อ แล้วพิมพ์ชื่อสินค้าที่ใช้ในแต่ละบ่อ — พิมพ์ชื่อเดียวกันในหลายบ่อเพื่อจัดกลุ่ม หรือพิมพ์คนละชื่อเพื่อเทียบสินค้า A กับสินค้า B พร้อมกันได้ในการทดลองเดียว (เว้นว่างไว้ = ไม่ได้ใช้อะไรเลย) — แต่ละบ่อลงกุ้งคนละวัน ช่วงทดลองเดียวกันจึงตรงกับอายุกุ้ง (DOC) คนละช่วงกัน ระบบคำนวณให้อัตโนมัติ</div>
-      <div id="trial-pond-picker" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
-      <div id="trial-picked-list" style="display:flex;flex-direction:column;gap:8px"></div>
-      <div class="hint" id="trial-doc-hint" style="margin-top:10px"></div>
-    </div>
-
-    <div class="card" style="margin-bottom:12px">
-      <div class="card-t">📊 ตัวชี้วัดที่ต้องการเปรียบเทียบ</div>
-      <div id="trial-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px"></div>
-      <div class="fg" id="trial-water-row" style="max-width:250px;margin-top:12px"><label class="fl">พารามิเตอร์น้ำ</label><select class="fi" id="trial-water-param" onchange="renderTrialResults()"></select></div>
-      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn btn-p" id="trial-save-btn" onclick="saveTrial()">💾 บันทึกการทดลอง</button>
-        <button class="btn btn-s" onclick="deleteTrial()" id="trial-del-btn" style="display:none">🗑️ ลบการทดลองนี้</button>
-      </div>
-      <div id="trial-msg" style="margin-top:8px"></div>
-    </div>
-
-    <div class="card" style="margin-bottom:12px" id="trial-growth-card">
-      <div class="card-t">📈 การเติบโตในช่วงทดลอง</div>
-      <div class="card-sub">แกน X = วันที่ปฏิทิน — แถบสีอ่อนคือช่วงทดลองที่เลือกไว้ด้านบน</div>
-      <div id="trial-growth-legend" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:11.5px"></div>
-      <div class="chart-wrap" style="height:280px"><canvas id="trialGrowthChart"></canvas></div>
-      <div id="trial-adg-chips" style="margin-top:12px"></div>
-    </div>
-
-    <div class="card" style="margin-bottom:12px" id="trial-mini-card">
-      <div class="card-t">🧮 ตัวชี้วัดในช่วงทดลอง — รายบ่อ</div>
-      <div id="trial-mini-compare" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px"></div>
-      <div id="trial-lab-note" style="margin-top:10px"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-t">📋 รายละเอียดรายบ่อ</div>
-      <div id="trial-table"></div>
-    </div>
-    <div class="hint" style="margin-top:10px">⚠️ เทียบจากบ่อจริงที่กำลังเลี้ยงอยู่ ไม่ใช่การทดลองแบบควบคุมทางวิทยาศาสตร์ — ปัจจัยอื่น (สายพันธุ์ลูกกุ้ง ความหนาแน่น สภาพอากาศ) อาจมีผลปนด้วย ใช้เป็นข้อมูลอ้างอิงประกอบการตัดสินใจ ไม่ใช่ข้อสรุปเด็ดขาด</div>
-  </div>
 </div>
 <!-- RISK -->
 <div id="sec-risk" class="sec">
@@ -4379,6 +4433,7 @@ function goTab(t,btn){
   if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='stock')initStock();if(t==='abw')initAbw();if(t==='feed')initFeed();if(t==='pl')initPL();
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
   if(t==='chem')initChem();if(t==='lab')initLab();if(t==='mortality')initMortality();
+  if(t==='trial')initTrialTab();
   if(t==='compare')initCompare();if(t==='risk'){if(_wxDaily)renderRisk(_wxDaily);else fetchWx();}if(t==='export')initExport();if(t==='wqfeed')initWqFeed();if(t==='hatchery')initHatchery();
   if(t==='manage')renderManage();
   if(t==='users')renderUsers();
@@ -7933,25 +7988,19 @@ function setCmpCat(cat,btn){
   document.getElementById('cmp-lab-row').style.display=cat==='lab'?'':'none';
   document.getElementById('cmp-water-row').style.display=cat==='water'?'':'none';
   const isWq=cat==='wq';
-  const isTrial=cat==='trial';
-  const hmEl=document.getElementById('cmp-wq-heatmap');if(hmEl)hmEl.style.display=(isWq&&!isTrial)?'':'none';
-  const chEl=document.getElementById('cmp-chart-card');if(chEl)chEl.style.display=(!isWq&&!isTrial)?'':'none';
-  const selEl=document.getElementById('cmp-sel');if(selEl)selEl.style.display=(isWq||isTrial)?'none':'flex';
-  const trEl=document.getElementById('cmp-trial');if(trEl)trEl.style.display=isTrial?'':'none';
-  if(isTrial){initTrialTab();return;}
+  const hmEl=document.getElementById('cmp-wq-heatmap');if(hmEl)hmEl.style.display=isWq?'':'none';
+  const chEl=document.getElementById('cmp-chart-card');if(chEl)chEl.style.display=!isWq?'':'none';
+  const selEl=document.getElementById('cmp-sel');if(selEl)selEl.style.display=isWq?'none':'flex';
   renderCompare();
 }
 function initCompare(){
   if(!_wqHmDate)_wqHmDate=today();
-  const isTrial0=cmpCat==='trial';
   const selEl=document.getElementById('cmp-sel');
-  if(selEl){selEl.innerHTML=sortedPonds().map(p=>`<span class="pond-chk${cmpP.has(p.id)?' on':''}" onclick="tglCmp('${p.id}',this)"><input type="checkbox"${cmpP.has(p.id)?' checked':''}>บ่อ ${p.name}</span>`).join('');selEl.style.display=(cmpCat==='wq'||isTrial0)?'none':'flex';}
+  if(selEl){selEl.innerHTML=sortedPonds().map(p=>`<span class="pond-chk${cmpP.has(p.id)?' on':''}" onclick="tglCmp('${p.id}',this)"><input type="checkbox"${cmpP.has(p.id)?' checked':''}>บ่อ ${p.name}</span>`).join('');selEl.style.display=cmpCat==='wq'?'none':'flex';}
   const pmEl=document.getElementById('cmp-param');if(pmEl)pmEl.innerHTML=PARAMS.map(p=>`<option value="${p.key}">${p.lbl}</option>`).join('');
   const isWq=cmpCat==='wq';
-  const hmEl=document.getElementById('cmp-wq-heatmap');if(hmEl)hmEl.style.display=(isWq&&!isTrial0)?'':'none';
-  const chEl=document.getElementById('cmp-chart-card');if(chEl)chEl.style.display=(!isWq&&!isTrial0)?'':'none';
-  const trEl=document.getElementById('cmp-trial');if(trEl)trEl.style.display=isTrial0?'':'none';
-  if(isTrial0){initTrialTab();return;}
+  const hmEl=document.getElementById('cmp-wq-heatmap');if(hmEl)hmEl.style.display=isWq?'':'none';
+  const chEl=document.getElementById('cmp-chart-card');if(chEl)chEl.style.display=!isWq?'':'none';
   renderCompare();
 }
 function tglCmp(id,el){cmpP.has(id)?cmpP.delete(id):cmpP.add(id);el.classList.toggle('on');renderCompare()}
@@ -7999,7 +8048,7 @@ function cmpExportPNG(){
 }
 // ══════ ทดลองเวชภัณฑ์ — เทียบ 2-4 บ่อที่กำลังเลี้ยงอยู่ตอนนี้ (ใช้/ไม่ใช้) ที่ DOC เดียวกัน ══════
 let trialCh=null;
-let _trialDraft={id:null,name:'',startDate:'',endDate:'',waterParam:'doM',metrics:{growth:true,fcr:true,mortality:false,lab:true,water:true,ehp:true,gutLipid:true},ponds:{}};
+let _trialDraft={id:null,name:'',type:'pond',startDate:'',endDate:'',waterParam:'doM',metrics:{growth:true,fcr:true,mortality:false,lab:true,water:true,ehp:true,gutLipid:true},ponds:{},objective:'',conclusion:'',journal:[]};
 const TRIAL_METRICS=[{key:'growth',lbl:'การเติบโต (ABW/ADG)'},{key:'fcr',lbl:'FCR ประเมิน'},{key:'mortality',lbl:'กุ้งตายสะสม (%)'},{key:'lab',lbl:'ผลแล็บ (TCBS/ตับ)'},{key:'water',lbl:'ค่าน้ำ'},{key:'ehp',lbl:'EHP — ตัวอ่อน (%)'},{key:'gutLipid',lbl:'เนื้อเยื่อตับ-ลำไส้'}];
 function trialActivePonds(){return wqfeedActivePonds();}
 // ── ช่วงเวลาที่ทดลอง — ทุกตัวชี้วัดด้านล่างกรองข้อมูลตามช่วงนี้เท่านั้น ไม่ใช่ล่าสุด/สะสมทั้งรอบแบบเดิม ──
@@ -8037,6 +8086,23 @@ function updateTrialDurationLabel(){
   const days=dDiff(start,end)+1;
   el.textContent=`📅 ${days} วัน${!_trialDraft.endDate?' (ยังดำเนินอยู่)':''}`;
 }
+// ── ประเภทการทดลอง: บ่อเลี้ยงจริง (เดิม) vs ห้องแล็บ (ไม่ผูกกับบ่อ) ──
+function setTrialType(t){
+  _trialDraft.type=t;
+  const pondBtn=document.getElementById('tb-pond'),labBtn=document.getElementById('tb-lab');
+  if(pondBtn)pondBtn.className='type-btn'+(t==='pond'?' on-pond':'');
+  if(labBtn)labBtn.className='type-btn'+(t==='lab'?' on-lab':'');
+  const pondSec=document.getElementById('trial-pond-section');if(pondSec)pondSec.style.display=t==='pond'?'':'none';
+  const labCard=document.getElementById('trial-lab-only-card');if(labCard)labCard.style.display=t==='lab'?'':'none';
+  const descEl=document.getElementById('trial-type-desc');
+  if(descEl)descEl.textContent=t==='pond'
+    ?'ผูกกับบ่อเลี้ยงจริง 2-4 บ่อ ที่กำลังเลี้ยงอยู่ตอนนี้ — เปรียบเทียบการเติบโต/FCR/กุ้งตาย/ผลแล็บ/ค่าน้ำ ระหว่างบ่อ'
+    :'ไม่ผูกกับบ่อเลี้ยงจริง — เหมาะกับการทดสอบสูตร/ส่วนผสมก่อนนำไปใช้จริงในบ่อ ไม่ต้องเลือกบ่อหรือดูกราฟเทียบ';
+  const subEl=document.getElementById('trial-period-sub');
+  if(subEl)subEl.textContent=t==='pond'
+    ?'ระบุ "ช่วงเวลาที่ลงเวชภัณฑ์จริง" ไม่ใช่ทั้งรอบเลี้ยง — ระบบจะกรองข้อมูลอาหาร/สุ่มตัวอย่าง/กุ้งตาย/ค่าน้ำ/ผลแล็บของทุกบ่อให้เหลือเฉพาะช่วงนี้ก่อนเทียบ'
+    :'ระบุช่วงเวลาที่ทำการทดลองในห้องแล็บ ใช้เป็นข้อมูลอ้างอิงประกอบบันทึกด้านล่าง';
+}
 function initTrialTab(){
   const selEl=document.getElementById('trial-select');
   if(selEl){
@@ -8048,9 +8114,12 @@ function initTrialTab(){
     const names=[...new Set((D.inventoryLog||[]).filter(r=>r.type==='out'&&r.pondId).map(r=>r.itemName||r.name).filter(Boolean))];
     dl.innerHTML=names.map(n=>`<option value="${n}">`).join('');
   }
+  setTrialType(_trialDraft.type||'pond');
   const nameEl=document.getElementById('trial-name');if(nameEl)nameEl.value=_trialDraft.name;
   const startEl=document.getElementById('trial-start');if(startEl)startEl.value=_trialDraft.startDate;
   const endEl=document.getElementById('trial-end');if(endEl)endEl.value=_trialDraft.endDate;
+  const objEl=document.getElementById('trial-objective');if(objEl)objEl.value=_trialDraft.objective||'';
+  const conEl=document.getElementById('trial-conclusion');if(conEl)conEl.value=_trialDraft.conclusion||'';
   updateTrialDurationLabel();
   const wpEl=document.getElementById('trial-water-param');
   if(wpEl)wpEl.innerHTML=PARAMS.map(p=>`<option value="${p.key}"${p.key===_trialDraft.waterParam?' selected':''}>${p.lbl}</option>`).join('');
@@ -8058,6 +8127,7 @@ function initTrialTab(){
   renderTrialMetricChecks();
   renderTrialPondPicker();
   renderTrialResults();
+  renderTrialJournal();
 }
 function renderTrialMetricChecks(){
   const el=document.getElementById('trial-metrics');if(!el)return;
@@ -8286,7 +8356,7 @@ function renderTrialResults(){
   }
 }
 function newTrial(){
-  _trialDraft={id:null,name:'',startDate:'',endDate:'',waterParam:'doM',metrics:{growth:true,fcr:true,mortality:false,lab:true,water:true,ehp:true,gutLipid:true},ponds:{}};
+  _trialDraft={id:null,name:'',type:'pond',startDate:'',endDate:'',waterParam:'doM',metrics:{growth:true,fcr:true,mortality:false,lab:true,water:true,ehp:true,gutLipid:true},ponds:{},objective:'',conclusion:'',journal:[]};
   const selEl=document.getElementById('trial-select');if(selEl)selEl.value='';
   const msgEl=document.getElementById('trial-msg');if(msgEl)msgEl.innerHTML='';
   initTrialTab();
@@ -8294,7 +8364,7 @@ function newTrial(){
 function loadTrial(id){
   if(!id){newTrial();return;}
   const t=(D.medTrials||[]).find(x=>x.id===id);if(!t)return;
-  _trialDraft={id:t.id,name:t.name,startDate:t.startDate||'',endDate:t.endDate||'',waterParam:t.waterParam||'doM',metrics:{...t.metrics},ponds:{...t.ponds}};
+  _trialDraft={id:t.id,name:t.name,type:t.type||'pond',startDate:t.startDate||'',endDate:t.endDate||'',waterParam:t.waterParam||'doM',metrics:{...t.metrics},ponds:{...t.ponds},objective:t.objective||'',conclusion:t.conclusion||'',journal:(t.journal||[]).map(j=>({...j}))};
   const msgEl=document.getElementById('trial-msg');if(msgEl)msgEl.innerHTML='';
   initTrialTab();
 }
@@ -8302,13 +8372,16 @@ function saveTrial(){
   const name=document.getElementById('trial-name').value.trim();
   const msg=document.getElementById('trial-msg');
   if(!name){msg.innerHTML='<span style="color:var(--d)">กรุณาตั้งชื่อการทดลอง</span>';return;}
-  const ids=Object.keys(_trialDraft.ponds);
-  if(ids.length<2||ids.length>4){msg.innerHTML='<span style="color:var(--d)">กรุณาเลือก 2-4 บ่อ</span>';return;}
   if(!_trialDraft.startDate){msg.innerHTML='<span style="color:var(--d)">กรุณากรอกวันที่เริ่มทดลอง</span>';return;}
+  const isLab=_trialDraft.type==='lab';
+  const ids=Object.keys(_trialDraft.ponds);
+  if(!isLab&&(ids.length<2||ids.length>4)){msg.innerHTML='<span style="color:var(--d)">กรุณาเลือก 2-4 บ่อ</span>';return;}
   _trialDraft.name=name;
   _trialDraft.waterParam=document.getElementById('trial-water-param')?.value||'doM';
+  _trialDraft.objective=document.getElementById('trial-objective')?.value.trim()||'';
+  _trialDraft.conclusion=document.getElementById('trial-conclusion')?.value.trim()||'';
   if(!D.medTrials)D.medTrials=[];
-  const rec={id:_trialDraft.id||('trial_'+Date.now()),name:_trialDraft.name,startDate:_trialDraft.startDate,endDate:_trialDraft.endDate,waterParam:_trialDraft.waterParam,metrics:{..._trialDraft.metrics},ponds:{..._trialDraft.ponds}};
+  const rec={id:_trialDraft.id||('trial_'+Date.now()),name:_trialDraft.name,type:_trialDraft.type,startDate:_trialDraft.startDate,endDate:_trialDraft.endDate,waterParam:_trialDraft.waterParam,metrics:{..._trialDraft.metrics},ponds:isLab?{}:{..._trialDraft.ponds},objective:_trialDraft.objective,conclusion:_trialDraft.conclusion,journal:(_trialDraft.journal||[]).map(j=>({...j}))};
   const idx=D.medTrials.findIndex(t=>t.id===rec.id);
   if(idx>=0)D.medTrials[idx]=rec;else D.medTrials.push(rec);
   _trialDraft.id=rec.id;
@@ -8324,6 +8397,37 @@ function deleteTrial(){
   D.deletedIds=D.deletedIds||[];D.deletedIds.push(_trialDraft.id);
   save();
   newTrial();
+}
+// ── บันทึกประจำการทดลอง (journal ข้อความ ไม่มีรูป) — ใช้ได้ทั้งทดลองในบ่อและในแล็บ เก็บใน _trialDraft.journal แล้วบันทึกจริงพร้อมกับ saveTrial() ──
+function toggleTrialJournalAdd(){
+  const box=document.getElementById('jr-add-box');if(!box)return;
+  const show=box.style.display==='none';
+  box.style.display=show?'':'none';
+  if(show){const d=document.getElementById('jr-date');if(d&&!d.value)d.value=today();}
+}
+function addTrialJournalEntry(){
+  const dateVal=document.getElementById('jr-date').value||today();
+  const noteVal=document.getElementById('jr-note').value.trim();
+  if(!noteVal){alert('กรุณาพิมพ์บันทึก');return;}
+  if(!_trialDraft.journal)_trialDraft.journal=[];
+  _trialDraft.journal.push({id:'jr_'+Date.now(),date:dateVal,note:noteVal});
+  document.getElementById('jr-note').value='';
+  document.getElementById('jr-add-box').style.display='none';
+  renderTrialJournal();
+}
+function deleteTrialJournalEntry(id){
+  _trialDraft.journal=(_trialDraft.journal||[]).filter(j=>j.id!==id);
+  renderTrialJournal();
+}
+function renderTrialJournal(){
+  const el=document.getElementById('jr-list');if(!el)return;
+  const list=(_trialDraft.journal||[]).slice().sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+  el.innerHTML=list.length?list.map(j=>{
+    const d=new Date(j.date+'T00:00:00');
+    const dd=d.toLocaleDateString('th-TH',{day:'numeric'});
+    const mm=d.toLocaleDateString('th-TH',{month:'short',year:'2-digit'});
+    return `<div class="jr-entry"><div class="jr-date-col"><div class="jr-date-d">${dd}</div><div class="jr-date-m">${mm}</div></div><div class="jr-body"><div class="jr-text">${j.note}</div></div><button type="button" class="btn btn-s btn-sm" onclick="deleteTrialJournalEntry('${j.id}')" style="align-self:flex-start">🗑️</button></div>`;
+  }).join(''):'<p style="color:var(--tx3);font-style:italic;font-size:12.5px;padding:8px 0">ยังไม่มีบันทึก</p>';
 }
 function renderCmpFeed(){
   const metric=document.getElementById('cmp-feed-param')?.value||'per100k';
