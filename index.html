@@ -6854,7 +6854,7 @@ function renderStockCart(){
       <span class="sk-cart-unit">${c.unit}</span>
       <input type="number" id="sk-cart-qty-${c.cartId}" class="fi sk-cart-qty" min="0.01" step="any" value="${c.qty}" inputmode="decimal" onchange="updateCartQty('${c.cartId}',this.value)">
       ${isSale?`<input type="number" id="sk-cart-price-${c.cartId}" class="fi sk-cart-price" min="0" step="any" value="${c.sellPrice!=null?c.sellPrice:''}" placeholder="ราคา" inputmode="decimal" title="ราคาขาย/หน่วย" onchange="updateCartPrice('${c.cartId}',this.value)"><span class="sk-cart-price-lbl">฿/${c.unit}</span>`:''}
-      ${isShared?`<span class="sk-cart-price-lbl">฿${c.unitCost.toLocaleString()}/${c.unit}</span>`:''}
+      ${isShared&&APP_ROLE==='admin'?`<span class="sk-cart-price-lbl">฿${c.unitCost.toLocaleString()}/${c.unit}</span>`:''}
       <button class="btn-sm btn-del" onclick="removeFromCart('${c.cartId}')">✕</button>
     </div>`).join('');
 }
