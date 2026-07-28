@@ -2529,6 +2529,7 @@ body.role-ceo .main{max-width:640px}
       <div style="display:flex;gap:0;background:var(--sf2);border-radius:8px;padding:3px;margin-bottom:14px;width:fit-content">
         <button id="skl-mode-out" class="stock-mode-btn on-out" onclick="setStockLogMode('out')">📤 เบิกออก รายบ่อ</button>
         <button id="skl-mode-in" class="stock-mode-btn" onclick="setStockLogMode('in')">📥 รับเข้าส่วนกลาง</button>
+        <button id="skl-mode-shared" class="stock-mode-btn" onclick="setStockLogMode('shared')">🔧 แชร์ทุกบ่อ</button>
       </div>
       <div id="skl-pane-out">
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
@@ -2552,6 +2553,24 @@ body.role-ceo .main{max-width:640px}
       </div>
       <div id="skl-pane-in" style="display:none">
         <div id="sk-log-in-table"></div>
+      </div>
+      <div id="skl-pane-shared" style="display:none">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+          <select class="fi" id="skl-shared-cat" style="width:150px" onchange="renderStockShareLog()">
+            <option value="">ทุกหมวด</option>
+            <option value="feed">🍚 อาหารกุ้ง</option>
+            <option value="chemOral">💊 ยากิน</option>
+            <option value="chemWater">🧪 ยาลงน้ำ</option>
+            <option value="probioOral">🦠 จุลินทรีย์กิน</option>
+            <option value="probioWater">🧫 จุลินทรีย์ลงน้ำ</option>
+            <option value="lime">🪨 ปูน</option>
+            <option value="equip">🔧 อุปกรณ์</option>
+          </select>
+          <input type="month" class="fi" id="skl-shared-month" style="width:150px" onchange="renderStockShareLog()">
+          <button class="btn" style="font-size:12px;padding:6px 12px;white-space:nowrap;background:var(--s1);color:var(--tx2)" onclick="clearStockShareFilter()">ล้างตัวกรอง</button>
+        </div>
+        <div class="admin-only" style="margin-bottom:12px"><div class="g4" id="skl-shared-kpi"></div></div>
+        <div id="sk-log-shared-table"></div>
       </div>
     </div>
   </div>
@@ -6990,13 +7009,18 @@ function setStockLogMode(mode){
   _stockLogMode=mode;
   const btnOut=document.getElementById('skl-mode-out');
   const btnIn=document.getElementById('skl-mode-in');
+  const btnShared=document.getElementById('skl-mode-shared');
   if(btnOut)btnOut.className='stock-mode-btn'+(mode==='out'?' on-out':'');
   if(btnIn)btnIn.className='stock-mode-btn'+(mode==='in'?' on-in':'');
+  if(btnShared)btnShared.className='stock-mode-btn'+(mode==='shared'?' on-shared':'');
   const paneOut=document.getElementById('skl-pane-out');
   const paneIn=document.getElementById('skl-pane-in');
+  const paneShared=document.getElementById('skl-pane-shared');
   if(paneOut)paneOut.style.display=mode==='out'?'':'none';
   if(paneIn)paneIn.style.display=mode==='in'?'':'none';
+  if(paneShared)paneShared.style.display=mode==='shared'?'':'none';
   if(mode==='out'){populateStockOutFilters();renderStockOutLog();}
+  else if(mode==='shared'){renderStockShareLog();}
   else{renderStockInLog();}
 }
 function renderStockInLog(){
@@ -7063,16 +7087,59 @@ function renderStockOutLog(){
     }).join('')
   }</tbody></table></div>`;
 }
-
-function renderStockLog(){if(_stockLogMode==='in')renderStockInLog();else{populateStockOutFilters();renderStockOutLog();}}// backward-compat stub
+// ── ประวัติแชร์ทุกบ่อ (อุปกรณ์นอก): กรองด้วยหมวด/เดือน + คำนวณส่วนแบ่งต้นทุนต่อบ่อ ณ วันที่บันทึกรายการนั้น (สูตรเดียวกับ getSharedCostForPond) ──
+function clearStockShareFilter(){
+  const c=document.getElementById('skl-shared-cat');if(c)c.value='';
+  const m=document.getElementById('skl-shared-month');if(m)m.value='';
+  renderStockShareLog();
+}
+function renderStockShareLog(){
+  const tbl=document.getElementById('sk-log-shared-table');if(!tbl)return;
+  const cat=document.getElementById('skl-shared-cat')?.value||'';
+  const month=document.getElementById('skl-shared-month')?.value||'';
+  const isAdmin=APP_ROLE==='admin';
+  let logs=(D.inventoryLog||[]).filter(l=>l.type==='shared');
+  if(cat)logs=logs.filter(l=>l.category===cat);
+  if(month)logs=logs.filter(l=>l.date&&l.date.startsWith(month));
+  logs=logs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const kpiEl=document.getElementById('skl-shared-kpi');
+  if(kpiEl){
+    const totalValue=logs.reduce((s,l)=>s+(l.qty||0)*(l.unitCost||0),0);
+    kpiEl.innerHTML=`<div class="kpi-card"><div class="kpi-lbl">จำนวนรายการ</div><div class="kpi-val">${logs.length}</div></div>
+      <div class="kpi-card"><div class="kpi-lbl">มูลค่ารวม (ตามตัวกรองนี้)</div><div class="kpi-val">฿${Math.round(totalValue).toLocaleString()}</div></div>`;
+  }
+  if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ไม่มีประวัติแชร์ทุกบ่อ'+(cat||month?'ตามตัวกรองนี้':'')+'</p>';return;}
+  const headExtra=isAdmin?'<th style="text-align:right">ราคา/หน่วย</th><th style="text-align:right">มูลค่ารวม</th><th style="text-align:right">บ่อที่แชร์</th><th style="text-align:right">ส่วนแบ่ง/บ่อ</th>':'';
+  tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>หมวด</th><th>รายการ</th><th style="text-align:right">จำนวน</th>${headExtra}<th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
+    logs.map(l=>{
+      const catLbl=STOCK_CAT_LABEL[l.category]||'-';
+      const catCss=STOCK_CAT_CSS[l.category]||'';
+      const value=(l.qty||0)*(l.unitCost||0);
+      const activeCount=activePondCountOnDate(l.date)||1;
+      const share=value/activeCount;
+      const extra=isAdmin?`<td style="text-align:right">฿${(l.unitCost||0).toLocaleString()}</td><td style="text-align:right">฿${Math.round(value).toLocaleString()}</td><td style="text-align:right">${activeCount}</td><td style="text-align:right">฿${Math.round(share).toLocaleString()}</td>`:'';
+      return `<tr>
+        <td>${fD(l.date)}</td>
+        <td><span class="badge ${catCss}">${catLbl}</span></td>
+        <td>${l.itemName||'-'}${!l.itemId?' <span style="font-size:10px;font-weight:700;color:var(--p)">(ของใหม่)</span>':''}</td>
+        <td style="text-align:right">${l.qty} ${l.unit||''}</td>
+        ${extra}
+        <td style="font-size:12px;color:var(--tx2)">${l.note||''}</td>
+        <td style="font-size:12px;color:var(--tx2)">${l.by||'-'}</td>
+        <td><button class="btn-sm btn-del" onclick="deleteStockLog('${l.id}');renderStockShareLog()">🗑️</button></td>
+      </tr>`;
+    }).join('')
+  }</tbody></table></div>`;
+}
+function renderStockLog(){if(_stockLogMode==='in')renderStockInLog();else if(_stockLogMode==='shared')renderStockShareLog();else{populateStockOutFilters();renderStockOutLog();}}// backward-compat stub
 
 function deleteStockLog(id){
   const log=(D.inventoryLog||[]).find(l=>l.id===id);if(!log)return;
   if(!confirm('ลบรายการนี้? ระบบจะย้อนยอดคงเหลือของ "'+(log.itemName||'')+'" ให้อัตโนมัติ'))return;
   const item=(D.inventoryItems||[]).find(i=>i.id===log.itemId);
   if(item){
-    // out ที่เคยตัดออกไป → บวกคืน / in ที่เคยรับเข้ามา → หักออก
-    item.qty=Math.round(((item.qty||0)+(log.type==='out'||log.type==='sale'?(log.qty||0):-(log.qty||0)))*100)/100;
+    // out/sale/shared(สินค้าจากแคตตาล็อก) ที่เคยตัดออกไป → บวกคืน / in ที่เคยรับเข้ามา → หักออก
+    item.qty=Math.round(((item.qty||0)+(log.type==='out'||log.type==='sale'||log.type==='shared'?(log.qty||0):-(log.qty||0)))*100)/100;
   }
   D.inventoryLog=(D.inventoryLog||[]).filter(l=>l.id!==id);
   D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
