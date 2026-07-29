@@ -417,6 +417,8 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .plot-stat{display:flex;justify-content:space-between;font-size:11.5px;color:var(--tx2);padding:3px 0}
 .plot-stat b{color:var(--tx)}
 .plot-card-actions{position:absolute;top:12px;right:12px;display:flex;gap:4px}
+.badge.b-active-grn{background:var(--ok);color:#fff;display:inline-flex;align-items:center;gap:5px;font-weight:700}
+.badge.b-active-grn .live-dot{width:6px;height:6px;border-radius:50%;background:#fff;display:inline-block;animation:pulse 1.5s infinite}
 .lab-tag{font-size:10px;font-weight:700;color:var(--labd);background:var(--labl);padding:2px 9px;border-radius:99px}
 .trial-chip{display:inline-block;padding:6px 14px;border-radius:20px;border:1.5px solid var(--bd);background:var(--sf);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--tx2);user-select:none}
 .trial-chip.on{background:var(--p);border-color:var(--p);color:#fff}
@@ -1273,10 +1275,11 @@ body.role-ceo .main{max-width:640px}
     </div>
 
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px">
         <div class="card-t" style="margin-bottom:0">📋 ประวัติรายรับ-รายจ่าย</div>
-        <div class="chip-row" id="pm-filter-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        <div class="chip-row" id="pm-period-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
       </div>
+      <div class="chip-row" id="pm-filter-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px"></div>
       <div class="g4" id="pm-kpi" style="margin-bottom:16px"></div>
       <div id="pm-table"></div>
     </div>
@@ -7570,7 +7573,7 @@ function palmTab(paneId,btn){
   if(btn)btn.classList.add('on');
   if(paneId==='ov')renderPalmOverview();
   if(paneId==='plot')renderPalmPlots();
-  if(paneId==='money'){populatePalmPlotSelects();setPalmMoneyMode(_palmMoneyMode);renderPalmMoneyFilterChips();renderPalmMoney();}
+  if(paneId==='money'){populatePalmPlotSelects();setPalmMoneyMode(_palmMoneyMode);renderPalmMoneyPeriodChips();renderPalmMoneyFilterChips();renderPalmMoney();}
   if(paneId==='fert'){populatePalmPlotSelects();renderPalmFertYearOptions();renderPalmFertFilterChips();renderPalmFertSummary();renderPalmFertLog();}
 }
 function populatePalmPlotSelects(){
@@ -7587,14 +7590,14 @@ function renderPalmOverview(){
   const kpiEl=document.getElementById('palm-ov-kpi');if(!kpiEl)return;
   const plots=palmPlots();
   const totalArea=plots.reduce((s,p)=>s+(p.area||0),0);
-  const thisMonth=today().slice(0,7);
-  const moneyThisMonth=palmMoneyList().filter(r=>(r.date||'').startsWith(thisMonth));
-  const totalIn=moneyThisMonth.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
-  const totalOut=moneyThisMonth.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
+  const thisYear=today().slice(0,4);
+  const moneyThisYear=palmMoneyList().filter(r=>(r.date||'').startsWith(thisYear));
+  const totalIn=moneyThisYear.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  const totalOut=moneyThisYear.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
   kpiEl.innerHTML=`<div class="kpi-card"><div class="kpi-lbl">จำนวนแปลง</div><div class="kpi-val">${plots.length}</div><div class="kpi-sub">แปลง</div></div>
     <div class="kpi-card"><div class="kpi-lbl">พื้นที่รวม</div><div class="kpi-val">${totalArea.toLocaleString()}</div><div class="kpi-sub">ไร่</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">รายได้เดือนนี้</div><div class="kpi-val" style="color:var(--ok)">฿${Math.round(totalIn).toLocaleString()}</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">กำไรสุทธิเดือนนี้</div><div class="kpi-val">฿${Math.round(totalIn-totalOut).toLocaleString()}</div></div>`;
+    <div class="kpi-card"><div class="kpi-lbl">รายได้สะสม (ตั้งแต่ต้นปี)</div><div class="kpi-val" style="color:var(--ok)">฿${Math.round(totalIn).toLocaleString()}</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">กำไรสุทธิสะสม (ตั้งแต่ต้นปี)</div><div class="kpi-val">฿${Math.round(totalIn-totalOut).toLocaleString()}</div></div>`;
   const remEl=document.getElementById('palm-ov-reminders');if(!remEl)return;
   const today0=today();
   const rows=plots.map(p=>{
@@ -7674,6 +7677,10 @@ function renderPalmPlots(){
   el.innerHTML=list.map(p=>{
     const kgThisYear=palmFertList().filter(r=>r.plotId===p.id&&(r.date||'').startsWith(curYear)).reduce((s,r)=>s+(r.kg||0),0);
     const perTree=p.trees?kgThisYear/p.trees:0;
+    const plotMoney=palmMoneyList().filter(r=>r.plotId===p.id);
+    const lifetimeIncome=plotMoney.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+    const lifetimeExpense=plotMoney.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
+    const lifetimeNet=lifetimeIncome-lifetimeExpense;
     return `<div class="plot-card">
       <div class="plot-card-actions">
         <button class="btn-sm" style="background:var(--sf2);color:var(--tx2);padding:4px 8px" onclick="openPalmPlotForm('${p.id}')">✏️</button>
@@ -7684,7 +7691,10 @@ function renderPalmPlots(){
       <div class="plot-stat"><span>พื้นที่</span><b>${p.area?p.area.toLocaleString():'-'} ไร่</b></div>
       <div class="plot-stat"><span>จำนวนต้น</span><b>${p.trees.toLocaleString()} ต้น</b></div>
       <div class="plot-stat"><span>ปุ๋ยปีนี้ (สะสม)</span><b>${p.trees?perTree.toFixed(2)+' กก./ต้น':'-'}</b></div>
-      <div class="plot-stat"><span>สถานะ</span>${p.status==='producing'?'<span class="badge b-ok">ให้ผลผลิตแล้ว</span>':'<span class="badge b-warn">ยังไม่ให้ผล</span>'}</div>
+      <div class="plot-stat"><span>รายรับรวม (ตั้งแต่เริ่ม)</span><b style="color:var(--ok)">฿${Math.round(lifetimeIncome).toLocaleString()}</b></div>
+      <div class="plot-stat"><span>รายจ่ายรวม (ตั้งแต่เริ่ม)</span><b style="color:var(--d)">฿${Math.round(lifetimeExpense).toLocaleString()}</b></div>
+      <div class="plot-stat"><span>กำไรสุทธิสะสม (ตั้งแต่เริ่ม)</span><b style="color:${lifetimeNet>=0?'var(--ok)':'var(--d)'}">฿${Math.round(lifetimeNet).toLocaleString()}</b></div>
+      <div class="plot-stat"><span>สถานะ</span>${p.status==='producing'?'<span class="badge b-active-grn"><span class="live-dot"></span>ให้ผลผลิตแล้ว</span>':'<span class="badge b-warn">ยังไม่ให้ผล</span>'}</div>
     </div>`;
   }).join('');
 }
@@ -7735,6 +7745,18 @@ function deletePalmMoney(id){
   renderPalmMoney();
 }
 let _palmMoneyFilterPlot='';
+let _palmMoneyPeriod='year';
+const PALM_MONEY_PERIODS=[{id:'month',name:'เดือนนี้'},{id:'year',name:'ปีนี้'},{id:'all',name:'ทั้งหมด'}];
+function renderPalmMoneyPeriodChips(){
+  const wrap=document.getElementById('pm-period-chips');if(!wrap)return;
+  wrap.innerHTML=PALM_MONEY_PERIODS.map(c=>`<span class="trial-chip${_palmMoneyPeriod===c.id?' on':''}" onclick="setPalmMoneyPeriod('${c.id}',this)">${c.name}</span>`).join('');
+}
+function setPalmMoneyPeriod(id,btn){
+  _palmMoneyPeriod=id;
+  document.querySelectorAll('#pm-period-chips .trial-chip').forEach(el=>el.classList.remove('on'));
+  btn.classList.add('on');
+  renderPalmMoney();
+}
 function renderPalmMoneyFilterChips(){
   const wrap=document.getElementById('pm-filter-chips');if(!wrap)return;
   const chips=[{id:'',name:'ทุกแปลง'}].concat(palmPlots().map(p=>({id:p.id,name:p.name})));
@@ -7751,14 +7773,20 @@ function renderPalmMoney(){
   let list=palmMoneyList().slice();
   if(_palmMoneyFilterPlot)list=list.filter(r=>r.plotId===_palmMoneyFilterPlot);
   list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  const thisMonth=today().slice(0,7);
-  const monthList=palmMoneyList().filter(r=>(_palmMoneyFilterPlot?r.plotId===_palmMoneyFilterPlot:true)&&(r.date||'').startsWith(thisMonth));
-  const totalIn=monthList.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
-  const totalOut=monthList.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
+  const thisMonth=today().slice(0,7),thisYear=today().slice(0,4);
+  const periodLbl={month:'เดือนนี้',year:'ตั้งแต่ต้นปี',all:'ทั้งหมด'}[_palmMoneyPeriod];
+  const periodList=palmMoneyList().filter(r=>{
+    if(_palmMoneyFilterPlot&&r.plotId!==_palmMoneyFilterPlot)return false;
+    if(_palmMoneyPeriod==='month')return(r.date||'').startsWith(thisMonth);
+    if(_palmMoneyPeriod==='year')return(r.date||'').startsWith(thisYear);
+    return true;
+  });
+  const totalIn=periodList.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  const totalOut=periodList.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
   const kpiEl=document.getElementById('pm-kpi');
-  if(kpiEl)kpiEl.innerHTML=`<div class="kpi-card"><div class="kpi-lbl">รายรับสะสม (เดือนนี้)</div><div class="kpi-val" style="color:var(--ok)">฿${Math.round(totalIn).toLocaleString()}</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">รายจ่ายสะสม (เดือนนี้)</div><div class="kpi-val" style="color:var(--d)">฿${Math.round(totalOut).toLocaleString()}</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">กำไรสุทธิ (เดือนนี้)</div><div class="kpi-val">฿${Math.round(totalIn-totalOut).toLocaleString()}</div></div>`;
+  if(kpiEl)kpiEl.innerHTML=`<div class="kpi-card"><div class="kpi-lbl">รายรับสะสม (${periodLbl})</div><div class="kpi-val" style="color:var(--ok)">฿${Math.round(totalIn).toLocaleString()}</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">รายจ่ายสะสม (${periodLbl})</div><div class="kpi-val" style="color:var(--d)">฿${Math.round(totalOut).toLocaleString()}</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">กำไรสุทธิ (${periodLbl})</div><div class="kpi-val">฿${Math.round(totalIn-totalOut).toLocaleString()}</div></div>`;
   if(!list.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติรายรับ-รายจ่าย</p>';return;}
   tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>ประเภท</th><th>แปลง</th><th>รายละเอียด</th><th style="text-align:right">น้ำหนัก</th><th style="text-align:right">จำนวนเงิน</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
     list.map(r=>{
