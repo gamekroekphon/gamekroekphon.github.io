@@ -35,6 +35,7 @@ if(window.Chart){Chart.defaults.animation=false;Chart.defaults.responsiveAnimati
   --d:#DC2626;--db:#FDECEC;--w:#B45309;--wb:#FEF9E7;
   --ok:#15803D;--ob:#F4FBF6;--in:#185FA5;--ib:#E6F1FB;
   --lab:#0d9488;--labl:#E6F7F5;--labd:#0a6b62;
+  --palm:#2F7D4F;--palml:#EAF5EE;--palmd:#1F5B38;
   --hdr-bg:#FFFFFF;--hdr-accent:#FEF6E0;
   --r:10px;--sh:0 1px 2px rgba(16,24,40,.05);
   --w-tx:#B45309;--ok-tx:#14532D;--d-hov:#B91C1C;
@@ -405,7 +406,17 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .type-btn .ic{font-size:20px}
 .type-btn.on-pond{background:var(--sf);color:var(--p);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .type-btn.on-lab{background:var(--sf);color:var(--lab);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.type-btn.on-income{background:var(--ok);color:#fff}
+.type-btn.on-expense{background:var(--d);color:#fff}
 .type-desc{font-size:11.5px;color:var(--tx3);text-align:center;margin-top:8px;line-height:1.6}
+/* ── ตะวันปาล์ม: การ์ดแปลง ── */
+.plot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.plot-card{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:14px 16px;position:relative}
+.plot-card .pn{font-size:14px;font-weight:700;color:var(--tx);margin-bottom:2px;padding-right:50px}
+.plot-card .pa{font-size:11.5px;color:var(--tx3);margin-bottom:10px}
+.plot-stat{display:flex;justify-content:space-between;font-size:11.5px;color:var(--tx2);padding:3px 0}
+.plot-stat b{color:var(--tx)}
+.plot-card-actions{position:absolute;top:12px;right:12px;display:flex;gap:4px}
 .lab-tag{font-size:10px;font-weight:700;color:var(--labd);background:var(--labl);padding:2px 9px;border-radius:99px}
 .trial-chip{display:inline-block;padding:6px 14px;border-radius:20px;border:1.5px solid var(--bd);background:var(--sf);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--tx2);user-select:none}
 .trial-chip.on{background:var(--p);border-color:var(--p);color:#fff}
@@ -962,6 +973,10 @@ body.role-ceo .main{max-width:640px}
       <button class="sn-link tab-item" onclick="goTab('pl',this)">📊 P&amp;L สรุป</button>
     </div>
   </nav>
+  <div class="sn-label">สวนปาล์ม</div>
+  <nav class="sn-nav">
+    <button class="sn-top tab-item admin-only" onclick="goTab('palm',this)"><span>🌴</span> ตะวันปาล์ม</button>
+  </nav>
   <div class="sn-label">ทั่วไป</div>
   <nav class="sn-nav">
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-settings')"><span>⚙️</span> ตั้งค่า <span class="sn-caret">▾</span></button>
@@ -1047,6 +1062,7 @@ body.role-ceo .main{max-width:640px}
     <div class="tab-dropdown">
       <button class="tab-item" id="tab-manage" onclick="goTab('manage',this)">⚙️ จัดการบ่อ</button>
       <button class="tab-item admin-only" id="tab-users" onclick="goTab('users',this)">👤 จัดการผู้ใช้</button>
+      <button class="tab-item admin-only" id="tab-palm" onclick="goTab('palm',this)">🌴 ตะวันปาล์ม</button>
     </div>
   </div>
 </div>
@@ -1093,6 +1109,8 @@ body.role-ceo .main{max-width:640px}
     <button class="mob-sheet-item" data-t="elec" onclick="mobMenuGo(this)"><span class="ic">⚡</span>ค่าไฟฟ้า</button>
     <button class="mob-sheet-item" data-t="abw" onclick="mobMenuGo(this)"><span class="ic">📈</span>ABW Growth</button>
     <button class="mob-sheet-item" data-t="pl" onclick="mobMenuGo(this)"><span class="ic">📊</span>P&amp;L สรุป</button>
+    <div class="mob-sheet-grp">🌴 สวนปาล์ม</div>
+    <button class="mob-sheet-item admin-only" data-t="palm" onclick="mobMenuGo(this)"><span class="ic">🌴</span>ตะวันปาล์ม</button>
     <div class="mob-sheet-grp">⚙️ ทั่วไป</div>
     <button class="mob-sheet-item" data-t="manage" onclick="mobMenuGo(this)"><span class="ic">⚙️</span>จัดการบ่อ</button>
     <button class="mob-sheet-item admin-only" data-t="users" onclick="mobMenuGo(this)"><span class="ic">👤</span>จัดการผู้ใช้</button>
@@ -1101,7 +1119,10 @@ body.role-ceo .main{max-width:640px}
 <div class="main">
 <!-- CEO DASHBOARD (role=ceo เท่านั้น) -->
 <div id="sec-ceo" class="sec">
-  <div class="ceo-hdr"><div class="ceo-hdr-title">ภาพรวมฟาร์ม · รอบปัจจุบัน</div></div>
+  <div class="ceo-hdr" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+    <div class="ceo-hdr-title">ภาพรวมฟาร์ม · รอบปัจจุบัน</div>
+    <button class="btn btn-s btn-sm" onclick="openPalmFromCeo()" style="white-space:nowrap">🌴 ตะวันปาล์ม</button>
+  </div>
   <div class="ceo-kpi-grid" id="ceo-kpi"></div>
   <div class="ceo-sec-hd">
     <div class="ceo-sec-title" id="ceo-pond-count">บ่อทั้งหมด</div>
@@ -1169,6 +1190,144 @@ body.role-ceo .main{max-width:640px}
         </div>
         <div class="ceo-acc-panel"><div class="ceo-acc-inner" id="ceo-feed-detail"></div></div>
       </div>
+    </div>
+  </div>
+</div>
+<!-- PALM (ตะวันปาล์ม — admin/CEO เท่านั้น, ข้อมูลการเงิน/สวนปาล์มแยกอิสระจากฟาร์มกุ้งทั้งหมด ไม่แตะ D.ponds/D.inventoryLog/ต้นทุนกุ้งใดๆเลย) -->
+<div id="sec-palm" class="sec">
+  <div class="sec-hdr">
+    <div class="sec-title">🌴 ตะวันปาล์ม</div>
+    <button class="btn btn-s btn-sm" id="palm-back-ceo-btn" onclick="showCeoOnly()" style="display:none">← กลับแดชบอร์ด CEO</button>
+  </div>
+  <div class="stock-sub">
+    <button class="stock-sub-btn on" id="palmb-ov" onclick="palmTab('ov',this)">🏠 ภาพรวม</button>
+    <button class="stock-sub-btn" id="palmb-plot" onclick="palmTab('plot',this)">🗺️ แปลงปาล์ม</button>
+    <button class="stock-sub-btn" id="palmb-money" onclick="palmTab('money',this)">💰 รายรับ-รายจ่าย</button>
+    <button class="stock-sub-btn" id="palmb-fert" onclick="palmTab('fert',this)">🧪 ประวัติใส่ปุ๋ย</button>
+  </div>
+
+  <!-- pane: ภาพรวม -->
+  <div class="stock-pane on" id="palmp-ov">
+    <div class="g4" id="palm-ov-kpi" style="margin-bottom:14px"></div>
+    <div class="card">
+      <div class="card-t">⏰ แปลงที่ใกล้/เลยกำหนดใส่ปุ๋ยรอบถัดไป</div>
+      <div class="card-sub">คำนวณจากวันที่บันทึก "กำหนดใส่รอบถัดไป" ล่าสุดต่อแปลงในแท็บ "ประวัติใส่ปุ๋ย"</div>
+      <div id="palm-ov-reminders"></div>
+    </div>
+  </div>
+
+  <!-- pane: แปลงปาล์ม -->
+  <div class="stock-pane" id="palmp-plot">
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div class="card-t" style="margin-bottom:0">🗺️ แปลงปาล์มทั้งหมด</div>
+        <button class="btn btn-p btn-sm" onclick="openPalmPlotForm()">➕ เพิ่มแปลงใหม่</button>
+      </div>
+      <div class="card-sub">แต่ละแปลงเก็บพื้นที่/จำนวนต้น/อายุแยกกัน — ใช้เป็นตัวกรองในหน้ารายรับ-รายจ่ายและประวัติใส่ปุ๋ยได้</div>
+      <div class="plot-grid" id="palm-plot-grid"></div>
+    </div>
+    <div class="card" id="palm-plot-form-card" style="display:none">
+      <div class="card-t" id="palm-plot-form-title">➕ เพิ่มแปลงใหม่</div>
+      <input type="hidden" id="pf-id">
+      <div class="fgrid">
+        <div class="fg"><label class="fl">ชื่อแปลง</label><input class="fi" id="pf-name" placeholder="เช่น แปลง A — หน้าบ้าน"></div>
+        <div class="fg"><label class="fl">พันธุ์</label><input class="fi" id="pf-variety" placeholder="เช่น ลูกผสมเทเนอรา"></div>
+      </div>
+      <div class="fgrid">
+        <div class="fg"><label class="fl">พื้นที่ (ไร่)</label><input class="fi" id="pf-area" inputmode="decimal" placeholder="เช่น 12"></div>
+        <div class="fg"><label class="fl">จำนวนต้น</label><input class="fi" id="pf-trees" inputmode="numeric" placeholder="เช่น 264"></div>
+      </div>
+      <div class="fgrid">
+        <div class="fg"><label class="fl">ปีที่ปลูก (พ.ศ.)</label><input class="fi" id="pf-plantyear" inputmode="numeric" placeholder="เช่น 2558"></div>
+        <div class="fg"><label class="fl">สถานะ</label><select class="fi" id="pf-status"><option value="producing">ให้ผลผลิตแล้ว</option><option value="notyet">ยังไม่ให้ผล</option></select></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-p" onclick="savePalmPlot()" style="flex:1">💾 บันทึก</button>
+        <button class="btn btn-s" onclick="closePalmPlotForm()">ยกเลิก</button>
+      </div>
+      <div id="sk-msg-palmplot"></div>
+    </div>
+  </div>
+
+  <!-- pane: รายรับ-รายจ่าย -->
+  <div class="stock-pane" id="palmp-money">
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-t">💰 บันทึกรายรับ-รายจ่าย</div>
+      <div class="card-sub">แยกบัญชีเป็นของสวนปาล์มเองทั้งหมด — <b>ไม่นำไปรวม/คำนวณกับข้อมูลการเงินฝั่งตะวันฟาร์ม (กุ้ง) เลย</b> เพราะรายได้จากขายปาล์มนำไปลงทุนกองทุนต่อ ไม่ได้เข้ากองกลางฟาร์มกุ้ง</div>
+      <div class="type-row">
+        <button type="button" class="type-btn on-income" id="pm-mode-income" onclick="setPalmMoneyMode('income')">📥 รายรับ (ขายปาล์ม)</button>
+        <button type="button" class="type-btn" id="pm-mode-expense" onclick="setPalmMoneyMode('expense')">📤 รายจ่าย</button>
+      </div>
+      <div class="fgrid">
+        <div class="fg"><label class="fl">แปลง</label><select class="fi" id="pm-plot"><option value="">ไม่ระบุ / รวมทั้งสวน</option></select></div>
+        <div class="fg"><label class="fl">วันที่</label><input type="date" class="fi" id="pm-date"></div>
+      </div>
+      <div id="pm-income-fields" class="fgrid">
+        <div class="fg"><label class="fl">น้ำหนัก (กก.)</label><input class="fi" id="pm-weight" inputmode="decimal" placeholder="เช่น 2,400" oninput="palmMoneyPreview()"></div>
+        <div class="fg"><label class="fl">ราคา/กก. (บาท)</label><input class="fi" id="pm-price" inputmode="decimal" placeholder="เช่น 6.20" oninput="palmMoneyPreview()"></div>
+      </div>
+      <div class="fg"><label class="fl" id="pm-amount-lbl">ยอดรวม (บาท)</label><input class="fi" id="pm-amount" inputmode="decimal" placeholder="0.00"></div>
+      <div class="fg"><label class="fl">รายละเอียด / หมายเหตุ</label><input class="fi" id="pm-note" placeholder="เช่น ลานเทปาล์มบางสวรรค์, ค่าน้ำมันรถตัดปาล์ม"></div>
+      <button class="btn btn-p" style="width:100%" onclick="savePalmMoney()">💾 บันทึก</button>
+      <div id="sk-msg-palmmoney"></div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+        <div class="card-t" style="margin-bottom:0">📋 ประวัติรายรับ-รายจ่าย</div>
+        <div class="chip-row" id="pm-filter-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+      <div class="g4" id="pm-kpi" style="margin-bottom:16px"></div>
+      <div id="pm-table"></div>
+    </div>
+  </div>
+
+  <!-- pane: ประวัติใส่ปุ๋ย -->
+  <div class="stock-pane" id="palmp-fert">
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-t">🧪 บันทึกการใส่ปุ๋ย</div>
+      <div class="fgrid">
+        <div class="fg"><label class="fl">แปลง <span style="color:var(--d)">*</span></label><select class="fi" id="pfl-plot"></select></div>
+        <div class="fg"><label class="fl">วันที่ใส่</label><input type="date" class="fi" id="pfl-date"></div>
+      </div>
+      <div class="fgrid">
+        <div class="fg"><label class="fl">ชนิดปุ๋ย</label><input class="fi" id="pfl-type" placeholder="เช่น 15-15-15, โพแทสเซียมคลอไรด์"></div>
+        <div class="fg"><label class="fl">ยี่ห้อปุ๋ย</label><input class="fi" id="pfl-brand" placeholder="เช่น ตราหัววัว-คันไถ, ไอซีพี"></div>
+      </div>
+      <div class="fgrid">
+        <div class="fg"><label class="fl">จำนวน</label><input class="fi" id="pfl-qty" inputmode="decimal" placeholder="เช่น 12" oninput="palmFertPreviewKg()"></div>
+        <div class="fg"><label class="fl">หน่วย</label><select class="fi" id="pfl-unit" onchange="palmFertPreviewKg()">
+          <option value="50">กระสอบ (50 กก./กระสอบ)</option>
+          <option value="25">กระสอบ (25 กก./กระสอบ)</option>
+          <option value="1">กิโลกรัม</option>
+        </select></div>
+      </div>
+      <div class="fgrid">
+        <div class="fg"><label class="fl">รวมเป็นกิโลกรัม</label><input class="fi" id="pfl-kg-preview" placeholder="คำนวณอัตโนมัติจากจำนวน × หน่วย" style="background:var(--sf2)" readonly></div>
+        <div class="fg"><label class="fl">ค่าใช้จ่าย (บาท)</label><input class="fi" id="pfl-cost" inputmode="decimal" placeholder="0.00"></div>
+      </div>
+      <div class="fg"><label class="fl">กำหนดใส่รอบถัดไป (โดยประมาณ)</label><input type="date" class="fi" id="pfl-next"></div>
+      <div class="fg"><label class="fl">หมายเหตุ</label><input class="fi" id="pfl-note" placeholder="เช่น ใส่รอบฝนแรก, ผู้ใส่: ลุงสมชาย"></div>
+      <button class="btn btn-p" style="width:100%" onclick="savePalmFert()">💾 บันทึก</button>
+      <div id="sk-msg-palmfert"></div>
+      <div class="hint" style="margin-top:12px">💡 บันทึกที่ผูก "ค่าใช้จ่าย" ไว้ จะไปรวมกับหมวดรายจ่ายในแท็บ "รายรับ-รายจ่าย" ของตะวันปาล์มเองให้อัตโนมัติ (ไม่ต้องกรอกซ้ำสองที่) — <b>ไม่ยุ่งกับข้อมูลการเงินของฝั่งตะวันฟาร์ม (กุ้ง) เลย แยกกันเด็ดขาด</b></div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:4px">
+        <div class="card-t" style="margin-bottom:0">📊 สรุปปริมาณปุ๋ยที่ใส่ต่อต้น (สะสมรายปี)</div>
+        <select class="fi" id="pfs-year" style="width:150px" onchange="renderPalmFertSummary()"></select>
+      </div>
+      <div class="card-sub">คำนวณจาก "ประวัติการใส่ปุ๋ย" ที่บันทึกไว้ทั้งหมดของแต่ละแปลงในปีนั้น ÷ จำนวนต้นในแปลง</div>
+      <div id="palm-fert-summary-table"></div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+        <div class="card-t" style="margin-bottom:0">📋 ประวัติการใส่ปุ๋ยรายแปลง</div>
+        <div class="chip-row" id="pfl-filter-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+      <div id="palm-fert-table"></div>
     </div>
   </div>
 </div>
@@ -4517,6 +4676,7 @@ function goTab(t,btn){
   if(t==='trial')initTrialTab();
   if(t==='compare')initCompare();if(t==='risk'){if(_wxDaily)renderRisk(_wxDaily);else fetchWx();}if(t==='export')initExport();if(t==='wqfeed')initWqFeed();if(t==='hatchery')initHatchery();
   if(t==='manage')renderManage();
+  if(t==='palm')initPalm();
   if(t==='users')renderUsers();
   if(t==='harvest')initHarvest();
   if(t==='crops')renderCrops();
@@ -7384,6 +7544,338 @@ function renderClerkCash(){
   }</tbody></table></div>`;
 }
 /* ===== END INVENTORY / STOCK ===== */
+
+/* ═══ ตะวันปาล์ม (admin/CEO เท่านั้น) — การเงินแยกอิสระจากฟาร์มกุ้งทั้งหมด ═══ */
+function palmPlots(){return D.palmPlots||[];}
+function palmMoneyList(){return D.palmMoney||[];}
+function palmFertList(){return D.palmFertilizer||[];}
+function palmPlotName(id){if(!id)return'ไม่ระบุ / รวมทั้งสวน';const p=palmPlots().find(x=>x.id===id);return p?p.name:'(แปลงที่ถูกลบ)';}
+function openPalmFromCeo(){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.getElementById('sec-palm')?.classList.add('on');
+  initPalm();
+}
+let _palmActiveTab='ov';
+function initPalm(){
+  if(APP_ROLE!=='admin'&&APP_ROLE!=='ceo')return;
+  const backBtn=document.getElementById('palm-back-ceo-btn');
+  if(backBtn)backBtn.style.display=APP_ROLE==='ceo'?'':'none';
+  palmTab(_palmActiveTab,document.getElementById('palmb-'+_palmActiveTab));
+}
+function palmTab(paneId,btn){
+  _palmActiveTab=paneId;
+  document.querySelectorAll('#sec-palm .stock-pane').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('#sec-palm .stock-sub-btn').forEach(b=>b.classList.remove('on'));
+  const p=document.getElementById('palmp-'+paneId);if(p)p.classList.add('on');
+  if(btn)btn.classList.add('on');
+  if(paneId==='ov')renderPalmOverview();
+  if(paneId==='plot')renderPalmPlots();
+  if(paneId==='money'){populatePalmPlotSelects();setPalmMoneyMode(_palmMoneyMode);renderPalmMoneyFilterChips();renderPalmMoney();}
+  if(paneId==='fert'){populatePalmPlotSelects();renderPalmFertYearOptions();renderPalmFertFilterChips();renderPalmFertSummary();renderPalmFertLog();}
+}
+function populatePalmPlotSelects(){
+  const list=palmPlots();
+  const opts=list.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  const pmSel=document.getElementById('pm-plot');
+  if(pmSel){const cur=pmSel.value;pmSel.innerHTML='<option value="">ไม่ระบุ / รวมทั้งสวน</option>'+opts;if([...pmSel.options].some(o=>o.value===cur))pmSel.value=cur;}
+  const pflSel=document.getElementById('pfl-plot');
+  if(pflSel){const cur=pflSel.value;pflSel.innerHTML=opts||'<option value="">— ยังไม่มีแปลง เพิ่มก่อนในแท็บ "แปลงปาล์ม" —</option>';if([...pflSel.options].some(o=>o.value===cur))pflSel.value=cur;}
+}
+
+// ── ภาพรวม ──
+function renderPalmOverview(){
+  const kpiEl=document.getElementById('palm-ov-kpi');if(!kpiEl)return;
+  const plots=palmPlots();
+  const totalArea=plots.reduce((s,p)=>s+(p.area||0),0);
+  const thisMonth=today().slice(0,7);
+  const moneyThisMonth=palmMoneyList().filter(r=>(r.date||'').startsWith(thisMonth));
+  const totalIn=moneyThisMonth.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  const totalOut=moneyThisMonth.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
+  kpiEl.innerHTML=`<div class="kpi-card"><div class="kpi-lbl">จำนวนแปลง</div><div class="kpi-val">${plots.length}</div><div class="kpi-sub">แปลง</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">พื้นที่รวม</div><div class="kpi-val">${totalArea.toLocaleString()}</div><div class="kpi-sub">ไร่</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">รายได้เดือนนี้</div><div class="kpi-val" style="color:var(--ok)">฿${Math.round(totalIn).toLocaleString()}</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">กำไรสุทธิเดือนนี้</div><div class="kpi-val">฿${Math.round(totalIn-totalOut).toLocaleString()}</div></div>`;
+  const remEl=document.getElementById('palm-ov-reminders');if(!remEl)return;
+  const today0=today();
+  const rows=plots.map(p=>{
+    const fertRecs=palmFertList().filter(r=>r.plotId===p.id&&r.next).sort((a,b)=>b.next.localeCompare(a.next));
+    return{p,latest:fertRecs[0]};
+  }).filter(x=>x.latest);
+  if(!rows.length){remEl.innerHTML='<p style="color:var(--tx3);padding:12px;font-style:italic;text-align:center">ยังไม่มีข้อมูลกำหนดใส่ปุ๋ยรอบถัดไป</p>';return;}
+  rows.sort((a,b)=>dDiff(today0,a.latest.next)-dDiff(today0,b.latest.next));
+  remEl.innerHTML=rows.map(({p,latest})=>{
+    const daysLeft=dDiff(today0,latest.next);
+    let icon='🟢',badge='<span class="badge b-ok">ปกติ</span>',txt='ครบกำหนดในอีก '+daysLeft+' วัน';
+    if(daysLeft<0){icon='🔴';badge='<span class="badge b-danger">เลยกำหนด</span>';txt='เลยกำหนดมาแล้ว '+Math.abs(daysLeft)+' วัน';}
+    else if(daysLeft<=7){icon='🟡';badge='<span class="badge b-warn">ใกล้ถึง</span>';}
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border:1px solid var(--bd);border-radius:8px;margin-bottom:8px;font-size:12.5px"><span>${icon} <b>${p.name}</b> ${txt}</span>${badge}</div>`;
+  }).join('');
+}
+
+// ── แปลงปาล์ม ──
+function openPalmPlotForm(plotId){
+  const card=document.getElementById('palm-plot-form-card');if(!card)return;
+  card.style.display='';
+  const titleEl=document.getElementById('palm-plot-form-title');
+  if(plotId){
+    const p=palmPlots().find(x=>x.id===plotId);if(!p)return;
+    titleEl.textContent='✏️ แก้ไขแปลง: '+p.name;
+    document.getElementById('pf-id').value=p.id;
+    document.getElementById('pf-name').value=p.name;
+    document.getElementById('pf-variety').value=p.variety||'';
+    document.getElementById('pf-area').value=p.area||'';
+    document.getElementById('pf-trees').value=p.trees||'';
+    document.getElementById('pf-plantyear').value=p.plantYear||'';
+    document.getElementById('pf-status').value=p.status||'producing';
+  }else{
+    titleEl.textContent='➕ เพิ่มแปลงใหม่';
+    ['pf-id','pf-name','pf-variety','pf-area','pf-trees','pf-plantyear'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('pf-status').value='producing';
+  }
+  card.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function closePalmPlotForm(){
+  const card=document.getElementById('palm-plot-form-card');if(card)card.style.display='none';
+}
+function savePalmPlot(){
+  const id=document.getElementById('pf-id').value;
+  const name=document.getElementById('pf-name').value.trim();
+  const area=parseFloat(document.getElementById('pf-area').value)||0;
+  const trees=parseInt(document.getElementById('pf-trees').value)||0;
+  if(!name){showStockMsg('palmplot','กรุณากรอกชื่อแปลง','err');return;}
+  if(!trees){showStockMsg('palmplot','กรุณากรอกจำนวนต้น','err');return;}
+  if(!D.palmPlots)D.palmPlots=[];
+  const rec={
+    id:id||('pp'+Date.now()+'_'+Math.random().toString(36).slice(2,6)),
+    name,variety:document.getElementById('pf-variety').value.trim(),area,trees,
+    plantYear:document.getElementById('pf-plantyear').value.trim(),
+    status:document.getElementById('pf-status').value
+  };
+  const idx=D.palmPlots.findIndex(p=>p.id===rec.id);
+  if(idx>=0)D.palmPlots[idx]=rec;else D.palmPlots.push(rec);
+  save();
+  showStockMsg('palmplot','✅ บันทึกเรียบร้อย','ok');
+  closePalmPlotForm();
+  renderPalmPlots();
+}
+function deletePalmPlot(id){
+  const p=palmPlots().find(x=>x.id===id);if(!p)return;
+  if(!confirm('ลบแปลง "'+p.name+'"? (ประวัติรายรับ-รายจ่าย/ใส่ปุ๋ยเก่าที่เคยผูกกับแปลงนี้จะยังอยู่ครบ แค่โชว่เป็น "แปลงที่ถูกลบ")'))return;
+  D.palmPlots=D.palmPlots.filter(x=>x.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
+  save();
+  renderPalmPlots();
+}
+function renderPalmPlots(){
+  const el=document.getElementById('palm-plot-grid');if(!el)return;
+  const list=palmPlots();
+  if(!list.length){el.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center;grid-column:1/-1">ยังไม่มีแปลงปาล์ม กด "เพิ่มแปลงใหม่" เพื่อเริ่มต้น</p>';return;}
+  const curYear=new Date().getFullYear().toString();
+  el.innerHTML=list.map(p=>{
+    const kgThisYear=palmFertList().filter(r=>r.plotId===p.id&&(r.date||'').startsWith(curYear)).reduce((s,r)=>s+(r.kg||0),0);
+    const perTree=p.trees?kgThisYear/p.trees:0;
+    return `<div class="plot-card">
+      <div class="plot-card-actions">
+        <button class="btn-sm" style="background:var(--sf2);color:var(--tx2);padding:4px 8px" onclick="openPalmPlotForm('${p.id}')">✏️</button>
+        <button class="btn-sm btn-del" onclick="deletePalmPlot('${p.id}')">🗑️</button>
+      </div>
+      <div class="pn">${p.name}</div>
+      <div class="pa">${p.variety?p.variety+' · ':''}${p.plantYear?'ปลูก '+p.plantYear:''}</div>
+      <div class="plot-stat"><span>พื้นที่</span><b>${p.area?p.area.toLocaleString():'-'} ไร่</b></div>
+      <div class="plot-stat"><span>จำนวนต้น</span><b>${p.trees.toLocaleString()} ต้น</b></div>
+      <div class="plot-stat"><span>ปุ๋ยปีนี้ (สะสม)</span><b>${p.trees?perTree.toFixed(2)+' กก./ต้น':'-'}</b></div>
+      <div class="plot-stat"><span>สถานะ</span>${p.status==='producing'?'<span class="badge b-ok">ให้ผลผลิตแล้ว</span>':'<span class="badge b-warn">ยังไม่ให้ผล</span>'}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── รายรับ-รายจ่าย ──
+let _palmMoneyMode='income';
+function setPalmMoneyMode(mode){
+  _palmMoneyMode=mode;
+  const bi=document.getElementById('pm-mode-income'),be=document.getElementById('pm-mode-expense');
+  if(bi)bi.className='type-btn'+(mode==='income'?' on-income':'');
+  if(be)be.className='type-btn'+(mode==='expense'?' on-expense':'');
+  const incFields=document.getElementById('pm-income-fields');if(incFields)incFields.style.display=mode==='income'?'':'none';
+  const amtLbl=document.getElementById('pm-amount-lbl');if(amtLbl)amtLbl.textContent=mode==='income'?'ยอดรวม (บาท)':'จำนวนเงิน (บาท)';
+}
+function palmMoneyPreview(){
+  const w=parseFloat(document.getElementById('pm-weight').value)||0;
+  const pr=parseFloat(document.getElementById('pm-price').value)||0;
+  if(w&&pr)document.getElementById('pm-amount').value=(w*pr).toFixed(2);
+}
+function savePalmMoney(){
+  const date=document.getElementById('pm-date').value||today();
+  const plotId=document.getElementById('pm-plot').value;
+  const amount=parseFloat(document.getElementById('pm-amount').value)||0;
+  const note=document.getElementById('pm-note').value.trim();
+  if(!(amount>0)){showStockMsg('palmmoney','กรุณากรอกจำนวนเงินให้ถูกต้อง','err');return;}
+  if(!D.palmMoney)D.palmMoney=[];
+  const rec={id:'pm'+Date.now()+'_'+Math.random().toString(36).slice(2,6),type:_palmMoneyMode,plotId,date,amount,note,by:curUserLabel()};
+  if(_palmMoneyMode==='income'){
+    const w=parseFloat(document.getElementById('pm-weight').value)||0;
+    const pr=parseFloat(document.getElementById('pm-price').value)||0;
+    if(w)rec.weightKg=w;
+    if(pr)rec.pricePerKg=pr;
+  }
+  D.palmMoney.push(rec);
+  save();
+  showStockMsg('palmmoney','✅ บันทึก'+(_palmMoneyMode==='income'?'รายรับ':'รายจ่าย')+'เรียบร้อย','ok');
+  ['pm-weight','pm-price','pm-amount','pm-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  renderPalmMoney();
+  flashSaveBtn(document.querySelector('#palmp-money .btn-p'));
+}
+function deletePalmMoney(id){
+  const rec=palmMoneyList().find(r=>r.id===id);if(!rec)return;
+  if(rec.linkedFertId){alert('รายการนี้ผูกกับประวัติใส่ปุ๋ย ต้องลบจากแท็บ "ประวัติใส่ปุ๋ย" แทน (ระบบจะลบให้ทั้งคู่พร้อมกัน)');return;}
+  if(!confirm('ลบรายการนี้?'))return;
+  D.palmMoney=D.palmMoney.filter(r=>r.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
+  save();
+  renderPalmMoney();
+}
+let _palmMoneyFilterPlot='';
+function renderPalmMoneyFilterChips(){
+  const wrap=document.getElementById('pm-filter-chips');if(!wrap)return;
+  const chips=[{id:'',name:'ทุกแปลง'}].concat(palmPlots().map(p=>({id:p.id,name:p.name})));
+  wrap.innerHTML=chips.map(c=>`<span class="trial-chip${_palmMoneyFilterPlot===c.id?' on':''}" onclick="setPalmMoneyFilterPlot('${c.id}',this)">${c.name}</span>`).join('');
+}
+function setPalmMoneyFilterPlot(id,btn){
+  _palmMoneyFilterPlot=id;
+  document.querySelectorAll('#pm-filter-chips .trial-chip').forEach(el=>el.classList.remove('on'));
+  btn.classList.add('on');
+  renderPalmMoney();
+}
+function renderPalmMoney(){
+  const tbl=document.getElementById('pm-table');if(!tbl)return;
+  let list=palmMoneyList().slice();
+  if(_palmMoneyFilterPlot)list=list.filter(r=>r.plotId===_palmMoneyFilterPlot);
+  list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const thisMonth=today().slice(0,7);
+  const monthList=palmMoneyList().filter(r=>(_palmMoneyFilterPlot?r.plotId===_palmMoneyFilterPlot:true)&&(r.date||'').startsWith(thisMonth));
+  const totalIn=monthList.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  const totalOut=monthList.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
+  const kpiEl=document.getElementById('pm-kpi');
+  if(kpiEl)kpiEl.innerHTML=`<div class="kpi-card"><div class="kpi-lbl">รายรับสะสม (เดือนนี้)</div><div class="kpi-val" style="color:var(--ok)">฿${Math.round(totalIn).toLocaleString()}</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">รายจ่ายสะสม (เดือนนี้)</div><div class="kpi-val" style="color:var(--d)">฿${Math.round(totalOut).toLocaleString()}</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">กำไรสุทธิ (เดือนนี้)</div><div class="kpi-val">฿${Math.round(totalIn-totalOut).toLocaleString()}</div></div>`;
+  if(!list.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติรายรับ-รายจ่าย</p>';return;}
+  tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>ประเภท</th><th>แปลง</th><th>รายละเอียด</th><th style="text-align:right">น้ำหนัก</th><th style="text-align:right">จำนวนเงิน</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
+    list.map(r=>{
+      const weightTxt=r.weightKg?r.weightKg.toLocaleString()+' กก.':'—';
+      return `<tr><td>${fD(r.date)}</td><td><span class="badge ${r.type==='income'?'b-ok':'b-danger'}">${r.type==='income'?'📥 รายรับ':'📤 รายจ่าย'}</span></td><td>${palmPlotName(r.plotId)}</td><td>${r.note||'-'}</td><td style="text-align:right">${weightTxt}</td><td style="text-align:right;color:${r.type==='income'?'var(--ok)':'var(--d)'}">${r.type==='income'?'+':'-'}฿${Math.round(r.amount).toLocaleString()}</td><td style="font-size:12px;color:var(--tx2)">${r.by||'-'}</td><td>${r.linkedFertId?'':'<button class="btn-sm btn-del" onclick="deletePalmMoney(\''+r.id+'\')">🗑️</button>'}</td></tr>`;
+    }).join('')
+  }</tbody></table></div>`;
+}
+
+// ── ประวัติใส่ปุ๋ย ──
+function palmFertPreviewKg(){
+  const qty=parseFloat(document.getElementById('pfl-qty').value)||0;
+  const per=parseFloat(document.getElementById('pfl-unit').value)||0;
+  const kg=qty*per;
+  document.getElementById('pfl-kg-preview').value=kg?kg.toLocaleString()+' กก.':'';
+}
+function savePalmFert(){
+  const plotId=document.getElementById('pfl-plot').value;
+  const date=document.getElementById('pfl-date').value||today();
+  const qty=parseFloat(document.getElementById('pfl-qty').value)||0;
+  const unitPerKg=parseFloat(document.getElementById('pfl-unit').value)||1;
+  const unitLabel=document.getElementById('pfl-unit').selectedOptions[0].textContent;
+  const cost=parseFloat(document.getElementById('pfl-cost').value)||0;
+  if(!plotId){showStockMsg('palmfert','กรุณาเลือกแปลง (เพิ่มแปลงก่อนถ้ายังไม่มี)','err');return;}
+  if(!(qty>0)){showStockMsg('palmfert','กรุณากรอกจำนวนให้ถูกต้อง','err');return;}
+  const kg=qty*unitPerKg;
+  if(!D.palmFertilizer)D.palmFertilizer=[];
+  const id='pf'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  const rec={id,plotId,date,type:document.getElementById('pfl-type').value.trim(),brand:document.getElementById('pfl-brand').value.trim(),qtyRaw:qty,unitLabel,kg,cost,next:document.getElementById('pfl-next').value,note:document.getElementById('pfl-note').value.trim(),by:curUserLabel()};
+  if(cost>0){
+    if(!D.palmMoney)D.palmMoney=[];
+    const moneyId='pm'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    D.palmMoney.push({id:moneyId,type:'expense',plotId,date,amount:cost,note:(rec.type||'ปุ๋ย')+(rec.brand?' ('+rec.brand+')':''),by:curUserLabel(),linkedFertId:id});
+    rec.linkedMoneyId=moneyId;
+  }
+  D.palmFertilizer.push(rec);
+  save();
+  showStockMsg('palmfert','✅ บันทึกเรียบร้อย','ok');
+  ['pfl-type','pfl-brand','pfl-qty','pfl-cost','pfl-next','pfl-note'].forEach(id2=>{const el=document.getElementById(id2);if(el)el.value='';});
+  const kgPrev=document.getElementById('pfl-kg-preview');if(kgPrev)kgPrev.value='';
+  renderPalmPlots();
+  renderPalmFertYearOptions();
+  renderPalmFertSummary();
+  renderPalmFertLog();
+  flashSaveBtn(document.querySelector('#palmp-fert .btn-p'));
+}
+function deletePalmFert(id){
+  const rec=palmFertList().find(r=>r.id===id);if(!rec)return;
+  if(!confirm('ลบรายการนี้?'+(rec.linkedMoneyId?' (จะลบรายจ่ายที่ผูกไว้ในแท็บ "รายรับ-รายจ่าย" ให้ด้วย)':'')))return;
+  D.palmFertilizer=D.palmFertilizer.filter(r=>r.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
+  if(rec.linkedMoneyId){
+    D.palmMoney=(D.palmMoney||[]).filter(m=>m.id!==rec.linkedMoneyId);
+    D.deletedIds.push(rec.linkedMoneyId);
+  }
+  save();
+  renderPalmPlots();
+  renderPalmFertYearOptions();
+  renderPalmFertSummary();
+  renderPalmFertLog();
+}
+function renderPalmFertYearOptions(){
+  const sel=document.getElementById('pfs-year');if(!sel)return;
+  const years=[...new Set(palmFertList().map(r=>(r.date||'').slice(0,4)).filter(Boolean))];
+  const curYear=new Date().getFullYear().toString();
+  if(!years.includes(curYear))years.push(curYear);
+  years.sort((a,b)=>b.localeCompare(a));
+  const cur=sel.value;
+  sel.innerHTML=years.map(y=>`<option value="${y}">ปี ${parseInt(y)+543}</option>`).join('');
+  if(years.includes(cur))sel.value=cur;
+}
+function renderPalmFertSummary(){
+  const sel=document.getElementById('pfs-year');const el=document.getElementById('palm-fert-summary-table');if(!el)return;
+  const year=sel?sel.value:new Date().getFullYear().toString();
+  const list=palmPlots();
+  if(!list.length){el.innerHTML='<p style="color:var(--tx3);padding:12px;font-style:italic;text-align:center">ยังไม่มีแปลงปาล์ม เพิ่มแปลงก่อนในแท็บ "แปลงปาล์ม"</p>';return;}
+  const rows=list.map(p=>{
+    const kg=palmFertList().filter(r=>r.plotId===p.id&&(r.date||'').startsWith(year)).reduce((s,r)=>s+(r.kg||0),0);
+    const perTree=p.trees?kg/p.trees:0;
+    return{...p,kg,perTree};
+  });
+  el.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>แปลง</th><th style="text-align:right">จำนวนต้น</th><th style="text-align:right">ปุ๋ยรวมปีนี้ (กก.)</th><th style="text-align:right">เฉลี่ย (กก./ต้น/ปี)</th></tr></thead><tbody>${
+    rows.map(r=>`<tr><td>${r.name}</td><td style="text-align:right">${r.trees.toLocaleString()}</td><td style="text-align:right">${r.kg.toLocaleString()}</td><td style="text-align:right"><b>${r.perTree.toFixed(2)}</b></td></tr>`).join('')
+  }</tbody></table></div>`;
+}
+let _palmFertFilterPlot='';
+function renderPalmFertFilterChips(){
+  const wrap=document.getElementById('pfl-filter-chips');if(!wrap)return;
+  const chips=[{id:'',name:'ทุกแปลง'}].concat(palmPlots().map(p=>({id:p.id,name:p.name})));
+  wrap.innerHTML=chips.map(c=>`<span class="trial-chip${_palmFertFilterPlot===c.id?' on':''}" onclick="setPalmFertFilterPlot('${c.id}',this)">${c.name}</span>`).join('');
+}
+function setPalmFertFilterPlot(id,btn){
+  _palmFertFilterPlot=id;
+  document.querySelectorAll('#pfl-filter-chips .trial-chip').forEach(el=>el.classList.remove('on'));
+  btn.classList.add('on');
+  renderPalmFertLog();
+}
+function renderPalmFertLog(){
+  const tbl=document.getElementById('palm-fert-table');if(!tbl)return;
+  let list=palmFertList().slice();
+  if(_palmFertFilterPlot)list=list.filter(r=>r.plotId===_palmFertFilterPlot);
+  list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(!list.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติการใส่ปุ๋ย</p>';return;}
+  const today0=today();
+  tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่ใส่</th><th>แปลง</th><th>ชนิดปุ๋ย</th><th>ยี่ห้อ</th><th style="text-align:right">ปริมาณ</th><th style="text-align:right">ค่าใช้จ่าย</th><th>กำหนดครั้งถัดไป</th><th>หมายเหตุ</th><th></th></tr></thead><tbody>${
+    list.map(r=>{
+      let nextTxt='-';
+      if(r.next){
+        const daysLeft=dDiff(today0,r.next);
+        if(daysLeft<0)nextTxt='<span class="badge b-danger">เลยกำหนด '+Math.abs(daysLeft)+' วัน</span>';
+        else if(daysLeft<=7)nextTxt='<span class="badge b-warn">'+fD(r.next)+' (ใกล้ถึง)</span>';
+        else nextTxt='<span class="badge b-ok">'+fD(r.next)+'</span>';
+      }
+      return `<tr><td>${fD(r.date)}</td><td>${palmPlotName(r.plotId)}</td><td>${r.type||'-'}</td><td>${r.brand||'-'}</td><td style="text-align:right">${r.qtyRaw} ${(r.unitLabel||'').split(' ')[0]}<br><span style="font-size:10.5px;color:var(--tx3)">(${r.kg.toLocaleString()} กก.)</span></td><td style="text-align:right">${r.cost?'฿'+r.cost.toLocaleString():'-'}</td><td>${nextTxt}</td><td style="font-size:12px;color:var(--tx2)">${r.note||''}</td><td><button class="btn-sm btn-del" onclick="deletePalmFert('${r.id}')">🗑️</button></td></tr>`;
+    }).join('')
+  }</tbody></table></div>`;
+}
 
 function initEntry(){
   populateAll();
