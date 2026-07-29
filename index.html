@@ -1211,6 +1211,14 @@ body.role-ceo .main{max-width:640px}
   <!-- pane: ภาพรวม -->
   <div class="stock-pane on" id="palmp-ov">
     <div class="g4" id="palm-ov-kpi" style="margin-bottom:14px"></div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:4px">
+        <div class="card-t" style="margin-bottom:0">📈 แนวโน้มผลผลิต (12 เดือนล่าสุด)</div>
+        <div class="chip-row" id="palm-yield-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+      <div class="card-sub">น้ำหนักปาล์มที่ขายได้ (กก.) รายเดือน คำนวณจากรายรับที่มีบันทึกน้ำหนักในแท็บ "รายรับ-รายจ่าย"</div>
+      <div style="position:relative;height:220px"><canvas id="palm-yield-chart"></canvas></div>
+    </div>
     <div class="card">
       <div class="card-t">⏰ แปลงที่ใกล้/เลยกำหนดใส่ปุ๋ยรอบถัดไป</div>
       <div class="card-sub">คำนวณจากวันที่บันทึก "กำหนดใส่รอบถัดไป" ล่าสุดต่อแปลงในแท็บ "ประวัติใส่ปุ๋ย"</div>
@@ -7571,7 +7579,7 @@ function palmTab(paneId,btn){
   document.querySelectorAll('#sec-palm .stock-sub-btn').forEach(b=>b.classList.remove('on'));
   const p=document.getElementById('palmp-'+paneId);if(p)p.classList.add('on');
   if(btn)btn.classList.add('on');
-  if(paneId==='ov')renderPalmOverview();
+  if(paneId==='ov'){renderPalmOverview();renderPalmYieldFilterChips();renderPalmYieldChart();}
   if(paneId==='plot')renderPalmPlots();
   if(paneId==='money'){populatePalmPlotSelects();setPalmMoneyMode(_palmMoneyMode);renderPalmMoneyPeriodChips();renderPalmMoneyFilterChips();renderPalmMoney();}
   if(paneId==='fert'){populatePalmPlotSelects();renderPalmFertYearOptions();renderPalmFertFilterChips();renderPalmFertSummary();renderPalmFertLog();}
@@ -7613,6 +7621,43 @@ function renderPalmOverview(){
     else if(daysLeft<=7){icon='🟡';badge='<span class="badge b-warn">ใกล้ถึง</span>';}
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border:1px solid var(--bd);border-radius:8px;margin-bottom:8px;font-size:12.5px"><span>${icon} <b>${p.name}</b> ${txt}</span>${badge}</div>`;
   }).join('');
+}
+let _palmYieldChart=null;
+let _palmYieldFilterPlot='';
+function renderPalmYieldFilterChips(){
+  const wrap=document.getElementById('palm-yield-chips');if(!wrap)return;
+  const chips=[{id:'',name:'ทุกแปลง'}].concat(palmPlots().map(p=>({id:p.id,name:p.name})));
+  wrap.innerHTML=chips.map(c=>`<span class="trial-chip${_palmYieldFilterPlot===c.id?' on':''}" onclick="setPalmYieldFilterPlot('${c.id}',this)">${c.name}</span>`).join('');
+}
+function setPalmYieldFilterPlot(id,btn){
+  _palmYieldFilterPlot=id;
+  document.querySelectorAll('#palm-yield-chips .trial-chip').forEach(el=>el.classList.remove('on'));
+  btn.classList.add('on');
+  renderPalmYieldChart();
+}
+function renderPalmYieldChart(){
+  const canvas=document.getElementById('palm-yield-chart');if(!canvas)return;
+  if(_palmYieldChart){_palmYieldChart.destroy();_palmYieldChart=null;}
+  const months=[];
+  const now=new Date();now.setDate(1);
+  for(let i=11;i>=0;i--){
+    const d=new Date(now);d.setMonth(d.getMonth()-i);
+    const ym=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    months.push({ym,label:MO_TH_SHORT[d.getMonth()]+' '+String((d.getFullYear()+543)%100).padStart(2,'0')});
+  }
+  const list=palmMoneyList().filter(r=>r.type==='income'&&r.weightKg&&(_palmYieldFilterPlot?r.plotId===_palmYieldFilterPlot:true));
+  const data=months.map(mo=>list.filter(r=>(r.date||'').startsWith(mo.ym)).reduce((s,r)=>s+r.weightKg,0));
+  _palmYieldChart=new Chart(canvas,{
+    type:'line',
+    data:{labels:months.map(m=>m.label),datasets:[{label:'ผลผลิต (กก.)',data,borderColor:'#2F7D4F',backgroundColor:'rgba(47,125,79,.15)',borderWidth:2.5,pointRadius:3,pointBackgroundColor:'#2F7D4F',fill:true,tension:.3}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y.toLocaleString()} กก.`}}},
+      scales:{
+        x:{ticks:{font:{size:9.5},color:'var(--tx3)'},grid:{display:false}},
+        y:{beginAtZero:true,ticks:{font:{size:9.5},color:'var(--tx3)',callback:v=>fmtKM(v)},grid:{color:'rgba(0,0,0,0.04)'}}
+      }
+    }
+  });
 }
 
 // ── แปลงปาล์ม ──
@@ -7678,6 +7723,8 @@ function renderPalmPlots(){
     const kgThisYear=palmFertList().filter(r=>r.plotId===p.id&&(r.date||'').startsWith(curYear)).reduce((s,r)=>s+(r.kg||0),0);
     const perTree=p.trees?kgThisYear/p.trees:0;
     const plotMoney=palmMoneyList().filter(r=>r.plotId===p.id);
+    const yieldThisYear=plotMoney.filter(r=>r.type==='income'&&(r.date||'').startsWith(curYear)).reduce((s,r)=>s+(r.weightKg||0),0);
+    const yieldPerRai=p.area?yieldThisYear/p.area:0;
     const lifetimeIncome=plotMoney.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
     const lifetimeExpense=plotMoney.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
     const lifetimeNet=lifetimeIncome-lifetimeExpense;
@@ -7691,6 +7738,7 @@ function renderPalmPlots(){
       <div class="plot-stat"><span>พื้นที่</span><b>${p.area?p.area.toLocaleString():'-'} ไร่</b></div>
       <div class="plot-stat"><span>จำนวนต้น</span><b>${p.trees.toLocaleString()} ต้น</b></div>
       <div class="plot-stat"><span>ปุ๋ยปีนี้ (สะสม)</span><b>${p.trees?perTree.toFixed(2)+' กก./ต้น':'-'}</b></div>
+      <div class="plot-stat"><span>ผลผลิตปีนี้ (สะสม)</span><b>${p.area?yieldPerRai.toFixed(1)+' กก./ไร่':'-'}</b></div>
       <div class="plot-stat"><span>รายรับรวม (ตั้งแต่เริ่ม)</span><b style="color:var(--ok)">฿${Math.round(lifetimeIncome).toLocaleString()}</b></div>
       <div class="plot-stat"><span>รายจ่ายรวม (ตั้งแต่เริ่ม)</span><b style="color:var(--d)">฿${Math.round(lifetimeExpense).toLocaleString()}</b></div>
       <div class="plot-stat"><span>กำไรสุทธิสะสม (ตั้งแต่เริ่ม)</span><b style="color:${lifetimeNet>=0?'var(--ok)':'var(--d)'}">฿${Math.round(lifetimeNet).toLocaleString()}</b></div>
