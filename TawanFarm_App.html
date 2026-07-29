@@ -3866,6 +3866,13 @@ function pondFeedCost(p){
   return Math.round(cost);
 }
 function fD(d){if(!d)return'-';return new Date(d).toLocaleDateString('th-TH',{year:'2-digit',month:'short',day:'numeric'})}
+// ── ย่อตัวเลขหลักพัน/ล้าน: >=1 ล้าน ขึ้น M เสมอ (ไม่โชว่ 1000K), >=1 พัน ขึ้น K, ต่ำกว่านั้นโชว่เต็ม ──
+function fmtKM(v){
+  const n=Math.abs(v);
+  if(n>=1e6){let m=(v/1e6).toFixed(1);if(m.endsWith('.0'))m=m.slice(0,-2);return m+'M';}
+  if(n>=1000)return(v/1000).toFixed(0)+'K';
+  return v.toFixed(0);
+}
 // ข้อ 2: แปลง cropYear เป็น พ.ศ. 4 หลักเสมอ (รองรับ BE 4 หลัก, CE 4 หลัก, และ BE 2 หลัก)
 function yearBE(y){if(!y)return'';const n=parseInt(y);if(isNaN(n))return'';if(n>2500)return n;if(n>100)return n+543;return n+2500;}
 // ── ปีของรอบเลี้ยง (ประวัติ) ยึดตามปีของ "วันที่จับ" (closeDate) เป็นหลัก — ถ้ายังไม่ปิด/ไม่มีวันที่จับ ค่อย fallback ไปใช้ cropYear/year ที่บันทึกไว้ ──
@@ -6173,7 +6180,7 @@ function renderLaborMonthChart(){
       <rect x="${x(i).toFixed(1)}" y="${yTotalTop.toFixed(1)}" width="${barW.toFixed(1)}" height="${(yFixedTop-yTotalTop).toFixed(1)}" fill="#D9A404" rx="2"/>
       <text x="${(x(i)+barW/2).toFixed(1)}" y="${h-8}" font-size="9.5" fill="var(--tx3)" text-anchor="middle">${mo.label}</text>`;
   }).join('');
-  const yTicks=[0,Math.round(maxT/2),Math.round(maxT)].map(v=>`<line x1="${padL}" y1="${y(v).toFixed(1)}" x2="${w-padR}" y2="${y(v).toFixed(1)}" stroke="var(--bd)" stroke-width="1"/><text x="2" y="${(y(v)+4).toFixed(1)}" font-size="9.5" fill="var(--tx3)">${(v/1000).toFixed(0)}k</text>`).join('');
+  const yTicks=[0,Math.round(maxT/2),Math.round(maxT)].map(v=>`<line x1="${padL}" y1="${y(v).toFixed(1)}" x2="${w-padR}" y2="${y(v).toFixed(1)}" stroke="var(--bd)" stroke-width="1"/><text x="2" y="${(y(v)+4).toFixed(1)}" font-size="9.5" fill="var(--tx3)">${fmtKM(v)}</text>`).join('');
   el.innerHTML=`<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%">${yTicks}${bars}</svg>`;
 }
 const MO_TH_SHORT=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -6713,7 +6720,7 @@ function renderStockKPI(){
   const txOut=txMonth.filter(l=>l.type==='out').length;
   const isAdmin=APP_ROLE==='admin';
   const totalVal=items.reduce((s,i)=>s+(i.unitPrice||0)*(i.qty||0),0);
-  const totalValK=totalVal>=1000?(totalVal/1000).toFixed(0)+'K':totalVal.toFixed(0);
+  const totalValK=fmtKM(totalVal);
   el.className=isAdmin?'g5':'g4';
   el.innerHTML=`
     <div class="kpi-card"><div class="kpi-lbl">รายการทั้งหมด</div><div class="kpi-val">${items.length}</div><div class="kpi-sub">รายการ</div></div>
