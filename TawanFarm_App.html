@@ -36,6 +36,7 @@ if(window.Chart){Chart.defaults.animation=false;Chart.defaults.responsiveAnimati
   --ok:#15803D;--ob:#F4FBF6;--in:#185FA5;--ib:#E6F1FB;
   --lab:#0d9488;--labl:#E6F7F5;--labd:#0a6b62;
   --palm:#2F7D4F;--palml:#EAF5EE;--palmd:#1F5B38;
+  --shr:#1D6FA5;--shrl:#E8F2FA;--shrd:#155380;
   --hdr-bg:#FFFFFF;--hdr-accent:#FEF6E0;
   --r:10px;--sh:0 1px 2px rgba(16,24,40,.05);
   --w-tx:#B45309;--ok-tx:#14532D;--d-hov:#B91C1C;
@@ -419,6 +420,18 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .plot-card-actions{position:absolute;top:12px;right:12px;display:flex;gap:4px}
 .badge.b-active-grn{background:var(--ok);color:#fff;display:inline-flex;align-items:center;gap:5px;font-weight:700}
 .badge.b-active-grn .live-dot{width:6px;height:6px;border-radius:50%;background:#fff;display:inline-block;animation:pulse 1.5s infinite}
+/* ── ตะวันปาล์ม: กองทุน ── */
+.fundbtn{flex:1;min-width:220px;padding:12px 14px;border-radius:12px;border:1.5px solid var(--bd);background:var(--sf);color:var(--tx2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;text-align:left;transition:.15s}
+.fundbtn .fb-name{font-size:14px;margin-bottom:2px}
+.fundbtn .fb-src{font-size:11px;font-weight:600;color:var(--tx3)}
+.fundbtn.on-palm{background:var(--palml);border-color:var(--palm);color:var(--palmd)}
+.fundbtn.on-shr{background:var(--shrl);border-color:var(--shr);color:var(--shrd)}
+.note{border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--tx2);margin-bottom:16px;line-height:1.7;border:1px solid var(--palm);background:var(--palml)}
+.note.shr{border-color:var(--shr);background:var(--shrl)}
+.note b{color:var(--palmd)}
+.note.shr b{color:var(--shrd)}
+.btn.shr{background:var(--shr)}
+.btn.shr:hover{background:var(--shrd)}
 .lab-tag{font-size:10px;font-weight:700;color:var(--labd);background:var(--labl);padding:2px 9px;border-radius:99px}
 .trial-chip{display:inline-block;padding:6px 14px;border-radius:20px;border:1.5px solid var(--bd);background:var(--sf);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--tx2);user-select:none}
 .trial-chip.on{background:var(--p);border-color:var(--p);color:#fff}
@@ -1206,6 +1219,7 @@ body.role-ceo .main{max-width:640px}
     <button class="stock-sub-btn" id="palmb-plot" onclick="palmTab('plot',this)">🗺️ แปลงปาล์ม</button>
     <button class="stock-sub-btn" id="palmb-money" onclick="palmTab('money',this)">💰 รายรับ-รายจ่าย</button>
     <button class="stock-sub-btn" id="palmb-fert" onclick="palmTab('fert',this)">🧪 ประวัติใส่ปุ๋ย</button>
+    <button class="stock-sub-btn" id="palmb-fund" onclick="palmTab('fund',this)">📈 กองทุน</button>
   </div>
 
   <!-- pane: ภาพรวม -->
@@ -1339,6 +1353,56 @@ body.role-ceo .main{max-width:640px}
         <div class="chip-row" id="pfl-filter-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
       </div>
       <div id="palm-fert-table"></div>
+    </div>
+  </div>
+
+  <!-- pane: กองทุน -->
+  <div class="stock-pane" id="palmp-fund">
+    <div class="sub" style="color:var(--tx3);font-size:11.5px;margin-bottom:12px">บันทึกได้ 2 กองทุนแยกอิสระจากกัน — สลับดูได้ด้วยปุ่มด้านล่าง</div>
+    <div class="fundsel" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="fundbtn on-palm" id="fund-btn-palm" onclick="selectFund('palm')">
+        <div class="fb-name">🌴 K-USXNDQ-A</div>
+        <div class="fb-src">เงินจากรายได้ขายปาล์ม</div>
+      </button>
+      <button class="fundbtn" id="fund-btn-shrimp" onclick="selectFund('shrimp')">
+        <div class="fb-name">🦐 K WORLDX</div>
+        <div class="fb-src">เงินจากรายได้ขายลูกกุ้ง (ใบลูกกุ้ง)</div>
+      </button>
+    </div>
+    <div class="note" id="fund-note"></div>
+    <div class="g4" id="fund-kpi" style="margin-bottom:16px"></div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-t">📊 มูลค่าพอร์ตเทียบกับเงินลงทุน</div>
+      <div class="card-sub">เส้นทึบ = มูลค่าปัจจุบันตาม NAV แต่ละช่วง · เส้นประ = เงินต้นสะสม</div>
+      <div style="position:relative;height:220px"><canvas id="fund-chart"></canvas></div>
+    </div>
+    <div class="g2" style="margin-bottom:0">
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-t">💰 บันทึกการซื้อกองทุน</div>
+        <div class="card-sub" id="fund-buy-sub"></div>
+        <div class="fg"><label class="fl">วันที่ซื้อ</label><input type="date" class="fi" id="fb-date"></div>
+        <div class="fg"><label class="fl">จำนวนเงิน (บาท)</label><input class="fi" id="fb-amt" inputmode="decimal" placeholder="เช่น 45,000" oninput="fundBuyPreview()"></div>
+        <div class="fg"><label class="fl">NAV ต่อหน่วย (ตอนซื้อ)</label><input class="fi" id="fb-nav" inputmode="decimal" placeholder="เช่น 10.4522" oninput="fundBuyPreview()"></div>
+        <div class="fg"><label class="fl">หน่วยที่ได้ (คำนวณอัตโนมัติ)</label><input class="fi" id="fb-units-preview" style="background:var(--sf2)" readonly></div>
+        <button class="btn btn-p" style="width:100%" id="fund-buy-btn" onclick="saveFundBuy()">💾 บันทึกการซื้อ</button>
+        <div id="sk-msg-fundbuy"></div>
+      </div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-t">🔄 บันทึก NAV ปัจจุบัน</div>
+        <div class="card-sub">อัปเดตเป็นระยะ (เช่น ทุกสัปดาห์) เพื่อคำนวณกำไร-ขาดทุนที่ยังไม่รับรู้</div>
+        <div class="fg"><label class="fl">วันที่</label><input type="date" class="fi" id="fn-date"></div>
+        <div class="fg"><label class="fl">NAV ต่อหน่วย</label><input class="fi" id="fn-nav" inputmode="decimal" placeholder="เช่น 10.9563"></div>
+        <button class="btn btn-p" style="width:100%" id="fund-nav-btn" onclick="saveFundNav()">💾 บันทึก NAV</button>
+        <div id="sk-msg-fundnav"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-t">📋 ประวัติการซื้อ</div>
+      <div id="fund-buy-table"></div>
+    </div>
+    <div class="card">
+      <div class="card-t">📋 ประวัติ NAV ที่บันทึก</div>
+      <div id="fund-nav-table"></div>
     </div>
   </div>
 </div>
@@ -7583,6 +7647,12 @@ function palmTab(paneId,btn){
   if(paneId==='plot')renderPalmPlots();
   if(paneId==='money'){populatePalmPlotSelects();setPalmMoneyMode(_palmMoneyMode);renderPalmMoneyPeriodChips();renderPalmMoneyFilterChips();renderPalmMoney();}
   if(paneId==='fert'){populatePalmPlotSelects();renderPalmFertYearOptions();renderPalmFertFilterChips();renderPalmFertSummary();renderPalmFertLog();}
+  if(paneId==='fund'){
+    const fbd=document.getElementById('fb-date'),fnd=document.getElementById('fn-date');
+    if(fbd&&!fbd.value)fbd.value=today();
+    if(fnd&&!fnd.value)fnd.value=today();
+    selectFund(_fundSel);
+  }
 }
 function populatePalmPlotSelects(){
   const list=palmPlots();
@@ -7951,6 +8021,137 @@ function renderPalmFertLog(){
       return `<tr><td>${fD(r.date)}</td><td>${palmPlotName(r.plotId)}</td><td>${r.type||'-'}</td><td>${r.brand||'-'}</td><td style="text-align:right">${r.qtyRaw} ${(r.unitLabel||'').split(' ')[0]}<br><span style="font-size:10.5px;color:var(--tx3)">(${r.kg.toLocaleString()} กก.)</span></td><td style="text-align:right">${r.cost?'฿'+r.cost.toLocaleString():'-'}</td><td>${nextTxt}</td><td style="font-size:12px;color:var(--tx2)">${r.note||''}</td><td><button class="btn-sm btn-del" onclick="deletePalmFert('${r.id}')">🗑️</button></td></tr>`;
     }).join('')
   }</tbody></table></div>`;
+}
+
+/* ── ตะวันปาล์ม: กองทุน (D.fundBuys/D.fundNav — บันทึกแยก 2 กองทุน ผูก field เดียวกันแต่กรองด้วย fund:'palm'|'shrimp', ไม่แตะ D.palmMoney/D.inventoryLog เลย) ── */
+const FUND_META={
+  palm:{icon:'🌴',color:'#2F7D4F',
+    note:'💡 <b>บัญชีนี้แยกอิสระอีกชั้น</b> — เงินที่นำไปซื้อกองทุนถือเป็นการ "ย้ายสินทรัพย์" จากเงินสดปาล์ม ไปเป็นหน่วยลงทุน <b>ไม่ใช่รายจ่าย</b> จึงไม่ไปหักลบกับ "กำไรสุทธิ" ในหน้ารายรับ-รายจ่ายปาล์ม',
+    noteCls:'',buySub:'กรอกทุกครั้งที่โอนเงินจากรายได้ขายปาล์มไปซื้อหน่วยลงทุน'},
+  shrimp:{icon:'🦐',color:'#1D6FA5',
+    note:'💡 <b>เก็บข้อมูลแยกไว้เฉยๆ ไม่เกี่ยวกับต้นทุนตะวันฟาร์ม</b> — เงินจากการขายใบลูกกุ้งที่นำมาซื้อกองทุนนี้ <b>ไม่ถูกนำไปคำนวณรวมกับต้นทุน/กำไรของฟาร์มกุ้งเลย</b> เป็นแค่บันทึกส่วนตัวติดตามผลตอบแทนของเงินก้อนนี้เท่านั้น',
+    noteCls:'shr',buySub:'กรอกทุกครั้งที่โอนเงินจากรายได้ขายใบลูกกุ้งไปซื้อหน่วยลงทุน'}
+};
+let _fundSel='palm';
+let _fundChart=null;
+function fundBuys(f){return(D.fundBuys||[]).filter(r=>r.fund===f).sort((a,b)=>(a.date||'').localeCompare(b.date||''));}
+function fundNavLog(f){return(D.fundNav||[]).filter(r=>r.fund===f).sort((a,b)=>(a.date||'').localeCompare(b.date||''));}
+function selectFund(f){
+  _fundSel=f;
+  document.getElementById('fund-btn-palm').className='fundbtn'+(f==='palm'?' on-palm':'');
+  document.getElementById('fund-btn-shrimp').className='fundbtn'+(f==='shrimp'?' on-shr':'');
+  renderFundPane();
+}
+function fundBuyPreview(){
+  const amt=parseFloat(document.getElementById('fb-amt').value)||0;
+  const nav=parseFloat(document.getElementById('fb-nav').value)||0;
+  document.getElementById('fb-units-preview').value=(amt&&nav)?(amt/nav).toFixed(2)+' หน่วย':'';
+}
+function saveFundBuy(){
+  const date=document.getElementById('fb-date').value||today();
+  const amt=parseFloat(document.getElementById('fb-amt').value)||0;
+  const nav=parseFloat(document.getElementById('fb-nav').value)||0;
+  if(!(amt>0)||!(nav>0)){showStockMsg('fundbuy','กรุณากรอกจำนวนเงินและ NAV ให้ถูกต้อง','err');return;}
+  if(!D.fundBuys)D.fundBuys=[];
+  D.fundBuys.push({id:'fb'+Date.now()+'_'+Math.random().toString(36).slice(2,6),fund:_fundSel,date,amount:amt,nav,units:amt/nav,by:curUserLabel()});
+  save();
+  showStockMsg('fundbuy','✅ บันทึกการซื้อเรียบร้อย','ok');
+  ['fb-amt','fb-nav','fb-units-preview'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  renderFundPane();
+  flashSaveBtn(document.getElementById('fund-buy-btn'));
+}
+function deleteFundBuy(id){
+  if(!confirm('ลบรายการซื้อนี้?'))return;
+  D.fundBuys=D.fundBuys.filter(r=>r.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
+  save();
+  renderFundPane();
+}
+function saveFundNav(){
+  const date=document.getElementById('fn-date').value||today();
+  const nav=parseFloat(document.getElementById('fn-nav').value)||0;
+  if(!(nav>0)){showStockMsg('fundnav','กรุณากรอก NAV ให้ถูกต้อง','err');return;}
+  if(!D.fundNav)D.fundNav=[];
+  D.fundNav.push({id:'fn'+Date.now()+'_'+Math.random().toString(36).slice(2,6),fund:_fundSel,date,nav,by:curUserLabel()});
+  save();
+  showStockMsg('fundnav','✅ บันทึก NAV เรียบร้อย','ok');
+  document.getElementById('fn-nav').value='';
+  renderFundPane();
+  flashSaveBtn(document.getElementById('fund-nav-btn'));
+}
+function deleteFundNav(id){
+  if(!confirm('ลบรายการ NAV นี้?'))return;
+  D.fundNav=D.fundNav.filter(r=>r.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
+  save();
+  renderFundPane();
+}
+function fundUnitsAsOf(buys,date){return buys.filter(b=>b.date<=date).reduce((s,b)=>s+b.units,0);}
+function fundInvestedAsOf(buys,date){return buys.filter(b=>b.date<=date).reduce((s,b)=>s+b.amount,0);}
+function renderFundPane(){
+  const meta=FUND_META[_fundSel];
+  const noteEl=document.getElementById('fund-note');if(!noteEl)return;
+  noteEl.className='note'+(meta.noteCls?' '+meta.noteCls:'');
+  noteEl.innerHTML=meta.note;
+  document.getElementById('fund-buy-sub').textContent=meta.buySub;
+  document.getElementById('fund-buy-btn').className='btn btn-p'+(_fundSel==='shrimp'?' shr':'');
+  document.getElementById('fund-nav-btn').className='btn btn-p'+(_fundSel==='shrimp'?' shr':'');
+
+  const buys=fundBuys(_fundSel),navLog=fundNavLog(_fundSel);
+  const totalUnits=buys.reduce((s,b)=>s+b.units,0);
+  const totalInvested=buys.reduce((s,b)=>s+b.amount,0);
+  const latest=navLog[navLog.length-1];
+  const curValue=latest?totalUnits*latest.nav:totalInvested;
+  const pl=curValue-totalInvested;
+  const plPct=totalInvested?(pl/totalInvested*100):0;
+  const plCls=pl>=0?'':'style="color:var(--d)"';
+  const plSign=pl>=0?'+':'';
+  document.getElementById('fund-kpi').innerHTML=`
+    <div class="kpi-card"><div class="kpi-lbl">หน่วยลงทุนสะสม</div><div class="kpi-val">${totalUnits.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div><div class="kpi-sub">หน่วย</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">เงินลงทุนสะสม</div><div class="kpi-val">฿${Math.round(totalInvested).toLocaleString()}</div><div class="kpi-sub">${buys.length} ครั้ง</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">มูลค่าปัจจุบัน</div><div class="kpi-val">฿${Math.round(curValue).toLocaleString()}</div><div class="kpi-sub">${latest?'NAV ล่าสุด '+latest.nav.toFixed(4)+' ('+fD(latest.date)+')':'ยังไม่มีบันทึก NAV'}</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">กำไร/ขาดทุน</div><div class="kpi-val" ${plCls}>${plSign}฿${Math.round(pl).toLocaleString()}</div><div class="kpi-sub" ${plCls}>${plSign}${plPct.toFixed(2)}%</div></div>`;
+
+  const buyTbl=document.getElementById('fund-buy-table');
+  if(!buys.length){buyTbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติการซื้อ</p>';}
+  else{
+    buyTbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th style="text-align:right">จำนวนเงิน</th><th style="text-align:right">NAV ตอนซื้อ</th><th style="text-align:right">หน่วยที่ได้</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
+      buys.slice().reverse().map(b=>`<tr><td>${fD(b.date)}</td><td style="text-align:right">฿${Math.round(b.amount).toLocaleString()}</td><td style="text-align:right">${b.nav.toFixed(4)}</td><td style="text-align:right">${b.units.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td style="font-size:12px;color:var(--tx2)">${b.by||'-'}</td><td><button class="btn-sm btn-del" onclick="deleteFundBuy('${b.id}')">🗑️</button></td></tr>`).join('')
+    }</tbody></table></div>`;
+  }
+
+  const navTbl=document.getElementById('fund-nav-table');
+  if(!navLog.length){navTbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีบันทึก NAV</p>';}
+  else{
+    navTbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th style="text-align:right">NAV ต่อหน่วย</th><th style="text-align:right">มูลค่าพอร์ต ณ วันนั้น</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
+      navLog.slice().reverse().map(n=>{
+        const units=fundUnitsAsOf(buys,n.date);
+        return `<tr><td>${fD(n.date)}</td><td style="text-align:right">${n.nav.toFixed(4)}</td><td style="text-align:right">฿${Math.round(units*n.nav).toLocaleString()}</td><td style="font-size:12px;color:var(--tx2)">${n.by||'-'}</td><td><button class="btn-sm btn-del" onclick="deleteFundNav('${n.id}')">🗑️</button></td></tr>`;
+      }).join('')
+    }</tbody></table></div>`;
+  }
+
+  const canvas=document.getElementById('fund-chart');
+  if(_fundChart){_fundChart.destroy();_fundChart=null;}
+  if(navLog.length){
+    const labels=navLog.map(n=>fD(n.date));
+    const valueData=navLog.map(n=>fundUnitsAsOf(buys,n.date)*n.nav);
+    const investedData=navLog.map(n=>fundInvestedAsOf(buys,n.date));
+    _fundChart=new Chart(canvas,{
+      type:'line',
+      data:{labels,datasets:[
+        {label:'มูลค่าพอร์ต',data:valueData,borderColor:meta.color,backgroundColor:meta.color+'26',borderWidth:2.5,pointRadius:3,pointBackgroundColor:meta.color,fill:true,tension:.3},
+        {label:'เงินลงทุนสะสม',data:investedData,borderColor:'#B8860B',borderDash:[5,4],borderWidth:2,pointRadius:2,fill:false,tension:.2}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ฿${Math.round(ctx.parsed.y).toLocaleString()}`}}},
+        scales:{
+          x:{ticks:{font:{size:9.5},color:'var(--tx3)'},grid:{display:false}},
+          y:{beginAtZero:true,ticks:{font:{size:9.5},color:'var(--tx3)',callback:v=>fmtKM(v)},grid:{color:'rgba(0,0,0,0.04)'}}
+        }
+      }
+    });
+  }
 }
 
 function initEntry(){
