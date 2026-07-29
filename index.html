@@ -407,6 +407,8 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .type-btn.on-lab{background:var(--sf);color:var(--lab);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .type-desc{font-size:11.5px;color:var(--tx3);text-align:center;margin-top:8px;line-height:1.6}
 .lab-tag{font-size:10px;font-weight:700;color:var(--labd);background:var(--labl);padding:2px 9px;border-radius:99px}
+.trial-chip{display:inline-block;padding:6px 14px;border-radius:20px;border:1.5px solid var(--bd);background:var(--sf);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--tx2);user-select:none}
+.trial-chip.on{background:var(--p);border-color:var(--p);color:#fff}
 .jr-add-toggle{font-size:12.5px;font-weight:600;color:var(--p);cursor:pointer;text-decoration:underline;text-decoration-style:dashed;text-underline-offset:3px;display:inline-block;margin-bottom:10px}
 .jr-add-box{background:var(--sf2);border:1px dashed var(--bd);border-radius:10px;padding:12px;margin-bottom:14px}
 .jr-entry{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--sf2)}
@@ -1575,6 +1577,15 @@ body.role-ceo .main{max-width:640px}
   <div class="sec-hdr"><div class="sec-title">🧪 ทดลองเวชภัณฑ์</div></div>
   <div class="card" style="margin-bottom:12px">
     <div class="card-t">📁 การทดลองที่บันทึกไว้</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px">
+      <div class="fg" style="margin:0;flex:1;min-width:180px"><label class="fl">ค้นหาชื่อการทดลอง</label><input class="fi" id="trial-search" placeholder="พิมพ์ชื่อการทดลอง..." oninput="onTrialSearchInput(this.value)"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="trial-chip trial-filter-chip on" data-st="" onclick="setTrialListFilterStatus('',this)">ทั้งหมด</span>
+        <span class="trial-chip trial-filter-chip" data-st="ongoing" onclick="setTrialListFilterStatus('ongoing',this)">🟢 กำลังทดลอง</span>
+        <span class="trial-chip trial-filter-chip" data-st="done" onclick="setTrialListFilterStatus('done',this)">✅ เสร็จสิ้น</span>
+        <span class="trial-chip trial-filter-chip" data-st="paused" onclick="setTrialListFilterStatus('paused',this)">⏸️ ระงับ</span>
+      </div>
+    </div>
     <div class="fgrid" style="grid-template-columns:2fr 1fr">
       <div class="fg"><label class="fl">เลือกการทดลอง</label><select class="fi" id="trial-select" onchange="loadTrial(this.value)"><option value="">— สร้างการทดลองใหม่ —</option></select></div>
       <div class="fg" style="display:flex;align-items:flex-end"><button class="btn btn-s" onclick="newTrial()" style="width:100%">➕ ทดลองใหม่</button></div>
@@ -1594,6 +1605,13 @@ body.role-ceo .main{max-width:640px}
   <div class="card" style="margin-bottom:12px">
     <div class="card-t">🧪 ชื่อการทดลอง + ช่วงเวลาที่ทดลอง</div>
     <div class="card-sub" id="trial-period-sub"></div>
+    <div class="fg" style="margin-bottom:14px"><label class="fl">สถานะการทดลอง</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="trial-chip trial-status-chip on" id="ts-ongoing" onclick="setTrialStatus('ongoing')">🟢 กำลังทดลอง</span>
+        <span class="trial-chip trial-status-chip" id="ts-done" onclick="setTrialStatus('done')">✅ เสร็จสิ้น</span>
+        <span class="trial-chip trial-status-chip" id="ts-paused" onclick="setTrialStatus('paused')">⏸️ ระงับ</span>
+      </div>
+    </div>
     <div class="fg" style="margin-bottom:14px"><label class="fl">ชื่อเวชภัณฑ์/สิ่งที่ทดลอง</label><input class="fi" id="trial-name" list="trial-suggest" placeholder="เช่น โปรไบโอติกบำรุงตับ สูตร B"></div>
     <datalist id="trial-suggest"></datalist>
     <div class="fgrid" style="grid-template-columns:1fr 1fr">
@@ -1608,8 +1626,8 @@ body.role-ceo .main{max-width:640px}
 
   <div class="card" style="margin-bottom:12px" id="trial-lab-only-card">
     <div class="card-t">🎯 รายละเอียดการทดลอง (เฉพาะแล็บ) <span class="lab-tag">แล็บ</span></div>
-    <div class="fg" style="margin-bottom:12px"><label class="fl">วัตถุประสงค์ / สิ่งที่ต้องการทดสอบ</label><textarea class="fi" id="trial-objective" rows="2" placeholder="เช่น เปรียบเทียบอัตราการรอดของเชื้อจุลินทรีย์ 2 สูตร เมื่อผสมในน้ำเค็ม 15 ppt"></textarea></div>
-    <div class="fg" style="margin:0"><label class="fl">ผลสรุปเบื้องต้น (กรอกเพิ่มได้ภายหลัง)</label><textarea class="fi" id="trial-conclusion" rows="2" placeholder="เช่น สูตร B รอดในน้ำเค็มได้ดีกว่าสูตร A ประมาณ 20%..."></textarea></div>
+    <div class="fg" style="margin-bottom:12px"><label class="fl">วัตถุประสงค์ / สิ่งที่ต้องการทดสอบ</label><textarea class="fi" id="trial-objective" rows="6" style="resize:vertical;line-height:1.6" placeholder="เช่น เปรียบเทียบอัตราการรอดของเชื้อจุลินทรีย์ 2 สูตร เมื่อผสมในน้ำเค็ม 15 ppt"></textarea></div>
+    <div class="fg" style="margin:0"><label class="fl">ผลสรุปเบื้องต้น (กรอกเพิ่มได้ภายหลัง)</label><textarea class="fi" id="trial-conclusion" rows="6" style="resize:vertical;line-height:1.6" placeholder="เช่น สูตร B รอดในน้ำเค็มได้ดีกว่าสูตร A ประมาณ 20%..."></textarea></div>
   </div>
 
   <div id="trial-pond-section">
@@ -8115,7 +8133,9 @@ function cmpExportPNG(){
 }
 // ══════ ทดลองเวชภัณฑ์ — เทียบ 2-4 บ่อที่กำลังเลี้ยงอยู่ตอนนี้ (ใช้/ไม่ใช้) ที่ DOC เดียวกัน ══════
 let trialCh=null;
-let _trialDraft={id:null,name:'',type:'pond',startDate:'',endDate:'',waterParam:'doM',metrics:{growth:true,fcr:true,mortality:false,lab:true,water:true,ehp:true,gutLipid:true},ponds:{},objective:'',conclusion:'',journal:[]};
+let _trialDraft={id:null,name:'',type:'pond',status:'ongoing',startDate:'',endDate:'',waterParam:'doM',metrics:{growth:true,fcr:true,mortality:false,lab:true,water:true,ehp:true,gutLipid:true},ponds:{},objective:'',conclusion:'',journal:[]};
+let _trialListFilter={status:'',q:''};
+const TRIAL_STATUS_ICON={ongoing:'🟢',done:'✅',paused:'⏸️'};
 const TRIAL_METRICS=[{key:'growth',lbl:'การเติบโต (ABW/ADG)'},{key:'fcr',lbl:'FCR ประเมิน'},{key:'mortality',lbl:'กุ้งตายสะสม (%)'},{key:'lab',lbl:'ผลแล็บ (TCBS/ตับ)'},{key:'water',lbl:'ค่าน้ำ'},{key:'ehp',lbl:'EHP — ตัวอ่อน (%)'},{key:'gutLipid',lbl:'เนื้อเยื่อตับ-ลำไส้'}];
 function trialActivePonds(){return wqfeedActivePonds();}
 // ── ช่วงเวลาที่ทดลอง — ทุกตัวชี้วัดด้านล่างกรองข้อมูลตามช่วงนี้เท่านั้น ไม่ใช่ล่าสุด/สะสมทั้งรอบแบบเดิม ──
@@ -8171,17 +8191,16 @@ function setTrialType(t){
     :'ระบุช่วงเวลาที่ทำการทดลองในห้องแล็บ ใช้เป็นข้อมูลอ้างอิงประกอบบันทึกด้านล่าง';
 }
 function initTrialTab(){
-  const selEl=document.getElementById('trial-select');
-  if(selEl){
-    selEl.innerHTML='<option value="">— สร้างการทดลองใหม่ —</option>'+(D.medTrials||[]).map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
-    if((D.medTrials||[]).some(t=>t.id===_trialDraft.id))selEl.value=_trialDraft.id;
-  }
+  populateTrialSelect();
+  const searchEl=document.getElementById('trial-search');if(searchEl)searchEl.value=_trialListFilter.q||'';
+  document.querySelectorAll('.trial-filter-chip').forEach(el=>el.classList.toggle('on',el.dataset.st===(_trialListFilter.status||'')));
   const dl=document.getElementById('trial-suggest');
   if(dl){
     const names=[...new Set((D.inventoryLog||[]).filter(r=>r.type==='out'&&r.pondId).map(r=>r.itemName||r.name).filter(Boolean))];
     dl.innerHTML=names.map(n=>`<option value="${n}">`).join('');
   }
   setTrialType(_trialDraft.type||'pond');
+  renderTrialStatusButtons();
   const nameEl=document.getElementById('trial-name');if(nameEl)nameEl.value=_trialDraft.name;
   const startEl=document.getElementById('trial-start');if(startEl)startEl.value=_trialDraft.startDate;
   const endEl=document.getElementById('trial-end');if(endEl)endEl.value=_trialDraft.endDate;
@@ -8195,6 +8214,38 @@ function initTrialTab(){
   renderTrialPondPicker();
   renderTrialResults();
   renderTrialJournal();
+}
+// ── รายการทดลองที่บันทึกไว้: ค้นหาชื่อ + กรองสถานะ (กำลังทดลอง/เสร็จสิ้น/ระงับ) ก่อนขึ้น dropdown ──
+function populateTrialSelect(){
+  const selEl=document.getElementById('trial-select');if(!selEl)return;
+  const q=(_trialListFilter.q||'').trim().toLowerCase();
+  const st=_trialListFilter.status||'';
+  const list=(D.medTrials||[]).filter(t=>{
+    if(st&&(t.status||'ongoing')!==st)return false;
+    if(q&&!(t.name||'').toLowerCase().includes(q))return false;
+    return true;
+  });
+  selEl.innerHTML='<option value="">— สร้างการทดลองใหม่ —</option>'+list.map(t=>`<option value="${t.id}">${TRIAL_STATUS_ICON[t.status||'ongoing']} ${t.name}</option>`).join('');
+  if(list.some(t=>t.id===_trialDraft.id))selEl.value=_trialDraft.id;
+}
+function onTrialSearchInput(val){
+  _trialListFilter.q=val;
+  populateTrialSelect();
+}
+function setTrialListFilterStatus(status,btn){
+  _trialListFilter.status=status;
+  document.querySelectorAll('.trial-filter-chip').forEach(el=>el.classList.remove('on'));
+  btn.classList.add('on');
+  populateTrialSelect();
+}
+// ── สถานะของการทดลองที่กำลังเปิดอยู่ (บันทึกไปพร้อม saveTrial) ──
+function setTrialStatus(status){
+  _trialDraft.status=status;
+  renderTrialStatusButtons();
+}
+function renderTrialStatusButtons(){
+  document.querySelectorAll('.trial-status-chip').forEach(el=>el.classList.remove('on'));
+  const el=document.getElementById('ts-'+(_trialDraft.status||'ongoing'));if(el)el.classList.add('on');
 }
 function renderTrialMetricChecks(){
   const el=document.getElementById('trial-metrics');if(!el)return;
@@ -8423,7 +8474,7 @@ function renderTrialResults(){
   }
 }
 function newTrial(){
-  _trialDraft={id:null,name:'',type:'pond',startDate:'',endDate:'',waterParam:'doM',metrics:{growth:true,fcr:true,mortality:false,lab:true,water:true,ehp:true,gutLipid:true},ponds:{},objective:'',conclusion:'',journal:[]};
+  _trialDraft={id:null,name:'',type:'pond',status:'ongoing',startDate:'',endDate:'',waterParam:'doM',metrics:{growth:true,fcr:true,mortality:false,lab:true,water:true,ehp:true,gutLipid:true},ponds:{},objective:'',conclusion:'',journal:[]};
   const selEl=document.getElementById('trial-select');if(selEl)selEl.value='';
   const msgEl=document.getElementById('trial-msg');if(msgEl)msgEl.innerHTML='';
   initTrialTab();
@@ -8431,7 +8482,7 @@ function newTrial(){
 function loadTrial(id){
   if(!id){newTrial();return;}
   const t=(D.medTrials||[]).find(x=>x.id===id);if(!t)return;
-  _trialDraft={id:t.id,name:t.name,type:t.type||'pond',startDate:t.startDate||'',endDate:t.endDate||'',waterParam:t.waterParam||'doM',metrics:{...t.metrics},ponds:{...t.ponds},objective:t.objective||'',conclusion:t.conclusion||'',journal:(t.journal||[]).map(j=>({...j}))};
+  _trialDraft={id:t.id,name:t.name,type:t.type||'pond',status:t.status||'ongoing',startDate:t.startDate||'',endDate:t.endDate||'',waterParam:t.waterParam||'doM',metrics:{...t.metrics},ponds:{...t.ponds},objective:t.objective||'',conclusion:t.conclusion||'',journal:(t.journal||[]).map(j=>({...j}))};
   const msgEl=document.getElementById('trial-msg');if(msgEl)msgEl.innerHTML='';
   initTrialTab();
 }
@@ -8448,7 +8499,7 @@ function saveTrial(){
   _trialDraft.objective=document.getElementById('trial-objective')?.value.trim()||'';
   _trialDraft.conclusion=document.getElementById('trial-conclusion')?.value.trim()||'';
   if(!D.medTrials)D.medTrials=[];
-  const rec={id:_trialDraft.id||('trial_'+Date.now()),name:_trialDraft.name,type:_trialDraft.type,startDate:_trialDraft.startDate,endDate:_trialDraft.endDate,waterParam:_trialDraft.waterParam,metrics:{..._trialDraft.metrics},ponds:isLab?{}:{..._trialDraft.ponds},objective:_trialDraft.objective,conclusion:_trialDraft.conclusion,journal:(_trialDraft.journal||[]).map(j=>({...j}))};
+  const rec={id:_trialDraft.id||('trial_'+Date.now()),name:_trialDraft.name,type:_trialDraft.type,status:_trialDraft.status||'ongoing',startDate:_trialDraft.startDate,endDate:_trialDraft.endDate,waterParam:_trialDraft.waterParam,metrics:{..._trialDraft.metrics},ponds:isLab?{}:{..._trialDraft.ponds},objective:_trialDraft.objective,conclusion:_trialDraft.conclusion,journal:(_trialDraft.journal||[]).map(j=>({...j}))};
   const idx=D.medTrials.findIndex(t=>t.id===rec.id);
   if(idx>=0)D.medTrials[idx]=rec;else D.medTrials.push(rec);
   _trialDraft.id=rec.id;
