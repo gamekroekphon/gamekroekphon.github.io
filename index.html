@@ -2419,6 +2419,7 @@ body.role-ceo .main{max-width:640px}
     <button class="stock-sub-btn" id="skb-tx" onclick="stockTab('tx',this)">บันทึกรับ-เบิก</button>
     <button class="stock-sub-btn" id="skb-log" onclick="stockTab('log',this)">ประวัติ</button>
     <button class="stock-sub-btn" id="skb-sale" onclick="stockTab('sale',this)">🛒 ยอดขายลูกค้าภายนอก</button>
+    <button class="stock-sub-btn" id="skb-cash" onclick="stockTab('cash',this)">💰 รายรับ-รายจ่าย (เสมียน)</button>
   </div>
   <!-- pane: รายการพัสดุ -->
   <div class="stock-pane on" id="skp-items">
@@ -2604,6 +2605,42 @@ body.role-ceo .main{max-width:640px}
         <button class="btn admin-only" style="font-size:12px;padding:6px 12px;white-space:nowrap" onclick="exportSaleCSV()">⬇️ Export CSV ส่งบัญชี (ตามเดือนที่เลือก)</button>
       </div>
       <div id="sksr-table"></div>
+    </div>
+  </div>
+  <!-- pane: รายรับ-รายจ่าย (เสมียน) -->
+  <div class="stock-pane" id="skp-cash">
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-weight:700;color:var(--tx);margin-bottom:10px">💰 รายรับ-รายจ่ายเงินสด (เสมียน)</div>
+      <div class="card-sub">บันทึกเงินที่เสมียนเบิกจากส่วนกลางมาเติม (รายรับ) และค่าใช้จ่ายเบ็ดเตล็ดในฟาร์ม เช่น ซื้อของทำอาหารให้คนงาน (รายจ่าย) — รายการ "รายจ่าย" จะถูกนำไปรวมกับต้นทุน "อุปกรณ์นอก (แชร์)" หารแบ่งทุกบ่อที่มีกุ้งอัตโนมัติเหมือนสต็อกโหมด "แชร์ทุกบ่อ" ส่วน "รายรับ" เป็นแค่การโอนเงินเข้ากองกลาง ไม่นับเป็นต้นทุน ไม่หารบ่อ</div>
+      <div id="cash-staffnote" style="display:none;background:var(--sf2);border-radius:8px;padding:8px 12px;font-size:11.5px;color:var(--tx3);margin:10px 0">🔒 มุมมองพนักงานเห็นเฉพาะรายการที่คุณบันทึกเอง — ยอดคงเหลือรวมทั้งกองทุนดูได้จาก Admin</div>
+      <div class="g4" id="cash-kpi" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-t">บันทึกรายการใหม่</div>
+      <div style="display:flex;gap:0;background:var(--sf2);border-radius:8px;padding:3px;margin-bottom:14px;width:fit-content">
+        <button id="cash-mode-in" class="stock-mode-btn on-in" onclick="setCashMode('in')">📥 รายรับ (เบิกเงินมาเติม)</button>
+        <button id="cash-mode-out" class="stock-mode-btn" onclick="setCashMode('out')">📤 รายจ่าย</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="fg"><label class="fl">วันที่</label><input type="date" class="fi" id="cash-date"></div>
+        <div class="fg"><label class="fl">จำนวนเงิน (บาท)</label><input type="number" class="fi" id="cash-amount" min="0.01" step="any" inputmode="decimal" placeholder="0.00"></div>
+      </div>
+      <div class="fg" style="margin-top:8px"><label class="fl">หมายเหตุ</label><input class="fi" id="cash-note" placeholder="เช่น ซื้อกับข้าวให้คนงาน, เบิกเงินเติมจากสำนักงานใหญ่"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button id="cash-save-btn" onclick="saveClerkCash()" style="flex:1">💾 บันทึก</button>
+        <button onclick="clearClerkCashForm()" style="background:var(--sf2);color:var(--tx2)">ล้าง</button>
+      </div>
+      <div id="sk-msg-cash"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-t">ประวัติรายรับ-รายจ่าย</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+        <input type="month" class="fi" id="cash-filter-month" style="width:150px" onchange="renderClerkCash()">
+        <button class="btn" style="font-size:12px;padding:6px 12px;white-space:nowrap;background:var(--s1);color:var(--tx2)" onclick="clearCashFilter()">ล้างตัวกรอง</button>
+      </div>
+      <div id="cash-table"></div>
     </div>
   </div>
 </div>
@@ -6653,6 +6690,7 @@ function stockTab(paneId,btn){
   if(paneId==='log'){setStockLogMode(_stockLogMode||'out');}
   if(paneId==='tx'){setStockMode(_stockMode||'in');}
   if(paneId==='sale'){initSaleMonthPills();renderSalesReport();}
+  if(paneId==='cash'){initClerkCash();}
 }
 
 function initStock(){
@@ -7243,6 +7281,100 @@ function exportSaleCSV(){
   }).join('\n');
   const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='TawanFarm_ขายลูกค้า_'+(_saleMonth==='all'?'all':_saleMonth)+'.csv';a.click();URL.revokeObjectURL(url);
+}
+// ── รายรับ-รายจ่ายเงินสด (เสมียน) — เบิกเงินจากส่วนกลางมาเติม (รายรับ) / ค่าใช้จ่ายเบ็ดเตล็ดในฟาร์ม (รายจ่าย) ── รายจ่ายผูกเข้า D.inventoryLog type:'shared' อัตโนมัติ (category:'equip') เพื่อให้ถูกรวมกับ "อุปกรณ์นอก" หารแบ่งทุกบ่อผ่าน getSharedCostForPond ที่มีอยู่แล้ว ไม่ต้องเขียนสูตรคำนวณคู่ขนาน — "รายรับ" เป็นแค่การโอนเงินเข้ากองกลาง ไม่ผูกกับ inventoryLog เลย ──
+let _cashMode='in';
+let _cashFilterMonth='';
+function setCashMode(mode){
+  _cashMode=mode;
+  const btnIn=document.getElementById('cash-mode-in'),btnOut=document.getElementById('cash-mode-out');
+  if(btnIn)btnIn.className='stock-mode-btn'+(mode==='in'?' on-in':'');
+  if(btnOut)btnOut.className='stock-mode-btn'+(mode==='out'?' on-out':'');
+}
+function initClerkCash(){
+  setCashMode('in');
+  const dEl=document.getElementById('cash-date');if(dEl&&!dEl.value)dEl.value=today();
+  clearCashFilter();
+}
+function clearClerkCashForm(){
+  const a=document.getElementById('cash-amount');if(a)a.value='';
+  const n=document.getElementById('cash-note');if(n)n.value='';
+}
+function clerkCashSorted(){
+  return (D.clerkCash||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.id||'').localeCompare(b.id||''));
+}
+function saveClerkCash(){
+  const date=document.getElementById('cash-date').value||today();
+  const amount=parseFloat(document.getElementById('cash-amount').value)||0;
+  const note=document.getElementById('cash-note').value.trim();
+  if(!(amount>0)){showStockMsg('cash','กรุณากรอกจำนวนเงินให้ถูกต้อง','err');return;}
+  if(!D.clerkCash)D.clerkCash=[];
+  const id='cc'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  const entry={id,type:_cashMode,date,amount,note,by:curUserLabel()};
+  if(_cashMode==='out'){
+    if(!D.inventoryLog)D.inventoryLog=[];
+    const logId='sl'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    D.inventoryLog.push({id:logId,itemId:null,itemName:note||'ค่าใช้จ่ายเบ็ดเตล็ด (เสมียน)',type:'shared',qty:1,date,note,pondId:'',balanceAfter:null,unit:'รายการ',by:curUserLabel(),category:'equip',unitCost:amount});
+    entry.linkedLogId=logId;
+  }
+  D.clerkCash.push(entry);
+  save();
+  showStockMsg('cash','✅ บันทึก'+(_cashMode==='in'?'รายรับ':'รายจ่าย')+'เรียบร้อย','ok');
+  clearClerkCashForm();
+  renderClerkCash();
+  flashSaveBtn(document.getElementById('cash-save-btn'));
+}
+function deleteClerkCash(id){
+  const entry=(D.clerkCash||[]).find(c=>c.id===id);if(!entry)return;
+  if(!confirm('ลบรายการนี้?'+(entry.linkedLogId?' (จะลบรายการที่ผูกไว้ในต้นทุน "อุปกรณ์นอก" ให้ด้วย)':'')))return;
+  D.clerkCash=(D.clerkCash||[]).filter(c=>c.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
+  if(entry.linkedLogId){
+    D.inventoryLog=(D.inventoryLog||[]).filter(l=>l.id!==entry.linkedLogId);
+    D.deletedIds.push(entry.linkedLogId);
+  }
+  save();
+  renderClerkCash();
+}
+function clearCashFilter(){
+  const m=document.getElementById('cash-filter-month');if(m)m.value='';
+  _cashFilterMonth='';
+  renderClerkCash();
+}
+function renderClerkCash(){
+  const monthEl=document.getElementById('cash-filter-month');
+  _cashFilterMonth=monthEl?monthEl.value:_cashFilterMonth;
+  // ── role staff: เห็นเฉพาะรายการที่ตัวเองบันทึก (by ตรงกับผู้ใช้ปัจจุบัน) ทั้ง KPI และตาราง — ไม่ใช่แค่ซ่อนแถวคนอื่น แต่คำนวณยอดสะสม/คงเหลือใหม่จากรายการของตัวเองล้วนๆ กันเลขยอดคงเหลือรวมทั้งกองทุนรั่วออกไปทางอ้อม ──
+  const isStaffScoped=APP_ROLE==='staff';
+  const noteEl=document.getElementById('cash-staffnote');if(noteEl)noteEl.style.display=isStaffScoped?'':'none';
+  const all=isStaffScoped?clerkCashSorted().filter(c=>c.by===curUserLabel()):clerkCashSorted();
+  let running=0;
+  const withBalance=all.map(c=>{running+=(c.type==='in'?c.amount:-c.amount);return{...c,balance:running};});
+  const totalIn=all.filter(c=>c.type==='in').reduce((s,c)=>s+c.amount,0);
+  const totalOut=all.filter(c=>c.type==='out').reduce((s,c)=>s+c.amount,0);
+  const kpiEl=document.getElementById('cash-kpi');
+  if(kpiEl){
+    kpiEl.innerHTML=`<div class="kpi-card"><div class="kpi-lbl">${isStaffScoped?'ยอดสุทธิที่คุณบันทึก':'ยอดคงเหลือปัจจุบัน'}</div><div class="kpi-val" style="color:${running<0?'var(--d)':'var(--tx)'}">฿${Math.round(running).toLocaleString()}</div></div>
+      <div class="kpi-card"><div class="kpi-lbl">รายรับสะสม</div><div class="kpi-val" style="color:var(--ok)">฿${Math.round(totalIn).toLocaleString()}</div></div>
+      <div class="kpi-card"><div class="kpi-lbl">รายจ่ายสะสม</div><div class="kpi-val" style="color:var(--d)">฿${Math.round(totalOut).toLocaleString()}</div></div>
+      <div class="kpi-card"><div class="kpi-lbl">จำนวนรายการ</div><div class="kpi-val">${all.length}</div></div>`;
+  }
+  const tbl=document.getElementById('cash-table');if(!tbl)return;
+  let rows=withBalance;
+  if(_cashFilterMonth)rows=rows.filter(c=>(c.date||'').startsWith(_cashFilterMonth));
+  rows=rows.slice().reverse();
+  if(!rows.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติรายรับ-รายจ่าย'+(_cashFilterMonth?'ตามตัวกรองนี้':'')+'</p>';return;}
+  tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>ประเภท</th><th style="text-align:right">จำนวนเงิน</th><th style="text-align:right">${isStaffScoped?'สุทธิสะสม (เฉพาะคุณ)':'คงเหลือสะสม'}</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
+    rows.map(c=>`<tr>
+      <td>${fD(c.date)}</td>
+      <td><span class="badge ${c.type==='in'?'b-ok':'b-danger'}">${c.type==='in'?'📥 รายรับ':'📤 รายจ่าย'}</span></td>
+      <td style="text-align:right;color:${c.type==='in'?'var(--ok)':'var(--d)'}">${c.type==='in'?'+':'-'}฿${Math.round(c.amount).toLocaleString()}</td>
+      <td style="text-align:right">฿${Math.round(c.balance).toLocaleString()}</td>
+      <td style="font-size:12px;color:var(--tx2)">${c.note||''}</td>
+      <td style="font-size:12px;color:var(--tx2)">${c.by||'-'}</td>
+      <td><button class="btn-sm btn-del" onclick="deleteClerkCash('${c.id}')">🗑️</button></td>
+    </tr>`).join('')
+  }</tbody></table></div>`;
 }
 /* ===== END INVENTORY / STOCK ===== */
 
