@@ -748,24 +748,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .fc-act-body span{font-size:11px;color:var(--tx3)}
 .fc-act-src{display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:5px;margin-top:3px}
 .fc-act-empty{text-align:center;padding:14px;color:var(--ok);font-size:12.5px}
-/* ── ข้างขึ้นข้างแรม/วันพระ-วันโกน + การ์ดเทียบรอบก่อน ── */
-.moon-strip{display:flex;align-items:center;gap:12px;background:var(--sf2);border-radius:10px;padding:12px 14px;margin-bottom:10px}
-.moon-ico{font-size:28px;line-height:1}
-.moon-txt{flex:1}
-.moon-txt .t1{font-size:13px;font-weight:600}
-.moon-txt .t2{font-size:11.5px;color:var(--tx3)}
-.wp-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px}
-.wp-day{flex-shrink:0;min-width:60px;border-radius:10px;padding:8px 6px;text-align:center;background:var(--sf2);border:1.5px solid transparent}
-.wp-day.today{border-color:var(--p)}
-.wp-day.kon{background:var(--wb);border-color:var(--w)}
-.wp-day.kon2{background:var(--ib);border-color:var(--in)}
-.wp-day.phra{background:var(--pl);border-color:var(--p)}
-.wp-day .wd{font-size:10.5px;color:var(--tx3)}
-.wp-day .dd{font-size:15px;font-weight:700;margin:2px 0}
-.wp-day .tag{font-size:9px;font-weight:700;padding:1px 4px;border-radius:99px;display:inline-block}
-.wp-day.kon .tag{background:var(--w);color:#fff}
-.wp-day.kon2 .tag{background:var(--in);color:#fff}
-.wp-day.phra .tag{background:var(--p);color:#fff}
+/* ── การ์ดเทียบรอบก่อน ── */
 .bm-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
 .bm-tab{flex:1;text-align:center;padding:8px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:var(--sf2);color:var(--tx2);min-width:140px}
 .bm-tab.on{background:var(--p);color:#fff}
@@ -1464,19 +1447,12 @@ body.role-ceo .main{max-width:640px}
       </div>
       <div id="ov-weather-card"></div>
       <div class="card" style="margin-bottom:14px">
-        <div class="card-t">🌙 วันพระ/วันโกน</div>
-        <div class="moon-strip" id="moon-strip"></div>
-        <div id="wp-alert"></div>
-        <div class="wp-strip" id="wp-strip"></div>
-        <div style="font-size:11px;color:var(--tx3);margin-top:6px">🧂 = ก่อนวันโกน · 🧂🧂 = วันโกน (ลงแร่ธาตุรวม) · 🙏 = วันพระ</div>
-      </div>
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-t">⚠️ บ่อเสี่ยงสูงสุด</div>
-        <div id="ov-risk-list"></div>
+        <div class="card-t" style="margin-bottom:0">🌙 วันพระ/วันโกน</div>
+        <div id="wp-oneline" style="font-size:12.5px;padding-top:8px"></div>
       </div>
       <div class="card">
-        <div class="card-t">🍩 สถานะบ่อทั้งฟาร์ม</div>
-        <div id="ov-status-donut"></div>
+        <div class="card-t">⚠️ บ่อเสี่ยงสูงสุด</div>
+        <div id="ov-risk-list"></div>
       </div>
     </div>
   </div>
@@ -5350,28 +5326,17 @@ function pondRiskEconomic(p){
 }
 let _fcSelRisk=null,_fcCurPond=null;
 function fcSetFilter(key){_fcSelRisk=_fcSelRisk===key?null:key;renderFarmCard(_fcCurPond);}
-const WD_TH=['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
 function renderMoonWanphra(){
-  const moonEl=document.getElementById('moon-strip');if(!moonEl)return;
+  const el=document.getElementById('wp-oneline');if(!el)return;
   const today=new Date();today.setHours(0,0,0,0);
-  const info=moonInfo(today);
-  moonEl.innerHTML=`<div class="moon-ico">${info.ico}</div><div class="moon-txt"><div class="t1">${info.txt}${info.near?' — วันนี้':''}</div><div class="t2">${info.near?'กุ้งมักลอกคราบ+กินอาหารลดลงช่วง 1-2 วันก่อน-หลังพระจันทร์เต็ม/ดับ เป็นพฤติกรรมปกติตามธรรมชาติ':'ยังไม่ใกล้ช่วงพระจันทร์เต็ม/ดับ'}</div></div>`;
-  const days=Array.from({length:10},(_,i)=>addDaysLocal(today,i));
-  document.getElementById('wp-strip').innerHTML=days.map(d=>{
-    const info2=wanphraInfo(d);
-    const cls=['wp-day',ymdLocal(d)===ymdLocal(today)?'today':'',info2||''].filter(Boolean).join(' ');
-    const tag=info2==='phra'?'🙏 วันพระ':info2==='kon2'?'🧂🧂 วันโกน':info2==='kon'?'🧂 ก่อนวันโกน':'';
-    return`<div class="${cls}"><div class="wd">${WD_TH[d.getDay()]}</div><div class="dd">${d.getDate()}/${d.getMonth()+1}</div>${tag?`<div class="tag">${tag}</div>`:''}</div>`;
-  }).join('');
-  const todayInfo=wanphraInfo(today),tmrInfo=wanphraInfo(addDaysLocal(today,1));
-  const alertEl=document.getElementById('wp-alert');
-  if(todayInfo==='kon2'||todayInfo==='kon'){
-    alertEl.innerHTML=`<div class="ai warn"><span>🧂</span><div><b>วันนี้เป็น${todayInfo==='kon2'?'วันโกน':'ก่อนวันโกน'}</b> — อย่าลืมลงแร่ธาตุรวมในบ่อตามรอบปกติของฟาร์ม</div></div>`;
-  }else if(tmrInfo==='kon2'||tmrInfo==='kon'){
-    alertEl.innerHTML=`<div class="ai warn"><span>🧂</span><div><b>พรุ่งนี้เป็น${tmrInfo==='kon2'?'วันโกน':'ก่อนวันโกน'}</b> — เตรียมแร่ธาตุรวมไว้ล่วงหน้าได้เลย</div></div>`;
-  }else{
-    alertEl.innerHTML='';
+  const todayInfo=wanphraInfo(today);
+  if(todayInfo==='kon2'){el.innerHTML=`<b>🧂🧂 วันนี้เป็นวันโกน</b> — อย่าลืมลงแร่ธาตุรวมในบ่อตามรอบปกติของฟาร์ม`;return;}
+  if(todayInfo==='kon'){el.innerHTML=`<b>🧂 พรุ่งนี้เป็นวันโกน</b> — เตรียมแร่ธาตุรวมไว้ล่วงหน้าได้เลย`;return;}
+  for(let i=1;i<=60;i++){
+    const d=addDaysLocal(today,i);
+    if(wanphraInfo(d)==='kon2'){el.innerHTML=`🧂 วันโกนถัดไป: อีก <b>${i} วัน</b> (${d.getDate()}/${d.getMonth()+1})`;return;}
   }
+  el.innerHTML=`<span style="color:var(--tx3)">ไม่พบข้อมูลวันโกนในตารางปีนี้</span>`;
 }
 function renderFarmCard(p){
   const gridEl=document.getElementById('fc-grid');if(!gridEl||!p)return;
@@ -6009,7 +5974,6 @@ function renderOv(){
     ${kk4}`;
   renderOvWeatherCard();
   renderOvRiskList();
-  renderOvDonut(active.length,prepM.length,closedCount);
   // ── สถานะ/ไซส์/Biomass/อาหาร/เช็คลิสต์/ค่าผิดปกติของบ่อที่กำลังเลี้ยงอยู่ ย้ายไปรวมในตาราง "สถานะบ่อทั้งหมด" (renderOvDashboard) หมดแล้ว — เหลือแค่เตรียมบ่อ+ว่าง ที่นี่ (คนละโครงสร้างข้อมูล ใส่ในตารางเดียวกันไม่ได้) ──
   let html='';
   if(prepM.length>0)html+=`<div class="ov-sec-lbl">เตรียมบ่อ</div><div class="ov-grid">${prepM.map(({p})=>renderPrepPondCard(p)).join('')}</div>`;
@@ -6150,20 +6114,6 @@ function renderOvRiskList(){
     const reason=(x.reasons&&x.reasons[0])?x.reasons[0].m:'';
     return`<div class="ov-risk-item" onclick="openPondDetail('${x.p.id}')"><div class="ov-risk-sc ${rc}">${x.maxS}</div><div class="ov-risk-info"><b>บ่อ ${x.p.name}</b><small>${reason}</small></div></div>`;
   }).join('');
-}
-let _ovDonutChart=null;
-function renderOvDonut(activeCount,prepCount,emptyCount){
-  const wrap=document.getElementById('ov-status-donut');if(!wrap)return;
-  wrap.innerHTML=`<div style="display:flex;align-items:center;gap:14px">
-    <div style="width:96px;height:96px;flex-shrink:0"><canvas id="ovDonutCanvas"></canvas></div>
-    <div style="font-size:12px;display:flex;flex-direction:column;gap:6px">
-      <div><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2f8f5b;margin-right:6px"></span>กำลังเลี้ยง ${activeCount}</div>
-      <div><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#3f6212;margin-right:6px"></span>เตรียมบ่อ ${prepCount}</div>
-      <div><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#d7ded8;margin-right:6px"></span>ว่าง/พักบ่อ ${emptyCount}</div>
-    </div></div>`;
-  const canvas=document.getElementById('ovDonutCanvas');if(!canvas||typeof Chart==='undefined')return;
-  if(_ovDonutChart){_ovDonutChart.destroy();_ovDonutChart=null;}
-  _ovDonutChart=new Chart(canvas,{type:'doughnut',data:{labels:['กำลังเลี้ยง','เตรียมบ่อ','ว่าง/พักบ่อ'],datasets:[{data:[activeCount,prepCount,emptyCount],backgroundColor:['#2f8f5b','#3f6212','#d7ded8'],borderWidth:0}]},options:{cutout:'70%',plugins:{legend:{display:false}}}});
 }
 function jumpEntry(id){document.getElementById('tab-entry').click();setTimeout(()=>{selectEPond(id);},80)}
 // ── การ์ดเตรียมบ่อในหน้าภาพรวม กดแล้วเด้งไปหน้า "เตรียมบ่อ" ตรงๆ (แทนหน้ารายละเอียดบ่อ) เพราะบ่อยังไม่มีกุ้ง ไม่มีอะไรให้ดูในหน้ารายละเอียดบ่อ — เปิดการ์ดของบ่อนั้นให้อัตโนมัติ+เลื่อนไปหาให้เลย ──
