@@ -465,6 +465,11 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .stock-sub-btn.on{color:var(--p);border-bottom-color:var(--p)}
 .stock-pane{display:none}.stock-pane.on{display:block}
 .stock-warn{background:var(--db);border:1px solid var(--d);border-radius:8px;padding:8px 12px;font-size:12.5px;color:var(--d);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.ov-stockwarn-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 9px;background:var(--db);border:1px solid var(--d);border-radius:8px;margin-bottom:6px;font-size:12px}
+.ov-stockwarn-item:last-child{margin-bottom:0}
+.ov-stockwarn-item .nm{font-weight:600;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ov-stockwarn-item .qty{color:var(--d);font-weight:700;white-space:nowrap;flex-shrink:0}
+.ov-stockwarn-item .qty small{font-weight:500;color:var(--tx3)}
 .stock-cat-seed{background:#FCE7F3;color:#9D174D}
 .admin-only{display:none}
 body.role-admin .admin-only{display:revert!important}
@@ -1450,6 +1455,13 @@ body.role-ceo .main{max-width:640px}
   <div class="ov-main-grid">
     <div id="ov-sections"></div>
     <div class="ov-side">
+      <div class="card" id="ov-stockwarn-card" style="margin-bottom:14px;display:none">
+        <div class="card-t" style="display:flex;justify-content:space-between;align-items:center">
+          <span>📦 สต็อกใกล้หมด</span>
+          <span style="font-size:11.5px;color:var(--p);font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-style:dashed;text-underline-offset:3px" onclick="document.getElementById('tab-stock')?.click()">ดูทั้งหมด ›</span>
+        </div>
+        <div id="ov-stockwarn-list"></div>
+      </div>
       <div id="ov-weather-card"></div>
       <div class="card" style="margin-bottom:14px">
         <div class="card-t">🌙 วันพระ/วันโกน</div>
@@ -5969,6 +5981,7 @@ function renderOv(){
   });
   meta.sort((a,b)=>b.age-a.age);
   renderMoonWanphra();
+  renderOvStockWarn();
   const dcP=meta.filter(m=>m.cls==='danger').length,wcP=meta.filter(m=>m.cls==='warn').length;
   document.getElementById('hdr-alert').textContent=dcP>0&&wcP>0?`🔴 ${dcP} ต้องดู · ⚠️ ${wcP} เฝ้าระวัง`:dcP>0?`🔴 ${dcP} ต้องดู`:wcP>0?`⚠️ ${wcP} เฝ้าระวัง`:'✅ ทุกบ่อปกติ';
   const active=meta.filter(m=>m.cls!=='prep');
@@ -7157,6 +7170,17 @@ function renderStockWarn(){
   if(!low.length){warnEl.style.display='none';return;}
   warnEl.style.display='flex';
   txtEl.textContent=low.map(i=>`${i.name} เหลือ ${i.qty} ${i.unit}`).join(' · ');
+}
+// ── เตือนสต็อกใกล้หมดในหน้าภาพรวม — ใช้เงื่อนไขเดียวกับ renderStockWarn() (i.qty<=i.minQty) แค่ดึงมาโชว์ซ้ำ ไม่มีเงื่อนไขใหม่ ซ่อนการ์ดทั้งใบถ้าไม่มีของใกล้หมด ──
+function renderOvStockWarn(){
+  const card=document.getElementById('ov-stockwarn-card');
+  const listEl=document.getElementById('ov-stockwarn-list');
+  if(!card||!listEl)return;
+  const items=D.inventoryItems||[];
+  const low=items.filter(i=>i.minQty>0&&i.qty<=i.minQty);
+  if(!low.length){card.style.display='none';return;}
+  card.style.display='';
+  listEl.innerHTML=low.map(i=>`<div class="ov-stockwarn-item"><span class="nm">${i.name}</span><span class="qty">เหลือ ${i.qty} <small>/ ขั้นต่ำ ${i.minQty} ${i.unit||''}</small></span></div>`).join('');
 }
 
 let _stockShowZero=false;
