@@ -1452,6 +1452,13 @@ body.role-ceo .main{max-width:640px}
     <div class="ov-side">
       <div id="ov-weather-card"></div>
       <div class="card" style="margin-bottom:14px">
+        <div class="card-t">🌙 วันพระ/วันโกน</div>
+        <div class="moon-strip" id="moon-strip"></div>
+        <div id="wp-alert"></div>
+        <div class="wp-strip" id="wp-strip"></div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:6px">🧂 = ก่อนวันโกน · 🧂🧂 = วันโกน (ลงแร่ธาตุรวม) · 🙏 = วันพระ</div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
         <div class="card-t">⚠️ บ่อเสี่ยงสูงสุด</div>
         <div id="ov-risk-list"></div>
       </div>
@@ -5161,18 +5168,6 @@ const FC_CATS=[
   {key:'econ',icon:'💰',label:'Economic Risk',calc:(p)=>pondRiskEconomic(p)},
 ];
 // ── การกระทำแนะนำผูกกับหมวด/ระดับความเสี่ยง — อ้างอิงจากเอกสาร Pond dynamics / ไนไตรท์สะสม / Precision feeding / shrimp health management ──
-const FC_ACTIONS={
-  do:{danger:[{t:'เปิดเครื่องตีน้ำเพิ่มทันที',d:'DO ต่ำกว่าเกณฑ์ปลอดภัย เสี่ยงกุ้งลอยหัว'},{t:'ลดอาหาร 20–50%',d:'ลดภาระออกซิเจนจากการย่อยอาหาร'},{t:'ตรวจ DO ซ้ำหลังเปิดเครื่องตีน้ำ',d:'ยืนยันว่าค่ากลับมาปกติ'}],
-      warn:[{t:'เฝ้าระวัง DO ช่วงเช้ามืด (ตี 3–5 น.)',d:'ช่วงที่ DO ต่ำสุดตามธรรมชาติ แอปยังไม่มีข้อมูลช่วงนี้'}]},
-  stab:{danger:[{t:'ตรวจ pH และ DO เช้า–บ่ายให้ครบทุกวัน',d:'ยืนยันแนวโน้มการแกว่งของระบบ'},{t:'ตรวจ Alkalinity',d:'เช็คว่าลดลงจนต้องเติมด่างหรือไม่'}],
-        warn:[{t:'เพิ่มความถี่ตรวจคุณภาพน้ำ',d:'บ่อเริ่มไม่นิ่ง ควรติดตามใกล้ชิดขึ้น'}]},
-  disease:{danger:[{t:'ตรวจสาเหตุกุ้งตายผิดปกติทันที',d:'จำนวนตายสูงกว่าค่าเฉลี่ยชัดเจน — เช็ค DO/พฤติกรรม/พื้นบ่อ'},{t:'สังเกตพฤติกรรมกุ้งใกล้ชิด (ลอยหัว ว่ายผิดปกติ)',d:'สัญญาณเตือนโรคล่วงหน้าหลายตัวขึ้นพร้อมกัน'},{t:'แจ้งที่ปรึกษาฟาร์ม',d:'ขอความเห็นผู้เชี่ยวชาญก่อนลุกลาม'}],
-           warn:[{t:'ตรวจการกินอาหารและคุณภาพน้ำเพิ่มเติม',d:'เฝ้าระวังสัญญาณเริ่มต้นก่อนกุ้งป่วยจริง'}]},
-  feed:{danger:[{t:'ตรวจยอกินอาหารและของเสียในยอ',d:'ประเมินว่าให้อาหารเกินความต้องการหรือไม่'},{t:'ปรับปริมาณอาหารใหม่ตามผลตรวจยอ',d:'ลดตามผลจริง ไม่ใช้ความรู้สึก'}],
-        warn:[{t:'ตรวจยอกินอาหารวันนี้',d:'ยืนยันแนวโน้มการกิน/FCR ที่เปลี่ยนไป'}]},
-  econ:{danger:[{t:'ทบทวนต้นทุนอาหารและ FCR ทั้งรอบ',d:'FCR สูงกระทบกำไรโดยตรง'}],
-        warn:[{t:'ติดตาม FCR สะสมสัปดาห์นี้',d:'เริ่มเบี่ยงจากเป้าหมาย'}]},
-};
 function _fcPick(candidates,okReason){
   const rk={ok:0,warn:1,danger:2};
   let best=null;
@@ -5342,9 +5337,7 @@ function pondRiskEconomic(p){
   return _fcPick(cands,'ต้นทุนอยู่ในแผน');
 }
 let _fcSelRisk=null,_fcCurPond=null;
-const _fcDoneSet=new Set();
 function fcSetFilter(key){_fcSelRisk=_fcSelRisk===key?null:key;renderFarmCard(_fcCurPond);}
-function fcToggleAction(id){if(_fcDoneSet.has(id))_fcDoneSet.delete(id);else _fcDoneSet.add(id);renderFarmCard(_fcCurPond);}
 const WD_TH=['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
 function renderMoonWanphra(){
   const moonEl=document.getElementById('moon-strip');if(!moonEl)return;
@@ -5371,7 +5364,6 @@ function renderMoonWanphra(){
 function renderFarmCard(p){
   const gridEl=document.getElementById('fc-grid');if(!gridEl||!p)return;
   _fcCurPond=p;
-  renderMoonWanphra();
   const last=p.records&&p.records.length?p.records[p.records.length-1]:null;
   const results=FC_CATS.map(c=>({...c,res:c.calc(p,last)}));
   gridEl.innerHTML=results.map(r=>`
@@ -5380,32 +5372,6 @@ function renderFarmCard(p){
       <span class="fc-item-badge ${r.res.level}">${FC_ICON[r.res.level]} ${FC_LBL[r.res.level]}</span>
       <div class="fc-item-reason">${r.res.reason}</div>
     </div>`).join('');
-  let actions=[];
-  results.forEach(r=>{
-    if(r.res.level==='ok')return;
-    const list=(FC_ACTIONS[r.key]&&FC_ACTIONS[r.key][r.res.level])||[];
-    list.forEach((a,i)=>actions.push({id:p.id+'-'+r.key+'-'+i,riskKey:r.key,riskLabel:r.label,level:r.res.level,...a}));
-  });
-  const rank={danger:0,warn:1};
-  actions.sort((a,b)=>rank[a.level]-rank[b.level]);
-  if(_fcSelRisk)actions=actions.filter(a=>a.riskKey===_fcSelRisk);
-  const doneCount=actions.filter(a=>_fcDoneSet.has(a.id)).length;
-  const progEl=document.getElementById('fc-act-progress');
-  if(progEl)progEl.textContent=actions.length?`ทำแล้ว ${doneCount} / ${actions.length} รายการ`:'';
-  const barEl=document.getElementById('fc-act-bar-fill');
-  if(barEl)barEl.style.width=actions.length?(doneCount/actions.length*100)+'%':'0%';
-  const listEl=document.getElementById('fc-act-list');if(!listEl)return;
-  if(!actions.length){
-    listEl.innerHTML=`<div class="fc-act-empty">✅ ไม่มีสิ่งที่ต้องทำเพิ่มเติม${_fcSelRisk?'ในหมวดนี้':''} — ทุกอย่างอยู่ในเกณฑ์ปกติ</div>`;
-    return;
-  }
-  listEl.innerHTML=actions.map(a=>{
-    const done=_fcDoneSet.has(a.id);
-    return`<div class="fc-act-item ${done?'done':''}" onclick="fcToggleAction('${a.id}')">
-      <div class="fc-act-chk">${done?'✓':''}</div>
-      <div class="fc-act-body"><b>${a.t}</b><span>${a.d}</span><br/><span class="fc-act-src ${a.level}">${a.riskLabel}</span></div>
-    </div>`;
-  }).join('');
 }
 function homeRow(p,age,cls,reason){
   const dot=cls==='danger'?'var(--d)':cls==='warn'?'var(--w)':cls==='prep'?'var(--in)':'var(--ok)';
@@ -5432,10 +5398,12 @@ function openPondDetail(id){
   renderPondDetail(id);
   window.scrollTo({top:0,behavior:'instant'});
 }
+let _pdCurPondId=null;
 function renderPondDetail(id){
   const p=pond(id);const el=document.getElementById('pd-body');
   if(!el)return;
   if(!p){el.innerHTML='<div class="card">ไม่พบข้อมูลบ่อ</div>';return}
+  _pdCurPondId=id;
   if(!Array.isArray(p.records))p.records=[];
   const last=p.records[p.records.length-1];
   const age=p.startDate?dDiff(p.startDate,today()):(last?last.age:0);
@@ -5618,15 +5586,7 @@ function renderPondDetail(id){
     ${reason?`<div class="pd-alert"><div class="ai ${cls==='prep'?'ok':cls}"><span>${cls==='danger'?'🔴':cls==='warn'?'⚠️':'✅'}</span><div>${reason}</div></div></div>`:''}
     ${cls!=='prep'?`<div class="card" style="margin-bottom:12px">
       <div class="card-t">🚦 ความเสี่ยงหลักของบ่อ</div>
-      <div class="moon-strip" id="moon-strip"></div>
-      <div id="wp-alert"></div>
-      <div class="wp-strip" id="wp-strip"></div>
-      <div style="font-size:11px;color:var(--tx3);margin-bottom:10px">🧂 = ก่อนวันโกน · 🧂🧂 = วันโกน (ลงแร่ธาตุรวม) · 🙏 = วันพระ</div>
       <div class="fc-grid" id="fc-grid"></div>
-      <div class="card-t" style="font-size:13px">✅ สิ่งที่ต้องทำวันนี้</div>
-      <div class="fc-act-progress" id="fc-act-progress"></div>
-      <div class="fc-act-bar"><div class="fc-act-bar-fill" id="fc-act-bar-fill"></div></div>
-      <div class="fc-act-list" id="fc-act-list"></div>
     </div>`:''}
     <div class="pd-gauges" id="pd-gauges"></div>
     ${kpiHero}
@@ -5635,8 +5595,20 @@ function renderPondDetail(id){
       ${waterHtml}
     </div>
     <div class="card" style="margin-top:12px">
+      <div class="card-t">📖 ประวัติค่าน้ำย้อนหลัง</div>
+      <div class="card-sub">ดูย้อนหลังของบ่อนี้ แก้ไข/ลบได้เลย ไม่ต้องออกไปหน้า "จัดการน้ำ"</div>
+      <div class="chip-row" id="pd-wq-hist-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
+      <div id="pd-wq-hist-table"></div>
+    </div>
+    <div class="card" style="margin-top:12px">
       <div class="card-t">🍖 อาหารล่าสุด${latFeed&&latFeed.date?` · ${fD(latFeed.date)}`:''}</div>
       ${feedHtml}
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="card-t">📖 สมุดประวัติการให้อาหาร</div>
+      <div class="card-sub">ดูย้อนหลังของบ่อนี้ แก้ไข/ลบได้เลย ไม่ต้องออกไปหน้า "อาหาร & FCR"</div>
+      <div class="chip-row" id="pd-feed-hist-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
+      <div id="pd-feed-hist-table"></div>
     </div>
     <div class="card" style="margin-top:12px">
       <div class="card-t">📏 ไซส์ล่าสุด${lat&&lat.date?` · ${fD(lat.date)}`:''}</div>
@@ -5673,6 +5645,8 @@ function renderPondDetail(id){
   if(cls!=='prep')renderFarmCard(p);
   renderBioCompare(p);
   if(cls!=='prep')renderCropBenchmark(p);
+  renderPdWqHistory(p);
+  renderPdFeedHistory(p);
 }
 function pdToggleCatItems(key){
   document.getElementById('pd-cat-items-'+key)?.classList.toggle('show');
@@ -5994,6 +5968,7 @@ function renderOv(){
     return{p,last,age,cls:pondStatusOv(p)};
   });
   meta.sort((a,b)=>b.age-a.age);
+  renderMoonWanphra();
   const dcP=meta.filter(m=>m.cls==='danger').length,wcP=meta.filter(m=>m.cls==='warn').length;
   document.getElementById('hdr-alert').textContent=dcP>0&&wcP>0?`🔴 ${dcP} ต้องดู · ⚠️ ${wcP} เฝ้าระวัง`:dcP>0?`🔴 ${dcP} ต้องดู`:wcP>0?`⚠️ ${wcP} เฝ้าระวัง`:'✅ ทุกบ่อปกติ';
   const active=meta.filter(m=>m.cls!=='prep');
@@ -8631,6 +8606,68 @@ function deleteWQ(pid,d){
   p.records=(p.records||[]).filter(r=>r.date!==d);
   save();renderWQTable();renderOv();
   renderEpChips();updateEpHeader();
+}
+
+/* ── สมุดประวัติในหน้าบ่อ (ค่าน้ำ/อาหาร) — ดึงข้อมูลชุดเดียวกับหน้า "จัดการน้ำ"/"อาหาร & FCR" มาแสดงในหน้าบ่อ ไม่ต้องสลับหน้า ── */
+let _pdWqPeriod=14,_pdFeedPeriod=14;
+function pdHistPeriodChips(period,setFn){
+  return[[14,'14 วัน'],[30,'30 วัน'],['all','ทั้งหมด']].map(([v,lbl])=>
+    `<span class="trial-chip${period===v?' on':''}" onclick="${setFn}(${typeof v==='number'?v:`'${v}'`},this)">${lbl}</span>`
+  ).join('');
+}
+function setPdWqPeriod(v,btn){_pdWqPeriod=v;document.querySelectorAll('#pd-wq-hist-chips .trial-chip').forEach(el=>el.classList.remove('on'));btn.classList.add('on');renderPdWqHistory(pond(_pdCurPondId));}
+function setPdFeedPeriod(v,btn){_pdFeedPeriod=v;document.querySelectorAll('#pd-feed-hist-chips .trial-chip').forEach(el=>el.classList.remove('on'));btn.classList.add('on');renderPdFeedHistory(pond(_pdCurPondId));}
+function pdEditWQ(pid,d){document.getElementById('tab-entry')?.click();setTimeout(()=>editWQ(pid,d),80);}
+function pdDeleteWQ(pid,d){deleteWQ(pid,d);const p=pond(pid);if(p)renderPdWqHistory(p);}
+function renderPdWqHistory(p){
+  const tbl=document.getElementById('pd-wq-hist-table');if(!tbl||!p)return;
+  const chipsEl=document.getElementById('pd-wq-hist-chips');
+  if(chipsEl)chipsEl.innerHTML=pdHistPeriodChips(_pdWqPeriod,'setPdWqPeriod');
+  let rec=[...(p.records||[])].reverse();
+  if(_pdWqPeriod!=='all')rec=rec.slice(0,_pdWqPeriod);
+  if(!rec.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return;}
+  const show=PARAMS.slice(0,8);
+  tbl.innerHTML=`<div style="font-size:11px;color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวาเพื่อดูทุกค่า →</div><div style="overflow-x:auto"><table class="tbl" style="white-space:nowrap"><thead><tr><th></th><th>วันที่</th><th>อายุ</th>${show.map(pm=>`<th>${pm.lbl}</th>`).join('')}<th>หมายเหตุ</th></tr></thead><tbody>${
+    rec.map((r,i)=>{
+      const ageCalc=p.startDate?dDiff(p.startDate,r.date):r.age;
+      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="pdEditWQ('${p.id}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="pdDeleteWQ('${p.id}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc}</td>${show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v,r);
+        const cell=v===null||v===undefined?`<span style="color:var(--tx3);font-size:12px" title="ยังไม่ได้กรอก">–</span>`:`<span style="color:${sc(s)}">${v}</span>`;
+        return`<td>${cell}</td>`;}).join('')}<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.notes||'<span style="color:var(--tx3);font-size:12px">–</span>'}</td></tr>`;
+    }).join('')}</tbody></table></div>`;
+}
+function pdEditFeed(pid,d){
+  document.getElementById('tab-feed')?.click();
+  setTimeout(()=>{
+    const dEl=document.getElementById('fd-date');if(dEl){dEl.value=d;renderFeedGrid();}
+    const row=document.querySelector(`tr[data-pond="${pid}"]`);if(row)row.scrollIntoView({behavior:'smooth',block:'center'});
+  },80);
+}
+function pdDeleteFeedEntry(pid,d){
+  const p=pond(pid);if(!p)return;
+  const rec=(p.feedLog||[]).find(r=>r.date===d);if(!rec)return;
+  if(!confirm('ต้องการลบข้อมูลอาหารวันที่ '+fD(d)+' ใช่หรือไม่?'))return;
+  reverseFeedStockDeduction(rec);
+  p.feedLog=p.feedLog.filter(r=>r!==rec);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(rec.id);
+  save();
+  renderPdFeedHistory(p);
+  if(typeof renderStockKPI==='function')renderStockKPI();
+  if(typeof renderStockWarn==='function')renderStockWarn();
+  if(typeof renderStockItems==='function')renderStockItems();
+  if(document.getElementById('fd-date')?.value===d&&typeof renderFeedGrid==='function')renderFeedGrid();
+}
+function renderPdFeedHistory(p){
+  const tbl=document.getElementById('pd-feed-hist-table');if(!tbl||!p)return;
+  const chipsEl=document.getElementById('pd-feed-hist-chips');
+  if(chipsEl)chipsEl.innerHTML=pdHistPeriodChips(_pdFeedPeriod,'setPdFeedPeriod');
+  let rec=[...(p.feedLog||[])].reverse();
+  if(_pdFeedPeriod!=='all')rec=rec.slice(0,_pdFeedPeriod);
+  if(!rec.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return;}
+  tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ยี่ห้อ/เบอร์</th><th style="text-align:right">อาหาร (กก.)</th><th>หมายเหตุ</th></tr></thead><tbody>${
+    rec.map((r,i)=>{
+      const ageCalc=p.startDate?dDiff(p.startDate,r.date):r.age;
+      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="pdEditFeed('${p.id}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="pdDeleteFeedEntry('${p.id}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc}</td><td>${r.feedBrand||'-'}</td><td style="text-align:right">${(r.totalFeed||0).toLocaleString()}</td><td style="font-size:12px;color:var(--tx2)">${r.notes||'-'}</td></tr>`;
+    }).join('')}</tbody></table></div>`;
 }
 
 // ===== EDIT HISTORY FUNCTIONS =====
