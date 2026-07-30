@@ -1388,6 +1388,17 @@ body.role-ceo .main{max-width:640px}
         <div id="sk-msg-fundbuy"></div>
       </div>
       <div class="card" style="margin-bottom:12px">
+        <div class="card-t">📤 บันทึกการขายกองทุน</div>
+        <div class="card-sub" id="fund-sell-sub"></div>
+        <div class="fg"><label class="fl">วันที่ขาย</label><input type="date" class="fi" id="fs-date"></div>
+        <div class="fg"><label class="fl">จำนวนหน่วยที่ขาย</label><input class="fi" id="fs-units" inputmode="decimal" placeholder="เช่น 2,000" oninput="fundSellPreview()"></div>
+        <div class="fg"><label class="fl">NAV ต่อหน่วย (ตอนขาย)</label><input class="fi" id="fs-nav" inputmode="decimal" placeholder="เช่น 11.2000" oninput="fundSellPreview()"></div>
+        <div class="fg"><label class="fl">เงินที่ได้ (คำนวณอัตโนมัติ)</label><input class="fi" id="fs-amt-preview" style="background:var(--sf2)" readonly></div>
+        <div class="fg"><label class="fl">หมายเหตุ</label><input class="fi" id="fs-note" placeholder="เช่น ถอนไปใช้จ่ายในสวนปาล์ม"></div>
+        <button class="btn btn-p" style="width:100%" id="fund-sell-btn" onclick="saveFundSell()">💾 บันทึกการขาย</button>
+        <div id="sk-msg-fundsell"></div>
+      </div>
+      <div class="card" style="margin-bottom:12px">
         <div class="card-t">🔄 บันทึก NAV ปัจจุบัน</div>
         <div class="card-sub">อัปเดตเป็นระยะ (เช่น ทุกสัปดาห์) เพื่อคำนวณกำไร-ขาดทุนที่ยังไม่รับรู้</div>
         <div class="fg"><label class="fl">วันที่</label><input type="date" class="fi" id="fn-date"></div>
@@ -1399,6 +1410,10 @@ body.role-ceo .main{max-width:640px}
     <div class="card" style="margin-bottom:12px">
       <div class="card-t">📋 ประวัติการซื้อ</div>
       <div id="fund-buy-table"></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-t">📋 ประวัติการขาย</div>
+      <div id="fund-sell-table"></div>
     </div>
     <div class="card">
       <div class="card-t">📋 ประวัติ NAV ที่บันทึก</div>
@@ -7648,9 +7663,10 @@ function palmTab(paneId,btn){
   if(paneId==='money'){populatePalmPlotSelects();setPalmMoneyMode(_palmMoneyMode);renderPalmMoneyPeriodChips();renderPalmMoneyFilterChips();renderPalmMoney();}
   if(paneId==='fert'){populatePalmPlotSelects();renderPalmFertYearOptions();renderPalmFertFilterChips();renderPalmFertSummary();renderPalmFertLog();}
   if(paneId==='fund'){
-    const fbd=document.getElementById('fb-date'),fnd=document.getElementById('fn-date');
+    const fbd=document.getElementById('fb-date'),fnd=document.getElementById('fn-date'),fsd=document.getElementById('fs-date');
     if(fbd&&!fbd.value)fbd.value=today();
     if(fnd&&!fnd.value)fnd.value=today();
+    if(fsd&&!fsd.value)fsd.value=today();
     selectFund(_fundSel);
   }
 }
@@ -8086,31 +8102,67 @@ function deleteFundNav(id){
   save();
   renderFundPane();
 }
-function fundUnitsAsOf(buys,date){return buys.filter(b=>b.date<=date).reduce((s,b)=>s+b.units,0);}
-function fundInvestedAsOf(buys,date){return buys.filter(b=>b.date<=date).reduce((s,b)=>s+b.amount,0);}
+function fundSells(f){return(D.fundSells||[]).filter(r=>r.fund===f).sort((a,b)=>(a.date||'').localeCompare(b.date||''));}
+function fundSellPreview(){
+  const units=parseFloat(document.getElementById('fs-units').value)||0;
+  const nav=parseFloat(document.getElementById('fs-nav').value)||0;
+  document.getElementById('fs-amt-preview').value=(units&&nav)?'฿'+(units*nav).toLocaleString(undefined,{maximumFractionDigits:2}):'';
+}
+function saveFundSell(){
+  const date=document.getElementById('fs-date').value||today();
+  const units=parseFloat(document.getElementById('fs-units').value)||0;
+  const nav=parseFloat(document.getElementById('fs-nav').value)||0;
+  const note=document.getElementById('fs-note').value.trim();
+  if(!(units>0)||!(nav>0)){showStockMsg('fundsell','กรุณากรอกจำนวนหน่วยและ NAV ให้ถูกต้อง','err');return;}
+  const held=fundBuys(_fundSel).reduce((s,b)=>s+b.units,0)-fundSells(_fundSel).reduce((s,s2)=>s+s2.units,0);
+  if(units>held+0.0001){showStockMsg('fundsell','จำนวนหน่วยที่ขายเกินกว่าที่ถืออยู่ ('+held.toFixed(2)+' หน่วย)','err');return;}
+  const amount=units*nav;
+  if(!D.fundSells)D.fundSells=[];
+  D.fundSells.push({id:'fs'+Date.now()+'_'+Math.random().toString(36).slice(2,6),fund:_fundSel,date,units,nav,amount,note,by:curUserLabel()});
+  save();
+  showStockMsg('fundsell','✅ บันทึกการขายเรียบร้อย','ok');
+  ['fs-units','fs-nav','fs-note','fs-amt-preview'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  renderFundPane();
+  flashSaveBtn(document.getElementById('fund-sell-btn'));
+}
+function deleteFundSell(id){
+  if(!confirm('ลบรายการขายนี้?'))return;
+  D.fundSells=D.fundSells.filter(r=>r.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
+  save();
+  renderFundPane();
+}
+function fundUnitsAsOf(buys,sells,date){return buys.filter(b=>b.date<=date).reduce((s,b)=>s+b.units,0)-sells.filter(s=>s.date<=date).reduce((s,r)=>s+r.units,0);}
+function fundNetInvestedAsOf(buys,sells,date){return buys.filter(b=>b.date<=date).reduce((s,b)=>s+b.amount,0)-sells.filter(s=>s.date<=date).reduce((s,r)=>s+r.amount,0);}
 function renderFundPane(){
   const meta=FUND_META[_fundSel];
   const noteEl=document.getElementById('fund-note');if(!noteEl)return;
   noteEl.className='note'+(meta.noteCls?' '+meta.noteCls:'');
   noteEl.innerHTML=meta.note;
   document.getElementById('fund-buy-sub').textContent=meta.buySub;
+  document.getElementById('fund-sell-sub').textContent='บันทึกไว้ดูเฉยๆ ไม่ผูกกับข้อมูลการเงินส่วนอื่นใดเลย';
   document.getElementById('fund-buy-btn').className='btn btn-p'+(_fundSel==='shrimp'?' shr':'');
   document.getElementById('fund-nav-btn').className='btn btn-p'+(_fundSel==='shrimp'?' shr':'');
+  document.getElementById('fund-sell-btn').className='btn btn-p'+(_fundSel==='shrimp'?' shr':'');
 
-  const buys=fundBuys(_fundSel),navLog=fundNavLog(_fundSel);
-  const totalUnits=buys.reduce((s,b)=>s+b.units,0);
+  const buys=fundBuys(_fundSel),navLog=fundNavLog(_fundSel),sells=fundSells(_fundSel);
+  const totalBuyUnits=buys.reduce((s,b)=>s+b.units,0);
   const totalInvested=buys.reduce((s,b)=>s+b.amount,0);
+  const totalSellUnits=sells.reduce((s,r)=>s+r.units,0);
+  const totalSellProceeds=sells.reduce((s,r)=>s+r.amount,0);
+  const netUnits=totalBuyUnits-totalSellUnits;
+  const netInvested=totalInvested-totalSellProceeds;
   const latest=navLog[navLog.length-1];
-  const curValue=latest?totalUnits*latest.nav:totalInvested;
-  const pl=curValue-totalInvested;
-  const plPct=totalInvested?(pl/totalInvested*100):0;
-  const plCls=pl>=0?'':'style="color:var(--d)"';
-  const plSign=pl>=0?'+':'';
+  const curValue=latest?netUnits*latest.nav:netInvested;
+  const totalPL=(curValue+totalSellProceeds)-totalInvested;
+  const totalPLPct=totalInvested?(totalPL/totalInvested*100):0;
+  const plCls=totalPL>=0?'':'style="color:var(--d)"';
+  const plSign=totalPL>=0?'+':'';
   document.getElementById('fund-kpi').innerHTML=`
-    <div class="kpi-card"><div class="kpi-lbl">หน่วยลงทุนสะสม</div><div class="kpi-val">${totalUnits.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div><div class="kpi-sub">หน่วย</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">เงินลงทุนสะสม</div><div class="kpi-val">฿${Math.round(totalInvested).toLocaleString()}</div><div class="kpi-sub">${buys.length} ครั้ง</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">หน่วยที่ถืออยู่ตอนนี้</div><div class="kpi-val">${netUnits.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div><div class="kpi-sub">หน่วย</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">เงินลงทุนสุทธิ</div><div class="kpi-val">฿${Math.round(netInvested).toLocaleString()}</div><div class="kpi-sub">ซื้อ ${buys.length} ครั้ง · ขาย ${sells.length} ครั้ง</div></div>
     <div class="kpi-card"><div class="kpi-lbl">มูลค่าปัจจุบัน</div><div class="kpi-val">฿${Math.round(curValue).toLocaleString()}</div><div class="kpi-sub">${latest?'NAV ล่าสุด '+latest.nav.toFixed(4)+' ('+fD(latest.date)+')':'ยังไม่มีบันทึก NAV'}</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">กำไร/ขาดทุน</div><div class="kpi-val" ${plCls}>${plSign}฿${Math.round(pl).toLocaleString()}</div><div class="kpi-sub" ${plCls}>${plSign}${plPct.toFixed(2)}%</div></div>`;
+    <div class="kpi-card"><div class="kpi-lbl">กำไร/ขาดทุนสะสม</div><div class="kpi-val" ${plCls}>${plSign}฿${Math.round(totalPL).toLocaleString()}</div><div class="kpi-sub" ${plCls}>${plSign}${totalPLPct.toFixed(2)}%</div></div>`;
 
   const buyTbl=document.getElementById('fund-buy-table');
   if(!buys.length){buyTbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติการซื้อ</p>';}
@@ -8120,12 +8172,20 @@ function renderFundPane(){
     }</tbody></table></div>`;
   }
 
+  const sellTbl=document.getElementById('fund-sell-table');
+  if(!sells.length){sellTbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติการขาย</p>';}
+  else{
+    sellTbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th style="text-align:right">หน่วยที่ขาย</th><th style="text-align:right">NAV ตอนขาย</th><th style="text-align:right">เงินที่ได้</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
+      sells.slice().reverse().map(s=>`<tr><td>${fD(s.date)}</td><td style="text-align:right">${s.units.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td style="text-align:right">${s.nav.toFixed(4)}</td><td style="text-align:right;color:var(--ok)">+฿${Math.round(s.amount).toLocaleString()}</td><td style="font-size:12px;color:var(--tx2)">${s.note||'-'}</td><td style="font-size:12px;color:var(--tx2)">${s.by||'-'}</td><td><button class="btn-sm btn-del" onclick="deleteFundSell('${s.id}')">🗑️</button></td></tr>`).join('')
+    }</tbody></table></div>`;
+  }
+
   const navTbl=document.getElementById('fund-nav-table');
   if(!navLog.length){navTbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีบันทึก NAV</p>';}
   else{
     navTbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th style="text-align:right">NAV ต่อหน่วย</th><th style="text-align:right">มูลค่าพอร์ต ณ วันนั้น</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
       navLog.slice().reverse().map(n=>{
-        const units=fundUnitsAsOf(buys,n.date);
+        const units=fundUnitsAsOf(buys,sells,n.date);
         return `<tr><td>${fD(n.date)}</td><td style="text-align:right">${n.nav.toFixed(4)}</td><td style="text-align:right">฿${Math.round(units*n.nav).toLocaleString()}</td><td style="font-size:12px;color:var(--tx2)">${n.by||'-'}</td><td><button class="btn-sm btn-del" onclick="deleteFundNav('${n.id}')">🗑️</button></td></tr>`;
       }).join('')
     }</tbody></table></div>`;
@@ -8135,13 +8195,13 @@ function renderFundPane(){
   if(_fundChart){_fundChart.destroy();_fundChart=null;}
   if(navLog.length){
     const labels=navLog.map(n=>fD(n.date));
-    const valueData=navLog.map(n=>fundUnitsAsOf(buys,n.date)*n.nav);
-    const investedData=navLog.map(n=>fundInvestedAsOf(buys,n.date));
+    const valueData=navLog.map(n=>fundUnitsAsOf(buys,sells,n.date)*n.nav);
+    const investedData=navLog.map(n=>fundNetInvestedAsOf(buys,sells,n.date));
     _fundChart=new Chart(canvas,{
       type:'line',
       data:{labels,datasets:[
         {label:'มูลค่าพอร์ต',data:valueData,borderColor:meta.color,backgroundColor:meta.color+'26',borderWidth:2.5,pointRadius:3,pointBackgroundColor:meta.color,fill:true,tension:.3},
-        {label:'เงินลงทุนสะสม',data:investedData,borderColor:'#B8860B',borderDash:[5,4],borderWidth:2,pointRadius:2,fill:false,tension:.2}
+        {label:'เงินลงทุนสุทธิ',data:investedData,borderColor:'#B8860B',borderDash:[5,4],borderWidth:2,pointRadius:2,fill:false,tension:.2}
       ]},
       options:{responsive:true,maintainAspectRatio:false,
         plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ฿${Math.round(ctx.parsed.y).toLocaleString()}`}}},
