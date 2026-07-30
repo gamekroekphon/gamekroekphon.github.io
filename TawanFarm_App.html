@@ -5972,9 +5972,15 @@ function renderOv(){
   const dcP=meta.filter(m=>m.cls==='danger').length,wcP=meta.filter(m=>m.cls==='warn').length;
   document.getElementById('hdr-alert').textContent=dcP>0&&wcP>0?`🔴 ${dcP} ต้องดู · ⚠️ ${wcP} เฝ้าระวัง`:dcP>0?`🔴 ${dcP} ต้องดู`:wcP>0?`⚠️ ${wcP} เฝ้าระวัง`:'✅ ทุกบ่อปกติ';
   const active=meta.filter(m=>m.cls!=='prep');
-  const prepM=meta.filter(m=>m.cls==='prep');
+  // ── บ่อสถานะ prep แต่ยังไม่มีข้อมูลเตรียมบ่อจริง (ไม่มี prepChecklist หรือมีแต่ว่างเปล่า ไม่มีวันลงกุ้ง/เช็คลิสต์ใดๆ) = ยังไม่ได้เริ่มเตรียมจริง ไม่ควรมาโชว์เป็นการ์ดในภาพรวม (นับรวมเป็น "ว่าง/พักบ่อ" แทน) — ใช้เกณฑ์เดียวกับ auto-detect ของหน้า "เตรียมบ่อ" (initPrep()) ──
+  const allPrep=meta.filter(m=>m.cls==='prep');
+  const prepM=allPrep.filter(m=>{
+    const cl=m.p.prepChecklist;
+    return!!(cl&&(cl.stockDate||(cl.steps&&Object.keys(cl.steps).length>0)));
+  });
+  const idleNotPrepped=allPrep.length-prepM.length;
   const warnM=meta.filter(m=>m.cls==='warn'||m.cls==='danger');
-  const closedCount=Math.max(0,TOTAL_PONDS-D.ponds.length);
+  const closedCount=Math.max(0,TOTAL_PONDS-D.ponds.length)+idleNotPrepped;
   const totalBio=active.reduce((s,{p})=>s+(getLatestBiomass(p)||0),0);
   const td=today();
   const yd=new Date(new Date(td).getTime()-86400000).toISOString().slice(0,10);
