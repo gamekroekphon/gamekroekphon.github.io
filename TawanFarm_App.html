@@ -2900,7 +2900,7 @@ body.role-ceo .main{max-width:640px}
   <div class="stock-pane" id="skp-cash">
     <div class="card" style="margin-bottom:12px">
       <div style="font-weight:700;color:var(--tx);margin-bottom:10px">💰 รายรับ-รายจ่ายเงินสด (เสมียน)</div>
-      <div class="card-sub">บันทึกเงินที่เสมียนเบิกจากส่วนกลางมาเติม (รายรับ) และค่าใช้จ่ายเบ็ดเตล็ดในฟาร์ม เช่น ซื้อของทำอาหารให้คนงาน (รายจ่าย) — รายการ "รายจ่าย" จะถูกนำไปรวมกับต้นทุน "อุปกรณ์นอก (แชร์)" หารแบ่งทุกบ่อที่มีกุ้งอัตโนมัติเหมือนสต็อกโหมด "แชร์ทุกบ่อ" ส่วน "รายรับ" เป็นแค่การโอนเงินเข้ากองกลาง ไม่นับเป็นต้นทุน ไม่หารบ่อ</div>
+      <div class="card-sub">บันทึกเงินที่เสมียนได้รับเข้ากระเป๋า (รายรับ) และค่าใช้จ่ายเบ็ดเตล็ดในฟาร์ม เช่น ซื้อของทำอาหารให้คนงาน (รายจ่าย) — รายการ "รายจ่าย" จะถูกนำไปรวมกับต้นทุน "อุปกรณ์นอก (แชร์)" หารแบ่งทุกบ่อที่มีกุ้งอัตโนมัติเหมือนสต็อกโหมด "แชร์ทุกบ่อ" ส่วน "รายรับ" แบ่งเป็น 2 แบบ: <b>เบิกจากส่วนกลาง</b> (ย้ายเงินมาเติมตอนเงินสดในกระเป๋าไม่พอ ไม่นับเป็นรายได้ฟาร์ม) กับ <b>ขายกุ้งสุ่ม/กุ้งเสีย</b> (รายได้จริงของฟาร์ม เข้ากระเป๋าเสมียนเหมือนกันแต่จะถูกส่งไปรวมในการ์ด "รายได้อื่น" ของ CEO ด้วย แยกจากรายได้ปิดรอบ ไม่ทับซ้อนกัน)</div>
       <div id="cash-staffnote" style="display:none;background:var(--sf2);border-radius:8px;padding:8px 12px;font-size:11.5px;color:var(--tx3);margin:10px 0">🔒 มุมมองพนักงานเห็นเฉพาะรายการที่คุณบันทึกเอง — ยอดคงเหลือรวมทั้งกองทุนดูได้จาก Admin</div>
       <div class="g4" id="cash-kpi" style="margin-top:12px"></div>
     </div>
@@ -2911,9 +2911,20 @@ body.role-ceo .main{max-width:640px}
         <button id="cash-mode-in" class="stock-mode-btn on-in" onclick="setCashMode('in')">📥 รายรับ (เบิกเงินมาเติม)</button>
         <button id="cash-mode-out" class="stock-mode-btn" onclick="setCashMode('out')">📤 รายจ่าย</button>
       </div>
+      <div id="cash-subtype-row" style="margin-bottom:14px">
+        <div style="font-size:11.5px;font-weight:600;color:var(--tx2);margin-bottom:8px">เลือกประเภทรายรับ</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span class="trial-chip on" id="cash-sub-transfer" onclick="setCashSubtype('transfer',this)">🏦 เบิกจากส่วนกลาง</span>
+          <span class="trial-chip" id="cash-sub-sale" onclick="setCashSubtype('sale',this)">🦐 ขายกุ้งสุ่ม/กุ้งเสีย</span>
+        </div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div class="fg"><label class="fl">วันที่</label><input type="date" class="fi" id="cash-date"></div>
         <div class="fg"><label class="fl">จำนวนเงิน (บาท)</label><input type="number" class="fi" id="cash-amount" min="0.01" step="any" inputmode="decimal" placeholder="0.00"></div>
+      </div>
+      <div id="cash-sale-fields" style="display:none;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <div class="fg"><label class="fl">บ่อ (ถ้าระบุได้)</label><select class="fi" id="cash-pond"></select></div>
+        <div class="fg"><label class="fl">น้ำหนัก (กก.) — ถ้ามี</label><input type="number" class="fi" id="cash-weight" min="0" step="any" inputmode="decimal" placeholder="เช่น 8.5"></div>
       </div>
       <div class="fg" style="margin-top:8px"><label class="fl">หมายเหตุ</label><input class="fi" id="cash-note" placeholder="เช่น ซื้อกับข้าวให้คนงาน, เบิกเงินเติมจากสำนักงานใหญ่"></div>
       <div style="display:flex;gap:8px;margin-top:12px">
@@ -4378,7 +4389,7 @@ function projHarvest(p,target=22){
 }
 function populateAll(){
   const simple={
-    'sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all','mt-pond':'',
+    'sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all','mt-pond':'','cash-pond':'',
   };
   Object.entries(simple).forEach(([id,def])=>{
     const el=document.getElementById(id);if(!el)return;const cur=el.value;
@@ -7717,12 +7728,22 @@ function exportSaleCSV(){
 }
 // ── รายรับ-รายจ่ายเงินสด (เสมียน) — เบิกเงินจากส่วนกลางมาเติม (รายรับ) / ค่าใช้จ่ายเบ็ดเตล็ดในฟาร์ม (รายจ่าย) ── รายจ่ายผูกเข้า D.inventoryLog type:'shared' อัตโนมัติ (category:'equip') เพื่อให้ถูกรวมกับ "อุปกรณ์นอก" หารแบ่งทุกบ่อผ่าน getSharedCostForPond ที่มีอยู่แล้ว ไม่ต้องเขียนสูตรคำนวณคู่ขนาน — "รายรับ" เป็นแค่การโอนเงินเข้ากองกลาง ไม่ผูกกับ inventoryLog เลย ──
 let _cashMode='in';
+let _cashSubtype='transfer';
 let _cashFilterMonth='';
 function setCashMode(mode){
   _cashMode=mode;
   const btnIn=document.getElementById('cash-mode-in'),btnOut=document.getElementById('cash-mode-out');
   if(btnIn)btnIn.className='stock-mode-btn'+(mode==='in'?' on-in':'');
   if(btnOut)btnOut.className='stock-mode-btn'+(mode==='out'?' on-out':'');
+  const subRow=document.getElementById('cash-subtype-row');if(subRow)subRow.style.display=mode==='in'?'':'none';
+  if(mode==='in')setCashSubtype('transfer',document.getElementById('cash-sub-transfer'));
+  else{const saleF=document.getElementById('cash-sale-fields');if(saleF)saleF.style.display='none';}
+}
+function setCashSubtype(subtype,btn){
+  _cashSubtype=subtype;
+  document.querySelectorAll('#cash-subtype-row .trial-chip').forEach(el=>el.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  const saleF=document.getElementById('cash-sale-fields');if(saleF)saleF.style.display=subtype==='sale'?'grid':'none';
 }
 function initClerkCash(){
   setCashMode('in');
@@ -7732,6 +7753,8 @@ function initClerkCash(){
 function clearClerkCashForm(){
   const a=document.getElementById('cash-amount');if(a)a.value='';
   const n=document.getElementById('cash-note');if(n)n.value='';
+  const p=document.getElementById('cash-pond');if(p)p.value='';
+  const w=document.getElementById('cash-weight');if(w)w.value='';
 }
 function clerkCashSorted(){
   return (D.clerkCash||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.id||'').localeCompare(b.id||''));
@@ -7744,6 +7767,15 @@ function saveClerkCash(){
   if(!D.clerkCash)D.clerkCash=[];
   const id='cc'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
   const entry={id,type:_cashMode,date,amount,note,by:curUserLabel()};
+  if(_cashMode==='in'){
+    entry.subtype=_cashSubtype;
+    if(_cashSubtype==='sale'){
+      const pondId=document.getElementById('cash-pond').value;
+      const weightKg=parseFloat(document.getElementById('cash-weight').value)||0;
+      if(pondId)entry.pondId=pondId;
+      if(weightKg)entry.weightKg=weightKg;
+    }
+  }
   if(_cashMode==='out'){
     if(!D.inventoryLog)D.inventoryLog=[];
     const logId='sl'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
@@ -7785,12 +7817,13 @@ function renderClerkCash(){
   const withBalance=all.map(c=>{running+=(c.type==='in'?c.amount:-c.amount);return{...c,balance:running};});
   const totalIn=all.filter(c=>c.type==='in').reduce((s,c)=>s+c.amount,0);
   const totalOut=all.filter(c=>c.type==='out').reduce((s,c)=>s+c.amount,0);
+  const totalOtherIncome=all.filter(c=>c.type==='in'&&c.subtype==='sale').reduce((s,c)=>s+c.amount,0);
   const kpiEl=document.getElementById('cash-kpi');
   if(kpiEl){
     kpiEl.innerHTML=`<div class="kpi-card"><div class="kpi-lbl">${isStaffScoped?'ยอดสุทธิที่คุณบันทึก':'ยอดคงเหลือปัจจุบัน'}</div><div class="kpi-val" style="color:${running<0?'var(--d)':'var(--tx)'}">฿${Math.round(running).toLocaleString()}</div></div>
       <div class="kpi-card"><div class="kpi-lbl">รายรับสะสม</div><div class="kpi-val" style="color:var(--ok)">฿${Math.round(totalIn).toLocaleString()}</div></div>
       <div class="kpi-card"><div class="kpi-lbl">รายจ่ายสะสม</div><div class="kpi-val" style="color:var(--d)">฿${Math.round(totalOut).toLocaleString()}</div></div>
-      <div class="kpi-card"><div class="kpi-lbl">จำนวนรายการ</div><div class="kpi-val">${all.length}</div></div>`;
+      <div class="kpi-card"><div class="kpi-lbl">รายได้อื่นสะสม (ขายกุ้งสุ่ม/เสีย)</div><div class="kpi-val" style="color:var(--in)">฿${Math.round(totalOtherIncome).toLocaleString()}</div><div class="kpi-sub">ส่งเข้า CEO แล้ว</div></div>`;
   }
   const tbl=document.getElementById('cash-table');if(!tbl)return;
   let rows=withBalance;
@@ -7798,15 +7831,21 @@ function renderClerkCash(){
   rows=rows.slice().reverse();
   if(!rows.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติรายรับ-รายจ่าย'+(_cashFilterMonth?'ตามตัวกรองนี้':'')+'</p>';return;}
   tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>ประเภท</th><th style="text-align:right">จำนวนเงิน</th><th style="text-align:right">${isStaffScoped?'สุทธิสะสม (เฉพาะคุณ)':'คงเหลือสะสม'}</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
-    rows.map(c=>`<tr>
+    rows.map(c=>{
+      let typeBadge;
+      if(c.type==='out')typeBadge='<span class="badge b-danger">📤 รายจ่าย</span>';
+      else if(c.subtype==='sale')typeBadge='<span class="badge b-info">🦐 ขายกุ้งสุ่ม/เสีย</span>';
+      else typeBadge='<span class="badge b-ok">🏦 เบิกจากส่วนกลาง</span>';
+      return `<tr>
       <td>${fD(c.date)}</td>
-      <td><span class="badge ${c.type==='in'?'b-ok':'b-danger'}">${c.type==='in'?'📥 รายรับ':'📤 รายจ่าย'}</span></td>
+      <td>${typeBadge}</td>
       <td style="text-align:right;color:${c.type==='in'?'var(--ok)':'var(--d)'}">${c.type==='in'?'+':'-'}฿${Math.round(c.amount).toLocaleString()}</td>
       <td style="text-align:right">฿${Math.round(c.balance).toLocaleString()}</td>
       <td style="font-size:12px;color:var(--tx2)">${c.note||''}</td>
       <td style="font-size:12px;color:var(--tx2)">${c.by||'-'}</td>
       <td><button class="btn-sm btn-del" onclick="deleteClerkCash('${c.id}')">🗑️</button></td>
-    </tr>`).join('')
+    </tr>`;
+    }).join('')
   }</tbody></table></div>`;
 }
 /* ===== END INVENTORY / STOCK ===== */
@@ -11766,6 +11805,7 @@ function renderCeo(){
   ponds.forEach(p=>{const f=ceoFeedDisplay(p);totalFeedToday+=f.val;if(!f.isToday)feedAllToday=false;});
   const totalBiomass=ponds.reduce((s,p)=>s+(getLatestBiomass(p)||0),0);
   const watchCount=ponds.filter(p=>ceoStatus(p)==='watch').length;
+  const otherIncome=(D.clerkCash||[]).filter(c=>c.type==='in'&&c.subtype==='sale').reduce((s,c)=>s+c.amount,0);
   el.innerHTML=`
     <div class="ceo-kpi hero">
       <div class="ceo-kpi-lbl">ต้นทุนสะสมรวมทั้งฟาร์ม</div>
@@ -11787,6 +11827,11 @@ function renderCeo(){
     <div class="ceo-kpi ${watchCount?'warn':''}">
       <div class="ceo-kpi-lbl">บ่อควรติดตาม</div>
       <div class="ceo-kpi-val">${watchCount}<small>/ ${ponds.length}</small></div>
+    </div>
+    <div class="ceo-kpi">
+      <div class="ceo-kpi-lbl">รายได้อื่น (ขายกุ้งสุ่ม/เสีย)</div>
+      <div class="ceo-kpi-val" style="color:var(--in)">${ceoMoney(otherIncome)}</div>
+      <div class="ceo-kpi-note">สะสมทั้งหมด · ไม่รวมในรายได้ปิดรอบ</div>
     </div>`;
 
   const countEl=document.getElementById('ceo-pond-count');
