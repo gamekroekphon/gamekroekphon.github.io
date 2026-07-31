@@ -748,6 +748,18 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .fc-act-body span{font-size:11px;color:var(--tx3)}
 .fc-act-src{display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:5px;margin-top:3px}
 .fc-act-empty{text-align:center;padding:14px;color:var(--ok);font-size:12.5px}
+/* ── ปฏิทินจับกุ้ง / เตือนพาเชียล ── */
+.ph-row{border:1px solid var(--bd);border-radius:10px;padding:10px 11px;margin-bottom:8px;background:var(--sf2)}
+.ph-row:last-child{margin-bottom:0}
+.ph-row.ready{border-color:var(--d);background:var(--db)}
+.ph-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ph-nm{font-weight:700;font-size:13.5px;cursor:pointer}
+.ph-bar{height:7px;background:var(--bd);border-radius:99px;overflow:hidden;margin:7px 0 5px}
+.ph-bar span{display:block;height:100%;border-radius:99px}
+.ph-meta{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--tx3)}
+.ph-meta b{color:var(--tx);font-size:12.5px}
+.ph-sub{font-size:11px;color:var(--tx3);margin-top:5px;line-height:1.5}
+.ph-cal-t{font-size:12px;font-weight:700;color:var(--tx2);margin:14px 0 7px;padding-top:12px;border-top:1px solid var(--bd)}
 /* ── การ์ดเทียบรอบก่อน ── */
 .bm-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
 .bm-tab{flex:1;text-align:center;padding:8px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:var(--sf2);color:var(--tx2);min-width:140px}
@@ -1434,6 +1446,13 @@ body.role-ceo .main{max-width:640px}
     </table>
     </div>
     <div class="ovd-cards" id="ovd-cards-body"></div>
+  </div>
+  <div class="card" style="margin-bottom:14px;display:none" id="ov-partial-card">
+    <div class="card-t">🗓️ ปฏิทินจับกุ้ง &amp; พาเชียล</div>
+    <div class="card-sub">เตือนเมื่อผลผลิตถึง 4,000 กก./ไร่ — บ่อเริ่มแน่น ควรทยอยจับออก · คาดการณ์จากอัตราโตล่าสุด (PDG)</div>
+    <div id="ov-partial-ready"></div>
+    <div id="ov-partial-list"></div>
+    <div id="ov-partial-cal"></div>
   </div>
   <div class="ov-main-grid">
     <div id="ov-sections"></div>
@@ -2895,7 +2914,7 @@ body.role-ceo .main{max-width:640px}
   <div class="stock-pane" id="skp-cash">
     <div class="card" style="margin-bottom:12px">
       <div style="font-weight:700;color:var(--tx);margin-bottom:10px">💰 รายรับ-รายจ่ายเงินสด (เสมียน)</div>
-      <div class="card-sub">บันทึกเงินที่เสมียนได้รับเข้ากระเป๋า (รายรับ) และค่าใช้จ่ายเบ็ดเตล็ดในฟาร์ม เช่น ซื้อของทำอาหารให้คนงาน (รายจ่าย) — รายการ "รายจ่าย" จะถูกนำไปรวมกับต้นทุน "อุปกรณ์นอก (แชร์)" หารแบ่งทุกบ่อที่มีกุ้งอัตโนมัติเหมือนสต็อกโหมด "แชร์ทุกบ่อ" ส่วน "รายรับ" แบ่งเป็น 2 แบบ: <b>เบิกจากส่วนกลาง</b> (ย้ายเงินมาเติมตอนเงินสดในกระเป๋าไม่พอ ไม่นับเป็นรายได้ฟาร์ม) กับ <b>ขายกุ้งสุ่ม/กุ้งเสีย</b> (รายได้จริงของฟาร์ม เข้ากระเป๋าเสมียนเหมือนกันแต่จะถูกส่งไปรวมในการ์ด "รายได้อื่น" ของ CEO ด้วย แยกจากรายได้ปิดรอบ ไม่ทับซ้อนกัน)</div>
+      <div class="card-sub">บันทึกเงินที่เสมียนได้รับเข้ากระเป๋า (รายรับ) และค่าใช้จ่ายเบ็ดเตล็ดในฟาร์ม เช่น ซื้อของทำอาหารให้คนงาน (รายจ่าย) — <b>เก็บเป็นตัวเลขลอยๆ ไม่ผูกกับข้อมูลส่วนอื่นเลย</b> ไม่ไปรวมในต้นทุนบ่อ / P&L / การ์ดของ CEO ใช้ดูเงินหมุนในฟาร์มอย่างเดียว (ทางบัญชีจะลงข้อมูล "อุปกรณ์นอก" แยกทีหลังเอง ถ้าผูกในแอปด้วยจะนับซ้ำ) ส่วน "รายรับ" แบ่งเป็น 2 แบบไว้ดูที่มาของเงิน: <b>เบิกจากส่วนกลาง</b> (ย้ายเงินมาเติมตอนเงินสดในกระเป๋าไม่พอ) กับ <b>ขายกุ้งสุ่ม/กุ้งเสีย</b> (เงินที่ได้จากการขายกุ้ง เข้ากระเป๋าเสมียนไว้ใช้จ่ายในฟาร์มเหมือนกัน)</div>
       <div id="cash-staffnote" style="display:none;background:var(--sf2);border-radius:8px;padding:8px 12px;font-size:11.5px;color:var(--tx3);margin:10px 0">🔒 มุมมองพนักงานเห็นเฉพาะรายการที่คุณบันทึกเอง — ยอดคงเหลือรวมทั้งกองทุนดูได้จาก Admin</div>
       <div class="g4" id="cash-kpi" style="margin-top:12px"></div>
     </div>
@@ -5974,6 +5993,7 @@ function renderOv(){
     ${kk4}`;
   renderOvWeatherCard();
   renderOvRiskList();
+  renderOvPartialHarvest();
   // ── สถานะ/ไซส์/Biomass/อาหาร/เช็คลิสต์/ค่าผิดปกติของบ่อที่กำลังเลี้ยงอยู่ ย้ายไปรวมในตาราง "สถานะบ่อทั้งหมด" (renderOvDashboard) หมดแล้ว — เหลือแค่เตรียมบ่อ+ว่าง ที่นี่ (คนละโครงสร้างข้อมูล ใส่ในตารางเดียวกันไม่ได้) ──
   let html='';
   if(prepM.length>0)html+=`<div class="ov-sec-lbl">เตรียมบ่อ</div><div class="ov-grid">${prepM.map(({p})=>renderPrepPondCard(p)).join('')}</div>`;
@@ -7133,6 +7153,80 @@ function renderOvStockWarn(){
   listEl.innerHTML=low.map(i=>`<div class="ov-stockwarn-item"><span class="nm">${i.name}</span><span class="qty">เหลือ ${i.qty} <small>/ ขั้นต่ำ ${i.minQty} ${i.unit||''}</small></span></div>`).join('');
 }
 
+// ── ปฏิทินจับกุ้ง / เตือนพาเชียล ──────────────────────────────────────────
+// เกณฑ์: ผลผลิตในบ่อถึง 4,000 กก./ไร่ = บ่อเริ่มแน่น ควรทยอยจับออก (พาเชียล) เป็นการเตือนครั้งแรก
+const PARTIAL_YIELD_TARGET=4000; // กก./ไร่
+const PARTIAL_CAL_DAYS=60;       // ช่วงที่ปฏิทินมองไปข้างหน้า
+function partialHarvestInfo(p){
+  if(!p.size||p.size<=0)return null;               // ไม่รู้ขนาดบ่อ (ไร่) คิด yield/ไร่ ไม่ได้
+  const bio=getLatestBiomass(p);
+  if(bio==null||bio<=0)return null;                // ยังไม่มีผลสุ่ม (ต้องมี ABW + อัตรารอด)
+  const yr=bio/p.size;
+  const pct=Math.min(100,yr/PARTIAL_YIELD_TARGET*100);
+  if(yr>=PARTIAL_YIELD_TARGET)return{ready:true,yr,pct:100,bio};
+  const s=p.samples||[],lat=s[s.length-1],pdg=parseFloat(getPDG(s));
+  // ── ต้องสุ่มอย่างน้อย 2 ครั้งถึงจะรู้อัตราโต (PDG) — ไม่งั้นคาดการณ์วันไม่ได้ ──
+  if(!lat||!lat.abw||!pdg||pdg<=0)return{ready:false,yr,pct,bio,noProj:true};
+  // ── Biomass โตตามสัดส่วน ABW (สมมติอัตรารอดคงที่) → หา ABW ที่ทำให้ yield แตะเกณฑ์ แล้วแปลงเป็นจำนวนวันด้วย PDG ──
+  const targetAbw=lat.abw*(PARTIAL_YIELD_TARGET*p.size)/bio;
+  const days=Math.ceil((targetAbw-lat.abw)/pdg);
+  if(!isFinite(days)||days<0)return{ready:false,yr,pct,bio,noProj:true};
+  const d=new Date(today()+'T00:00:00');d.setDate(d.getDate()+days);
+  return{ready:false,yr,pct,bio,days,date:ymdLocal(d)};
+}
+function renderOvPartialHarvest(){
+  const card=document.getElementById('ov-partial-card');if(!card)return;
+  const readyEl=document.getElementById('ov-partial-ready'),listEl=document.getElementById('ov-partial-list'),calEl=document.getElementById('ov-partial-cal');
+  const rows=[];
+  wqfeedActivePonds().forEach(p=>{const info=partialHarvestInfo(p);if(info)rows.push({p,info});});
+  if(!rows.length){card.style.display='none';return;}
+  card.style.display='';
+  const fmtYr=v=>Math.round(v).toLocaleString();
+
+  // ── 1) บ่อที่ถึงเกณฑ์แล้ว ──
+  const ready=rows.filter(r=>r.info.ready).sort((a,b)=>b.info.yr-a.info.yr);
+  readyEl.innerHTML=ready.map(({p,info})=>`
+    <div class="ph-row ready">
+      <div class="ph-top"><span class="ph-nm" onclick="openPondDetail('${p.id}')">บ่อ ${p.name} ›</span><span class="badge b-danger">🚨 พาเชียลได้แล้ว</span></div>
+      <div class="ph-bar"><span style="width:100%;background:var(--d)"></span></div>
+      <div class="ph-meta"><span><b style="color:var(--d)">${fmtYr(info.yr)}</b> กก./ไร่</span><span>เกณฑ์ ${PARTIAL_YIELD_TARGET.toLocaleString()}</span></div>
+      <div class="ph-sub">บ่อ ${p.size} ไร่ · Biomass ${fmtYr(info.bio)} กก.</div>
+    </div>`).join('');
+
+  // ── 2) บ่อที่ยังไม่ถึง เรียงตามความใกล้ (บ่อที่คาดการณ์ไม่ได้ไว้ท้ายสุด) ──
+  const pend=rows.filter(r=>!r.info.ready).sort((a,b)=>{
+    if(a.info.noProj!==b.info.noProj)return a.info.noProj?1:-1;
+    if(a.info.noProj)return b.info.yr-a.info.yr;
+    return a.info.days-b.info.days;
+  });
+  listEl.innerHTML=(ready.length&&pend.length?'<div class="ph-cal-t">บ่ออื่นๆ — ระยะถึงเกณฑ์พาเชียล</div>':'')+pend.map(({p,info})=>{
+    const cls=info.noProj?'var(--tx3)':info.days<=14?'var(--w)':'var(--in)';
+    const badge=info.noProj
+      ?'<span class="badge b-info">รอผลสุ่มครั้งที่ 2</span>'
+      :`<span class="badge ${info.days<=14?'b-warn':'b-info'}">อีก ~${info.days} วัน</span>`;
+    return`<div class="ph-row">
+      <div class="ph-top"><span class="ph-nm" onclick="openPondDetail('${p.id}')">บ่อ ${p.name} ›</span>${badge}</div>
+      <div class="ph-bar"><span style="width:${info.pct.toFixed(0)}%;background:${cls}"></span></div>
+      <div class="ph-meta"><span><b>${fmtYr(info.yr)}</b> กก./ไร่ (${info.pct.toFixed(0)}%)</span><span>${info.noProj?'ยังคาดการณ์ไม่ได้':'คาด '+fD(info.date)}</span></div>
+    </div>`;
+  }).join('');
+
+  // ── 3) ปฏิทินรวม 60 วัน: วันพาเชียล + วันถึงไซส์เป้าหมาย เรียงตามวันที่ ──
+  const td=today(),ev=[];
+  rows.forEach(({p,info})=>{
+    if(info.ready)ev.push({date:td,name:p.name,lbl:'🚨 พาเชียล',cls:'b-danger'});
+    else if(info.date&&info.days<=PARTIAL_CAL_DAYS)ev.push({date:info.date,name:p.name,lbl:'พาเชียล',cls:'b-warn'});
+    const ph=projHarvest(p);
+    if(ph&&!ph.ready&&ph.days<=PARTIAL_CAL_DAYS)ev.push({date:ph.date,name:p.name,lbl:'ถึงไซส์ 22 ก.',cls:'b-info'});
+  });
+  if(!ev.length){calEl.innerHTML='';return;}
+  ev.sort((a,b)=>a.date.localeCompare(b.date));
+  calEl.innerHTML=`<div class="ph-cal-t">🗓️ ปฏิทิน ${PARTIAL_CAL_DAYS} วันข้างหน้า</div>
+    <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>บ่อ</th><th>เหตุการณ์</th></tr></thead><tbody>${
+      ev.map(e=>`<tr><td style="white-space:nowrap">${e.date===td?'<b>วันนี้</b>':fD(e.date)}</td><td>บ่อ ${e.name}</td><td><span class="badge ${e.cls}">${e.lbl}</span></td></tr>`).join('')
+    }</tbody></table></div>`;
+}
+
 let _stockShowZero=false;
 function toggleStockZero(){
   _stockShowZero=!_stockShowZero;
@@ -7731,12 +7825,7 @@ function saveClerkCash(){
       if(weightKg)entry.weightKg=weightKg;
     }
   }
-  if(_cashMode==='out'){
-    if(!D.inventoryLog)D.inventoryLog=[];
-    const logId='sl'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-    D.inventoryLog.push({id:logId,itemId:null,itemName:note||'ค่าใช้จ่ายเบ็ดเตล็ด (เสมียน)',type:'shared',qty:1,date,note,pondId:'',balanceAfter:null,unit:'รายการ',by:curUserLabel(),category:'equip',unitCost:amount});
-    entry.linkedLogId=logId;
-  }
+  // ── ไม่ผูกรายจ่ายเข้า D.inventoryLog (ต้นทุน "อุปกรณ์นอก") อีกต่อไป — ทางบัญชีลงข้อมูลอุปกรณ์นอกแยกทีหลังเอง ถ้าผูกที่นี่ด้วยจะนับซ้ำ กระเป๋าเสมียนเก็บเป็นตัวเลขลอยๆ ดูเงินหมุนในฟาร์มอย่างเดียว ──
   D.clerkCash.push(entry);
   save();
   showStockMsg('cash','✅ บันทึก'+(_cashMode==='in'?'รายรับ':'รายจ่าย')+'เรียบร้อย','ok');
@@ -7749,6 +7838,7 @@ function deleteClerkCash(id){
   if(!confirm('ลบรายการนี้?'+(entry.linkedLogId?' (จะลบรายการที่ผูกไว้ในต้นทุน "อุปกรณ์นอก" ให้ด้วย)':'')))return;
   D.clerkCash=(D.clerkCash||[]).filter(c=>c.id!==id);
   D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
+  // ── รายการเก่าที่บันทึกไว้ตอนที่ยังผูกกับต้นทุน "อุปกรณ์นอก" อยู่ ยังมี linkedLogId ติดมา — ต้องลบตัวที่ผูกไว้ตามไปด้วย ไม่งั้นจะเหลือค้างเป็นต้นทุนลอย (รายการใหม่ไม่สร้าง linkedLogId แล้ว) ──
   if(entry.linkedLogId){
     D.inventoryLog=(D.inventoryLog||[]).filter(l=>l.id!==entry.linkedLogId);
     D.deletedIds.push(entry.linkedLogId);
@@ -7778,7 +7868,7 @@ function renderClerkCash(){
     kpiEl.innerHTML=`<div class="kpi-card"><div class="kpi-lbl">${isStaffScoped?'ยอดสุทธิที่คุณบันทึก':'ยอดคงเหลือปัจจุบัน'}</div><div class="kpi-val" style="color:${running<0?'var(--d)':'var(--tx)'}">฿${Math.round(running).toLocaleString()}</div></div>
       <div class="kpi-card"><div class="kpi-lbl">รายรับสะสม</div><div class="kpi-val" style="color:var(--ok)">฿${Math.round(totalIn).toLocaleString()}</div></div>
       <div class="kpi-card"><div class="kpi-lbl">รายจ่ายสะสม</div><div class="kpi-val" style="color:var(--d)">฿${Math.round(totalOut).toLocaleString()}</div></div>
-      <div class="kpi-card"><div class="kpi-lbl">รายได้อื่นสะสม (ขายกุ้งสุ่ม/เสีย)</div><div class="kpi-val" style="color:var(--in)">฿${Math.round(totalOtherIncome).toLocaleString()}</div><div class="kpi-sub">ส่งเข้า CEO แล้ว</div></div>`;
+      <div class="kpi-card"><div class="kpi-lbl">ในนั้นเป็นเงินขายกุ้งสุ่ม/เสีย</div><div class="kpi-val" style="color:var(--in)">฿${Math.round(totalOtherIncome).toLocaleString()}</div><div class="kpi-sub">ไม่ผูกกับข้อมูลส่วนอื่น</div></div>`;
   }
   const tbl=document.getElementById('cash-table');if(!tbl)return;
   let rows=withBalance;
@@ -11822,7 +11912,6 @@ function renderCeo(){
   ponds.forEach(p=>{const f=ceoFeedDisplay(p);totalFeedToday+=f.val;if(!f.isToday)feedAllToday=false;});
   const totalBiomass=ponds.reduce((s,p)=>s+(getLatestBiomass(p)||0),0);
   const watchCount=ponds.filter(p=>ceoStatus(p)==='watch').length;
-  const otherIncome=(D.clerkCash||[]).filter(c=>c.type==='in'&&c.subtype==='sale').reduce((s,c)=>s+c.amount,0);
   el.innerHTML=`
     <div class="ceo-kpi hero">
       <div class="ceo-kpi-lbl">ต้นทุนสะสมรวมทั้งฟาร์ม</div>
@@ -11844,11 +11933,6 @@ function renderCeo(){
     <div class="ceo-kpi ${watchCount?'warn':''}">
       <div class="ceo-kpi-lbl">บ่อควรติดตาม</div>
       <div class="ceo-kpi-val">${watchCount}<small>/ ${ponds.length}</small></div>
-    </div>
-    <div class="ceo-kpi">
-      <div class="ceo-kpi-lbl">รายได้อื่น (ขายกุ้งสุ่ม/เสีย)</div>
-      <div class="ceo-kpi-val" style="color:var(--in)">${ceoMoney(otherIncome)}</div>
-      <div class="ceo-kpi-note">สะสมทั้งหมด · ไม่รวมในรายได้ปิดรอบ</div>
     </div>`;
 
   const countEl=document.getElementById('ceo-pond-count');
