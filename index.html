@@ -2916,6 +2916,9 @@ body.role-ceo .main{max-width:640px}
       <div style="font-weight:700;color:var(--tx);margin-bottom:10px">💰 รายรับ-รายจ่ายเงินสด (เสมียน)</div>
       <div class="card-sub">บันทึกเงินที่เสมียนได้รับเข้ากระเป๋า (รายรับ) และค่าใช้จ่ายเบ็ดเตล็ดในฟาร์ม เช่น ซื้อของทำอาหารให้คนงาน (รายจ่าย) — <b>เก็บเป็นตัวเลขลอยๆ ไม่ผูกกับข้อมูลส่วนอื่นเลย</b> ไม่ไปรวมในต้นทุนบ่อ / P&L / การ์ดของ CEO ใช้ดูเงินหมุนในฟาร์มอย่างเดียว (ทางบัญชีจะลงข้อมูล "อุปกรณ์นอก" แยกทีหลังเอง ถ้าผูกในแอปด้วยจะนับซ้ำ) ส่วน "รายรับ" แบ่งเป็น 2 แบบไว้ดูที่มาของเงิน: <b>เบิกจากส่วนกลาง</b> (ย้ายเงินมาเติมตอนเงินสดในกระเป๋าไม่พอ) กับ <b>ขายกุ้งสุ่ม/กุ้งเสีย</b> (เงินที่ได้จากการขายกุ้ง เข้ากระเป๋าเสมียนไว้ใช้จ่ายในฟาร์มเหมือนกัน)</div>
       <div class="g4" id="cash-kpi" style="margin-top:12px"></div>
+      <div id="cash-cleanup-row" class="admin-only" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)">
+        <button onclick="cleanupClerkCashSharedLinks()" style="background:var(--sf2);color:var(--tx2);font-size:12px">🧹 ล้างรายการเก่าที่เคยผูกกับ "อุปกรณ์นอก" (<span id="cash-cleanup-count">0</span> รายการ)</button>
+      </div>
     </div>
 
     <div class="card" style="margin-bottom:12px">
@@ -7832,6 +7835,22 @@ function saveClerkCash(){
   renderClerkCash();
   flashSaveBtn(document.getElementById('cash-save-btn'));
 }
+// ── ล้างรายการเก่าที่บันทึกไว้ตอนที่ยังผูกกับต้นทุน "อุปกรณ์นอก" อยู่ (ก่อน entry #125) — พี่สั่งให้ลบตัวที่ผูกไว้ใน D.inventoryLog ออกให้หมด เพราะไม่ต้องการให้เงินสดเสมียนไปรวมกับอุปกรณ์นอกอีกต่อไป — รายการ D.clerkCash เองไม่ลบ แค่เอา linkedLogId ออก (ยังเห็นประวัติเงินสดปกติ) ──
+function cleanupClerkCashSharedLinks(){
+  const linked=(D.clerkCash||[]).filter(c=>c.linkedLogId);
+  if(!linked.length){alert('ไม่มีรายการเก่าที่ต้องล้างแล้ว');return;}
+  if(!confirm('ล้างรายการเก่า '+linked.length+' รายการที่เคยผูกกับ "อุปกรณ์นอก"?\nจะลบรายการที่ผูกไว้ในต้นทุนอุปกรณ์นอกออก ประวัติเงินสดเสมียนเองยังอยู่เหมือนเดิม ไม่กู้คืนได้'))return;
+  D.deletedIds=D.deletedIds||[];
+  linked.forEach(c=>{
+    D.inventoryLog=(D.inventoryLog||[]).filter(l=>l.id!==c.linkedLogId);
+    D.deletedIds.push(c.linkedLogId);
+    delete c.linkedLogId;
+  });
+  save();
+  renderClerkCash();
+  if(typeof renderStockLog==='function')renderStockLog();
+  alert('✅ ล้างเรียบร้อย '+linked.length+' รายการ');
+}
 function deleteClerkCash(id){
   const entry=(D.clerkCash||[]).find(c=>c.id===id);if(!entry)return;
   if(!confirm('ลบรายการนี้?'+(entry.linkedLogId?' (จะลบรายการที่ผูกไว้ในต้นทุน "อุปกรณ์นอก" ให้ด้วย)':'')))return;
@@ -7855,6 +7874,9 @@ function renderClerkCash(){
   _cashFilterMonth=monthEl?monthEl.value:_cashFilterMonth;
   // ── staff เห็นข้อมูลทั้งหมดเหมือน admin — เป็นผู้กรอกข้อมูลและถือเงินสดส่วนนี้จริง ไม่มีเหตุผลต้องกรองเฉพาะรายการของตัวเอง ──
   const all=clerkCashSorted();
+  const linkedCount=all.filter(c=>c.linkedLogId).length;
+  const cleanupRow=document.getElementById('cash-cleanup-row');
+  if(cleanupRow){cleanupRow.style.display=linkedCount>0?'':'none';const cEl=document.getElementById('cash-cleanup-count');if(cEl)cEl.textContent=linkedCount;}
   let running=0;
   const withBalance=all.map(c=>{running+=(c.type==='in'?c.amount:-c.amount);return{...c,balance:running};});
   const totalIn=all.filter(c=>c.type==='in').reduce((s,c)=>s+c.amount,0);
