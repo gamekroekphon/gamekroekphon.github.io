@@ -748,6 +748,13 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .fc-act-body span{font-size:11px;color:var(--tx3)}
 .fc-act-src{display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:5px;margin-top:3px}
 .fc-act-empty{text-align:center;padding:14px;color:var(--ok);font-size:12.5px}
+/* ── การ์ดพับเก็บได้ในหน้ารายละเอียดบ่อ (กดหัวข้อเพื่อกาง/ยุบ) — ปิดไว้ทั้งหมดตอนเปิดหน้า กันหน้ารกและเลื่อนยาว ── */
+.pd-col-head{justify-content:space-between;cursor:pointer;margin-bottom:0;border-bottom:none;padding-bottom:0;-webkit-user-select:none;user-select:none}
+.pd-col-head:hover{color:var(--p)}
+.pd-col-head .pd-col-ttl{display:flex;align-items:center;gap:7px;min-width:0;flex:1}
+.pd-col-head .ceo-cat-caret{font-size:15px;color:var(--p);flex:none;width:22px;height:22px;line-height:22px;text-align:center;border-radius:50%;background:var(--pl)}
+.pd-col-body{display:none;padding-top:12px;margin-top:12px;border-top:1px solid var(--bd)}
+.pd-col-body.show{display:block}
 /* ── ปฏิทินจับกุ้ง / เตือนพาเชียล ── */
 .ph-row{border:1px solid var(--bd);border-radius:10px;padding:10px 11px;margin-bottom:8px;background:var(--sf2)}
 .ph-row:last-child{margin-bottom:0}
@@ -5563,9 +5570,9 @@ function renderPondDetail(id){
       +pdCostCatRow('elec','ค่าไฟ',pdElecCost);
     // ── ประมาณต้นทุนบาท/กก. ณ วันนี้ = ต้นทุนสะสมทั้งหมด ÷ น้ำหนักกุ้งที่มีตอนนี้ (biomass ประเมิน, ตัวเดียวกับที่ใช้ใน kpiHero) — เป็นค่าประมาณระหว่างเลี้ยง ไม่ใช่ต้นทุน/กก. สุดท้ายตอนปิดรอบ (คำนวณจากน้ำหนักจับจริง คนละค่ากันโดยตั้งใจ) ──
     const pdCostPerKg=(biomass&&biomass>0)?pdCostTotal/biomass:null;
-    costCardHtml=`<div class="card" style="margin-bottom:12px">
-      <div class="card-t" style="justify-content:space-between"><span>💰 ต้นทุนสะสม</span><span class="pd-admin-tag">ADMIN เท่านั้น</span></div>
-      <div class="ceo-cost-total-row" style="border-top:none;padding-top:0"><span class="lbl">รวมต้นทุนสะสมของบ่อนี้</span><span class="val">${ceoMoney(pdCostTotal)}</span></div>
+    costCardHtml=pdCard('cost',
+      `💰 ต้นทุนสะสม <span style="color:var(--p);font-weight:800">${ceoMoney(pdCostTotal)}</span> <span class="pd-admin-tag">ADMIN</span>`,
+      `<div class="ceo-cost-total-row" style="border-top:none;padding-top:0"><span class="lbl">รวมต้นทุนสะสมของบ่อนี้</span><span class="val">${ceoMoney(pdCostTotal)}</span></div>
       <div class="pd-water-row" style="border-top:1px dashed var(--bd)"><span style="color:var(--tx2)">ต้นทุน/กก. ประมาณ (ณ วันนี้)</span><span style="font-weight:700;color:var(--p)">${pdCostPerKg!=null?'฿'+pdCostPerKg.toFixed(1)+'/กก.':'-'}</span></div>
       <div style="text-align:center;padding:8px 0 2px;cursor:pointer;border-top:1px solid var(--sf2)" onclick="pdToggleCostDetail()">
         <span style="font-size:12px;color:var(--p);font-weight:600">ดูรายละเอียดแยกหมวด <span class="ceo-cat-caret" id="pd-cost-detail-caret">▾</span></span>
@@ -5574,8 +5581,7 @@ function renderPondDetail(id){
         ${pdCostPerKg==null?`<div style="font-size:11px;color:var(--tx3);padding:2px 0 6px">ยังไม่มีข้อมูลสุ่มตัวอย่าง คำนวณ Biomass ประเมินไม่ได้</div>`:`<div style="font-size:11px;color:var(--tx3);padding:2px 0 6px">= ต้นทุนสะสม ÷ Biomass ประเมิน ${Math.round(biomass).toLocaleString()} กก. — เป็นค่าประมาณระหว่างเลี้ยง ไม่ใช่ต้นทุน/กก. สุดท้ายตอนปิดรอบ</div>`}
         <div style="font-size:11px;color:var(--tx3);padding:0 0 8px">📦 สต็อก/เวชภัณฑ์/อุปกรณ์นอก นับตั้งแต่ ${fD(pdCostFrom)} (ครอบช่วงเตรียมบ่อก่อนลงกุ้ง) · ค่าแรง/ค่าไฟ นับจากวันลงกุ้ง ${fD(p.startDate)}</div>
         ${pdCatRowsHtml}
-      </div>
-    </div>`;
+      </div>`);
   }
 
   el.innerHTML=`
@@ -5589,35 +5595,21 @@ function renderPondDetail(id){
     <div style="display:inline-flex;align-items:center;gap:6px;background:var(--a1);color:var(--a);font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;margin-bottom:12px">⏱ อายุ ${age} วัน</div>
     ${costCardHtml}
     ${reason?`<div class="pd-alert"><div class="ai ${cls==='prep'?'ok':cls}"><span>${cls==='danger'?'🔴':cls==='warn'?'⚠️':'✅'}</span><div>${reason}</div></div></div>`:''}
-    ${cls!=='prep'?`<div class="card" style="margin-bottom:12px">
-      <div class="card-t">🚦 ความเสี่ยงหลักของบ่อ</div>
-      <div class="fc-grid" id="fc-grid"></div>
-    </div>`:''}
+    ${cls!=='prep'?pdCard('risk','🚦 ความเสี่ยงหลักของบ่อ','<div class="fc-grid" id="fc-grid"></div>'):''}
     <div class="pd-gauges" id="pd-gauges"></div>
     ${kpiHero}
-    <div class="card" style="margin-top:12px">
-      <div class="card-t">💧 คุณภาพน้ำล่าสุด${last&&last.date?` · ${fD(last.date)}`:''}</div>
-      ${waterHtml}
-    </div>
-    <div class="card" style="margin-top:12px">
-      <div class="card-t">📖 ประวัติค่าน้ำย้อนหลัง</div>
-      <div class="card-sub">ดูย้อนหลังของบ่อนี้ แก้ไข/ลบได้เลย ไม่ต้องออกไปหน้า "จัดการน้ำ"</div>
+    ${pdCard('water',`💧 คุณภาพน้ำล่าสุด${last&&last.date?` · ${fD(last.date)}`:''}`,waterHtml)}
+    ${pdCard('wqhist','📖 ประวัติค่าน้ำย้อนหลัง',
+      `<div class="card-sub">ดูย้อนหลังของบ่อนี้ แก้ไข/ลบได้เลย ไม่ต้องออกไปหน้า "จัดการน้ำ"</div>
       <div class="chip-row" id="pd-wq-hist-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
-      <div id="pd-wq-hist-table"></div>
-    </div>
-    <div class="card" style="margin-top:12px">
-      <div class="card-t">🍖 อาหารล่าสุด${latFeed&&latFeed.date?` · ${fD(latFeed.date)}`:''}</div>
-      ${feedHtml}
-    </div>
-    <div class="card" style="margin-top:12px">
-      <div class="card-t">📖 สมุดประวัติการให้อาหาร</div>
-      <div class="card-sub">ดูย้อนหลังของบ่อนี้ แก้ไข/ลบได้เลย ไม่ต้องออกไปหน้า "อาหาร & FCR"</div>
+      <div id="pd-wq-hist-table"></div>`)}
+    ${pdCard('feed',`🍖 อาหารล่าสุด${latFeed&&latFeed.date?` · ${fD(latFeed.date)}`:''}`,feedHtml)}
+    ${pdCard('feedhist','📖 สมุดประวัติการให้อาหาร',
+      `<div class="card-sub">ดูย้อนหลังของบ่อนี้ แก้ไข/ลบได้เลย ไม่ต้องออกไปหน้า "อาหาร & FCR"</div>
       <div class="chip-row" id="pd-feed-hist-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
-      <div id="pd-feed-hist-table"></div>
-    </div>
-    <div class="card" style="margin-top:12px">
-      <div class="card-t">💊 เวชภัณฑ์ที่ใช้ล่าสุด</div>
-      <div class="card-sub">ดึงจากหน้าสต็อกอัตโนมัติ ไม่ต้องออกไปดูหน้าประวัติสต็อก</div>
+      <div id="pd-feed-hist-table"></div>`)}
+    ${pdCard('med','💊 เวชภัณฑ์ที่ใช้ล่าสุด',
+      `<div class="card-sub">ดึงจากหน้าสต็อกอัตโนมัติ ไม่ต้องออกไปดูหน้าประวัติสต็อก</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
         <div class="chip-row" id="pd-med-hist-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
         <select class="fi" id="pd-med-cat" style="width:150px;margin-left:auto" onchange="setPdMedCat(this.value)">
@@ -5628,34 +5620,15 @@ function renderPondDetail(id){
           <option value="probioWater">🧫 จุลินทรีย์ลงน้ำ</option>
         </select>
       </div>
-      <div id="pd-med-hist-table"></div>
-    </div>
-    <div class="card" style="margin-top:12px">
-      <div class="card-t">📏 ไซส์ล่าสุด${lat&&lat.date?` · ${fD(lat.date)}`:''}</div>
-      ${sizeHtml}
-    </div>
-    <div class="card" style="margin-top:12px" id="pd-biocompare-card"></div>
-    <div class="card" style="margin-top:12px" id="pd-benchmark-card"></div>
-    <div class="card" style="margin-top:12px">
-      <div class="card-t">🚰 การจัดการน้ำล่าสุด${latWater&&latWater.date?` · ${fD(latWater.date)}`:''}</div>
-      ${wmHtml}
-    </div>
-    <div class="card pd-chart-card">
-      <div class="card-t">📉 แนวโน้มคุณภาพน้ำ 10 วันล่าสุด</div>
-      <div class="pd-chart-wrap"><canvas id="pd-c-water"></canvas></div>
-    </div>
-    <div class="card pd-chart-card">
-      <div class="card-t">🍤 อาหารการกินรายวัน 14 วันล่าสุด</div>
-      <div class="pd-chart-wrap"><canvas id="pd-c-feedday"></canvas></div>
-    </div>
-    <div class="card pd-chart-card">
-      <div class="card-t">⚖️ อาหาร vs การเติบโต รายสัปดาห์</div>
-      <div class="pd-chart-wrap"><canvas id="pd-c-feedweek"></canvas></div>
-    </div>
-    <div class="card pd-chart-card">
-      <div class="card-t">📈 การเติบโต — น้ำหนักเฉลี่ย (รายสัปดาห์)</div>
-      <div class="pd-chart-wrap"><canvas id="pd-c-growth"></canvas></div>
-    </div>
+      <div id="pd-med-hist-table"></div>`)}
+    ${pdCard('size',`📏 ไซส์ล่าสุด${lat&&lat.date?` · ${fD(lat.date)}`:''}`,sizeHtml)}
+    ${pdCard('bio','⚖️ เปรียบเทียบ Biomass 2 วิธี','<div id="pd-biocompare-card"></div>')}
+    ${pdCard('bench','📊 เทียบกับรอบก่อน','<div id="pd-benchmark-card"></div>')}
+    ${pdCard('watman',`🚰 การจัดการน้ำล่าสุด${latWater&&latWater.date?` · ${fD(latWater.date)}`:''}`,wmHtml)}
+    ${pdCard('chwater','📉 แนวโน้มคุณภาพน้ำ 10 วันล่าสุด','<div class="pd-chart-wrap"><canvas id="pd-c-water"></canvas></div>')}
+    ${pdCard('chfeedday','🍤 อาหารการกินรายวัน 14 วันล่าสุด','<div class="pd-chart-wrap"><canvas id="pd-c-feedday"></canvas></div>')}
+    ${pdCard('chfeedweek','⚖️ อาหาร vs การเติบโต รายสัปดาห์','<div class="pd-chart-wrap"><canvas id="pd-c-feedweek"></canvas></div>')}
+    ${pdCard('chgrowth','📈 การเติบโต — น้ำหนักเฉลี่ย (รายสัปดาห์)','<div class="pd-chart-wrap"><canvas id="pd-c-growth"></canvas></div>')}
     <div class="pd-actions">
       <button class="btn btn-p" onclick="jumpEntry('${p.id}')">📝 กรอกข้อมูลใหม่</button>
       <button class="btn" onclick="jumpFeed('${p.id}')">🍖 กรอกอาหาร</button>
@@ -5677,6 +5650,28 @@ function pdToggleCostDetail(){
   document.getElementById('pd-cost-detail')?.classList.toggle('show');
   document.getElementById('pd-cost-detail-caret')?.classList.toggle('open');
 }
+// ── การ์ดพับเก็บได้ในหน้ารายละเอียดบ่อ — ปิดทุกใบตอนเปิดหน้า ผู้ใช้กดกางเฉพาะหัวข้อที่อยากดู
+//    จำสถานะกาง/ยุบไว้ใน _pdOpenCards เพื่อไม่ให้ยุบกลับเองเวลาหน้าถูก re-render (เช่น กดแก้/ลบในตารางประวัติ) ──
+const _pdOpenCards=new Set();
+function pdCard(key,title,bodyHtml,extraCls){
+  const open=_pdOpenCards.has(key);
+  return`<div class="card${extraCls?' '+extraCls:''}" style="margin-top:12px">
+    <div class="card-t pd-col-head" onclick="pdToggleCard('${key}')">
+      <span class="pd-col-ttl">${title}</span>
+      <span class="ceo-cat-caret${open?' open':''}" id="pdc-caret-${key}">▾</span>
+    </div>
+    <div class="pd-col-body${open?' show':''}" id="pdc-body-${key}">${bodyHtml}</div>
+  </div>`;
+}
+function pdToggleCard(key){
+  const body=document.getElementById('pdc-body-'+key);if(!body)return;
+  const nowOpen=!body.classList.contains('show');
+  body.classList.toggle('show',nowOpen);
+  document.getElementById('pdc-caret-'+key)?.classList.toggle('open',nowOpen);
+  if(nowOpen)_pdOpenCards.add(key);else _pdOpenCards.delete(key);
+  // ── กราฟ Chart.js ที่ถูกสร้างตอนการ์ดยังปิดอยู่จะได้ขนาด 0 (canvas อยู่ใน display:none) ต้องสั่ง resize ใหม่ตอนกาง ──
+  if(nowOpen)setTimeout(()=>{Object.values(_pdCharts||{}).forEach(c=>{try{c&&c.resize();}catch(e){}});},0);
+}
 // ══════ เปรียบเทียบ Biomass 2 วิธี: แบบฟาร์ม (อัตรารอดกรอกเอง) vs แบบเอกสาร (ไขว้ตรวจจากอาหารที่ให้จริง) ══════
 const _bcFeedRateOverride={}; // เก็บค่าที่ผู้ใช้แก้เอง ต่อบ่อ ระหว่างอยู่ในหน้านี้ (ไม่บันทึกลง DB — เป็นแค่เครื่องมือช่วยตัดสินใจ)
 // ── สูตร Feeding Rate จริงจากเอกสาร "Precision Feeding ในการเลี้ยงกุ้งขาว" (ดร.พุทธ ส่องแสงจินดา หน้า 16) — regression จากข้อมูลภาคสนาม ขึ้นกับทั้งอายุ+น้ำหนักกุ้ง ไม่ใช่น้ำหนักอย่างเดียว
@@ -5692,7 +5687,7 @@ function renderBioCompare(p){
   const lat=samples.length?samples[samples.length-1]:null;
   const feedLog=p.feedLog||[];const latFeed=feedLog.length?feedLog[feedLog.length-1]:null;
   if(!lat||!lat.abw||lat.survivalRate==null||!latFeed||!latFeed.totalFeed){
-    card.innerHTML=`<div class="card-t">⚖️ เปรียบเทียบ Biomass 2 วิธี</div><div style="color:var(--tx3);font-size:13px;padding:7px 0">ต้องมีข้อมูล ABW + อัตรารอด (จากสุ่มตัวอย่าง) และอาหารที่ให้ล่าสุด ก่อนเปรียบเทียบได้</div>`;
+    card.innerHTML=`<div style="color:var(--tx3);font-size:13px;padding:7px 0">ต้องมีข้อมูล ABW + อัตรารอด (จากสุ่มตัวอย่าง) และอาหารที่ให้ล่าสุด ก่อนเปรียบเทียบได้</div>`;
     return;
   }
   const abw=lat.abw,todayFeed=latFeed.totalFeed,release=pRelease(p);
@@ -5712,7 +5707,6 @@ function renderBioCompare(p){
   if(delta>=25){bannerCls='danger';bannerIcon='🔴';bannerTxt=`ตัวเลข 2 แบบต่างกันมาก (${delta.toFixed(1)}%) — ควรตรวจสอบทั้งอัตรารอดที่กรอกและยอดอาหารที่บันทึกโดยด่วน อาจมีข้อผิดพลาดในการกรอกข้อมูล`;}
   else if(delta>=10){bannerCls='warn';bannerIcon='⚠️';bannerTxt=`ตัวเลข 2 แบบต่างกันพอสมควร (${delta.toFixed(1)}%) — ${farmBiomass>docBiomass?'อัตรารอดที่กรอกเองอาจสูงเกินจริง (feeding rate ที่ได้จริงต่ำผิดปกติ)':'อัตรารอดที่กรอกเองอาจต่ำเกินจริง (feeding rate ที่ได้จริงสูงผิดปกติ)'} — แนะนำสุ่มตัวอย่างเช็คซ้ำ`;}
   card.innerHTML=`
-    <div class="card-t">⚖️ เปรียบเทียบ Biomass 2 วิธี</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
       <div class="fg"><label class="fl">อัตรารอด (%) — กรอกเอง (แบบฟาร์ม)</label><input type="text" class="fi" value="${farmSurvival}" readonly style="background:var(--sf2)"></div>
       <div class="fg">
@@ -5828,7 +5822,7 @@ function renderCropBenchmark(p){
   const availPrev=!!(p.cropHistory||[]).filter(c=>(c.samples||[]).length).length;
   const availSibling=!!bmFindSibling(p);
   if(curAge==null||(!availPrev&&!availSibling)){
-    card.innerHTML=`<div class="card-t">📊 เทียบกับรอบก่อน</div><div style="color:var(--tx3);font-size:13px;padding:7px 0">ยังไม่มีรอบก่อนของบ่อนี้ หรือบ่อพี่น้องขนาดเดียวกันที่กำลังเลี้ยงอยู่ให้เทียบ</div>`;
+    card.innerHTML=`<div style="color:var(--tx3);font-size:13px;padding:7px 0">ยังไม่มีรอบก่อนของบ่อนี้ หรือบ่อพี่น้องขนาดเดียวกันที่กำลังเลี้ยงอยู่ให้เทียบ</div>`;
     return;
   }
   let mode=_bmMode[p.id]||(availPrev?'prev':'sibling');
@@ -5841,8 +5835,7 @@ function renderCropBenchmark(p){
   const curFcr=getFCR(p),refFcrRaw=ref.series.fcrAtAge(curAge);
   const curFeed100k=curSeries.feed100kAtAge(curAge),refFeed100k=ref.series.feed100kAtAge(curAge);
   card.innerHTML=`
-    <div class="card-t">📊 เทียบกับรอบก่อน — บ่อ ${p.name} (DOC วันนี้ = ${curAge} วัน)</div>
-    <div class="card-sub">ตอบคำถาม "รอบนี้โตช้ากว่ารอบที่แล้วไหม" โดยเทียบที่ DOC เดียวกัน ไม่ใช่เทียบวันที่ปัจจุบัน</div>
+    <div class="card-sub">บ่อ ${p.name} · DOC วันนี้ = ${curAge} วัน — ตอบคำถาม "รอบนี้โตช้ากว่ารอบที่แล้วไหม" โดยเทียบที่ DOC เดียวกัน ไม่ใช่เทียบวันที่ปัจจุบัน</div>
     <div class="bm-tabs">
       ${availPrev?`<div class="bm-tab ${mode==='prev'?'on':''}" onclick="bmSetMode('${p.id}','prev')">🔁 รอบก่อนของบ่อนี้</div>`:''}
       ${availSibling?`<div class="bm-tab ${mode==='sibling'?'on':''}" onclick="bmSetMode('${p.id}','sibling')">🐟 บ่อพี่น้องขนาดเดียวกัน</div>`:''}
@@ -5937,11 +5930,11 @@ function renderPdCharts(p){
     {label:'pH',data:recs.map(r=>r.phM!=null&&r.phM!==''?parseFloat(r.phM):null),borderColor:'#2f8f5b',backgroundColor:'rgba(47,143,91,.1)',tension:.35,fill:true,spanGaps:true},
     {label:'DO',data:recs.map(r=>r.doM!=null&&r.doM!==''?parseFloat(r.doM):null),borderColor:'#3f6212',tension:.35,spanGaps:true}
   ]},options:{maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{boxWidth:10,font:{size:10}}}},scales:{x:{ticks:{font:{size:9}}},y:{ticks:{font:{size:9}}}}}});
-  else if(wEl)wEl.parentElement.innerHTML='<div class="card-t">📉 แนวโน้มคุณภาพน้ำ 10 วันล่าสุด</div><p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลพอ</p>';
+  else if(wEl)wEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลพอ</p>';
   const feeds=(p.feedLog||[]).filter(r=>r.date).slice(-14);
   const fEl=document.getElementById('pd-c-feedday');
   if(fEl&&feeds.length)_pdCharts.feedDay=new Chart(fEl,{type:'bar',data:{labels:feeds.map(r=>fD(r.date)),datasets:[{label:'กก./วัน',data:feeds.map(r=>parseFloat(r.totalFeed)||0),backgroundColor:'#3f6212',borderRadius:4}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8}}},y:{ticks:{font:{size:9}}}}}});
-  else if(fEl)fEl.parentElement.innerHTML='<div class="card-t">🍤 อาหารการกินรายวัน 14 วันล่าสุด</div><p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลพอ</p>';
+  else if(fEl)fEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลพอ</p>';
   const buckets=pdWeekBuckets(p);
   const wkLbls=buckets.map(b=>'สัปดาห์ '+b.week);
   const fwEl=document.getElementById('pd-c-feedweek');
@@ -5951,7 +5944,7 @@ function renderPdCharts(p){
   ]},options:{maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{boxWidth:10,font:{size:9}}}},scales:{y:{ticks:{font:{size:9}}},y1:{position:'right',grid:{drawOnChartArea:false},ticks:{font:{size:9}}},x:{ticks:{font:{size:8}}}}}});
   const gEl=document.getElementById('pd-c-growth');
   if(gEl&&buckets.some(b=>b.abw!=null))_pdCharts.growth=new Chart(gEl,{type:'line',data:{labels:wkLbls,datasets:[{label:'กรัม/ตัว',data:buckets.map(b=>b.abw),borderColor:'#2f8f5b',backgroundColor:'rgba(63,98,18,.18)',fill:true,tension:.35,spanGaps:true,pointRadius:3,pointBackgroundColor:'#2f8f5b'}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8}}},y:{ticks:{font:{size:9}}}}}});
-  else if(gEl)gEl.parentElement.innerHTML='<div class="card-t">📈 การเติบโต — น้ำหนักเฉลี่ย (รายสัปดาห์)</div><p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลผลสุ่มพอ</p>';
+  else if(gEl)gEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลผลสุ่มพอ</p>';
 }
 function jumpFeed(id){document.getElementById('tab-feed').click();setTimeout(()=>{const el=document.getElementById(`fdg-${id}-total`);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus();}},80)}
 let homeAttnExpanded=false;
