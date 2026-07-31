@@ -2915,7 +2915,6 @@ body.role-ceo .main{max-width:640px}
     <div class="card" style="margin-bottom:12px">
       <div style="font-weight:700;color:var(--tx);margin-bottom:10px">💰 รายรับ-รายจ่ายเงินสด (เสมียน)</div>
       <div class="card-sub">บันทึกเงินที่เสมียนได้รับเข้ากระเป๋า (รายรับ) และค่าใช้จ่ายเบ็ดเตล็ดในฟาร์ม เช่น ซื้อของทำอาหารให้คนงาน (รายจ่าย) — <b>เก็บเป็นตัวเลขลอยๆ ไม่ผูกกับข้อมูลส่วนอื่นเลย</b> ไม่ไปรวมในต้นทุนบ่อ / P&L / การ์ดของ CEO ใช้ดูเงินหมุนในฟาร์มอย่างเดียว (ทางบัญชีจะลงข้อมูล "อุปกรณ์นอก" แยกทีหลังเอง ถ้าผูกในแอปด้วยจะนับซ้ำ) ส่วน "รายรับ" แบ่งเป็น 2 แบบไว้ดูที่มาของเงิน: <b>เบิกจากส่วนกลาง</b> (ย้ายเงินมาเติมตอนเงินสดในกระเป๋าไม่พอ) กับ <b>ขายกุ้งสุ่ม/กุ้งเสีย</b> (เงินที่ได้จากการขายกุ้ง เข้ากระเป๋าเสมียนไว้ใช้จ่ายในฟาร์มเหมือนกัน)</div>
-      <div id="cash-staffnote" style="display:none;background:var(--sf2);border-radius:8px;padding:8px 12px;font-size:11.5px;color:var(--tx3);margin:10px 0">🔒 มุมมองพนักงานเห็นเฉพาะรายการที่คุณบันทึกเอง — ยอดคงเหลือรวมทั้งกองทุนดูได้จาก Admin</div>
       <div class="g4" id="cash-kpi" style="margin-top:12px"></div>
     </div>
 
@@ -7775,7 +7774,7 @@ function exportSaleCSV(){
   const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='TawanFarm_ขายลูกค้า_'+(_saleMonth==='all'?'all':_saleMonth)+'.csv';a.click();URL.revokeObjectURL(url);
 }
-// ── รายรับ-รายจ่ายเงินสด (เสมียน) — เบิกเงินจากส่วนกลางมาเติม (รายรับ) / ค่าใช้จ่ายเบ็ดเตล็ดในฟาร์ม (รายจ่าย) ── รายจ่ายผูกเข้า D.inventoryLog type:'shared' อัตโนมัติ (category:'equip') เพื่อให้ถูกรวมกับ "อุปกรณ์นอก" หารแบ่งทุกบ่อผ่าน getSharedCostForPond ที่มีอยู่แล้ว ไม่ต้องเขียนสูตรคำนวณคู่ขนาน — "รายรับ" เป็นแค่การโอนเงินเข้ากองกลาง ไม่ผูกกับ inventoryLog เลย ──
+// ── รายรับ-รายจ่ายเงินสด (เสมียน) — เบิกเงินจากส่วนกลางมาเติม (รายรับ) / ค่าใช้จ่ายเบ็ดเตล็ดในฟาร์ม (รายจ่าย) ── เก็บเป็นตัวเลขลอยๆ ไม่ผูกกับ D.inventoryLog/ต้นทุนบ่อ/P&L/CEO เลย ให้ staff เห็นข้อมูลทั้งหมด (ไม่จำกัดเฉพาะรายการที่ตัวเองบันทึก) เพราะ staff เป็นผู้กรอกข้อมูลและถือเงินสดส่วนนี้จริง ──
 let _cashMode='in';
 let _cashSubtype='transfer';
 let _cashFilterMonth='';
@@ -7854,10 +7853,8 @@ function clearCashFilter(){
 function renderClerkCash(){
   const monthEl=document.getElementById('cash-filter-month');
   _cashFilterMonth=monthEl?monthEl.value:_cashFilterMonth;
-  // ── role staff: เห็นเฉพาะรายการที่ตัวเองบันทึก (by ตรงกับผู้ใช้ปัจจุบัน) ทั้ง KPI และตาราง — ไม่ใช่แค่ซ่อนแถวคนอื่น แต่คำนวณยอดสะสม/คงเหลือใหม่จากรายการของตัวเองล้วนๆ กันเลขยอดคงเหลือรวมทั้งกองทุนรั่วออกไปทางอ้อม ──
-  const isStaffScoped=APP_ROLE==='staff';
-  const noteEl=document.getElementById('cash-staffnote');if(noteEl)noteEl.style.display=isStaffScoped?'':'none';
-  const all=isStaffScoped?clerkCashSorted().filter(c=>c.by===curUserLabel()):clerkCashSorted();
+  // ── staff เห็นข้อมูลทั้งหมดเหมือน admin — เป็นผู้กรอกข้อมูลและถือเงินสดส่วนนี้จริง ไม่มีเหตุผลต้องกรองเฉพาะรายการของตัวเอง ──
+  const all=clerkCashSorted();
   let running=0;
   const withBalance=all.map(c=>{running+=(c.type==='in'?c.amount:-c.amount);return{...c,balance:running};});
   const totalIn=all.filter(c=>c.type==='in').reduce((s,c)=>s+c.amount,0);
@@ -7865,7 +7862,7 @@ function renderClerkCash(){
   const totalOtherIncome=all.filter(c=>c.type==='in'&&c.subtype==='sale').reduce((s,c)=>s+c.amount,0);
   const kpiEl=document.getElementById('cash-kpi');
   if(kpiEl){
-    kpiEl.innerHTML=`<div class="kpi-card"><div class="kpi-lbl">${isStaffScoped?'ยอดสุทธิที่คุณบันทึก':'ยอดคงเหลือปัจจุบัน'}</div><div class="kpi-val" style="color:${running<0?'var(--d)':'var(--tx)'}">฿${Math.round(running).toLocaleString()}</div></div>
+    kpiEl.innerHTML=`<div class="kpi-card"><div class="kpi-lbl">ยอดคงเหลือปัจจุบัน</div><div class="kpi-val" style="color:${running<0?'var(--d)':'var(--tx)'}">฿${Math.round(running).toLocaleString()}</div></div>
       <div class="kpi-card"><div class="kpi-lbl">รายรับสะสม</div><div class="kpi-val" style="color:var(--ok)">฿${Math.round(totalIn).toLocaleString()}</div></div>
       <div class="kpi-card"><div class="kpi-lbl">รายจ่ายสะสม</div><div class="kpi-val" style="color:var(--d)">฿${Math.round(totalOut).toLocaleString()}</div></div>
       <div class="kpi-card"><div class="kpi-lbl">ในนั้นเป็นเงินขายกุ้งสุ่ม/เสีย</div><div class="kpi-val" style="color:var(--in)">฿${Math.round(totalOtherIncome).toLocaleString()}</div><div class="kpi-sub">ไม่ผูกกับข้อมูลส่วนอื่น</div></div>`;
@@ -7875,7 +7872,7 @@ function renderClerkCash(){
   if(_cashFilterMonth)rows=rows.filter(c=>(c.date||'').startsWith(_cashFilterMonth));
   rows=rows.slice().reverse();
   if(!rows.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติรายรับ-รายจ่าย'+(_cashFilterMonth?'ตามตัวกรองนี้':'')+'</p>';return;}
-  tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>ประเภท</th><th style="text-align:right">จำนวนเงิน</th><th style="text-align:right">${isStaffScoped?'สุทธิสะสม (เฉพาะคุณ)':'คงเหลือสะสม'}</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
+  tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>ประเภท</th><th style="text-align:right">จำนวนเงิน</th><th style="text-align:right">คงเหลือสะสม</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
     rows.map(c=>{
       let typeBadge;
       if(c.type==='out')typeBadge='<span class="badge b-danger">📤 รายจ่าย</span>';
