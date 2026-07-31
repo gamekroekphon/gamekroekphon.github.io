@@ -1456,7 +1456,7 @@ body.role-ceo .main{max-width:640px}
   </div>
   <div class="card" style="margin-bottom:14px;display:none" id="ov-partial-card">
     <div class="card-t">🗓️ ปฏิทินจับกุ้ง &amp; พาเชียล</div>
-    <div class="card-sub">เตือนเมื่อผลผลิตถึง 4,000 กก./ไร่ — บ่อเริ่มแน่น ควรทยอยจับออก · คาดการณ์จากอัตราโตล่าสุด (PDG)</div>
+    <div class="card-sub">เตือนเมื่อผลผลิตถึง 4,000 กก./ไร่ — บ่อเริ่มแน่น ควรทยอยจับออก · คาดการณ์วันที่ + ไซส์ที่จะได้ ณ วันนั้น จากอัตราโตล่าสุด (PDG)</div>
     <div id="ov-partial-ready"></div>
     <div id="ov-partial-list"></div>
     <div id="ov-partial-cal"></div>
@@ -7185,17 +7185,23 @@ function partialHarvestInfo(p){
   if(bio==null||bio<=0)return null;                // ยังไม่มีผลสุ่ม (ต้องมี ABW + อัตรารอด)
   const yr=bio/p.size;
   const pct=Math.min(100,yr/PARTIAL_YIELD_TARGET*100);
-  if(yr>=PARTIAL_YIELD_TARGET)return{ready:true,yr,pct:100,bio};
-  const s=p.samples||[],lat=s[s.length-1],pdg=parseFloat(getPDG(s));
+  const s=p.samples||[],lat=s[s.length-1];
+  if(yr>=PARTIAL_YIELD_TARGET)return{ready:true,yr,pct:100,bio,abw:lat?lat.abw:null};
+  const pdg=parseFloat(getPDG(s));
   // ── ต้องสุ่มอย่างน้อย 2 ครั้งถึงจะรู้อัตราโต (PDG) — ไม่งั้นคาดการณ์วันไม่ได้ ──
-  if(!lat||!lat.abw||!pdg||pdg<=0)return{ready:false,yr,pct,bio,noProj:true};
-  // ── Biomass โตตามสัดส่วน ABW (สมมติอัตรารอดคงที่) → หา ABW ที่ทำให้ yield แตะเกณฑ์ แล้วแปลงเป็นจำนวนวันด้วย PDG ──
+  if(!lat||!lat.abw||!pdg||pdg<=0)return{ready:false,yr,pct,bio,abw:lat?lat.abw:null,noProj:true};
+  // ── Biomass โตตามสัดส่วน ABW (สมมติอัตรารอดคงที่) → หา ABW ที่ทำให้ yield แตะเกณฑ์ ──
   const targetAbw=lat.abw*(PARTIAL_YIELD_TARGET*p.size)/bio;
-  const days=Math.ceil((targetAbw-lat.abw)/pdg);
-  if(!isFinite(days)||days<0)return{ready:false,yr,pct,bio,noProj:true};
+  // ── นับวันจาก ABW ประเมิน "ณ วันนี้" (= ABW ตอนสุ่ม + PDG × วันที่ผ่านมาตั้งแต่สุ่ม) ไม่ใช่ ABW ตอนสุ่มตรงๆ ไม่งั้นวันที่คาดการณ์จะเลื่อนออกไปเท่ากับอายุของผลสุ่ม ──
+  const sinceSample=lat.date?Math.max(0,dDiff(lat.date,today())):0;
+  const abwNow=lat.abw+pdg*sinceSample;
+  const days=Math.max(0,Math.ceil((targetAbw-abwNow)/pdg));
+  if(!isFinite(days))return{ready:false,yr,pct,bio,abw:lat.abw,noProj:true};
   const d=new Date(today()+'T00:00:00');d.setDate(d.getDate()+days);
-  return{ready:false,yr,pct,bio,days,date:ymdLocal(d)};
+  return{ready:false,yr,pct,bio,abw:lat.abw,abwNow,targetAbw,days,date:ymdLocal(d)};
 }
+// ── ไซส์กุ้ง: กรัม/ตัว + ตัว/กก. (ชาวบ่อคุยกันด้วยหน่วย "ตัว/กก." เป็นหลัก) ──
+function fmtShrimpSize(g){return g>0?`${g.toFixed(1)} ก. (${Math.round(1000/g)} ตัว/กก.)`:'-';}
 function renderOvPartialHarvest(){
   const card=document.getElementById('ov-partial-card');if(!card)return;
   const readyEl=document.getElementById('ov-partial-ready'),listEl=document.getElementById('ov-partial-list'),calEl=document.getElementById('ov-partial-cal');
@@ -7212,7 +7218,7 @@ function renderOvPartialHarvest(){
       <div class="ph-top"><span class="ph-nm" onclick="openPondDetail('${p.id}')">บ่อ ${p.name} ›</span><span class="badge b-danger">🚨 พาเชียลได้แล้ว</span></div>
       <div class="ph-bar"><span style="width:100%;background:var(--d)"></span></div>
       <div class="ph-meta"><span><b style="color:var(--d)">${fmtYr(info.yr)}</b> กก./ไร่</span><span>เกณฑ์ ${PARTIAL_YIELD_TARGET.toLocaleString()}</span></div>
-      <div class="ph-sub">บ่อ ${p.size} ไร่ · Biomass ${fmtYr(info.bio)} กก.</div>
+      <div class="ph-sub">บ่อ ${p.size} ไร่ · Biomass ${fmtYr(info.bio)} กก.${info.abw?' · ไซส์ตอนนี้ '+fmtShrimpSize(info.abw):''}</div>
     </div>`).join('');
 
   // ── 2) บ่อที่ยังไม่ถึง เรียงตามความใกล้ (บ่อที่คาดการณ์ไม่ได้ไว้ท้ายสุด) ──
@@ -7230,22 +7236,23 @@ function renderOvPartialHarvest(){
       <div class="ph-top"><span class="ph-nm" onclick="openPondDetail('${p.id}')">บ่อ ${p.name} ›</span>${badge}</div>
       <div class="ph-bar"><span style="width:${info.pct.toFixed(0)}%;background:${cls}"></span></div>
       <div class="ph-meta"><span><b>${fmtYr(info.yr)}</b> กก./ไร่ (${info.pct.toFixed(0)}%)</span><span>${info.noProj?'ยังคาดการณ์ไม่ได้':'คาด '+fD(info.date)}</span></div>
+      ${info.noProj?'':`<div class="ph-sub">ไซส์คาด ณ วันนั้น <b style="color:var(--tx)">${fmtShrimpSize(info.targetAbw)}</b> · ตอนนี้ ~${fmtShrimpSize(info.abwNow)}</div>`}
     </div>`;
   }).join('');
 
   // ── 3) ปฏิทินรวม 60 วัน: วันพาเชียล + วันถึงไซส์เป้าหมาย เรียงตามวันที่ ──
   const td=today(),ev=[];
   rows.forEach(({p,info})=>{
-    if(info.ready)ev.push({date:td,name:p.name,lbl:'🚨 พาเชียล',cls:'b-danger'});
-    else if(info.date&&info.days<=PARTIAL_CAL_DAYS)ev.push({date:info.date,name:p.name,lbl:'พาเชียล',cls:'b-warn'});
+    if(info.ready)ev.push({date:td,name:p.name,lbl:'🚨 พาเชียล',cls:'b-danger',abw:info.abw});
+    else if(info.date&&info.days<=PARTIAL_CAL_DAYS)ev.push({date:info.date,name:p.name,lbl:'พาเชียล',cls:'b-warn',abw:info.targetAbw});
     const ph=projHarvest(p);
-    if(ph&&!ph.ready&&ph.days<=PARTIAL_CAL_DAYS)ev.push({date:ph.date,name:p.name,lbl:'ถึงไซส์ 22 ก.',cls:'b-info'});
+    if(ph&&!ph.ready&&ph.days<=PARTIAL_CAL_DAYS)ev.push({date:ph.date,name:p.name,lbl:'ถึงไซส์ 22 ก.',cls:'b-info',abw:22});
   });
   if(!ev.length){calEl.innerHTML='';return;}
   ev.sort((a,b)=>a.date.localeCompare(b.date));
   calEl.innerHTML=`<div class="ph-cal-t">🗓️ ปฏิทิน ${PARTIAL_CAL_DAYS} วันข้างหน้า</div>
-    <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>บ่อ</th><th>เหตุการณ์</th></tr></thead><tbody>${
-      ev.map(e=>`<tr><td style="white-space:nowrap">${e.date===td?'<b>วันนี้</b>':fD(e.date)}</td><td>บ่อ ${e.name}</td><td><span class="badge ${e.cls}">${e.lbl}</span></td></tr>`).join('')
+    <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>บ่อ</th><th>เหตุการณ์</th><th>ไซส์คาด ณ วันนั้น</th></tr></thead><tbody>${
+      ev.map(e=>`<tr><td style="white-space:nowrap">${e.date===td?'<b>วันนี้</b>':fD(e.date)}</td><td>บ่อ ${e.name}</td><td><span class="badge ${e.cls}">${e.lbl}</span></td><td style="white-space:nowrap">${e.abw?fmtShrimpSize(e.abw):'-'}</td></tr>`).join('')
     }</tbody></table></div>`;
 }
 
