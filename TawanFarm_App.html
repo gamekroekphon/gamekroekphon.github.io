@@ -4201,7 +4201,7 @@ function pondRunningCost(p){
   if(!p||!p.startDate)return null;
   const fry=p.costFry||0;
   const feed=Math.round(pondFeedCost(p)||0);
-  const chem=Math.round(getStockCostBreakdownForPond(p.id,p.startDate,today()).total||0);
+  const chem=Math.round(getStockCostBreakdownForPond(p.id,pondCostStartDate(p),today()).total||0);
   const labor=Math.round(getLaborCostForPond(p.id,p.startDate,today())||0);
   const elec=Math.round(getElecCostForPeriod(p.startDate,today())||0);
   return{fry,feed,chem,labor,elec,total:fry+feed+chem+labor+elec};
@@ -5515,13 +5515,14 @@ function renderPondDetail(id){
   // ===== ต้นทุนสะสม (admin เท่านั้น) — ใช้สูตร/building block เดียวกับหน้า CEO (ceoOpenSheet) ไม่สร้างคำนวณคู่ขนาน =====
   let costCardHtml='';
   if(APP_ROLE==='admin'&&cls!=='prep'){
-    const pdStockItems=getStockItemsForPond(p.id,p.startDate,today());
+    const pdCostFrom=pondCostStartDate(p);
+    const pdStockItems=getStockItemsForPond(p.id,pdCostFrom,today());
     const pdFeedCost=pondFeedCost(p);
     const pdFryCost=p.costFry||0;
     const pdLaborCost=getLaborCostForPond(p.id,p.startDate,today());
     const pdElecCost=getElecCostForPeriod(p.startDate,today());
     // ── ต้นทุนแชร์ (โหมด "แชร์ทุกบ่อ" หน้าสต็อก) — แต่ละรายการหารด้วยจำนวนบ่อ active ณ วันที่บันทึก ──
-    const pdSharedItems=getSharedItemsInRange(p.startDate,today());
+    const pdSharedItems=getSharedItemsInRange(pdCostFrom,today());
     let pdSharedCost=0;
     const pdSharedCatItems={};
     pdSharedItems.forEach(l=>{
@@ -5571,6 +5572,7 @@ function renderPondDetail(id){
       </div>
       <div class="ceo-cat-items" id="pd-cost-detail" style="padding-left:0">
         ${pdCostPerKg==null?`<div style="font-size:11px;color:var(--tx3);padding:2px 0 6px">ยังไม่มีข้อมูลสุ่มตัวอย่าง คำนวณ Biomass ประเมินไม่ได้</div>`:`<div style="font-size:11px;color:var(--tx3);padding:2px 0 6px">= ต้นทุนสะสม ÷ Biomass ประเมิน ${Math.round(biomass).toLocaleString()} กก. — เป็นค่าประมาณระหว่างเลี้ยง ไม่ใช่ต้นทุน/กก. สุดท้ายตอนปิดรอบ</div>`}
+        <div style="font-size:11px;color:var(--tx3);padding:0 0 8px">📦 สต็อก/เวชภัณฑ์/อุปกรณ์นอก นับตั้งแต่ ${fD(pdCostFrom)} (ครอบช่วงเตรียมบ่อก่อนลงกุ้ง) · ค่าแรง/ค่าไฟ นับจากวันลงกุ้ง ${fD(p.startDate)}</div>
         ${pdCatRowsHtml}
       </div>
     </div>`;
@@ -11602,7 +11604,7 @@ function openCropModal(pid){
   document.getElementById('cm-cost-fry').value=p.costFry||'';
   document.getElementById('cm-cost-feed').value=pondFeedCost(p)||'';
   // ── เวชภัณฑ์(ยากิน+ยาลงน้ำ+จุลินทรีย์กิน+จุลินทรีย์ลงน้ำ)/ปูน/อุปกรณ์ แยกหมวดจากรายการเบิกพัสดุจริงของบ่อนี้ แก้ไขตัวเลขเองได้ ──
-  const stockGroups=getStockCostGroupsForPond(pid,p.startDate,today());
+  const stockGroups=getStockCostGroupsForPond(pid,pondCostStartDate(p),today());
   document.getElementById('cm-cost-med').value=stockGroups.med||'';
   document.getElementById('cm-cost-lime').value=stockGroups.lime||'';
   document.getElementById('cm-cost-equip').value=stockGroups.equip||'';
@@ -11612,7 +11614,7 @@ function openCropModal(pid){
   const autoLabor=getLaborCostForPond(pid,p.startDate,today());
   document.getElementById('cm-cost-labor').value=autoLabor?Math.round(autoLabor):'';
   // ── อุปกรณ์นอก: ดึงจาก getSharedCostForPond (ส่วนแบ่งจากโหมด "แชร์ทุกบ่อ" หน้าสต็อก) แทนกรอกเองแล้ว — แก้ไขได้ถ้าจำเป็น ──
-  const autoSharedCost=getSharedCostForPond(pid,p.startDate,today());
+  const autoSharedCost=getSharedCostForPond(pid,pondCostStartDate(p),today());
   document.getElementById('cm-cost-equip-out').value=autoSharedCost?Math.round(autoSharedCost):'';
   // ── น้ำมัน/ค่าจับกุ้ง/% ส่วนแบ่ง — ยังกรอกเองทั้งหมด เพราะต้องดึงตัวเลขจากนอกแอป ──
   ['cm-cost-fuel','cm-pct-caretaker','cm-pct-manager'].forEach(id=>{
@@ -11928,6 +11930,23 @@ function ceoFeedPer100k(p){
   return(ceoFeedDisplay(p).val/(pRelease(p)/100000)).toFixed(1);
 }
 // ── รายการเบิกสต็อกจริงของบ่อ ไม่รวมอาหาร (คิดแยกจาก pondFeedCost อยู่แล้ว) เรียงล่าสุดก่อน ──
+// ── วันเริ่มนับต้นทุน "สต็อก/เวชภัณฑ์" ของรอบปัจจุบัน — ย้อนจากวันลงกุ้ง 60 วัน ให้ครอบช่วงเตรียมบ่อ
+//    (PREP_STEPS ขั้นแรกสุด "ตากบ่อ" คือ -60 วัน) เพราะของที่เบิกไปเตรียมบ่อ — โซดาไฟ/คอปเปอร์/ไดโครวอส/คลอรีน —
+//    เบิกก่อนลงกุ้งเป็นเดือน ถ้านับจาก p.startDate เฉยๆ จะตกหล่นทั้งหมด
+//    ⚠️ กันนับซ้อนรอบก่อน: ไม่ย้อนเลยวันปิดรอบก่อนหน้าของบ่อเดียวกัน ไม่งั้นต้นทุนปลายรอบเก่าจะถูกดึงมานับซ้ำในรอบใหม่
+//    ⚠️ ใช้เฉพาะต้นทุนสต็อก/เวชภัณฑ์/อุปกรณ์นอกเท่านั้น — ค่าแรง/ค่าไฟยังนับจาก p.startDate เหมือนเดิม
+//       เพราะสูตรหารต่อบ่อ (activePondCountOnDate) นับเฉพาะบ่อที่ลงกุ้งแล้ว ถ้าขยายช่วงย้อนหลังจะทำให้บ่ออื่นที่เลี้ยงอยู่ได้ส่วนแบ่งลดลงตามไปด้วย ──
+const POND_PREP_LOOKBACK_DAYS=60;
+function pondCostStartDate(p){
+  if(!p||!p.startDate)return null;
+  const back=ymdLocal(addDaysLocal(new Date(p.startDate+'T00:00:00'),-POND_PREP_LOOKBACK_DAYS));
+  const prevClose=(p.cropHistory||[]).map(c=>c.closeDate).filter(d=>d&&d<p.startDate).sort().pop();
+  if(prevClose){
+    const dayAfter=ymdLocal(addDaysLocal(new Date(prevClose+'T00:00:00'),1));
+    return back<dayAfter?dayAfter:back;
+  }
+  return back;
+}
 function getStockItemsForPond(pondId,startDate,endDate){
   if(!pondId||!startDate)return[];
   const end=endDate||today();
@@ -11955,7 +11974,7 @@ function getSharedCostForPond(pondId,fromDate,toDate){
 function ceoTotalCost(p){
   const fryCost=p.costFry||0;
   const feedCost=pondFeedCost(p);
-  const stockCost=getStockCostBreakdownForPond(p.id,p.startDate,today()).total;
+  const stockCost=getStockCostBreakdownForPond(p.id,pondCostStartDate(p),today()).total;
   const laborCost=getLaborCostForPond(p.id,p.startDate,today());
   const elecCost=getElecCostForPeriod(p.startDate,today());
   return fryCost+feedCost+stockCost+laborCost+elecCost;
@@ -12092,14 +12111,15 @@ function ceoOpenSheet(pid){
   }
 
   // ── ต้นทุนสะสม: รายการจริงจากสต็อกที่เบิกลงบ่อ (ไม่รวมอาหาร) + อาหาร/ลูกกุ้ง/ค่าแรง/ค่าไฟ ──
-  const stockItems=getStockItemsForPond(p.id,p.startDate,today());
+  const ceoCostFrom=pondCostStartDate(p);
+  const stockItems=getStockItemsForPond(p.id,ceoCostFrom,today());
   const stockCostSum=stockItems.reduce((s,i)=>s+i.qty*i.unitPrice,0);
   const feedCost=pondFeedCost(p);
   const fryCost=p.costFry||0;
   const laborCost=getLaborCostForPond(p.id,p.startDate,today());
   const elecCost=getElecCostForPeriod(p.startDate,today());
   // ── ต้นทุนแชร์ (โหมด "แชร์ทุกบ่อ" หน้าสต็อก) — สูตรเดียวกับหน้ารายละเอียดบ่อของ admin (ข้อ 102) ──
-  const sharedItems=getSharedItemsInRange(p.startDate,today());
+  const sharedItems=getSharedItemsInRange(ceoCostFrom,today());
   let sharedCost=0;
   const sharedCatItems={};
   sharedItems.forEach(l=>{
