@@ -5614,6 +5614,11 @@ function renderPondDetail(id){
       <div id="pd-feed-hist-table"></div>
     </div>
     <div class="card" style="margin-top:12px">
+      <div class="card-t">💊 เวชภัณฑ์ที่ใช้ล่าสุด (7 วัน)</div>
+      <div class="card-sub">ดึงจากหน้าสต็อกอัตโนมัติ ไม่ต้องออกไปดูหน้าประวัติสต็อก</div>
+      <div id="pd-med-hist-table"></div>
+    </div>
+    <div class="card" style="margin-top:12px">
       <div class="card-t">📏 ไซส์ล่าสุด${lat&&lat.date?` · ${fD(lat.date)}`:''}</div>
       ${sizeHtml}
     </div>
@@ -5650,6 +5655,7 @@ function renderPondDetail(id){
   if(cls!=='prep')renderCropBenchmark(p);
   renderPdWqHistory(p);
   renderPdFeedHistory(p);
+  renderPdMedHistory(p);
 }
 function pdToggleCatItems(key){
   document.getElementById('pd-cat-items-'+key)?.classList.toggle('show');
@@ -8766,6 +8772,17 @@ function renderPdFeedHistory(p){
       const ageCalc=p.startDate?dDiff(p.startDate,r.date):r.age;
       return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="pdEditFeed('${p.id}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:11px" onclick="pdDeleteFeedEntry('${p.id}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc}</td><td>${r.feedBrand||'-'}</td><td style="text-align:right">${(r.totalFeed||0).toLocaleString()}</td><td style="font-size:12px;color:var(--tx2)">${r.notes||'-'}</td></tr>`;
     }).join('')}</tbody></table></div>`;
+}
+// ── เวชภัณฑ์ที่ใช้ลงบ่อนี้ย้อนหลัง 7 วัน — ดึงจาก getStockItemsForPond() ชุดเดียวกับที่ใช้คิดต้นทุนสะสม (ไม่สร้าง query คู่ขนาน) กรองเฉพาะหมวดยา/จุลินทรีย์ ──
+const PD_MED_CATS=['chemOral','chemWater','probioOral','probioWater','chem'];
+function renderPdMedHistory(p){
+  const tbl=document.getElementById('pd-med-hist-table');if(!tbl||!p)return;
+  const from=ymdLocal(addDaysLocal(new Date(today()+'T00:00:00'),-7));
+  const items=getStockItemsForPond(p.id,from,today()).filter(i=>PD_MED_CATS.includes(i.category));
+  if(!items.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:16px;font-style:italic">ยังไม่มีการใช้เวชภัณฑ์ใน 7 วันที่ผ่านมา</p>';return;}
+  tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>รายการ</th><th>หมวด</th><th style="text-align:right">จำนวน</th></tr></thead><tbody>${
+    items.map(i=>`<tr><td>${fD(i.date)}</td><td>${i.name}</td><td><span class="badge b-info">${STOCK_CAT_LABEL[i.category]||i.category}</span></td><td style="text-align:right">${i.qty} ${i.unit}</td></tr>`).join('')
+  }</tbody></table></div>`;
 }
 
 // ===== EDIT HISTORY FUNCTIONS =====
