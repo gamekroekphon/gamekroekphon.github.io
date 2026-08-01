@@ -482,8 +482,8 @@ body.role-admin .home-quick .admin-only{display:flex!important}
 .stock-cat-equip{background:#F0FDF4;color:#166534}
 .stock-cat-chemOral{background:#EFF6FF;color:#1D4ED8}
 .stock-cat-chemWater{background:#E0F2FE;color:#0369A1}
-.stock-cat-probioOral{background:#F3E8FF;color:#7E22CE}
-.stock-cat-probioWater{background:#EDE9FE;color:#5B21B6}
+.stock-cat-probioOral{background:#E0E7FF;color:#4338CA}
+.stock-cat-probioWater{background:#FAE8FF;color:#A21CAF}
 .stock-cat-lime{background:#F5F5F4;color:#57534E}
 .stock-qty-low{color:var(--d);font-weight:700}
 .stock-mode-btn{flex:1;padding:7px;font-size:13px;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--tx2);font-weight:500;transition:background .15s,color .15s}
@@ -8747,7 +8747,7 @@ function renderPdFeedHistory(p){
 // ── เวชภัณฑ์ที่ใช้ลงบ่อนี้ — ดึงจาก getStockItemsForPond() ชุดเดียวกับที่ใช้คิดต้นทุนสะสม (ไม่สร้าง query คู่ขนาน) กรองเฉพาะหมวดยา/จุลินทรีย์ + เลือกช่วงวัน/หมวดได้เหมือนตัวกรองประวัติเบิกออกในหน้าสต็อก ──
 const PD_MED_CATS=['chemOral','chemWater','probioOral','probioWater','chem'];
 // ── ปุ่มเลือกหมวด: สีตรงกับ STOCK_CAT_CSS (ตัวเดียวกับ badge ในตาราง) ให้กดแล้วรู้ทันทีว่ากำลังกรองหมวดไหนอยู่ ──
-const PD_MED_CAT_OPTS=[['','ทุกหมวด',null],['chemOral','💊 ยากิน','#1D4ED8'],['chemWater','🧪 ยาลงน้ำ','#0369A1'],['probioOral','🦠 จุลินทรีย์กิน','#7E22CE'],['probioWater','🧫 จุลินทรีย์ลงน้ำ','#5B21B6']];
+const PD_MED_CAT_OPTS=[['','ทุกหมวด',null],['chemOral','💊 ยากิน','#1D4ED8'],['chemWater','🧪 ยาลงน้ำ','#0369A1'],['probioOral','🦠 จุลินทรีย์กิน','#4338CA'],['probioWater','🧫 จุลินทรีย์ลงน้ำ','#A21CAF']];
 let _pdMedPeriod=7,_pdMedCat='';
 function pdMedPeriodChips(period){
   return[[7,'7 วัน'],[14,'14 วัน'],[30,'30 วัน'],['all','ทั้งหมด']].map(([v,lbl])=>
@@ -11839,7 +11839,7 @@ function renderPartialList(){
 // ===== CEO DASHBOARD (role=ceo) =====
 const ceoMoney=v=>'฿'+Math.round(v||0).toLocaleString('th-TH');
 // ── สีจุดหมวดหมู่ ใช้ค่าเดียวกับสีตัวหนังสือใน STOCK_CAT_CSS (badge เดิมเป็นพื้นอ่อน+ตัวหนังสือเข้ม ไม่เหมาะกับจุดกลมเล็กๆ) ──
-const CEO_CAT_DOT={seed:'#9D174D',chem:'#1D4ED8',feed:'#92400E',chemOral:'#1D4ED8',chemWater:'#0369A1',probioOral:'#7E22CE',probioWater:'#5B21B6',lime:'#57534E',equip:'#166534',fry:'#9D174D',labor:'#0F766E',elec:'#B45309',shared:'#9333EA'};
+const CEO_CAT_DOT={seed:'#9D174D',chem:'#1D4ED8',feed:'#92400E',chemOral:'#1D4ED8',chemWater:'#0369A1',probioOral:'#4338CA',probioWater:'#A21CAF',lime:'#57534E',equip:'#166534',fry:'#9D174D',labor:'#0F766E',elec:'#B45309',shared:'#9333EA'};
 // ── สถานะ "ควรติดตาม" ถ้า ABW ล่าสุดต่ำกว่ามาตรฐานตามอายุเกิน 15% ──
 function ceoStatus(p){
   const s=p.samples||[];if(!s.length)return'ok';
