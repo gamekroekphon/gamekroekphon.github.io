@@ -5625,7 +5625,7 @@ function renderPondDetail(id){
       <div class="chip-row" id="pd-med-hist-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
       <div class="chip-row" id="pd-med-cat-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
       <div id="pd-med-hist-table"></div>`)}
-    ${pdCard('medproto','🔁 ตารางการลงเวชภัณฑ์','<div id="pd-medproto-body"></div>')}
+    ${pdCard('medproto','🔁 เวชพันฑ์ผสมกิน','<div id="pd-medproto-body"></div>')}
     ${pdCard('size',`📏 ไซส์ล่าสุด${lat&&lat.date?` · ${fD(lat.date)}`:''}`,sizeHtml)}
     ${pdCard('bio','⚖️ เปรียบเทียบ Biomass 2 วิธี','<div id="pd-biocompare-card"></div>')}
     ${pdCard('bench','📊 เทียบกับรอบก่อน','<div id="pd-benchmark-card"></div>')}
@@ -8898,6 +8898,14 @@ function pdProtoAddMed(idx,itemId){
   round.meds.push({id:item.id,name:item.name,category:item.category});
   renderPdMedProtocol(pond(_pdCurPondId));
 }
+function mprotEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+// ── ช่องพิมพ์ค้นหาเวชภัณฑ์ (แทน dropdown เดิม) — จับคู่ข้อความที่พิมพ์/เลือกจาก datalist กลับไปหา item จริงแล้วเรียก pdProtoAddMed เหมือนเดิม ──
+function pdProtoSearchMed(el,idx){
+  const val=el.value.trim();if(!val)return;
+  const avail=medProtocolAvailItems(_pdProtoDraft.rounds[idx].meds.map(m=>m.id));
+  const item=avail.find(i=>`${STOCK_CAT_LABEL[i.category]||''} — ${i.name}`===val)||avail.find(i=>i.name===val);
+  if(item)pdProtoAddMed(idx,item.id);
+}
 function pdProtoRemoveMed(idx,medIdx){_pdProtoDraft.rounds[idx].meds.splice(medIdx,1);renderPdMedProtocol(pond(_pdCurPondId));}
 function pdProtoToggleLoopDraft(){_pdProtoDraft.loop=!_pdProtoDraft.loop;renderPdMedProtocol(pond(_pdCurPondId));}
 function pdProtoSave(pid){
@@ -8919,7 +8927,8 @@ function pdProtoSave(pid){
     // ── แก้ตารางล่วงหน้าได้โดยไม่กระทบรอบที่กำลังใช้อยู่จริง — คง curIdx/curStart เดิมไว้ (แค่ clamp กันรอบที่กำลังใช้อยู่ถูกลบไปแล้ว) ──
     else{curIdx=Math.min(p.medProtocol.curIdx,newRounds.length-1);curStart=p.medProtocol.curStart;}
   }
-  p.medProtocol={active:true,rounds:newRounds,loop:!!_pdProtoDraft.loop,curIdx,curStart,reason,
+  const updatedAt=new Date().toLocaleString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  p.medProtocol={active:true,rounds:newRounds,loop:!!_pdProtoDraft.loop,curIdx,curStart,reason,updatedAt,updatedBy:curUserLabel(),
     note:(p.medProtocol&&p.medProtocol.note)||'',noteUpdatedAt:(p.medProtocol&&p.medProtocol.noteUpdatedAt)||'',noteUpdatedBy:(p.medProtocol&&p.medProtocol.noteUpdatedBy)||''};
   save();
   _pdProtoEditing=false;_pdProtoDraft=null;
@@ -8961,10 +8970,10 @@ function pdProtoFormHtml(p){
     <div class="mprot-round-edit">
       <div class="mprot-top"><span class="mprot-lbl">รอบที่ ${idx+1}</span>${_pdProtoDraft.rounds.length>1?`<button class="btn btn-sm" style="background:var(--db);color:var(--d);border:1px solid var(--d)" onclick="pdProtoRemoveRound(${idx})">🗑️ ลบรอบนี้</button>`:''}</div>
       <div class="mprot-meds">${r.meds.map((m,mi)=>`<span class="badge ${STOCK_CAT_CSS[m.category]||''}">${m.name}<span class="mprot-chip-x" onclick="pdProtoRemoveMed(${idx},${mi})">×</span></span>`).join('')||'<span style="font-size:var(--fs11);color:var(--tx3);font-style:italic">ยังไม่ได้เลือกเวชภัณฑ์</span>'}</div>
-      <select class="fi" style="margin-bottom:8px" onchange="pdProtoAddMed(${idx},this.value);this.value=''">
-        <option value="">+ เพิ่มรายการ...</option>
-        ${medProtocolAvailItems(r.meds.map(m=>m.id)).map(i=>`<option value="${i.id}">${STOCK_CAT_LABEL[i.category]||''} — ${i.name}</option>`).join('')}
-      </select>
+      <input class="fi" list="mprot-med-list-${idx}" placeholder="พิมพ์ชื่อเวชภัณฑ์เพื่อค้นหา..." style="margin-bottom:8px" onchange="pdProtoSearchMed(this,${idx})" autocomplete="off">
+      <datalist id="mprot-med-list-${idx}">
+        ${medProtocolAvailItems(r.meds.map(m=>m.id)).map(i=>`<option data-id="${i.id}" value="${mprotEsc(STOCK_CAT_LABEL[i.category]||'')} — ${mprotEsc(i.name)}"></option>`).join('')}
+      </datalist>
       <label class="fl" style="display:block;font-size:var(--fs105);font-weight:600;color:var(--tx2);margin-bottom:4px">ใช้กี่วัน</label>
       <input class="fi mprot-days-input" data-idx="${idx}" type="number" min="1" value="${r.days}">
     </div>`).join('');
@@ -9039,6 +9048,7 @@ function renderPdMedProtocol(p){
     </div>`;
   }
   if(mp.reason)html+=`<div class="card-sub" style="margin-top:10px"><b style="color:var(--tx2)">เหตุผลที่สั่งใช้:</b> ${mp.reason}</div>`;
+  if(mp.updatedAt)html+=`<div class="card-sub" style="margin-top:4px">🕒 อัปเดตล่าสุด: ${mp.updatedAt}${mp.updatedBy?' โดย '+mp.updatedBy:''}</div>`;
   html+=`<div style="text-align:center;margin-top:10px"><button class="btn btn-s btn-sm" onclick="pdProtoEdit()">✏️ แก้ไขตาราง</button></div>`;
   body.innerHTML=html;
 }
