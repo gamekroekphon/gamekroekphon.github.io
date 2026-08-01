@@ -5577,16 +5577,8 @@ function renderPondDetail(id){
       <div id="pd-feed-hist-table"></div>`)}
     ${pdCard('med','💊 เวชภัณฑ์ที่ใช้ล่าสุด',
       `<div class="card-sub">ดึงจากหน้าสต็อกอัตโนมัติ ไม่ต้องออกไปดูหน้าประวัติสต็อก</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
-        <div class="chip-row" id="pd-med-hist-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-        <select class="fi" id="pd-med-cat" style="width:150px;margin-left:auto" onchange="setPdMedCat(this.value)">
-          <option value="">ทุกหมวดเวชภัณฑ์</option>
-          <option value="chemOral">💊 ยากิน</option>
-          <option value="chemWater">🧪 ยาลงน้ำ</option>
-          <option value="probioOral">🦠 จุลินทรีย์กิน</option>
-          <option value="probioWater">🧫 จุลินทรีย์ลงน้ำ</option>
-        </select>
-      </div>
+      <div class="chip-row" id="pd-med-hist-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
+      <div class="chip-row" id="pd-med-cat-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
       <div id="pd-med-hist-table"></div>`)}
     ${pdCard('size',`📏 ไซส์ล่าสุด${lat&&lat.date?` · ${fD(lat.date)}`:''}`,sizeHtml)}
     ${pdCard('bio','⚖️ เปรียบเทียบ Biomass 2 วิธี','<div id="pd-biocompare-card"></div>')}
@@ -8754,11 +8746,20 @@ function renderPdFeedHistory(p){
 }
 // ── เวชภัณฑ์ที่ใช้ลงบ่อนี้ — ดึงจาก getStockItemsForPond() ชุดเดียวกับที่ใช้คิดต้นทุนสะสม (ไม่สร้าง query คู่ขนาน) กรองเฉพาะหมวดยา/จุลินทรีย์ + เลือกช่วงวัน/หมวดได้เหมือนตัวกรองประวัติเบิกออกในหน้าสต็อก ──
 const PD_MED_CATS=['chemOral','chemWater','probioOral','probioWater','chem'];
+// ── ปุ่มเลือกหมวด: สีตรงกับ STOCK_CAT_CSS (ตัวเดียวกับ badge ในตาราง) ให้กดแล้วรู้ทันทีว่ากำลังกรองหมวดไหนอยู่ ──
+const PD_MED_CAT_OPTS=[['','ทุกหมวด',null],['chemOral','💊 ยากิน','#1D4ED8'],['chemWater','🧪 ยาลงน้ำ','#0369A1'],['probioOral','🦠 จุลินทรีย์กิน','#7E22CE'],['probioWater','🧫 จุลินทรีย์ลงน้ำ','#5B21B6']];
 let _pdMedPeriod=7,_pdMedCat='';
 function pdMedPeriodChips(period){
   return[[7,'7 วัน'],[14,'14 วัน'],[30,'30 วัน'],['all','ทั้งหมด']].map(([v,lbl])=>
     `<span class="trial-chip${period===v?' on':''}" onclick="setPdMedPeriod(${typeof v==='number'?v:`'${v}'`},this)">${lbl}</span>`
   ).join('');
+}
+function pdMedCatChips(cat){
+  return PD_MED_CAT_OPTS.map(([v,lbl,color])=>{
+    const on=cat===v;
+    const style=on&&color?` style="background:${color};border-color:${color};color:#fff"`:'';
+    return `<span class="trial-chip${on?' on':''}"${style} onclick="setPdMedCat('${v}')">${lbl}</span>`;
+  }).join('');
 }
 function setPdMedPeriod(v,btn){_pdMedPeriod=v;document.querySelectorAll('#pd-med-hist-chips .trial-chip').forEach(el=>el.classList.remove('on'));btn.classList.add('on');renderPdMedHistory(pond(_pdCurPondId));}
 function setPdMedCat(v){_pdMedCat=v;renderPdMedHistory(pond(_pdCurPondId));}
@@ -8766,13 +8767,14 @@ function renderPdMedHistory(p){
   const tbl=document.getElementById('pd-med-hist-table');if(!tbl||!p)return;
   const chipsEl=document.getElementById('pd-med-hist-chips');
   if(chipsEl)chipsEl.innerHTML=pdMedPeriodChips(_pdMedPeriod);
-  const catEl=document.getElementById('pd-med-cat');if(catEl)catEl.value=_pdMedCat;
+  const catChipsEl=document.getElementById('pd-med-cat-chips');
+  if(catChipsEl)catChipsEl.innerHTML=pdMedCatChips(_pdMedCat);
   const from=_pdMedPeriod==='all'?(p.startDate||'2000-01-01'):ymdLocal(addDaysLocal(new Date(today()+'T00:00:00'),-_pdMedPeriod));
   let items=getStockItemsForPond(p.id,from,today()).filter(i=>PD_MED_CATS.includes(i.category));
   if(_pdMedCat)items=items.filter(i=>i.category===_pdMedCat);
   if(!items.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:16px;font-style:italic">ยังไม่มีการใช้เวชภัณฑ์ตามตัวกรองนี้</p>';return;}
   tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>รายการ</th><th>หมวด</th><th style="text-align:right">จำนวน</th></tr></thead><tbody>${
-    items.map(i=>`<tr><td>${fD(i.date)}</td><td>${i.name}</td><td><span class="badge b-info">${STOCK_CAT_LABEL[i.category]||i.category}</span></td><td style="text-align:right">${i.qty} ${i.unit}</td></tr>`).join('')
+    items.map(i=>`<tr><td>${fD(i.date)}</td><td>${i.name}</td><td><span class="badge ${STOCK_CAT_CSS[i.category]||''}">${STOCK_CAT_LABEL[i.category]||i.category}</span></td><td style="text-align:right">${i.qty} ${i.unit}</td></tr>`).join('')
   }</tbody></table></div>`;
 }
 
