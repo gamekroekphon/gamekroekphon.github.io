@@ -8827,7 +8827,7 @@ function renderPdMedHistory(p){
 // แก้ปัญหา "สั่งยาแล้วลืม" — p.medProtocol เก็บลำดับ "รอบ" (แต่ละรอบ = ชุดเวชภัณฑ์หลายตัว + จำนวนวัน)
 // เดินหน้าอัตโนมัติทุกครั้งที่เปิดแอป (medProtocolAdvance) ไม่ต้องมี cron ฝั่งเซิร์ฟเวอร์ — ถ้าตั้งวนซ้ำ (loop) จะย้อนกลับรอบแรกเองตอนจบรอบสุดท้าย
 // ถ้าไม่วนซ้ำและไม่มีรอบถัดไป → curIdx ชี้เกินท้าย array (sentinel "จบตารางแล้ว") ต้องรอพี่มาตัดสินใจ (เพิ่มรอบ/วนกลับ/หยุด)
-const MED_PROTOCOL_CATS=['chemOral','chemWater','probioOral','probioWater'];
+const MED_PROTOCOL_CATS=['chemOral','chemWater','probioOral','probioWater','lime'];
 function medProtocolAdvance(p){
   const mp=p.medProtocol;
   if(!mp||!mp.active||!mp.rounds||!mp.rounds.length)return false;
