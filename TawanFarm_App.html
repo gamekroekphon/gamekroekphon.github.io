@@ -261,6 +261,13 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .pd-gauge-wrap{position:relative;height:62px}
 .pd-gauge-val{position:absolute;bottom:0;left:0;right:0;font-size:15px;font-weight:700;color:var(--tx)}
 .pd-gauge-st{font-size:var(--fs95);margin-top:2px;font-weight:600}
+/* ── เกจครึ่งวงกลมด้วย CSS ล้วน (conic-gradient) แทน Chart.js doughnut — ทำงานเหมือนเดิมทุกประการแต่ไม่ต้องสร้าง Chart instance
+   (เดิม 4 เกจ = 4 Chart.js instance ต่อการเปิดหน้าบ่อ 1 ครั้ง วัดจริงกินเวลา ~59ms หรือ 65% ของเวลาทั้งหมด บนมือถือช้ากว่านี้มาก ทำให้รู้สึก "ค้าง")
+   เจาะรูตรงกลางด้วยวงกลมทึบสีพื้นการ์ดทับ (ไม่ใช้ CSS mask เพราะ mask+radial-gradient render ไม่ขึ้นในเบราว์เซอร์บางตัว/บาง WebView บนมือถือ — เทคนิคนี้ทำงานได้ทุกเบราว์เซอร์) ── */
+.pd-gauge-arc-box{position:relative;width:74%;max-width:100px;aspect-ratio:2/1;overflow:hidden;margin:0 auto}
+.pd-gauge-arc-box::before{content:'';position:absolute;left:0;top:0;width:100%;aspect-ratio:1/1;border-radius:50%;
+  background:conic-gradient(from 270deg,var(--col) 0%,var(--col) calc(var(--pct)*0.5%),var(--trk) calc(var(--pct)*0.5%),var(--trk) 50%,transparent 50%);}
+.pd-gauge-arc-box::after{content:'';position:absolute;left:14%;top:28%;width:72%;aspect-ratio:1/1;border-radius:50%;background:var(--sf);}
 @media(max-width:480px){.pd-gauges{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .pd-chart-card{margin-top:12px}
 .pd-chart-wrap{height:200px;margin-top:6px}
@@ -5858,12 +5865,8 @@ function renderCropBenchmark(p){
 }
 // ══════ เฟส 2 (ดีไซน์ใหม่พี่แพรว): เกจค่าน้ำ + กราฟรายบ่อ ══════
 const PD_GAUGE_RANGE={phM:[6.5,9.5],doM:[0,10],nh4:[0,1],no2:[0,5],tM:[20,38]};
-let _pdGaugeCharts={};
-function pdBustGauges(){Object.values(_pdGaugeCharts).forEach(c=>c&&c.destroy());_pdGaugeCharts={};}
 function renderPdGauges(p,last){
   const wrap=document.getElementById('pd-gauges');if(!wrap)return;
-  pdBustGauges();
-  if(typeof Chart==='undefined'){wrap.innerHTML='';return;}
   const thirdKey=(last&&last.nh4!=null&&last.nh4!=='')?'nh4':'no2';
   const thirdLbl=thirdKey==='nh4'?'แอมโมเนีย':'ไนไตรท์';
   const items=[
@@ -5872,23 +5875,24 @@ function renderPdGauges(p,last){
     {lbl:thirdLbl,key:thirdKey,id:'pdg3'},
     {lbl:'อุณหภูมิเช้า',key:'tM',id:'pdg4'}
   ];
-  wrap.innerHTML=items.map(it=>`<div class="pd-gauge">
-    <div class="pd-gauge-lab">${it.lbl}</div>
-    <div class="pd-gauge-wrap"><canvas id="${it.id}"></canvas><div class="pd-gauge-val" id="${it.id}v">–</div></div>
-    <div class="pd-gauge-st" id="${it.id}s"></div>
-  </div>`).join('');
-  items.forEach(it=>{
+  // ── เดิมแต่ละเกจสร้าง Chart.js doughnut instance (4 อัน = ~59ms ทุกครั้งที่เปิดหน้าบ่อ) เปลี่ยนเป็น CSS conic-gradient ล้วน ไม่ต้องพึ่ง JS library ──
+  wrap.innerHTML=items.map(it=>{
     const v=last?last[it.key]:null;
     const has=v!=null&&v!=='';
     const rng=PD_GAUGE_RANGE[it.key];
     const cls=has?classifyOv(it.key,parseFloat(v)):'na';
     const col=cls==='danger'?'#e5533c':cls==='warn'?'#f0a83a':cls==='ok'?'#2f8f5b':'#d7ded8';
     const pct=has&&rng?Math.max(2,Math.min(98,((parseFloat(v)-rng[0])/(rng[1]-rng[0]))*100)):0;
-    const canvas=document.getElementById(it.id);
-    if(canvas)_pdGaugeCharts[it.id]=new Chart(canvas,{type:'doughnut',data:{datasets:[{data:[pct,100-pct],backgroundColor:[col,'#e7ece6'],borderWidth:0}]},options:{rotation:-90,circumference:180,cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:false}}}});
-    const vEl=document.getElementById(it.id+'v');if(vEl)vEl.textContent=has?v:'–';
-    const sEl=document.getElementById(it.id+'s');if(sEl){sEl.textContent=!has?'ไม่มีข้อมูล':(cls==='ok'?'อยู่ในเกณฑ์':'เกินเกณฑ์');sEl.style.color=col;}
-  });
+    const stTxt=!has?'ไม่มีข้อมูล':(cls==='ok'?'อยู่ในเกณฑ์':'เกินเกณฑ์');
+    return`<div class="pd-gauge">
+      <div class="pd-gauge-lab">${it.lbl}</div>
+      <div class="pd-gauge-wrap">
+        <div class="pd-gauge-arc-box" style="--pct:${pct};--col:${col};--trk:#e7ece6"></div>
+        <div class="pd-gauge-val">${has?v:'–'}</div>
+      </div>
+      <div class="pd-gauge-st" style="color:${col}">${stTxt}</div>
+    </div>`;
+  }).join('');
 }
 function pdWeekBuckets(p){
   const start=p.startDate;if(!start)return[];
