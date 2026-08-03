@@ -5561,25 +5561,33 @@ function renderPondDetail(id){
       pdCatItems[cat][key].total+=it.qty*it.unitPrice;
     });
     const pdCostTotal=pdFryCost+pdFeedCost+pdStockItems.reduce((s,i)=>s+i.qty*i.unitPrice,0)+pdLaborCost+pdElecCost+pdSharedCost;
-    const pdCostCatRow=(key,lbl,val)=>{
+    // ── รายละเอียดเสริม 4 หมวด (พี่ขอ): อาหาร=กระสอบ+กก., ลูกกุ้ง=จำนวนตัว+ราคา/ตัว, ค่าแรง/ค่าไฟ=จำนวนวัน+เฉลี่ย/วัน — ไม่สร้างคำนวณคู่ขนาน ใช้ตัวเลขจริงจาก feedLog/pRelease/age เดียวกับที่การ์ดอื่นใช้อยู่แล้ว ──
+    const pdFeedTotalKg=feedLog.reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0);
+    const pdFeedDetail=pdFeedTotalKg>0?`<div class="ceo-cat-item-row" style="border-bottom:none"><span>รวม <b>${Math.round(pdFeedTotalKg).toLocaleString()} กก.</b></span><span>≈ <b>${Math.round(pdFeedTotalKg/25).toLocaleString()} กระสอบ</b></span></div>`:'';
+    const pdFryPieces=pRelease(p);
+    const pdFryPerPiece=pdFryPieces>0&&pdFryCost>0?pdFryCost/pdFryPieces:null;
+    const pdFryDetail=pdFryPieces>0?`<div class="ceo-cat-item-row" style="border-bottom:none"><span><b>${pdFryPieces.toLocaleString()} ตัว</b></span><span>${pdFryPerPiece!=null?'× ฿'+pdFryPerPiece.toFixed(2)+'/ตัว':'-'}</span></div>`:'';
+    const pdLaborElecDetail=(val)=>age>0?`<div class="ceo-cat-item-row" style="border-bottom:none"><span>เลี้ยงมาแล้ว <b>${age} วัน</b></span><span>เฉลี่ย <b>฿${Math.round(val/age).toLocaleString()}/วัน</b></span></div>`:'';
+    const pdCostCatRow=(key,lbl,val,detailHtml)=>{
       const items=Object.values(pdCatItems[key]||{});
-      const hasItems=items.length>0;
+      const hasDetail=!!detailHtml;
+      const hasItems=items.length>0||hasDetail;
       return`<div class="ceo-item-row${hasItems?' ceo-cat-row':''}"${hasItems?` onclick="pdToggleCatItems('${key}')"`:''}>
         <span class="ceo-cat-dot" style="background:${CEO_CAT_DOT[key]||'var(--tx3)'}"></span>
         <div class="ceo-item-main"><div class="ceo-item-name">${lbl}${hasItems?' <span class="ceo-cat-caret" id="pd-cat-caret-'+key+'">▾</span>':''}</div></div>
         <span class="ceo-item-val">${ceoMoney(val)}</span>
-      </div>${hasItems?`<div class="ceo-cat-items" id="pd-cat-items-${key}">${items.map(it=>
+      </div>${hasItems?`<div class="ceo-cat-items" id="pd-cat-items-${key}">${hasDetail?detailHtml:items.map(it=>
         `<div class="ceo-cat-item-row"><span>${it.name}</span><span>${it.qty} ${it.unit} · ${ceoMoney(it.total)}</span></div>`
       ).join('')}</div>`:''}`;
     };
     const pdCatOrder=['chemOral','chemWater','probioOral','probioWater','lime','equip'];
-    const pdCatRowsHtml=pdCostCatRow('feed','อาหารกุ้ง',pdFeedCost)
+    const pdCatRowsHtml=pdCostCatRow('feed','อาหารกุ้ง',pdFeedCost,pdFeedDetail)
       +pdCatOrder.map(k=>pdCostCatRow(k,STOCK_CAT_LABEL[k],pdCatSums[k]||0)).join('')
       +(pdCatSums.other?pdCostCatRow('other','อื่นๆ (เดิม)',pdCatSums.other):'')
       +pdCostCatRow('shared','อุปกรณ์นอก (แชร์)',pdSharedCost)
-      +pdCostCatRow('fry','ลูกกุ้ง',pdFryCost)
-      +pdCostCatRow('labor','ค่าแรง',pdLaborCost)
-      +pdCostCatRow('elec','ค่าไฟ',pdElecCost);
+      +pdCostCatRow('fry','ลูกกุ้ง',pdFryCost,pdFryDetail)
+      +pdCostCatRow('labor','ค่าแรง',pdLaborCost,pdLaborElecDetail(pdLaborCost))
+      +pdCostCatRow('elec','ค่าไฟ',pdElecCost,pdLaborElecDetail(pdElecCost));
     // ── ประมาณต้นทุนบาท/กก. ณ วันนี้ = ต้นทุนสะสมทั้งหมด ÷ น้ำหนักกุ้งที่มีตอนนี้ (biomass ประเมิน, ตัวเดียวกับที่ใช้ใน kpiHero) — เป็นค่าประมาณระหว่างเลี้ยง ไม่ใช่ต้นทุน/กก. สุดท้ายตอนปิดรอบ (คำนวณจากน้ำหนักจับจริง คนละค่ากันโดยตั้งใจ) ──
     const pdCostPerKg=(biomass&&biomass>0)?pdCostTotal/biomass:null;
     costCardHtml=pdCard('cost',
