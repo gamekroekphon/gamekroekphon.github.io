@@ -793,6 +793,18 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .ph-meta b{color:var(--tx);font-size:12.5px}
 .ph-sub{font-size:var(--fs11);color:var(--tx3);margin-top:5px;line-height:1.5}
 .ph-cal-t{font-size:12px;font-weight:700;color:var(--tx2);margin:14px 0 7px;padding-top:12px;border-top:1px solid var(--bd)}
+/* ── กล่องลูกศรปรับเกณฑ์พาเชียล "ลองดู" (ไม่บันทึกถาวร) ── */
+.tgt-box{background:var(--pl);border:1.5px solid var(--p);border-radius:12px;padding:11px 13px;margin-bottom:12px}
+.tgt-lbl{font-size:var(--fs11);color:var(--pd);font-weight:700;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tgt-row{display:flex;align-items:center;gap:10px}
+.tgt-btn{width:38px;height:38px;flex:none;border-radius:10px;border:1.5px solid var(--p);background:var(--sf);color:var(--p);font-size:19px;font-weight:800;cursor:pointer;display:grid;place-items:center;line-height:1;transition:all .12s}
+.tgt-btn:hover:not(:disabled){background:var(--p);color:#fff}
+.tgt-btn:disabled{opacity:.3;cursor:not-allowed}
+.tgt-val{flex:1;text-align:center}
+.tgt-num{font-size:23px;font-weight:800;color:var(--p);line-height:1.15;font-variant-numeric:tabular-nums}
+.tgt-unit{font-size:var(--fs105);color:var(--tx3);font-weight:600}
+.tgt-hint{font-size:var(--fs10);color:var(--tx3);text-align:center;margin-top:7px;line-height:1.5}
+.tgt-reset{font-size:var(--fs10);color:var(--p);cursor:pointer;text-decoration:underline;font-weight:700}
 /* ── ตารางการลงเวชภัณฑ์ (หมุนเวียนหลายรอบ) — เส้น timeline แนวตั้ง ── */
 .mprot-sched{position:relative;padding-left:24px}
 .mprot-sched::before{content:'';position:absolute;left:8px;top:4px;bottom:4px;width:2px;background:var(--bd)}
@@ -1499,7 +1511,8 @@ body.role-ceo .main{max-width:640px}
   </div>
   <div class="card" style="margin-bottom:14px;display:none" id="ov-partial-card">
     <div class="card-t">🗓️ ปฏิทินจับกุ้ง &amp; พาเชียล</div>
-    <div class="card-sub">เตือนเมื่อผลผลิตถึง 4,000 กก./ไร่ — บ่อเริ่มแน่น ควรทยอยจับออก · คาดการณ์วันที่ + ไซส์ที่จะได้ ณ วันนั้น จากอัตราโตล่าสุด (PDG)</div>
+    <div class="card-sub">เตือนเมื่อผลผลิตถึงเกณฑ์ — บ่อเริ่มแน่น ควรทยอยจับออก · คาดการณ์วันที่ + ไซส์ที่จะได้ ณ วันนั้น จากอัตราโตล่าสุด (PDG)</div>
+    <div id="ov-partial-tgt"></div>
     <div id="ov-partial-ready"></div>
     <div id="ov-partial-list"></div>
     <div id="ov-partial-cal"></div>
@@ -7195,21 +7208,31 @@ function renderOvStockWarn(){
 
 // ── ปฏิทินจับกุ้ง / เตือนพาเชียล ──────────────────────────────────────────
 // เกณฑ์: ผลผลิตในบ่อถึง 4,000 กก./ไร่ = บ่อเริ่มแน่น ควรทยอยจับออก (พาเชียล) เป็นการเตือนครั้งแรก
-const PARTIAL_YIELD_TARGET=4000; // กก./ไร่
+const PARTIAL_YIELD_TARGET=4000; // กก./ไร่ — ค่าเริ่มต้น/ค่ามาตรฐานของฟาร์ม
 const PARTIAL_CAL_DAYS=60;       // ช่วงที่ปฏิทินมองไปข้างหน้า
+// ── เกณฑ์ที่ใช้คำนวณจริง ณ ตอนนี้ — ปรับด้วยลูกศร ◀ ▶ ได้เพื่อ "ลองดู" ว่าถ้าจับที่เกณฑ์อื่นจะได้ไซส์ไหน/อีกกี่วัน
+//    ตั้งใจเก็บเป็นตัวแปรใน memory เท่านั้น ไม่บันทึกลง D/Firebase — ปิดแอปหรือรีเฟรชแล้วกลับเป็น 4,000 เสมอ
+//    (พี่ยืนยันว่าต้องการให้เป็นแค่ตัวลองดู ไม่ใช่การตั้งค่าถาวร กันเผลอปรับแล้วค้างจนคนอื่นเห็นเลขผิด) ──
+let _phTarget=PARTIAL_YIELD_TARGET;
+const PH_TARGET_MIN=2000,PH_TARGET_MAX=6000,PH_TARGET_STEP=250;
+function phStepTarget(n){
+  _phTarget=Math.max(PH_TARGET_MIN,Math.min(PH_TARGET_MAX,_phTarget+n));
+  renderOvPartialHarvest();
+}
+function phResetTarget(){_phTarget=PARTIAL_YIELD_TARGET;renderOvPartialHarvest();}
 function partialHarvestInfo(p){
   if(!p.size||p.size<=0)return null;               // ไม่รู้ขนาดบ่อ (ไร่) คิด yield/ไร่ ไม่ได้
   const bio=getLatestBiomass(p);
   if(bio==null||bio<=0)return null;                // ยังไม่มีผลสุ่ม (ต้องมี ABW + อัตรารอด)
   const yr=bio/p.size;
-  const pct=Math.min(100,yr/PARTIAL_YIELD_TARGET*100);
+  const pct=Math.min(100,yr/_phTarget*100);
   const s=p.samples||[],lat=s[s.length-1];
-  if(yr>=PARTIAL_YIELD_TARGET)return{ready:true,yr,pct:100,bio,abw:lat?lat.abw:null};
+  if(yr>=_phTarget)return{ready:true,yr,pct:100,bio,abw:lat?lat.abw:null};
   const pdg=parseFloat(getPDG(s));
   // ── ต้องสุ่มอย่างน้อย 2 ครั้งถึงจะรู้อัตราโต (PDG) — ไม่งั้นคาดการณ์วันไม่ได้ ──
   if(!lat||!lat.abw||!pdg||pdg<=0)return{ready:false,yr,pct,bio,abw:lat?lat.abw:null,noProj:true};
   // ── Biomass โตตามสัดส่วน ABW (สมมติอัตรารอดคงที่) → หา ABW ที่ทำให้ yield แตะเกณฑ์ ──
-  const targetAbw=lat.abw*(PARTIAL_YIELD_TARGET*p.size)/bio;
+  const targetAbw=lat.abw*(_phTarget*p.size)/bio;
   // ── นับวันจาก ABW ประเมิน "ณ วันนี้" (= ABW ตอนสุ่ม + PDG × วันที่ผ่านมาตั้งแต่สุ่ม) ไม่ใช่ ABW ตอนสุ่มตรงๆ ไม่งั้นวันที่คาดการณ์จะเลื่อนออกไปเท่ากับอายุของผลสุ่ม ──
   const sinceSample=lat.date?Math.max(0,dDiff(lat.date,today())):0;
   const abwNow=lat.abw+pdg*sinceSample;
@@ -7222,12 +7245,23 @@ function partialHarvestInfo(p){
 function fmtShrimpSize(g){return g>0?`${g.toFixed(1)} ก. (${Math.round(1000/g)} ตัว/กก.)`:'-';}
 function renderOvPartialHarvest(){
   const card=document.getElementById('ov-partial-card');if(!card)return;
-  const readyEl=document.getElementById('ov-partial-ready'),listEl=document.getElementById('ov-partial-list'),calEl=document.getElementById('ov-partial-cal');
+  const tgtEl=document.getElementById('ov-partial-tgt'),readyEl=document.getElementById('ov-partial-ready'),listEl=document.getElementById('ov-partial-list'),calEl=document.getElementById('ov-partial-cal');
   const rows=[];
   wqfeedActivePonds().forEach(p=>{const info=partialHarvestInfo(p);if(info)rows.push({p,info});});
   if(!rows.length){card.style.display='none';return;}
   card.style.display='';
   const fmtYr=v=>Math.round(v).toLocaleString();
+
+  // ── กล่องลูกศรปรับเกณฑ์ "ลองดู" (ไม่บันทึกถาวร) ──
+  if(tgtEl)tgtEl.innerHTML=`<div class="tgt-box">
+    <div class="tgt-lbl"><span>🎯 เกณฑ์พาเชียล (ลองดู — ไม่บันทึก)</span>${_phTarget!==PARTIAL_YIELD_TARGET?`<span class="tgt-reset" onclick="phResetTarget()">คืนค่า ${PARTIAL_YIELD_TARGET.toLocaleString()}</span>`:''}</div>
+    <div class="tgt-row">
+      <button class="tgt-btn" onclick="phStepTarget(-${PH_TARGET_STEP})"${_phTarget<=PH_TARGET_MIN?' disabled':''}>◀</button>
+      <div class="tgt-val"><div class="tgt-num">${_phTarget.toLocaleString()}</div><div class="tgt-unit">กก./ไร่ (${(_phTarget/1000).toFixed(1)} ตัน/ไร่)</div></div>
+      <button class="tgt-btn" onclick="phStepTarget(${PH_TARGET_STEP})"${_phTarget>=PH_TARGET_MAX?' disabled':''}>▶</button>
+    </div>
+    <div class="tgt-hint">เลื่อนเพื่อดูว่าถ้าจับที่เกณฑ์นี้ กุ้งจะได้ไซส์เท่าไร และอีกกี่วัน — เป็นแค่ตัวลองดู ปิด/รีเฟรชแอปแล้วกลับเป็น ${PARTIAL_YIELD_TARGET.toLocaleString()} เสมอ</div>
+  </div>`;
 
   // ── 1) บ่อที่ถึงเกณฑ์แล้ว ──
   const ready=rows.filter(r=>r.info.ready).sort((a,b)=>b.info.yr-a.info.yr);
@@ -7235,7 +7269,7 @@ function renderOvPartialHarvest(){
     <div class="ph-row ready">
       <div class="ph-top"><span class="ph-nm" onclick="openPondDetail('${p.id}')">บ่อ ${p.name} ›</span><span class="badge b-danger">🚨 พาเชียลได้แล้ว</span></div>
       <div class="ph-bar"><span style="width:100%;background:var(--d)"></span></div>
-      <div class="ph-meta"><span><b style="color:var(--d)">${fmtYr(info.yr)}</b> กก./ไร่</span><span>เกณฑ์ ${PARTIAL_YIELD_TARGET.toLocaleString()}</span></div>
+      <div class="ph-meta"><span><b style="color:var(--d)">${fmtYr(info.yr)}</b> กก./ไร่</span><span>เกณฑ์ ${_phTarget.toLocaleString()}</span></div>
       <div class="ph-sub">บ่อ ${p.size} ไร่ · Biomass ${fmtYr(info.bio)} กก.${info.abw?' · ไซส์ตอนนี้ '+fmtShrimpSize(info.abw):''}</div>
     </div>`).join('');
 
