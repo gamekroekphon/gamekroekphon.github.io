@@ -275,6 +275,31 @@ body.role-admin .sn-link.admin-only{display:block!important}
   background:conic-gradient(from 270deg,var(--col) 0%,var(--col) calc(var(--pct)*0.5%),var(--trk) calc(var(--pct)*0.5%),var(--trk) 50%,transparent 50%);}
 .pd-gauge-arc-box::after{content:'';position:absolute;left:14%;top:28%;width:72%;aspect-ratio:1/1;border-radius:50%;background:var(--sf);}
 @media(max-width:480px){.pd-gauges{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* ── ประวัติน้ำ/อาหาร บนมือถือ: การ์ดแยกทีละวันแทนตารางเลื่อนซ้าย-ขวา (เดิมปุ่ม ✏️/🗑️ ติดกับวันที่จนกดพลาด) — จอคอมยังเป็นตารางเดิมทุกจุด ── */
+.pd-hist-cards{display:none}
+@media(max-width:600px){
+  .pd-hist-tblwrap{display:none}
+  .pd-hist-cards{display:block}
+}
+.pd-rec-card{border:1px solid var(--bd);border-radius:10px;padding:9px 11px;margin-bottom:8px;background:var(--sf2)}
+.pd-rec-card:last-child{margin-bottom:0}
+.pd-rec-card.hi{border-color:var(--p);background:var(--pl)}
+.pd-rec-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px;padding-bottom:7px;border-bottom:1px dashed var(--bd)}
+.pd-rec-date{display:flex;flex-direction:column;gap:1px}
+.pd-rec-date b{font-size:13px;color:var(--tx)}
+.pd-rec-date span{font-size:var(--fs10);color:var(--tx3)}
+.pd-rec-actions{display:flex;gap:5px;flex:none}
+.pd-rec-actions button{width:28px;height:28px;border-radius:7px;border:1px solid var(--bd);background:var(--sf);font-size:12px;display:grid;place-items:center;cursor:pointer;padding:0}
+.pd-rec-actions button.del{border-color:var(--d);color:var(--d)}
+.pd-rec-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px}
+.pd-rec-item{display:flex;justify-content:space-between;font-size:11.5px}
+.pd-rec-item .k{color:var(--tx3)}
+.pd-rec-item .v{font-weight:700;color:var(--tx)}
+.pd-rec-item .v.warn{color:var(--w)}
+.pd-rec-item .v.danger{color:var(--d)}
+.pd-rec-note{font-size:var(--fs11);color:var(--tx2);margin-top:7px;padding-top:7px;border-top:1px dashed var(--bd);line-height:1.5}
+.pd-rec-feedrow{display:flex;justify-content:space-between;font-size:12px}
+.pd-rec-feedrow b{color:var(--tx)}
 .pd-chart-card{margin-top:12px}
 .pd-chart-wrap{height:200px;margin-top:6px}
 /* ── เฟส 4 (พี่แพรว): ปรับสีหน้า P&L ให้ตรงธีมเขียว-มะนาวใหม่ ── */
@@ -8795,13 +8820,31 @@ function renderPdWqHistory(p){
   if(_pdWqPeriod!=='all')rec=rec.slice(0,_pdWqPeriod);
   if(!rec.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return;}
   const show=PARAMS.slice(0,8);
-  tbl.innerHTML=`<div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวาเพื่อดูทุกค่า →</div><div style="overflow-x:auto"><table class="tbl" style="white-space:nowrap"><thead><tr><th></th><th>วันที่</th><th>อายุ</th>${show.map(pm=>`<th>${pm.lbl}</th>`).join('')}<th>หมายเหตุ</th></tr></thead><tbody>${
+  const tableHtml=`<div class="pd-hist-tblwrap"><div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวาเพื่อดูทุกค่า →</div><div style="overflow-x:auto"><table class="tbl" style="white-space:nowrap"><thead><tr><th></th><th>วันที่</th><th>อายุ</th>${show.map(pm=>`<th>${pm.lbl}</th>`).join('')}<th>หมายเหตุ</th></tr></thead><tbody>${
     rec.map((r,i)=>{
       const ageCalc=p.startDate?dDiff(p.startDate,r.date):r.age;
       return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdEditWQ('${p.id}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdDeleteWQ('${p.id}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc}</td>${show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v,r);
         const cell=v===null||v===undefined?`<span style="color:var(--tx3);font-size:12px" title="ยังไม่ได้กรอก">–</span>`:`<span style="color:${sc(s)}">${v}</span>`;
         return`<td>${cell}</td>`;}).join('')}<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.notes||'<span style="color:var(--tx3);font-size:12px">–</span>'}</td></tr>`;
-    }).join('')}</tbody></table></div>`;
+    }).join('')}</tbody></table></div></div>`;
+  // ── มือถือ (≤600px): แสดงเป็นการ์ดแยกทีละวันแทนตารางเลื่อน กันปุ่ม ✏️/🗑️ ไปติดกับวันที่ (entry #146) ──
+  const cardsHtml=`<div class="pd-hist-cards">${rec.map((r,i)=>{
+    const ageCalc=p.startDate?dDiff(p.startDate,r.date):r.age;
+    const items=show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v,r);
+      const cls=s==='danger'?' danger':s==='warn'?' warn':'';
+      const vHtml=v===null||v===undefined?'<span class="k" style="font-weight:400">–</span>':`<span class="v${cls}">${v}${pm.unit||''}</span>`;
+      return`<div class="pd-rec-item"><span class="k">${pm.lbl}</span>${vHtml}</div>`;
+    }).join('');
+    return`<div class="pd-rec-card${i===0?' hi':''}">
+      <div class="pd-rec-top">
+        <div class="pd-rec-date"><b>${fD(r.date)}</b><span>อายุ ${ageCalc} วัน</span></div>
+        <div class="pd-rec-actions"><button onclick="pdEditWQ('${p.id}','${r.date}')" title="แก้ไข">✏️</button><button class="del" onclick="pdDeleteWQ('${p.id}','${r.date}')" title="ลบ">🗑️</button></div>
+      </div>
+      <div class="pd-rec-grid">${items}</div>
+      ${r.notes?`<div class="pd-rec-note">📝 ${r.notes}</div>`:''}
+    </div>`;
+  }).join('')}</div>`;
+  tbl.innerHTML=tableHtml+cardsHtml;
 }
 function pdEditFeed(pid,d){
   document.getElementById('tab-feed')?.click();
@@ -8831,11 +8874,24 @@ function renderPdFeedHistory(p){
   let rec=[...(p.feedLog||[])].reverse();
   if(_pdFeedPeriod!=='all')rec=rec.slice(0,_pdFeedPeriod);
   if(!rec.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return;}
-  tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ยี่ห้อ/เบอร์</th><th style="text-align:right">อาหาร (กก.)</th><th>หมายเหตุ</th></tr></thead><tbody>${
+  const tableHtml=`<div class="pd-hist-tblwrap"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ยี่ห้อ/เบอร์</th><th style="text-align:right">อาหาร (กก.)</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rec.map((r,i)=>{
       const ageCalc=p.startDate?dDiff(p.startDate,r.date):r.age;
       return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdEditFeed('${p.id}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdDeleteFeedEntry('${p.id}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc}</td><td>${r.feedBrand||'-'}</td><td style="text-align:right">${(r.totalFeed||0).toLocaleString()}</td><td style="font-size:12px;color:var(--tx2)">${r.notes||'-'}</td></tr>`;
-    }).join('')}</tbody></table></div>`;
+    }).join('')}</tbody></table></div></div>`;
+  // ── มือถือ (≤600px): แสดงเป็นการ์ดแยกทีละวันแทนตารางเลื่อน (entry #146) ──
+  const cardsHtml=`<div class="pd-hist-cards">${rec.map((r,i)=>{
+    const ageCalc=p.startDate?dDiff(p.startDate,r.date):r.age;
+    return`<div class="pd-rec-card${i===0?' hi':''}">
+      <div class="pd-rec-top">
+        <div class="pd-rec-date"><b>${fD(r.date)}</b><span>อายุ ${ageCalc} วัน</span></div>
+        <div class="pd-rec-actions"><button onclick="pdEditFeed('${p.id}','${r.date}')" title="แก้ไข">✏️</button><button class="del" onclick="pdDeleteFeedEntry('${p.id}','${r.date}')" title="ลบ">🗑️</button></div>
+      </div>
+      <div class="pd-rec-feedrow"><span>ยี่ห้อ/เบอร์: ${r.feedBrand||'-'}</span><b>${(r.totalFeed||0).toLocaleString()} กก.</b></div>
+      ${r.notes?`<div class="pd-rec-note">📝 ${r.notes}</div>`:''}
+    </div>`;
+  }).join('')}</div>`;
+  tbl.innerHTML=tableHtml+cardsHtml;
 }
 // ── เวชภัณฑ์ที่ใช้ลงบ่อนี้ — ดึงจาก getStockItemsForPond() ชุดเดียวกับที่ใช้คิดต้นทุนสะสม (ไม่สร้าง query คู่ขนาน) กรองเฉพาะหมวดยา/จุลินทรีย์ + เลือกช่วงวัน/หมวดได้เหมือนตัวกรองประวัติเบิกออกในหน้าสต็อก ──
 const PD_MED_CATS=['chemOral','chemWater','probioOral','probioWater','chem'];
