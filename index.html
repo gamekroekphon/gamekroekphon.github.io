@@ -85,19 +85,25 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 }
 .sn-logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;color:#fff;padding:0 6px 16px}
 .sn-mark{width:30px;height:30px;background:var(--sn-lime);border-radius:8px;display:grid;place-items:center;font-size:15px;flex-shrink:0}
-.sn-label{font-size:var(--fs10);letter-spacing:1px;color:#7fa38e;margin:12px 8px 6px}
+.sn-label{font-size:var(--fs10);letter-spacing:1.2px;color:#6b8f7b;margin:14px 8px 6px;font-weight:600}
 .sn-nav{display:flex;flex-direction:column;gap:2px}
-.sn-top,.sn-grp-btn{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;color:#c4d8ca;text-align:left;padding:9px 11px;border-radius:9px;font-family:inherit;font-size:13px;cursor:pointer}
-.sn-top:hover,.sn-grp-btn:hover{background:var(--sn-bg2)}
-.sn-top.on{background:var(--sn-lime);color:var(--sn-bg);font-weight:600}
-.sn-grp-btn.sn-has-active{color:var(--sn-lime);font-weight:600}
+/* ── เมนูหลัก: ใหญ่+หนา+สว่างขึ้นกว่าเมนูย่อยชัดเจน (เดิม 13px/#c4d8ca ใกล้เมนูย่อย 12px/#a9c3b0 เกินไป แยกไม่ออก)
+   ปุ่ม .sn-top/.sn-link ยังมีคลาส .tab/.tab-item ติดมาด้วย (ใช้ค้นหาข้ามหน้าใน goTabByName) ซึ่งมี rule ประกาศทีหลังสไตล์นี้และ specificity เท่ากัน (0,1,0)
+   ทำให้ font-size/weight/color ของ .tab/.tab-item ทับของเราแบบเงียบๆ — ต้อง scope ด้วย .side-nav (0,2,0) เพื่อชนะแน่นอนไม่ว่าจะประกาศลำดับไหน ── */
+.side-nav .sn-top,.side-nav .sn-grp-btn{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;color:#F2FAF2;text-align:left;padding:10px 11px;border-radius:9px;font-family:inherit;font-size:14.5px;font-weight:600;letter-spacing:.2px;cursor:pointer}
+.side-nav .sn-top:hover,.side-nav .sn-grp-btn:hover{background:var(--sn-bg2)}
+.side-nav .sn-top.on{background:var(--sn-lime);color:var(--sn-bg);font-weight:700}
+.side-nav .sn-grp-btn.open{background:var(--sn-bg2);box-shadow:inset 3px 0 0 var(--sn-lime)}
+.side-nav .sn-grp-btn.sn-has-active{color:var(--sn-lime)}
 .sn-caret{margin-left:auto;font-size:var(--fs9);transition:transform .15s}
 .sn-grp-btn.open .sn-caret{transform:rotate(180deg)}
-.sn-sub{max-height:0;overflow:hidden;transition:max-height .2s}
+.sn-sub{max-height:0;overflow:hidden;transition:max-height .2s;position:relative;margin:2px 0 6px}
 .sn-sub.open{max-height:600px}
-.sn-link{display:block;width:100%;background:none;border:none;text-align:left;padding:7px 11px 7px 34px;color:#a9c3b0;font-family:inherit;font-size:12px;border-radius:8px;cursor:pointer}
-.sn-link:hover{background:var(--sn-bg2);color:#fff}
-.sn-link.on{color:var(--sn-lime);font-weight:600}
+.sn-sub::before{content:'';position:absolute;left:20px;top:2px;bottom:2px;width:1.5px;background:#2f5f47;border-radius:2px}
+.side-nav .sn-link{display:block;width:100%;background:none;border:none;text-align:left;padding:6px 11px 6px 34px;color:#93b3a0;font-family:inherit;font-size:12px;font-weight:400;border-radius:8px;cursor:pointer;position:relative}
+.side-nav .sn-link:hover{background:var(--sn-bg2);color:#fff}
+.side-nav .sn-link.on{color:var(--sn-lime);font-weight:600}
+.sn-link.on::before{content:'';position:absolute;left:18px;top:7px;bottom:7px;width:3px;background:var(--sn-lime);border-radius:2px}
 body.role-admin .sn-link.admin-only{display:block!important}
 .sn-side-card{margin-top:auto;background:var(--sn-bg2);border-radius:12px;padding:11px;font-size:var(--fs11);color:#bcd3c3;margin-top:12px}
 .sn-side-card b{color:#fff}
