@@ -2464,11 +2464,11 @@ body.role-ceo .main{max-width:640px}
   <div class="card admin-only" style="border:2px dashed var(--wr);background:var(--sf2)">
     <div style="font-weight:700;color:var(--tx);margin-bottom:8px">🗃️ นำเข้าประวัติการเลี้ยงย้อนหลัง <span style="font-size:var(--fs11);color:var(--tx3);font-weight:400">(Admin เท่านั้น)</span></div>
     <div style="font-size:13px;color:var(--tx2);margin-bottom:10px">นำเข้าข้อมูลรอบเลี้ยง ปี 2565–2569 จากแผนลงลูกกุ้ง (219 รอบ / 27 บ่อ)<br>ระบบจะข้ามรอบที่มีอยู่แล้วโดยอัตโนมัติ (ไม่ทับข้อมูลปัจจุบัน)</div>
-    <button class="btn btn-p" onclick="seedHistoricalCrops()">📥 seed ประวัติการเลี้ยงย้อนหลัง</button>
+    <button class="btn btn-p" onclick="runSeedHistoricalCrops(this)">📥 seed ประวัติการเลี้ยงย้อนหลัง</button>
     <hr style="border:none;border-top:1px dashed var(--bd);margin:14px 0">
     <div style="font-weight:700;color:var(--tx);margin-bottom:8px">🦐 นำเข้าประวัติจับกุ้งย้อนหลัง ปี 60–69</div>
     <div style="font-size:13px;color:var(--tx2);margin-bottom:10px">นำเข้าบันทึกการจับกุ้งรายครั้ง 636 รายการ (ปี 2560–2569) เข้าแท็บ "🦐 จับกุ้ง" และรอบเลี้ยงที่ปิดแล้ว ปี 60–64 จำนวน 175 รอบ เข้าประวัติรอบเลี้ยง<br>ระบบจะข้ามรายการที่มีอยู่แล้วโดยอัตโนมัติ (ไม่ทับข้อมูลปัจจุบัน)</div>
-    <button class="btn btn-p" onclick="seedHarvestHistory()">📥 seed ประวัติจับกุ้ง ปี 60–69</button>
+    <button class="btn btn-p" onclick="runSeedHarvestHistory(this)">📥 seed ประวัติจับกุ้ง ปี 60–69</button>
     <hr style="border:none;border-top:1px dashed var(--bd);margin:14px 0">
     <div style="font-weight:700;color:var(--tx);margin-bottom:8px">🔄 แปลงชื่อบ่อ B.x → A.x</div>
     <div style="font-size:13px;color:var(--tx2);margin-bottom:10px">เปลี่ยนชื่อแสดงผลบ่อที่ยังใช้ชื่อ "B.1", "B.2", ... ให้เป็น "A.1", "A.2", ... ใน Firebase<br>ข้อมูลภายใน (id, log) ไม่เปลี่ยน — ทำได้ครั้งเดียวปลอดภัย</div>
@@ -13098,7 +13098,42 @@ async function fixA1Round3_2568(){
 }
 // ─── END เพิ่มรอบที่หาย A.1 ──────────────────────────────────────────────
 
+// ══════ โหลดไฟล์ seed แบบ lazy (เฉพาะตอนกดปุ่ม) ══════
+// เดิม seedHarvestHistory.js (314KB) + seedCropHistory.js (231KB) ถูกโหลดด้วย <script src> ทุกครั้งที่เปิดแอป
+// ทั้งที่ใช้แค่ตอน admin กดปุ่ม seed ครั้งเดียว — เบราว์เซอร์ต้องแกะ 545KB ทิ้งเปล่าทุกครั้ง (มือถือรุ่นกลาง-ล่างช้าชัดเจน)
+function lazyLoadScript(src){
+  return new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src=src;s.onload=()=>res();s.onerror=()=>rej(new Error('โหลดไฟล์ไม่สำเร็จ'));
+    document.head.appendChild(s);
+  });
+}
+async function runSeedHarvestHistory(btn){
+  if(typeof seedHarvestHistory==='function'){seedHarvestHistory();return;}
+  const old=btn.textContent;
+  btn.disabled=true;btn.textContent='⏳ กำลังโหลดข้อมูล...';
+  try{
+    await lazyLoadScript('seedHarvestHistory.js');
+    btn.disabled=false;btn.textContent=old;
+    if(typeof seedHarvestHistory==='function')seedHarvestHistory();
+    else alert('โหลดไฟล์แล้วแต่ไม่พบฟังก์ชัน seedHarvestHistory');
+  }catch(e){
+    btn.disabled=false;btn.textContent=old;
+    alert('โหลดไฟล์ข้อมูลไม่สำเร็จ: '+e.message);
+  }
+}
+// ── seedCropHistory.js ตอนนี้เป็นไฟล์ไม่สมบูรณ์ (ถูกตัดกลางคันที่บรรทัดสุดท้าย) JS จึง parse ไม่ผ่านทั้งไฟล์
+//    ทำให้ทั้ง HISTORICAL_CROPS และ seedHistoricalCrops() ไม่มีอยู่จริง — เดิมกดปุ่มแล้วเงียบ ไม่มีอะไรเกิดขึ้นและไม่มีข้อความบอก
+//    (ตัวข้อมูล HISTORICAL_CROPS ~10,000 บรรทัดยังอยู่ครบ ขาดแค่ท้ายฟังก์ชัน ถ้าจะซ่อมให้ใช้ได้ต้องเติมส่วนที่ขาดกลับ) ──
+async function runSeedHistoricalCrops(btn){
+  if(typeof seedHistoricalCrops==='function'){seedHistoricalCrops();return;}
+  const old=btn.textContent;
+  btn.disabled=true;btn.textContent='⏳ กำลังโหลดข้อมูล...';
+  try{await lazyLoadScript('seedCropHistory.js');}catch(e){}
+  btn.disabled=false;btn.textContent=old;
+  if(typeof seedHistoricalCrops==='function')seedHistoricalCrops();
+  else alert('⚠️ ใช้ปุ่มนี้ไม่ได้ตอนนี้\n\nไฟล์ข้อมูล seedCropHistory.js ไม่สมบูรณ์ (ถูกตัดกลางคัน) ทำให้โหลดเข้าระบบไม่ได้\nต้องซ่อมไฟล์ก่อนถึงจะใช้ปุ่มนี้ได้ — แจ้งผู้ดูแลระบบได้เลย');
+}
 </script>
-<script src="seedCropHistory.js"></script>
-<script src="seedHarvestHistory.js"></script></body>
+</body>
 </html>
