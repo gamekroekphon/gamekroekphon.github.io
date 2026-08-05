@@ -10530,6 +10530,8 @@ function renderRisk(d){
   document.getElementById('risk-recs').innerHTML=recs.length>0?recs.map(r=>`<div class="ai warn" style="margin-bottom:7px"><span>💡</span><div style="font-size:13px">${r.a}</div></div>`).join(''):'<p style="color:var(--ok);font-size:13px;padding:10px">✅ ไม่พบความเสี่ยงสูงใน 3 วัน</p>';
 }
 // ===== EXPORT =====
+// ── ปีเก่าสุด (พ.ศ.) ที่ dropdown "เลือกรอบที่ปิด" ในหน้า PDF ปิดบ่อจะแสดง — ข้อมูลจริงอัปเดตแค่ถึงปีนี้ ถ้าอัปเดตย้อนหลังเพิ่มค่อยขยับเลขนี้ลง ──
+const EX_HIST_MIN_YEAR_BE=2568;
 function initExport(){
   populateAll();
   onExPondChange();
@@ -10553,17 +10555,20 @@ function onExPondChange(){
   }
   const p=pond(pid);
   const hist=(p&&p.cropHistory)||[];
-  if(!hist.length){
+  // ── dropdown "เลือกรอบที่ปิด" โชว์เฉพาะปี ≥ EX_HIST_MIN_YEAR_BE (ข้อมูลจริงอัปเดตถึงแค่ปีนี้ — พี่แจ้งว่าถ้าอัปเดตข้อมูลย้อนหลังเพิ่มจะบอกให้ขยับค่านี้)
+  //    ยังคง value="${i}" เป็น index เดิมใน p.cropHistory เสมอ (getCloseSummary/genPDF ฯลฯ อ้างอิง index นี้ตรงๆ) แค่ไม่ list ตัวเลือกที่เก่ากว่าเกณฑ์ ──
+  const visIdx=hist.map((c,i)=>({c,i})).filter(({c})=>histRecYear(c)>=EX_HIST_MIN_YEAR_BE);
+  if(!hist.length||!visIdx.length){
     if(cropWrap)cropWrap.style.display='none';
-    if(exInfo)exInfo.innerHTML='<p style="color:var(--tx3);font-size:13px">บ่อนี้ยังไม่มีประวัติปิดบ่อ</p>';
+    if(exInfo)exInfo.innerHTML=`<p style="color:var(--tx3);font-size:13px">${hist.length?'บ่อนี้มีประวัติปิดบ่อเฉพาะก่อนปี '+EX_HIST_MIN_YEAR_BE+' (ยังไม่แสดง)':'บ่อนี้ยังไม่มีประวัติปิดบ่อ'}</p>`;
     if(chartWrap)chartWrap.style.display='none';
     renderExChartToggles();
     return;
   }
   if(cropWrap)cropWrap.style.display='';
   if(cropSel){
-    cropSel.innerHTML=hist.map((c,i)=>`<option value="${i}">รอบที่ ${c.cropNum}/${yearBE(c.cropYear)} (ปิด ${c.closeDate?fD(c.closeDate):'-'})</option>`).join('');
-    cropSel.value=String(hist.length-1);
+    cropSel.innerHTML=visIdx.map(({c,i})=>`<option value="${i}">รอบที่ ${c.cropNum}/${yearBE(c.cropYear)} (ปิด ${c.closeDate?fD(c.closeDate):'-'})</option>`).join('');
+    cropSel.value=String(visIdx[visIdx.length-1].i);
   }
   renderExPreview();
 }
