@@ -2551,6 +2551,12 @@ body.role-ceo .main{max-width:640px}
     <div style="font-size:13px;color:var(--tx2);margin-bottom:10px">เติมวันลง 24 พ.ย.68 / วันจับ 20 ม.ค.69 / ไซส์ 55 ตัว เข้าประวัติรอบเลี้ยง (ปิดแล้ว) — ข้อมูลผลผลิต/ต้นทุนที่เหลือกรอกทีหลังผ่านปุ่มแก้ไข (ดินสอ)</div>
     <button class="btn" onclick="fixA1Round3_2568()" style="background:#d97706;color:#fff">➕ เพิ่มรอบ A.1 #3/2568</button>
     <span id="fixA1r3-msg" style="font-size:12px;margin-left:10px;color:var(--ok)"></span>
+    <hr style="border:none;border-top:1px dashed var(--bd);margin:14px 0">
+    <div style="font-weight:700;color:var(--tx);margin-bottom:8px">🔴 ลบประวัติรอบเลี้ยงเก่ากว่าปี 2568 ทิ้งถาวร</div>
+    <div style="font-size:13px;color:var(--tx2);margin-bottom:10px">ลบข้อมูลรอบเลี้ยง (และ P&L รายบ่อ/รายรอบที่ผูกกัน) ของปี 2567 ย้อนหลังลงไปทั้งหมด เหลือแค่ปี 2568 เป็นต้นไป — <b>กู้คืนไม่ได้</b> (ระบบดาวน์โหลดไฟล์สำรองให้อัตโนมัติก่อนลบทุกครั้ง) ไม่กระทบข้อมูลค่าไฟฟ้า</div>
+    <button class="btn" onclick="if(confirm(previewCropHistoryCleanup().removeList.length+' รอบเก่ากว่าปี 2568 พร้อมลบ — ดูรายละเอียดได้ที่ console (F12) ก่อนกดยืนยันด้านล่าง'))console.log(previewCropHistoryCleanup())" style="background:var(--in);color:#fff">👁️ ดูตัวอย่างก่อนลบ (ไม่ลบจริง)</button>
+    <button class="btn" onclick="cleanupOldCropHistory(this)" style="background:#dc2626;color:#fff;margin-left:8px">🗑️ ลบรอบเลี้ยงเก่ากว่าปี 2568 ทันที</button>
+    <span id="crophist-cleanup-msg" style="font-size:12px;margin-left:10px;color:var(--ok)"></span>
   </div>
   <!-- Mobile-only logout -->
   <div class="mobile-logout-block" style="display:none;margin-top:16px">
@@ -13299,6 +13305,52 @@ async function fixA1Round3_2568(){
   }
 }
 // ─── END เพิ่มรอบที่หาย A.1 ──────────────────────────────────────────────
+
+// ══════ ลบประวัติรอบเลี้ยง (cropHistory) ปีเก่ากว่า 2568 ทิ้งถาวร ══════
+// พี่ขอลบข้อมูลรอบเลี้ยงย้อนหลังปี 2567 ลงไปทั้งหมด เหลือแค่ 2568-2569 ที่อัปเดตล่าสุด — P&L รายบ่อ/รายรอบอ่านจาก cropHistory ตัวเดียวกันโดยตรง (renderPL* ไม่มี store แยก) ลบตรงนี้จุดเดียวเลยครบทั้งประวัติรอบเลี้ยงและ P&L เก่า — ไม่แตะ D.elecBills/ค่าไฟฟ้าเลย (คนละ array กันคนละหน้าที่)
+const CROPHIST_KEEP_MIN_YEAR_BE=2568;
+function previewCropHistoryCleanup(){
+  const removeList=[],keepCount={};
+  D.ponds.forEach(p=>{
+    (p.cropHistory||[]).forEach(c=>{
+      const y=histRecYear(c);
+      if(y<CROPHIST_KEEP_MIN_YEAR_BE)removeList.push({pond:p.name,year:y,id:c.id});
+      else keepCount[y]=(keepCount[y]||0)+1;
+    });
+  });
+  return{removeList,keepCount};
+}
+async function cleanupOldCropHistory(btn){
+  const msg=document.getElementById('crophist-cleanup-msg');
+  const{removeList,keepCount}=previewCropHistoryCleanup();
+  if(!removeList.length){
+    if(msg)msg.textContent='✅ ไม่พบรอบเลี้ยงที่เก่ากว่าปี '+CROPHIST_KEEP_MIN_YEAR_BE+' (อาจลบไปแล้ว)';
+    return;
+  }
+  const keepTxt=Object.keys(keepCount).sort().map(y=>`ปี ${y}: ${keepCount[y]} รอบ`).join(', ')||'ไม่มี';
+  const ok=confirm(`⚠️ จะลบรอบเลี้ยงเก่ากว่าปี ${CROPHIST_KEEP_MIN_YEAR_BE} ทั้งหมด ${removeList.length} รอบ (รวมข้อมูล P&L ของรอบเหล่านั้นไปด้วย เพราะดึงจากที่เดียวกัน)\nจะเหลือ: ${keepTxt}\n\nระบบจะดาวน์โหลดไฟล์สำรองข้อมูลทั้งหมดให้อัตโนมัติก่อนลบ แต่หลังลบแล้ว "กู้คืนไม่ได้" ในแอป\n\nยืนยันลบ?`);
+  if(!ok)return;
+  exportJSON(); // สำรองข้อมูลทั้งหมด (D ทั้งก้อน) ก่อนลบ กันเผื่อต้องกู้คืนภายหลัง
+  let removed=0;
+  D.ponds.forEach(p=>{
+    if(!p.cropHistory)return;
+    const before=p.cropHistory.length;
+    const kept=p.cropHistory.filter(c=>histRecYear(c)>=CROPHIST_KEEP_MIN_YEAR_BE);
+    removed+=before-kept.length;
+    p.cropHistory.filter(c=>histRecYear(c)<CROPHIST_KEEP_MIN_YEAR_BE).forEach(c=>{
+      if(c.id){D.deletedIds=D.deletedIds||[];D.deletedIds.push(c.id);} // tombstone — กันรายการนี้กลับมาจาก merge ทุกเครื่อง
+    });
+    p.cropHistory=kept;
+  });
+  try{
+    await saveForce();
+    if(msg)msg.textContent=`✅ ลบแล้ว ${removed} รอบ (เก่ากว่าปี ${CROPHIST_KEEP_MIN_YEAR_BE}) — เหลือ: ${keepTxt}`;
+    renderCrops();populateAll();renderOv();
+  }catch(e){
+    if(msg)msg.textContent='❌ บันทึกไม่ได้: '+e.message;
+  }
+}
+// ─── END ลบประวัติรอบเลี้ยงเก่า ──────────────────────────────────────────
 
 // ══════ โหลดไฟล์ seed แบบ lazy (เฉพาะตอนกดปุ่ม) ══════
 // เดิม seedHarvestHistory.js (314KB) + seedCropHistory.js (231KB) ถูกโหลดด้วยแท็ก script src ทุกครั้งที่เปิดแอป
