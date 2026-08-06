@@ -1459,7 +1459,7 @@ body.role-ceo .main{max-width:640px}
         <div class="card-t" style="margin-bottom:0">📊 ราคาเฉลี่ย/กก. แยกตามเดือน (รวมทุกปี)</div>
         <div class="chip-row" id="palm-harvest-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
       </div>
-      <div class="card-sub">ดึงจากบันทึก "รายรับ (ขายปาล์ม)" ที่มีน้ำหนักในแท็บ "รายรับ-รายจ่าย" — รวมข้อมูลทุกปีที่มี แล้วเฉลี่ยตามเดือนปฏิทิน ให้เห็นว่าเดือนไหนราคาดีที่สุด ยิ่งสะสมข้อมูลหลายปีกราฟยิ่งแม่นขึ้น</div>
+      <div class="card-sub">ดึงจากบันทึก "รายรับ (ขายปาล์ม)" ที่มีน้ำหนัก+ราคา/กก. ในแท็บ "รายรับ-รายจ่าย" — ใช้ราคา/กก. ที่กรอกไว้ตรงๆ (ไม่คำนวณจากยอดเงิน เพราะยอดเงินคือรายรับสุทธิหลังหักค่าจ้างทีมตัดซึ่งแต่ละเจ้าคิดราคาไม่เท่ากัน) รวมข้อมูลทุกปีที่มี แล้วเฉลี่ยตามเดือนปฏิทิน ให้เห็นว่าเดือนไหนราคาดีที่สุด ยิ่งสะสมข้อมูลหลายปีกราฟยิ่งแม่นขึ้น</div>
       <div style="position:relative;height:200px"><canvas id="palm-harvest-chart"></canvas></div>
       <div id="palm-harvest-best" style="text-align:center;margin-top:8px"></div>
     </div>
@@ -8487,17 +8487,18 @@ function setPalmHarvestFilterPlot(id,btn){
   renderPalmHarvestTable();
 }
 let _palmHarvestChart=null;
-// ── ราคาเฉลี่ย/กก. ต่อเดือนปฏิทิน รวมทุกปีที่มีข้อมูล (ถัวเฉลี่ยแบบถ่วงน้ำหนัก = ยอดขายรวม ÷ น้ำหนักรวมของเดือนนั้น ไม่ใช่ค่าเฉลี่ยของราคาต่อครั้งเฉยๆ) ──
+// ── ราคาเฉลี่ย/กก. ต่อเดือนปฏิทิน รวมทุกปีที่มีข้อมูล — ใช้ "ราคา/กก." (pricePerKg) ที่กรอกไว้ตอนบันทึกโดยตรง ไม่คำนวณจาก amount/weightKg เพราะ amount คือรายรับสุทธิหลังหักค่าจ้างทีมตัดแล้ว (แต่ละเจ้าคิดราคาไม่เท่ากัน) ถัวเฉลี่ยแบบถ่วงน้ำหนักด้วยน้ำหนักของแต่ละครั้ง ──
 function renderPalmHarvestChart(){
   const canvas=document.getElementById('palm-harvest-chart');if(!canvas)return;
   if(_palmHarvestChart){_palmHarvestChart.destroy();_palmHarvestChart=null;}
   const list=palmHarvestList().filter(r=>_palmHarvestFilterPlot?r.plotId===_palmHarvestFilterPlot:true);
-  const buckets=Array.from({length:12},()=>({amt:0,kg:0}));
+  const buckets=Array.from({length:12},()=>({priceKgSum:0,kg:0}));
   list.forEach(r=>{
+    if(!(r.pricePerKg>0))return;
     const m=parseInt((r.date||'').slice(5,7))-1;
-    if(m>=0&&m<12){buckets[m].amt+=r.amount;buckets[m].kg+=r.weightKg;}
+    if(m>=0&&m<12){buckets[m].priceKgSum+=r.pricePerKg*r.weightKg;buckets[m].kg+=r.weightKg;}
   });
-  const avgs=buckets.map(b=>b.kg>0?b.amt/b.kg:null);
+  const avgs=buckets.map(b=>b.kg>0?b.priceKgSum/b.kg:null);
   let bestIdx=-1;
   avgs.forEach((v,i)=>{if(v!=null&&(bestIdx===-1||v>avgs[bestIdx]))bestIdx=i;});
   const bestEl=document.getElementById('palm-harvest-best');
@@ -8520,10 +8521,10 @@ function renderPalmHarvestTable(){
   let list=palmHarvestList().filter(r=>_palmHarvestFilterPlot?r.plotId===_palmHarvestFilterPlot:true);
   list=list.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   if(!list.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติตัดปาล์ม — บันทึกที่แท็บ "รายรับ-รายจ่าย" โดยกรอกน้ำหนักด้วย</p>';return;}
-  tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่ตัด</th><th>แปลง</th><th style="text-align:right">น้ำหนัก</th><th style="text-align:right">ราคา/กก.</th><th style="text-align:right">ยอดขาย</th></tr></thead><tbody>${
+  tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่ตัด</th><th>แปลง</th><th style="text-align:right">น้ำหนัก</th><th style="text-align:right">ราคา/กก.</th><th style="text-align:right">รายรับสุทธิ</th></tr></thead><tbody>${
     list.map(r=>{
-      const priceKg=r.weightKg?r.amount/r.weightKg:0;
-      return `<tr><td>${fD(r.date)}</td><td>${palmPlotName(r.plotId)}</td><td style="text-align:right">${r.weightKg.toLocaleString()} กก.</td><td style="text-align:right">฿${priceKg.toFixed(2)}</td><td style="text-align:right;color:var(--ok)">฿${Math.round(r.amount).toLocaleString()}</td></tr>`;
+      const priceTxt=r.pricePerKg>0?`฿${r.pricePerKg.toFixed(2)}`:'-';
+      return `<tr><td>${fD(r.date)}</td><td>${palmPlotName(r.plotId)}</td><td style="text-align:right">${r.weightKg.toLocaleString()} กก.</td><td style="text-align:right">${priceTxt}</td><td style="text-align:right;color:var(--ok)">฿${Math.round(r.amount).toLocaleString()}</td></tr>`;
     }).join('')
   }</tbody></table></div>`;
 }
