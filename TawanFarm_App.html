@@ -3093,7 +3093,7 @@ body.role-ceo .main{max-width:640px}
   <div class="card" style="margin-bottom:14px">
     <div class="card-t">📋 กำไร-ขาดทุนรายบ่อ รายรอบ</div>
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch" id="pl-table-wrap">
-      <p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลรอบที่ปิดแล้ว</p>
+      <p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลรอบที่ปิดแล้ว — จะแสดงที่นี่หลังปิดรอบเลี้ยงครั้งแรก</p>
     </div>
   </div>
   <div class="g2">
@@ -4146,11 +4146,11 @@ function renderWqFeedChart(){
       {label:'อุณหภูมิ',data:rr.map(r=>{const v=wqfeedAvg([r],['tM','tA']);return v!=null?+v.toFixed(1):null;}),borderColor:'#e5533c',tension:.35,spanGaps:true,pointRadius:0},
       {label:'DO',data:rr.map(r=>{const v=wqfeedAvg([r],['doM','doA']);return v!=null?+v.toFixed(2):null;}),borderColor:'#185fa5',tension:.35,spanGaps:true,pointRadius:0,yAxisID:'y1'}
     ]},options:{maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{boxWidth:10,font:{size:10}}}},scales:{x:{ticks:{font:{size:9}}},y:{ticks:{font:{size:9}}},y1:{position:'right',grid:{drawOnChartArea:false},ticks:{font:{size:9}}}}}});
-  }else if(wEl)wEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;text-align:center;padding:20px">ยังไม่มีข้อมูลค่าน้ำพอ</p>';
+  }else if(wEl)wEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;text-align:center;padding:20px">ยังไม่มีข้อมูลค่าน้ำพอสำหรับกราฟนี้ — บันทึกเพิ่มได้ที่หน้า "คุณภาพน้ำ"</p>';
   const fEl=document.getElementById('wqfeed-c-feed');
   if(fEl&&ff.length&&typeof Chart!=='undefined'){
     _wqfeedFeedChart=new Chart(fEl,{type:'bar',data:{labels:ff.map(r=>fD(r.date)),datasets:[{label:'อาหาร กก./วัน',data:ff.map(r=>parseFloat(r.totalFeed)||0),backgroundColor:'#3f6212',borderRadius:4}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8}}},y:{ticks:{font:{size:9}}}}}});
-  }else if(fEl)fEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;text-align:center;padding:20px">ยังไม่มีข้อมูลอาหารพอ</p>';
+  }else if(fEl)fEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;text-align:center;padding:20px">ยังไม่มีข้อมูลอาหารพอสำหรับกราฟนี้ — บันทึกเพิ่มได้ที่หน้า "อาหาร & FCR"</p>';
 }
 function hatcheryStats(){
   const groups={};
@@ -5549,7 +5549,7 @@ function renderPondDetail(id){
     }
     waterHtml=rows.length?rows.join(''):'<div style="color:var(--tx3);font-size:13px;padding:7px 0">ไม่มีข้อมูล</div>';
   }else{
-    waterHtml='<div style="color:var(--tx3);font-size:13px;padding:7px 0">ยังไม่มีข้อมูลคุณภาพน้ำ</div>';
+    waterHtml='<div style="color:var(--tx3);font-size:13px;padding:7px 0">ยังไม่มีข้อมูลคุณภาพน้ำ — บันทึกได้ที่หน้า "คุณภาพน้ำ"</div>';
   }
 
   // ===== Feed section =====
@@ -5559,7 +5559,7 @@ function renderPondDetail(id){
     ${per100k!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">กก./แสนตัว</span><span style="font-weight:600">${per100k.toFixed(1)}</span></div>`:''}
     ${feedRate!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">Feed Rate</span><span style="font-weight:600">${feedRate}%</span></div>`:''}
     ${latFeed.meals!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">จำนวนมื้อ</span><span style="font-weight:600">${latFeed.meals} มื้อ</span></div>`:''}
-  `:'<div style="color:var(--tx3);font-size:13px;padding:7px 0">ยังไม่มีข้อมูลอาหาร</div>';
+  `:'<div style="color:var(--tx3);font-size:13px;padding:7px 0">ยังไม่มีข้อมูลอาหาร — บันทึกได้ที่หน้า "อาหาร & FCR"</div>';
 
   // ===== Size section =====
   const sizeHtml=lat?`
@@ -5568,14 +5568,14 @@ function renderPondDetail(id){
     ${pdg!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">อัตราโต</span><span style="font-weight:600">${pdg} กรัม/วัน</span></div>`:''}
     ${lat.survivalRate!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">Survival Rate</span><span style="font-weight:600">${lat.survivalRate}%</span></div>`:''}
     ${biomass!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">Biomass (ประเมิน)</span><span style="font-weight:600">${Math.round(biomass).toLocaleString()} กก.</span></div>`:''}
-  `:'<div style="color:var(--tx3);font-size:13px;padding:7px 0">ยังไม่มีข้อมูลสุ่มตัวอย่าง</div>';
+  `:'<div style="color:var(--tx3);font-size:13px;padding:7px 0">ยังไม่มีข้อมูลสุ่มตัวอย่าง — บันทึกได้ที่หน้า "สุ่มตัวอย่าง"</div>';
 
   // ===== Water management section =====
   const wmHtml=latWater?`
     <div class="pd-water-row"><span style="color:var(--tx2)">การดำเนินการ</span><span style="font-weight:600">${WL_ACT[latWater.action]||latWater.action}</span></div>
     ${latWater.vol!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">ปริมาณ</span><span style="font-weight:600">${latWater.vol} ซม.</span></div>`:''}
     ${latWater.notes?`<div class="pd-water-row"><span style="color:var(--tx2)">หมายเหตุ</span><span style="font-weight:600">${latWater.notes}</span></div>`:''}
-  `:'<div style="color:var(--tx3);font-size:13px;padding:7px 0">ยังไม่มีข้อมูลการจัดการน้ำ</div>';
+  `:'<div style="color:var(--tx3);font-size:13px;padding:7px 0">ยังไม่มีข้อมูลการจัดการน้ำ — บันทึกได้ที่หน้า "จัดการน้ำ"</div>';
 
   const cumFeed=getCumFeed(p);
   const prevSizeCount=latPrev&&latPrev.abw&&latPrev.abw>0?Math.round(1000/latPrev.abw):null;
@@ -6015,11 +6015,11 @@ function renderPdCharts(p){
     {label:'pH',data:recs.map(r=>r.phM!=null&&r.phM!==''?parseFloat(r.phM):null),borderColor:'#2f8f5b',backgroundColor:'rgba(47,143,91,.1)',tension:.35,fill:true,spanGaps:true},
     {label:'DO',data:recs.map(r=>r.doM!=null&&r.doM!==''?parseFloat(r.doM):null),borderColor:'#3f6212',tension:.35,spanGaps:true}
   ]},options:{maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{boxWidth:10,font:{size:10}}}},scales:{x:{ticks:{font:{size:9}}},y:{ticks:{font:{size:9}}}}}});
-  else if(wEl)wEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลพอ</p>';
+  else if(wEl)wEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลค่าน้ำพอสำหรับกราฟนี้</p>';
   const feeds=(p.feedLog||[]).filter(r=>r.date).slice(-14);
   const fEl=document.getElementById('pd-c-feedday');
   if(fEl&&feeds.length)_pdCharts.feedDay=new Chart(fEl,{type:'bar',data:{labels:feeds.map(r=>fD(r.date)),datasets:[{label:'กก./วัน',data:feeds.map(r=>parseFloat(r.totalFeed)||0),backgroundColor:'#3f6212',borderRadius:4}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8}}},y:{ticks:{font:{size:9}}}}}});
-  else if(fEl)fEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลพอ</p>';
+  else if(fEl)fEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลอาหารพอสำหรับกราฟนี้</p>';
   const buckets=pdWeekBuckets(p);
   const wkLbls=buckets.map(b=>'สัปดาห์ '+b.week);
   const fwEl=document.getElementById('pd-c-feedweek');
@@ -6029,7 +6029,7 @@ function renderPdCharts(p){
   ]},options:{maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{boxWidth:10,font:{size:9}}}},scales:{y:{ticks:{font:{size:9}}},y1:{position:'right',grid:{drawOnChartArea:false},ticks:{font:{size:9}}},x:{ticks:{font:{size:8}}}}}});
   const gEl=document.getElementById('pd-c-growth');
   if(gEl&&buckets.some(b=>b.abw!=null))_pdCharts.growth=new Chart(gEl,{type:'line',data:{labels:wkLbls,datasets:[{label:'กรัม/ตัว',data:buckets.map(b=>b.abw),borderColor:'#2f8f5b',backgroundColor:'rgba(63,98,18,.18)',fill:true,tension:.35,spanGaps:true,pointRadius:3,pointBackgroundColor:'#2f8f5b'}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8}}},y:{ticks:{font:{size:9}}}}}});
-  else if(gEl)gEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลผลสุ่มพอ</p>';
+  else if(gEl)gEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลผลสุ่มพอสำหรับกราฟนี้ — ต้องสุ่มตัวอย่างอย่างน้อย 2 ครั้งขึ้นไป</p>';
 }
 function jumpFeed(id){document.getElementById('tab-feed').click();setTimeout(()=>{const el=document.getElementById(`fdg-${id}-total`);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus();}},80)}
 let homeAttnExpanded=false;
@@ -6315,7 +6315,7 @@ function deleteStaff(id){
 function renderStaffTable(){
   const el=document.getElementById('st-table');if(!el)return;
   const list=(D.staff||[]).slice().sort((a,b)=>new Date(b.startDate)-new Date(a.startDate));
-  if(!list.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลพนักงานประจำ</p>';return;}
+  if(!list.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลพนักงานประจำ — เพิ่มได้จากฟอร์มด้านบน</p>';return;}
   el.innerHTML=`<table class="tbl"><thead><tr><th>ชื่อ</th><th>ตำแหน่ง</th><th>เงินเดือน (บาท)</th><th>มีผลตั้งแต่</th><th></th></tr></thead><tbody>${
     list.map(r=>`<tr><td>${r.name}</td><td><span class="pr-size-tag">${r.position}</span></td><td>${r.salary.toLocaleString()}</td><td>${fD(r.startDate)}</td><td><button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="deleteStaff('${r.id}')">🗑️</button></td></tr>`).join('')
   }</tbody></table>`;
@@ -6408,7 +6408,7 @@ function normalizeDailyLaborWeeks(){
 function renderDailyWeekTable(){
   const el=document.getElementById('dw-table');if(!el)return;
   const list=(D.dailyLaborWeeks||[]).filter(r=>r.weekEnd).slice().sort((a,b)=>b.weekEnd.localeCompare(a.weekEnd));
-  if(!list.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return;}
+  if(!list.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล — บันทึกยอดจ่ายจริงได้ที่ฟอร์มด้านบน</p>';return;}
   const todayStr=today();
   el.innerHTML=`<table class="tbl"><thead><tr><th>วันตัดรอบ (พุธ)</th><th>ช่วงที่คุม</th><th>สถานะ</th><th>บ่อที่กำลังเลี้ยง</th><th>จำนวนคน</th><th>ยอดจ่ายจริง (บาท)</th><th>เฉลี่ย/วัน</th><th></th></tr></thead><tbody>${
     list.map(r=>{
@@ -6691,7 +6691,7 @@ function renderStaffAdvancePane(){
 function renderStaffAdvanceList(){
   const el=document.getElementById('adv-list');if(!el)return;
   const all=staffAdvances().slice().reverse();
-  if(!all.length){el.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีรายการเบิกเงินล่วงหน้า</p>';return;}
+  if(!all.length){el.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีรายการเบิกเงินล่วงหน้า — เพิ่มได้จากฟอร์มด้านบน</p>';return;}
   el.innerHTML=all.map(a=>{
     const repaid=advanceRepaidTotal(a.id);
     const remaining=advanceRemaining(a);
@@ -6952,7 +6952,7 @@ let elHistYearSel=null; // null = ยังไม่ตั้งค่า (จ�
 function renderElecHistory(){
   const el=document.getElementById('el-history');if(!el)return;
   const allBills=[...(D.electricityBills||[])].sort((a,b)=>b.month.localeCompare(a.month));
-  if(!allBills.length){el.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีประวัติ</p>';return;}
+  if(!allBills.length){el.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีประวัติบิลค่าไฟ — บันทึกได้จากฟอร์มด้านบน</p>';return;}
   const yearCounts={};
   allBills.forEach(b=>{
     const y=yearBE(parseInt(b.month.split('-')[0],10));
@@ -7380,7 +7380,7 @@ function renderStockItems(){
     if(!_stockShowZero&&(i.qty||0)===0)return false;
     return true;
   });
-  if(!items.length){el.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีรายการพัสดุ</p>';return;}
+  if(!items.length){el.innerHTML=`<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">${(cat||search)?'ไม่พบรายการที่ตรงกับตัวกรองนี้ — ลองเปลี่ยนคำค้นหรือหมวดหมู่':'ยังไม่มีรายการพัสดุ — เพิ่มได้จากฟอร์มด้านบน'}</p>`;return;}
   // sort: low stock first
   const sorted=[...items].sort((a,b)=>{
     const aLow=a.minQty>0&&a.qty<=a.minQty?0:1;
@@ -7711,7 +7711,7 @@ function setStockLogMode(mode){
 function renderStockInLog(){
   const tbl=document.getElementById('sk-log-in-table');if(!tbl)return;
   const logs=[...(D.inventoryLog||[])].filter(l=>l.type==='in').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีประวัติรับเข้าส่วนกลาง</p>';return;}
+  if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีประวัติรับเข้าส่วนกลาง — บันทึกได้ที่ปุ่ม "+ รับเข้า สต็อกกลาง" ด้านบน</p>';return;}
   const byDate={};
   logs.forEach(l=>{if(!byDate[l.date])byDate[l.date]=[];byDate[l.date].push(l);});
   tbl.innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>รายการ</th><th style="text-align:right">จำนวน</th><th>หน่วย</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>'+
@@ -8027,7 +8027,7 @@ function renderClerkCash(){
   let rows=withBalance;
   if(_cashFilterMonth)rows=rows.filter(c=>(c.date||'').startsWith(_cashFilterMonth));
   rows=rows.slice().reverse();
-  if(!rows.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติรายรับ-รายจ่าย'+(_cashFilterMonth?'ตามตัวกรองนี้':'')+'</p>';return;}
+  if(!rows.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติรายรับ-รายจ่าย'+(_cashFilterMonth?'ตามตัวกรองนี้ — ลองเลือกเดือนอื่น':' — บันทึกได้จากฟอร์มด้านบน')+'</p>';return;}
   tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>ประเภท</th><th style="text-align:right">จำนวนเงิน</th><th style="text-align:right">คงเหลือสะสม</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
     rows.map(c=>{
       let typeBadge;
@@ -8112,7 +8112,7 @@ function renderPalmOverview(){
     const fertRecs=palmFertList().filter(r=>r.plotId===p.id&&r.next).sort((a,b)=>b.next.localeCompare(a.next));
     return{p,latest:fertRecs[0]};
   }).filter(x=>x.latest);
-  if(!rows.length){remEl.innerHTML='<p style="color:var(--tx3);padding:12px;font-style:italic;text-align:center">ยังไม่มีข้อมูลกำหนดใส่ปุ๋ยรอบถัดไป</p>';return;}
+  if(!rows.length){remEl.innerHTML='<p style="color:var(--tx3);padding:12px;font-style:italic;text-align:center">ยังไม่มีข้อมูลกำหนดใส่ปุ๋ยรอบถัดไป — กรอกช่อง "กำหนดใส่รอบถัดไป" ได้ที่แท็บ "ประวัติใส่ปุ๋ย"</p>';return;}
   rows.sort((a,b)=>dDiff(today0,a.latest.next)-dDiff(today0,b.latest.next));
   remEl.innerHTML=rows.map(({p,latest})=>{
     const daysLeft=dDiff(today0,latest.next);
@@ -8345,7 +8345,7 @@ function renderPalmMoney(){
   if(kpiEl)kpiEl.innerHTML=`<div class="kpi-card"><div class="kpi-lbl">รายรับสะสม (${periodLbl})</div><div class="kpi-val" style="color:var(--ok)">฿${Math.round(totalIn).toLocaleString()}</div></div>
     <div class="kpi-card"><div class="kpi-lbl">รายจ่ายสะสม (${periodLbl})</div><div class="kpi-val" style="color:var(--d)">฿${Math.round(totalOut).toLocaleString()}</div></div>
     <div class="kpi-card"><div class="kpi-lbl">กำไรสุทธิ (${periodLbl})</div><div class="kpi-val">฿${Math.round(totalIn-totalOut).toLocaleString()}</div></div>`;
-  if(!list.length){tbl.innerHTML=`<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติ${_palmMoneyViewType==='income'?'รายรับ':'รายจ่าย'}</p>`;return;}
+  if(!list.length){tbl.innerHTML=`<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติ${_palmMoneyViewType==='income'?'รายรับ':'รายจ่าย'} — บันทึกได้จากฟอร์มด้านบน</p>`;return;}
   tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>แปลง</th><th>รายละเอียด</th><th style="text-align:right">น้ำหนัก</th><th style="text-align:right">จำนวนเงิน</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
     list.map(r=>{
       const weightTxt=r.weightKg?r.weightKg.toLocaleString()+' กก.':'—';
@@ -8447,7 +8447,7 @@ function renderPalmFertLog(){
   let list=palmFertList().slice();
   if(_palmFertFilterPlot)list=list.filter(r=>r.plotId===_palmFertFilterPlot);
   list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  if(!list.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติการใส่ปุ๋ย</p>';return;}
+  if(!list.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติการใส่ปุ๋ย — บันทึกได้จากฟอร์มด้านบน</p>';return;}
   const today0=today();
   const unitShort=r=>(r.unitLabel||'').split(' ')[0]||'หน่วย';
   // ── ราคา/หน่วย = ค่าใช้จ่าย ÷ จำนวนที่ซื้อ — เทียบกับครั้งก่อน "ปุ๋ยชนิดเดียวกัน" เท่านั้น เพื่อดูราคาขึ้น-ลง (list เรียงใหม่→เก่าอยู่แล้ว จึงหา j>i ตัวแรกที่ type ตรงกันคือ "ครั้งก่อน") ──
@@ -8661,7 +8661,7 @@ function renderFundPane(){
     <div class="kpi-card"><div class="kpi-lbl">กำไร/ขาดทุนสะสม</div><div class="kpi-val" ${plCls}>${plSign}฿${Math.round(totalPL).toLocaleString()}</div><div class="kpi-sub" ${plCls}>${plSign}${totalPLPct.toFixed(2)}%</div></div>`;
 
   const buyTbl=document.getElementById('fund-buy-table');
-  if(!buys.length){buyTbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติการซื้อ</p>';}
+  if(!buys.length){buyTbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติการซื้อ — บันทึกได้ที่ฟอร์ม "บันทึกการซื้อกองทุน" ด้านบน</p>';}
   else{
     buyTbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th style="text-align:right">จำนวนเงิน</th><th style="text-align:right">NAV ตอนซื้อ</th><th style="text-align:right">หน่วยที่ได้</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
       buys.slice().reverse().map(b=>`<tr><td>${fD(b.date)}</td><td style="text-align:right">฿${Math.round(b.amount).toLocaleString()}</td><td style="text-align:right">${b.nav.toFixed(4)}</td><td style="text-align:right">${b.units.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td style="font-size:12px;color:var(--tx2)">${b.by||'-'}</td><td><button class="btn-sm btn-del" onclick="deleteFundBuy('${b.id}')">🗑️</button></td></tr>`).join('')
@@ -8669,7 +8669,7 @@ function renderFundPane(){
   }
 
   const sellTbl=document.getElementById('fund-sell-table');
-  if(!sells.length){sellTbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติการขาย</p>';}
+  if(!sells.length){sellTbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติการขาย — บันทึกได้ที่ฟอร์ม "บันทึกการขายกองทุน" ด้านบน</p>';}
   else{
     sellTbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th style="text-align:right">หน่วยที่ขาย</th><th style="text-align:right">NAV ตอนขาย</th><th style="text-align:right">เงินที่ได้</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
       sells.slice().reverse().map(s=>`<tr><td>${fD(s.date)}</td><td style="text-align:right">${s.units.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td style="text-align:right">${s.nav.toFixed(4)}</td><td style="text-align:right;color:var(--ok)">+฿${Math.round(s.amount).toLocaleString()}</td><td style="font-size:12px;color:var(--tx2)">${s.note||'-'}</td><td style="font-size:12px;color:var(--tx2)">${s.by||'-'}</td><td><button class="btn-sm btn-del" onclick="deleteFundSell('${s.id}')">🗑️</button></td></tr>`).join('')
@@ -8677,7 +8677,7 @@ function renderFundPane(){
   }
 
   const navTbl=document.getElementById('fund-nav-table');
-  if(!navLog.length){navTbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีบันทึก NAV</p>';}
+  if(!navLog.length){navTbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีบันทึก NAV — บันทึกได้ที่ฟอร์ม "บันทึก NAV ปัจจุบัน" ด้านบน</p>';}
   else{
     navTbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th style="text-align:right">NAV ต่อหน่วย</th><th style="text-align:right">มูลค่าพอร์ต ณ วันนั้น</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
       navLog.slice().reverse().map(n=>{
@@ -8889,7 +8889,7 @@ function renderWQTable(){
   const pid=document.getElementById('ep-pond')?.value,rows=parseInt(document.getElementById('tbl-rows')?.value||999);
   const wrap=document.getElementById('tbl-wrap');if(!wrap)return;
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
-  const p=pond(pid);if(!p||!p.records.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
+  const p=pond(pid);if(!p||!p.records.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">บ่อนี้ยังไม่มีข้อมูลคุณภาพน้ำ — บันทึกได้จากฟอร์มด้านบน</p>';return}
   const rec=[...p.records].reverse().slice(0,rows);
   const show=PARAMS.slice(0,8);
   // ข้อ 4: แสดงชื่อบ่อในหัวตาราง
@@ -8931,7 +8931,7 @@ function renderPdWqHistory(p){
   if(chipsEl)chipsEl.innerHTML=pdHistPeriodChips(_pdWqPeriod,'setPdWqPeriod');
   let rec=[...(p.records||[])].reverse();
   if(_pdWqPeriod!=='all')rec=rec.slice(0,_pdWqPeriod);
-  if(!rec.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return;}
+  if(!rec.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลคุณภาพน้ำของบ่อนี้ — บันทึกได้ที่หน้า "คุณภาพน้ำ"</p>';return;}
   const show=PARAMS.slice(0,8);
   const tableHtml=`<div class="pd-hist-tblwrap"><div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวาเพื่อดูทุกค่า →</div><div style="overflow-x:auto"><table class="tbl" style="white-space:nowrap"><thead><tr><th></th><th>วันที่</th><th>อายุ</th>${show.map(pm=>`<th>${pm.lbl}</th>`).join('')}<th>หมายเหตุ</th></tr></thead><tbody>${
     rec.map((r,i)=>{
@@ -8986,7 +8986,7 @@ function renderPdFeedHistory(p){
   if(chipsEl)chipsEl.innerHTML=pdHistPeriodChips(_pdFeedPeriod,'setPdFeedPeriod');
   let rec=[...(p.feedLog||[])].reverse();
   if(_pdFeedPeriod!=='all')rec=rec.slice(0,_pdFeedPeriod);
-  if(!rec.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return;}
+  if(!rec.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลอาหารของบ่อนี้ — บันทึกได้ที่หน้า "อาหาร & FCR"</p>';return;}
   const tableHtml=`<div class="pd-hist-tblwrap"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ยี่ห้อ/เบอร์</th><th style="text-align:right">อาหาร (กก.)</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rec.map((r,i)=>{
       const ageCalc=p.startDate?dDiff(p.startDate,r.date):r.age;
@@ -9034,7 +9034,7 @@ function renderPdMedHistory(p){
   const from=_pdMedPeriod==='all'?(p.startDate||'2000-01-01'):ymdLocal(addDaysLocal(new Date(today()+'T00:00:00'),-_pdMedPeriod));
   let items=getStockItemsForPond(p.id,from,today()).filter(i=>PD_MED_CATS.includes(i.category));
   if(_pdMedCat)items=items.filter(i=>i.category===_pdMedCat);
-  if(!items.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:16px;font-style:italic">ยังไม่มีการใช้เวชภัณฑ์ตามตัวกรองนี้</p>';return;}
+  if(!items.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:16px;font-style:italic">ยังไม่มีการใช้เวชภัณฑ์ตามตัวกรองนี้ — ลองเปลี่ยนช่วงเวลา/หมวดหมู่ หรือเบิกใช้ได้ที่หน้า "สต็อก"</p>';return;}
   tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>รายการ</th><th>หมวด</th><th style="text-align:right">จำนวน</th></tr></thead><tbody>${
     items.map(i=>`<tr><td>${fD(i.date)}</td><td>${i.name}</td><td><span class="badge ${STOCK_CAT_CSS[i.category]||''}">${STOCK_CAT_LABEL[i.category]||i.category}</span></td><td style="text-align:right">${i.qty} ${i.unit}</td></tr>`).join('')
   }</tbody></table></div>`;
@@ -9431,7 +9431,7 @@ function renderFeedGrid(){
   const wrap=document.getElementById('fd-grid-wrap');if(!wrap)return;
   const d=document.getElementById('fd-date')?.value||today();
   const ponds=wqfeedActivePonds().slice().sort((a,b)=>a.name.localeCompare(b.name,'th'));
-  if(!ponds.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีบ่อที่กำลังเลี้ยงอยู่</p>';return}
+  if(!ponds.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีบ่อที่กำลังเลี้ยงอยู่ — ปล่อยลูกกุ้งได้ที่หน้า "รอบเลี้ยง"</p>';return}
   const feedItems=(D.inventoryItems||[]).filter(i=>i.category==='feed').sort((a,b)=>a.name.localeCompare(b.name,'th'));
   // ── เตือนบ่อที่ยังไม่ได้กรอกอาหารของวันที่เลือก — มองปราดเดียวรู้ว่าขาดบ่อไหน ──
   const missing=ponds.filter(p=>!(p.feedLog||[]).some(r=>r.date===d));
@@ -9608,7 +9608,7 @@ function renderSampleTable(){
   const wrap=document.getElementById('sp-tbl-wrap');if(!wrap)return;
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
   const p=pond(pid);const rows=(p?.samples||[]).slice().reverse();
-  if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
+  if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">บ่อนี้ยังไม่มีข้อมูลสุ่มตัวอย่าง — บันทึกได้จากฟอร์มด้านบน</p>';return}
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ตัวอย่าง</th><th>น้ำหนักรวม (กก.)</th><th>ABW (g)</th><th>ไซส์ (ตัว/กก.)</th><th>Survival%</th><th>Biomass (kg)</th><th>PDG (g/วัน)</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rows.map((r,i)=>`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editSample('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteSample('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.sampleCount||'-'}</td><td>${r.sampleWeight!=null?r.sampleWeight+' กก.':'-'}</td><td><strong style="color:var(--p)">${r.abw?.toFixed(2)||'-'}</strong></td><td><strong style="color:var(--in)">${r.plCount||'-'}</strong></td><td>${r.survivalRate?r.survivalRate+'%':'-'}</td><td>${r.biomass?.toFixed(0)||'-'}</td><td>${r.pdg||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')}</tbody></table>`;
 }
@@ -9661,7 +9661,7 @@ function renderWaterTable(){
   const wrap=document.getElementById('wl-tbl-wrap');if(!wrap)return;
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
   const p=pond(pid);const rows=(p?.waterLog||[]).slice().reverse();
-  if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
+  if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">บ่อนี้ยังไม่มีข้อมูลจัดการน้ำ — บันทึกได้จากฟอร์มด้านบน</p>';return}
   const wlPond=pond(pid);const wlFull=(wlPond?.waterLog||[]).slice().reverse();
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>การดำเนินการ</th><th>ปริมาณ (ซม.)</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rows.map((r,i)=>{const origIdx=(wlPond?.waterLog||[]).indexOf(r);return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editWaterLog('${pid}',${origIdx})">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteWaterLog('${pid}','${r.id||origIdx}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td><span class="badge b-info">${WL_ACT[r.action]||r.action}</span></td><td>${r.vol?r.vol+' ซม.':'-'}</td><td>${r.notes||'-'}</td></tr>`}).join('')}</tbody></table>`;
@@ -9763,7 +9763,7 @@ function renderMtTable(){
   const wrap=document.getElementById('mt-tbl-wrap');if(!wrap)return;
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
   const p=pond(pid);const rows=(p?.mortalityLog||[]).slice().reverse();
-  if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return}
+  if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">บ่อนี้ยังไม่มีบันทึกกุ้งตาย — บันทึกได้จากฟอร์มด้านบน</p>';return}
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>จำนวนตาย</th><th>สาเหตุ</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rows.map(r=>`<tr><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editMortality('${pid}','${r.id}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteMortality('${pid}','${r.id}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age>0?r.age+' วัน':'-'}</td><td style="font-weight:700${r.count>=3?';color:var(--w)':''}">${r.count} ตัว</td><td>${r.cause?`<span class="badge b-warn">${MT_CAUSE_LBL[r.cause]||r.cause}</span>`:'<span style="color:var(--tx3)">-</span>'}</td><td style="color:var(--tx2)">${r.notes||'-'}</td></tr>`).join('')
   }</tbody></table>`;
@@ -9867,7 +9867,7 @@ function renderLabTable(){
   const wrap=document.getElementById('lb-tbl-wrap');if(!wrap)return;
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
   const p=pond(pid);const rows=(p?.labResults||[]).slice().reverse();
-  if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีผลแล็บ</p>';return}
+  if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">บ่อนี้ยังไม่มีผลแล็บ — บันทึกได้จากฟอร์มด้านบน</p>';return}
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>แล็บ</th><th>🟢 เชื้อเขียว (น้ำ)</th><th>🟡 เชื้อเหลือง (น้ำ)</th><th>🟢 เชื้อเขียว (ตับ)</th><th>🟡 เชื้อเหลือง (ตับ)</th><th>TVC (น้ำ)</th><th>TVC (ตับ)</th><th>EHP</th><th>ตัวอ่อน EHP</th><th>ลำไส้อักเสบ</th><th>เม็ดไขมันรวม</th><th>ตับอ่อน</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rows.map((r,i)=>{
       const sg=r.tcbsGreen!=null?(r.tcbsGreen>1000?'danger':r.tcbsGreen>100?'warn':'ok'):'ok';
@@ -10373,7 +10373,7 @@ function renderTrialJournal(){
     const dd=d.toLocaleDateString('th-TH',{day:'numeric'});
     const mm=d.toLocaleDateString('th-TH',{month:'short',year:'2-digit'});
     return `<div class="jr-entry"><div class="jr-date-col"><div class="jr-date-d">${dd}</div><div class="jr-date-m">${mm}</div></div><div class="jr-body"><div class="jr-text">${j.note}</div></div><button type="button" class="btn btn-s btn-sm" onclick="deleteTrialJournalEntry('${j.id}')" style="align-self:flex-start">🗑️</button></div>`;
-  }).join(''):'<p style="color:var(--tx3);font-style:italic;font-size:12.5px;padding:8px 0">ยังไม่มีบันทึก</p>';
+  }).join(''):'<p style="color:var(--tx3);font-style:italic;font-size:12.5px;padding:8px 0">ยังไม่มีบันทึก — กด "+ เพิ่มบันทึกใหม่" เพื่อเริ่มต้น</p>';
 }
 function renderCmpFeed(){
   const metric=document.getElementById('cmp-feed-param')?.value||'per100k';
@@ -10605,7 +10605,7 @@ function renderRisk(d){
   // ── เฉพาะบ่อที่กำลังเลี้ยงอยู่จริง (ตัดบ่อที่จับไปแล้ว/ยังไม่ลงกุ้ง ออกจากการประเมินความเสี่ยง — เดิมใช้ D.ponds ตรงๆ ทำให้บ่อที่ปิดรอบแล้วยังโชว์ค่าความเสี่ยงค้าง) ──
   const activePonds=wqfeedActivePonds();
   if(!activePonds.length){
-    document.getElementById('risk-grid').innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic;grid-column:1/-1">ยังไม่มีบ่อที่กำลังเลี้ยงอยู่ให้ประเมินความเสี่ยง</p>';
+    document.getElementById('risk-grid').innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic;grid-column:1/-1">ยังไม่มีบ่อที่กำลังเลี้ยงอยู่ให้ประเมินความเสี่ยง — ปล่อยลูกกุ้งได้ที่หน้า "รอบเลี้ยง"</p>';
     renderRiskWeatherBanner(weatherDays);
     document.getElementById('risk-farm-summary').innerHTML='<div class="card" style="background:var(--sf2)"><div style="color:var(--tx3);font-size:13px;text-align:center">ยังไม่มีบ่อที่กำลังเลี้ยงอยู่</div></div>';
     _riskPondMaxCache=[];
@@ -11407,7 +11407,7 @@ function renderCrops(){
   const histEl=document.getElementById('cr-history');if(!histEl)return;
   const allHistory=[];D.ponds.forEach(p=>(p.cropHistory||[]).forEach((c,_idx)=>allHistory.push({...c,pondName:p.name,_pondId:p.id,_idx})));
   allHistory.sort((a,b)=>(b.closeDate||'').localeCompare(a.closeDate||''));
-  if(allHistory.length===0){histEl.innerHTML='<p style="color:var(--tx3);padding:10px">ยังไม่มีประวัติรอบเลี้ยง</p>';return;}
+  if(allHistory.length===0){histEl.innerHTML='<p style="color:var(--tx3);padding:10px">ยังไม่มีประวัติรอบเลี้ยง — จะแสดงที่นี่หลังกด "ปิดรอบ" ครั้งแรก</p>';return;}
   // ── dropdown ปี สำหรับการ์ดประวัติ (แยกจาก dropdown ปีของการ์ดสรุปด้านบน) ──
   // ยึดปีตาม "วันที่จับ" (closeDate) เป็นหลัก เช่น ลงกุ้ง ธ.ค.68 จับ ก.พ.69 → นับเป็นรอบของปี 2569 (ดู histRecYear())
   const curYBE=yearBE(curY);
@@ -12355,7 +12355,7 @@ function renderPartialList(){
   const p=pond(pid);if(!p)return;
   if(nameEl)nameEl.textContent=' — บ่อ '+p.name;
   const rows=(p.partialHarvests||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
-  if(!rows.length){listEl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีรายการพาเชียลในรอบนี้</p>';return;}
+  if(!rows.length){listEl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีรายการพาเชียลในรอบนี้ — บันทึกได้จากฟอร์มด้านบน</p>';return;}
   listEl.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:var(--sf2);border-bottom:2px solid var(--bd)">
     <th style="text-align:left;padding:8px 10px;font-size:12px;color:var(--tx2)">วันที่</th>
     <th style="text-align:left;padding:8px 10px;font-size:12px;color:var(--tx2)">แพ</th>
@@ -12502,7 +12502,7 @@ function renderCeo(){
   if(countEl)countEl.textContent=`บ่อทั้งหมด (${ponds.length} บ่อ)`;
 
   const listEl=document.getElementById('ceo-pond-list');if(!listEl)return;
-  if(!ponds.length){listEl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีบ่อที่กำลังเลี้ยงอยู่</p>';return}
+  if(!ponds.length){listEl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีบ่อที่กำลังเลี้ยงอยู่ — ปล่อยลูกกุ้งได้ที่หน้า "รอบเลี้ยง"</p>';return}
   listEl.innerHTML=ponds.map(p=>{
     const status=ceoStatus(p);
     const statusLbl=status==='ok'?'ปกติ':'ควรติดตาม';
@@ -13072,7 +13072,7 @@ function renderPLKPI(rows){
 }
 function renderPLTable(rows){
   const wrap=document.getElementById('pl-table-wrap');if(!wrap)return;
-  if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล</p>';return;}
+  if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลรอบที่ปิดแล้วในช่วงที่เลือก — ลองเลือกปีอื่น</p>';return;}
   wrap.innerHTML=`<div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวา →</div><table class="tbl" style="white-space:nowrap;min-width:700px">
   <thead><tr>
     <th>บ่อ</th><th>รอบ/ปี</th><th>วันปิด</th>
@@ -13122,7 +13122,7 @@ function renderPLCostChart(rows){
   if(!rows.length){
     const c=document.getElementById('pl-donut');if(c&&_plDonutChart){_plDonutChart.destroy();_plDonutChart=null;}
     const l=document.getElementById('pl-donut-legend');if(l)l.innerHTML='';
-    const t=document.getElementById('pl-cost-tbl');if(t)t.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px">ยังไม่มีข้อมูล</p>';
+    const t=document.getElementById('pl-cost-tbl');if(t)t.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px">ยังไม่มีข้อมูลรอบที่ปิดแล้วในช่วงที่เลือก</p>';
     return;
   }
   const totFry=rows.reduce((s,r)=>s+(r.costFry||0),0);
