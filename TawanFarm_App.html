@@ -30,7 +30,7 @@ if(window.Chart){Chart.defaults.animation=false;Chart.defaults.responsiveAnimati
 :root{
   /* ── ธีม Light/Yellow (สเปก P Preaw 19 มิ.ย. 2569) — คงชื่อตัวแปรเดิม ผูกค่าสีใหม่ ── */
   --bg:#F6F7F9;--sf:#FFFFFF;--sf2:#F1F3F5;--bd:#E2E5EA;
-  --tx:#1F2937;--tx2:#5F6670;--tx3:#9AA1AB;
+  --tx:#1F2937;--tx2:#5F6670;--tx3:#5D6874; /* เดิม #9AA1AB คอนทราสต์แค่ 2.6:1 บนพื้นขาว/เทาอ่อน (ต้องการ 4.5:1) — ปรับเข้มขึ้นให้ผ่าน WCAG AA ทุกพื้นหลังที่ใช้จริง (--sf/--sf2/--bg) */
   --p:#9A6A04;--pl:#FEF6E0;--pd:#7A5503;
   --d:#DC2626;--db:#FDECEC;--w:#B45309;--wb:#FEF9E7;
   --ok:#15803D;--ob:#F4FBF6;--in:#185FA5;--ib:#E6F1FB;
@@ -1027,8 +1027,8 @@ body.role-ceo .main{max-width:640px}
 <div class="login-screen" id="login-screen">
   <div class="login-box">
     <div class="login-logo"><div class="ico">🦐</div><div class="name">ตะวันฟาร์ม</div><div class="sub">กรุณาเข้าสู่ระบบ</div></div>
-    <div class="login-field"><label>อีเมล</label><input type="email" id="login-email" class="fi" placeholder="email@example.com" autocomplete="email"></div>
-    <div class="login-field"><label>รหัสผ่าน</label><input type="password" id="login-pass" class="fi" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="login-field"><label for="login-email">อีเมล</label><input type="email" id="login-email" class="fi" placeholder="email@example.com" autocomplete="email"></div>
+    <div class="login-field"><label for="login-pass">รหัสผ่าน</label><input type="password" id="login-pass" class="fi" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button class="btn btn-p" style="width:100%;justify-content:center;margin-top:4px" onclick="doLogin()">เข้าสู่ระบบ</button>
     <div class="login-err" id="login-err"></div>
   </div>
@@ -1345,16 +1345,16 @@ body.role-ceo .main{max-width:640px}
       <div class="card-t" id="palm-plot-form-title">➕ เพิ่มแปลงใหม่</div>
       <input type="hidden" id="pf-id">
       <div class="fgrid">
-        <div class="fg"><label class="fl">ชื่อแปลง</label><input class="fi" id="pf-name" placeholder="เช่น แปลง A — หน้าบ้าน"></div>
-        <div class="fg"><label class="fl">พันธุ์</label><input class="fi" id="pf-variety" placeholder="เช่น ลูกผสมเทเนอรา"></div>
+        <div class="fg"><label class="fl" for="pf-name">ชื่อแปลง</label><input class="fi" id="pf-name" placeholder="เช่น แปลง A — หน้าบ้าน"></div>
+        <div class="fg"><label class="fl" for="pf-variety">พันธุ์</label><input class="fi" id="pf-variety" placeholder="เช่น ลูกผสมเทเนอรา"></div>
       </div>
       <div class="fgrid">
-        <div class="fg"><label class="fl">พื้นที่ (ไร่)</label><input class="fi" id="pf-area" inputmode="decimal" placeholder="เช่น 12"></div>
-        <div class="fg"><label class="fl">จำนวนต้น</label><input class="fi" id="pf-trees" inputmode="numeric" placeholder="เช่น 264"></div>
+        <div class="fg"><label class="fl" for="pf-area">พื้นที่ (ไร่)</label><input class="fi" id="pf-area" inputmode="decimal" placeholder="เช่น 12"></div>
+        <div class="fg"><label class="fl" for="pf-trees">จำนวนต้น</label><input class="fi" id="pf-trees" inputmode="numeric" placeholder="เช่น 264"></div>
       </div>
       <div class="fgrid">
-        <div class="fg"><label class="fl">ปีที่ปลูก (พ.ศ.)</label><input class="fi" id="pf-plantyear" inputmode="numeric" placeholder="เช่น 2558"></div>
-        <div class="fg"><label class="fl">สถานะ</label><select class="fi" id="pf-status"><option value="producing">ให้ผลผลิตแล้ว</option><option value="notyet">ยังไม่ให้ผล</option></select></div>
+        <div class="fg"><label class="fl" for="pf-plantyear">ปีที่ปลูก (พ.ศ.)</label><input class="fi" id="pf-plantyear" inputmode="numeric" placeholder="เช่น 2558"></div>
+        <div class="fg"><label class="fl" for="pf-status">สถานะ</label><select class="fi" id="pf-status"><option value="producing">ให้ผลผลิตแล้ว</option><option value="notyet">ยังไม่ให้ผล</option></select></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px">
         <button class="btn btn-p" onclick="savePalmPlot()" style="flex:1">💾 บันทึก</button>
@@ -1374,15 +1374,15 @@ body.role-ceo .main{max-width:640px}
         <button type="button" class="type-btn" id="pm-mode-expense" onclick="setPalmMoneyMode('expense')">📤 รายจ่าย</button>
       </div>
       <div class="fgrid">
-        <div class="fg"><label class="fl">แปลง</label><select class="fi" id="pm-plot"><option value="">ไม่ระบุ / รวมทั้งสวน</option></select></div>
-        <div class="fg"><label class="fl">วันที่</label><input type="date" class="fi" id="pm-date"></div>
+        <div class="fg"><label class="fl" for="pm-plot">แปลง</label><select class="fi" id="pm-plot"><option value="">ไม่ระบุ / รวมทั้งสวน</option></select></div>
+        <div class="fg"><label class="fl" for="pm-date">วันที่</label><input type="date" class="fi" id="pm-date"></div>
       </div>
       <div id="pm-income-fields" class="fgrid">
-        <div class="fg"><label class="fl">น้ำหนัก (กก.)</label><input class="fi" id="pm-weight" inputmode="decimal" placeholder="เช่น 2,400" oninput="palmMoneyPreview()"></div>
-        <div class="fg"><label class="fl">ราคา/กก. (บาท)</label><input class="fi" id="pm-price" inputmode="decimal" placeholder="เช่น 6.20" oninput="palmMoneyPreview()"></div>
+        <div class="fg"><label class="fl" for="pm-weight">น้ำหนัก (กก.)</label><input class="fi" id="pm-weight" inputmode="decimal" placeholder="เช่น 2,400" oninput="palmMoneyPreview()"></div>
+        <div class="fg"><label class="fl" for="pm-price">ราคา/กก. (บาท)</label><input class="fi" id="pm-price" inputmode="decimal" placeholder="เช่น 6.20" oninput="palmMoneyPreview()"></div>
       </div>
-      <div class="fg"><label class="fl" id="pm-amount-lbl">ยอดรวม (บาท)</label><input class="fi" id="pm-amount" inputmode="decimal" placeholder="0.00"></div>
-      <div class="fg"><label class="fl">รายละเอียด / หมายเหตุ</label><input class="fi" id="pm-note" placeholder="เช่น ลานเทปาล์มบางสวรรค์, ค่าน้ำมันรถตัดปาล์ม"></div>
+      <div class="fg"><label class="fl" id="pm-amount-lbl" for="pm-amount">ยอดรวม (บาท)</label><input class="fi" id="pm-amount" inputmode="decimal" placeholder="0.00"></div>
+      <div class="fg"><label class="fl" for="pm-note">รายละเอียด / หมายเหตุ</label><input class="fi" id="pm-note" placeholder="เช่น ลานเทปาล์มบางสวรรค์, ค่าน้ำมันรถตัดปาล์ม"></div>
       <button class="btn btn-p" style="width:100%" onclick="savePalmMoney()">💾 บันทึก</button>
       <div id="sk-msg-palmmoney"></div>
     </div>
@@ -1408,27 +1408,27 @@ body.role-ceo .main{max-width:640px}
     <div class="card" style="margin-bottom:12px">
       <div class="card-t">🧪 บันทึกการใส่ปุ๋ย</div>
       <div class="fgrid">
-        <div class="fg"><label class="fl">แปลง <span style="color:var(--d)">*</span></label><select class="fi" id="pfl-plot"></select></div>
-        <div class="fg"><label class="fl">วันที่ใส่</label><input type="date" class="fi" id="pfl-date"></div>
+        <div class="fg"><label class="fl" for="pfl-plot">แปลง <span style="color:var(--d)">*</span></label><select class="fi" id="pfl-plot"></select></div>
+        <div class="fg"><label class="fl" for="pfl-date">วันที่ใส่</label><input type="date" class="fi" id="pfl-date"></div>
       </div>
       <div class="fgrid">
-        <div class="fg"><label class="fl">ชนิดปุ๋ย</label><input class="fi" id="pfl-type" placeholder="เช่น 15-15-15, โพแทสเซียมคลอไรด์"></div>
-        <div class="fg"><label class="fl">ยี่ห้อปุ๋ย</label><input class="fi" id="pfl-brand" placeholder="เช่น ตราหัววัว-คันไถ, ไอซีพี"></div>
+        <div class="fg"><label class="fl" for="pfl-type">ชนิดปุ๋ย</label><input class="fi" id="pfl-type" placeholder="เช่น 15-15-15, โพแทสเซียมคลอไรด์"></div>
+        <div class="fg"><label class="fl" for="pfl-brand">ยี่ห้อปุ๋ย</label><input class="fi" id="pfl-brand" placeholder="เช่น ตราหัววัว-คันไถ, ไอซีพี"></div>
       </div>
       <div class="fgrid">
-        <div class="fg"><label class="fl">จำนวน</label><input class="fi" id="pfl-qty" inputmode="decimal" placeholder="เช่น 12" oninput="palmFertPreviewKg()"></div>
-        <div class="fg"><label class="fl">หน่วย</label><select class="fi" id="pfl-unit" onchange="palmFertPreviewKg()">
+        <div class="fg"><label class="fl" for="pfl-qty">จำนวน</label><input class="fi" id="pfl-qty" inputmode="decimal" placeholder="เช่น 12" oninput="palmFertPreviewKg()"></div>
+        <div class="fg"><label class="fl" for="pfl-unit">หน่วย</label><select class="fi" id="pfl-unit" onchange="palmFertPreviewKg()">
           <option value="50">กระสอบ (50 กก./กระสอบ)</option>
           <option value="25">กระสอบ (25 กก./กระสอบ)</option>
           <option value="1">กิโลกรัม</option>
         </select></div>
       </div>
       <div class="fgrid">
-        <div class="fg"><label class="fl">รวมเป็นกิโลกรัม</label><input class="fi" id="pfl-kg-preview" placeholder="คำนวณอัตโนมัติจากจำนวน × หน่วย" style="background:var(--sf2)" readonly></div>
-        <div class="fg"><label class="fl">ค่าใช้จ่าย (บาท)</label><input class="fi" id="pfl-cost" inputmode="decimal" placeholder="0.00"></div>
+        <div class="fg"><label class="fl" for="pfl-kg-preview">รวมเป็นกิโลกรัม</label><input class="fi" id="pfl-kg-preview" placeholder="คำนวณอัตโนมัติจากจำนวน × หน่วย" style="background:var(--sf2)" readonly></div>
+        <div class="fg"><label class="fl" for="pfl-cost">ค่าใช้จ่าย (บาท)</label><input class="fi" id="pfl-cost" inputmode="decimal" placeholder="0.00"></div>
       </div>
-      <div class="fg"><label class="fl">กำหนดใส่รอบถัดไป (โดยประมาณ)</label><input type="date" class="fi" id="pfl-next"></div>
-      <div class="fg"><label class="fl">หมายเหตุ</label><input class="fi" id="pfl-note" placeholder="เช่น ใส่รอบฝนแรก, ผู้ใส่: ลุงสมชาย"></div>
+      <div class="fg"><label class="fl" for="pfl-next">กำหนดใส่รอบถัดไป (โดยประมาณ)</label><input type="date" class="fi" id="pfl-next"></div>
+      <div class="fg"><label class="fl" for="pfl-note">หมายเหตุ</label><input class="fi" id="pfl-note" placeholder="เช่น ใส่รอบฝนแรก, ผู้ใส่: ลุงสมชาย"></div>
       <button class="btn btn-p" style="width:100%" onclick="savePalmFert()">💾 บันทึก</button>
       <div id="sk-msg-palmfert"></div>
       <div class="hint" style="margin-top:12px">💡 บันทึกที่ผูก "ค่าใช้จ่าย" ไว้ จะไปรวมกับหมวดรายจ่ายในแท็บ "รายรับ-รายจ่าย" ของตะวันปาล์มเองให้อัตโนมัติ (ไม่ต้องกรอกซ้ำสองที่) — <b>ไม่ยุ่งกับข้อมูลการเงินของฝั่งตะวันฟาร์ม (กุ้ง) เลย แยกกันเด็ดขาด</b></div>
@@ -1494,29 +1494,29 @@ body.role-ceo .main{max-width:640px}
       <div class="card" style="margin-bottom:12px">
         <div class="card-t">💰 บันทึกการซื้อกองทุน</div>
         <div class="card-sub" id="fund-buy-sub"></div>
-        <div class="fg"><label class="fl">วันที่ซื้อ</label><input type="date" class="fi" id="fb-date"></div>
-        <div class="fg"><label class="fl">จำนวนเงิน (บาท)</label><input class="fi" id="fb-amt" inputmode="decimal" placeholder="เช่น 45,000" oninput="fundBuyPreview()"></div>
-        <div class="fg"><label class="fl">NAV ต่อหน่วย (ตอนซื้อ)</label><input class="fi" id="fb-nav" inputmode="decimal" placeholder="เช่น 10.4522" oninput="fundBuyPreview()"></div>
-        <div class="fg"><label class="fl">หน่วยที่ได้ (คำนวณอัตโนมัติ)</label><input class="fi" id="fb-units-preview" style="background:var(--sf2)" readonly></div>
+        <div class="fg"><label class="fl" for="fb-date">วันที่ซื้อ</label><input type="date" class="fi" id="fb-date"></div>
+        <div class="fg"><label class="fl" for="fb-amt">จำนวนเงิน (บาท)</label><input class="fi" id="fb-amt" inputmode="decimal" placeholder="เช่น 45,000" oninput="fundBuyPreview()"></div>
+        <div class="fg"><label class="fl" for="fb-nav">NAV ต่อหน่วย (ตอนซื้อ)</label><input class="fi" id="fb-nav" inputmode="decimal" placeholder="เช่น 10.4522" oninput="fundBuyPreview()"></div>
+        <div class="fg"><label class="fl" for="fb-units-preview">หน่วยที่ได้ (คำนวณอัตโนมัติ)</label><input class="fi" id="fb-units-preview" style="background:var(--sf2)" readonly></div>
         <button class="btn btn-p" style="width:100%" id="fund-buy-btn" onclick="saveFundBuy()">💾 บันทึกการซื้อ</button>
         <div id="sk-msg-fundbuy"></div>
       </div>
       <div class="card" style="margin-bottom:12px">
         <div class="card-t">📤 บันทึกการขายกองทุน</div>
         <div class="card-sub" id="fund-sell-sub"></div>
-        <div class="fg"><label class="fl">วันที่ขาย</label><input type="date" class="fi" id="fs-date"></div>
-        <div class="fg"><label class="fl">จำนวนหน่วยที่ขาย</label><input class="fi" id="fs-units" inputmode="decimal" placeholder="เช่น 2,000" oninput="fundSellPreview()"></div>
-        <div class="fg"><label class="fl">NAV ต่อหน่วย (ตอนขาย)</label><input class="fi" id="fs-nav" inputmode="decimal" placeholder="เช่น 11.2000" oninput="fundSellPreview()"></div>
-        <div class="fg"><label class="fl">เงินที่ได้ (คำนวณอัตโนมัติ)</label><input class="fi" id="fs-amt-preview" style="background:var(--sf2)" readonly></div>
-        <div class="fg"><label class="fl">หมายเหตุ</label><input class="fi" id="fs-note" placeholder="เช่น ถอนไปใช้จ่ายในสวนปาล์ม"></div>
+        <div class="fg"><label class="fl" for="fs-date">วันที่ขาย</label><input type="date" class="fi" id="fs-date"></div>
+        <div class="fg"><label class="fl" for="fs-units">จำนวนหน่วยที่ขาย</label><input class="fi" id="fs-units" inputmode="decimal" placeholder="เช่น 2,000" oninput="fundSellPreview()"></div>
+        <div class="fg"><label class="fl" for="fs-nav">NAV ต่อหน่วย (ตอนขาย)</label><input class="fi" id="fs-nav" inputmode="decimal" placeholder="เช่น 11.2000" oninput="fundSellPreview()"></div>
+        <div class="fg"><label class="fl" for="fs-amt-preview">เงินที่ได้ (คำนวณอัตโนมัติ)</label><input class="fi" id="fs-amt-preview" style="background:var(--sf2)" readonly></div>
+        <div class="fg"><label class="fl" for="fs-note">หมายเหตุ</label><input class="fi" id="fs-note" placeholder="เช่น ถอนไปใช้จ่ายในสวนปาล์ม"></div>
         <button class="btn btn-p" style="width:100%" id="fund-sell-btn" onclick="saveFundSell()">💾 บันทึกการขาย</button>
         <div id="sk-msg-fundsell"></div>
       </div>
       <div class="card" style="margin-bottom:12px">
         <div class="card-t">🔄 บันทึก NAV ปัจจุบัน</div>
         <div class="card-sub">อัปเดตเป็นระยะ (เช่น ทุกสัปดาห์) เพื่อคำนวณกำไร-ขาดทุนที่ยังไม่รับรู้</div>
-        <div class="fg"><label class="fl">วันที่</label><input type="date" class="fi" id="fn-date"></div>
-        <div class="fg"><label class="fl">NAV ต่อหน่วย</label><input class="fi" id="fn-nav" inputmode="decimal" placeholder="เช่น 10.9563"></div>
+        <div class="fg"><label class="fl" for="fn-date">วันที่</label><input type="date" class="fi" id="fn-date"></div>
+        <div class="fg"><label class="fl" for="fn-nav">NAV ต่อหน่วย</label><input class="fi" id="fn-nav" inputmode="decimal" placeholder="เช่น 10.9563"></div>
         <button class="btn btn-p" style="width:100%" id="fund-nav-btn" onclick="saveFundNav()">💾 บันทึก NAV</button>
         <div id="sk-msg-fundnav"></div>
       </div>
@@ -1639,8 +1639,8 @@ body.role-ceo .main{max-width:640px}
     </div>
     <div id="ep-chipbar" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"></div>
     <div class="fgrid" style="margin-bottom:16px;grid-template-columns:1fr 1fr">
-      <div class="fg"><label class="fl">วันที่ *</label><input type="date" class="fi" id="ep-date" onchange="calcAge('ep');checkExistingWQ();saveLastEntry();renderEpChips();updateEpHeader()"></div>
-      <div class="fg"><label class="fl">อายุ (วัน)</label><input type="number" class="fi" id="ep-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
+      <div class="fg"><label class="fl" for="ep-date">วันที่ *</label><input type="date" class="fi" id="ep-date" onchange="calcAge('ep');checkExistingWQ();saveLastEntry();renderEpChips();updateEpHeader()"></div>
+      <div class="fg"><label class="fl" for="ep-age">อายุ (วัน)</label><input type="number" class="fi" id="ep-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
     </div>
     <div class="card-t" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
       <div><span id="ep-active-name" style="font-size:16px;font-weight:700;color:var(--p)">— เลือกบ่อด้านบน —</span> <span id="ep-active-sub" style="font-size:var(--fs115);color:var(--tx3)"></span></div>
@@ -1649,7 +1649,7 @@ body.role-ceo .main{max-width:640px}
     <div class="fgrid" id="ep-fields"></div>
     <button type="button" class="btn btn-s wq-extra-toggle" id="wq-extra-btn" onclick="toggleWqExtra()">+ เพิ่มค่าเสริม (Ca/Mg/Hardness)</button>
     <div class="wq-extra-wrap" id="ep-fields-extra-wrap"><div class="fgrid" id="ep-fields-extra"></div></div>
-    <div style="margin-top:12px"><div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="ep-notes" placeholder="สังเกตการณ์..."></div></div>
+    <div style="margin-top:12px"><div class="fg"><label class="fl" for="ep-notes">หมายเหตุ</label><input type="text" class="fi" id="ep-notes" placeholder="สังเกตการณ์..."></div></div>
     <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn btn-p" onclick="saveWQ()">💾 บันทึก แล้วไปบ่อถัดไป</button>
       <button class="btn btn-s" onclick="clearWQ()">🗑️ ล้างฟอร์ม</button>
@@ -1671,7 +1671,7 @@ body.role-ceo .main{max-width:640px}
     <div class="card-t" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
       <span>📝 บันทึกอาหารทุกบ่อ</span>
       <div style="display:flex;align-items:center;gap:8px">
-        <label class="fl" style="margin:0">วันที่</label>
+        <label class="fl" style="margin:0" for="fd-date">วันที่</label>
         <input type="date" class="fi" id="fd-date" style="width:150px" onchange="renderFeedGrid()">
       </div>
     </div>
@@ -1692,39 +1692,39 @@ body.role-ceo .main{max-width:640px}
       <div class="card-t">📝 บันทึกการสุ่ม</div>
       <div style="display:flex;flex-direction:column;gap:12px">
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="sp-pond" onchange="onSpPond()"><option value="">-- เลือกบ่อ --</option></select></div>
-          <div class="fg"><label class="fl">วันที่ *</label><input type="date" class="fi" id="sp-date" onchange="calcAge('sp')"></div>
+          <div class="fg"><label class="fl" for="sp-pond">บ่อ *</label><select class="fi" id="sp-pond" onchange="onSpPond()"><option value="">-- เลือกบ่อ --</option></select></div>
+          <div class="fg"><label class="fl" for="sp-date">วันที่ *</label><input type="date" class="fi" id="sp-date" onchange="calcAge('sp')"></div>
         </div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">อายุ (วัน)</label><input type="number" class="fi" id="sp-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
-          <div class="fg"><label class="fl">จำนวนตัวที่ชั่ง</label><input type="number" class="fi" id="sp-count" placeholder="30" oninput="calcSampleABW()"></div>
+          <div class="fg"><label class="fl" for="sp-age">อายุ (วัน)</label><input type="number" class="fi" id="sp-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
+          <div class="fg"><label class="fl" for="sp-count">จำนวนตัวที่ชั่ง</label><input type="number" class="fi" id="sp-count" placeholder="30" oninput="calcSampleABW()"></div>
         </div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">น้ำหนักรวม (กิโลกรัม)</label><input type="number" step="0.001" class="fi" id="sp-weight" placeholder="กก." oninput="calcSampleABW()"></div>
+          <div class="fg"><label class="fl" for="sp-weight">น้ำหนักรวม (กิโลกรัม)</label><input type="number" step="0.001" class="fi" id="sp-weight" placeholder="กก." oninput="calcSampleABW()"></div>
           <div class="fg">
-            <label class="fl">ABW (g/ตัว) — คำนวณ</label>
+            <label class="fl" for="sp-abw">ABW (g/ตัว) — คำนวณ</label>
             <input type="number" step="0.01" class="fi" id="sp-abw" readonly style="background:var(--sf2);color:var(--p);font-weight:700;font-size:16px">
           </div>
         </div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
           <div class="fg">
-            <label class="fl">ไซส์ (ตัว/กก.) — คำนวณ</label>
+            <label class="fl" for="sp-size">ไซส์ (ตัว/กก.) — คำนวณ</label>
             <input type="number" class="fi" id="sp-size" readonly style="background:var(--sf2);color:var(--in);font-weight:700;font-size:16px">
             <span class="lbl-std">ยิ่งน้อย = ตัวยิ่งโต</span>
           </div>
           <div class="fg">
-            <label class="fl">Survival Rate (%) — ประมาณ</label>
+            <label class="fl" for="sp-surv">Survival Rate (%) — ประมาณ</label>
             <input type="number" step="1" class="fi" id="sp-surv" placeholder="80" oninput="calcBiomass()">
           </div>
         </div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
           <div class="fg">
-            <label class="fl">Biomass รวม <span style="font-weight:400;color:var(--tx3)">(น้ำหนักกุ้งทั้งบ่อ, กก.)</span> — คำนวณ</label>
+            <label class="fl" for="sp-biomass">Biomass รวม <span style="font-weight:400;color:var(--tx3)">(น้ำหนักกุ้งทั้งบ่อ, กก.)</span> — คำนวณ</label>
             <input type="number" class="fi" id="sp-biomass" readonly style="background:var(--sf2);color:var(--p);font-weight:700">
             <span class="lbl-std" id="sp-pdg-info"></span>
           </div>
         </div>
-        <div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="sp-notes" placeholder="กุ้งสวย/ซีด/เปลือกนิ่ม..."></div>
+        <div class="fg"><label class="fl" for="sp-notes">หมายเหตุ</label><input type="text" class="fi" id="sp-notes" placeholder="กุ้งสวย/ซีด/เปลือกนิ่ม..."></div>
         <div style="display:flex;gap:10px"><button class="btn btn-p" id="sp-save-btn" onclick="saveSample()">💾 บันทึก</button><button class="btn btn-s" onclick="clearSample()">🗑️ ล้าง</button></div>
         <div id="sp-msg"></div>
         <div id="sp-result" style="display:none;margin-top:10px"></div>
@@ -1753,15 +1753,15 @@ body.role-ceo .main{max-width:640px}
       <div style="display:flex;flex-direction:column;gap:12px">
         <input type="hidden" id="wl-edit-id">
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="wl-pond" onchange="onWlPond()"><option value="">-- เลือกบ่อ --</option></select></div>
-          <div class="fg"><label class="fl">วันที่ *</label><input type="date" class="fi" id="wl-date" onchange="calcAge('wl')"></div>
+          <div class="fg"><label class="fl" for="wl-pond">บ่อ *</label><select class="fi" id="wl-pond" onchange="onWlPond()"><option value="">-- เลือกบ่อ --</option></select></div>
+          <div class="fg"><label class="fl" for="wl-date">วันที่ *</label><input type="date" class="fi" id="wl-date" onchange="calcAge('wl')"></div>
         </div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">อายุ (วัน)</label><input type="number" class="fi" id="wl-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
-          <div class="fg"><label class="fl">การดำเนินการ</label><select class="fi" id="wl-action" onchange="toggleWlShockHint()"><option value="exchange">เปลี่ยนถ่ายน้ำ</option><option value="add">เติมน้ำ</option><option value="drain">ระบายน้ำ</option><option value="treat">บำบัดน้ำ</option></select></div>
+          <div class="fg"><label class="fl" for="wl-age">อายุ (วัน)</label><input type="number" class="fi" id="wl-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
+          <div class="fg"><label class="fl" for="wl-action">การดำเนินการ</label><select class="fi" id="wl-action" onchange="toggleWlShockHint()"><option value="exchange">เปลี่ยนถ่ายน้ำ</option><option value="add">เติมน้ำ</option><option value="drain">ระบายน้ำ</option><option value="treat">บำบัดน้ำ</option></select></div>
         </div>
         <div class="hint" id="wl-shock-hint" style="display:none">⚠️ ถ่ายน้ำปริมาณมากรวดเดียว เสี่ยงกุ้งช็อกถ้าน้ำใหม่อุณหภูมิ/ความเค็มต่างจากบ่อเดิมเกิน 5°C — ควรทยอยเปลี่ยนทีละน้อยแทนครั้งเดียว</div>
-        <div class="fg"><label class="fl">เหตุผล / หมายเหตุ</label><input type="text" class="fi" id="wl-notes" placeholder="เหตุผลในการเปลี่ยนน้ำ..."></div>
+        <div class="fg"><label class="fl" for="wl-notes">เหตุผล / หมายเหตุ</label><input type="text" class="fi" id="wl-notes" placeholder="เหตุผลในการเปลี่ยนน้ำ..."></div>
         <div style="display:flex;gap:10px"><button class="btn btn-p" onclick="saveWaterLog()">💾 บันทึก</button><button class="btn btn-s" onclick="clearWaterLog()">🗑️ ล้าง</button></div>
         <div id="wl-msg"></div>
       </div>
@@ -1784,14 +1784,14 @@ body.role-ceo .main{max-width:640px}
       <div class="card-t">📝 บันทึกจำนวนกุ้งตาย</div>
       <div style="display:flex;flex-direction:column;gap:12px">
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="mt-pond" onchange="onMtPond()"><option value="">-- เลือกบ่อ --</option></select></div>
-          <div class="fg"><label class="fl">วันที่ *</label><input type="date" class="fi" id="mt-date" onchange="calcAge('mt')"></div>
+          <div class="fg"><label class="fl" for="mt-pond">บ่อ *</label><select class="fi" id="mt-pond" onchange="onMtPond()"><option value="">-- เลือกบ่อ --</option></select></div>
+          <div class="fg"><label class="fl" for="mt-date">วันที่ *</label><input type="date" class="fi" id="mt-date" onchange="calcAge('mt')"></div>
         </div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">อายุ (วัน)</label><input type="number" class="fi" id="mt-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
-          <div class="fg"><label class="fl">จำนวนกุ้งตาย (ตัว) *</label><input type="number" class="fi" id="mt-count" placeholder="0" oninput="onMtCountInput()"></div>
+          <div class="fg"><label class="fl" for="mt-age">อายุ (วัน)</label><input type="number" class="fi" id="mt-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
+          <div class="fg"><label class="fl" for="mt-count">จำนวนกุ้งตาย (ตัว) *</label><input type="number" class="fi" id="mt-count" placeholder="0" oninput="onMtCountInput()"></div>
         </div>
-        <div class="fg"><label class="fl">สาเหตุที่สังเกตได้</label>
+        <div class="fg"><label class="fl" for="mt-cause">สาเหตุที่สังเกตได้</label>
           <select class="fi" id="mt-cause">
             <option value="">-- ไม่ทราบ/ไม่ระบุ --</option>
             <option value="do">คาดว่า DO ต่ำ</option>
@@ -1801,7 +1801,7 @@ body.role-ceo .main{max-width:640px}
             <option value="other">อื่นๆ</option>
           </select>
         </div>
-        <div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="mt-notes" placeholder="เช่น ลอยหัวตอนเช้า, พบบริเวณมุมบ่อ..."></div>
+        <div class="fg"><label class="fl" for="mt-notes">หมายเหตุ</label><input type="text" class="fi" id="mt-notes" placeholder="เช่น ลอยหัวตอนเช้า, พบบริเวณมุมบ่อ..."></div>
         <div id="mt-warn"></div>
         <div style="display:flex;gap:10px"><button class="btn btn-p" id="mt-save-btn" onclick="saveMortality()">💾 บันทึก</button><button class="btn btn-s" onclick="clearMortality()">🗑️ ล้าง</button></div>
         <div id="mt-msg"></div>
@@ -1825,12 +1825,12 @@ body.role-ceo .main{max-width:640px}
       <div class="card-t">📝 บันทึกผลแล็บ</div>
       <div style="display:flex;flex-direction:column;gap:12px">
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="lb-pond" onchange="onLbPond()"><option value="">-- เลือกบ่อ --</option></select></div>
-          <div class="fg"><label class="fl">วันที่ส่งตรวจ *</label><input type="date" class="fi" id="lb-date" onchange="calcAge('lb')"></div>
+          <div class="fg"><label class="fl" for="lb-pond">บ่อ *</label><select class="fi" id="lb-pond" onchange="onLbPond()"><option value="">-- เลือกบ่อ --</option></select></div>
+          <div class="fg"><label class="fl" for="lb-date">วันที่ส่งตรวจ *</label><input type="date" class="fi" id="lb-date" onchange="calcAge('lb')"></div>
         </div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">อายุ (วัน)</label><input type="number" class="fi" id="lb-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
-          <div class="fg"><label class="fl">ห้องแล็บ / ผู้ตรวจ</label><input type="text" class="fi" id="lb-lab" placeholder="CP Lab, มหาวิทยาลัย..."></div>
+          <div class="fg"><label class="fl" for="lb-age">อายุ (วัน)</label><input type="number" class="fi" id="lb-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
+          <div class="fg"><label class="fl" for="lb-lab">ห้องแล็บ / ผู้ตรวจ</label><input type="text" class="fi" id="lb-lab" placeholder="CP Lab, มหาวิทยาลัย..."></div>
         </div>
         <div class="lb-src-toggle">
           <button type="button" class="lb-src-btn on-water" id="lb-src-water" onclick="setLabSrc('water',this)">🌊 ตรวจจากน้ำ <span class="lb-src-count" id="lb-cnt-water">0/3</span></button>
@@ -1840,19 +1840,19 @@ body.role-ceo .main{max-width:640px}
           <div class="lb-sect-hdr">🦠 TCBS — เชื้อในน้ำ</div>
           <div class="fgrid" style="grid-template-columns:1fr 1fr">
             <div class="fg">
-              <label class="fl">เชื้อเขียว — V. parahaemolyticus</label>
+              <label class="fl" for="lb-tcbs-g">เชื้อเขียว — V. parahaemolyticus</label>
               <input type="number" class="fi" id="lb-tcbs-g" placeholder="CFU/mL" oninput="onLabInput('water')">
               <span class="lbl-std">ปลอดภัย: &lt;100 | เฝ้าระวัง: 100–1,000 | อันตราย: &gt;1,000</span>
             </div>
             <div class="fg">
-              <label class="fl">เชื้อเหลือง — V. alginolyticus / cholerae</label>
+              <label class="fl" for="lb-tcbs-y">เชื้อเหลือง — V. alginolyticus / cholerae</label>
               <input type="number" class="fi" id="lb-tcbs-y" placeholder="CFU/mL" oninput="onLabInput('water')">
               <span class="lbl-std">ปลอดภัย: &lt;1,000 | เฝ้าระวัง: &gt;1,000</span>
             </div>
           </div>
           <div class="lb-sect-hdr">🧫 Total Viable Count — น้ำ</div>
           <div class="fg">
-            <label class="fl">TVC น้ำ (CFU/mL)</label>
+            <label class="fl" for="lb-tvc">TVC น้ำ (CFU/mL)</label>
             <input type="number" class="fi" id="lb-tvc" placeholder="0" oninput="onLabInput('water')">
             <span class="lbl-std">ปกติ: &lt;10^5</span>
           </div>
@@ -1861,34 +1861,34 @@ body.role-ceo .main{max-width:640px}
           <div class="lb-sect-hdr">🦠 TCBS — เชื้อในตับ</div>
           <div class="fgrid" style="grid-template-columns:1fr 1fr">
             <div class="fg">
-              <label class="fl">เชื้อเขียว — V. parahaemolyticus</label>
+              <label class="fl" for="lb-hep-g">เชื้อเขียว — V. parahaemolyticus</label>
               <input type="number" class="fi" id="lb-hep-g" placeholder="CFU/g" oninput="onLabInput('hep')">
               <span class="lbl-std">ปลอดภัย: &lt;100 | เฝ้าระวัง: 100–1,000 | อันตราย: &gt;1,000</span>
             </div>
             <div class="fg">
-              <label class="fl">เชื้อเหลือง — V. alginolyticus / cholerae</label>
+              <label class="fl" for="lb-hep-y">เชื้อเหลือง — V. alginolyticus / cholerae</label>
               <input type="number" class="fi" id="lb-hep-y" placeholder="CFU/g" oninput="onLabInput('hep')">
               <span class="lbl-std">ปลอดภัย: &lt;1,000 | เฝ้าระวัง: &gt;1,000</span>
             </div>
           </div>
           <div class="lb-sect-hdr">🧫 Total Viable Count — ตับ</div>
           <div class="fg">
-            <label class="fl">TVC ตับ (CFU/g)</label>
+            <label class="fl" for="lb-tvc-hep">TVC ตับ (CFU/g)</label>
             <input type="number" class="fi" id="lb-tvc-hep" placeholder="0" oninput="onLabInput('hep')">
             <span class="lbl-std">ปกติ: &lt;10^5</span>
           </div>
           <div class="lb-sect-hdr">🔬 EHP / Microsporidian</div>
           <div class="fgrid" style="grid-template-columns:1fr 1fr">
-            <div class="fg"><label class="fl">EHP (% พบเชื้อ)</label><input type="number" class="fi" id="lb-ehp" placeholder="0" min="0" max="100" step="0.1" oninput="onLabInput('hep')"><span class="lbl-std">ปลอดภัย: 0% | เฝ้าระวัง: 0–5% | อันตราย: &gt;5%</span></div>
-            <div class="fg"><label class="fl">ตัวอ่อน EHP (%)</label><input type="number" class="fi" id="lb-ehp-larva" placeholder="0" min="0" max="100" step="0.1" oninput="onLabInput('hep')"><span class="lbl-std">ปลอดภัย: 0% | เฝ้าระวัง: 0–25% | อันตราย: &gt;25%</span></div>
+            <div class="fg"><label class="fl" for="lb-ehp">EHP (% พบเชื้อ)</label><input type="number" class="fi" id="lb-ehp" placeholder="0" min="0" max="100" step="0.1" oninput="onLabInput('hep')"><span class="lbl-std">ปลอดภัย: 0% | เฝ้าระวัง: 0–5% | อันตราย: &gt;5%</span></div>
+            <div class="fg"><label class="fl" for="lb-ehp-larva">ตัวอ่อน EHP (%)</label><input type="number" class="fi" id="lb-ehp-larva" placeholder="0" min="0" max="100" step="0.1" oninput="onLabInput('hep')"><span class="lbl-std">ปลอดภัย: 0% | เฝ้าระวัง: 0–25% | อันตราย: &gt;25%</span></div>
           </div>
           <div class="lb-sect-hdr">🍽️ เนื้อเยื่อตับ-ลำไส้</div>
           <div class="fgrid" style="grid-template-columns:1fr 1fr">
-            <div class="fg"><label class="fl">ลำไส้อักเสบ (%)</label><input type="number" class="fi" id="lb-gut" placeholder="0" min="0" max="100" step="0.1" oninput="onLabInput('hep')"><span class="lbl-std">ปกติ: 0–10% | เฝ้าระวัง: 10–30% | อันตราย: &gt;30%</span></div>
-            <div class="fg"><label class="fl">เม็ดไขมันรวม (%)</label><input type="number" class="fi" id="lb-lipid" placeholder="0" min="0" max="100" step="0.1" oninput="onLabInput('hep')"><span class="lbl-std">ดี: &gt;70% | เฝ้าระวัง: 50–70% | อันตราย: &lt;50%</span></div>
+            <div class="fg"><label class="fl" for="lb-gut">ลำไส้อักเสบ (%)</label><input type="number" class="fi" id="lb-gut" placeholder="0" min="0" max="100" step="0.1" oninput="onLabInput('hep')"><span class="lbl-std">ปกติ: 0–10% | เฝ้าระวัง: 10–30% | อันตราย: &gt;30%</span></div>
+            <div class="fg"><label class="fl" for="lb-lipid">เม็ดไขมันรวม (%)</label><input type="number" class="fi" id="lb-lipid" placeholder="0" min="0" max="100" step="0.1" oninput="onLabInput('hep')"><span class="lbl-std">ดี: &gt;70% | เฝ้าระวัง: 50–70% | อันตราย: &lt;50%</span></div>
           </div>
           <div class="fg" style="margin-top:8px">
-            <label class="fl">ลักษณะตับอ่อน (มองด้วยตา)</label>
+            <label class="fl" for="lb-hepato">ลักษณะตับอ่อน (มองด้วยตา)</label>
             <select class="fi" id="lb-hepato" onchange="onLabInput('hep')">
               <option value="">-- เลือก --</option>
               <option value="normal">ปกติ — สีน้ำตาลเข้ม เต่ง</option>
@@ -1901,7 +1901,7 @@ body.role-ceo .main{max-width:640px}
         </div>
         <div class="lb-sect-hdr">📋 สรุปสถานะ (รวมทั้ง 2 แหล่ง)</div>
         <div id="lb-status-display" style="margin-top:4px"></div>
-        <div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="lb-notes" placeholder="ข้อสังเกตจากแล็บ..."></div>
+        <div class="fg"><label class="fl" for="lb-notes">หมายเหตุ</label><input type="text" class="fi" id="lb-notes" placeholder="ข้อสังเกตจากแล็บ..."></div>
         <div style="display:flex;gap:10px"><button class="btn btn-p" id="lb-save-btn" onclick="saveLab()">💾 บันทึกทั้งหมด</button><button class="btn btn-s" onclick="clearLab()">🗑️ ล้าง</button></div>
         <div id="lb-msg"></div>
       </div>
@@ -1931,7 +1931,7 @@ body.role-ceo .main{max-width:640px}
   <div class="card" style="margin-bottom:12px">
     <div class="card-t">📁 การทดลองที่บันทึกไว้</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px">
-      <div class="fg" style="margin:0;flex:1;min-width:180px"><label class="fl">ค้นหาชื่อการทดลอง</label><input class="fi" id="trial-search" placeholder="พิมพ์ชื่อการทดลอง..." oninput="onTrialSearchInput(this.value)"></div>
+      <div class="fg" style="margin:0;flex:1;min-width:180px"><label class="fl" for="trial-search">ค้นหาชื่อการทดลอง</label><input class="fi" id="trial-search" placeholder="พิมพ์ชื่อการทดลอง..." oninput="onTrialSearchInput(this.value)"></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <span class="trial-chip trial-filter-chip on" data-st="" onclick="setTrialListFilterStatus('',this)">ทั้งหมด</span>
         <span class="trial-chip trial-filter-chip" data-st="ongoing" onclick="setTrialListFilterStatus('ongoing',this)">🟢 กำลังทดลอง</span>
@@ -1940,7 +1940,7 @@ body.role-ceo .main{max-width:640px}
       </div>
     </div>
     <div class="fgrid" style="grid-template-columns:2fr 1fr">
-      <div class="fg"><label class="fl">เลือกการทดลอง</label><select class="fi" id="trial-select" onchange="loadTrial(this.value)"><option value="">— สร้างการทดลองใหม่ —</option></select></div>
+      <div class="fg"><label class="fl" for="trial-select">เลือกการทดลอง</label><select class="fi" id="trial-select" onchange="loadTrial(this.value)"><option value="">— สร้างการทดลองใหม่ —</option></select></div>
       <div class="fg" style="display:flex;align-items:flex-end"><button class="btn btn-s" onclick="newTrial()" style="width:100%">➕ ทดลองใหม่</button></div>
     </div>
   </div>
@@ -1965,11 +1965,11 @@ body.role-ceo .main{max-width:640px}
         <span class="trial-chip trial-status-chip" id="ts-paused" onclick="setTrialStatus('paused')">⏸️ ระงับ</span>
       </div>
     </div>
-    <div class="fg" style="margin-bottom:14px"><label class="fl">ชื่อเวชภัณฑ์/สิ่งที่ทดลอง</label><input class="fi" id="trial-name" list="trial-suggest" placeholder="เช่น โปรไบโอติกบำรุงตับ สูตร B"></div>
+    <div class="fg" style="margin-bottom:14px"><label class="fl" for="trial-name">ชื่อเวชภัณฑ์/สิ่งที่ทดลอง</label><input class="fi" id="trial-name" list="trial-suggest" placeholder="เช่น โปรไบโอติกบำรุงตับ สูตร B"></div>
     <datalist id="trial-suggest"></datalist>
     <div class="fgrid" style="grid-template-columns:1fr 1fr">
-      <div class="fg"><label class="fl">วันที่เริ่มทดลอง <span style="color:var(--d)">*</span></label><input type="date" class="fi" id="trial-start" onchange="setTrialPeriod()"></div>
-      <div class="fg"><label class="fl">วันที่สิ้นสุดทดลอง</label><input type="date" class="fi" id="trial-end" onchange="setTrialPeriod()"></div>
+      <div class="fg"><label class="fl" for="trial-start">วันที่เริ่มทดลอง <span style="color:var(--d)">*</span></label><input type="date" class="fi" id="trial-start" onchange="setTrialPeriod()"></div>
+      <div class="fg"><label class="fl" for="trial-end">วันที่สิ้นสุดทดลอง</label><input type="date" class="fi" id="trial-end" onchange="setTrialPeriod()"></div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">
       <button type="button" class="btn btn-s" onclick="trialSetOngoing()">ยังดำเนินอยู่ (ตั้งเป็นวันนี้)</button>
@@ -1979,8 +1979,8 @@ body.role-ceo .main{max-width:640px}
 
   <div class="card" style="margin-bottom:12px" id="trial-lab-only-card">
     <div class="card-t">🎯 รายละเอียดการทดลอง (เฉพาะแล็บ) <span class="lab-tag">แล็บ</span></div>
-    <div class="fg" style="margin-bottom:12px"><label class="fl">วัตถุประสงค์ / สิ่งที่ต้องการทดสอบ</label><textarea class="fi" id="trial-objective" rows="6" style="resize:vertical;line-height:1.6" placeholder="เช่น เปรียบเทียบอัตราการรอดของเชื้อจุลินทรีย์ 2 สูตร เมื่อผสมในน้ำเค็ม 15 ppt"></textarea></div>
-    <div class="fg" style="margin:0"><label class="fl">ผลสรุปเบื้องต้น (กรอกเพิ่มได้ภายหลัง)</label><textarea class="fi" id="trial-conclusion" rows="6" style="resize:vertical;line-height:1.6" placeholder="เช่น สูตร B รอดในน้ำเค็มได้ดีกว่าสูตร A ประมาณ 20%..."></textarea></div>
+    <div class="fg" style="margin-bottom:12px"><label class="fl" for="trial-objective">วัตถุประสงค์ / สิ่งที่ต้องการทดสอบ</label><textarea class="fi" id="trial-objective" rows="6" style="resize:vertical;line-height:1.6" placeholder="เช่น เปรียบเทียบอัตราการรอดของเชื้อจุลินทรีย์ 2 สูตร เมื่อผสมในน้ำเค็ม 15 ppt"></textarea></div>
+    <div class="fg" style="margin:0"><label class="fl" for="trial-conclusion">ผลสรุปเบื้องต้น (กรอกเพิ่มได้ภายหลัง)</label><textarea class="fi" id="trial-conclusion" rows="6" style="resize:vertical;line-height:1.6" placeholder="เช่น สูตร B รอดในน้ำเค็มได้ดีกว่าสูตร A ประมาณ 20%..."></textarea></div>
   </div>
 
   <div id="trial-pond-section">
@@ -1995,7 +1995,7 @@ body.role-ceo .main{max-width:640px}
   <div class="card" style="margin-bottom:12px">
     <div class="card-t">📊 ตัวชี้วัดที่ต้องการเปรียบเทียบ</div>
     <div id="trial-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px"></div>
-    <div class="fg" id="trial-water-row" style="max-width:250px;margin-top:12px"><label class="fl">พารามิเตอร์น้ำ</label><select class="fi" id="trial-water-param" onchange="renderTrialResults()"></select></div>
+    <div class="fg" id="trial-water-row" style="max-width:250px;margin-top:12px"><label class="fl" for="trial-water-param">พารามิเตอร์น้ำ</label><select class="fi" id="trial-water-param" onchange="renderTrialResults()"></select></div>
   </div>
 
   <div class="card" style="margin-bottom:12px" id="trial-growth-card">
@@ -2025,9 +2025,9 @@ body.role-ceo .main{max-width:640px}
     <span class="jr-add-toggle" onclick="toggleTrialJournalAdd()">+ เพิ่มบันทึกใหม่</span>
     <div class="jr-add-box" id="jr-add-box" style="display:none">
       <div class="fgrid" style="margin-bottom:8px">
-        <div class="fg" style="margin:0"><label class="fl">วันที่</label><input type="date" class="fi" id="jr-date"></div>
+        <div class="fg" style="margin:0"><label class="fl" for="jr-date">วันที่</label><input type="date" class="fi" id="jr-date"></div>
       </div>
-      <div class="fg" style="margin:0"><label class="fl">บันทึก</label><textarea class="fi" id="jr-note" rows="2" placeholder="เช่น วันนี้สังเกตเห็นตะกอนตกในบีกเกอร์สูตร B มากกว่าสูตร A"></textarea></div>
+      <div class="fg" style="margin:0"><label class="fl" for="jr-note">บันทึก</label><textarea class="fi" id="jr-note" rows="2" placeholder="เช่น วันนี้สังเกตเห็นตะกอนตกในบีกเกอร์สูตร B มากกว่าสูตร A"></textarea></div>
       <div style="margin-top:12px"><button type="button" class="btn btn-p" onclick="addTrialJournalEntry()">บันทึก</button></div>
     </div>
     <div id="jr-list"></div>
@@ -2052,10 +2052,10 @@ body.role-ceo .main{max-width:640px}
       <button class="cmp-cat-btn" id="cmp-cat-water" onclick="setCmpCat('water',this)">💦 น้ำ</button>
     </div>
     <div id="cmp-sel" style="display:none;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
-    <div id="cmp-param-row" style="display:none" class="fg" style="max-width:250px"><label class="fl">พารามิเตอร์</label><select class="fi" id="cmp-param" onchange="renderCompare()"></select></div>
-    <div id="cmp-feed-row" class="fg" style="max-width:280px;display:none"><label class="fl">ชนิดข้อมูล</label><select class="fi" id="cmp-feed-param" onchange="renderCompare()"><option value="per100k">การกิน (กก./แสน)</option><option value="daily">อาหารต่อวัน (กก.)</option><option value="cumulative">อาหารสะสม (กก.)</option></select></div>
-    <div id="cmp-lab-row" class="fg" style="max-width:280px;display:none"><label class="fl">ผลตรวจ</label><select class="fi" id="cmp-lab-param" onchange="renderCompare()"><option value="tcbsGreen">🟢 เชื้อเขียว - น้ำ (CFU/mL)</option><option value="tcbsYellow">🟡 เชื้อเหลือง - น้ำ (CFU/mL)</option><option value="hepatoGreen">🟢 เชื้อเขียว - ตับ (CFU/g)</option><option value="hepatoYellow">🟡 เชื้อเหลือง - ตับ (CFU/g)</option><option value="tvc">TVC - น้ำ (CFU/mL)</option><option value="tvcHepato">TVC - ตับ (CFU/g)</option></select></div>
-    <div id="cmp-water-row" class="fg" style="max-width:280px;display:none"><label class="fl">ชนิดกิจกรรม</label><select class="fi" id="cmp-water-param" onchange="renderCompare()"><option value="all">ทุกกิจกรรม</option><option value="exchange">เปลี่ยนถ่ายน้ำ</option><option value="add">เติมน้ำ</option><option value="drain">ระบายน้ำ</option></select></div>
+    <div id="cmp-param-row" style="display:none" class="fg" style="max-width:250px"><label class="fl" for="cmp-param">พารามิเตอร์</label><select class="fi" id="cmp-param" onchange="renderCompare()"></select></div>
+    <div id="cmp-feed-row" class="fg" style="max-width:280px;display:none"><label class="fl" for="cmp-feed-param">ชนิดข้อมูล</label><select class="fi" id="cmp-feed-param" onchange="renderCompare()"><option value="per100k">การกิน (กก./แสน)</option><option value="daily">อาหารต่อวัน (กก.)</option><option value="cumulative">อาหารสะสม (กก.)</option></select></div>
+    <div id="cmp-lab-row" class="fg" style="max-width:280px;display:none"><label class="fl" for="cmp-lab-param">ผลตรวจ</label><select class="fi" id="cmp-lab-param" onchange="renderCompare()"><option value="tcbsGreen">🟢 เชื้อเขียว - น้ำ (CFU/mL)</option><option value="tcbsYellow">🟡 เชื้อเหลือง - น้ำ (CFU/mL)</option><option value="hepatoGreen">🟢 เชื้อเขียว - ตับ (CFU/g)</option><option value="hepatoYellow">🟡 เชื้อเหลือง - ตับ (CFU/g)</option><option value="tvc">TVC - น้ำ (CFU/mL)</option><option value="tvcHepato">TVC - ตับ (CFU/g)</option></select></div>
+    <div id="cmp-water-row" class="fg" style="max-width:280px;display:none"><label class="fl" for="cmp-water-param">ชนิดกิจกรรม</label><select class="fi" id="cmp-water-param" onchange="renderCompare()"><option value="all">ทุกกิจกรรม</option><option value="exchange">เปลี่ยนถ่ายน้ำ</option><option value="add">เติมน้ำ</option><option value="drain">ระบายน้ำ</option></select></div>
   </div>
 
   <!-- WQ Heatmap (default shown, hidden for other cats) -->
@@ -2121,7 +2121,7 @@ body.role-ceo .main{max-width:640px}
   <div id="wqfeed-alerts" style="margin-bottom:14px"></div>
   <div class="card">
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-      <label class="fl" style="margin:0">เลือกบ่อ:</label>
+      <label class="fl" style="margin:0" for="wqfeed-pond">เลือกบ่อ:</label>
       <select class="fi" id="wqfeed-pond" onchange="renderWqFeedChart()" style="width:160px"></select>
     </div>
     <div style="position:relative;height:180px;margin-bottom:8px"><canvas id="wqfeed-c-water"></canvas></div>
@@ -2141,7 +2141,7 @@ body.role-ceo .main{max-width:640px}
     <div style="font-size:12px;color:var(--tx3);margin-bottom:10px">เลือกชื่อที่หมายถึงโรงเพาะฟักเดียวกัน (เช่น "cp ชุมพร1" กับ "ซีพี") อย่างน้อย 2 ชื่อ แล้วกรอกชื่อที่ต้องการใช้จริง — ระบบจะแก้ทุกบ่อ/ทุกรอบเลี้ยงที่เกี่ยวข้องให้อัตโนมัติ (Admin เท่านั้น)</div>
     <div id="hatchery-merge-list" style="max-height:260px;overflow-y:auto;margin-bottom:12px"></div>
     <div class="fgrid" style="grid-template-columns:1fr auto;align-items:end">
-      <div class="fg"><label class="fl">รวมเป็นชื่อ</label><input type="text" class="fi" id="hatchery-merge-target" placeholder="เช่น ซีพี ชุมพร1"></div>
+      <div class="fg"><label class="fl" for="hatchery-merge-target">รวมเป็นชื่อ</label><input type="text" class="fi" id="hatchery-merge-target" placeholder="เช่น ซีพี ชุมพร1"></div>
       <button class="btn btn-p" onclick="mergeHatcheryNames()">🔗 รวมชื่อที่เลือก</button>
     </div>
     <div id="hatchery-merge-msg" style="margin-top:10px"></div>
@@ -2202,11 +2202,11 @@ body.role-ceo .main{max-width:640px}
     <div class="card-t">🔍 ดูข้อมูลย้อนหลังบ่อที่ปิดแล้ว</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
       <div class="fg" style="flex:1;min-width:160px">
-        <label class="fl">เลือกบ่อ</label>
+        <label class="fl" for="clh-pond">เลือกบ่อ</label>
         <select class="fi" id="clh-pond" onchange="onChPondChange()"><option value="">-- เลือกบ่อ --</option></select>
       </div>
       <div class="fg" style="flex:1;min-width:160px">
-        <label class="fl">เลือกรอบที่ปิด</label>
+        <label class="fl" for="ch-cycle">เลือกรอบที่ปิด</label>
         <select class="fi" id="ch-cycle" onchange="onChCycleChange()"><option value="">-- เลือกรอบ --</option></select>
       </div>
     </div>
@@ -2258,44 +2258,44 @@ body.role-ceo .main{max-width:640px}
       <div style="margin-bottom:18px">
         <div style="font-weight:700;font-size:13px;color:var(--p);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">🦐 ผลจับจริง</div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">ผลผลิตรวม (กก.)</label><input type="number" class="fi" id="cm-weight" step="0.1" placeholder="1500"></div>
-          <div class="fg"><label class="fl">ไซส์จับเฉลี่ย (ตัว/กก.)</label><input type="number" class="fi" id="cm-size" step="1" placeholder="60"></div>
-          <div class="fg"><label class="fl">ตัวที่จับได้ (ตัว)</label><input type="number" class="fi" id="cm-caught" placeholder="คำนวณจาก กก.×ไซส์"></div>
-          <div class="fg"><label class="fl">อัตรารอด (%)</label><input type="number" class="fi" id="cm-survival" step="0.1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--sf2)"></div>
-          <div class="fg"><label class="fl">FCR สุดท้าย <span style="font-weight:400;color:var(--tx3)">(อัตราแลกเนื้อ)</span></label><input type="number" class="fi" id="cm-fcr" step="0.01" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--sf2)"></div>
-          <div class="fg"><label class="fl">ราคาขาย (บาท/กก.)</label><input type="number" class="fi" id="cm-price" step="0.5" placeholder="130"></div>
-          <div class="fg"><label class="fl">แพที่จับ / ผู้ซื้อ</label><input type="text" class="fi" id="cm-buyer" placeholder="ชื่อแพ / บริษัท"></div>
+          <div class="fg"><label class="fl" for="cm-weight">ผลผลิตรวม (กก.)</label><input type="number" class="fi" id="cm-weight" step="0.1" placeholder="1500"></div>
+          <div class="fg"><label class="fl" for="cm-size">ไซส์จับเฉลี่ย (ตัว/กก.)</label><input type="number" class="fi" id="cm-size" step="1" placeholder="60"></div>
+          <div class="fg"><label class="fl" for="cm-caught">ตัวที่จับได้ (ตัว)</label><input type="number" class="fi" id="cm-caught" placeholder="คำนวณจาก กก.×ไซส์"></div>
+          <div class="fg"><label class="fl" for="cm-survival">อัตรารอด (%)</label><input type="number" class="fi" id="cm-survival" step="0.1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--sf2)"></div>
+          <div class="fg"><label class="fl" for="cm-fcr">FCR สุดท้าย <span style="font-weight:400;color:var(--tx3)">(อัตราแลกเนื้อ)</span></label><input type="number" class="fi" id="cm-fcr" step="0.01" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--sf2)"></div>
+          <div class="fg"><label class="fl" for="cm-price">ราคาขาย (บาท/กก.)</label><input type="number" class="fi" id="cm-price" step="0.5" placeholder="130"></div>
+          <div class="fg"><label class="fl" for="cm-buyer">แพที่จับ / ผู้ซื้อ</label><input type="text" class="fi" id="cm-buyer" placeholder="ชื่อแพ / บริษัท"></div>
         </div>
       </div>
       <!-- Economics -->
       <div style="margin-bottom:18px">
         <div style="font-weight:700;font-size:13px;color:var(--in);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">💰 รายได้ & ต้นทุน</div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">รายได้รวม (บาท)</label><input type="number" class="fi" id="cm-revenue" step="1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--sf2)"></div>
-          <div class="fg"><label class="fl">ต้นทุนอาหารกุ้ง (บาท)</label><input type="number" class="fi" id="cm-cost-feed" step="1" placeholder="คำนวณจาก feedLog" readonly style="background:var(--sf2)"></div>
-          <div class="fg"><label class="fl">ต้นทุนลูกกุ้ง (บาท)</label><input type="number" class="fi" id="cm-cost-fry" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนเวชภัณฑ์ (บาท) <span style="font-weight:400;color:var(--tx3)">(ยากิน+ยาลงน้ำ+จุลินทรีย์ ดึงจากสต็อก แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-med" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนปูน (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากสต็อก แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-lime" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนค่าแรง (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากข้อมูลเงินเดือน+ค่าแรงรายสัปดาห์ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-labor" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="cm-cost-elec" step="1" placeholder="ดึงอัตโนมัติ 2,500 บาท/วัน" style="background:var(--sf2)"></div>
-          <div class="fg"><label class="fl">ต้นทุนน้ำมัน (บาท) <span style="font-weight:400;color:var(--tx3)">(กรอกเอง)</span></label><input type="number" class="fi" id="cm-cost-fuel" step="1" placeholder="กรอกเอง"></div>
-          <div class="fg"><label class="fl">อุปกรณ์ (บาท) <span style="font-weight:400;color:var(--tx3)">(ในสต็อก ดึงอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-equip" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">อุปกรณ์นอก (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากโหมด "แชร์ทุกบ่อ" ในสต็อกอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-equip-out" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ค่าจับกุ้ง (บาท) <span style="font-weight:400;color:var(--tx3)">(1.5 บ./กก. ถ้าจับไม่ถึง 4 ตันคิด 6,000 บ. — ตัวเลขในช่องเป็นแค่คำแนะนำ กรอกยืนยันเอง)</span></label><input type="number" class="fi" id="cm-cost-catch" step="1" placeholder="กรอกเอง"></div>
+          <div class="fg"><label class="fl" for="cm-revenue">รายได้รวม (บาท)</label><input type="number" class="fi" id="cm-revenue" step="1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--sf2)"></div>
+          <div class="fg"><label class="fl" for="cm-cost-feed">ต้นทุนอาหารกุ้ง (บาท)</label><input type="number" class="fi" id="cm-cost-feed" step="1" placeholder="คำนวณจาก feedLog" readonly style="background:var(--sf2)"></div>
+          <div class="fg"><label class="fl" for="cm-cost-fry">ต้นทุนลูกกุ้ง (บาท)</label><input type="number" class="fi" id="cm-cost-fry" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="cm-cost-med">ต้นทุนเวชภัณฑ์ (บาท) <span style="font-weight:400;color:var(--tx3)">(ยากิน+ยาลงน้ำ+จุลินทรีย์ ดึงจากสต็อก แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-med" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="cm-cost-lime">ต้นทุนปูน (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากสต็อก แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-lime" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="cm-cost-labor">ต้นทุนค่าแรง (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากข้อมูลเงินเดือน+ค่าแรงรายสัปดาห์ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-labor" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="cm-cost-elec">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="cm-cost-elec" step="1" placeholder="ดึงอัตโนมัติ 2,500 บาท/วัน" style="background:var(--sf2)"></div>
+          <div class="fg"><label class="fl" for="cm-cost-fuel">ต้นทุนน้ำมัน (บาท) <span style="font-weight:400;color:var(--tx3)">(กรอกเอง)</span></label><input type="number" class="fi" id="cm-cost-fuel" step="1" placeholder="กรอกเอง"></div>
+          <div class="fg"><label class="fl" for="cm-cost-equip">อุปกรณ์ (บาท) <span style="font-weight:400;color:var(--tx3)">(ในสต็อก ดึงอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-equip" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="cm-cost-equip-out">อุปกรณ์นอก (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากโหมด "แชร์ทุกบ่อ" ในสต็อกอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-equip-out" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="cm-cost-catch">ค่าจับกุ้ง (บาท) <span style="font-weight:400;color:var(--tx3)">(1.5 บ./กก. ถ้าจับไม่ถึง 4 ตันคิด 6,000 บ. — ตัวเลขในช่องเป็นแค่คำแนะนำ กรอกยืนยันเอง)</span></label><input type="number" class="fi" id="cm-cost-catch" step="1" placeholder="กรอกเอง"></div>
         </div>
         <div style="font-weight:700;font-size:12px;color:var(--p);margin:14px 0 8px;padding-top:10px;border-top:1px dashed var(--bd)">🤝 ส่วนแบ่งกำไร <span style="font-weight:400;color:var(--tx3)">(หักออกเป็นต้นทุน)</span></div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">% คนเลี้ยง (บาท) <span style="font-weight:400;color:var(--tx3)">(คำนวณจากไซส์กุ้ง+น้ำหนักจับ — ตัวเลขในช่องเป็นแค่คำแนะนำ กรอกยืนยันเอง)</span></label><input type="number" class="fi" id="cm-pct-caretaker" step="1" placeholder="กรอกเอง"></div>
-          <div class="fg" style="grid-column:1/-1"><label class="fl">ส่วนแบ่งผู้จัดการ (บาท) <span style="font-weight:400;color:var(--tx3)">(กรอกเอง — ยังไม่ผูกสูตร ต้องดึงข้อมูลจากไฟล์อื่น)</span></label><input type="number" class="fi" id="cm-pct-manager" step="1" placeholder="กรอกเอง"></div>
+          <div class="fg"><label class="fl" for="cm-pct-caretaker">% คนเลี้ยง (บาท) <span style="font-weight:400;color:var(--tx3)">(คำนวณจากไซส์กุ้ง+น้ำหนักจับ — ตัวเลขในช่องเป็นแค่คำแนะนำ กรอกยืนยันเอง)</span></label><input type="number" class="fi" id="cm-pct-caretaker" step="1" placeholder="กรอกเอง"></div>
+          <div class="fg" style="grid-column:1/-1"><label class="fl" for="cm-pct-manager">ส่วนแบ่งผู้จัดการ (บาท) <span style="font-weight:400;color:var(--tx3)">(กรอกเอง — ยังไม่ผูกสูตร ต้องดึงข้อมูลจากไฟล์อื่น)</span></label><input type="number" class="fi" id="cm-pct-manager" step="1" placeholder="กรอกเอง"></div>
         </div>
         <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--bd)">
-          <div class="fg"><label class="fl" style="color:var(--ok);font-weight:700">กำไรสุทธิ (บาท)</label><input type="number" class="fi" id="cm-profit" step="1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--ob);font-weight:700"></div>
+          <div class="fg"><label class="fl" style="color:var(--ok);font-weight:700" for="cm-profit">กำไรสุทธิ (บาท)</label><input type="number" class="fi" id="cm-profit" step="1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--ob);font-weight:700"></div>
         </div>
       </div>
       <!-- Close Date + Notes -->
       <div class="fgrid" style="grid-template-columns:1fr 1fr;margin-bottom:12px">
-        <div class="fg"><label class="fl">วันที่ปิดบ่อ</label><input type="date" class="fi" id="cm-close-date"></div>
-        <div class="fg"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="cm-notes" placeholder="..."></div>
+        <div class="fg"><label class="fl" for="cm-close-date">วันที่ปิดบ่อ</label><input type="date" class="fi" id="cm-close-date"></div>
+        <div class="fg"><label class="fl" for="cm-notes">หมายเหตุ</label><input type="text" class="fi" id="cm-notes" placeholder="..."></div>
       </div>
       <div style="background:var(--wb);border-radius:8px;padding:12px;margin-bottom:16px;font-size:12px;color:#b45309">
         ⚠️ หลังปิดรอบ: ข้อมูลค่าน้ำ/อาหาร/สุ่มจะถูกเก็บเข้าประวัติและล้างออก เพื่อเริ่มรอบใหม่
@@ -2323,65 +2323,65 @@ body.role-ceo .main{max-width:640px}
       <div id="ecm-new-fields" style="display:none;margin-bottom:18px">
         <div style="font-weight:700;font-size:13px;color:#d97706;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">📌 ระบุบ่อ/รอบ (สำหรับข้อมูลเก่าที่ตกหล่น)</div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr 1fr">
-          <div class="fg" style="grid-column:1/-1"><label class="fl">บ่อ *</label><select class="fi" id="ecm-new-pond"><option value="">-- เลือกบ่อ --</option></select></div>
-          <div class="fg"><label class="fl">รอบที่ *</label><input type="number" class="fi" id="ecm-new-cropnum" step="1" placeholder="1"></div>
-          <div class="fg"><label class="fl">ปี (พ.ศ.) *</label><input type="number" class="fi" id="ecm-new-cropyear" step="1" placeholder="2568"></div>
+          <div class="fg" style="grid-column:1/-1"><label class="fl" for="ecm-new-pond">บ่อ *</label><select class="fi" id="ecm-new-pond"><option value="">-- เลือกบ่อ --</option></select></div>
+          <div class="fg"><label class="fl" for="ecm-new-cropnum">รอบที่ *</label><input type="number" class="fi" id="ecm-new-cropnum" step="1" placeholder="1"></div>
+          <div class="fg"><label class="fl" for="ecm-new-cropyear">ปี (พ.ศ.) *</label><input type="number" class="fi" id="ecm-new-cropyear" step="1" placeholder="2568"></div>
         </div>
       </div>
       <!-- ข้อมูลลูกกุ้ง (กรอกย้อนหลังได้) -->
       <div style="margin-bottom:18px">
         <div style="font-weight:700;font-size:13px;color:var(--ok);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">🦐 ข้อมูลลูกกุ้ง</div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg" style="grid-column:1/-1"><label class="fl">โรงเพาะฟัก / บริษัทลูกกุ้ง</label><input type="text" class="fi" id="ecm-hatchery" placeholder="ซีพี, ซายอควา, ไทยแปซิฟิก..." list="hatchery-list"></div>
-          <div class="fg"><label class="fl">ระยะลูกกุ้งตอนปล่อย</label><select class="fi" id="ecm-pltype"><option value="">-- เลือกระยะ --</option><option value="PL10">PL10</option><option value="PL12">PL12</option><option value="PL15">PL15</option><option value="PL17">PL17</option><option value="SuperPL">SuperPL</option><option value="ชำนอก">ชำนอก</option></select></div>
-          <div class="fg"><label class="fl">น้ำหนักลูกกุ้งตอนปล่อย (กรัม/ตัว)</label><input type="number" class="fi" id="ecm-plweight" step="0.001" placeholder="0.003"></div>
+          <div class="fg" style="grid-column:1/-1"><label class="fl" for="ecm-hatchery">โรงเพาะฟัก / บริษัทลูกกุ้ง</label><input type="text" class="fi" id="ecm-hatchery" placeholder="ซีพี, ซายอควา, ไทยแปซิฟิก..." list="hatchery-list"></div>
+          <div class="fg"><label class="fl" for="ecm-pltype">ระยะลูกกุ้งตอนปล่อย</label><select class="fi" id="ecm-pltype"><option value="">-- เลือกระยะ --</option><option value="PL10">PL10</option><option value="PL12">PL12</option><option value="PL15">PL15</option><option value="PL17">PL17</option><option value="SuperPL">SuperPL</option><option value="ชำนอก">ชำนอก</option></select></div>
+          <div class="fg"><label class="fl" for="ecm-plweight">น้ำหนักลูกกุ้งตอนปล่อย (กรัม/ตัว)</label><input type="number" class="fi" id="ecm-plweight" step="0.001" placeholder="0.003"></div>
         </div>
       </div>
       <!-- Harvest Results -->
       <div style="margin-bottom:18px">
         <div style="font-weight:700;font-size:13px;color:var(--p);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">🦐 ผลจับจริง</div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">ผลผลิตรวม (กก.)</label><input type="number" class="fi" id="ecm-weight" step="0.1" placeholder="1500"></div>
-          <div class="fg"><label class="fl">ไซส์จับเฉลี่ย (ตัว/กก.)</label><input type="number" class="fi" id="ecm-size" step="1" placeholder="60"></div>
-          <div class="fg"><label class="fl">ตัวที่จับได้ (ตัว)</label><input type="number" class="fi" id="ecm-caught" placeholder="0"></div>
-          <div class="fg"><label class="fl">อัตรารอด (%)</label><input type="number" class="fi" id="ecm-survival" step="0.1" placeholder="0"></div>
-          <div class="fg"><label class="fl">FCR สุดท้าย</label><input type="number" class="fi" id="ecm-fcr" step="0.01" placeholder="0"></div>
-          <div class="fg"><label class="fl">ราคาขาย (บาท/กก.)</label><input type="number" class="fi" id="ecm-price" step="0.5" placeholder="130"></div>
-          <div class="fg"><label class="fl">แพที่จับ / ผู้ซื้อ</label><input type="text" class="fi" id="ecm-buyer" placeholder="ชื่อแพ / บริษัท"></div>
+          <div class="fg"><label class="fl" for="ecm-weight">ผลผลิตรวม (กก.)</label><input type="number" class="fi" id="ecm-weight" step="0.1" placeholder="1500"></div>
+          <div class="fg"><label class="fl" for="ecm-size">ไซส์จับเฉลี่ย (ตัว/กก.)</label><input type="number" class="fi" id="ecm-size" step="1" placeholder="60"></div>
+          <div class="fg"><label class="fl" for="ecm-caught">ตัวที่จับได้ (ตัว)</label><input type="number" class="fi" id="ecm-caught" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-survival">อัตรารอด (%)</label><input type="number" class="fi" id="ecm-survival" step="0.1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-fcr">FCR สุดท้าย</label><input type="number" class="fi" id="ecm-fcr" step="0.01" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-price">ราคาขาย (บาท/กก.)</label><input type="number" class="fi" id="ecm-price" step="0.5" placeholder="130"></div>
+          <div class="fg"><label class="fl" for="ecm-buyer">แพที่จับ / ผู้ซื้อ</label><input type="text" class="fi" id="ecm-buyer" placeholder="ชื่อแพ / บริษัท"></div>
         </div>
       </div>
       <!-- Economics -->
       <div style="margin-bottom:18px">
         <div style="font-weight:700;font-size:13px;color:var(--in);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">💰 รายได้ & ต้นทุน</div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">รายได้รวม (บาท)</label><input type="number" class="fi" id="ecm-revenue" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนอาหารกุ้ง (บาท)</label><input type="number" class="fi" id="ecm-cost-feed" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนลูกกุ้ง (บาท)</label><input type="number" class="fi" id="ecm-cost-fry" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนเวชภัณฑ์ (บาท)</label><input type="number" class="fi" id="ecm-cost-med" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนปูน (บาท)</label><input type="number" class="fi" id="ecm-cost-lime" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนค่าแรง (บาท)</label><input type="number" class="fi" id="ecm-cost-labor" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="ecm-cost-elec" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนน้ำมัน (บาท)</label><input type="number" class="fi" id="ecm-cost-fuel" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">อุปกรณ์ (บาท)</label><input type="number" class="fi" id="ecm-cost-equip" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">อุปกรณ์นอก (บาท)</label><input type="number" class="fi" id="ecm-cost-equip-out" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ค่าจับกุ้ง (บาท)</label><input type="number" class="fi" id="ecm-cost-catch" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">% คนเลี้ยง (บาท) <span style="font-weight:400;color:var(--tx3)">(ยอดเงิน ไม่ใช่ %)</span></label><input type="number" class="fi" id="ecm-pct-caretaker" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ส่วนแบ่งผู้จัดการ (บาท)</label><input type="number" class="fi" id="ecm-pct-manager" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-revenue">รายได้รวม (บาท)</label><input type="number" class="fi" id="ecm-revenue" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-cost-feed">ต้นทุนอาหารกุ้ง (บาท)</label><input type="number" class="fi" id="ecm-cost-feed" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-cost-fry">ต้นทุนลูกกุ้ง (บาท)</label><input type="number" class="fi" id="ecm-cost-fry" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-cost-med">ต้นทุนเวชภัณฑ์ (บาท)</label><input type="number" class="fi" id="ecm-cost-med" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-cost-lime">ต้นทุนปูน (บาท)</label><input type="number" class="fi" id="ecm-cost-lime" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-cost-labor">ต้นทุนค่าแรง (บาท)</label><input type="number" class="fi" id="ecm-cost-labor" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-cost-elec">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="ecm-cost-elec" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-cost-fuel">ต้นทุนน้ำมัน (บาท)</label><input type="number" class="fi" id="ecm-cost-fuel" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-cost-equip">อุปกรณ์ (บาท)</label><input type="number" class="fi" id="ecm-cost-equip" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-cost-equip-out">อุปกรณ์นอก (บาท)</label><input type="number" class="fi" id="ecm-cost-equip-out" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-cost-catch">ค่าจับกุ้ง (บาท)</label><input type="number" class="fi" id="ecm-cost-catch" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-pct-caretaker">% คนเลี้ยง (บาท) <span style="font-weight:400;color:var(--tx3)">(ยอดเงิน ไม่ใช่ %)</span></label><input type="number" class="fi" id="ecm-pct-caretaker" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-pct-manager">ส่วนแบ่งผู้จัดการ (บาท)</label><input type="number" class="fi" id="ecm-pct-manager" step="1" placeholder="0"></div>
         </div>
         <div style="font-weight:700;font-size:12px;color:var(--tx3);margin:14px 0 8px;padding-top:10px;border-top:1px dashed var(--bd)">🗄️ หมวดระบบเดิม (ก่อนแยกหมวดละเอียด — แก้ไขได้เผื่อรอบเก่าที่เคยกรอกแบบเดิม)</div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl">ต้นทุนสารเคมี (เดิม, บาท)</label><input type="number" class="fi" id="ecm-cost-chem" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl">ต้นทุนอื่นๆ (เดิม, บาท)</label><input type="number" class="fi" id="ecm-cost-other" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-cost-chem">ต้นทุนสารเคมี (เดิม, บาท)</label><input type="number" class="fi" id="ecm-cost-chem" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-cost-other">ต้นทุนอื่นๆ (เดิม, บาท)</label><input type="number" class="fi" id="ecm-cost-other" step="1" placeholder="0"></div>
         </div>
         <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--bd)">
-          <div class="fg"><label class="fl" style="color:var(--ok);font-weight:700">กำไรสุทธิ (บาท)</label><input type="number" class="fi" id="ecm-profit" step="1" placeholder="คำนวณอัตโนมัติ" style="background:var(--ob);font-weight:700"></div>
+          <div class="fg"><label class="fl" style="color:var(--ok);font-weight:700" for="ecm-profit">กำไรสุทธิ (บาท)</label><input type="number" class="fi" id="ecm-profit" step="1" placeholder="คำนวณอัตโนมัติ" style="background:var(--ob);font-weight:700"></div>
         </div>
       </div>
       <!-- Start Date + Close Date + Notes -->
       <div class="fgrid" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
-        <div class="fg"><label class="fl">วันลง</label><input type="date" class="fi" id="ecm-start-date"></div>
-        <div class="fg"><label class="fl">วันที่ปิดบ่อ</label><input type="date" class="fi" id="ecm-close-date"></div>
-        <div class="fg" style="grid-column:1/-1"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="ecm-notes" placeholder="..."></div>
+        <div class="fg"><label class="fl" for="ecm-start-date">วันลง</label><input type="date" class="fi" id="ecm-start-date"></div>
+        <div class="fg"><label class="fl" for="ecm-close-date">วันที่ปิดบ่อ</label><input type="date" class="fi" id="ecm-close-date"></div>
+        <div class="fg" style="grid-column:1/-1"><label class="fl" for="ecm-notes">หมายเหตุ</label><input type="text" class="fi" id="ecm-notes" placeholder="..."></div>
       </div>
       <div id="ecm-msg" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px"></div>
       <div style="display:flex;gap:10px;align-items:center">
@@ -2398,8 +2398,8 @@ body.role-ceo .main{max-width:640px}
   <div class="card" style="margin-bottom:20px">
     <div class="card-t">➕ บันทึกการจับกุ้ง</div>
     <div class="fgrid" style="grid-template-columns:1fr 1fr">
-      <div class="fg"><label class="fl">บ่อ *</label><select class="fi" id="hv-pond" onchange="onHvPondChange()"><option value="">-- เลือกบ่อ --</option></select></div>
-      <div class="fg"><label class="fl">รูปแบบการจับ *</label>
+      <div class="fg"><label class="fl" for="hv-pond">บ่อ *</label><select class="fi" id="hv-pond" onchange="onHvPondChange()"><option value="">-- เลือกบ่อ --</option></select></div>
+      <div class="fg"><label class="fl" for="hv-type">รูปแบบการจับ *</label>
         <select class="fi" id="hv-type" onchange="onHvTypeChange()">
           <option value="">-- เลือก --</option>
           <option value="พาเชียล">พาเชียล (จับบางส่วน บ่อยังเลี้ยงต่อ)</option>
@@ -2410,20 +2410,20 @@ body.role-ceo .main{max-width:640px}
     <div id="hv-round-strip" style="display:none;margin-top:12px;gap:8px;flex-wrap:wrap"></div>
     <div id="hv-partial-fields" style="display:none">
       <div class="fgrid" style="grid-template-columns:1fr 1fr">
-        <div class="fg"><label class="fl">วันที่จับ</label><input type="date" class="fi" id="hv-date"></div>
-        <div class="fg"><label class="fl">แพที่ทำการจับ</label><input type="text" class="fi" id="hv-buyer" placeholder="ชื่อแพ / บริษัท"></div>
-        <div class="fg"><label class="fl">ลักษณะการจับ</label>
+        <div class="fg"><label class="fl" for="hv-date">วันที่จับ</label><input type="date" class="fi" id="hv-date"></div>
+        <div class="fg"><label class="fl" for="hv-buyer">แพที่ทำการจับ</label><input type="text" class="fi" id="hv-buyer" placeholder="ชื่อแพ / บริษัท"></div>
+        <div class="fg"><label class="fl" for="hv-live">ลักษณะการจับ</label>
           <select class="fi" id="hv-live">
             <option value="">-- เลือก --</option>
             <option value="กุ้งเป็น">จับกุ้งเป็น</option>
             <option value="กุ้งตาย">จับกุ้งตาย</option>
           </select>
         </div>
-        <div class="fg"><label class="fl">ไซส์ (ตัว/กก.)</label><input type="number" class="fi" id="hv-size" placeholder="60" step="1"></div>
-        <div class="fg"><label class="fl">น้ำหนักรวม (กก.)</label><input type="number" class="fi" id="hv-weight" placeholder="1000" step="0.1"></div>
-        <div class="fg"><label class="fl">ราคา (บาท/กก.)</label><input type="number" class="fi" id="hv-price" placeholder="120" step="0.5"></div>
+        <div class="fg"><label class="fl" for="hv-size">ไซส์ (ตัว/กก.)</label><input type="number" class="fi" id="hv-size" placeholder="60" step="1"></div>
+        <div class="fg"><label class="fl" for="hv-weight">น้ำหนักรวม (กก.)</label><input type="number" class="fi" id="hv-weight" placeholder="1000" step="0.1"></div>
+        <div class="fg"><label class="fl" for="hv-price">ราคา (บาท/กก.)</label><input type="number" class="fi" id="hv-price" placeholder="120" step="0.5"></div>
       </div>
-      <div class="fg" style="margin-top:8px"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="hv-notes" placeholder="..."></div>
+      <div class="fg" style="margin-top:8px"><label class="fl" for="hv-notes">หมายเหตุ</label><input type="text" class="fi" id="hv-notes" placeholder="..."></div>
       <div style="margin-top:14px;display:flex;align-items:center;gap:10px">
         <button class="btn btn-p" onclick="savePartialHarvest()">💾 บันทึกพาเชียล</button>
         <span id="hv-msg" style="font-size:12px"></span>
@@ -2481,11 +2481,11 @@ body.role-ceo .main{max-width:640px}
       ✔ อาหารรวม, FCR (อัตราแลกเนื้อ), ADG (อัตราการเติบโต/วัน), หมายเหตุ
     </p>
     <div class="fg" style="margin-bottom:16px">
-      <label class="fl">เลือกบ่อ</label>
+      <label class="fl" for="ex-pond">เลือกบ่อ</label>
       <select class="fi" id="ex-pond" onchange="onExPondChange()"><option value="all">ทุกบ่อ (สรุปรวม)</option></select>
     </div>
     <div class="fg" id="ex-crop-wrap" style="margin-bottom:16px;display:none">
-      <label class="fl">เลือกรอบที่ปิด (ประวัติ)</label>
+      <label class="fl" for="ex-crop">เลือกรอบที่ปิด (ประวัติ)</label>
       <select class="fi" id="ex-crop" onchange="renderExPreview()"></select>
     </div>
     <div class="fg" id="ex-chart-toggles" style="margin-bottom:16px;display:none">
@@ -2572,10 +2572,10 @@ body.role-ceo .main{max-width:640px}
   <div class="card" style="margin-bottom:16px">
     <div class="card-t">➕ เพิ่มผู้ใช้ใหม่</div>
     <div class="fgrid" style="grid-template-columns:1.3fr 1fr 1fr 1fr auto">
-      <div class="fg"><label class="fl">อีเมล</label><input class="fi" id="nu-email" placeholder="name@tawanfarm.com"></div>
-      <div class="fg"><label class="fl">ชื่อที่แสดง</label><input class="fi" id="nu-name" placeholder="ชื่อพนักงาน"></div>
-      <div class="fg"><label class="fl">รหัสผ่านเริ่มต้น</label><input class="fi" id="nu-pass" type="text" placeholder="อย่างน้อย 6 ตัว"></div>
-      <div class="fg"><label class="fl">สิทธิ์ (Role)</label>
+      <div class="fg"><label class="fl" for="nu-email">อีเมล</label><input class="fi" id="nu-email" placeholder="name@tawanfarm.com"></div>
+      <div class="fg"><label class="fl" for="nu-name">ชื่อที่แสดง</label><input class="fi" id="nu-name" placeholder="ชื่อพนักงาน"></div>
+      <div class="fg"><label class="fl" for="nu-pass">รหัสผ่านเริ่มต้น</label><input class="fi" id="nu-pass" type="text" placeholder="อย่างน้อย 6 ตัว"></div>
+      <div class="fg"><label class="fl" for="nu-role">สิทธิ์ (Role)</label>
         <select class="fi" id="nu-role"><option value="staff">staff (พนักงาน)</option><option value="admin">admin</option><option value="ceo">CEO (ผู้บริหาร)</option></select>
       </div>
       <div class="fg"><button class="btn btn-p" onclick="addNewUser()">💾 เพิ่มผู้ใช้</button></div>
@@ -2620,8 +2620,8 @@ body.role-ceo .main{max-width:640px}
     <div class="card" style="margin-bottom:16px">
       <div class="card-t">🧑‍💼 เพิ่ม/แก้ไข เงินเดือนประจำ</div>
       <div class="fgrid">
-        <div class="fg"><label class="fl">ชื่อ</label><input type="text" class="fi" id="st-name" placeholder="เช่น สมชาย ใจดี"></div>
-        <div class="fg"><label class="fl">ตำแหน่ง</label>
+        <div class="fg"><label class="fl" for="st-name">ชื่อ</label><input type="text" class="fi" id="st-name" placeholder="เช่น สมชาย ใจดี"></div>
+        <div class="fg"><label class="fl" for="st-position">ตำแหน่ง</label>
           <select class="fi" id="st-position">
             <option value="ผู้จัดการฟาร์ม">ผู้จัดการฟาร์ม</option>
             <option value="หัวหน้าบ่อ">หัวหน้าบ่อ</option>
@@ -2629,8 +2629,8 @@ body.role-ceo .main{max-width:640px}
             <option value="อื่นๆ">อื่นๆ</option>
           </select>
         </div>
-        <div class="fg"><label class="fl">เงินเดือน (บาท/เดือน)</label><input type="number" class="fi" id="st-salary" placeholder="เช่น 25000" inputmode="decimal"></div>
-        <div class="fg"><label class="fl">มีผลตั้งแต่</label><input type="date" class="fi" id="st-start"></div>
+        <div class="fg"><label class="fl" for="st-salary">เงินเดือน (บาท/เดือน)</label><input type="number" class="fi" id="st-salary" placeholder="เช่น 25000" inputmode="decimal"></div>
+        <div class="fg"><label class="fl" for="st-start">มีผลตั้งแต่</label><input type="date" class="fi" id="st-start"></div>
       </div>
       <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn btn-p" onclick="saveStaff()">💾 บันทึก</button>
@@ -2652,12 +2652,12 @@ body.role-ceo .main{max-width:640px}
       <div class="card-sub" style="font-size:var(--fs115);color:var(--tx3);margin-bottom:12px">แต่ละแถว = ยอดของสัปดาห์ที่ตัดรอบวันพุธนั้น ครอบคลุมช่วงทำงาน 7 วัน (พฤหัสบดี–พุธ) กรอกวันที่ตัดรอบ (วันพุธ) เป็นตัวระบุสัปดาห์ สัปดาห์ที่ตัดรอบไปแล้วจะล็อกไว้ ไม่ถูกคำนวณย้อนหลังใหม่ ต่อให้สัปดาห์ถัดไปยอดเปลี่ยน</div>
       <input type="hidden" id="dw-edit-id">
       <div class="fgrid">
-        <div class="fg"><label class="fl">วันตัดรอบ (ต้องเป็นวันพุธ) *</label><input type="date" class="fi" id="dw-start" onchange="checkDwWednesday()"></div>
-        <div class="fg"><label class="fl">จำนวนคนทำงานจริง</label><input type="number" class="fi" id="dw-people" placeholder="เช่น 32"></div>
-        <div class="fg"><label class="fl">ยอดจ่ายจริง (บาท) *</label><input type="number" class="fi" id="dw-amount" placeholder="เช่น 61500" inputmode="decimal"></div>
+        <div class="fg"><label class="fl" for="dw-start">วันตัดรอบ (ต้องเป็นวันพุธ) *</label><input type="date" class="fi" id="dw-start" onchange="checkDwWednesday()"></div>
+        <div class="fg"><label class="fl" for="dw-people">จำนวนคนทำงานจริง</label><input type="number" class="fi" id="dw-people" placeholder="เช่น 32"></div>
+        <div class="fg"><label class="fl" for="dw-amount">ยอดจ่ายจริง (บาท) *</label><input type="number" class="fi" id="dw-amount" placeholder="เช่น 61500" inputmode="decimal"></div>
       </div>
       <div class="fgrid" style="margin-top:11px">
-        <div class="fg" style="grid-column:1/-1"><label class="fl">หมายเหตุ</label><input type="text" class="fi" id="dw-note" placeholder="เช่น มีวันหยุดนักขัตฤกษ์ 1 วัน"></div>
+        <div class="fg" style="grid-column:1/-1"><label class="fl" for="dw-note">หมายเหตุ</label><input type="text" class="fi" id="dw-note" placeholder="เช่น มีวันหยุดนักขัตฤกษ์ 1 วัน"></div>
       </div>
       <div id="dw-wed-warn" style="margin-top:8px"></div>
       <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
@@ -2683,21 +2683,21 @@ body.role-ceo .main{max-width:640px}
       <div class="card" style="margin-bottom:12px">
         <div class="card-t">➕ บันทึกเบิกเงินล่วงหน้าใหม่</div>
         <div class="card-sub">กรอกทุกครั้งที่บัญชีจ่ายเงินก้อนให้พนักงานล่วงหน้า</div>
-        <div class="fg"><label class="fl">ชื่อพนักงาน</label><input class="fi" id="adv-name" placeholder="เช่น สมชาย ใจดี"></div>
-        <div class="fg"><label class="fl">วันที่เบิก</label><input type="date" class="fi" id="adv-date"></div>
-        <div class="fg"><label class="fl">จำนวนเงินที่เบิก (บาท)</label><input class="fi" id="adv-amount" inputmode="decimal" placeholder="เช่น 5,000"></div>
-        <div class="fg"><label class="fl">เหตุผล</label><input class="fi" id="adv-reason" placeholder="เช่น ค่า Work Permit ต่ออายุ"></div>
-        <div class="fg"><label class="fl">ยอดหักคืน/สัปดาห์ (บาท)</label><input class="fi" id="adv-weekly" inputmode="decimal" placeholder="เช่น 500"></div>
+        <div class="fg"><label class="fl" for="adv-name">ชื่อพนักงาน</label><input class="fi" id="adv-name" placeholder="เช่น สมชาย ใจดี"></div>
+        <div class="fg"><label class="fl" for="adv-date">วันที่เบิก</label><input type="date" class="fi" id="adv-date"></div>
+        <div class="fg"><label class="fl" for="adv-amount">จำนวนเงินที่เบิก (บาท)</label><input class="fi" id="adv-amount" inputmode="decimal" placeholder="เช่น 5,000"></div>
+        <div class="fg"><label class="fl" for="adv-reason">เหตุผล</label><input class="fi" id="adv-reason" placeholder="เช่น ค่า Work Permit ต่ออายุ"></div>
+        <div class="fg"><label class="fl" for="adv-weekly">ยอดหักคืน/สัปดาห์ (บาท)</label><input class="fi" id="adv-weekly" inputmode="decimal" placeholder="เช่น 500"></div>
         <button class="btn btn-p" style="width:100%" onclick="saveStaffAdvance()">💾 บันทึกการเบิก</button>
         <div id="sk-msg-adv"></div>
       </div>
       <div class="card" style="margin-bottom:12px">
         <div class="card-t">↩️ บันทึกหักคืนรายสัปดาห์</div>
         <div class="card-sub">เลือกพนักงานที่มีหนี้ค้าง แล้วบันทึกยอดที่หักคืนในสัปดาห์นั้น</div>
-        <div class="fg"><label class="fl">พนักงาน</label><select class="fi" id="advr-sel" onchange="advRepayPreview()"></select></div>
-        <div class="fg"><label class="fl">วันที่หัก (ตรงกับวันตัดรอบค่าแรง)</label><input type="date" class="fi" id="advr-date"></div>
-        <div class="fg"><label class="fl">ยอดหักคืน (บาท)</label><input class="fi" id="advr-amount" inputmode="decimal" placeholder="เช่น 500" oninput="advRepayPreview()"></div>
-        <div class="fg"><label class="fl">ยอดคงเหลือหลังหัก (คำนวณอัตโนมัติ)</label><input class="fi" id="advr-remain-preview" style="background:var(--sf2)" readonly></div>
+        <div class="fg"><label class="fl" for="advr-sel">พนักงาน</label><select class="fi" id="advr-sel" onchange="advRepayPreview()"></select></div>
+        <div class="fg"><label class="fl" for="advr-date">วันที่หัก (ตรงกับวันตัดรอบค่าแรง)</label><input type="date" class="fi" id="advr-date"></div>
+        <div class="fg"><label class="fl" for="advr-amount">ยอดหักคืน (บาท)</label><input class="fi" id="advr-amount" inputmode="decimal" placeholder="เช่น 500" oninput="advRepayPreview()"></div>
+        <div class="fg"><label class="fl" for="advr-remain-preview">ยอดคงเหลือหลังหัก (คำนวณอัตโนมัติ)</label><input class="fi" id="advr-remain-preview" style="background:var(--sf2)" readonly></div>
         <button class="btn btn-p" style="width:100%" onclick="saveStaffAdvanceRepay()">💾 บันทึกการหักคืน</button>
         <div id="sk-msg-advr"></div>
       </div>
@@ -2746,7 +2746,7 @@ body.role-ceo .main{max-width:640px}
     <div class="card">
       <p style="font-size:12px;color:var(--tx2);margin:0 0 10px">💡 ค่าไฟฟ้าจะถูกดึงไปคำนวณต้นทุนอัตโนมัติตอนปิดรอบ</p>
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
-        <label class="fl" style="margin:0">เดือน</label>
+        <label class="fl" style="margin:0" for="el-month">เดือน</label>
         <input type="month" id="el-month" class="fi" style="width:180px" onchange="loadElecBill()">
       </div>
       <div class="meter-grid" style="font-weight:700;color:var(--tx2);padding-bottom:6px">
@@ -2775,7 +2775,7 @@ body.role-ceo .main{max-width:640px}
         <span id="el-total-baht" style="font-weight:700;color:var(--p)"></span>
         <span id="el-avg-rate" style="color:var(--tx2);font-size:13px"></span>
       </div>
-      <div class="fg" style="margin-top:12px"><label class="fl">หมายเหตุ</label><input class="fi" id="el-note" placeholder="เพิ่มเติม..."></div>
+      <div class="fg" style="margin-top:12px"><label class="fl" for="el-note">หมายเหตุ</label><input class="fi" id="el-note" placeholder="เพิ่มเติม..."></div>
       <div style="display:flex;gap:8px;margin-top:4px">
         <button id="el-save-btn" onclick="saveElecBill()">💾 บันทึกบิลค่าไฟ</button>
         <button onclick="clearElecBill()" style="background:var(--sf2);color:var(--tx2)">🗑️ ล้างฟอร์ม</button>
@@ -2821,9 +2821,9 @@ body.role-ceo .main{max-width:640px}
   <div class="stock-pane on" id="skp-items">
     <div class="card admin-only">
       <div style="font-weight:700;color:var(--tx);margin-bottom:10px">เพิ่มรายการพัสดุ</div>
-      <div class="fg"><label class="fl">ชื่อพัสดุ</label><input class="fi" id="sk-name" placeholder="เช่น อาหาร 0# CP, คลอรีน"></div>
+      <div class="fg"><label class="fl" for="sk-name">ชื่อพัสดุ</label><input class="fi" id="sk-name" placeholder="เช่น อาหาร 0# CP, คลอรีน"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-        <div class="fg"><label class="fl">หมวดหมู่</label>
+        <div class="fg"><label class="fl" for="sk-cat">หมวดหมู่</label>
           <select class="fi" id="sk-cat">
             <option value="feed">🍚 อาหารกุ้ง</option>
             <option value="chemOral">💊 ยากิน</option>
@@ -2834,14 +2834,14 @@ body.role-ceo .main{max-width:640px}
             <option value="equip">🔧 อุปกรณ์</option>
           </select>
         </div>
-        <div class="fg"><label class="fl">หน่วย</label><input class="fi" id="sk-unit" placeholder="กก., กระสอบ, ขวด..."></div>
-        <div class="fg"><label class="fl">ราคาต้นทุน (บาท/หน่วย)</label><input type="number" class="fi" id="sk-price" placeholder="0" inputmode="decimal" step="any"></div>
+        <div class="fg"><label class="fl" for="sk-unit">หน่วย</label><input class="fi" id="sk-unit" placeholder="กก., กระสอบ, ขวด..."></div>
+        <div class="fg"><label class="fl" for="sk-price">ราคาต้นทุน (บาท/หน่วย)</label><input type="number" class="fi" id="sk-price" placeholder="0" inputmode="decimal" step="any"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="fg"><label class="fl">จำนวนเริ่มต้น</label><input type="number" class="fi" id="sk-qty" placeholder="0" inputmode="decimal"></div>
-        <div class="fg"><label class="fl">ขั้นต่ำเตือน</label><input type="number" class="fi" id="sk-min" placeholder="5" inputmode="decimal"></div>
+        <div class="fg"><label class="fl" for="sk-qty">จำนวนเริ่มต้น</label><input type="number" class="fi" id="sk-qty" placeholder="0" inputmode="decimal"></div>
+        <div class="fg"><label class="fl" for="sk-min">ขั้นต่ำเตือน</label><input type="number" class="fi" id="sk-min" placeholder="5" inputmode="decimal"></div>
       </div>
-      <div class="fg"><label class="fl">ผู้จำหน่าย/หมายเหตุ</label><input class="fi" id="sk-note-item" placeholder="—"></div>
+      <div class="fg"><label class="fl" for="sk-note-item">ผู้จำหน่าย/หมายเหตุ</label><input class="fi" id="sk-note-item" placeholder="—"></div>
       <div style="display:flex;gap:8px;margin-top:4px">
         <button onclick="saveStockItem()">💾 บันทึกรายการ</button>
         <button onclick="clearStockItem()" style="background:var(--sf2);color:var(--tx2)">ล้างฟอร์ม</button>
@@ -2881,19 +2881,19 @@ body.role-ceo .main{max-width:640px}
         <button id="sk-mode-sale" class="stock-mode-btn" onclick="setStockMode('sale')">🛒 ขายลูกค้าภายนอก</button>
       </div>
       <div id="sk-tx-pond-row" style="display:none;margin-bottom:8px">
-        <div class="fg"><label class="fl">บ่อปลายทาง * <span style="color:var(--tx3);font-weight:400">(เชื่อม P&amp;L)</span></label>
+        <div class="fg"><label class="fl" for="sk-tx-pond">บ่อปลายทาง * <span style="color:var(--tx3);font-weight:400">(เชื่อม P&amp;L)</span></label>
           <select class="fi" id="sk-tx-pond"><option value="">— เลือกบ่อ —</option></select>
         </div>
       </div>
       <div id="sk-tx-cust-row" style="display:none;margin-bottom:8px">
-        <div class="fg"><label class="fl">ชื่อลูกค้า / ร้าน *</label><input class="fi" id="sk-tx-cust" list="sk-cust-list" placeholder="เช่น ร้านฟาร์มสุข, คุณสมชาย" autocomplete="off"><datalist id="sk-cust-list"></datalist></div>
+        <div class="fg"><label class="fl" for="sk-tx-cust">ชื่อลูกค้า / ร้าน *</label><input class="fi" id="sk-tx-cust" list="sk-cust-list" placeholder="เช่น ร้านฟาร์มสุข, คุณสมชาย" autocomplete="off"><datalist id="sk-cust-list"></datalist></div>
         <div style="font-size:var(--fs11);color:var(--tx3);margin-top:-2px">💡 โหมดนี้ไม่มีช่องเลือกบ่อ — รายการขายจะไม่ถูกนับเป็นต้นทุนบ่อไหนเลย</div>
       </div>
       <div id="sk-shared-note-row" style="display:none;margin-bottom:8px">
         <div style="font-size:var(--fs115);color:var(--tx2);background:var(--ib);border:1px solid #cfe1f5;border-radius:8px;padding:9px 11px;line-height:1.6">ℹ️ โหมดนี้ไม่มีช่องเลือกบ่อ — เลือกสินค้าได้จากสต็อกทั้งหมด (ไม่จำกัดหมวด) ยอดจะถูกหารเฉลี่ยอัตโนมัติให้ทุกบ่อที่มีกุ้งอยู่ ณ วันที่บันทึกรายการนี้ ใช้กับของที่ซื้อมาใช้ร่วมทั้งฟาร์ม ระบุลงบ่อใดบ่อหนึ่งไม่ได้ (เช่น อะมิโน, โพแทสเซียม, อุปกรณ์ซ่อมบำรุงทั่วไป)</div>
       </div>
       <div class="fg" style="position:relative;margin-bottom:8px">
-        <label class="fl">เพิ่มรายการพัสดุ <span id="sk-stk-note" style="font-weight:400;color:var(--tx3);font-size:var(--fs11);display:none">(แสดงเฉพาะมีสินค้า)</span></label>
+        <label class="fl" for="sk-tx-search">เพิ่มรายการพัสดุ <span id="sk-stk-note" style="font-weight:400;color:var(--tx3);font-size:var(--fs11);display:none">(แสดงเฉพาะมีสินค้า)</span></label>
         <input class="fi" id="sk-tx-search" placeholder="พิมพ์ชื่อเพื่อค้นหา..." autocomplete="off" oninput="filterStockSearch()" onfocus="showStockDrop()" onblur="setTimeout(hideStockDrop,200)">
         <div id="sk-tx-drop" style="display:none;position:absolute;left:0;right:0;z-index:50;background:var(--sf);border:1px solid var(--bd);border-radius:8px;margin-top:2px;max-height:200px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.12)"></div>
       </div>
@@ -2902,8 +2902,8 @@ body.role-ceo .main{max-width:640px}
       </div>
       <div id="sk-manual-box" style="display:none;background:var(--sf2);border:1px dashed var(--bd);border-radius:10px;padding:12px;margin-bottom:10px">
         <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px">
-          <div class="fg" style="margin:0"><label class="fl">ชื่อสินค้า</label><input class="fi" id="sk-manual-name" placeholder="เช่น หัวเชื้อน้ำยาฆ่าเชื้อ"></div>
-          <div class="fg" style="margin:0"><label class="fl">หมวด</label>
+          <div class="fg" style="margin:0"><label class="fl" for="sk-manual-name">ชื่อสินค้า</label><input class="fi" id="sk-manual-name" placeholder="เช่น หัวเชื้อน้ำยาฆ่าเชื้อ"></div>
+          <div class="fg" style="margin:0"><label class="fl" for="sk-manual-cat">หมวด</label>
             <select class="fi" id="sk-manual-cat">
               <option value="">— เลือก —</option>
               <option value="feed">อาหารกุ้ง</option>
@@ -2917,9 +2917,9 @@ body.role-ceo .main{max-width:640px}
           </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
-          <div class="fg" style="margin:0"><label class="fl">จำนวน</label><input class="fi" id="sk-manual-qty" type="number" min="0.01" step="any" inputmode="decimal"></div>
-          <div class="fg" style="margin:0"><label class="fl">หน่วย</label><input class="fi" id="sk-manual-unit" placeholder="เช่น ขวด"></div>
-          <div class="fg" style="margin:0"><label class="fl">ราคา/หน่วย (฿)</label><input class="fi" id="sk-manual-price" type="number" min="0" step="any" inputmode="decimal"></div>
+          <div class="fg" style="margin:0"><label class="fl" for="sk-manual-qty">จำนวน</label><input class="fi" id="sk-manual-qty" type="number" min="0.01" step="any" inputmode="decimal"></div>
+          <div class="fg" style="margin:0"><label class="fl" for="sk-manual-unit">หน่วย</label><input class="fi" id="sk-manual-unit" placeholder="เช่น ขวด"></div>
+          <div class="fg" style="margin:0"><label class="fl" for="sk-manual-price">ราคา/หน่วย (฿)</label><input class="fi" id="sk-manual-price" type="number" min="0" step="any" inputmode="decimal"></div>
         </div>
         <button onclick="addManualItemToCart()" style="width:100%;margin-top:10px;background:var(--sf);color:var(--p);border:1px solid var(--bd);border-radius:6px;padding:8px;font-weight:600;font-size:13px;cursor:pointer">+ เพิ่มลงตะกร้า</button>
       </div>
@@ -2928,8 +2928,8 @@ body.role-ceo .main{max-width:640px}
         <div id="sk-cart-list"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="fg"><label class="fl">วันที่</label><input type="date" class="fi" id="sk-tx-date"></div>
-        <div class="fg"><label class="fl">หมายเหตุ</label><input class="fi" id="sk-tx-note" placeholder="—"></div>
+        <div class="fg"><label class="fl" for="sk-tx-date">วันที่</label><input type="date" class="fi" id="sk-tx-date"></div>
+        <div class="fg"><label class="fl" for="sk-tx-note">หมายเหตุ</label><input class="fi" id="sk-tx-note" placeholder="—"></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px">
         <button onclick="saveStockTxBatch()" style="flex:1">💾 บันทึก</button>
@@ -3028,14 +3028,14 @@ body.role-ceo .main{max-width:640px}
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="fg"><label class="fl">วันที่</label><input type="date" class="fi" id="cash-date"></div>
-        <div class="fg"><label class="fl">จำนวนเงิน (บาท)</label><input type="number" class="fi" id="cash-amount" min="0.01" step="any" inputmode="decimal" placeholder="0.00"></div>
+        <div class="fg"><label class="fl" for="cash-date">วันที่</label><input type="date" class="fi" id="cash-date"></div>
+        <div class="fg"><label class="fl" for="cash-amount">จำนวนเงิน (บาท)</label><input type="number" class="fi" id="cash-amount" min="0.01" step="any" inputmode="decimal" placeholder="0.00"></div>
       </div>
       <div id="cash-sale-fields" style="display:none;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-        <div class="fg"><label class="fl">บ่อ (ถ้าระบุได้)</label><select class="fi" id="cash-pond"></select></div>
-        <div class="fg"><label class="fl">น้ำหนัก (กก.) — ถ้ามี</label><input type="number" class="fi" id="cash-weight" min="0" step="any" inputmode="decimal" placeholder="เช่น 8.5"></div>
+        <div class="fg"><label class="fl" for="cash-pond">บ่อ (ถ้าระบุได้)</label><select class="fi" id="cash-pond"></select></div>
+        <div class="fg"><label class="fl" for="cash-weight">น้ำหนัก (กก.) — ถ้ามี</label><input type="number" class="fi" id="cash-weight" min="0" step="any" inputmode="decimal" placeholder="เช่น 8.5"></div>
       </div>
-      <div class="fg" style="margin-top:8px"><label class="fl">หมายเหตุ</label><input class="fi" id="cash-note" placeholder="เช่น ซื้อกับข้าวให้คนงาน, เบิกเงินเติมจากสำนักงานใหญ่"></div>
+      <div class="fg" style="margin-top:8px"><label class="fl" for="cash-note">หมายเหตุ</label><input class="fi" id="cash-note" placeholder="เช่น ซื้อกับข้าวให้คนงาน, เบิกเงินเติมจากสำนักงานใหญ่"></div>
       <div style="display:flex;gap:8px;margin-top:12px">
         <button id="cash-save-btn" onclick="saveClerkCash()" style="flex:1">💾 บันทึก</button>
         <button onclick="clearClerkCashForm()" style="background:var(--sf2);color:var(--tx2)">ล้าง</button>
@@ -3085,7 +3085,7 @@ body.role-ceo .main{max-width:640px}
   <div class="sec-hdr"><div class="sec-title">📊 สรุปกำไร-ขาดทุน (P&amp;L) รายบ่อ รายรอบ</div></div>
   <div class="g4" id="pl-kpi" style="margin-bottom:16px"></div>
   <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
-    <label class="fl">ปี:</label>
+    <label class="fl" for="pl-year">ปี:</label>
     <select class="fi" id="pl-year" onchange="renderPL()" style="width:110px"></select>
     <span id="pl-badge" style="font-size:12px;color:var(--tx3)"></span>
     <button class="btn btn-s" style="margin-left:auto" onclick="exportPLCSV()">⬇️ Export CSV</button>
@@ -3115,16 +3115,16 @@ body.role-ceo .main{max-width:640px}
     <div class="modal-t" id="mdl-title">➕ เพิ่มบ่อใหม่</div>
     <div style="display:flex;flex-direction:column;gap:14px">
       <input type="hidden" id="mdl-id">
-      <div class="fg"><label class="fl">ชื่อบ่อ * (A.1, B.3)</label><input type="text" class="fi" id="mdl-name" placeholder="A.1"></div>
-      <div class="fg"><label class="fl">ยอดสั่งซื้อ (ตัว) *</label><input type="number" class="fi" id="mdl-stock" placeholder="500000" oninput="syncMdlTotal()"></div>
-      <div class="fg"><label class="fl">ยอดแถม (ตัว)</label><input type="number" class="fi" id="mdl-stockbonus" placeholder="0" oninput="syncMdlTotal()"></div>
-      <div class="fg"><label class="fl">ยอดปล่อยจริง (ตัว)</label><input type="text" class="fi" id="mdl-total" readonly style="background:var(--sf2);color:var(--p);font-weight:700"><span class="lbl-std">ใช้คำนวณ Biomass/FCR/อัตรารอด/ความหนาแน่นทั้งระบบ</span></div>
-      <div class="fg"><label class="fl">ขนาดบ่อ (ไร่) *</label><input type="number" class="fi" id="mdl-size" step="0.1" placeholder="4.0"></div>
-      <div class="fg"><label class="fl">วันที่ปล่อยกุ้ง *</label><input type="date" class="fi" id="mdl-start"></div>
-      <div class="fg"><label class="fl">โรงเพาะ / บริษัทลูกกุ้ง</label><input type="text" class="fi" id="mdl-hatchery" placeholder="ซีพี, ซายอควา, ไทยแปซิฟิก..." list="hatchery-list"><datalist id="hatchery-list"><option value="ซีพี"><option value="ซายอควา"><option value="ไทยแปซิฟิก"><option value="เจริญโภคภัณฑ์"><option value="SIS"></datalist></div>
-      <div class="fg"><label class="fl">ระยะลูกกุ้งตอนปล่อย</label><select class="fi" id="mdl-plType"><option value="">-- เลือกระยะ --</option><option value="PL10">PL10</option><option value="PL12">PL12</option><option value="PL15">PL15</option><option value="PL17">PL17</option><option value="SuperPL">SuperPL</option><option value="ชำนอก">ชำนอก</option></select></div>
-      <div class="fg"><label class="fl">น้ำหนักกุ้งตอนปล่อย (กรัม/ตัว)</label><input type="number" class="fi" id="mdl-plWeight" step="0.001" placeholder="0.003"></div>
-      <div class="fg"><label class="fl">ต้นทุนลูกกุ้ง (PL) โดยประมาณ (บาท)</label><input type="number" class="fi" id="mdl-costfry" step="1" placeholder="18000"><span class="lbl-std">ใช้คำนวณจุดคุ้มทุนตั้งแต่วันแรก กรอกภายหลังได้</span></div>
+      <div class="fg"><label class="fl" for="mdl-name">ชื่อบ่อ * (A.1, B.3)</label><input type="text" class="fi" id="mdl-name" placeholder="A.1"></div>
+      <div class="fg"><label class="fl" for="mdl-stock">ยอดสั่งซื้อ (ตัว) *</label><input type="number" class="fi" id="mdl-stock" placeholder="500000" oninput="syncMdlTotal()"></div>
+      <div class="fg"><label class="fl" for="mdl-stockbonus">ยอดแถม (ตัว)</label><input type="number" class="fi" id="mdl-stockbonus" placeholder="0" oninput="syncMdlTotal()"></div>
+      <div class="fg"><label class="fl" for="mdl-total">ยอดปล่อยจริง (ตัว)</label><input type="text" class="fi" id="mdl-total" readonly style="background:var(--sf2);color:var(--p);font-weight:700"><span class="lbl-std">ใช้คำนวณ Biomass/FCR/อัตรารอด/ความหนาแน่นทั้งระบบ</span></div>
+      <div class="fg"><label class="fl" for="mdl-size">ขนาดบ่อ (ไร่) *</label><input type="number" class="fi" id="mdl-size" step="0.1" placeholder="4.0"></div>
+      <div class="fg"><label class="fl" for="mdl-start">วันที่ปล่อยกุ้ง *</label><input type="date" class="fi" id="mdl-start"></div>
+      <div class="fg"><label class="fl" for="mdl-hatchery">โรงเพาะ / บริษัทลูกกุ้ง</label><input type="text" class="fi" id="mdl-hatchery" placeholder="ซีพี, ซายอควา, ไทยแปซิฟิก..." list="hatchery-list"><datalist id="hatchery-list"><option value="ซีพี"><option value="ซายอควา"><option value="ไทยแปซิฟิก"><option value="เจริญโภคภัณฑ์"><option value="SIS"></datalist></div>
+      <div class="fg"><label class="fl" for="mdl-plType">ระยะลูกกุ้งตอนปล่อย</label><select class="fi" id="mdl-plType"><option value="">-- เลือกระยะ --</option><option value="PL10">PL10</option><option value="PL12">PL12</option><option value="PL15">PL15</option><option value="PL17">PL17</option><option value="SuperPL">SuperPL</option><option value="ชำนอก">ชำนอก</option></select></div>
+      <div class="fg"><label class="fl" for="mdl-plWeight">น้ำหนักกุ้งตอนปล่อย (กรัม/ตัว)</label><input type="number" class="fi" id="mdl-plWeight" step="0.001" placeholder="0.003"></div>
+      <div class="fg"><label class="fl" for="mdl-costfry">ต้นทุนลูกกุ้ง (PL) โดยประมาณ (บาท)</label><input type="number" class="fi" id="mdl-costfry" step="1" placeholder="18000"><span class="lbl-std">ใช้คำนวณจุดคุ้มทุนตั้งแต่วันแรก กรอกภายหลังได้</span></div>
       <div style="display:flex;gap:10px"><button class="btn btn-p" onclick="savePond()">💾 บันทึก</button><button class="btn btn-s" onclick="closePond()">ยกเลิก</button></div>
     </div>
   </div>
@@ -5796,9 +5796,9 @@ function renderBioCompare(p){
   else if(delta>=10){bannerCls='warn';bannerIcon='⚠️';bannerTxt=`ตัวเลข 2 แบบต่างกันพอสมควร (${delta.toFixed(1)}%) — ${farmBiomass>docBiomass?'อัตรารอดที่กรอกเองอาจสูงเกินจริง (feeding rate ที่ได้จริงต่ำผิดปกติ)':'อัตรารอดที่กรอกเองอาจต่ำเกินจริง (feeding rate ที่ได้จริงสูงผิดปกติ)'} — แนะนำสุ่มตัวอย่างเช็คซ้ำ`;}
   card.innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
-      <div class="fg"><label class="fl">อัตรารอด (%) — กรอกเอง (แบบฟาร์ม)</label><input type="text" class="fi" value="${farmSurvival}" readonly style="background:var(--sf2)"></div>
+      <div class="fg"><label class="fl" for="bc-survival-${p.id}">อัตรารอด (%) — กรอกเอง (แบบฟาร์ม)</label><input type="text" class="fi" id="bc-survival-${p.id}" value="${farmSurvival}" readonly style="background:var(--sf2)"></div>
       <div class="fg">
-        <label class="fl">Feeding Rate (%) ที่ควรจะเป็น <span style="color:${auto?'var(--ok)':'var(--w)'};font-weight:400">— ${auto?'auto (สูตร ดร.พุทธ ตามอายุ+น้ำหนัก)':'แก้ไขเองแล้ว'}</span></label>
+        <label class="fl" for="bc-feedrate-${p.id}">Feeding Rate (%) ที่ควรจะเป็น <span style="color:${auto?'var(--ok)':'var(--w)'};font-weight:400">— ${auto?'auto (สูตร ดร.พุทธ ตามอายุ+น้ำหนัก)':'แก้ไขเองแล้ว'}</span></label>
         <div style="display:flex;gap:6px">
           <input type="number" class="fi" id="bc-feedrate-${p.id}" step="0.1" value="${feedRate}" onchange="bcEditFeedRate('${p.id}',this.value)">
           <button type="button" class="btn btn-s" style="white-space:nowrap" onclick="bcResetFeedRate('${p.id}')">↺ ค่าแนะนำ</button>
@@ -8713,7 +8713,7 @@ function renderFundPane(){
 function initEntry(){
   populateAll();
   const dEl=document.getElementById('ep-date');if(dEl&&!dEl.value)dEl.value=today();
-  const wqFieldHtml=p=>`<div class="fg"><label class="fl">${p.lbl}${p.unit?' ('+p.unit+')':''}</label><input type="number" step="any" inputmode="decimal" class="fi" id="ef-${p.key}" placeholder="—" oninput="onFI('${p.key}',this)"><span class="lbl-std" id="std-${p.key}">${stdText(p)}</span>${p.note?`<span class="hint">${p.note}</span>`:''}</div>`;
+  const wqFieldHtml=p=>`<div class="fg"><label class="fl" for="ef-${p.key}">${p.lbl}${p.unit?' ('+p.unit+')':''}</label><input type="number" step="any" inputmode="decimal" class="fi" id="ef-${p.key}" placeholder="—" oninput="onFI('${p.key}',this)"><span class="lbl-std" id="std-${p.key}">${stdText(p)}</span>${p.note?`<span class="hint">${p.note}</span>`:''}</div>`;
   // ── มือถือ: ค่าหลักก่อน ค่าเสริม (Ca/Mg/Hardness) ซ่อนไว้กดเพิ่ม (สเปกพี่แพรว ข้อ 6) ──
   const WQ_EXTRA_KEYS=['ca','mg_','hard'];
   document.getElementById('ep-fields').innerHTML=PARAMS.filter(p=>!WQ_EXTRA_KEYS.includes(p.key)).map(wqFieldHtml).join('');
@@ -9191,8 +9191,8 @@ function pdProtoFormHtml(p){
       <datalist id="mprot-med-list-${idx}">
         ${medProtocolAvailItems(r.meds.map(m=>m.id)).map(i=>`<option data-id="${i.id}" value="${mprotEsc(STOCK_CAT_LABEL[i.category]||'')} — ${mprotEsc(i.name)}"></option>`).join('')}
       </datalist>
-      <label class="fl" style="display:block;font-size:var(--fs105);font-weight:600;color:var(--tx2);margin-bottom:4px">ใช้กี่วัน</label>
-      <input class="fi mprot-days-input" data-idx="${idx}" type="number" min="1" value="${r.days}">
+      <label class="fl" for="mprot-days-${idx}" style="display:block;font-size:var(--fs105);font-weight:600;color:var(--tx2);margin-bottom:4px">ใช้กี่วัน</label>
+      <input class="fi mprot-days-input" id="mprot-days-${idx}" data-idx="${idx}" type="number" min="1" value="${r.days}">
     </div>`).join('');
   return`
     <div class="card-sub" style="margin-bottom:10px">แก้ไขตาราง — บ่อ ${p.name}</div>
@@ -9202,7 +9202,7 @@ function pdProtoFormHtml(p){
       <div><div style="font-weight:600;font-size:12.5px">🔁 วนซ้ำตารางนี้ตลอดไป</div><div style="font-size:var(--fs11);color:var(--tx3)">จบรอบสุดท้ายแล้วย้อนกลับไปรอบที่ 1 อัตโนมัติ ไม่ต้องสั่งใหม่</div></div>
       <span class="trial-chip${_pdProtoDraft.loop?' on':''}" onclick="pdProtoToggleLoopDraft()">${_pdProtoDraft.loop?'✅ เปิดอยู่':'ปิดอยู่'}</span>
     </div>
-    <label class="fl" style="display:block;font-size:var(--fs105);font-weight:600;color:var(--tx2);margin-bottom:4px">เหตุผล / อาการที่พบ (บันทึกไว้อ้างอิง)</label>
+    <label class="fl" style="display:block;font-size:var(--fs105);font-weight:600;color:var(--tx2);margin-bottom:4px" for="mprot-reason-input">เหตุผล / อาการที่พบ (บันทึกไว้อ้างอิง)</label>
     <textarea class="fi" id="mprot-reason-input" rows="2" style="margin-bottom:12px">${_pdProtoDraft.reason||''}</textarea>
     <div style="display:flex;gap:8px">
       <button class="btn btn-p" style="flex:1" onclick="pdProtoSave('${p.id}')">💾 บันทึกตาราง</button>
@@ -9306,7 +9306,7 @@ function renderOvMedProtocol(){
     return`<div class="mprot-box" style="margin-bottom:10px${st&&st.finished?';border-color:var(--d);background:var(--db)':''}">
       <div class="mprot-top"><span class="mprot-lbl" style="color:${st&&st.finished?'var(--d)':'var(--tx)'}">บ่อ ${p.name}</span>${headBadge}</div>
       <div class="mprot-meds">${medsHtml}</div>
-      <label class="fl" style="display:block;font-size:var(--fs105);font-weight:600;color:var(--tx2);margin:8px 0 4px">📝 หมายเหตุเพิ่มเติม (พิมพ์อิสระ ไม่ผูกกับตาราง)</label>
+      <label class="fl" style="display:block;font-size:var(--fs105);font-weight:600;color:var(--tx2);margin:8px 0 4px" for="ov-mprot-note-${p.id}">📝 หมายเหตุเพิ่มเติม (พิมพ์อิสระ ไม่ผูกกับตาราง)</label>
       <textarea class="fi" id="ov-mprot-note-${p.id}" rows="2" style="margin-bottom:6px" placeholder="เช่น วันนี้ปรับโดสชั่วคราว...">${noteVal}</textarea>
       <div style="display:flex;justify-content:space-between;align-items:center;font-size:var(--fs105);color:var(--tx3)">
         <span>${updInfo}</span>
@@ -11982,7 +11982,7 @@ function renderPrepCard(pid){
         ${overdue.length?`<span style="font-size:var(--fs11);font-weight:700;color:var(--d);background:var(--db);padding:2px 8px;border-radius:99px">⚠️ เลยกำหนด ${overdue.length} ขั้นตอน</span>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:8px" onclick="event.stopPropagation()">
-        <label style="font-size:var(--fs11);color:var(--tx3)">วันลงกุ้ง:</label>
+        <label style="font-size:var(--fs11);color:var(--tx3)" for="prep-stock-date-${pid}">วันลงกุ้ง:</label>
         <input type="date" class="fi" id="prep-stock-date-${pid}" value="${stockDate}" onchange="updatePrepStockDate('${pid}')" style="width:120px;padding:3px 7px;font-size:var(--fs11)">
         <button onclick="resetPrepPond('${pid}')" title="ล้างแผนเตรียมบ่อ (ใช้เมื่อเปลี่ยนแผนการเลี้ยง)" style="background:none;border:1px solid var(--bd);border-radius:5px;padding:2px 8px;font-size:13px;cursor:pointer;color:var(--d);line-height:1.4">🗑️ ล้างแผน</button>
       </div>
@@ -12677,10 +12677,41 @@ function ceoToggleCatItems(key){
   document.getElementById('ceo-cat-caret-'+key)?.classList.toggle('open');
 }
 
+// ══════ Accessibility: ปุ่ม/chip แบบ <span onclick>/<div onclick> (chip กรอง, ตัวเลือกโหมด ฯลฯ) เดิมกดด้วยคีย์บอร์ดไม่ได้เลย (ไม่มี tabindex/role/Enter-Space) ══════
+// เพิ่ม tabindex+role="button"+รองรับ Enter/Space ให้อัตโนมัติ ทั้งของที่มีอยู่แล้วตอนโหลดหน้า และของที่ render เพิ่มทีหลัง (ใช้ MutationObserver จับ เพราะหลายจุด render ผ่าน innerHTML แบบไดนามิก ไม่ได้โหลดมาตั้งแต่แรก) — ไม่แก้โครงสร้าง/tag เดิมเลย กันผลกระทบกับ CSS selector ที่มีอยู่
+function _a11yMakeClickable(el){
+  if(el.tabIndex>=0&&el.hasAttribute('tabindex'))return; // ทำไปแล้ว
+  if(!el.getAttribute('onclick'))return;
+  el.setAttribute('tabindex','0');
+  if(!el.hasAttribute('role'))el.setAttribute('role','button');
+  el.addEventListener('keydown',function(e){
+    if(e.key==='Enter'||e.key===' '||e.key==='Spacebar'){
+      e.preventDefault();
+      el.click();
+    }
+  });
+}
+function a11yScanClickables(root){
+  (root||document).querySelectorAll('span[onclick],div[onclick],tr[onclick]').forEach(_a11yMakeClickable);
+}
+function initA11yKeyboardChips(){
+  a11yScanClickables(document);
+  const mo=new MutationObserver(muts=>{
+    muts.forEach(mut=>{
+      mut.addedNodes.forEach(node=>{
+        if(node.nodeType!==1)return;
+        if(['SPAN','DIV','TR'].includes(node.tagName)&&node.getAttribute('onclick'))_a11yMakeClickable(node);
+        if(node.querySelectorAll)a11yScanClickables(node);
+      });
+    });
+  });
+  mo.observe(document.body,{childList:true,subtree:true});
+}
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded',()=>{
   const _hdrDate=document.getElementById('hdr-date');if(_hdrDate)_hdrDate.textContent=new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   populateAll();renderOv();
+  initA11yKeyboardChips();
   document.getElementById('pondModal').addEventListener('click',e=>{if(e.target===document.getElementById('pondModal'))closePond()});
   fetchWx().catch(()=>{});
   if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
