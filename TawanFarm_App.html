@@ -1566,7 +1566,7 @@ body.role-ceo .main{max-width:640px}
     <textarea class="fi" id="ov-mprot-water" rows="3" style="margin-bottom:4px;font-family:inherit;line-height:1.5;font-size:var(--fs11)" placeholder="เช่น I-bac ยืนทุกวัน, Super PS ทุกวันอาทิตย์..."></textarea>
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:6px;padding-top:8px;border-top:1px solid var(--bd)">
       <span id="ov-mprot-upd" style="font-size:var(--fs105);color:var(--tx3)"></span>
-      <button class="btn btn-sm btn-p" onclick="ovProtoSave()">💾 บันทึก</button>
+      <button class="btn btn-sm btn-p" id="ov-mprot-save-btn" onclick="ovProtoSave()">💾 บันทึก</button>
     </div>
   </div>
   <div class="card" style="margin-bottom:14px;display:none" id="ov-partial-card">
@@ -9290,6 +9290,7 @@ function renderPdMedProtocol(p){
 
 // ── หน้าภาพรวม: Protocol เวชภัณฑ์ล่าสุดของทั้งฟาร์ม (ไม่ผูกรายบ่อ) — พี่แจ้งว่าหน้างานเปลี่ยนโปรแกรมกิน/ลงน้ำอยู่ตลอด ตารางวันต่อวันตามไม่ทัน ใช้ Note อิสระ 2 ช่องแทน ──
 function ovProtoSave(){
+  if(APP_ROLE!=='admin')return; // ให้แก้ได้เฉพาะ admin — กันเผื่อกดผ่านช่องทางอื่น (UI ก็ปิดไว้แล้วสำหรับ role อื่น)
   if(!D.medProtocolOverview)D.medProtocolOverview={feedNote:'',waterNote:'',updatedAt:'',updatedBy:''};
   const feedEl=document.getElementById('ov-mprot-feed'),waterEl=document.getElementById('ov-mprot-water');
   if(!feedEl||!waterEl)return;
@@ -9301,11 +9302,15 @@ function ovProtoSave(){
   renderOvMedProtocol();
 }
 function renderOvMedProtocol(){
-  const feedEl=document.getElementById('ov-mprot-feed'),waterEl=document.getElementById('ov-mprot-water'),updEl=document.getElementById('ov-mprot-upd');
+  const feedEl=document.getElementById('ov-mprot-feed'),waterEl=document.getElementById('ov-mprot-water'),updEl=document.getElementById('ov-mprot-upd'),btnEl=document.getElementById('ov-mprot-save-btn');
   if(!feedEl||!waterEl||!updEl)return;
   const mp=D.medProtocolOverview||{};
   if(document.activeElement!==feedEl)feedEl.value=mp.feedNote||'';
   if(document.activeElement!==waterEl)waterEl.value=mp.waterNote||'';
+  const canEdit=APP_ROLE==='admin';
+  feedEl.readOnly=!canEdit;waterEl.readOnly=!canEdit;
+  feedEl.style.background=canEdit?'':'var(--sf2)';waterEl.style.background=canEdit?'':'var(--sf2)';
+  if(btnEl)btnEl.style.display=canEdit?'':'none';
   updEl.innerHTML=mp.updatedAt?`🕒 อัปเดตล่าสุด <b style="color:var(--tx2)">${mp.updatedAt}</b> โดย ${mp.updatedBy||'-'}`:'ยังไม่เคยบันทึก';
 }
 
