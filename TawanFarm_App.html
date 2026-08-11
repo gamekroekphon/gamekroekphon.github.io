@@ -6138,8 +6138,7 @@ function _ovdFiltered(rows){
   return rows;
 }
 function _ovdSort(rows){
-  const rank={danger:0,warn:1,ok:2};
-  return rows.slice().sort((a,b)=>(rank[a.cls]??2)-(rank[b.cls]??2)||b.age-a.age);
+  return rows.slice().sort((a,b)=>b.age-a.age);
 }
 function _ovdFullyOk(r){return r.cls==='ok'&&r.hasWQ&&r.hasFeed&&r.hasStock;}
 function setOvdFilter(key){_ovdFilter=key;_ovdShowAllOk=false;renderOv();}
