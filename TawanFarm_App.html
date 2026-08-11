@@ -4073,8 +4073,8 @@ function sortedPonds(){
 function today(){return new Date(Date.now()+7*3600000).toISOString().split('T')[0]}
 function dDiff(a,b){return Math.floor((new Date(b)-new Date(a))/86400000)}
 function wqfeedActivePonds(){return D.ponds.filter(p=>{const cls=pondStatusOv(p);return cls!=='prep'&&cls!=='empty'&&cls!=='closed';});}
-// ── อายุกุ้งปัจจุบันของบ่อ (วัน) — ใช้จุดเดียวกันทุกที่ที่ต้องเรียงบ่อตามอายุ (มาก→น้อย) แทนเรียงชื่อ/สถานะ ──
-function pondCurAge(p){return p&&p.startDate?dDiff(p.startDate,today()):0;}
+// ── อายุกุ้งปัจจุบันของบ่อ (วัน) — ใช้จุดเดียวกันทุกที่ที่ต้องเรียงบ่อตามอายุ/แสดงอายุบ่อที่กำลังเลี้ยงอยู่ — วันลงกุ้ง = อายุ 1 วัน (ไม่ใช่ 0) ตามที่พี่ยืนยัน ──
+function pondCurAge(p){return p&&p.startDate?dDiff(p.startDate,today())+1:0;}
 function sortPondsByAge(list){return list.slice().sort((a,b)=>pondCurAge(b)-pondCurAge(a));}
 function wqfeedPondStats(p){
   const recs=(p.records||[]).filter(r=>r.date).slice().sort((a,b)=>a.date.localeCompare(b.date));
@@ -4363,7 +4363,7 @@ function worstOv(a,b){const o={ok:0,warn:1,danger:2};return(o[b]||0)>(o[a]||0)?b
 function pondStatusOv(p){
   if(!Array.isArray(p.records))p.records=[];
   const last=p.records[p.records.length-1];
-  const age=p.startDate?dDiff(p.startDate,today()):(last?last.age:0);
+  const age=p.startDate?pondCurAge(p):(last?last.age:0);
   if(age<=0)return'prep';
   let level='ok';
   if(last){
@@ -5486,7 +5486,7 @@ function renderPondDetail(id){
   _pdCurPondId=id;
   if(!Array.isArray(p.records))p.records=[];
   const last=p.records[p.records.length-1];
-  const age=p.startDate?dDiff(p.startDate,today()):(last?last.age:0);
+  const age=p.startDate?pondCurAge(p):(last?last.age:0);
   const cls=pondStatusOv(p);
   const reason=reasonOv(p,last,age);
   const badgeTxt={danger:'ต้องดู!',warn:'เฝ้าระวัง',ok:'ปกติ',prep:'กำลังเตรียม'}[cls]||'ปกติ';
@@ -6055,7 +6055,7 @@ function renderOv(){
   const meta=D.ponds.map(p=>{
     if(!Array.isArray(p.records))p.records=[];
     const last=p.records[p.records.length-1];
-    const age=p.startDate?dDiff(p.startDate,today()):(last?last.age:0);
+    const age=p.startDate?pondCurAge(p):(last?last.age:0);
     return{p,last,age,cls:pondStatusOv(p)};
   });
   meta.sort((a,b)=>b.age-a.age);
@@ -9828,7 +9828,7 @@ function renderTrialPondPicker(){
   const pickEl=document.getElementById('trial-pond-picker');if(!pickEl)return;
   const active=trialActivePonds();
   pickEl.innerHTML=active.length?active.map(p=>{
-    const doc=p.startDate?dDiff(p.startDate,today()):null;
+    const doc=p.startDate?pondCurAge(p):null;
     const picked=!!_trialDraft.ponds[p.id];
     return `<span class="pond-chk${picked?' on':''}" onclick="toggleTrialPond('${p.id}')">${p.name} <span style="font-size:var(--fs105);opacity:.75">DOC ${doc!=null?doc:'-'}</span></span>`;
   }).join(''):'<p style="color:var(--tx3);font-style:italic;font-size:12.5px">ไม่มีบ่อที่กำลังเลี้ยงอยู่ตอนนี้</p>';
@@ -10935,7 +10935,7 @@ function mgCountCell(n,active){
 function renderManage(){
   document.getElementById('mg-tbody').innerHTML=D.ponds.map(p=>{
     const age=p.startDate?dDiff(p.startDate,today()):null;
-    const ageCell=(age===null)?'<span style="color:var(--tx3)">ยังไม่ลงกุ้ง</span>':age<0?`<span style="color:var(--in)">เตรียมบ่อ (เหลือ ${Math.abs(age)} วัน)</span>`:`${age} วัน`;
+    const ageCell=(age===null)?'<span style="color:var(--tx3)">ยังไม่ลงกุ้ง</span>':age<0?`<span style="color:var(--in)">เตรียมบ่อ (เหลือ ${Math.abs(age)} วัน)</span>`:`${age+1} วัน`;
     const active=age!==null&&age>=0; // ลงกุ้งแล้วและไม่ได้อยู่ระหว่างเตรียมบ่อ — ใช้ตัดสินว่า "ควรมีข้อมูล" หรือยัง
     const adg=getPDG(p.samples||[]);
     const adgCell=adg?`${adg}`:'<span style="color:var(--tx3)">-</span>';
@@ -12037,7 +12037,7 @@ function renderHvRoundStrip(){
   if(!p){el.style.display='none';el.innerHTML='';return;}
   const chip=t=>`<span style="display:inline-flex;align-items:center;gap:5px;background:var(--sf2);border:1px solid var(--bd);border-radius:16px;padding:3px 11px;font-size:12px">${t}</span>`;
   const chips=[];
-  chips.push(chip(`📅 รอบ ${p.cropNum||1}/${yearBE(p.cropYear)||'-'}${p.startDate?` · เลี้ยงมา ${dDiff(p.startDate,today())} วัน`:' · ยังไม่ลงกุ้ง'}`));
+  chips.push(chip(`📅 รอบ ${p.cropNum||1}/${yearBE(p.cropYear)||'-'}${p.startDate?` · เลี้ยงมา ${pondCurAge(p)} วัน`:' · ยังไม่ลงกุ้ง'}`));
   const ph=p.partialHarvests||[];
   const phKg=ph.reduce((s,r)=>s+(r.weight||0),0);
   chips.push(chip(ph.length?`📦 พาเชียลแล้ว ${ph.length} ครั้ง · ${phKg.toLocaleString()} กก.`:'📦 ยังไม่มีพาเชียลรอบนี้'));
@@ -12246,7 +12246,7 @@ function renderCeo(){
     const statusLbl=status==='ok'?'ปกติ':'ควรติดตาม';
     const bio=getLatestBiomass(p);
     const size=(p.samples&&p.samples.length)?p.samples[p.samples.length-1].plCount:null;
-    const age=p.startDate?dDiff(p.startDate,today()):0;
+    const age=p.startDate?pondCurAge(p):0;
     const f=ceoFeedDisplay(p);
     return`<div class="ceo-pcard" onclick="ceoOpenSheet('${p.id}')">
       <div class="ceo-pcard-top">
@@ -12271,7 +12271,7 @@ function renderCeo(){
 }
 function ceoOpenSheet(pid){
   const p=pond(pid);if(!p)return;
-  const age=p.startDate?dDiff(p.startDate,today()):0;
+  const age=p.startDate?pondCurAge(p):0;
   const lastSample=(p.samples&&p.samples.length)?p.samples[p.samples.length-1]:null;
 
   document.getElementById('ceo-s-name').textContent=p.name;
@@ -12589,7 +12589,7 @@ function renderAbwTable(ponds){
     const samps=(p.samples||[]).filter(s=>s.abw).sort((a,b)=>a.age-b.age);
     if(!samps.length)return null;
     const lat=samps[samps.length-1];
-    const curAge=p.startDate?dDiff(p.startDate,today()):lat.age;
+    const curAge=p.startDate?pondCurAge(p):lat.age;
     const tgt=getAbwTarget(lat.age);
     const pct=tgt>0?Math.round(lat.abw/tgt*100):null;
     const col=ABW_COLORS[i%ABW_COLORS.length];
