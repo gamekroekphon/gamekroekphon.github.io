@@ -1,6 +1,18 @@
 # TawanFarm App — ประวัติการแก้บัค/ฟีเจอร์ฉบับเต็ม (Archive)
 
-ย้ายมาจาก CLAUDE.md เพื่อลดขนาดไฟล์ที่โหลดเข้า context ทุกครั้ง — เปิดไฟล์นี้เมื่อต้องการอ้างอิงเหตุผล/รายละเอียดของการแก้ไขในอดีต (entry #1–160)
+ย้ายมาจาก CLAUDE.md เพื่อลดขนาดไฟล์ที่โหลดเข้า context ทุกครั้ง — เปิดไฟล์นี้เมื่อต้องการอ้างอิงเหตุผล/รายละเอียดของการแก้ไขในอดีต (entry #1–161)
+
+### 161. หน้ารายละเอียดบ่อ: ลบการ์ด "เวชพันฑ์ผสมกิน" (รายบ่อ) + "อาหารรายวัน 14 วัน" + "การเติบโต–น้ำหนักเฉลี่ย" เพราะซ้ำซ้อน
+
+พี่รีวิวหน้ารายละเอียดบ่อแล้วขอลบ 3 การ์ดที่ข้อมูลซ้ำกับที่อื่นแล้ว: (1) "เวชพันฑ์ผสมกิน" รายบ่อ — ซ้ำกับ Protocol เวชภัณฑ์ล่าสุดที่หน้าภาพรวม (entry #158-160) แล้ว (2) กราฟ "อาหารการกินรายวัน 14 วันล่าสุด" — ซ้ำกับ "สมุดประวัติการให้อาหาร" ที่อยู่ในหน้าเดียวกันด้านบน (3) กราฟ "การเติบโต — น้ำหนักเฉลี่ย (รายสัปดาห์)" — ไม่จำเป็น ข้อมูลซ้ำซ้อนกับกราฟ ABW ที่อื่น
+
+**แก้**: `renderPondDetail(id)` ลบ 3 `pdCard(...)` บล็อก (`medproto`/`chfeedday`/`chgrowth`) และเลิกเรียก `renderPdMedProtocol(p)` — กราฟ `chfeedweek` (⚖️ อาหาร vs การเติบโต รายสัปดาห์) ไม่ได้ถูกขอให้ลบ เก็บไว้เหมือนเดิม
+
+**ลบทิ้งทั้งระบบ** (dead code หลังตัดจุดเรียกใช้ทั้งหมดแล้ว ไม่เหลือใครเรียก): ระบบตารางเวชภัณฑ์แบบหมุนเวียนรายบ่อทั้งชุด — `MED_PROTOCOL_CATS`, `medProtocolAdvance`, `sweepMedProtocols` (ไม่มีจุดเรียกอยู่แล้วด้วย), `medProtocolStatus`, `medProtocolAvailItems`, `medBadge`, `pdProtoStartNew/Edit/AddRoundQuick/CancelEdit/AddRound/RemoveRound/AddMed/SearchMed/RemoveMed/ToggleLoopDraft/Save/EndEarly/StopAll/LoopBackFirst/ToggleLoop`, `pdProtoFormHtml`, `renderPdMedProtocol`, `mprotEsc`, ตัวแปร `_pdProtoEditing`/`_pdProtoDraft`, field `p.medProtocol` (ไม่มีจุดอ่าน/เขียนเหลือในโค้ดแล้ว — เช็คด้วย grep ทั่วไฟล์), และ CSS `.mprot-sched/.mprot-round/.mprot-dot/.mprot-box/.mprot-top/.mprot-lbl/.mprot-meds/.mprot-meta/.mprot-chip-x/.mprot-round-edit` (ใช้เฉพาะ UI ที่ลบไปแล้วเท่านั้น — คนละชุดกับ `#ov-mprot-feed/water/upd/save-btn` ของ Protocol ภาพรวมที่ไม่ใช้ class เหล่านี้)
+
+`renderPdCharts(p)` ตัดส่วนวาดกราฟ `pd-c-feedday` และ `pd-c-growth` ออก เหลือ `pd-c-water`/`pd-c-feedweek` ตามเดิม (ตัวแปร `buckets`/`wkLbls` ยังใช้ร่วมกับ feedweek เหมือนเดิม)
+
+ทดสอบผ่าน local server: เปิดหน้ารายละเอียดบ่อ B1 ยืนยัน 3 การ์ดหายไปจริง การ์ดที่เหลือ (สมุดประวัติการให้อาหาร, เวชภัณฑ์ที่ใช้ล่าสุด, กราฟอาหาร vs การเติบโตรายสัปดาห์ ฯลฯ) ยังอยู่ครบ ✓ กราฟ `feedWeek`/`water` ยัง render ปกติ ยืนยันผ่าน `_pdCharts` object ไม่มี key `feedDay`/`growth` เหลือค้าง ✓ `node --check` ผ่านทั้ง 2 script block ✓ ไม่มี console error — sync ไฟล์แล้ว
 
 ### 160. "Protocol เวชภัณฑ์ล่าสุด": จำกัดให้แก้ไข/บันทึกได้เฉพาะ role admin
 

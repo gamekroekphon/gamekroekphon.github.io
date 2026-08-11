@@ -830,26 +830,6 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .tgt-unit{font-size:var(--fs105);color:var(--tx3);font-weight:600}
 .tgt-hint{font-size:var(--fs10);color:var(--tx3);text-align:center;margin-top:7px;line-height:1.5}
 .tgt-reset{font-size:var(--fs10);color:var(--p);cursor:pointer;text-decoration:underline;font-weight:700}
-/* ── ตารางการลงเวชภัณฑ์ (หมุนเวียนหลายรอบ) — เส้น timeline แนวตั้ง ── */
-.mprot-sched{position:relative;padding-left:24px}
-.mprot-sched::before{content:'';position:absolute;left:8px;top:4px;bottom:4px;width:2px;background:var(--bd)}
-.mprot-round{position:relative;margin-bottom:12px}
-.mprot-round:last-child{margin-bottom:0}
-.mprot-dot{position:absolute;left:-24px;top:2px;width:18px;height:18px;border-radius:50%;background:var(--sf2);border:2px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:var(--tx3)}
-.mprot-round.done .mprot-dot{background:var(--ok);border-color:var(--ok);color:#fff}
-.mprot-round.active .mprot-dot{background:var(--p);border-color:var(--p);color:#fff}
-.mprot-round.pending .mprot-dot{background:var(--sf);border-style:dashed}
-.mprot-box{border:1px solid var(--bd);border-radius:12px;padding:11px 13px;background:var(--sf2)}
-.mprot-round.active .mprot-box{border-color:var(--p);background:var(--pl)}
-.mprot-round.done .mprot-box{opacity:.6}
-.mprot-round.pending .mprot-box{border-style:dashed;background:transparent}
-.mprot-top{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap}
-.mprot-lbl{font-size:var(--fs105);font-weight:800;color:var(--tx3);text-transform:uppercase;letter-spacing:.3px}
-.mprot-meds{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px}
-.mprot-meta{font-size:var(--fs11);color:var(--tx3);display:flex;justify-content:space-between;gap:6px}
-.mprot-meta b{color:var(--tx)}
-.mprot-chip-x{cursor:pointer;font-weight:900;margin-left:4px}
-.mprot-round-edit{border:1.5px dashed var(--bd);border-radius:12px;padding:11px 13px;margin-bottom:10px}
 /* ── การ์ดเทียบรอบก่อน ── */
 .bm-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
 .bm-tab{flex:1;text-align:center;padding:8px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:var(--sf2);color:var(--tx2);min-width:140px}
@@ -5726,15 +5706,12 @@ function renderPondDetail(id){
       <div class="chip-row" id="pd-med-hist-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
       <div class="chip-row" id="pd-med-cat-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
       <div id="pd-med-hist-table"></div>`)}
-    ${pdCard('medproto','🔁 เวชพันฑ์ผสมกิน','<div id="pd-medproto-body"></div>')}
     ${pdCard('size',`📏 ไซส์ล่าสุด${lat&&lat.date?` · ${fD(lat.date)}`:''}`,sizeHtml)}
     ${pdCard('bio','⚖️ เปรียบเทียบ Biomass 2 วิธี','<div id="pd-biocompare-card"></div>')}
     ${pdCard('bench','📊 เทียบกับรอบก่อน','<div id="pd-benchmark-card"></div>')}
     ${pdCard('watman',`🚰 การจัดการน้ำล่าสุด${latWater&&latWater.date?` · ${fD(latWater.date)}`:''}`,wmHtml)}
     ${pdCard('chwater','📉 แนวโน้มคุณภาพน้ำ 10 วันล่าสุด','<div class="pd-chart-wrap"><canvas id="pd-c-water"></canvas></div>')}
-    ${pdCard('chfeedday','🍤 อาหารการกินรายวัน 14 วันล่าสุด','<div class="pd-chart-wrap"><canvas id="pd-c-feedday"></canvas></div>')}
     ${pdCard('chfeedweek','⚖️ อาหาร vs การเติบโต รายสัปดาห์','<div class="pd-chart-wrap"><canvas id="pd-c-feedweek"></canvas></div>')}
-    ${pdCard('chgrowth','📈 การเติบโต — น้ำหนักเฉลี่ย (รายสัปดาห์)','<div class="pd-chart-wrap"><canvas id="pd-c-growth"></canvas></div>')}
     <div class="pd-actions">
       <button class="btn btn-p" onclick="jumpEntry('${p.id}')">📝 กรอกข้อมูลใหม่</button>
       <button class="btn" onclick="jumpFeed('${p.id}')">🍖 กรอกอาหาร</button>
@@ -5747,7 +5724,6 @@ function renderPondDetail(id){
   renderPdWqHistory(p);
   renderPdFeedHistory(p);
   renderPdMedHistory(p);
-  renderPdMedProtocol(p);
 }
 function pdToggleCatItems(key){
   document.getElementById('pd-cat-items-'+key)?.classList.toggle('show');
@@ -6035,10 +6011,6 @@ function renderPdCharts(p){
     {label:'DO',data:recs.map(r=>r.doM!=null&&r.doM!==''?parseFloat(r.doM):null),borderColor:'#3f6212',tension:.35,spanGaps:true}
   ]},options:{maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{boxWidth:10,font:{size:10}}}},scales:{x:{ticks:{font:{size:9}}},y:{ticks:{font:{size:9}}}}}});
   else if(wEl)wEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลค่าน้ำพอสำหรับกราฟนี้</p>';
-  const feeds=(p.feedLog||[]).filter(r=>r.date).slice(-14);
-  const fEl=document.getElementById('pd-c-feedday');
-  if(fEl&&feeds.length)_pdCharts.feedDay=new Chart(fEl,{type:'bar',data:{labels:feeds.map(r=>fD(r.date)),datasets:[{label:'กก./วัน',data:feeds.map(r=>parseFloat(r.totalFeed)||0),backgroundColor:'#3f6212',borderRadius:4}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8}}},y:{ticks:{font:{size:9}}}}}});
-  else if(fEl)fEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลอาหารพอสำหรับกราฟนี้</p>';
   const buckets=pdWeekBuckets(p);
   const wkLbls=buckets.map(b=>'สัปดาห์ '+b.week);
   const fwEl=document.getElementById('pd-c-feedweek');
@@ -6046,9 +6018,6 @@ function renderPdCharts(p){
     {type:'bar',label:'อาหาร/สัปดาห์ (กก.)',data:buckets.map(b=>Math.round(b.feedTotal)),backgroundColor:'#7fbf7a',borderRadius:4,yAxisID:'y',order:2},
     {type:'line',label:'ADG (ก./วัน)',data:buckets.map(b=>b.adg),borderColor:'#1f6b42',tension:.35,spanGaps:true,yAxisID:'y1',order:1}
   ]},options:{maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{boxWidth:10,font:{size:9}}}},scales:{y:{ticks:{font:{size:9}}},y1:{position:'right',grid:{drawOnChartArea:false},ticks:{font:{size:9}}},x:{ticks:{font:{size:8}}}}}});
-  const gEl=document.getElementById('pd-c-growth');
-  if(gEl&&buckets.some(b=>b.abw!=null))_pdCharts.growth=new Chart(gEl,{type:'line',data:{labels:wkLbls,datasets:[{label:'กรัม/ตัว',data:buckets.map(b=>b.abw),borderColor:'#2f8f5b',backgroundColor:'rgba(63,98,18,.18)',fill:true,tension:.35,spanGaps:true,pointRadius:3,pointBackgroundColor:'#2f8f5b'}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8}}},y:{ticks:{font:{size:9}}}}}});
-  else if(gEl)gEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:12px;padding:10px 0;text-align:center">ยังไม่มีข้อมูลผลสุ่มพอสำหรับกราฟนี้ — ต้องสุ่มตัวอย่างอย่างน้อย 2 ครั้งขึ้นไป</p>';
 }
 function jumpFeed(id){document.getElementById('tab-feed').click();setTimeout(()=>{const el=document.getElementById(`fdg-${id}-total`);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus();}},80)}
 let homeAttnExpanded=false;
@@ -9058,235 +9027,6 @@ function renderPdMedHistory(p){
   }</tbody></table></div>`;
 }
 
-// ══════ ตารางการลงเวชภัณฑ์แบบหมุนเวียน (medProtocol) ══════
-// แก้ปัญหา "สั่งยาแล้วลืม" — p.medProtocol เก็บลำดับ "รอบ" (แต่ละรอบ = ชุดเวชภัณฑ์หลายตัว + จำนวนวัน)
-// เดินหน้าอัตโนมัติทุกครั้งที่เปิดแอป (medProtocolAdvance) ไม่ต้องมี cron ฝั่งเซิร์ฟเวอร์ — ถ้าตั้งวนซ้ำ (loop) จะย้อนกลับรอบแรกเองตอนจบรอบสุดท้าย
-// ถ้าไม่วนซ้ำและไม่มีรอบถัดไป → curIdx ชี้เกินท้าย array (sentinel "จบตารางแล้ว") ต้องรอพี่มาตัดสินใจ (เพิ่มรอบ/วนกลับ/หยุด)
-const MED_PROTOCOL_CATS=['chemOral','chemWater','probioOral','probioWater','lime'];
-function medProtocolAdvance(p){
-  const mp=p.medProtocol;
-  if(!mp||!mp.active||!mp.rounds||!mp.rounds.length)return false;
-  if(mp.curIdx>=mp.rounds.length)return false; // จบตารางแล้ว รอการตัดสินใจ ไม่ต้องเดินต่อ
-  let changed=false,guard=0;
-  while(mp.curIdx<mp.rounds.length&&guard<1000){
-    guard++;
-    const r=mp.rounds[mp.curIdx];
-    if(dDiff(mp.curStart,today())<r.days)break;
-    mp.curStart=ymdLocal(addDaysLocal(new Date(mp.curStart+'T00:00:00'),r.days));
-    if(mp.curIdx+1<mp.rounds.length)mp.curIdx++;
-    else if(mp.loop)mp.curIdx=0;
-    else mp.curIdx=mp.rounds.length; // sentinel: จบตารางแล้ว
-    changed=true;
-  }
-  return changed;
-}
-// ── เดินตารางทุกบ่อครั้งเดียวตอนเข้าหน้าภาพรวม (ทางที่คนส่วนใหญ่เปิดแอปทุกวันอยู่แล้ว) ──
-function sweepMedProtocols(){
-  let changed=false;
-  (D.ponds||[]).forEach(p=>{if(medProtocolAdvance(p))changed=true;});
-  if(changed)save();
-}
-function medProtocolStatus(p){
-  const mp=p.medProtocol;
-  if(!mp||!mp.active||!mp.rounds||!mp.rounds.length)return null;
-  if(mp.curIdx>=mp.rounds.length)return{finished:true,mp};
-  const r=mp.rounds[mp.curIdx];
-  const dayInRound=dDiff(mp.curStart,today())+1;
-  const pct=Math.min(100,(dayInRound/r.days)*100);
-  const endDate=ymdLocal(addDaysLocal(new Date(mp.curStart+'T00:00:00'),r.days));
-  return{finished:false,round:r,idx:mp.curIdx,dayInRound,pct,endDate,mp};
-}
-function medProtocolAvailItems(excludeIds){
-  return(D.inventoryItems||[]).filter(i=>MED_PROTOCOL_CATS.includes(i.category)&&!(excludeIds||[]).includes(i.id));
-}
-function medBadge(m){return`<span class="badge ${STOCK_CAT_CSS[m.category]||''}">${m.name}</span>`;}
-
-// ── หน้ารายละเอียดบ่อ ──
-let _pdProtoEditing=false,_pdProtoDraft=null;
-function pdProtoStartNew(){_pdProtoDraft={rounds:[{meds:[],days:3}],loop:false,reason:''};_pdProtoEditing=true;renderPdMedProtocol(pond(_pdCurPondId));}
-function pdProtoEdit(){
-  const p=pond(_pdCurPondId);const mp=p.medProtocol;
-  _pdProtoDraft=mp&&mp.rounds&&mp.rounds.length
-    ?{rounds:JSON.parse(JSON.stringify(mp.rounds)),loop:!!mp.loop,reason:mp.reason||''}
-    :{rounds:[{meds:[],days:3}],loop:false,reason:''};
-  _pdProtoEditing=true;
-  renderPdMedProtocol(p);
-}
-function pdProtoAddRoundQuick(pid){
-  const p=pond(pid);if(!p||!p.medProtocol)return;
-  _pdProtoDraft={rounds:JSON.parse(JSON.stringify(p.medProtocol.rounds)).concat([{meds:[],days:3}]),loop:!!p.medProtocol.loop,reason:p.medProtocol.reason||''};
-  _pdProtoEditing=true;
-  renderPdMedProtocol(p);
-}
-function pdProtoCancelEdit(){_pdProtoEditing=false;_pdProtoDraft=null;renderPdMedProtocol(pond(_pdCurPondId));}
-function pdProtoAddRound(){_pdProtoDraft.rounds.push({meds:[],days:3});renderPdMedProtocol(pond(_pdCurPondId));}
-function pdProtoRemoveRound(idx){
-  if(_pdProtoDraft.rounds.length<=1){alert('ต้องมีอย่างน้อย 1 รอบ');return;}
-  _pdProtoDraft.rounds.splice(idx,1);
-  renderPdMedProtocol(pond(_pdCurPondId));
-}
-function pdProtoAddMed(idx,itemId){
-  if(!itemId)return;
-  const item=(D.inventoryItems||[]).find(i=>i.id===itemId);if(!item)return;
-  const round=_pdProtoDraft.rounds[idx];
-  if(round.meds.some(m=>m.id===itemId))return;
-  round.meds.push({id:item.id,name:item.name,category:item.category});
-  renderPdMedProtocol(pond(_pdCurPondId));
-}
-function mprotEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
-// ── ช่องพิมพ์ค้นหาเวชภัณฑ์ (แทน dropdown เดิม) — จับคู่ข้อความที่พิมพ์/เลือกจาก datalist กลับไปหา item จริงแล้วเรียก pdProtoAddMed เหมือนเดิม ──
-function pdProtoSearchMed(el,idx){
-  const val=el.value.trim();if(!val)return;
-  const avail=medProtocolAvailItems(_pdProtoDraft.rounds[idx].meds.map(m=>m.id));
-  const item=avail.find(i=>`${STOCK_CAT_LABEL[i.category]||''} — ${i.name}`===val)||avail.find(i=>i.name===val);
-  if(item)pdProtoAddMed(idx,item.id);
-}
-function pdProtoRemoveMed(idx,medIdx){_pdProtoDraft.rounds[idx].meds.splice(medIdx,1);renderPdMedProtocol(pond(_pdCurPondId));}
-function pdProtoToggleLoopDraft(){_pdProtoDraft.loop=!_pdProtoDraft.loop;renderPdMedProtocol(pond(_pdCurPondId));}
-function pdProtoSave(pid){
-  const p=pond(pid);if(!p)return;
-  document.querySelectorAll('.mprot-days-input').forEach(inp=>{
-    const idx=parseInt(inp.dataset.idx);
-    if(_pdProtoDraft.rounds[idx])_pdProtoDraft.rounds[idx].days=Math.max(1,parseInt(inp.value)||1);
-  });
-  for(const r of _pdProtoDraft.rounds){
-    if(!r.meds.length){alert('กรุณาเลือกเวชภัณฑ์อย่างน้อย 1 รายการในทุกรอบ');return;}
-  }
-  const reason=(document.getElementById('mprot-reason-input')?.value||'').trim();
-  const newRounds=_pdProtoDraft.rounds.map(r=>({meds:r.meds,days:r.days}));
-  const wasActive=!!(p.medProtocol&&p.medProtocol.rounds&&p.medProtocol.rounds.length&&p.medProtocol.active);
-  let curIdx=0,curStart=today();
-  if(wasActive){
-    const wasFinished=p.medProtocol.curIdx>=p.medProtocol.rounds.length;
-    if(wasFinished){curIdx=newRounds.length-1;curStart=today();}
-    // ── แก้ตารางล่วงหน้าได้โดยไม่กระทบรอบที่กำลังใช้อยู่จริง — คง curIdx/curStart เดิมไว้ (แค่ clamp กันรอบที่กำลังใช้อยู่ถูกลบไปแล้ว) ──
-    else{curIdx=Math.min(p.medProtocol.curIdx,newRounds.length-1);curStart=p.medProtocol.curStart;}
-  }
-  const updatedAt=new Date().toLocaleString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-  p.medProtocol={active:true,rounds:newRounds,loop:!!_pdProtoDraft.loop,curIdx,curStart,reason,updatedAt,updatedBy:curUserLabel(),
-    note:(p.medProtocol&&p.medProtocol.note)||'',noteUpdatedAt:(p.medProtocol&&p.medProtocol.noteUpdatedAt)||'',noteUpdatedBy:(p.medProtocol&&p.medProtocol.noteUpdatedBy)||''};
-  save();
-  _pdProtoEditing=false;_pdProtoDraft=null;
-  renderPdMedProtocol(p);
-}
-function pdProtoEndEarly(pid){
-  const p=pond(pid);if(!p||!p.medProtocol)return;
-  const mp=p.medProtocol;if(mp.curIdx>=mp.rounds.length)return;
-  if(!confirm('จบรอบนี้ก่อนกำหนดและเลื่อนไปรอบถัดไปทันที?'))return;
-  const r=mp.rounds[mp.curIdx];
-  mp.curStart=ymdLocal(addDaysLocal(new Date(today()+'T00:00:00'),-r.days)); // บังคับให้ elapsed>=days แล้วให้ advance() เดินต่อให้
-  medProtocolAdvance(p);
-  save();
-  renderPdMedProtocol(p);
-}
-function pdProtoStopAll(pid){
-  const p=pond(pid);if(!p||!p.medProtocol)return;
-  if(!confirm('หยุดใช้ตารางเวชภัณฑ์ทั้งหมดของบ่อนี้?'))return;
-  p.medProtocol.active=false;
-  save();
-  renderPdMedProtocol(p);
-  renderOvMedProtocol();
-}
-function pdProtoLoopBackFirst(pid){
-  const p=pond(pid);if(!p||!p.medProtocol)return;
-  p.medProtocol.loop=true;p.medProtocol.curIdx=0;p.medProtocol.curStart=today();
-  save();
-  renderPdMedProtocol(p);
-  renderOvMedProtocol();
-}
-function pdProtoToggleLoop(pid){
-  const p=pond(pid);if(!p||!p.medProtocol)return;
-  p.medProtocol.loop=!p.medProtocol.loop;
-  save();
-  renderPdMedProtocol(p);
-}
-function pdProtoFormHtml(p){
-  const roundsHtml=_pdProtoDraft.rounds.map((r,idx)=>`
-    <div class="mprot-round-edit">
-      <div class="mprot-top"><span class="mprot-lbl">รอบที่ ${idx+1}</span>${_pdProtoDraft.rounds.length>1?`<button class="btn btn-sm" style="background:var(--db);color:var(--d);border:1px solid var(--d)" onclick="pdProtoRemoveRound(${idx})">🗑️ ลบรอบนี้</button>`:''}</div>
-      <div class="mprot-meds">${r.meds.map((m,mi)=>`<span class="badge ${STOCK_CAT_CSS[m.category]||''}">${m.name}<span class="mprot-chip-x" onclick="pdProtoRemoveMed(${idx},${mi})">×</span></span>`).join('')||'<span style="font-size:var(--fs11);color:var(--tx3);font-style:italic">ยังไม่ได้เลือกเวชภัณฑ์</span>'}</div>
-      <input class="fi" list="mprot-med-list-${idx}" placeholder="พิมพ์ชื่อเวชภัณฑ์เพื่อค้นหา..." style="margin-bottom:8px" onchange="pdProtoSearchMed(this,${idx})" autocomplete="off">
-      <datalist id="mprot-med-list-${idx}">
-        ${medProtocolAvailItems(r.meds.map(m=>m.id)).map(i=>`<option data-id="${i.id}" value="${mprotEsc(STOCK_CAT_LABEL[i.category]||'')} — ${mprotEsc(i.name)}"></option>`).join('')}
-      </datalist>
-      <label class="fl" for="mprot-days-${idx}" style="display:block;font-size:var(--fs105);font-weight:600;color:var(--tx2);margin-bottom:4px">ใช้กี่วัน</label>
-      <input class="fi mprot-days-input" id="mprot-days-${idx}" data-idx="${idx}" type="number" min="1" value="${r.days}">
-    </div>`).join('');
-  return`
-    <div class="card-sub" style="margin-bottom:10px">แก้ไขตาราง — บ่อ ${p.name}</div>
-    ${roundsHtml}
-    <button class="btn btn-s" style="width:100%;margin-bottom:12px" onclick="pdProtoAddRound()">➕ เพิ่มรอบถัดไป</button>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--bd);margin-bottom:10px">
-      <div><div style="font-weight:600;font-size:12.5px">🔁 วนซ้ำตารางนี้ตลอดไป</div><div style="font-size:var(--fs11);color:var(--tx3)">จบรอบสุดท้ายแล้วย้อนกลับไปรอบที่ 1 อัตโนมัติ ไม่ต้องสั่งใหม่</div></div>
-      <span class="trial-chip${_pdProtoDraft.loop?' on':''}" onclick="pdProtoToggleLoopDraft()">${_pdProtoDraft.loop?'✅ เปิดอยู่':'ปิดอยู่'}</span>
-    </div>
-    <label class="fl" style="display:block;font-size:var(--fs105);font-weight:600;color:var(--tx2);margin-bottom:4px" for="mprot-reason-input">เหตุผล / อาการที่พบ (บันทึกไว้อ้างอิง)</label>
-    <textarea class="fi" id="mprot-reason-input" rows="2" style="margin-bottom:12px">${_pdProtoDraft.reason||''}</textarea>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-p" style="flex:1" onclick="pdProtoSave('${p.id}')">💾 บันทึกตาราง</button>
-      <button class="btn btn-s" onclick="pdProtoCancelEdit()">ยกเลิก</button>
-    </div>`;
-}
-function renderPdMedProtocol(p){
-  const body=document.getElementById('pd-medproto-body');if(!body||!p)return;
-  medProtocolAdvance(p); // เผื่อไม่ได้เปิดแอปมาหลายวัน ให้ตารางเดินตามจริงก่อนแสดงผล
-  if(_pdProtoEditing){body.innerHTML=pdProtoFormHtml(p);return;}
-  const mp=p.medProtocol;
-  if(!mp||!mp.rounds||!mp.rounds.length||!mp.active){
-    body.innerHTML=`<div class="card-sub" style="margin-bottom:10px">${mp&&!mp.active?'หยุดใช้ตารางไว้แล้ว ยังไม่มีตารางใหม่':'ยังไม่มีตารางสำหรับบ่อนี้'}</div>
-      <button class="btn btn-p" onclick="pdProtoStartNew()">➕ สร้างตารางใหม่</button>`;
-    return;
-  }
-  const st=medProtocolStatus(p);
-  let html='<div class="mprot-sched">';
-  mp.rounds.forEach((r,i)=>{
-    let cls='pending',dotTxt=String(i+1),tag='',metaLeft=r.days+' วัน',metaRight='',extraBtn='';
-    if(!st.finished&&i===mp.curIdx){
-      cls='active';dotTxt='▶';tag=`<span class="badge b-warn">วันที่ ${st.dayInRound}/${r.days}</span>`;
-      metaLeft='เริ่ม '+fD(mp.curStart);metaRight='ครบกำหนด <b>'+fD(st.endDate)+'</b>';
-      extraBtn=`<div style="margin-top:8px"><button class="btn btn-sm" style="background:var(--sf2);color:var(--tx2);border:1px solid var(--bd)" onclick="pdProtoEndEarly('${p.id}')">⏭️ จบรอบนี้ก่อนกำหนด</button></div>`;
-    }else if(st.finished&&i===mp.rounds.length-1){
-      cls='done';dotTxt='✓';tag='<span class="badge b-danger">รอบสุดท้าย — ครบแล้ว</span>';
-    }else if((!st.finished&&i<mp.curIdx)||(st.finished&&i<mp.rounds.length-1)){
-      cls='done';dotTxt='✓';tag='<span class="badge" style="background:var(--sf2);color:var(--tx3)">ผ่านไปแล้ว</span>';
-    }else if(st.finished){
-      tag='<span class="badge b-info">จะวนกลับมาใช้ถ้าเปิดวนซ้ำ</span>';
-    }else{
-      tag='<span class="badge b-info">ถัดไป</span>';
-    }
-    const bar=cls==='active'?`<div class="ph-bar"><span style="width:${st.pct.toFixed(0)}%;background:var(--p)"></span></div>`:'';
-    html+=`<div class="mprot-round ${cls}">
-      <div class="mprot-dot">${dotTxt}</div>
-      <div class="mprot-box">
-        <div class="mprot-top"><span class="mprot-lbl">รอบที่ ${i+1}</span>${tag}</div>
-        <div class="mprot-meds">${r.meds.map(medBadge).join('')}</div>
-        ${bar}
-        <div class="mprot-meta"><span>${metaLeft}</span><span>${metaRight}</span></div>
-        ${extraBtn}
-      </div>
-    </div>`;
-  });
-  html+='</div>';
-  if(st.finished){
-    html+=`<div style="background:var(--db);border-radius:10px;padding:10px 12px;font-size:var(--fs11);color:var(--tx2);margin-top:12px;line-height:1.6">
-      ⚠️ <b style="color:var(--d)">จบตารางแล้ว ไม่มีคำสั่งต่อ</b> — พนักงานจะไม่ได้รับเวชภัณฑ์ตัวไหนต่อจนกว่าจะวนกลับ/เพิ่มรอบใหม่
-    </div>
-    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px">
-      <button class="btn btn-sm" style="background:var(--sf2);color:var(--tx2);border:1px solid var(--bd)" onclick="pdProtoLoopBackFirst('${p.id}')">🔁 วนกลับไปรอบที่ 1</button>
-      <button class="btn btn-sm" style="background:var(--p);color:#fff" onclick="pdProtoAddRoundQuick('${p.id}')">➕ เพิ่มรอบใหม่</button>
-      <button class="btn btn-sm" style="background:var(--db);color:var(--d);border:1px solid var(--d)" onclick="pdProtoStopAll('${p.id}')">⏹ หยุดทั้งหมด</button>
-    </div>`;
-  }else{
-    html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)">
-      <span class="trial-chip${mp.loop?' on':''}" onclick="pdProtoToggleLoop('${p.id}')">🔁 วนซ้ำอัตโนมัติ${mp.loop?' ✅':''}</span>
-      <button class="btn btn-sm" style="background:var(--db);color:var(--d);border:1px solid var(--d)" onclick="pdProtoStopAll('${p.id}')">⏹ หยุดทั้งหมด</button>
-    </div>`;
-  }
-  if(mp.reason)html+=`<div class="card-sub" style="margin-top:10px"><b style="color:var(--tx2)">เหตุผลที่สั่งใช้:</b> ${mp.reason}</div>`;
-  if(mp.updatedAt)html+=`<div class="card-sub" style="margin-top:4px">🕒 อัปเดตล่าสุด: ${mp.updatedAt}${mp.updatedBy?' โดย '+mp.updatedBy:''}</div>`;
-  html+=`<div style="text-align:center;margin-top:10px"><button class="btn btn-s btn-sm" onclick="pdProtoEdit()">✏️ แก้ไขตาราง</button></div>`;
-  body.innerHTML=html;
-}
 
 // ── หน้าภาพรวม: Protocol เวชภัณฑ์ล่าสุดของทั้งฟาร์ม (ไม่ผูกรายบ่อ) — พี่แจ้งว่าหน้างานเปลี่ยนโปรแกรมกิน/ลงน้ำอยู่ตลอด ตารางวันต่อวันตามไม่ทัน ใช้ Note อิสระ 2 ช่องแทน ──
 function ovProtoSave(){
