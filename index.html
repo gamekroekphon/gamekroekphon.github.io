@@ -4087,6 +4087,9 @@ function sortedPonds(){
 function today(){return new Date(Date.now()+7*3600000).toISOString().split('T')[0]}
 function dDiff(a,b){return Math.floor((new Date(b)-new Date(a))/86400000)}
 function wqfeedActivePonds(){return D.ponds.filter(p=>{const cls=pondStatusOv(p);return cls!=='prep'&&cls!=='empty'&&cls!=='closed';});}
+// ── อายุกุ้งปัจจุบันของบ่อ (วัน) — ใช้จุดเดียวกันทุกที่ที่ต้องเรียงบ่อตามอายุ (มาก→น้อย) แทนเรียงชื่อ/สถานะ ──
+function pondCurAge(p){return p&&p.startDate?dDiff(p.startDate,today()):0;}
+function sortPondsByAge(list){return list.slice().sort((a,b)=>pondCurAge(b)-pondCurAge(a));}
 function wqfeedPondStats(p){
   const recs=(p.records||[]).filter(r=>r.date).slice().sort((a,b)=>a.date.localeCompare(b.date));
   const feeds=(p.feedLog||[]).filter(r=>r.date).slice().sort((a,b)=>a.date.localeCompare(b.date));
@@ -4098,7 +4101,7 @@ function wqfeedAvg(rows,keys){
 }
 function initWqFeed(){
   const sel=document.getElementById('wqfeed-pond');if(!sel)return;
-  const actives=wqfeedActivePonds();
+  const actives=sortPondsByAge(wqfeedActivePonds());
   sel.innerHTML=actives.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
   renderWqFeedAlerts(actives);
   if(actives.length)renderWqFeedChart();
@@ -6514,7 +6517,7 @@ function renderLaborActiveSection(){
   const bannerEl=document.getElementById('lb-active-banner');
   const kpiEl=document.getElementById('lb-rate-kpi');
   if(!bannerEl||!kpiEl)return;
-  const activePonds=wqfeedActivePonds();
+  const activePonds=sortPondsByAge(wqfeedActivePonds());
   const todayStr=today();
   const dailyRate=dailyFixedStaffRate(todayStr)+dailyWeeklyWorkerRate(todayStr);
   const perPond=activePonds.length?dailyRate/activePonds.length:0;
@@ -6879,7 +6882,7 @@ function renderElecKPI(){
 // ── แถบตรวจสอบบ่อ active วันนี้ — เช็คตาเปล่าว่าตรงกับที่ใช้หารค่าไฟ/บ่อ/วันไหม (แพทเทิร์นเดียวกับ renderLaborActiveSection) ──
 function renderElecActiveSection(){
   const bannerEl=document.getElementById('el-active-banner');if(!bannerEl)return;
-  const activePonds=wqfeedActivePonds();
+  const activePonds=sortPondsByAge(wqfeedActivePonds());
   bannerEl.innerHTML=activePonds.length?`
     <div style="background:var(--ob);border:1.5px solid var(--ok);border-radius:10px;padding:12px 14px">
       <div style="font-size:13px;font-weight:700;color:var(--ok);margin-bottom:8px">🐟 บ่อที่ระบบนับว่า "กำลังเลี้ยงอยู่" วันนี้ — ${activePonds.length} บ่อ</div>
@@ -8748,14 +8751,14 @@ function restoreLastEntry(){
 // ── บ่อถัดไปที่ยังไม่กรอกข้อมูลของวันที่เลือกอยู่ (ใช้ auto-advance หลังบันทึก + ตอนเปิดหน้าครั้งแรก) ──
 function epNextUnfilled(excludeId){
   const d=document.getElementById('ep-date')?.value||today();
-  const list=wqfeedActivePonds().slice().sort((a,b)=>a.name.localeCompare(b.name,'th'));
+  const list=sortPondsByAge(wqfeedActivePonds());
   return list.find(p=>p.id!==excludeId&&!(p.records||[]).some(r=>r.date===d));
 }
 function renderEpChips(){
   const bar=document.getElementById('ep-chipbar');if(!bar)return;
   const d=document.getElementById('ep-date')?.value||today();
   const activePid=document.getElementById('ep-pond')?.value;
-  const list=wqfeedActivePonds().slice().sort((a,b)=>a.name.localeCompare(b.name,'th'));
+  const list=sortPondsByAge(wqfeedActivePonds());
   bar.innerHTML=list.map(p=>{
     const done=(p.records||[]).some(r=>r.date===d);
     const cls='pond-chk'+(done?' wq-done':'')+(p.id===activePid?' on':'');
@@ -9283,7 +9286,7 @@ function ovProtoSaveNote(pid){
 function renderOvMedProtocol(){
   const card=document.getElementById('ov-medproto-card');const list=document.getElementById('ov-medproto-list');
   if(!card||!list)return;
-  const ponds=wqfeedActivePonds().filter(p=>p.medProtocol&&((p.medProtocol.rounds&&p.medProtocol.rounds.length)||p.medProtocol.note));
+  const ponds=sortPondsByAge(wqfeedActivePonds().filter(p=>p.medProtocol&&((p.medProtocol.rounds&&p.medProtocol.rounds.length)||p.medProtocol.note)));
   if(!ponds.length){card.style.display='none';return;}
   card.style.display='';
   list.innerHTML=ponds.map(p=>{
@@ -9429,7 +9432,7 @@ function feedGridRow(p,d,feedItems){
 function renderFeedGrid(){
   const wrap=document.getElementById('fd-grid-wrap');if(!wrap)return;
   const d=document.getElementById('fd-date')?.value||today();
-  const ponds=wqfeedActivePonds().slice().sort((a,b)=>a.name.localeCompare(b.name,'th'));
+  const ponds=sortPondsByAge(wqfeedActivePonds());
   if(!ponds.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีบ่อที่กำลังเลี้ยงอยู่ — ปล่อยลูกกุ้งได้ที่หน้า "รอบเลี้ยง"</p>';return}
   const feedItems=(D.inventoryItems||[]).filter(i=>i.category==='feed').sort((a,b)=>a.name.localeCompare(b.name,'th'));
   // ── เตือนบ่อที่ยังไม่ได้กรอกอาหารของวันที่เลือก — มองปราดเดียวรู้ว่าขาดบ่อไหน ──
@@ -10602,7 +10605,7 @@ function renderRisk(d){
   // ── อากาศ 3 วันข้างหน้า — คำนวณครั้งเดียว ใช้ร่วมกันทุกบ่อ (ไม่ใช่ของรายบ่อ) ──
   const weatherDays=d.time.slice(1,4).map((_,i)=>calcWeatherRisk(d,i+1));
   // ── เฉพาะบ่อที่กำลังเลี้ยงอยู่จริง (ตัดบ่อที่จับไปแล้ว/ยังไม่ลงกุ้ง ออกจากการประเมินความเสี่ยง — เดิมใช้ D.ponds ตรงๆ ทำให้บ่อที่ปิดรอบแล้วยังโชว์ค่าความเสี่ยงค้าง) ──
-  const activePonds=wqfeedActivePonds();
+  const activePonds=sortPondsByAge(wqfeedActivePonds());
   if(!activePonds.length){
     document.getElementById('risk-grid').innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic;grid-column:1/-1">ยังไม่มีบ่อที่กำลังเลี้ยงอยู่ให้ประเมินความเสี่ยง — ปล่อยลูกกุ้งได้ที่หน้า "รอบเลี้ยง"</p>';
     renderRiskWeatherBanner(weatherDays);
@@ -12468,7 +12471,7 @@ function showCeoOnly(){
 }
 function renderCeo(){
   const el=document.getElementById('ceo-kpi');if(!el)return;
-  const ponds=wqfeedActivePonds();
+  const ponds=sortPondsByAge(wqfeedActivePonds());
   const totalCostAll=ponds.reduce((s,p)=>s+ceoTotalCost(p),0);
   let totalFeedToday=0,feedAllToday=true;
   ponds.forEach(p=>{const f=ceoFeedDisplay(p);totalFeedToday+=f.val;if(!f.isToday)feedAllToday=false;});
@@ -12762,7 +12765,7 @@ function getAbwTarget(age){
 }
 
 function initAbw(){
-  const ponds=D.ponds.filter(p=>p.startDate&&!p.closed&&(p.samples||[]).some(s=>s.abw));
+  const ponds=sortPondsByAge(D.ponds.filter(p=>p.startDate&&!p.closed&&(p.samples||[]).some(s=>s.abw)));
   const chipsEl=document.getElementById('abw-chips');
   if(chipsEl){
     chipsEl.innerHTML=ponds.map((p,i)=>{
@@ -12933,7 +12936,7 @@ function renderWQHeatmap(){
   }).join('');
 
   // Collect pond data for selected date
-  const activePonds=sortedPonds().filter(p=>p.startDate&&!p.closed);
+  const activePonds=sortPondsByAge(sortedPonds().filter(p=>p.startDate&&!p.closed));
   const rows=activePonds.map(p=>{
     const recs=(p.records||[]).sort((a,b)=>a.date.localeCompare(b.date));
     const rec=recs.find(r=>r.date===date)||null;
@@ -12948,9 +12951,7 @@ function renderWQHeatmap(){
     return{p,rec,prev,worst};
   });
 
-  // Sort: danger → warn → ok → na
-  const sOrd={danger:0,warn:1,ok:2,na:3};
-  rows.sort((a,b)=>(sOrd[a.worst]??3)-(sOrd[b.worst]??3));
+  // เรียงตามอายุกุ้งมาก→น้อยอยู่แล้ว (จาก activePonds) ไม่เรียงตามความรุนแรงของสถานะอีกต่อไป
 
   // KPI
   const withData=rows.filter(r=>r.rec);
