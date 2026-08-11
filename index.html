@@ -1546,6 +1546,18 @@ body.role-ceo .main{max-width:640px}
     <div class="mhd-search" onclick="document.getElementById('bnav-more')?.click()">🔍 ค้นหาบ่อ / ข้อมูล...</div>
   </div>
   <div class="ov-kpi-bar" id="ov-kpi-bar"></div>
+  <div class="card" style="margin-bottom:14px" id="ov-medproto-card">
+    <div class="card-t">💊 Protocol เวชภัณฑ์ล่าสุด</div>
+    <div class="card-sub">ภาพรวมทั้งฟาร์ม อัปเดตอิสระเมื่อโปรแกรมที่ใช้จริงหน้างานเปลี่ยน — ไม่ผูกกับบ่อใดบ่อหนึ่ง เพราะหน้างานเปลี่ยนแปลงตลอด แอปตามไม่ทันวันต่อวัน ให้ดูเป็นภาพรวมตรงนี้ที่เดียว</div>
+    <div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--tx2);margin-bottom:6px"><span style="width:8px;height:8px;border-radius:50%;background:var(--p)"></span>🍚 โปรแกรมผสมอาหาร (กิน)</div>
+    <textarea class="fi" id="ov-mprot-feed" rows="7" style="margin-bottom:12px;font-family:inherit;line-height:1.6" placeholder="เช่น บ่อทั่วไป: In-out 5g + โปรไบโอติก 5g สลับ 3 วัน..."></textarea>
+    <div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--tx2);margin-bottom:6px"><span style="width:8px;height:8px;border-radius:50%;background:var(--in)"></span>💧 โปรแกรมลงน้ำ</div>
+    <textarea class="fi" id="ov-mprot-water" rows="6" style="margin-bottom:6px;font-family:inherit;line-height:1.6" placeholder="เช่น I-bac ยืนทุกวัน, Super PS ทุกวันอาทิตย์..."></textarea>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:8px;padding-top:10px;border-top:1px solid var(--bd)">
+      <span id="ov-mprot-upd" style="font-size:var(--fs105);color:var(--tx3)"></span>
+      <button class="btn btn-sm btn-p" onclick="ovProtoSave()">💾 บันทึก</button>
+    </div>
+  </div>
   <div class="card" style="margin-bottom:14px" id="ovd-card">
     <div class="card-t">📊 สถานะบ่อทั้งหมด</div>
     <div class="ovd-sum-strip" id="ovd-sum-strip"></div>
@@ -1565,11 +1577,6 @@ body.role-ceo .main{max-width:640px}
     <div id="ov-partial-ready"></div>
     <div id="ov-partial-list"></div>
     <div id="ov-partial-cal"></div>
-  </div>
-  <div class="card" style="margin-bottom:14px;display:none" id="ov-medproto-card">
-    <div class="card-t">💊 Protocol เวชภัณฑ์ปัจจุบัน — ทุกบ่อ</div>
-    <div class="card-sub">ดึงรอบที่ใช้อยู่จากตารางอัตโนมัติ + มีช่องบันทึกอิสระต่อบ่อพร้อมวันอัปเดตล่าสุด กันสับสนเวลาสั่งงานปากเปล่า</div>
-    <div id="ov-medproto-list"></div>
   </div>
   <div class="ov-main-grid">
     <div id="ov-sections"></div>
@@ -9282,50 +9289,25 @@ function renderPdMedProtocol(p){
   body.innerHTML=html;
 }
 
-// ── หน้าภาพรวม: กระดาน Protocol ทุกบ่อ + ช่องหมายเหตุอิสระพร้อมวันอัปเดตล่าสุด (กันสับสนตอนสั่งงานปากเปล่า) ──
-function ovProtoSaveNote(pid){
-  const p=pond(pid);if(!p)return;
-  const ta=document.getElementById('ov-mprot-note-'+pid);if(!ta)return;
-  if(!p.medProtocol)p.medProtocol={active:false,rounds:[],loop:false,curIdx:0,curStart:today(),reason:''};
-  p.medProtocol.note=ta.value.trim();
-  p.medProtocol.noteUpdatedAt=new Date().toLocaleString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-  p.medProtocol.noteUpdatedBy=curUserLabel();
+// ── หน้าภาพรวม: Protocol เวชภัณฑ์ล่าสุดของทั้งฟาร์ม (ไม่ผูกรายบ่อ) — พี่แจ้งว่าหน้างานเปลี่ยนโปรแกรมกิน/ลงน้ำอยู่ตลอด ตารางวันต่อวันตามไม่ทัน ใช้ Note อิสระ 2 ช่องแทน ──
+function ovProtoSave(){
+  if(!D.medProtocolOverview)D.medProtocolOverview={feedNote:'',waterNote:'',updatedAt:'',updatedBy:''};
+  const feedEl=document.getElementById('ov-mprot-feed'),waterEl=document.getElementById('ov-mprot-water');
+  if(!feedEl||!waterEl)return;
+  D.medProtocolOverview.feedNote=feedEl.value.trim();
+  D.medProtocolOverview.waterNote=waterEl.value.trim();
+  D.medProtocolOverview.updatedAt=new Date().toLocaleString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  D.medProtocolOverview.updatedBy=curUserLabel();
   save();
   renderOvMedProtocol();
 }
 function renderOvMedProtocol(){
-  const card=document.getElementById('ov-medproto-card');const list=document.getElementById('ov-medproto-list');
-  if(!card||!list)return;
-  const ponds=sortPondsByAge(wqfeedActivePonds().filter(p=>p.medProtocol&&((p.medProtocol.rounds&&p.medProtocol.rounds.length)||p.medProtocol.note)));
-  if(!ponds.length){card.style.display='none';return;}
-  card.style.display='';
-  list.innerHTML=ponds.map(p=>{
-    const st=medProtocolStatus(p);
-    let headBadge,medsHtml;
-    if(!st){
-      headBadge='<span class="badge" style="background:var(--sf2);color:var(--tx3)">ไม่มีตารางที่ใช้งานอยู่</span>';
-      medsHtml='<span style="font-size:var(--fs11);color:var(--tx3);font-style:italic">ยังไม่มีตารางเวชภัณฑ์</span>';
-    }else if(st.finished){
-      headBadge='<span class="badge b-danger">🚨 จบตารางแล้ว</span>';
-      const lastRound=st.mp.rounds[st.mp.rounds.length-1];
-      medsHtml=(lastRound.meds||[]).map(m=>`<span class="badge ${STOCK_CAT_CSS[m.category]||''}" style="opacity:.6">${m.name} (จบแล้ว)</span>`).join('');
-    }else{
-      headBadge=`<span class="badge b-warn">รอบ ${st.idx+1} · วันที่ ${st.dayInRound}/${st.round.days}</span>`;
-      medsHtml=st.round.meds.map(medBadge).join('');
-    }
-    const noteVal=(p.medProtocol&&p.medProtocol.note)||'';
-    const updInfo=p.medProtocol&&p.medProtocol.noteUpdatedAt?`🕒 อัปเดตล่าสุด <b style="color:var(--tx2)">${p.medProtocol.noteUpdatedAt}</b> โดย ${p.medProtocol.noteUpdatedBy||'-'}`:'ยังไม่เคยบันทึกหมายเหตุ';
-    return`<div class="mprot-box" style="margin-bottom:10px${st&&st.finished?';border-color:var(--d);background:var(--db)':''}">
-      <div class="mprot-top"><span class="mprot-lbl" style="color:${st&&st.finished?'var(--d)':'var(--tx)'}">บ่อ ${p.name}</span>${headBadge}</div>
-      <div class="mprot-meds">${medsHtml}</div>
-      <label class="fl" style="display:block;font-size:var(--fs105);font-weight:600;color:var(--tx2);margin:8px 0 4px" for="ov-mprot-note-${p.id}">📝 หมายเหตุเพิ่มเติม (พิมพ์อิสระ ไม่ผูกกับตาราง)</label>
-      <textarea class="fi" id="ov-mprot-note-${p.id}" rows="2" style="margin-bottom:6px" placeholder="เช่น วันนี้ปรับโดสชั่วคราว...">${noteVal}</textarea>
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:var(--fs105);color:var(--tx3)">
-        <span>${updInfo}</span>
-        <button class="btn btn-sm btn-p" onclick="ovProtoSaveNote('${p.id}')">💾 บันทึก</button>
-      </div>
-    </div>`;
-  }).join('');
+  const feedEl=document.getElementById('ov-mprot-feed'),waterEl=document.getElementById('ov-mprot-water'),updEl=document.getElementById('ov-mprot-upd');
+  if(!feedEl||!waterEl||!updEl)return;
+  const mp=D.medProtocolOverview||{};
+  if(document.activeElement!==feedEl)feedEl.value=mp.feedNote||'';
+  if(document.activeElement!==waterEl)waterEl.value=mp.waterNote||'';
+  updEl.innerHTML=mp.updatedAt?`🕒 อัปเดตล่าสุด <b style="color:var(--tx2)">${mp.updatedAt}</b> โดย ${mp.updatedBy||'-'}`:'ยังไม่เคยบันทึก';
 }
 
 // ===== EDIT HISTORY FUNCTIONS =====
