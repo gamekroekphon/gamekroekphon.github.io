@@ -11491,12 +11491,14 @@ function renderClosedDetail(){
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
         <button class="btn btn-sm" onclick="toggleChSec('feed')">🍽️ อาหาร (${(c.feedLog||[]).length})</button>
         <button class="btn btn-sm" onclick="toggleChSec('sample')">📏 สุ่มกุ้ง (${(c.samples||[]).length})</button>
-        <button class="btn btn-sm" onclick="toggleChSec('water')">💧 น้ำ (${(c.waterLog||[]).length})</button>
+        <button class="btn btn-sm" onclick="toggleChSec('wq')">💧 คุณภาพน้ำ (${(c.records||[]).length})</button>
+        <button class="btn btn-sm" onclick="toggleChSec('water')">💦 จัดการน้ำ (${(c.waterLog||[]).length})</button>
         <button class="btn btn-sm" onclick="toggleChSec('chem')">🧪 สารเคมี (${(c.chemLog||[]).length})</button>
         <button class="btn btn-sm" onclick="toggleChSec('lab')">🔬 แล็บ (${(c.labResults||[]).length})</button>
       </div>
       <div id="ch-sec-feed" style="display:none;margin-bottom:10px"></div>
       <div id="ch-sec-sample" style="display:none;margin-bottom:10px"></div>
+      <div id="ch-sec-wq" style="display:none;margin-bottom:10px"></div>
       <div id="ch-sec-water" style="display:none;margin-bottom:10px"></div>
       <div id="ch-sec-chem" style="display:none;margin-bottom:10px"></div>
       <div id="ch-sec-lab" style="display:none;margin-bottom:10px"></div>
@@ -11586,7 +11588,7 @@ function renderChFeedChart(s){
 function toggleChSec(name){
   const el=document.getElementById('ch-sec-'+name);if(!el)return;
   const isOpen=el.style.display!=='none';
-  ['feed','sample','water','chem','lab'].forEach(n=>{const e=document.getElementById('ch-sec-'+n);if(e&&n!==name)e.style.display='none';});
+  ['feed','sample','wq','water','chem','lab'].forEach(n=>{const e=document.getElementById('ch-sec-'+n);if(e&&n!==name)e.style.display='none';});
   if(isOpen){el.style.display='none';return}
   el.style.display='block';
   const pid=document.getElementById('clh-pond')?.value;
@@ -11594,6 +11596,7 @@ function toggleChSec(name){
   const p=pond(pid);const c=p&&p.cropHistory?p.cropHistory[idx]:null;if(!c)return;
   if(name==='feed')el.innerHTML=renderChFeedTable(c);
   else if(name==='sample')el.innerHTML=renderChSampleTable(c);
+  else if(name==='wq')el.innerHTML=renderChWqTable(c);
   else if(name==='water')el.innerHTML=renderChWaterTable(c);
   else if(name==='chem')el.innerHTML=renderChChemTable(c);
   else if(name==='lab')el.innerHTML=renderChLabTable(c);
@@ -11611,6 +11614,14 @@ function renderChSampleTable(c){
   return `<table class="tbl"><thead><tr><th>วันที่</th><th>อายุ</th><th>ABW (ก.)</th><th>ไซส์</th><th>อัตรารอด(%)</th><th>Biomass</th><th>PDG</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.abw||'-'}</td><td>${r.plCount||'-'}</td><td>${r.survivalRate||'-'}</td><td>${r.biomass||'-'}</td><td>${r.pdg||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')
   }</tbody></table>`;
+}
+function renderChWqTable(c){
+  const rows=(c.records||[]).slice().sort((a,b)=>(a.age||0)-(b.age||0));
+  if(!rows.length)return '<p style="color:var(--tx3);text-align:center;padding:14px;font-style:italic">ไม่มีข้อมูล</p>';
+  const show=PARAMS.slice(0,8);
+  return `<div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวาเพื่อดูทุกค่า →</div><div style="overflow-x:auto"><table class="tbl" style="white-space:nowrap"><thead><tr><th>วันที่</th><th>อายุ</th>${show.map(pm=>`<th>${pm.lbl}</th>`).join('')}<th>หมายเหตุ</th></tr></thead><tbody>${
+    rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${r.age||'-'}</td>${show.map(pm=>{const v=r[pm.key];return`<td>${v===null||v===undefined||v===''?'<span style="color:var(--tx3)">–</span>':v}</td>`;}).join('')}<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.notes||'-'}</td></tr>`).join('')
+  }</tbody></table></div>`;
 }
 function renderChWaterTable(c){
   const rows=(c.waterLog||[]).slice().sort((a,b)=>(a.age||0)-(b.age||0));
