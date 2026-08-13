@@ -867,7 +867,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .hdr-user{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx2)}
 .hdr-user .uname{max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hdr-role-badge{font-size:var(--fs10);padding:2px 6px;border-radius:4px;font-weight:500}
-.role-admin{background:var(--pb);color:var(--p)}.role-staff{background:var(--sf2);color:var(--tx3)}.role-ceo{background:var(--pl);color:var(--pd)}
+.role-admin{background:var(--pb);color:var(--p)}.role-staff{background:var(--sf2);color:var(--tx3)}
 /* ── Mobile UX patch ── */
 /* 1. แถบเมนูบน: ปัดนิ้วซ้าย-ขวาได้บน iOS */
 .tabs{-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
@@ -880,93 +880,12 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   .mobile-logout-block{display:block!important}
 }
 
-/* ═══════════════════════════ CEO DASHBOARD (role=ceo) ═══════════════════════════ */
-/* role=ceo: ซ่อนเมนู/แถบแท็บ/bottom-nav ทั้งหมด แสดงแค่หน้า CEO เต็มจอ ไม่ต้องกดหลายขั้น */
-body.role-ceo .side-nav,body.role-ceo .tabs-wrap,body.role-ceo #bnav{display:none!important}
-body.role-ceo .main{max-width:640px}
-/* ── บั๊ก: sidebar ซ่อนไปแล้วแต่กฎจอง margin-left 230px (บรรทัด ~76 สำหรับ .side-nav) ยัง !important ทับอยู่ทุกจอ ≥601px (รวม iPad) ทำให้เนื้อหาเบี้ยวไปทางขวา ไม่กึ่งกลางจอ — รีเซ็ตกลับด้วย selector ที่ specificity สูงกว่า ── */
-@media(min-width:601px){
-  body.role-ceo .hdr{margin-left:0!important;width:100%!important}
-  body.role-ceo .main{margin-left:auto!important;margin-right:auto!important;width:100%!important;max-width:640px!important}
-}
-.ceo-hdr{margin-bottom:16px}
-.ceo-hdr-title{font-size:14px;font-weight:700;color:var(--tx2)}
-.ceo-kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px}
-.ceo-kpi{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;box-shadow:var(--sh)}
-.ceo-kpi.hero{grid-column:1/-1;background:linear-gradient(155deg,var(--pl),var(--sf) 75%);border-color:var(--pl)}
-.ceo-kpi-lbl{font-size:var(--fs11);color:var(--tx3);font-weight:600;margin-bottom:7px}
-.ceo-kpi-val{font-size:20px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--tx)}
-.ceo-kpi.hero .ceo-kpi-val{font-size:25px;color:var(--pd)}
-.ceo-kpi-val small{font-size:12px;font-weight:600;color:var(--tx3);margin-left:3px}
-.ceo-kpi.warn .ceo-kpi-val{color:var(--w)}
-.ceo-kpi-note{font-size:var(--fs95);color:var(--tx3);margin-top:3px}
-.ceo-sec-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
-.ceo-sec-title{font-size:14px;font-weight:700}
-.ceo-sec-note{font-size:var(--fs115);color:var(--tx3)}
-.ceo-pond-list{display:flex;flex-direction:column;gap:10px;margin-bottom:8px}
-.ceo-pcard{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:15px;cursor:pointer;box-shadow:var(--sh);transition:transform .1s ease,border-color .1s ease}
-.ceo-pcard:hover{border-color:var(--p)}
-.ceo-pcard:active{transform:scale(.99)}
-.ceo-pcard-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px}
-.ceo-pcard-name{font-size:16.5px;font-weight:700}
-.ceo-pcard-age{font-size:var(--fs115);color:var(--tx3);margin-top:1px}
-.ceo-status-pill{font-size:var(--fs105);font-weight:700;padding:3px 10px;border-radius:99px;white-space:nowrap;flex-shrink:0}
-.ceo-status-ok{background:var(--ob);color:var(--ok)}
-.ceo-status-watch{background:var(--wb);color:var(--w)}
-.ceo-pcard-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
-.ceo-mini-lbl{font-size:var(--fs10);color:var(--tx3);margin-bottom:1px;white-space:nowrap}
-.ceo-mini-val{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
-.ceo-pcard-cost{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--bd);padding-top:10px;margin-top:11px}
-.ceo-cost-lbl{font-size:var(--fs11);color:var(--tx3);font-weight:600}
-.ceo-cost-val{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
-.ceo-scrim{position:fixed;inset:0;background:rgba(20,17,10,.42);z-index:200;display:none}
-.ceo-scrim.on{display:block}
-.ceo-sheet{position:fixed;left:0;right:0;bottom:0;max-height:92vh;background:var(--sf);border-radius:20px 20px 0 0;box-shadow:0 -10px 34px rgba(16,24,40,.22);z-index:201;display:none;flex-direction:column;max-width:560px;margin:0 auto}
-.ceo-sheet.on{display:flex}
-.ceo-sheet-handle{width:36px;height:4px;background:var(--bd);border-radius:99px;margin:10px auto 4px;flex-shrink:0}
-.ceo-sheet-hd{padding:6px 20px 14px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0}
-.ceo-sheet-name{font-size:19px;font-weight:700}
-.ceo-sheet-meta{font-size:15px;font-weight:600;color:var(--tx2);margin-top:3px}
-.ceo-sheet-close{width:30px;height:30px;border-radius:99px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);font-size:13px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.ceo-sheet-body{padding:16px 20px 40px;overflow-y:auto;flex:1}
-.ceo-block-title{font-size:var(--fs11);font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 9px}
-.ceo-block-title:first-child{margin-top:0}
-.ceo-info-list{background:var(--sf2);border-radius:10px;padding:2px 12px}
-.ceo-plain-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd);font-size:12.5px}
-.ceo-plain-row:last-child{border-bottom:none}
-.ceo-plain-row .lbl{color:var(--tx2)}
-.ceo-plain-row .src{font-size:var(--fs10);color:var(--tx3);display:block;margin-top:1px}
-.ceo-plain-row .val{font-weight:700;font-variant-numeric:tabular-nums}
-.ceo-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.ceo-wq-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-.ceo-wq-cell{background:var(--sf2);border-radius:10px;padding:10px 11px}
-.ceo-wq-lbl{font-size:var(--fs10);color:var(--tx3);margin-bottom:3px}
-.ceo-wq-val{font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:5px}
-.ceo-wq-arrow{font-size:var(--fs11);font-weight:700}
-.ceo-wq-arrow.up{color:var(--ok)}
-.ceo-wq-arrow.down{color:var(--d)}
-.ceo-wq-arrow.flat{color:var(--tx3)}
-.ceo-stat{background:var(--sf2);border-radius:10px;padding:14px}
-.ceo-stat-lbl{font-size:12.5px;font-weight:600;color:var(--tx3);margin-bottom:4px}
-.ceo-stat-val{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
-.ceo-growth-note{font-size:var(--fs115);color:var(--tx3);line-height:1.6;margin-bottom:22px}
-.ceo-acc{border:1px solid var(--bd);border-radius:10px;margin-bottom:10px;overflow:hidden}
-.ceo-acc-hd{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;background:var(--sf)}
-.ceo-acc-hd:hover{background:var(--sf2)}
-.ceo-acc-ic{font-size:16px;flex-shrink:0}
-.ceo-acc-title{font-size:13px;font-weight:700;flex:1}
-.ceo-acc-right{font-size:13px;font-weight:700;color:var(--tx2);font-variant-numeric:tabular-nums}
-.ceo-acc-caret{font-size:var(--fs11);color:var(--tx3);transition:transform .18s;flex-shrink:0}
-.ceo-acc.open .ceo-acc-caret{transform:rotate(180deg)}
-.ceo-acc-panel{max-height:0;overflow:hidden;transition:max-height .24s ease}
-.ceo-acc.open .ceo-acc-panel{max-height:3000px}
-.ceo-acc-inner{padding:2px 14px 14px;border-top:1px solid var(--bd)}
+/* ═══ ต้นทุนแยกหมวด (accordion แถวหมวด/รายการ) — ใช้ร่วมกันระหว่างการ์ดต้นทุนสะสมหน้ารายละเอียดบ่อ (admin) และหน้าสต็อก (จุดแชร์) — เดิมเป็นส่วนหนึ่งของ CEO Dashboard ที่ลบไปแล้ว (role CEO เลิกใช้) แต่ 2 หน้านี้ยังใช้คลาสกลุ่มนี้อยู่ ══ */
 .ceo-item-row{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--sf2)}
 .ceo-item-row:last-child{border-bottom:none}
 .ceo-cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .ceo-item-main{flex:1;min-width:0}
 .ceo-item-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ceo-item-sub{font-size:var(--fs105);color:var(--tx3)}
 .ceo-item-val{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;flex-shrink:0}
 .ceo-cat-row{cursor:pointer}
 .ceo-cat-caret{font-size:var(--fs9);color:var(--tx3);display:inline-block;transition:transform .15s}
@@ -978,25 +897,6 @@ body.role-ceo .main{max-width:640px}
 .ceo-cost-total-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0 2px;margin-top:4px;border-top:2px solid var(--bd)}
 .ceo-cost-total-row .lbl{font-size:12.5px;font-weight:700}
 .ceo-cost-total-row .val{font-size:16px;font-weight:700;color:var(--p)}
-.ceo-hist-tbl{width:100%;border-collapse:collapse;font-size:var(--fs115)}
-.ceo-hist-tbl th{text-align:right;font-size:var(--fs10);color:var(--tx3);font-weight:600;padding:6px 4px;border-bottom:1px solid var(--bd)}
-.ceo-hist-tbl th:first-child{text-align:left}
-.ceo-hist-tbl td{text-align:right;padding:7px 4px;border-bottom:1px solid var(--sf2);font-variant-numeric:tabular-nums}
-.ceo-hist-tbl td:first-child{text-align:left;color:var(--tx2);font-variant-numeric:normal}
-.ceo-hist-tbl tr:last-child td{border-bottom:none}
-.ceo-empty{color:var(--tx3);padding:14px;font-style:italic;text-align:center;font-size:12.5px}
-/* iPad/แท็บเล็ต: กว้างขึ้น การ์ดบ่อเรียงหลายคอลัมน์ ไม่ยืดเป็นแถวเดียวยาวๆ เหมือนมือถือ (วางท้าย section กัน base rule ทับ) */
-@media(min-width:700px){
-  body.role-ceo .main{margin-left:auto!important;margin-right:auto!important;width:100%!important;max-width:900px!important}
-  .ceo-kpi-grid{grid-template-columns:repeat(4,1fr)}
-  .ceo-pond-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-  .ceo-sheet{left:50%;right:auto;transform:translateX(-50%);width:560px;border-radius:20px;bottom:16px;max-height:calc(100% - 32px)}
-}
-@media(min-width:1000px){
-  body.role-ceo .main{margin-left:auto!important;margin-right:auto!important;width:100%!important;max-width:1180px!important}
-  .ceo-kpi-grid{grid-template-columns:repeat(5,1fr)}
-  .ceo-pond-list{grid-template-columns:repeat(3,1fr)}
-}
 </style>
   <!-- Firebase SDKs (compat v9) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -1199,90 +1099,10 @@ body.role-ceo .main{max-width:640px}
   </div>
 </div>
 <div class="main">
-<!-- CEO DASHBOARD (role=ceo เท่านั้น) -->
-<div id="sec-ceo" class="sec">
-  <div class="ceo-hdr" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-    <div class="ceo-hdr-title">ภาพรวมฟาร์ม · รอบปัจจุบัน</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-s btn-sm" onclick="openPalmFromCeo()" style="white-space:nowrap">🌴 ตะวันปาล์ม</button>
-      <button class="btn btn-sm" onclick="doLogout()" style="white-space:nowrap;background:#ef4444;color:#fff">🚪 ออกจากระบบ</button>
-    </div>
-  </div>
-  <div class="ceo-kpi-grid" id="ceo-kpi"></div>
-  <div class="ceo-sec-hd">
-    <div class="ceo-sec-title" id="ceo-pond-count">บ่อทั้งหมด</div>
-    <div class="ceo-sec-note">แตะเพื่อดูรายละเอียด</div>
-  </div>
-  <div class="ceo-pond-list" id="ceo-pond-list"></div>
-
-  <div class="ceo-scrim" id="ceo-scrim" onclick="ceoCloseSheet()"></div>
-  <div class="ceo-sheet" id="ceo-sheet">
-    <div class="ceo-sheet-handle"></div>
-    <div class="ceo-sheet-hd">
-      <div>
-        <div class="ceo-sheet-name" id="ceo-s-name">—</div>
-        <div class="ceo-sheet-meta" id="ceo-s-meta">—</div>
-      </div>
-      <button class="ceo-sheet-close" onclick="ceoCloseSheet()" aria-label="ปิด">✕</button>
-    </div>
-    <div class="ceo-sheet-body" id="ceo-sheet-body">
-      <div class="ceo-block-title">ข้อมูลบ่อ</div>
-      <div class="ceo-info-list" style="margin-bottom:16px">
-        <div class="ceo-plain-row"><span class="lbl">วันลงกุ้ง</span><span class="val" id="ceo-p-stockdate">—</span></div>
-        <div class="ceo-plain-row"><span class="lbl">ลูกกุ้งจากที่ไหน</span><span class="val" id="ceo-p-hatchery">—</span></div>
-        <div class="ceo-plain-row"><span class="lbl">น้ำหนักรวมสะสม</span><span class="val" id="ceo-p-totalweight">—</span></div>
-        <div class="ceo-plain-row"><span class="lbl">อาหารรวมสะสม</span><span class="val" id="ceo-p-totalfeed">—</span></div>
-        <div class="ceo-plain-row"><span class="lbl">จัดการน้ำล่าสุด</span><span class="val" id="ceo-p-lastwater" style="text-align:right;max-width:60%">—</span></div>
-      </div>
-
-      <div class="ceo-block-title">สรุปบ่อ</div>
-      <div class="ceo-stat-grid">
-        <div class="ceo-stat"><div class="ceo-stat-lbl">Biomass</div><div class="ceo-stat-val" id="ceo-p-bio">—</div></div>
-        <div class="ceo-stat"><div class="ceo-stat-lbl">ไซส์</div><div class="ceo-stat-val" id="ceo-p-size">—</div></div>
-        <div class="ceo-stat"><div class="ceo-stat-lbl">FCR ประเมิน</div><div class="ceo-stat-val" id="ceo-p-fcr">—</div></div>
-        <div class="ceo-stat"><div class="ceo-stat-lbl">Yield/ไร่</div><div class="ceo-stat-val" id="ceo-p-yield">—</div></div>
-        <div class="ceo-stat"><div class="ceo-stat-lbl">อาหาร/แสนตัว</div><div class="ceo-stat-val" id="ceo-p-feed100k">—</div></div>
-      </div>
-
-      <div class="ceo-block-title">ค่าน้ำล่าสุด <span id="ceo-p-waterdate" style="text-transform:none;font-weight:400;color:var(--tx3)"></span></div>
-      <div class="ceo-wq-grid" id="ceo-p-watergrid"></div>
-      <div class="ceo-growth-note" id="ceo-p-growthnote">—</div>
-
-      <div class="ceo-acc" id="ceo-acc-cost">
-        <div class="ceo-acc-hd" onclick="ceoToggleAcc('ceo-acc-cost')">
-          <span class="ceo-acc-ic">💰</span>
-          <span class="ceo-acc-title">ต้นทุนสะสม</span>
-          <span class="ceo-acc-right" id="ceo-cost-total-mini">—</span>
-          <span class="ceo-acc-caret">▾</span>
-        </div>
-        <div class="ceo-acc-panel"><div class="ceo-acc-inner" id="ceo-cost-detail"></div></div>
-      </div>
-
-      <div class="ceo-acc" id="ceo-acc-water">
-        <div class="ceo-acc-hd" onclick="ceoToggleAcc('ceo-acc-water')">
-          <span class="ceo-acc-ic">💧</span>
-          <span class="ceo-acc-title">ค่าน้ำย้อนหลัง 7 วัน</span>
-          <span class="ceo-acc-caret">▾</span>
-        </div>
-        <div class="ceo-acc-panel"><div class="ceo-acc-inner" id="ceo-water-detail"></div></div>
-      </div>
-
-      <div class="ceo-acc" id="ceo-acc-feed">
-        <div class="ceo-acc-hd" onclick="ceoToggleAcc('ceo-acc-feed')">
-          <span class="ceo-acc-ic">🍖</span>
-          <span class="ceo-acc-title">อาหารย้อนหลัง 7 วัน</span>
-          <span class="ceo-acc-caret">▾</span>
-        </div>
-        <div class="ceo-acc-panel"><div class="ceo-acc-inner" id="ceo-feed-detail"></div></div>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- PALM (ตะวันปาล์ม — admin/CEO เท่านั้น, ข้อมูลการเงิน/สวนปาล์มแยกอิสระจากฟาร์มกุ้งทั้งหมด ไม่แตะ D.ponds/D.inventoryLog/ต้นทุนกุ้งใดๆเลย) -->
+<!-- PALM (ตะวันปาล์ม — admin เท่านั้น, ข้อมูลการเงิน/สวนปาล์มแยกอิสระจากฟาร์มกุ้งทั้งหมด ไม่แตะ D.ponds/D.inventoryLog/ต้นทุนกุ้งใดๆเลย) -->
 <div id="sec-palm" class="sec">
   <div class="sec-hdr">
     <div class="sec-title">🌴 ตะวันปาล์ม</div>
-    <button class="btn btn-s btn-sm" id="palm-back-ceo-btn" onclick="showCeoOnly()" style="display:none">← กลับแดชบอร์ด CEO</button>
   </div>
   <div class="stock-sub">
     <button class="stock-sub-btn on" id="palmb-ov" onclick="palmTab('ov',this)">🏠 ภาพรวม</button>
@@ -2562,7 +2382,7 @@ body.role-ceo .main{max-width:640px}
       <div class="fg"><label class="fl" for="nu-name">ชื่อที่แสดง</label><input class="fi" id="nu-name" placeholder="ชื่อพนักงาน"></div>
       <div class="fg"><label class="fl" for="nu-pass">รหัสผ่านเริ่มต้น</label><input class="fi" id="nu-pass" type="text" placeholder="อย่างน้อย 6 ตัว"></div>
       <div class="fg"><label class="fl" for="nu-role">สิทธิ์ (Role)</label>
-        <select class="fi" id="nu-role"><option value="staff">staff (พนักงาน)</option><option value="admin">admin</option><option value="ceo">CEO (ผู้บริหาร)</option></select>
+        <select class="fi" id="nu-role"><option value="staff">staff (พนักงาน)</option><option value="admin">admin</option></select>
       </div>
       <div class="fg"><button class="btn btn-p" onclick="addNewUser()">💾 เพิ่มผู้ใช้</button></div>
     </div>
@@ -2993,7 +2813,7 @@ body.role-ceo .main{max-width:640px}
   <div class="stock-pane" id="skp-cash">
     <div class="card" style="margin-bottom:12px">
       <div style="font-weight:700;color:var(--tx);margin-bottom:10px">💰 รายรับ-รายจ่ายเงินสด (เสมียน)</div>
-      <div class="card-sub">บันทึกเงินที่เสมียนได้รับเข้ากระเป๋า (รายรับ) และค่าใช้จ่ายเบ็ดเตล็ดในฟาร์ม เช่น ซื้อของทำอาหารให้คนงาน (รายจ่าย) — <b>เก็บเป็นตัวเลขลอยๆ ไม่ผูกกับข้อมูลส่วนอื่นเลย</b> ไม่ไปรวมในต้นทุนบ่อ / P&L / การ์ดของ CEO ใช้ดูเงินหมุนในฟาร์มอย่างเดียว (ทางบัญชีจะลงข้อมูล "อุปกรณ์นอก" แยกทีหลังเอง ถ้าผูกในแอปด้วยจะนับซ้ำ) ส่วน "รายรับ" แบ่งเป็น 2 แบบไว้ดูที่มาของเงิน: <b>เบิกจากส่วนกลาง</b> (ย้ายเงินมาเติมตอนเงินสดในกระเป๋าไม่พอ) กับ <b>ขายกุ้งสุ่ม/กุ้งเสีย</b> (เงินที่ได้จากการขายกุ้ง เข้ากระเป๋าเสมียนไว้ใช้จ่ายในฟาร์มเหมือนกัน)</div>
+      <div class="card-sub">บันทึกเงินที่เสมียนได้รับเข้ากระเป๋า (รายรับ) และค่าใช้จ่ายเบ็ดเตล็ดในฟาร์ม เช่น ซื้อของทำอาหารให้คนงาน (รายจ่าย) — <b>เก็บเป็นตัวเลขลอยๆ ไม่ผูกกับข้อมูลส่วนอื่นเลย</b> ไม่ไปรวมในต้นทุนบ่อ / P&L ใช้ดูเงินหมุนในฟาร์มอย่างเดียว (ทางบัญชีจะลงข้อมูล "อุปกรณ์นอก" แยกทีหลังเอง ถ้าผูกในแอปด้วยจะนับซ้ำ) ส่วน "รายรับ" แบ่งเป็น 2 แบบไว้ดูที่มาของเงิน: <b>เบิกจากส่วนกลาง</b> (ย้ายเงินมาเติมตอนเงินสดในกระเป๋าไม่พอ) กับ <b>ขายกุ้งสุ่ม/กุ้งเสีย</b> (เงินที่ได้จากการขายกุ้ง เข้ากระเป๋าเสมียนไว้ใช้จ่ายในฟาร์มเหมือนกัน)</div>
       <div class="g4" id="cash-kpi" style="margin-top:12px"></div>
       <div id="cash-cleanup-row" class="admin-only" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)">
         <button onclick="cleanupClerkCashSharedLinks()" style="background:var(--sf2);color:var(--tx2);font-size:12px">🧹 ล้างรายการเก่าที่เคยผูกกับ "อุปกรณ์นอก" (<span id="cash-cleanup-count">0</span> รายการ)</button>
@@ -3206,7 +3026,7 @@ document.addEventListener('focusout', () => {
   setTimeout(() => {
     if (_pendingRerender && !isEditingField()) {
       _pendingRerender = false;
-      populateAll(); renderOv(); if(APP_ROLE==='ceo')renderCeo();
+      populateAll(); renderOv();
     }
   }, 50);
 });
@@ -3217,7 +3037,7 @@ const FINANCE_TABS=['tab-harvest','tab-harveststat','tab-export','tab-labor','ta
 const FINANCE_SECS=['sec-harvest','sec-harveststat','sec-export','sec-labor','sec-elec','sec-pl','sec-manage'];
 function applyRole(role){
   APP_ROLE=role;
-  document.body.classList.remove('role-admin','role-ceo');
+  document.body.classList.remove('role-admin');
   if(role==='admin'){
     document.getElementById('btn-add-pond')?.style.setProperty('display','');
     document.getElementById('hdr-role-badge').className='hdr-role-badge role-admin';
@@ -3225,31 +3045,14 @@ function applyRole(role){
     document.body.classList.add('role-admin');
     const sr=document.getElementById('sn-role');if(sr)sr.textContent='Admin';
     const ms=document.getElementById('mhd-sub');if(ms)ms.textContent='ตะวันฟาร์ม · Admin';
-    ceoLeaveIfActive();
-  }else if(role==='ceo'){
-    // ── CEO: ไม่เห็นเมนูกรอกข้อมูลรายวันเลย เห็นแค่ภาพรวมทุกบ่อ+ตัวเลขต้นทุน (ดูอย่างเดียว ไม่มีปุ่มแก้ไข) ──
-    document.getElementById('hdr-role-badge').className='hdr-role-badge role-ceo';
-    document.getElementById('hdr-role-badge').textContent='ผู้บริหาร';
-    document.body.classList.add('role-ceo');
-    const sr=document.getElementById('sn-role');if(sr)sr.textContent='ผู้บริหาร';
-    const ms=document.getElementById('mhd-sub');if(ms)ms.textContent='ตะวันฟาร์ม · ผู้บริหาร';
-    showCeoOnly();
   }else{
+    // role ที่ไม่ใช่ 'admin' (รวมถึง role เก่าที่อาจหลงเหลืออยู่ในฐานข้อมูล เช่น 'ceo' ที่เลิกใช้แล้ว) ตกมาเป็น staff เสมอ กันเผื่อ role แปลกๆ ได้สิทธิ์เกินตัว
     FINANCE_TABS.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
     FINANCE_SECS.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
     document.getElementById('hdr-role-badge').className='hdr-role-badge role-staff';
     document.getElementById('hdr-role-badge').textContent='พนักงาน';
     const sr=document.getElementById('sn-role');if(sr)sr.textContent='พนักงาน';
     const ms=document.getElementById('mhd-sub');if(ms)ms.textContent='ตะวันฟาร์ม · พนักงาน';
-    ceoLeaveIfActive();
-  }
-}
-// ── ถ้าเปลี่ยน role ออกจาก ceo ระหว่างใช้งานอยู่ (แอดมินเปลี่ยนสิทธิ์แบบ real-time) ให้พากลับหน้าภาพรวมแทนที่จะค้างหน้า CEO ──
-function ceoLeaveIfActive(){
-  const sec=document.getElementById('sec-ceo');
-  if(sec&&sec.classList.contains('on')){
-    sec.classList.remove('on');
-    goTab('overview',document.getElementById('tab-overview'));
   }
 }
 function updateUserHeader(user,role){
@@ -3289,8 +3092,6 @@ function renderUsers(){
       const isMe=r.uid===meUid;
       const roleBadge=r.role==='admin'
         ?'<span style="display:inline-flex;padding:3px 10px;border-radius:20px;font-size:var(--fs115);font-weight:700;background:var(--pl);color:var(--p)">Admin</span>'
-        :r.role==='ceo'
-        ?'<span style="display:inline-flex;padding:3px 10px;border-radius:20px;font-size:var(--fs115);font-weight:700;background:var(--pl);color:var(--pd)">CEO (ผู้บริหาร)</span>'
         :'<span style="display:inline-flex;padding:3px 10px;border-radius:20px;font-size:var(--fs115);font-weight:700;background:var(--sf2);color:var(--tx3)">พนักงาน (staff)</span>';
       const lastLogin=r.lastLogin?(fD(r.lastLogin.slice(0,10))+' '+(r.lastLogin.slice(11,16)||'')):'-';
       return `<tr>
@@ -3300,9 +3101,8 @@ function renderUsers(){
         </div></td>
         <td style="padding:10px">${roleBadge}</td>
         <td style="padding:10px"><select class="fi" style="padding:6px 8px;font-size:12.5px;width:auto" onchange="changeUserRole('${r.uid}',this.value,'${esc(r.email)}')">
-          <option value="staff"${r.role!=='admin'&&r.role!=='ceo'?' selected':''}>staff</option>
+          <option value="staff"${r.role!=='admin'?' selected':''}>staff</option>
           <option value="admin"${r.role==='admin'?' selected':''}>admin</option>
-          <option value="ceo"${r.role==='ceo'?' selected':''}>CEO (ผู้บริหาร)</option>
         </select></td>
         <td style="padding:10px;font-size:12px">${lastLogin}</td>
         <td style="padding:10px"><button class="btn btn-s" style="padding:4px 10px;font-size:var(--fs115)" onclick="removeUserEntry('${r.uid}','${esc(r.email)}')">🗑️ ลบ</button></td>
@@ -3395,7 +3195,7 @@ async function initFirebase() {
       seedPonds();
       const json_loaded = JSON.stringify(D);
       localStorage.setItem(SK, json_loaded);
-      populateAll(); renderOv(); if(APP_ROLE==='ceo')renderCeo();
+      populateAll(); renderOv();
       setSyncStatus('sync-ok', '✅ โหลดข้อมูลสำเร็จ (' + (D.ponds||[]).length + ' บ่อ)');
     } else if (val && val.ponds) {
       // ── มีข้อมูล format เก่า (tawan_v3 array) → migrate ──
@@ -3416,7 +3216,7 @@ async function initFirebase() {
       const json = JSON.stringify(D);
       await dbRef.set({ json, updated: new Date().toISOString() });
       localStorage.setItem(SK, json);
-      populateAll(); renderOv(); if(APP_ROLE==='ceo')renderCeo();
+      populateAll(); renderOv();
       setSyncStatus('sync-ok', '✅ Migrate สำเร็จ — ' + (D.ponds||[]).length + ' บ่อ');
     } else {
       // ── ยังไม่มีข้อมูลบน Cloud → push local ──
@@ -3439,7 +3239,7 @@ async function initFirebase() {
         if (isEditingField()) {
           _pendingRerender = true;
         } else {
-          populateAll(); renderOv(); if(APP_ROLE==='ceo')renderCeo();
+          populateAll(); renderOv();
         }
         setSyncStatus('sync-ok', '🔄 ซิงค์แล้ว');
       }, 0);
@@ -5604,7 +5404,7 @@ function renderPondDetail(id){
     </div>
   </div>`;
 
-  // ===== ต้นทุนสะสม (admin เท่านั้น) — ใช้สูตร/building block เดียวกับหน้า CEO (ceoOpenSheet) ไม่สร้างคำนวณคู่ขนาน =====
+  // ===== ต้นทุนสะสม (admin เท่านั้น) — ใช้สูตร/building block เดียวกับ ceoTotalCost/ceoMoney (Overview KPI bar) ไม่สร้างคำนวณคู่ขนาน =====
   let costCardHtml='';
   if(APP_ROLE==='admin'&&cls!=='prep'){
     const pdCostFrom=pondCostStartDate(p);
@@ -7898,7 +7698,7 @@ function exportSaleCSV(){
   const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='TawanFarm_ขายลูกค้า_'+(_saleMonth==='all'?'all':_saleMonth)+'.csv';a.click();URL.revokeObjectURL(url);
 }
-// ── รายรับ-รายจ่ายเงินสด (เสมียน) — เบิกเงินจากส่วนกลางมาเติม (รายรับ) / ค่าใช้จ่ายเบ็ดเตล็ดในฟาร์ม (รายจ่าย) ── เก็บเป็นตัวเลขลอยๆ ไม่ผูกกับ D.inventoryLog/ต้นทุนบ่อ/P&L/CEO เลย ให้ staff เห็นข้อมูลทั้งหมด (ไม่จำกัดเฉพาะรายการที่ตัวเองบันทึก) เพราะ staff เป็นผู้กรอกข้อมูลและถือเงินสดส่วนนี้จริง ──
+// ── รายรับ-รายจ่ายเงินสด (เสมียน) — เบิกเงินจากส่วนกลางมาเติม (รายรับ) / ค่าใช้จ่ายเบ็ดเตล็ดในฟาร์ม (รายจ่าย) ── เก็บเป็นตัวเลขลอยๆ ไม่ผูกกับ D.inventoryLog/ต้นทุนบ่อ/P&L เลย ให้ staff เห็นข้อมูลทั้งหมด (ไม่จำกัดเฉพาะรายการที่ตัวเองบันทึก) เพราะ staff เป็นผู้กรอกข้อมูลและถือเงินสดส่วนนี้จริง ──
 let _cashMode='in';
 let _cashSubtype='transfer';
 let _cashFilterMonth='';
@@ -8035,21 +7835,14 @@ function renderClerkCash(){
 }
 /* ===== END INVENTORY / STOCK ===== */
 
-/* ═══ ตะวันปาล์ม (admin/CEO เท่านั้น) — การเงินแยกอิสระจากฟาร์มกุ้งทั้งหมด ═══ */
+/* ═══ ตะวันปาล์ม (admin เท่านั้น) — การเงินแยกอิสระจากฟาร์มกุ้งทั้งหมด ═══ */
 function palmPlots(){return D.palmPlots||[];}
 function palmMoneyList(){return D.palmMoney||[];}
 function palmFertList(){return D.palmFertilizer||[];}
 function palmPlotName(id){if(!id)return'ไม่ระบุ / รวมทั้งสวน';const p=palmPlots().find(x=>x.id===id);return p?p.name:'(แปลงที่ถูกลบ)';}
-function openPalmFromCeo(){
-  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
-  document.getElementById('sec-palm')?.classList.add('on');
-  initPalm();
-}
 let _palmActiveTab='ov';
 function initPalm(){
-  if(APP_ROLE!=='admin'&&APP_ROLE!=='ceo')return;
-  const backBtn=document.getElementById('palm-back-ceo-btn');
-  if(backBtn)backBtn.style.display=APP_ROLE==='ceo'?'':'none';
+  if(APP_ROLE!=='admin')return;
   palmTab(_palmActiveTab,document.getElementById('palmb-'+_palmActiveTab));
 }
 function palmTab(paneId,btn){
@@ -12131,30 +11924,10 @@ function renderPartialList(){
     </tr>`;
   }).join('')}</tbody></table></div>`;
 }
-// ===== CEO DASHBOARD (role=ceo) =====
+// ===== ต้นทุนสะสมรายบ่อ (ใช้ร่วมกันระหว่าง Overview KPI bar / หน้ารายละเอียดบ่อ admin / หน้าสต็อก — เดิมสร้างไว้เป็นส่วนหนึ่งของ CEO Dashboard ที่ลบไปแล้ว) =====
 const ceoMoney=v=>'฿'+Math.round(v||0).toLocaleString('th-TH');
 // ── สีจุดหมวดหมู่ ใช้ค่าเดียวกับสีตัวหนังสือใน STOCK_CAT_CSS (badge เดิมเป็นพื้นอ่อน+ตัวหนังสือเข้ม ไม่เหมาะกับจุดกลมเล็กๆ) ──
 const CEO_CAT_DOT={seed:'#9D174D',chem:'#1D4ED8',feed:'#92400E',chemOral:'#1D4ED8',chemWater:'#0369A1',probioOral:'#4338CA',probioWater:'#A21CAF',lime:'#57534E',equip:'#166534',fry:'#9D174D',labor:'#0F766E',elec:'#B45309',shared:'#9333EA'};
-// ── สถานะ "ควรติดตาม" ถ้า ABW ล่าสุดต่ำกว่ามาตรฐานตามอายุเกิน 15% ──
-function ceoStatus(p){
-  const s=p.samples||[];if(!s.length)return'ok';
-  const last=s[s.length-1];
-  const age=last.age||(p.startDate?dDiff(p.startDate,today()):0);
-  const target=getAbwTarget(age);
-  if(!target||!last.abw)return'ok';
-  return last.abw<target*0.85?'watch':'ok';
-}
-// ── อาหารวันนี้: ถ้ายังไม่กรอกวันนี้ ใช้บันทึกล่าสุดก่อนหน้าแทน ไม่โชว่างเปล่า ──
-function ceoFeedDisplay(p){
-  const today_=(p.feedLog||[]).find(r=>r.date===today());
-  if(today_&&today_.totalFeed!=null)return{val:today_.totalFeed,isToday:true};
-  const prev=(p.feedLog||[]).filter(r=>r.totalFeed!=null&&r.date<today()).sort((a,b)=>b.date.localeCompare(a.date))[0];
-  return prev?{val:prev.totalFeed,isToday:false,date:prev.date}:{val:0,isToday:true};
-}
-function ceoFeedPer100k(p){
-  if(!pRelease(p))return'-';
-  return(ceoFeedDisplay(p).val/(pRelease(p)/100000)).toFixed(1);
-}
 // ── รายการเบิกสต็อกจริงของบ่อ ไม่รวมอาหาร (คิดแยกจาก pondFeedCost อยู่แล้ว) เรียงล่าสุดก่อน ──
 // ── วันเริ่มนับต้นทุน "สต็อก/เวชภัณฑ์" ของรอบปัจจุบัน — ย้อนจากวันลงกุ้ง 60 วัน ให้ครอบช่วงเตรียมบ่อ
 //    (PREP_STEPS ขั้นแรกสุด "ตากบ่อ" คือ -60 วัน) เพราะของที่เบิกไปเตรียมบ่อ — โซดาไฟ/คอปเปอร์/ไดโครวอส/คลอรีน —
@@ -12204,226 +11977,6 @@ function ceoTotalCost(p){
   const laborCost=getLaborCostForPond(p.id,p.startDate,today());
   const elecCost=getElecCostForPeriod(p.startDate,today());
   return fryCost+feedCost+stockCost+laborCost+elecCost;
-}
-function ceoRelDays(dateStr){
-  const days=dDiff(dateStr,today());
-  if(days<=0)return'วันนี้';
-  if(days===1)return'1 วันที่แล้ว';
-  return days+' วันที่แล้ว';
-}
-function showCeoOnly(){
-  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
-  document.getElementById('sec-ceo')?.classList.add('on');
-  renderCeo();
-}
-function renderCeo(){
-  const el=document.getElementById('ceo-kpi');if(!el)return;
-  const ponds=sortPondsByAge(wqfeedActivePonds());
-  const totalCostAll=ponds.reduce((s,p)=>s+ceoTotalCost(p),0);
-  let totalFeedToday=0,feedAllToday=true;
-  ponds.forEach(p=>{const f=ceoFeedDisplay(p);totalFeedToday+=f.val;if(!f.isToday)feedAllToday=false;});
-  const totalBiomass=ponds.reduce((s,p)=>s+(getLatestBiomass(p)||0),0);
-  const watchCount=ponds.filter(p=>ceoStatus(p)==='watch').length;
-  el.innerHTML=`
-    <div class="ceo-kpi hero">
-      <div class="ceo-kpi-lbl">ต้นทุนสะสมรวมทั้งฟาร์ม</div>
-      <div class="ceo-kpi-val">${ceoMoney(totalCostAll)}</div>
-    </div>
-    <div class="ceo-kpi">
-      <div class="ceo-kpi-lbl">อาหารรวมวันนี้</div>
-      <div class="ceo-kpi-val">${Math.round(totalFeedToday).toLocaleString()}<small>กก.</small></div>
-      ${feedAllToday?'':'<div class="ceo-kpi-note">* บางบ่อยังไม่กรอก ใช้ข้อมูลล่าสุดแทน</div>'}
-    </div>
-    <div class="ceo-kpi">
-      <div class="ceo-kpi-lbl">Biomass รวม</div>
-      <div class="ceo-kpi-val">${Math.round(totalBiomass).toLocaleString()}<small>กก.</small></div>
-    </div>
-    <div class="ceo-kpi">
-      <div class="ceo-kpi-lbl">บ่อที่กำลังเลี้ยง</div>
-      <div class="ceo-kpi-val">${ponds.length}<small>บ่อ</small></div>
-    </div>
-    <div class="ceo-kpi ${watchCount?'warn':''}">
-      <div class="ceo-kpi-lbl">บ่อควรติดตาม</div>
-      <div class="ceo-kpi-val">${watchCount}<small>/ ${ponds.length}</small></div>
-    </div>`;
-
-  const countEl=document.getElementById('ceo-pond-count');
-  if(countEl)countEl.textContent=`บ่อทั้งหมด (${ponds.length} บ่อ)`;
-
-  const listEl=document.getElementById('ceo-pond-list');if(!listEl)return;
-  if(!ponds.length){listEl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีบ่อที่กำลังเลี้ยงอยู่ — ปล่อยลูกกุ้งได้ที่หน้า "รอบเลี้ยง"</p>';return}
-  listEl.innerHTML=ponds.map(p=>{
-    const status=ceoStatus(p);
-    const statusLbl=status==='ok'?'ปกติ':'ควรติดตาม';
-    const bio=getLatestBiomass(p);
-    const size=(p.samples&&p.samples.length)?p.samples[p.samples.length-1].plCount:null;
-    const age=p.startDate?pondCurAge(p):0;
-    const f=ceoFeedDisplay(p);
-    return`<div class="ceo-pcard" onclick="ceoOpenSheet('${p.id}')">
-      <div class="ceo-pcard-top">
-        <div>
-          <div class="ceo-pcard-name">${p.name}</div>
-          <div class="ceo-pcard-age">อายุ ${age} วัน</div>
-        </div>
-        <span class="ceo-status-pill ceo-status-${status}">${statusLbl}</span>
-      </div>
-      <div class="ceo-pcard-stats">
-        <div><div class="ceo-mini-lbl">Biomass</div><div class="ceo-mini-val">${bio?Math.round(bio).toLocaleString()+' กก.':'-'}</div></div>
-        <div><div class="ceo-mini-lbl">ไซส์</div><div class="ceo-mini-val">${size?size+' ตัว/กก.':'-'}</div></div>
-        <div><div class="ceo-mini-lbl">อาหารวันนี้${f.isToday?'':' (ล่าสุด)'}</div><div class="ceo-mini-val">${f.val?Math.round(f.val).toLocaleString()+' กก.':'-'}</div></div>
-        <div><div class="ceo-mini-lbl">อาหาร/แสนตัว</div><div class="ceo-mini-val">${ceoFeedPer100k(p)} กก.</div></div>
-      </div>
-      <div class="ceo-pcard-cost">
-        <span class="ceo-cost-lbl">ต้นทุนสะสม</span>
-        <span class="ceo-cost-val">${ceoMoney(ceoTotalCost(p))}</span>
-      </div>
-    </div>`;
-  }).join('');
-}
-function ceoOpenSheet(pid){
-  const p=pond(pid);if(!p)return;
-  const age=p.startDate?pondCurAge(p):0;
-  const lastSample=(p.samples&&p.samples.length)?p.samples[p.samples.length-1]:null;
-
-  document.getElementById('ceo-s-name').textContent=p.name;
-  document.getElementById('ceo-s-meta').textContent=`อายุ ${age} วัน${lastSample&&lastSample.abw?' · ABW '+lastSample.abw.toFixed(1)+' ก.':''}`;
-
-  document.getElementById('ceo-p-stockdate').textContent=p.startDate?fD(p.startDate):'-';
-  document.getElementById('ceo-p-hatchery').textContent=p.hatchery||'-';
-  const bio=getLatestBiomass(p);
-  document.getElementById('ceo-p-totalweight').textContent=bio?Math.round(bio).toLocaleString()+' กก.':'-';
-  const cumFeed=getCumFeed(p);
-  document.getElementById('ceo-p-totalfeed').textContent=cumFeed?Math.round(cumFeed).toLocaleString()+' กก.':'-';
-  const lastWl=(p.waterLog||[]).slice().sort((a,b)=>b.date.localeCompare(a.date))[0];
-  document.getElementById('ceo-p-lastwater').textContent=lastWl
-    ?`${WL_ACT[lastWl.action]||lastWl.action} ${lastWl.vol||'-'} ซม. · ${ceoRelDays(lastWl.date)}`
-    :'ยังไม่มีการจัดการน้ำ';
-
-  // ── ค่าน้ำล่าสุด: โชว์ทุกค่าที่มีการวัดจริง (ไม่ใช่ 3 ค่าตายตัว) พร้อมลูกศรเทียบกับครั้งก่อนหน้า ──
-  const recsSorted=(p.records||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
-  const lastRec=recsSorted[0],prevRec=recsSorted[1];
-  const wdEl=document.getElementById('ceo-p-waterdate');
-  if(wdEl)wdEl.textContent=lastRec?(lastRec.date===today()?'(วันนี้)':'(ล่าสุด — '+ceoRelDays(lastRec.date)+')'):'';
-  const wgEl=document.getElementById('ceo-p-watergrid');
-  if(wgEl){
-    const measured=lastRec?PARAMS.filter(pm=>lastRec[pm.key]!=null):[];
-    wgEl.innerHTML=measured.length?measured.map(pm=>{
-      const cur=lastRec[pm.key],prev=prevRec?prevRec[pm.key]:null;
-      let arrow='';
-      if(prev!=null){
-        const diff=cur-prev;
-        arrow=Math.abs(diff)<1e-9?'<span class="ceo-wq-arrow flat">▬</span>':(diff>0?'<span class="ceo-wq-arrow up">▲</span>':'<span class="ceo-wq-arrow down">▼</span>');
-      }
-      return`<div class="ceo-wq-cell"><div class="ceo-wq-lbl">${pm.lbl}</div><div class="ceo-wq-val">${cur.toFixed(pm.dec)}${pm.unit?' '+pm.unit:''}${arrow}</div></div>`;
-    }).join(''):'<div style="grid-column:1/-1;color:var(--tx3);font-size:12px;text-align:center;padding:10px">ยังไม่มีข้อมูลค่าน้ำ</div>';
-  }
-
-  document.getElementById('ceo-p-bio').textContent=bio?Math.round(bio).toLocaleString()+' กก.':'-';
-  document.getElementById('ceo-p-size').textContent=lastSample&&lastSample.plCount?lastSample.plCount+' ตัว/กก.':'-';
-  const fcrVal=getFCR(p);
-  document.getElementById('ceo-p-fcr').textContent=fcrVal||'-';
-  document.getElementById('ceo-p-yield').textContent=(bio&&p.size)?Math.round(bio/p.size).toLocaleString()+' กก.':'-';
-  const f100k=ceoFeedPer100k(p);
-  document.getElementById('ceo-p-feed100k').textContent=f100k!=='-'?f100k+' กก.':'-';
-
-  const growth=(p.samples||[]).filter(s=>s.abw).map(s=>s.abw);
-  if(growth.length>=2){
-    const trend=growth[growth.length-1]-growth[growth.length-2];
-    const status=ceoStatus(p);
-    document.getElementById('ceo-p-growthnote').textContent=
-      `น้ำหนักเปลี่ยนแปลง ${trend>=0?'+':''}${trend.toFixed(2)} กรัม จากการสุ่มครั้งก่อน — ${status==='ok'?'อัตราการเติบโตอยู่ในเกณฑ์ปกติ':'อัตราการเติบโตช้ากว่าค่ามาตรฐาน ควรติดตามใกล้ชิด'}`;
-  }else{
-    document.getElementById('ceo-p-growthnote').textContent='ยังมีข้อมูลสุ่มตัวอย่างไม่พอสำหรับดูแนวโน้ม (ต้องมีอย่างน้อย 2 ครั้ง)';
-  }
-
-  // ── ต้นทุนสะสม: รายการจริงจากสต็อกที่เบิกลงบ่อ (ไม่รวมอาหาร) + อาหาร/ลูกกุ้ง/ค่าแรง/ค่าไฟ ──
-  const ceoCostFrom=pondCostStartDate(p);
-  const stockItems=getStockItemsForPond(p.id,ceoCostFrom,today());
-  const stockCostSum=stockItems.reduce((s,i)=>s+i.qty*i.unitPrice,0);
-  const feedCost=pondFeedCost(p);
-  const fryCost=p.costFry||0;
-  const laborCost=getLaborCostForPond(p.id,p.startDate,today());
-  const elecCost=getElecCostForPeriod(p.startDate,today());
-  // ── ต้นทุนแชร์ (โหมด "แชร์ทุกบ่อ" หน้าสต็อก) — สูตรเดียวกับหน้ารายละเอียดบ่อของ admin (ข้อ 102) ──
-  const sharedItems=getSharedItemsInRange(ceoCostFrom,today());
-  let sharedCost=0;
-  const sharedCatItems={};
-  sharedItems.forEach(l=>{
-    const ac=activePondCountOnDate(l.date)||1;
-    const share=((l.qty||0)*(l.unitCost||0))/ac;
-    sharedCost+=share;
-    sharedCatItems[l.id]={name:l.itemName,unit:`แชร์ ${ac} บ่อ`,qty:fD(l.date),total:share};
-  });
-  const totalCost=fryCost+feedCost+stockCostSum+laborCost+elecCost+sharedCost;
-  document.getElementById('ceo-cost-total-mini').textContent=ceoMoney(totalCost);
-  // ── สรุปแยกตามหมวดต้นทุน (อาหารกุ้ง/ยากิน/ยาลงน้ำ/จุลินทรีย์กิน/จุลินทรีย์ลงน้ำ/ปูน/อุปกรณ์/ลูกกุ้ง/ค่าแรง/ค่าไฟ) แทนการไล่ทีละรายการสินค้า — เดิมยิ่งเบิกสต็อกหลายรายการยิ่งยาว ดันแถวท้าย (ค่าไฟ) หลุด max-height ของ accordion จนเลื่อนดูไม่ได้ ──
-  // แต่ละหมวดที่มาจากสต็อก (มีรายชื่อสินค้าจริง) กดแตะแล้วขยายดู list สินค้าในหมวดนั้นได้ — หมวดที่เป็นค่าคำนวณล้วน (อาหาร/ลูกกุ้ง/ค่าแรง/ค่าไฟ) ไม่มี list ให้ขยาย
-  const catSums={},catItems={shared:sharedCatItems};
-  stockItems.forEach(it=>{
-    const cat=STOCK_CATEGORIES.some(c=>c.key===it.category)?it.category:'other';
-    catSums[cat]=(catSums[cat]||0)+it.qty*it.unitPrice;
-    if(!catItems[cat])catItems[cat]={};
-    const key=it.name+'|'+it.unit;
-    if(!catItems[cat][key])catItems[cat][key]={name:it.name,unit:it.unit,qty:0,total:0};
-    catItems[cat][key].qty+=it.qty;
-    catItems[cat][key].total+=it.qty*it.unitPrice;
-  });
-  const costCatRow=(key,lbl,val)=>{
-    const items=Object.values(catItems[key]||{});
-    const hasItems=items.length>0;
-    return`<div class="ceo-item-row${hasItems?' ceo-cat-row':''}"${hasItems?` onclick="ceoToggleCatItems('${key}')"`:''}>
-      <span class="ceo-cat-dot" style="background:${CEO_CAT_DOT[key]||'var(--tx3)'}"></span>
-      <div class="ceo-item-main"><div class="ceo-item-name">${lbl}${hasItems?' <span class="ceo-cat-caret" id="ceo-cat-caret-'+key+'">▾</span>':''}</div></div>
-      <span class="ceo-item-val">${ceoMoney(val)}</span>
-    </div>${hasItems?`<div class="ceo-cat-items" id="ceo-cat-items-${key}">${items.map(it=>
-      `<div class="ceo-cat-item-row"><span>${it.name}</span><span>${it.qty} ${it.unit} · ${ceoMoney(it.total)}</span></div>`
-    ).join('')}</div>`:''}`;
-  };
-  const catOrder=['chemOral','chemWater','probioOral','probioWater','lime','equip'];
-  const catRowsHtml=costCatRow('feed','อาหารกุ้ง',feedCost)
-    +catOrder.map(k=>costCatRow(k,STOCK_CAT_LABEL[k],catSums[k]||0)).join('')
-    +(catSums.other?costCatRow('other','อื่นๆ (เดิม)',catSums.other):'')
-    +costCatRow('shared','อุปกรณ์นอก (แชร์)',sharedCost)
-    +costCatRow('fry','ลูกกุ้ง',fryCost)
-    +costCatRow('labor','ค่าแรง',laborCost)
-    +costCatRow('elec','ค่าไฟ',elecCost);
-  // ── ต้นทุน/กก. ประมาณ (ณ วันนี้) = ต้นทุนสะสมทั้งหมด ÷ Biomass ประเมิน (ตัวแปร bio เดียวกับที่ใช้ในบล็อก "สรุปบ่อ" ด้านบน) สูตรเดียวกับที่ใช้ในหน้ารายละเอียดบ่อของ admin (ข้อ 99) ──
-  const costPerKg=(bio&&bio>0)?totalCost/bio:null;
-  document.getElementById('ceo-cost-detail').innerHTML=`
-    ${catRowsHtml}
-    <div class="ceo-cost-total-row"><span class="lbl">รวมต้นทุนสะสม</span><span class="val">${ceoMoney(totalCost)}</span></div>
-    <div class="pd-water-row" style="border-top:1px dashed var(--bd)"><span style="color:var(--tx2)">ต้นทุน/กก. ประมาณ (ณ วันนี้)</span><span style="font-weight:700;color:var(--p)">${costPerKg!=null?'฿'+costPerKg.toFixed(1)+'/กก.':'-'}</span></div>`;
-
-  // ── ค่าน้ำย้อนหลัง 7 วัน ──
-  const waterRows=(p.records||[]).slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7);
-  document.getElementById('ceo-water-detail').innerHTML=waterRows.length?`
-    <div style="overflow-x:auto"><table class="ceo-hist-tbl"><thead><tr>
-      <th>วันที่</th><th>pH เช้า/บ่าย</th><th>DO เช้า</th><th>Temp เช้า</th>
-    </tr></thead><tbody>${waterRows.map(r=>`<tr><td>${fD(r.date)}</td><td>${r.phM!=null?r.phM.toFixed(1):'-'}/${r.phA!=null?r.phA.toFixed(1):'-'}</td><td>${r.doM!=null?r.doM.toFixed(1):'-'}</td><td>${r.tM!=null?r.tM.toFixed(1)+'°':'-'}</td></tr>`).join('')}</tbody></table></div>`
-    :'<div class="ceo-empty">ยังไม่มีข้อมูลค่าน้ำ</div>';
-
-  // ── อาหารย้อนหลัง 7 วัน ──
-  const feedRows=(p.feedLog||[]).slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7);
-  document.getElementById('ceo-feed-detail').innerHTML=feedRows.length?`
-    <div style="overflow-x:auto"><table class="ceo-hist-tbl"><thead><tr>
-      <th>วันที่</th><th>อาหาร (กก.)</th>
-    </tr></thead><tbody>${feedRows.map(r=>`<tr><td>${fD(r.date)}</td><td>${r.totalFeed!=null?(+r.totalFeed).toFixed(1):'-'}</td></tr>`).join('')}</tbody></table></div>`
-    :'<div class="ceo-empty">ยังไม่มีข้อมูลอาหาร</div>';
-
-  ['ceo-acc-cost','ceo-acc-water','ceo-acc-feed'].forEach(id=>document.getElementById(id)?.classList.remove('open'));
-  document.getElementById('ceo-acc-cost')?.classList.add('open');
-
-  document.getElementById('ceo-scrim').classList.add('on');
-  document.getElementById('ceo-sheet').classList.add('on');
-}
-function ceoCloseSheet(){
-  document.getElementById('ceo-scrim')?.classList.remove('on');
-  document.getElementById('ceo-sheet')?.classList.remove('on');
-}
-function ceoToggleAcc(id){document.getElementById(id)?.classList.toggle('open')}
-function ceoToggleCatItems(key){
-  document.getElementById('ceo-cat-items-'+key)?.classList.toggle('show');
-  document.getElementById('ceo-cat-caret-'+key)?.classList.toggle('open');
 }
 
 // ══════ Accessibility: ปุ่ม/chip แบบ <span onclick>/<div onclick> (chip กรอง, ตัวเลือกโหมด ฯลฯ) เดิมกดด้วยคีย์บอร์ดไม่ได้เลย (ไม่มี tabindex/role/Enter-Space) ══════
