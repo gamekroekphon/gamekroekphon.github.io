@@ -6645,10 +6645,15 @@ function renderElecKPI(){
   const dailyRate=dailyElecRate(today());
   const perPondDay=activePonds.length?dailyRate/activePonds.length:0;
   const elecStart=elecDataStartDate();
+  // ── ค่าไฟ/กก. เฉลี่ย: คิดเฉพาะรอบที่ปิดในปี พ.ศ. ปัจจุบันเท่านั้น ไม่ดึงรอบปีก่อนๆ มาถัวเฉลี่ยรวมกัน (พี่ยืนยันว่าอยากดูเป็นรายปี ปีไหนปีนั้น) — ข้อมูลรอบเก่ายังอยู่ครบในตาราง "ค่าไฟ/กก. เทียบรอบที่ปิด" ด้านล่างเพื่อดูย้อนหลังได้ ──
+  const curYearBE=yearBE(new Date().getFullYear());
   const closed=[];
   D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{
     const w=c.totalWeight||(c.harvestResult||{}).totalWeight;
-    if(c.closeDate&&w&&(!elecStart||c.closeDate>=elecStart))closed.push({...c,pondId:p.id,_w:w});
+    if(!c.closeDate||!w)return;
+    if(elecStart&&c.closeDate<elecStart)return;
+    if(yearBE(parseInt(c.closeDate.split('-')[0],10))!==curYearBE)return;
+    closed.push({...c,pondId:p.id,_w:w});
   }));
   let avgPerKg=null;
   if(closed.length){
@@ -6662,7 +6667,7 @@ function renderElecKPI(){
     <div class="kpi-card"><div class="kpi-label">บิลเดือนล่าสุด</div><div class="kpi-val">${latest?latest.totalBaht.toLocaleString():'-'} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">${latest?fmtMonth(latest.month):'ยังไม่มีข้อมูล'}</div></div>
     <div class="kpi-card"><div class="kpi-label">บ่อที่กำลังเลี้ยงตอนนี้</div><div class="kpi-val">${activePonds.length} <span class="kpi-unit">บ่อ</span></div><div class="kpi-sub">ใช้ตรวจสอบว่าตรงหน้างานไหม</div></div>
     <div class="kpi-card"><div class="kpi-label">ค่าไฟ/บ่อ/วัน (ตอนนี้)</div><div class="kpi-val">${Math.round(perPondDay).toLocaleString()} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">จากบิลล่าสุด ÷ บ่อที่เลี้ยงอยู่</div></div>
-    <div class="kpi-card" style="border-top:3px solid var(--p)"><div class="kpi-label">ค่าไฟ/กก. เฉลี่ย (รอบที่ปิด)</div><div class="kpi-val">${avgPerKg!==null?avgPerKg.toFixed(2):'-'} <span class="kpi-unit">บาท/กก.</span></div><div class="kpi-sub">${closed.length} รอบ${elecStart?' · ตั้งแต่ '+fD(elecStart):''}</div></div>`;
+    <div class="kpi-card" style="border-top:3px solid var(--p)"><div class="kpi-label">ค่าไฟ/กก. เฉลี่ย (รอบที่ปิดปีนี้)</div><div class="kpi-val">${avgPerKg!==null?avgPerKg.toFixed(2):'-'} <span class="kpi-unit">บาท/กก.</span></div><div class="kpi-sub">${closed.length} รอบ · ปี ${curYearBE}</div></div>`;
 }
 // ── แถบตรวจสอบบ่อ active วันนี้ — เช็คตาเปล่าว่าตรงกับที่ใช้หารค่าไฟ/บ่อ/วันไหม (แพทเทิร์นเดียวกับ renderLaborActiveSection) ──
 function renderElecActiveSection(){
@@ -6702,27 +6707,40 @@ function renderElecTrendChart(){
   });
 }
 // ── ค่าไฟ/กก. เทียบรอบที่ปิดแล้ว — เฉพาะรอบที่ปิดตั้งแต่มีข้อมูลบิลค่าไฟจริงเป็นต้นมา (แพทเทิร์นเดียวกับ renderLaborCropSummary) ──
+// ── ค่าเฉลี่ยคิดแยกเป็นรายปี (ปีไหนปีนั้น) ไม่ดึงรอบปีก่อนๆ มาถัวรวมกัน — ข้อมูลรอบเก่ายังอยู่ครบ สลับดูปีอื่นได้จาก dropdown (ไม่ได้ลบทิ้ง แค่ไม่เอามาปนกับค่าเฉลี่ยปีปัจจุบัน) ──
+let elCropYearSel=null; // null = ยังไม่ตั้งค่า (จะ default เป็นปีปัจจุบัน ถ้ามีข้อมูล ไม่งั้นปีล่าสุดที่มี)
 function renderElecCropSummary(){
   const el=document.getElementById('el-crop-summary');if(!el)return;
   const elecStart=elecDataStartDate();
-  const rows=[];
+  const allRows=[];
   D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{
     const w=c.totalWeight||(c.harvestResult||{}).totalWeight;
     if(!c.closeDate||!w)return;
     if(elecStart&&c.closeDate<elecStart)return;
     const days=c.startDate?dDiff(c.startDate,c.closeDate)+1:null;
     const ec=getElecCostForPeriod(c.startDate,c.closeDate);
-    rows.push({name:p.name,cropNum:c.cropNum,closeDate:c.closeDate,weight:w,elec:ec,perKg:ec&&w?ec/w:null,days});
+    allRows.push({name:p.name,cropNum:c.cropNum,closeDate:c.closeDate,weight:w,elec:ec,perKg:ec&&w?ec/w:null,days,yearBE:yearBE(parseInt(c.closeDate.split('-')[0],10))});
   }));
-  rows.sort((a,b)=>new Date(b.closeDate)-new Date(a.closeDate));
-  if(!rows.length){el.innerHTML=`<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีรอบที่ปิดแล้วตั้งแต่มีข้อมูลบิลค่าไฟจริง${elecStart?' ('+fD(elecStart)+' เป็นต้นไป)':''}</p>`;return;}
+  if(!allRows.length){el.innerHTML=`<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีรอบที่ปิดแล้วตั้งแต่มีข้อมูลบิลค่าไฟจริง${elecStart?' ('+fD(elecStart)+' เป็นต้นไป)':''}</p>`;return;}
+  const yearCounts={};
+  allRows.forEach(r=>{yearCounts[r.yearBE]=(yearCounts[r.yearBE]||0)+1;});
+  const years=Object.keys(yearCounts).map(Number).sort((a,b)=>b-a);
+  const curYearBE=yearBE(new Date().getFullYear());
+  if(elCropYearSel===null||!years.includes(Number(elCropYearSel)))elCropYearSel=String(years.includes(curYearBE)?curYearBE:years[0]);
+  const rows=allRows.filter(r=>r.yearBE===Number(elCropYearSel)).sort((a,b)=>new Date(b.closeDate)-new Date(a.closeDate));
   const validPerKg=rows.map(r=>r.perKg).filter(v=>v!==null&&v>0);
   const avg=validPerKg.length?validPerKg.reduce((s,v)=>s+v,0)/validPerKg.length:null;
+  const yearOpts=years.map(y=>`<option value="${y}"${String(y)===elCropYearSel?' selected':''}>ปี ${y} (${yearCounts[y]} รอบ)</option>`).join('');
+  const selectorHtml=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+    <div style="font-weight:700;color:var(--tx)">📊 ค่าไฟ/กก. เทียบรอบที่ปิด</div>
+    <select class="fi" id="el-crop-year" onchange="elCropYearSel=this.value;renderElecCropSummary()" style="width:180px;font-size:12px;padding:4px 8px">${yearOpts}</select>
+  </div>`;
+  if(!rows.length){el.innerHTML=selectorHtml+`<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ไม่มีรอบที่ปิดในปี ${elCropYearSel}</p>`;return;}
   const kpiHtml=avg!==null?`<div class="kpi-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-    <div class="kpi-card"><div class="kpi-label">ค่าไฟ/กก. เฉลี่ยทั้งฟาร์ม</div><div class="kpi-val">${avg.toFixed(2)} <span class="kpi-unit">บาท/กก.</span></div></div>
-    <div class="kpi-card"><div class="kpi-label">รอบที่ปิดแล้ว (ใช้คำนวณ)</div><div class="kpi-val">${rows.length} <span class="kpi-unit">รอบ</span></div><div class="kpi-sub">${elecStart?'ตั้งแต่ '+fD(elecStart):''}</div></div>
+    <div class="kpi-card"><div class="kpi-label">ค่าไฟ/กก. เฉลี่ย (ปี ${elCropYearSel})</div><div class="kpi-val">${avg.toFixed(2)} <span class="kpi-unit">บาท/กก.</span></div></div>
+    <div class="kpi-card"><div class="kpi-label">รอบที่ปิดแล้ว (ใช้คำนวณ)</div><div class="kpi-val">${rows.length} <span class="kpi-unit">รอบ</span></div><div class="kpi-sub">เฉพาะปี ${elCropYearSel}</div></div>
   </div>`:'';
-  el.innerHTML=kpiHtml+`<table class="tbl"><thead><tr><th>บ่อ</th><th>รอบ</th><th>วันปิดรอบ</th><th>จำนวนวันที่เลี้ยง</th><th>ค่าไฟรวมรอบ (บาท)</th><th>ค่าไฟ/กก.</th><th></th></tr></thead><tbody>${
+  el.innerHTML=selectorHtml+kpiHtml+`<table class="tbl"><thead><tr><th>บ่อ</th><th>รอบ</th><th>วันปิดรอบ</th><th>จำนวนวันที่เลี้ยง</th><th>ค่าไฟรวมรอบ (บาท)</th><th>ค่าไฟ/กก.</th><th></th></tr></thead><tbody>${
     rows.map(r=>{
       let badge='';
       if(r.perKg!==null&&avg){
