@@ -530,6 +530,7 @@ body.role-admin .home-quick .admin-only{display:flex!important}
 .stock-cat-probioOral{background:#E0E7FF;color:#4338CA}
 .stock-cat-probioWater{background:#FAE8FF;color:#A21CAF}
 .stock-cat-lime{background:#F5F5F4;color:#57534E}
+.stock-cat-fuel{background:#FFEDD5;color:#C2410C}
 .stock-qty-low{color:var(--d);font-weight:700}
 .stock-mode-btn{flex:1;padding:7px;font-size:13px;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--tx2);font-weight:500;transition:background .15s,color .15s}
 .stock-mode-btn.on-in{background:var(--ob);color:var(--ok)}
@@ -2084,7 +2085,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
           <div class="fg"><label class="fl" for="cm-cost-lime">ต้นทุนปูน (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากสต็อก แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-lime" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="cm-cost-labor">ต้นทุนค่าแรง (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากข้อมูลเงินเดือน+ค่าแรงรายสัปดาห์ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-labor" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="cm-cost-elec">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="cm-cost-elec" step="1" placeholder="ดึงอัตโนมัติ 2,500 บาท/วัน" style="background:var(--sf2)"></div>
-          <div class="fg"><label class="fl" for="cm-cost-fuel">ต้นทุนน้ำมัน (บาท) <span style="font-weight:400;color:var(--tx3)">(กรอกเอง)</span></label><input type="number" class="fi" id="cm-cost-fuel" step="1" placeholder="กรอกเอง"></div>
+          <div class="fg"><label class="fl" for="cm-cost-fuel">ต้นทุนน้ำมัน (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากโหมด "แชร์ทุกบ่อ" ในสต็อกอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-fuel" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="cm-cost-equip">อุปกรณ์ (บาท) <span style="font-weight:400;color:var(--tx3)">(ในสต็อก ดึงอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-equip" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="cm-cost-equip-out">อุปกรณ์นอก (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากโหมด "แชร์ทุกบ่อ" ในสต็อกอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-equip-out" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="cm-cost-catch">ค่าจับกุ้ง (บาท) <span style="font-weight:400;color:var(--tx3)">(1.5 บ./กก. ถ้าจับไม่ถึง 4 ตันคิด 6,000 บ. — ตัวเลขในช่องเป็นแค่คำแนะนำ กรอกยืนยันเอง)</span></label><input type="number" class="fi" id="cm-cost-catch" step="1" placeholder="กรอกเอง"></div>
@@ -2682,6 +2683,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
               <option value="probioWater">จุลินทรีย์ลงน้ำ</option>
               <option value="lime">ปูน</option>
               <option value="equip">อุปกรณ์</option>
+              <option value="fuel">น้ำมัน</option>
             </select>
           </div>
         </div>
@@ -2749,6 +2751,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
             <option value="probioWater">🧫 จุลินทรีย์ลงน้ำ</option>
             <option value="lime">🪨 ปูน</option>
             <option value="equip">🔧 อุปกรณ์</option>
+            <option value="fuel">⛽ น้ำมัน</option>
           </select>
           <input type="month" class="fi" id="skl-shared-month" style="width:150px" onchange="renderStockShareLog()">
           <button class="btn" style="font-size:12px;padding:6px 12px;white-space:nowrap;background:var(--s1);color:var(--tx2)" onclick="clearStockShareFilter()">ล้างตัวกรอง</button>
@@ -5376,17 +5379,18 @@ function renderPondDetail(id){
     const pdFryCost=p.costFry||0;
     const pdLaborCost=getLaborCostForPond(p.id,p.startDate,today());
     const pdElecCost=getElecCostForPeriod(p.startDate,today());
-    // ── ต้นทุนแชร์ (โหมด "แชร์ทุกบ่อ" หน้าสต็อก) — แต่ละรายการหารด้วยจำนวนบ่อ active ณ วันที่บันทึก ──
+    // ── ต้นทุนแชร์ (โหมด "แชร์ทุกบ่อ" หน้าสต็อก) — แต่ละรายการหารด้วยจำนวนบ่อ active ณ วันที่บันทึก — แยกหมวด 'น้ำมัน' ออกจากที่เหลือ (อุปกรณ์นอก) เป็นคนละแถวในการ์ด แต่ยังใช้กลไกแชร์ต่อบ่อแบบเดียวกัน ──
     const pdSharedItems=getSharedItemsInRange(pdCostFrom,today());
-    let pdSharedCost=0;
-    const pdSharedCatItems={};
+    let pdSharedCost=0,pdFuelCost=0;
+    const pdSharedCatItems={},pdFuelCatItems={};
     pdSharedItems.forEach(l=>{
       const ac=activePondCountOnDate(l.date)||1;
       const share=((l.qty||0)*(l.unitCost||0))/ac;
-      pdSharedCost+=share;
-      pdSharedCatItems[l.id]={name:l.itemName,unit:`แชร์ ${ac} บ่อ`,qty:fD(l.date),total:share};
+      const isFuel=l.category==='fuel';
+      if(isFuel)pdFuelCost+=share;else pdSharedCost+=share;
+      (isFuel?pdFuelCatItems:pdSharedCatItems)[l.id]={name:l.itemName,unit:`แชร์ ${ac} บ่อ`,qty:fD(l.date),total:share};
     });
-    const pdCatSums={},pdCatItems={shared:pdSharedCatItems};
+    const pdCatSums={},pdCatItems={shared:pdSharedCatItems,fuel:pdFuelCatItems};
     pdStockItems.forEach(it=>{
       const cat=STOCK_CATEGORIES.some(c=>c.key===it.category)?it.category:'other';
       pdCatSums[cat]=(pdCatSums[cat]||0)+it.qty*it.unitPrice;
@@ -5396,7 +5400,7 @@ function renderPondDetail(id){
       pdCatItems[cat][key].qty+=it.qty;
       pdCatItems[cat][key].total+=it.qty*it.unitPrice;
     });
-    const pdCostTotal=pdFryCost+pdFeedCost+pdStockItems.reduce((s,i)=>s+i.qty*i.unitPrice,0)+pdLaborCost+pdElecCost+pdSharedCost;
+    const pdCostTotal=pdFryCost+pdFeedCost+pdStockItems.reduce((s,i)=>s+i.qty*i.unitPrice,0)+pdLaborCost+pdElecCost+pdSharedCost+pdFuelCost;
     // ── รายละเอียดเสริม 4 หมวด (พี่ขอ): อาหาร=กระสอบ+กก., ลูกกุ้ง=จำนวนตัว+ราคา/ตัว, ค่าแรง/ค่าไฟ=จำนวนวัน+เฉลี่ย/วัน — ไม่สร้างคำนวณคู่ขนาน ใช้ตัวเลขจริงจาก feedLog/pRelease/age เดียวกับที่การ์ดอื่นใช้อยู่แล้ว ──
     const pdFeedTotalKg=feedLog.reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0);
     const pdFeedDetail=pdFeedTotalKg>0?`<div class="ceo-cat-item-row" style="border-bottom:none"><span>รวม <b>${Math.round(pdFeedTotalKg).toLocaleString()} กก.</b></span><span>≈ <b>${Math.round(pdFeedTotalKg/25).toLocaleString()} กระสอบ</b></span></div>`:'';
@@ -5421,6 +5425,7 @@ function renderPondDetail(id){
       +pdCatOrder.map(k=>pdCostCatRow(k,STOCK_CAT_LABEL[k],pdCatSums[k]||0)).join('')
       +(pdCatSums.other?pdCostCatRow('other','อื่นๆ (เดิม)',pdCatSums.other):'')
       +pdCostCatRow('shared','อุปกรณ์นอก (แชร์)',pdSharedCost)
+      +pdCostCatRow('fuel','น้ำมัน (แชร์)',pdFuelCost)
       +pdCostCatRow('fry','ลูกกุ้ง',pdFryCost,pdFryDetail)
       +pdCostCatRow('labor','ค่าแรง',pdLaborCost,pdLaborElecDetail(pdLaborCost))
       +pdCostCatRow('elec','ค่าไฟ',pdElecCost,pdLaborElecDetail(pdElecCost));
@@ -6687,11 +6692,12 @@ const STOCK_CATEGORIES=[
   {key:'probioOral',lbl:'จุลินทรีย์กิน'},
   {key:'probioWater',lbl:'จุลินทรีย์ลงน้ำ'},
   {key:'lime',lbl:'ปูน'},
-  {key:'equip',lbl:'อุปกรณ์'}
+  {key:'equip',lbl:'อุปกรณ์'},
+  {key:'fuel',lbl:'น้ำมัน'}
 ];
 // เก็บ label/css ของหมวดเก่า (seed, chem) ไว้เผื่อรายการเก่าที่เคยบันทึกไว้ก่อนหน้านี้ยังต้องแสดงผลได้ถูกต้อง — ไม่แสดงเป็นตัวเลือกให้เพิ่มใหม่แล้ว
-const STOCK_CAT_LABEL={seed:'ลูกกุ้ง (เดิม)',chem:'ยา/สารเคมี (เดิม)',feed:'อาหารกุ้ง',chemOral:'ยากิน',chemWater:'ยาลงน้ำ',probioOral:'จุลินทรีย์กิน',probioWater:'จุลินทรีย์ลงน้ำ',lime:'ปูน',equip:'อุปกรณ์'};
-const STOCK_CAT_CSS={seed:'stock-cat-seed',chem:'stock-cat-chem',feed:'stock-cat-feed',chemOral:'stock-cat-chemOral',chemWater:'stock-cat-chemWater',probioOral:'stock-cat-probioOral',probioWater:'stock-cat-probioWater',lime:'stock-cat-lime',equip:'stock-cat-equip'};
+const STOCK_CAT_LABEL={seed:'ลูกกุ้ง (เดิม)',chem:'ยา/สารเคมี (เดิม)',feed:'อาหารกุ้ง',chemOral:'ยากิน',chemWater:'ยาลงน้ำ',probioOral:'จุลินทรีย์กิน',probioWater:'จุลินทรีย์ลงน้ำ',lime:'ปูน',equip:'อุปกรณ์',fuel:'น้ำมัน'};
+const STOCK_CAT_CSS={seed:'stock-cat-seed',chem:'stock-cat-chem',feed:'stock-cat-feed',chemOral:'stock-cat-chemOral',chemWater:'stock-cat-chemWater',probioOral:'stock-cat-probioOral',probioWater:'stock-cat-probioWater',lime:'stock-cat-lime',equip:'stock-cat-equip',fuel:'stock-cat-fuel'};
 const STOCK_TX_LABEL={in:'📥 รับเข้า',out:'📤 เบิกออก',adjust:'✏️ ปรับยอด'};
 
 // ===== STOCK CATALOG (ราคาต้นทุน+ขนส่ง จากรายการราคาหน้าร้าน) =====
@@ -11495,11 +11501,14 @@ function openCropModal(pid){
   // ── ค่าแรง: ดึงจาก getLaborCostForPond (เงินเดือนประจำ+พนักงานรายวัน หารตามบ่อ active จริงรายวัน) แทนกรอกเองแล้ว — พี่ยืนยันแล้วว่าเทียบตัวเลขที่กรอกเองไว้ก่อนหน้ากับสูตรนี้ไม่ต่างกัน แก้ไขได้ถ้าจำเป็น ──
   const autoLabor=getLaborCostForPond(pid,p.startDate,today());
   document.getElementById('cm-cost-labor').value=autoLabor?Math.round(autoLabor):'';
-  // ── อุปกรณ์นอก: ดึงจาก getSharedCostForPond (ส่วนแบ่งจากโหมด "แชร์ทุกบ่อ" หน้าสต็อก) แทนกรอกเองแล้ว — แก้ไขได้ถ้าจำเป็น ──
-  const autoSharedCost=getSharedCostForPond(pid,pondCostStartDate(p),today());
+  // ── อุปกรณ์นอก/น้ำมัน: ดึงจาก getSharedCostForPond (ส่วนแบ่งจากโหมด "แชร์ทุกบ่อ" หน้าสต็อก) แทนกรอกเองแล้ว — แยกหมวด 'fuel' ออกเป็นช่องน้ำมันต่างหาก ไม่ให้นับซ้ำในอุปกรณ์นอก — แก้ไขได้ถ้าจำเป็น ──
+  const cmCostFrom=pondCostStartDate(p);
+  const autoFuelCost=getSharedCostForPond(pid,cmCostFrom,today(),'fuel');
+  const autoSharedCost=getSharedCostForPond(pid,cmCostFrom,today())-autoFuelCost;
   document.getElementById('cm-cost-equip-out').value=autoSharedCost?Math.round(autoSharedCost):'';
-  // ── น้ำมัน/ค่าจับกุ้ง/% ส่วนแบ่ง — ยังกรอกเองทั้งหมด เพราะต้องดึงตัวเลขจากนอกแอป ──
-  ['cm-cost-fuel','cm-pct-caretaker','cm-pct-manager'].forEach(id=>{
+  document.getElementById('cm-cost-fuel').value=autoFuelCost?Math.round(autoFuelCost):'';
+  // ── ค่าจับกุ้ง/% ส่วนแบ่ง — ยังกรอกเองทั้งหมด เพราะต้องดึงตัวเลขจากนอกแอป ──
+  ['cm-pct-caretaker','cm-pct-manager'].forEach(id=>{
     document.getElementById(id).value='';
   });
   document.getElementById('cm-cost-catch').value='';
@@ -11790,7 +11799,7 @@ function renderPartialList(){
 // ===== ต้นทุนสะสมรายบ่อ (ใช้ร่วมกันระหว่าง Overview KPI bar / หน้ารายละเอียดบ่อ admin / หน้าสต็อก — เดิมสร้างไว้เป็นส่วนหนึ่งของ CEO Dashboard ที่ลบไปแล้ว) =====
 const ceoMoney=v=>'฿'+Math.round(v||0).toLocaleString('th-TH');
 // ── สีจุดหมวดหมู่ ใช้ค่าเดียวกับสีตัวหนังสือใน STOCK_CAT_CSS (badge เดิมเป็นพื้นอ่อน+ตัวหนังสือเข้ม ไม่เหมาะกับจุดกลมเล็กๆ) ──
-const CEO_CAT_DOT={seed:'#9D174D',chem:'#1D4ED8',feed:'#92400E',chemOral:'#1D4ED8',chemWater:'#0369A1',probioOral:'#4338CA',probioWater:'#A21CAF',lime:'#57534E',equip:'#166534',fry:'#9D174D',labor:'#0F766E',elec:'#B45309',shared:'#9333EA'};
+const CEO_CAT_DOT={seed:'#9D174D',chem:'#1D4ED8',feed:'#92400E',chemOral:'#1D4ED8',chemWater:'#0369A1',probioOral:'#4338CA',probioWater:'#A21CAF',lime:'#57534E',equip:'#166534',fuel:'#C2410C',fry:'#9D174D',labor:'#0F766E',elec:'#B45309',shared:'#9333EA'};
 // ── รายการเบิกสต็อกจริงของบ่อ ไม่รวมอาหาร (คิดแยกจาก pondFeedCost อยู่แล้ว) เรียงล่าสุดก่อน ──
 // ── วันเริ่มนับต้นทุน "สต็อก/เวชภัณฑ์" ของรอบปัจจุบัน — ย้อนจากวันลงกุ้ง 60 วัน ให้ครอบช่วงเตรียมบ่อ
 //    (PREP_STEPS ขั้นแรกสุด "ตากบ่อ" คือ -60 วัน) เพราะของที่เบิกไปเตรียมบ่อ — โซดาไฟ/คอปเปอร์/ไดโครวอส/คลอรีน —
@@ -11816,19 +11825,22 @@ function getStockItemsForPond(pondId,startDate,endDate){
     .map(l=>{const item=(D.inventoryItems||[]).find(i=>i.id===l.itemId);
       return{name:l.itemName||item?.name||'-',category:item?.category||'',date:l.date,qty:l.qty||0,unit:l.unit||item?.unit||'',unitPrice:item?.unitPrice||0};
     })
-    .filter(i=>i.category!=='feed')
+    // ── ตัดหมวด 'feed' (คิดแยกจาก pondFeedCost อยู่แล้ว) และหมวดเก่า 'seed' (คิดแยกจาก p.costFry อยู่แล้ว — ป้องกันนับซ้ำ) ──
+    // ⚠️ จุดนี้คือ single source of truth ของ "รายการสต็อกที่นับเป็นต้นทุนบ่อ" ใช้ร่วมกันทั้งการ์ด "ต้นทุนสะสม" หน้ารายละเอียดบ่อ, KPI ต้นทุนสะสมหน้าภาพรวม, และฟอร์ม "ปิดรอบ" — ถ้าตัดหมวดตรงนี้จุดเดียว ทุกจุดจะตรงกันเสมอ (เดิมฟอร์มปิดรอบตัด 'seed' เองอีกที ทำให้ถ้ามีสินค้าที่ยังติดหมวดเก่า 'seed' อยู่ ตัวเลข "รวมต้นทุนสะสม" กับตอนปิดบ่อจะไม่ตรงกัน เพราะการ์ดต้นทุนสะสมนับรวม แต่ฟอร์มปิดรอบไม่ได้ดึงมาให้)
+    .filter(i=>i.category!=='feed'&&i.category!=='seed')
     .sort((a,b)=>b.date.localeCompare(a.date));
 }
 // ── ต้นทุนที่แชร์ให้ทุกบ่อ (โหมด "แชร์ทุกบ่อ" หน้าสต็อก, D.inventoryLog type='shared') — คนละแนวคิดกับ getStockItemsForPond (ที่ผูก pondId เดียว) เพราะรายการเดียวต้องแบ่งให้หลายบ่อ ไม่ผูก pondId ใน log เลย จึงอ่าน "รายการที่แชร์ทั้งหมด" ก่อนแล้วค่อยหารส่วนแบ่งต่อบ่อทีหลัง ──
-function getSharedItemsInRange(fromDate,toDate){
+// category (ไม่บังคับ): ระบุเพื่อกรองเฉพาะหมวดนั้น (เช่น 'fuel' ดึงเฉพาะน้ำมัน) — ไม่ระบุ = ดึงทุกหมวดที่แชร์เหมือนเดิม
+function getSharedItemsInRange(fromDate,toDate,category){
   if(!fromDate)return[];
   const end=toDate||today();
-  return(D.inventoryLog||[]).filter(l=>l.type==='shared'&&l.date>=fromDate&&l.date<=end);
+  return(D.inventoryLog||[]).filter(l=>l.type==='shared'&&l.date>=fromDate&&l.date<=end&&(!category||l.category===category));
 }
 // ── ส่วนแบ่งต้นทุนแชร์ของบ่อนี้ = แต่ละรายการ ÷ จำนวนบ่อที่ active ณ วันที่บันทึกรายการนั้น (สูตรเดียวกับค่าไฟ/ค่าแรง — activePondCountOnDate — ต่างแค่คิดเป็นรายรายการแทนรายวัน เพราะเป็นเหตุการณ์ที่ไม่ต่อเนื่องแบบบิลรายเดือน) ──
-function getSharedCostForPond(pondId,fromDate,toDate){
+function getSharedCostForPond(pondId,fromDate,toDate,category){
   if(!pondId||!fromDate)return 0;
-  return getSharedItemsInRange(fromDate,toDate).reduce((s,l)=>{
+  return getSharedItemsInRange(fromDate,toDate,category).reduce((s,l)=>{
     const activeCount=activePondCountOnDate(l.date)||1;
     return s+((l.qty||0)*(l.unitCost||0))/activeCount;
   },0);
@@ -12172,15 +12184,16 @@ function getStockCostBreakdownForPond(pondId,startDate,closeDate){
   });
   return{byCat,total};
 }
-// ── ต้นทุนพัสดุแยกกลุ่มสำหรับฟอร์มปิดรอบ: เวชภัณฑ์ (ยากิน+ยาลงน้ำ+จุลินทรีย์กิน+จุลินทรีย์ลงน้ำ + หมวด "เดิม" ยา/สารเคมี) / ปูน / อุปกรณ์
-//    ไม่รวมหมวด "ลูกกุ้ง (เดิม)" เพราะคิดแยกจาก p.costFry อยู่แล้ว กันนับซ้ำ ──
+// ── ต้นทุนพัสดุแยกกลุ่มสำหรับฟอร์มปิดรอบ: เวชภัณฑ์ (ยากิน+ยาลงน้ำ+จุลินทรีย์กิน+จุลินทรีย์ลงน้ำ + หมวด "เดิม" ยา/สารเคมี + หมวดอื่นๆ ที่ไม่เข้าพวกปูน/อุปกรณ์) / ปูน / อุปกรณ์
+//    'seed' (ลูกกุ้งเดิม) ไม่มีทางเข้ามาถึงจุดนี้แล้ว เพราะ getStockItemsForPond ตัดออกตั้งแต่ต้นทาง (กันนับซ้ำกับ p.costFry) ──
+//    ⚠️ ใช้ else รับทุกหมวดที่เหลือเข้า med เป็น catch-all เจตนา — ให้ผลรวม (med+lime+equip) เท่ากับผลรวมสต็อกทั้งหมดที่นับใน "ต้นทุนสะสม" หน้ารายละเอียดบ่อเป๊ะๆ เสมอ ไม่ว่าจะมีหมวดแปลกๆ ที่ไม่รู้จักโผล่มาก็ตาม (เดิมมีเงื่อนไข if/else if แบบไม่มี else ท้าย ทำให้หมวดที่ไม่ตรงเงื่อนไขไหนเลยหายไปจากฟอร์มปิดรอบเงียบๆ ทั้งที่การ์ดต้นทุนสะสมนับรวมไว้) ──
 function getStockCostGroupsForPond(pondId,startDate,closeDate){
   const bd=getStockCostBreakdownForPond(pondId,startDate,closeDate);
   const g={med:0,lime:0,equip:0};
   Object.entries(bd.byCat).forEach(([cat,amt])=>{
-    if(cat==='chemOral'||cat==='chemWater'||cat==='probioOral'||cat==='probioWater'||cat==='chem')g.med+=amt;
-    else if(cat==='lime')g.lime+=amt;
+    if(cat==='lime')g.lime+=amt;
     else if(cat==='equip')g.equip+=amt;
+    else g.med+=amt;
   });
   return g;
 }
