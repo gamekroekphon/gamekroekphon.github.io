@@ -2417,7 +2417,6 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   <div class="labor-sub">
     <button class="labor-sub-btn on" onclick="laborTab('lp-staff',this)">🧑‍💼 เงินเดือนประจำ</button>
     <button class="labor-sub-btn" onclick="laborTab('lp-cost',this)">👷 พนักงานรายวัน (รายสัปดาห์)</button>
-    <button class="labor-sub-btn" onclick="laborTab('lp-adv',this)">💳 เงินเบิกล่วงหน้า</button>
     <button class="labor-sub-btn" onclick="laborTab('lp-summary',this)">📋 ประวัติ/สรุป</button>
   </div>
 
@@ -2476,42 +2475,6 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <div class="card-t">📋 ประวัติจ่ายค่าแรงรายสัปดาห์</div>
       <div id="dw-table"></div>
       <div class="hint" style="margin-top:10px">* 🔒 = ตัดรอบแล้ว (จ่ายจริงแล้ว) ไม่ถูกคำนวณย้อนหลังใหม่ · 📅 = ยังไม่ถึงวันตัดรอบ/ประมาณการ</div>
-    </div>
-  </div>
-
-  <!-- SUB-PANE: เงินเบิกล่วงหน้า -->
-  <div class="labor-pane" id="lp-adv">
-    <div class="note" style="border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--tx2);margin-bottom:16px;line-height:1.7;border:1px solid var(--w);background:var(--wb)">
-      💡 <b style="color:var(--w)">แยกเป็นบัญชีลูกหนี้ ไม่ใช่ค่าแรง</b> — ยอดในหน้านี้จะ<b style="color:var(--w)">ไม่ไปยุ่งกับช่อง "ยอดจ่ายจริง" ในหน้าพนักงานรายวัน</b> เด็ดขาด เพราะยอดที่กรอกที่นั่นควรเป็นค่าแรงเต็มจำนวนเสมอ (ต้นทุนแรงงานจริงของสัปดาห์นั้น) — เงินเบิกล่วงหน้าเป็นแค่หนี้ที่พนักงานติดค้างบริษัท ใช้หน้านี้ติดตามแยกต่างหากว่าใครเหลือหนี้เท่าไหร่ หักคืนไปแล้วกี่งวด
-    </div>
-    <div class="g3" id="adv-kpi" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px"></div>
-    <div class="g2" style="margin-bottom:0">
-      <div class="card" style="margin-bottom:12px">
-        <div class="card-t">➕ บันทึกเบิกเงินล่วงหน้าใหม่</div>
-        <div class="card-sub">กรอกทุกครั้งที่บัญชีจ่ายเงินก้อนให้พนักงานล่วงหน้า</div>
-        <div class="fg"><label class="fl" for="adv-name">ชื่อพนักงาน</label><input class="fi" id="adv-name" placeholder="เช่น สมชาย ใจดี"></div>
-        <div class="fg"><label class="fl" for="adv-date">วันที่เบิก</label><input type="date" class="fi" id="adv-date"></div>
-        <div class="fg"><label class="fl" for="adv-amount">จำนวนเงินที่เบิก (บาท)</label><input class="fi" id="adv-amount" inputmode="decimal" placeholder="เช่น 5,000"></div>
-        <div class="fg"><label class="fl" for="adv-reason">เหตุผล</label><input class="fi" id="adv-reason" placeholder="เช่น ค่า Work Permit ต่ออายุ"></div>
-        <div class="fg"><label class="fl" for="adv-weekly">ยอดหักคืน/สัปดาห์ (บาท)</label><input class="fi" id="adv-weekly" inputmode="decimal" placeholder="เช่น 500"></div>
-        <button class="btn btn-p" style="width:100%" onclick="saveStaffAdvance()">💾 บันทึกการเบิก</button>
-        <div id="sk-msg-adv"></div>
-      </div>
-      <div class="card" style="margin-bottom:12px">
-        <div class="card-t">↩️ บันทึกหักคืนรายสัปดาห์</div>
-        <div class="card-sub">เลือกพนักงานที่มีหนี้ค้าง แล้วบันทึกยอดที่หักคืนในสัปดาห์นั้น</div>
-        <div class="fg"><label class="fl" for="advr-sel">พนักงาน</label><select class="fi" id="advr-sel" onchange="advRepayPreview()"></select></div>
-        <div class="fg"><label class="fl" for="advr-date">วันที่หัก (ตรงกับวันตัดรอบค่าแรง)</label><input type="date" class="fi" id="advr-date"></div>
-        <div class="fg"><label class="fl" for="advr-amount">ยอดหักคืน (บาท)</label><input class="fi" id="advr-amount" inputmode="decimal" placeholder="เช่น 500" oninput="advRepayPreview()"></div>
-        <div class="fg"><label class="fl" for="advr-remain-preview">ยอดคงเหลือหลังหัก (คำนวณอัตโนมัติ)</label><input class="fi" id="advr-remain-preview" style="background:var(--sf2)" readonly></div>
-        <button class="btn btn-p" style="width:100%" onclick="saveStaffAdvanceRepay()">💾 บันทึกการหักคืน</button>
-        <div id="sk-msg-advr"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-t">📋 รายการเงินเบิกทั้งหมด</div>
-      <div class="card-sub">แสดงความคืบหน้าการหักคืนต่อคน — ปิดอัตโนมัติเมื่อหักครบยอด</div>
-      <div id="adv-list"></div>
     </div>
   </div>
 
@@ -6052,12 +6015,6 @@ function laborTab(paneId, btn) {
   document.querySelectorAll('.labor-pane').forEach(p=>p.classList.remove('on'));
   btn.classList.add('on');
   document.getElementById(paneId).classList.add('on');
-  if(paneId==='lp-adv'){
-    const d=document.getElementById('adv-date'),rd=document.getElementById('advr-date');
-    if(d&&!d.value)d.value=today();
-    if(rd&&!rd.value)rd.value=today();
-    renderStaffAdvancePane();
-  }
 }
 function initLabor(){
   populateAll();
@@ -6401,136 +6358,6 @@ function renderLaborCropSummary(){
       return`<tr><td>${r.name}</td><td>รอบ ${r.cropNum}</td><td>${fD(r.closeDate)}</td><td>${r.days!=null?r.days+' วัน':'-'}</td><td>${r.weight.toLocaleString()}</td><td>${Math.round(r.labor).toLocaleString()}</td><td>${r.perKg!==null?r.perKg.toFixed(2)+' บาท':'-'}</td><td>${badge}</td></tr>`;
     }).join('')
   }</tbody></table>`;
-}
-/* ── เงินเบิกล่วงหน้าพนักงาน (D.staffAdvances/D.staffAdvanceRepay — บัญชีลูกหนี้แยกจากค่าแรง ไม่แตะ dw-amount/getLaborCostForPond เลย) ── */
-function staffAdvances(){return(D.staffAdvances||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));}
-function staffAdvanceRepays(advanceId){return(D.staffAdvanceRepay||[]).filter(r=>r.advanceId===advanceId).sort((a,b)=>(a.date||'').localeCompare(b.date||''));}
-function advanceRepaidTotal(advanceId){return staffAdvanceRepays(advanceId).reduce((s,r)=>s+r.amount,0);}
-function advanceRemaining(adv){return adv.amount-advanceRepaidTotal(adv.id);}
-function saveStaffAdvance(){
-  const name=document.getElementById('adv-name').value.trim();
-  const date=document.getElementById('adv-date').value||today();
-  const amount=parseFloat(document.getElementById('adv-amount').value)||0;
-  const reason=document.getElementById('adv-reason').value.trim();
-  const weeklyAmount=parseFloat(document.getElementById('adv-weekly').value)||0;
-  if(!name){showStockMsg('adv','กรุณากรอกชื่อพนักงาน','err');return;}
-  if(!(amount>0)){showStockMsg('adv','กรุณากรอกจำนวนเงินที่เบิกให้ถูกต้อง','err');return;}
-  if(!D.staffAdvances)D.staffAdvances=[];
-  D.staffAdvances.push({id:'adv'+Date.now()+'_'+Math.random().toString(36).slice(2,6),name,date,amount,reason,weeklyAmount,by:curUserLabel()});
-  save();
-  showStockMsg('adv','✅ บันทึกการเบิกเรียบร้อย','ok');
-  ['adv-name','adv-amount','adv-reason','adv-weekly'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  renderStaffAdvancePane();
-}
-function deleteStaffAdvance(id){
-  if(!confirm('ลบรายการเบิกนี้? (ประวัติการหักคืนทั้งหมดของรายการนี้จะถูกลบไปด้วย)'))return;
-  D.staffAdvances=D.staffAdvances.filter(a=>a.id!==id);
-  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
-  (D.staffAdvanceRepay||[]).filter(r=>r.advanceId===id).forEach(r=>D.deletedIds.push(r.id));
-  D.staffAdvanceRepay=(D.staffAdvanceRepay||[]).filter(r=>r.advanceId!==id);
-  save();
-  renderStaffAdvancePane();
-}
-function populateAdvanceRepaySelect(){
-  const sel=document.getElementById('advr-sel');if(!sel)return;
-  const cur=sel.value;
-  const active=staffAdvances().filter(a=>advanceRemaining(a)>0.001);
-  sel.innerHTML=active.length?active.map(a=>`<option value="${a.id}">${a.name} (ค้าง ฿${Math.round(advanceRemaining(a)).toLocaleString()})</option>`).join(''):'<option value="">— ไม่มีพนักงานที่มีหนี้ค้าง —</option>';
-  if([...sel.options].some(o=>o.value===cur))sel.value=cur;
-  advRepayPreview();
-}
-function advRepayPreview(){
-  const sel=document.getElementById('advr-sel');
-  const adv=staffAdvances().find(a=>a.id===sel.value);
-  const amt=parseFloat(document.getElementById('advr-amount').value)||0;
-  const preview=document.getElementById('advr-remain-preview');
-  if(!adv){preview.value='';return;}
-  preview.value='฿'+Math.max(0,advanceRemaining(adv)-amt).toLocaleString();
-}
-function saveStaffAdvanceRepay(){
-  const advanceId=document.getElementById('advr-sel').value;
-  const date=document.getElementById('advr-date').value||today();
-  const amount=parseFloat(document.getElementById('advr-amount').value)||0;
-  const adv=staffAdvances().find(a=>a.id===advanceId);
-  if(!adv){showStockMsg('advr','กรุณาเลือกพนักงานที่มีหนี้ค้าง','err');return;}
-  if(!(amount>0)){showStockMsg('advr','กรุณากรอกยอดหักคืนให้ถูกต้อง','err');return;}
-  const remaining=advanceRemaining(adv);
-  if(amount>remaining+0.0001){showStockMsg('advr','ยอดหักคืนเกินกว่าที่ค้างอยู่ ('+remaining.toFixed(0)+' บาท)','err');return;}
-  if(!D.staffAdvanceRepay)D.staffAdvanceRepay=[];
-  D.staffAdvanceRepay.push({id:'advr'+Date.now()+'_'+Math.random().toString(36).slice(2,6),advanceId,date,amount,by:curUserLabel()});
-  save();
-  showStockMsg('advr','✅ บันทึกการหักคืนเรียบร้อย','ok');
-  document.getElementById('advr-amount').value='';
-  renderStaffAdvancePane();
-}
-function deleteStaffAdvanceRepay(id){
-  if(!confirm('ลบรายการหักคืนนี้?'))return;
-  D.staffAdvanceRepay=D.staffAdvanceRepay.filter(r=>r.id!==id);
-  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
-  save();
-  renderStaffAdvancePane();
-}
-let _advExpanded={};
-function toggleAdvanceHistory(id){
-  _advExpanded[id]=!_advExpanded[id];
-  renderStaffAdvanceList();
-}
-function renderStaffAdvancePane(){
-  const kpiEl=document.getElementById('adv-kpi');if(!kpiEl)return;
-  const all=staffAdvances();
-  const active=all.filter(a=>advanceRemaining(a)>0.001);
-  const totalOutstanding=active.reduce((s,a)=>s+advanceRemaining(a),0);
-  const thisMonth=today().slice(0,7);
-  const repaidThisMonth=(D.staffAdvanceRepay||[]).filter(r=>(r.date||'').startsWith(thisMonth));
-  const repaidThisMonthTotal=repaidThisMonth.reduce((s,r)=>s+r.amount,0);
-  const newThisMonth=all.filter(a=>(a.date||'').startsWith(thisMonth));
-  const newThisMonthTotal=newThisMonth.reduce((s,a)=>s+a.amount,0);
-  kpiEl.innerHTML=`
-    <div class="kpi-card"><div class="kpi-lbl">พนักงานที่มีหนี้ค้าง</div><div class="kpi-val">${active.length}</div><div class="kpi-sub">คน</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">ยอดเบิกคงค้างรวม</div><div class="kpi-val" style="color:var(--w)">฿${Math.round(totalOutstanding).toLocaleString()}</div><div class="kpi-sub">ทุกคนรวมกัน</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">คืนแล้วสะสม (เดือนนี้)</div><div class="kpi-val" style="color:var(--ok)">฿${Math.round(repaidThisMonthTotal).toLocaleString()}</div><div class="kpi-sub">${repaidThisMonth.length} งวด</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">เบิกใหม่สะสม (เดือนนี้)</div><div class="kpi-val">฿${Math.round(newThisMonthTotal).toLocaleString()}</div><div class="kpi-sub">${newThisMonth.length} รายการ</div></div>`;
-  populateAdvanceRepaySelect();
-  renderStaffAdvanceList();
-}
-function renderStaffAdvanceList(){
-  const el=document.getElementById('adv-list');if(!el)return;
-  const all=staffAdvances().slice().reverse();
-  if(!all.length){el.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีรายการเบิกเงินล่วงหน้า — เพิ่มได้จากฟอร์มด้านบน</p>';return;}
-  el.innerHTML=all.map(a=>{
-    const repaid=advanceRepaidTotal(a.id);
-    const remaining=advanceRemaining(a);
-    const pct=a.amount?Math.min(100,Math.round(repaid/a.amount*100)):0;
-    const repays=staffAdvanceRepays(a.id);
-    const isDone=remaining<=0.001;
-    const weeksLeft=(!isDone&&a.weeklyAmount>0)?Math.ceil(remaining/a.weeklyAmount):null;
-    const lastRepayDate=repays.length?repays[repays.length-1].date:null;
-    const expanded=!!_advExpanded[a.id];
-    const historyHtml=expanded?`<div style="margin-top:10px;overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่หัก</th><th style="text-align:right">ยอดหักคืน</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
-      repays.length?repays.slice().reverse().map(r=>`<tr><td>${fD(r.date)}</td><td style="text-align:right">฿${Math.round(r.amount).toLocaleString()}</td><td style="font-size:12px;color:var(--tx2)">${r.by||'-'}</td><td><button class="btn-sm btn-del" onclick="deleteStaffAdvanceRepay('${r.id}')">🗑️</button></td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--tx3);font-style:italic">ยังไม่มีการหักคืน</td></tr>'
-    }</tbody></table></div>`:'';
-    return `<div class="card" style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:8px">
-        <div>
-          <div style="font-size:14px;font-weight:700">${a.name}</div>
-          <div style="font-size:var(--fs115);color:var(--tx3)">${a.reason||'-'} · เบิกเมื่อ ${fD(a.date)}</div>
-        </div>
-        <span class="badge ${isDone?'b-ok':'b-warn'}">${isDone?'✅ หักคืนครบแล้ว':'🟡 กำลังหักคืน'}</span>
-      </div>
-      <div style="background:var(--sf2);border-radius:99px;height:8px;overflow:hidden;margin:8px 0"><div style="background:var(--w);height:100%;border-radius:99px;width:${pct}%"></div></div>
-      <div style="display:flex;justify-content:space-between;font-size:var(--fs115);color:var(--tx2);flex-wrap:wrap;gap:8px">
-        <span>เบิกไป <b style="color:var(--tx)">฿${Math.round(a.amount).toLocaleString()}</b></span>
-        <span>คืนแล้ว <b style="color:var(--ok)">฿${Math.round(repaid).toLocaleString()}</b> (${repays.length} งวด)</span>
-        ${isDone?`<span>ปิดยอดเมื่อ ${fD(lastRepayDate)}</span>`:`<span>คงเหลือ <b style="color:var(--w)">฿${Math.round(remaining).toLocaleString()}</b></span>`}
-        ${(!isDone&&weeksLeft!=null)?`<span>เหลืออีก ~${weeksLeft} สัปดาห์ (${a.weeklyAmount.toLocaleString()}/สัปดาห์)</span>`:''}
-      </div>
-      <div style="display:flex;gap:6px;margin-top:10px">
-        <button class="btn-sm" style="background:var(--sf2);color:var(--tx2)" onclick="toggleAdvanceHistory('${a.id}')">📋 ${expanded?'ซ่อนประวัติหักคืน':'ดูประวัติหักคืน'}</button>
-        <button class="btn-sm btn-del" onclick="deleteStaffAdvance('${a.id}')">🗑️ ลบรายการเบิก</button>
-      </div>
-      ${historyHtml}
-    </div>`;
-  }).join('');
 }
 /* ===== ELECTRICITY ===== */
 function elecTab(paneId,btn){
