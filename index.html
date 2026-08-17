@@ -2330,6 +2330,10 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <table class="tbl"><thead><tr><th>ชื่อบ่อ</th><th>ยอดปล่อย</th><th>ขนาด (ไร่)</th><th>ความหนาแน่น</th><th>วันปล่อย</th><th>อายุ</th><th>น้ำ</th><th>อาหาร</th><th>สุ่ม</th><th>แล็บ</th><th>อัตราโต (ก./วัน)</th><th>จัดการ</th></tr></thead><tbody id="mg-tbody"></tbody></table>
     </div>
   </div>
+  <!-- ═══ การ์ดเครื่องมือ migration/seed ข้อมูลย้อนหลัง (7 ปุ่ม) — ซ่อนออกจากหน้าจอตามที่พี่ขอ (2569) กันกดโดนโดยไม่ตั้งใจแล้วข้อมูลเปลี่ยน
+       งานใช้ครั้งเดียวเสร็จแล้วทั้งหมด ไม่มีประโยชน์ต่อเนื่อง — ฟังก์ชัน JS ที่อยู่เบื้องหลัง (runSeedHistoricalCrops, runSeedHarvestHistory,
+       migratePondNamesB2A, fixYear2569Round1, forceInjectYear2569Round1, fixA1Round3_2568, previewCropHistoryCleanup, cleanupOldCropHistory)
+       ยังเก็บไว้เหมือนเดิมไม่ได้ลบ เผื่อจำเป็นต้องใช้อีกในอนาคตค่อยเรียกผ่าน console เอง
   <div class="card admin-only" style="border:2px dashed var(--wr);background:var(--sf2)">
     <div style="font-weight:700;color:var(--tx);margin-bottom:8px">🗃️ นำเข้าประวัติการเลี้ยงย้อนหลัง <span style="font-size:var(--fs11);color:var(--tx3);font-weight:400">(Admin เท่านั้น)</span></div>
     <div style="font-size:13px;color:var(--tx2);margin-bottom:10px">นำเข้าข้อมูลรอบเลี้ยง ปี 2565–2569 จากแผนลงลูกกุ้ง (219 รอบ / 27 บ่อ)<br>ระบบจะข้ามรอบที่มีอยู่แล้วโดยอัตโนมัติ (ไม่ทับข้อมูลปัจจุบัน)</div>
@@ -2365,6 +2369,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <button class="btn" onclick="cleanupOldCropHistory(this)" style="background:#dc2626;color:#fff;margin-left:8px">🗑️ ลบรอบเลี้ยงเก่ากว่าปี 2568 ทันที</button>
     <span id="crophist-cleanup-msg" style="font-size:12px;margin-left:10px;color:var(--ok)"></span>
   </div>
+  ══ -->
   <!-- Mobile-only logout -->
   <div class="mobile-logout-block" style="display:none;margin-top:16px">
     <div class="card" style="text-align:center;padding:16px">
