@@ -254,6 +254,27 @@ body.role-admin .sn-link.admin-only{display:block!important}
 .pd-alert{margin-top:14px}
 .pd-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
 .pd-water-row{display:flex;justify-content:space-between;padding:7px 0;border-top:.5px solid var(--bd);font-size:13px}
+.pd-surv-hero{display:flex;align-items:center;gap:16px;padding:4px 0 14px;border-bottom:1px solid var(--sf2);margin-bottom:12px}
+.pd-surv-ring{position:relative;width:76px;height:76px;flex:none}
+.pd-surv-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.pd-surv-ring .bgc{fill:none;stroke:var(--sf2);stroke-width:7}
+.pd-surv-ring .fgc{fill:none;stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset .4s}
+.pd-surv-ring .val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700}
+.pd-surv-meta{flex:1;min-width:0}
+.pd-surv-src{font-size:12px;color:var(--tx2);font-weight:600}
+.pd-surv-date{font-size:11px;color:var(--tx3);margin-top:2px}
+.pd-surv-trend{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;margin-top:6px}
+.pd-surv-trend.down{color:var(--d);background:var(--db)}
+.pd-surv-trend.up{color:var(--ok);background:var(--ob)}
+.pd-surv-cmp-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--sf2);font-size:13px}
+.pd-surv-cmp-row:last-child{border-bottom:none}
+.pd-surv-cmp-lbl b{color:var(--tx);display:block;font-size:13px}
+.pd-surv-cmp-lbl span.sub{font-size:11px;color:var(--tx3);font-weight:400}
+.pd-surv-cmp-val{font-weight:700;font-size:15px;font-variant-numeric:tabular-nums}
+.pd-surv-chart{display:flex;align-items:flex-end;gap:6px;height:70px;padding:10px 4px 20px;position:relative}
+.pd-surv-bar{flex:1;background:linear-gradient(180deg,var(--in),#7DB4EA);border-radius:4px 4px 0 0;position:relative;min-height:2px}
+.pd-surv-bar .lbl{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:9.5px;color:var(--tx3);white-space:nowrap}
+.pd-surv-bar .v{position:absolute;top:-16px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:var(--tx2)}
 .pd-actions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
 .pd-admin-tag{font-size:var(--fs10);font-weight:700;color:var(--pd);background:var(--pl);padding:2px 9px;border-radius:99px}
 @media(max-width:600px){.pd-metrics{grid-template-columns:repeat(2,1fr)}}
@@ -5373,6 +5394,11 @@ function renderPondDetail(id){
       <div style="font-size:22px;font-weight:500;color:${fcrValColor};line-height:1">${fcr??'—'}</div>
       <div style="font-size:var(--fs10);color:#16a34a;margin-top:3px">เป้า &lt; 1.5</div>
     </div>
+    <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px" title="จากสุ่มตัวอย่างล่าสุด — กรอกเอง">
+      <div style="font-size:var(--fs10);color:#16a34a;margin-bottom:4px">อัตรารอด</div>
+      <div style="font-size:22px;font-weight:500;color:${lat&&lat.survivalRate!=null?survRingColor(lat.survivalRate):'#15803d'};line-height:1">${lat&&lat.survivalRate!=null?lat.survivalRate+'%':'—'}</div>
+      <div style="font-size:var(--fs10);color:#16a34a;margin-top:3px">ล่าสุด${lat&&lat.date?' '+fD(lat.date):''}</div>
+    </div>
   </div>`;
 
   // ===== ต้นทุนสะสม (admin เท่านั้น) — ใช้สูตร/building block เดียวกับ ceoTotalCost/ceoMoney (Overview KPI bar) ไม่สร้างคำนวณคู่ขนาน =====
@@ -5480,6 +5506,7 @@ function renderPondDetail(id){
       <div class="chip-row" id="pd-med-cat-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
       <div id="pd-med-hist-table"></div>`)}
     ${pdCard('size',`📏 ไซส์ล่าสุด${lat&&lat.date?` · ${fD(lat.date)}`:''}`,sizeHtml)}
+    ${pdCard('surv','🦐 อัตรารอด','<div id="pd-survival-card"></div>')}
     ${pdCard('bio','⚖️ เปรียบเทียบ Biomass 2 วิธี','<div id="pd-biocompare-card"></div>')}
     ${pdCard('bench','📊 เทียบกับรอบก่อน','<div id="pd-benchmark-card"></div>')}
     ${pdCard('watman',`🚰 การจัดการน้ำล่าสุด${latWater&&latWater.date?` · ${fD(latWater.date)}`:''}`,wmHtml)}
@@ -5492,6 +5519,7 @@ function renderPondDetail(id){
   renderPdGauges(p,last);
   renderPdCharts(p);
   if(cls!=='prep')renderFarmCard(p);
+  renderSurvivalCard(p);
   renderBioCompare(p);
   if(cls!=='prep')renderCropBenchmark(p);
   renderPdWqHistory(p);
@@ -5537,15 +5565,12 @@ function bcFeedRateFormula(age,abw){
   const rate=Math.exp(4.055-0.799*Math.log(age)+0.129*Math.log(abw));
   return Math.round(rate*10)/10;
 }
-function renderBioCompare(p){
-  const card=document.getElementById('pd-biocompare-card');if(!card)return;
+// ── ⚠️ single source of truth ของการคำนวณเปรียบเทียบ biomass/อัตรารอด 2 แบบ — ใช้ร่วมกันทั้งการ์ด "เปรียบเทียบ Biomass 2 วิธี" และการ์ด "อัตรารอด" ห้ามคำนวณคู่ขนานแยกกัน ──
+function getBioCompareCalc(p){
   const samples=p.samples||[];
   const lat=samples.length?samples[samples.length-1]:null;
   const feedLog=p.feedLog||[];const latFeed=feedLog.length?feedLog[feedLog.length-1]:null;
-  if(!lat||!lat.abw||lat.survivalRate==null||!latFeed||!latFeed.totalFeed){
-    card.innerHTML=`<div style="color:var(--tx3);font-size:13px;padding:7px 0">ต้องมีข้อมูล ABW + อัตรารอด (จากสุ่มตัวอย่าง) และอาหารที่ให้ล่าสุด ก่อนเปรียบเทียบได้</div>`;
-    return;
-  }
+  if(!lat||!lat.abw||lat.survivalRate==null||!latFeed||!latFeed.totalFeed)return null;
   const abw=lat.abw,todayFeed=latFeed.totalFeed,release=pRelease(p);
   const age=lat.age||(p.startDate?dDiff(p.startDate,lat.date||today()):null);
   const docRate=bcFeedRateFormula(age,abw);
@@ -5562,6 +5587,16 @@ function renderBioCompare(p){
   let bannerCls='ok',bannerIcon='✅',bannerTxt=`ตัวเลข 2 แบบใกล้เคียงกัน (ต่างกัน ${delta.toFixed(1)}%) — อัตรารอดที่กรอกเองน่าเชื่อถือได้`;
   if(delta>=25){bannerCls='danger';bannerIcon='🔴';bannerTxt=`ตัวเลข 2 แบบต่างกันมาก (${delta.toFixed(1)}%) — ควรตรวจสอบทั้งอัตรารอดที่กรอกและยอดอาหารที่บันทึกโดยด่วน อาจมีข้อผิดพลาดในการกรอกข้อมูล`;}
   else if(delta>=10){bannerCls='warn';bannerIcon='⚠️';bannerTxt=`ตัวเลข 2 แบบต่างกันพอสมควร (${delta.toFixed(1)}%) — ${farmBiomass>docBiomass?'อัตรารอดที่กรอกเองอาจสูงเกินจริง (feeding rate ที่ได้จริงต่ำผิดปกติ)':'อัตรารอดที่กรอกเองอาจต่ำเกินจริง (feeding rate ที่ได้จริงสูงผิดปกติ)'} — แนะนำสุ่มตัวอย่างเช็คซ้ำ`;}
+  return{lat,abw,age,docRate,auto,feedRate,farmSurvival,farmBiomass,farmCount,farmImpliedRate,docBiomass,docCount,docImpliedSurvival,delta,bannerCls,bannerIcon,bannerTxt};
+}
+function renderBioCompare(p){
+  const card=document.getElementById('pd-biocompare-card');if(!card)return;
+  const bc=getBioCompareCalc(p);
+  if(!bc){
+    card.innerHTML=`<div style="color:var(--tx3);font-size:13px;padding:7px 0">ต้องมีข้อมูล ABW + อัตรารอด (จากสุ่มตัวอย่าง) และอาหารที่ให้ล่าสุด ก่อนเปรียบเทียบได้</div>`;
+    return;
+  }
+  const{abw,age,docRate,auto,feedRate,farmSurvival,farmBiomass,farmCount,farmImpliedRate,docBiomass,docCount,docImpliedSurvival,bannerCls,bannerIcon,bannerTxt}=bc;
   card.innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
       <div class="fg"><label class="fl" for="bc-survival-${p.id}">อัตรารอด (%) — กรอกเอง (แบบฟาร์ม)</label><input type="text" class="fi" id="bc-survival-${p.id}" value="${farmSurvival}" readonly style="background:var(--sf2)"></div>
@@ -5595,6 +5630,75 @@ function renderBioCompare(p){
 }
 function bcEditFeedRate(pid,v){_bcFeedRateOverride[pid]=parseFloat(v)||0;renderBioCompare(pond(pid));}
 function bcResetFeedRate(pid){delete _bcFeedRateOverride[pid];renderBioCompare(pond(pid));}
+// ══════ การ์ด "อัตรารอด" — วงกลมโชว์ค่ากรอกเองล่าสุด + เทียบกับตัวประมาณจากอาหารจริง (getBioCompareCalc) + แนวโน้มย้อนหลังในรอบนี้ ══════
+function survRingColor(pct){return pct>=70?'var(--ok)':pct>=50?'var(--w)':'var(--d)';}
+function renderSurvivalCard(p){
+  const card=document.getElementById('pd-survival-card');if(!card)return;
+  const samples=(p.samples||[]).filter(s=>s.survivalRate!=null&&s.survivalRate!=='').slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
+  if(!samples.length){
+    card.innerHTML=`<div style="color:var(--tx3);font-size:13px;padding:7px 0">ยังไม่มีข้อมูลอัตรารอด — กรอกได้ตอนบันทึก "สุ่มตัวอย่าง"</div>`;
+    return;
+  }
+  const lat=samples[samples.length-1];
+  const prev=samples.length>1?samples[samples.length-2]:null;
+  const pct=parseFloat(lat.survivalRate);
+  const r=30,circ=2*Math.PI*r;
+  const offset=circ*(1-Math.min(100,Math.max(0,pct))/100);
+  const ringColor=survRingColor(pct);
+  const age=lat.age||(p.startDate?dDiff(p.startDate,lat.date):null);
+  let trendHtml='';
+  if(prev){
+    const diff=Math.round((pct-parseFloat(prev.survivalRate))*10)/10;
+    if(Math.abs(diff)>=0.1){
+      trendHtml=`<div class="pd-surv-trend ${diff<0?'down':'up'}">${diff<0?'▼':'▲'} ${diff<0?'ลดลง':'เพิ่มขึ้น'} ${Math.abs(diff)}% จากครั้งก่อน (${prev.survivalRate}%)</div>`;
+    }
+  }
+  const bc=getBioCompareCalc(p);
+  let cmpHtml='';
+  if(bc){
+    cmpHtml=`
+    <div class="pd-surv-cmp-row">
+      <div class="pd-surv-cmp-lbl"><b>อัตรารอดโดยประมาณ (จากอาหารจริง)</b><span class="sub">คำนวณย้อนกลับจากยอดอาหารสะสมเทียบ feeding rate มาตรฐาน</span></div>
+      <div style="text-align:right">
+        <span class="pd-surv-cmp-val" style="color:${bc.delta>=10?'var(--w)':'var(--ok)'}">${bc.docImpliedSurvival.toFixed(1)}%</span>
+        <div style="font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;margin-top:3px;display:inline-block;color:${bc.delta>=10?'var(--w)':'var(--ok)'};background:${bc.delta>=10?'var(--wb)':'var(--ob)'}">ต่างกัน ${bc.delta.toFixed(1)}%</div>
+      </div>
+    </div>
+    <div class="pd-surv-cmp-row">
+      <div class="pd-surv-cmp-lbl"><b>Biomass ล่าสุด (ประเมิน)</b><span class="sub">ABW × ยอดปล่อย × อัตรารอดที่กรอกเอง</span></div>
+      <div class="pd-surv-cmp-val">${Math.round(bc.farmBiomass).toLocaleString()} กก.</div>
+    </div>
+    ${bc.delta>=10?`<div class="ai ${bc.bannerCls}" style="margin-top:10px"><span>${bc.bannerIcon}</span><div>${bc.bannerTxt}</div></div>`:''}`;
+  }else{
+    cmpHtml=`<div style="color:var(--tx3);font-size:12px;padding:6px 0">ยังไม่มีข้อมูลอาหารล่าสุด — กรอกอาหารวันนี้เพื่อเทียบกับตัวประมาณจากอาหารจริง</div>`;
+  }
+  const chartSamples=samples.slice(-6);
+  const maxV=Math.max(...chartSamples.map(s=>parseFloat(s.survivalRate)));
+  const chartHtml=chartSamples.length>1?`<div class="pd-surv-chart">${chartSamples.map(s=>{
+    const v=parseFloat(s.survivalRate);
+    const h=maxV>0?Math.max(8,v/maxV*100):8;
+    const sAge=s.age||(p.startDate?dDiff(p.startDate,s.date):null);
+    return`<div class="pd-surv-bar" style="height:${h}%;background:${s===lat?'linear-gradient(180deg,var(--p),var(--pd))':'linear-gradient(180deg,var(--in),#7DB4EA)'}"><span class="v">${v}%</span><span class="lbl">${sAge!=null?'DOC '+sAge:fD(s.date)}</span></div>`;
+  }).join('')}</div>`:'';
+  card.innerHTML=`
+    <div class="pd-surv-hero">
+      <div class="pd-surv-ring">
+        <svg viewBox="0 0 76 76">
+          <circle class="bgc" cx="38" cy="38" r="${r}"></circle>
+          <circle class="fgc" cx="38" cy="38" r="${r}" stroke="${ringColor}" stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}"></circle>
+        </svg>
+        <div class="val" style="color:${ringColor}">${pct}%</div>
+      </div>
+      <div class="pd-surv-meta">
+        <div class="pd-surv-src">📝 กรอกเองจากสุ่มตัวอย่างล่าสุด</div>
+        <div class="pd-surv-date">${fD(lat.date)}${age!=null?` (อายุ ${age} วัน)`:''}</div>
+        ${trendHtml}
+      </div>
+    </div>
+    ${cmpHtml}
+    ${chartHtml?`<div class="card-sub" style="margin-top:14px">แนวโน้มอัตรารอดตลอดรอบเลี้ยง (สุ่มตัวอย่าง ${chartSamples.length} ครั้งล่าสุด)</div>${chartHtml}`:''}
+  `;
+}
 // ══════ เทียบกับรอบก่อน: ตอบคำถาม "รอบนี้โตช้ากว่ารอบที่แล้วไหม" โดยเทียบที่ DOC เดียวกัน ══════
 const _bmMode={}; // เก็บโหมดที่เลือก (prev/sibling) ต่อบ่อ ระหว่างอยู่ในหน้านี้
 function bmBuildSeries(samples,feedLog,release){
