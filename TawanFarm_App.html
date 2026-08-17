@@ -4254,7 +4254,8 @@ function getCumFeed(p){return(p.feedLog||[]).reduce((s,r)=>s+(r.totalFeed||0),0)
 function getLatestBiomass(p){
   const s=(p.samples||[]);if(!s.length)return null;
   const lat=s[s.length-1];if(!lat.abw||!lat.survivalRate)return null;
-  return lat.abw*pRelease(p)*(lat.survivalRate/100)/1000;
+  // ⚠️ อัตรารอดของฟาร์มอ้างอิงกับ "ยอดสั่งซื้อ" (p.stock) เท่านั้น ไม่รวมยอดแถม (p.stockBonus) — ตามธรรมเนียมที่ฟาร์มใช้จริง ต่างจาก pRelease(p) ที่ใช้กับจุดอื่น (ความหนาแน่น/ต้นทุนต่อตัว/อาหารต่อแสนตัว) ที่ต้องนับยอดปล่อยจริงทั้งหมด
+  return lat.abw*(p.stock||0)*(lat.survivalRate/100)/1000;
 }
 function getFCR(p){const f=getCumFeed(p);const b=getLatestBiomass(p);if(!b||b<=0||f<=0)return null;return(f/b).toFixed(2)}
 function getPDG(samples){
@@ -5076,10 +5077,10 @@ function fcRisingTrend(p,key,margin){return _fcTrend(_fcVals(p.records,key,4),ma
 // FCR เฉพาะช่วงระหว่าง 2 ครั้งสุ่มล่าสุด (ไม่ใช่ FCR สะสม) — เผยประสิทธิภาพอาหารล่าสุดที่ FCR สะสมอาจกลบไว้ (ตามหลัก "แนวโน้มสำคัญกว่าค่าสะสม")
 function fcPeriodFCR(p){
   const samples=(p.samples||[]).filter(s=>s.date&&s.abw!=null&&s.abw!==''&&s.survivalRate!=null&&s.survivalRate!=='').slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
-  if(samples.length<2||!pRelease(p))return null;
+  if(samples.length<2||!p.stock)return null;
   const a=samples[samples.length-2],b=samples[samples.length-1];
-  const bioA=a.abw*(a.survivalRate/100)*pRelease(p)/1000;
-  const bioB=b.abw*(b.survivalRate/100)*pRelease(p)/1000;
+  const bioA=a.abw*(a.survivalRate/100)*(p.stock||0)/1000;
+  const bioB=b.abw*(b.survivalRate/100)*(p.stock||0)/1000;
   const gain=bioB-bioA;if(gain<=0)return null;
   const feedSum=(p.feedLog||[]).filter(r=>r.date>a.date&&r.date<=b.date).reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0);
   if(feedSum<=0)return null;
@@ -5571,7 +5572,8 @@ function getBioCompareCalc(p){
   const lat=samples.length?samples[samples.length-1]:null;
   const feedLog=p.feedLog||[];const latFeed=feedLog.length?feedLog[feedLog.length-1]:null;
   if(!lat||!lat.abw||lat.survivalRate==null||!latFeed||!latFeed.totalFeed)return null;
-  const abw=lat.abw,todayFeed=latFeed.totalFeed,release=pRelease(p);
+  // ⚠️ อัตรารอดอิงกับยอดสั่งซื้อ (p.stock) ไม่รวมยอดแถม — ตามธรรมเนียมฟาร์ม
+  const abw=lat.abw,todayFeed=latFeed.totalFeed,release=p.stock||0;
   const age=lat.age||(p.startDate?dDiff(p.startDate,lat.date||today()):null);
   const docRate=bcFeedRateFormula(age,abw);
   const auto=!(p.id in _bcFeedRateOverride);
@@ -5740,13 +5742,13 @@ function bmGetRef(mode,p){
     const hist=(p.cropHistory||[]).filter(c=>(c.samples||[]).length);
     if(!hist.length)return null;
     const c=hist[hist.length-1];
-    return{series:bmBuildSeries(c.samples,c.feedLog,(c.stock||0)+(c.stockBonus||0)),hatchery:c.hatchery||'-',label:`รอบที่ ${c.cropNum}/${yearBE(c.cropYear)} (ปิดแล้ว)`};
+    return{series:bmBuildSeries(c.samples,c.feedLog,(c.stock||0)),hatchery:c.hatchery||'-',label:`รอบที่ ${c.cropNum}/${yearBE(c.cropYear)} (ปิดแล้ว)`};
   }
   if(mode==='sibling'){
     const sib=bmFindSibling(p);if(!sib)return null;
     const sameHatchery=!!(p.hatchery&&p.hatchery.trim()&&sib.hatchery&&sib.hatchery.trim().toLowerCase()===p.hatchery.trim().toLowerCase());
     const densNote=`หนาแน่น ${dens(sib)} ตัว/ตรม.`;
-    return{series:bmBuildSeries(sib.samples,sib.feedLog,pRelease(sib)),hatchery:sib.hatchery||'-',label:`บ่อ ${sib.name} (กำลังเลี้ยง — ${densNote}${sameHatchery?', แหล่งลูกกุ้งเดียวกัน':''})`};
+    return{series:bmBuildSeries(sib.samples,sib.feedLog,(sib.stock||0)),hatchery:sib.hatchery||'-',label:`บ่อ ${sib.name} (กำลังเลี้ยง — ${densNote}${sameHatchery?', แหล่งลูกกุ้งเดียวกัน':''})`};
   }
   return null;
 }
@@ -5789,7 +5791,7 @@ function renderCropBenchmark(p){
   if(mode==='prev'&&!availPrev)mode='sibling';
   if(mode==='sibling'&&!availSibling)mode='prev';
   const ref=bmGetRef(mode,p);
-  const curSeries=bmBuildSeries(p.samples,p.feedLog,pRelease(p));
+  const curSeries=bmBuildSeries(p.samples,p.feedLog,(p.stock||0));
   const curAbw=curSeries.abwAtAge(curAge),refAbw=ref.series.abwAtAge(curAge);
   const curSurv=curSeries.survivalAtAge(curAge),refSurv=ref.series.survivalAtAge(curAge);
   const curFcr=getFCR(p),refFcrRaw=ref.series.fcrAtAge(curAge);
@@ -9025,7 +9027,7 @@ function calcBiomass(){
   const el=document.getElementById('sp-biomass');
   if(!pid||!abw||!surv){el.value='';return}
   const p=pond(pid);if(!p)return;
-  el.value=(pRelease(p)*(surv/100)*abw/1000).toFixed(0);
+  el.value=((p.stock||0)*(surv/100)*abw/1000).toFixed(0);
   const samps=p.samples||[];const pdgEl=document.getElementById('sp-pdg-info');
   if(samps.length>0){
     const last=samps[samps.length-1];const days=parseInt(document.getElementById('sp-age').value)-last.age;
@@ -9661,7 +9663,7 @@ function trialAdgInRange(p,lo,hi){
   return(rows[rows.length-1].abw-rows[0].abw)/days;
 }
 function trialFcrInRange(p,lo,hi){
-  const release=pRelease(p);if(!release)return null;
+  const release=p.stock||0;if(!release)return null;
   const sStart=trialNearestSampleAtOrBefore(p.samples,lo),sEnd=trialNearestSampleAtOrBefore(p.samples,hi);
   if(!sStart||!sEnd||sStart===sEnd)return null;
   const bStart=trialBiomassAt(sStart,release),bEnd=trialBiomassAt(sEnd,release);
@@ -11659,7 +11661,7 @@ function calcCropEcon(){
   const caught=w&&sz?Math.round(w*sz):0;
   document.getElementById('cm-caught').value=caught||'';
   // survival rate
-  const survival=caught&&pRelease(p)?(caught/pRelease(p)*100):0;
+  const survival=caught&&p.stock?(caught/p.stock*100):0;
   document.getElementById('cm-survival').value=survival?survival.toFixed(1):'';
   // fcr
   const cumFeed=getCumFeed(p);
