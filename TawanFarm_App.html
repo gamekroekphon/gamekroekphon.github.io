@@ -3866,8 +3866,16 @@ function sortedPonds(){
 function today(){return new Date(Date.now()+7*3600000).toISOString().split('T')[0]}
 function dDiff(a,b){return Math.floor((new Date(b)-new Date(a))/86400000)}
 function wqfeedActivePonds(){return D.ponds.filter(p=>{const cls=pondStatusOv(p);return cls!=='prep'&&cls!=='empty'&&cls!=='closed';});}
-// ── บ่อที่กรอกคุณภาพน้ำได้: เหมือน wqfeedActivePonds() แต่รวม "เตรียมบ่อ" ด้วย — ต้องตรวจน้ำก่อนลงกุ้งจริง (ยังไม่มี startDate ก็ตรวจได้) ใช้เฉพาะหน้า "บันทึกคุณภาพน้ำ" จุดเดียว หน้าอื่น (อาหาร/สุ่มตัวอย่าง/โรค ฯลฯ) ที่ต้องมีกุ้งในบ่อจริงยังใช้ wqfeedActivePonds() เหมือนเดิม ──
-function wqEntryPonds(){return D.ponds.filter(p=>{const cls=pondStatusOv(p);return cls!=='empty'&&cls!=='closed';});}
+// ── บ่อที่กรอกคุณภาพน้ำได้: เหมือน wqfeedActivePonds() แต่เพิ่มบ่อ "เตรียมบ่อ" ที่ใกล้ลงกุ้งด้วย — ตรวจน้ำก่อนลงกุ้งจริงเริ่มล่วงหน้า 7 วันก่อนวันลงกุ้งที่วางแผนไว้ (ไม่ใช่ทุกบ่อที่สถานะเตรียม เฉพาะบ่อที่ตั้งวันลงกุ้งไว้แล้วและใกล้ถึงวันนั้น) ใช้เฉพาะหน้า "บันทึกคุณภาพน้ำ" จุดเดียว หน้าอื่น (อาหาร/สุ่มตัวอย่าง/โรค ฯลฯ) ที่ต้องมีกุ้งในบ่อจริงยังใช้ wqfeedActivePonds() เหมือนเดิม ──
+function wqEntryPonds(){
+  return D.ponds.filter(p=>{
+    const cls=pondStatusOv(p);
+    if(cls!=='prep')return cls!=='empty'&&cls!=='closed';
+    const stockDate=p.prepChecklist&&p.prepChecklist.stockDate;
+    if(!stockDate)return false;                      // ยังไม่ตั้งวันลงกุ้ง — ยังไม่ถึงช่วงตรวจน้ำ
+    return dDiff(today(),stockDate)<=7;               // เหลือ ≤7 วันก่อนลงกุ้ง (รวมกรณีเลยกำหนดแล้วยังไม่ได้ลง)
+  });
+}
 // ── อายุกุ้งปัจจุบันของบ่อ (วัน) — ใช้จุดเดียวกันทุกที่ที่ต้องเรียงบ่อตามอายุ/แสดงอายุบ่อที่กำลังเลี้ยงอยู่ — วันลงกุ้ง = อายุ 1 วัน (ไม่ใช่ 0) ตามที่พี่ยืนยัน ──
 function pondCurAge(p){return p&&p.startDate?dDiff(p.startDate,today())+1:0;}
 function sortPondsByAge(list){return list.slice().sort((a,b)=>pondCurAge(b)-pondCurAge(a));}
