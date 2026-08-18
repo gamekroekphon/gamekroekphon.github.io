@@ -3866,6 +3866,8 @@ function sortedPonds(){
 function today(){return new Date(Date.now()+7*3600000).toISOString().split('T')[0]}
 function dDiff(a,b){return Math.floor((new Date(b)-new Date(a))/86400000)}
 function wqfeedActivePonds(){return D.ponds.filter(p=>{const cls=pondStatusOv(p);return cls!=='prep'&&cls!=='empty'&&cls!=='closed';});}
+// ── บ่อที่กรอกคุณภาพน้ำได้: เหมือน wqfeedActivePonds() แต่รวม "เตรียมบ่อ" ด้วย — ต้องตรวจน้ำก่อนลงกุ้งจริง (ยังไม่มี startDate ก็ตรวจได้) ใช้เฉพาะหน้า "บันทึกคุณภาพน้ำ" จุดเดียว หน้าอื่น (อาหาร/สุ่มตัวอย่าง/โรค ฯลฯ) ที่ต้องมีกุ้งในบ่อจริงยังใช้ wqfeedActivePonds() เหมือนเดิม ──
+function wqEntryPonds(){return D.ponds.filter(p=>{const cls=pondStatusOv(p);return cls!=='empty'&&cls!=='closed';});}
 // ── อายุกุ้งปัจจุบันของบ่อ (วัน) — ใช้จุดเดียวกันทุกที่ที่ต้องเรียงบ่อตามอายุ/แสดงอายุบ่อที่กำลังเลี้ยงอยู่ — วันลงกุ้ง = อายุ 1 วัน (ไม่ใช่ 0) ตามที่พี่ยืนยัน ──
 function pondCurAge(p){return p&&p.startDate?dDiff(p.startDate,today())+1:0;}
 function sortPondsByAge(list){return list.slice().sort((a,b)=>pondCurAge(b)-pondCurAge(a));}
@@ -4165,7 +4167,7 @@ function worstOv(a,b){const o={ok:0,warn:1,danger:2};return(o[b]||0)>(o[a]||0)?b
 function pondStatusOv(p){
   if(!Array.isArray(p.records))p.records=[];
   const last=p.records[p.records.length-1];
-  const age=p.startDate?pondCurAge(p):(last?last.age:0);
+  const age=p.startDate?pondCurAge(p):(last&&last.age!=null?last.age:0);
   if(age<=0)return'prep';
   let level='ok';
   if(last){
@@ -4258,7 +4260,8 @@ function calcAge(pfx){
   const d=document.getElementById(pfx+'-date')?.value;
   const el=document.getElementById(pfx+'-age');if(!el)return;
   if(!pid||!d){el.value='';return}
-  const p=pond(pid);if(!p)return;el.value=dDiff(p.startDate,d);
+  const p=pond(pid);if(!p)return;
+  el.value=p.startDate?dDiff(p.startDate,d):'';   // บ่อเตรียม (ยังไม่ลงกุ้ง) ไม่มี startDate — เว้นว่างแทน NaN
 }
 function getCumFeed(p){return(p.feedLog||[]).reduce((s,r)=>s+(r.totalFeed||0),0)}
 // ══════ พาเชียล (จับบางส่วนระหว่างเลี้ยง) — รวมยอดเป็นชุดเดียว ใช้ร่วมกันทุกจุด ══════
@@ -5339,7 +5342,7 @@ function renderPondDetail(id){
   _pdCurPondId=id;
   if(!Array.isArray(p.records))p.records=[];
   const last=p.records[p.records.length-1];
-  const age=p.startDate?pondCurAge(p):(last?last.age:0);
+  const age=p.startDate?pondCurAge(p):(last&&last.age!=null?last.age:0);
   const cls=pondStatusOv(p);
   const reason=reasonOv(p,last,age);
   const badgeTxt={danger:'ต้องดู!',warn:'เฝ้าระวัง',ok:'ปกติ',prep:'กำลังเตรียม'}[cls]||'ปกติ';
@@ -5997,7 +6000,7 @@ function renderOv(){
   const meta=D.ponds.map(p=>{
     if(!Array.isArray(p.records))p.records=[];
     const last=p.records[p.records.length-1];
-    const age=p.startDate?pondCurAge(p):(last?last.age:0);
+    const age=p.startDate?pondCurAge(p):(last&&last.age!=null?last.age:0);
     return{p,last,age,cls:pondStatusOv(p)};
   });
   meta.sort((a,b)=>b.age-a.age);
@@ -8547,7 +8550,7 @@ function initEntry(){
   document.getElementById('ep-fields').innerHTML=PARAMS.filter(p=>!WQ_EXTRA_KEYS.includes(p.key)).map(wqFieldHtml).join('');
   document.getElementById('ep-fields-extra').innerHTML=PARAMS.filter(p=>WQ_EXTRA_KEYS.includes(p.key)).map(wqFieldHtml).join('');
   restoreLastEntry();
-  const activeIds=wqfeedActivePonds().map(p=>p.id);
+  const activeIds=wqEntryPonds().map(p=>p.id);
   let pid=document.getElementById('ep-pond').value;
   if(!pid||!activeIds.includes(pid)){
     const next=epNextUnfilled(null);
@@ -8572,23 +8575,24 @@ function restoreLastEntry(){
   // จำไว้เฉพาะ "บ่อล่าสุดที่เลือก" — วันที่ต้องเป็นวันนี้เสมอ (ฟอร์มเปล่า ไม่ดึงข้อมูลเก่ามาแสดง)
   const el=document.getElementById('ep-pond');if(!el)return;
   const lastPid=localStorage.getItem('tf_lastPondId');
-  if(lastPid&&wqfeedActivePonds().some(p=>p.id===lastPid)){el.value=lastPid}
+  if(lastPid&&wqEntryPonds().some(p=>p.id===lastPid)){el.value=lastPid}
 }
 // ── บ่อถัดไปที่ยังไม่กรอกข้อมูลของวันที่เลือกอยู่ (ใช้ auto-advance หลังบันทึก + ตอนเปิดหน้าครั้งแรก) ──
 function epNextUnfilled(excludeId){
   const d=document.getElementById('ep-date')?.value||today();
-  const list=sortPondsByAge(wqfeedActivePonds());
+  const list=sortPondsByAge(wqEntryPonds());
   return list.find(p=>p.id!==excludeId&&!(p.records||[]).some(r=>r.date===d));
 }
 function renderEpChips(){
   const bar=document.getElementById('ep-chipbar');if(!bar)return;
   const d=document.getElementById('ep-date')?.value||today();
   const activePid=document.getElementById('ep-pond')?.value;
-  const list=sortPondsByAge(wqfeedActivePonds());
+  const list=sortPondsByAge(wqEntryPonds());
   bar.innerHTML=list.map(p=>{
     const done=(p.records||[]).some(r=>r.date===d);
+    const isPrep=pondStatusOv(p)==='prep';
     const cls='pond-chk'+(done?' wq-done':'')+(p.id===activePid?' on':'');
-    return`<span class="${cls}" onclick="selectEPond('${p.id}')">${done?'✓ ':''}บ่อ ${p.name}</span>`;
+    return`<span class="${cls}" onclick="selectEPond('${p.id}')">${done?'✓ ':''}บ่อ ${p.name}${isPrep?' 🧹':''}</span>`;
   }).join('');
   const doneCount=list.filter(p=>(p.records||[]).some(r=>r.date===d)).length;
   const progTxt=document.getElementById('ep-prog-txt');
@@ -8686,7 +8690,8 @@ function saveWQ(){
   if(!pid||!d){showMsg('ep-msg','warn','กรุณาเลือกบ่อและวันที่');return}
   const p=pond(pid);if(!p)return;
   // ข้อ 1: คำนวณอายุอัตโนมัติ — ไม่อ่านจาก input (ป้องกันค่าผิดจากการกรอกมือ)
-  const rec={date:d,age:dDiff(p.startDate,d)};
+  // บ่อเตรียม (ยังไม่ลงกุ้ง จึงไม่มี startDate) เก็บ age เป็น null แทน NaN — เป็นค่าตรวจน้ำก่อนลงกุ้ง ไม่มี "อายุกุ้ง" ให้คำนวณ
+  const rec={date:d,age:p.startDate?dDiff(p.startDate,d):null};
   PARAMS.forEach(pm=>{const v=document.getElementById('ef-'+pm.key)?.value;rec[pm.key]=v===''||v===undefined?null:parseFloat(v)});
   rec.notes=document.getElementById('ep-notes').value;
   const idx=p.records.findIndex(r=>r.date===d);
@@ -8726,7 +8731,7 @@ function renderWQTable(){
     rec.map((r,i)=>{
       // ข้อ 1: คำนวณอายุจากวันปล่อย ไม่ใช้ค่าที่เก็บไว้ (ป้องกันค่าผิดจากการกรอกมือ)
       const ageCalc=p.startDate?dDiff(p.startDate,r.date):r.age;
-      return`<tr class="${i===0?'hi':''}""><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editWQ('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteWQ('${pid}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc}</td>${show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v,r);
+      return`<tr class="${i===0?'hi':''}""><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editWQ('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteWQ('${pid}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc!=null?ageCalc:'-'}</td>${show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v,r);
         // ข้อ 5: null (ยังไม่กรอก) แสดง – สีเทา / 0 (ค่าจริง) แสดง 0 ตามสถานะ
         const cell=v===null||v===undefined
           ?`<span style="color:var(--tx3);font-size:12px" title="ยังไม่ได้กรอก">–</span>`
@@ -8764,7 +8769,7 @@ function renderPdWqHistory(p){
   const tableHtml=`<div class="pd-hist-tblwrap"><div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวาเพื่อดูทุกค่า →</div><div style="overflow-x:auto"><table class="tbl" style="white-space:nowrap"><thead><tr><th></th><th>วันที่</th><th>อายุ</th>${show.map(pm=>`<th>${pm.lbl}</th>`).join('')}<th>หมายเหตุ</th></tr></thead><tbody>${
     rec.map((r,i)=>{
       const ageCalc=p.startDate?dDiff(p.startDate,r.date):r.age;
-      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdEditWQ('${p.id}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdDeleteWQ('${p.id}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc}</td>${show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v,r);
+      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdEditWQ('${p.id}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdDeleteWQ('${p.id}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc!=null?ageCalc:'-'}</td>${show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v,r);
         const cell=v===null||v===undefined?`<span style="color:var(--tx3);font-size:12px" title="ยังไม่ได้กรอก">–</span>`:`<span style="color:${sc(s)}">${v}</span>`;
         return`<td>${cell}</td>`;}).join('')}<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.notes||'<span style="color:var(--tx3);font-size:12px">–</span>'}</td></tr>`;
     }).join('')}</tbody></table></div></div>`;
@@ -8778,7 +8783,7 @@ function renderPdWqHistory(p){
     }).join('');
     return`<div class="pd-rec-card${i===0?' hi':''}">
       <div class="pd-rec-top">
-        <div class="pd-rec-date"><b>${fD(r.date)}</b><span>อายุ ${ageCalc} วัน</span></div>
+        <div class="pd-rec-date"><b>${fD(r.date)}</b><span>${ageCalc!=null?'อายุ '+ageCalc+' วัน':'ตรวจก่อนลงกุ้ง'}</span></div>
         <div class="pd-rec-actions"><button onclick="pdEditWQ('${p.id}','${r.date}')" title="แก้ไข">✏️</button><button class="del" onclick="pdDeleteWQ('${p.id}','${r.date}')" title="ลบ">🗑️</button></div>
       </div>
       <div class="pd-rec-grid">${items}</div>
@@ -8825,7 +8830,7 @@ function renderPdFeedHistory(p){
     const ageCalc=p.startDate?dDiff(p.startDate,r.date):r.age;
     return`<div class="pd-rec-card${i===0?' hi':''}">
       <div class="pd-rec-top">
-        <div class="pd-rec-date"><b>${fD(r.date)}</b><span>อายุ ${ageCalc} วัน</span></div>
+        <div class="pd-rec-date"><b>${fD(r.date)}</b><span>${ageCalc!=null?'อายุ '+ageCalc+' วัน':''}</span></div>
         <div class="pd-rec-actions"><button onclick="pdEditFeed('${p.id}','${r.date}')" title="แก้ไข">✏️</button><button class="del" onclick="pdDeleteFeedEntry('${p.id}','${r.date}')" title="ลบ">🗑️</button></div>
       </div>
       <div class="pd-rec-feedrow"><span>ยี่ห้อ/เบอร์: ${r.feedBrand||'-'}</span><b>${(r.totalFeed||0).toLocaleString()} กก.</b></div>
