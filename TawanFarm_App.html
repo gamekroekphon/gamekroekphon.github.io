@@ -4298,7 +4298,7 @@ function cropHarvestResult(c){
   out.totalWeightAll=allKg;
   const feed=(c.feedLog||[]).reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0);
   if(feed>0&&allKg>0)out.fcr=+(feed/allKg).toFixed(2);
-  const stock=parseFloat(c.stock)||0;                        // ยอดสั่งซื้อ (ไม่รวมแถม) ตาม entry #174
+  const stock=(parseFloat(c.stock)||0)+(parseFloat(c.stockBonus)||0);   // ยอดปล่อยจริง = สั่งซื้อ+แถม
   const closeCount=parseFloat(hr.caught)||0;
   if(stock>0&&(closeCount+pt.count)>0){
     out.caught=Math.round(closeCount+pt.count);
@@ -4312,11 +4312,11 @@ function cropHarvestResult(c){
   return out;
 }
 // ── biomass ของกุ้งที่ "ยังอยู่ในบ่อ" ตอนนี้ — หักตัวที่จับพาเชียลไปแล้วออก ──
-// ⚠️ อัตรารอดของฟาร์มอ้างอิงกับ "ยอดสั่งซื้อ" (p.stock) เท่านั้น ไม่รวมยอดแถม (p.stockBonus) — ตามธรรมเนียมที่ฟาร์มใช้จริง ต่างจาก pRelease(p) ที่ใช้กับจุดอื่น (ความหนาแน่น/ต้นทุนต่อตัว/อาหารต่อแสนตัว) ที่ต้องนับยอดปล่อยจริงทั้งหมด
+// ⚠️ ทุกสูตรที่อิงกับ "จำนวนลูกกุ้ง" ในแอปใช้ pRelease(p) = ยอดสั่งซื้อ + ยอดแถม เสมอ (อัตรารอด/biomass/FCR/ความหนาแน่น/อาหารต่อแสนตัว/% กุ้งตาย) — ตามที่พี่ยืนยัน entry #179
 function getLatestBiomass(p){
   const s=(p.samples||[]);if(!s.length)return null;
   const lat=s[s.length-1];if(!lat.abw||!lat.survivalRate)return null;
-  const aliveCount=(p.stock||0)*(lat.survivalRate/100)-partialTotals(p.partialHarvests).count;
+  const aliveCount=pRelease(p)*(lat.survivalRate/100)-partialTotals(p.partialHarvests).count;
   return Math.max(0,aliveCount)*lat.abw/1000;
 }
 // ── FCR ประเมิน = อาหารสะสม ÷ (กุ้งที่ยังอยู่ในบ่อ + ที่พาเชียลไปแล้ว) — อาหารถูกกินโดยกุ้งทั้ง 2 ส่วน ──
@@ -5146,10 +5146,10 @@ function fcRisingTrend(p,key,margin){return _fcTrend(_fcVals(p.records,key,4),ma
 // FCR เฉพาะช่วงระหว่าง 2 ครั้งสุ่มล่าสุด (ไม่ใช่ FCR สะสม) — เผยประสิทธิภาพอาหารล่าสุดที่ FCR สะสมอาจกลบไว้ (ตามหลัก "แนวโน้มสำคัญกว่าค่าสะสม")
 function fcPeriodFCR(p){
   const samples=(p.samples||[]).filter(s=>s.date&&s.abw!=null&&s.abw!==''&&s.survivalRate!=null&&s.survivalRate!=='').slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
-  if(samples.length<2||!p.stock)return null;
+  if(samples.length<2||!pRelease(p))return null;
   const a=samples[samples.length-2],b=samples[samples.length-1];
-  const bioA=a.abw*(a.survivalRate/100)*(p.stock||0)/1000;
-  const bioB=b.abw*(b.survivalRate/100)*(p.stock||0)/1000;
+  const bioA=a.abw*(a.survivalRate/100)*pRelease(p)/1000;
+  const bioB=b.abw*(b.survivalRate/100)*pRelease(p)/1000;
   // ── ถ้ามีพาเชียลคั่นระหว่าง 2 ครั้งสุ่ม ต้องบวกน้ำหนักที่จับออกไปกลับเข้า "เนื้อที่โตขึ้น" ไม่งั้น gain ติดลบ/ต่ำเกินจริง แล้ว FCR ช่วงนั้นเพี้ยน ──
   const phBetween=partialTotals((p.partialHarvests||[]).filter(r=>r.date>a.date&&r.date<=b.date)).kg;
   const gain=bioB+phBetween-bioA;if(gain<=0)return null;
@@ -5646,8 +5646,7 @@ function getBioCompareCalc(p){
   const lat=samples.length?samples[samples.length-1]:null;
   const feedLog=p.feedLog||[];const latFeed=feedLog.length?feedLog[feedLog.length-1]:null;
   if(!lat||!lat.abw||lat.survivalRate==null||!latFeed||!latFeed.totalFeed)return null;
-  // ⚠️ อัตรารอดอิงกับยอดสั่งซื้อ (p.stock) ไม่รวมยอดแถม — ตามธรรมเนียมฟาร์ม
-  const abw=lat.abw,todayFeed=latFeed.totalFeed,release=p.stock||0;
+  const abw=lat.abw,todayFeed=latFeed.totalFeed,release=pRelease(p);
   const age=lat.age||(p.startDate?dDiff(p.startDate,lat.date||today()):null);
   const docRate=bcFeedRateFormula(age,abw);
   const auto=!(p.id in _bcFeedRateOverride);
@@ -5816,13 +5815,13 @@ function bmGetRef(mode,p){
     const hist=(p.cropHistory||[]).filter(c=>(c.samples||[]).length);
     if(!hist.length)return null;
     const c=hist[hist.length-1];
-    return{series:bmBuildSeries(c.samples,c.feedLog,(c.stock||0)),hatchery:c.hatchery||'-',label:`รอบที่ ${c.cropNum}/${yearBE(c.cropYear)} (ปิดแล้ว)`};
+    return{series:bmBuildSeries(c.samples,c.feedLog,(c.stock||0)+(c.stockBonus||0)),hatchery:c.hatchery||'-',label:`รอบที่ ${c.cropNum}/${yearBE(c.cropYear)} (ปิดแล้ว)`};
   }
   if(mode==='sibling'){
     const sib=bmFindSibling(p);if(!sib)return null;
     const sameHatchery=!!(p.hatchery&&p.hatchery.trim()&&sib.hatchery&&sib.hatchery.trim().toLowerCase()===p.hatchery.trim().toLowerCase());
     const densNote=`หนาแน่น ${dens(sib)} ตัว/ตรม.`;
-    return{series:bmBuildSeries(sib.samples,sib.feedLog,(sib.stock||0)),hatchery:sib.hatchery||'-',label:`บ่อ ${sib.name} (กำลังเลี้ยง — ${densNote}${sameHatchery?', แหล่งลูกกุ้งเดียวกัน':''})`};
+    return{series:bmBuildSeries(sib.samples,sib.feedLog,pRelease(sib)),hatchery:sib.hatchery||'-',label:`บ่อ ${sib.name} (กำลังเลี้ยง — ${densNote}${sameHatchery?', แหล่งลูกกุ้งเดียวกัน':''})`};
   }
   return null;
 }
@@ -5865,7 +5864,7 @@ function renderCropBenchmark(p){
   if(mode==='prev'&&!availPrev)mode='sibling';
   if(mode==='sibling'&&!availSibling)mode='prev';
   const ref=bmGetRef(mode,p);
-  const curSeries=bmBuildSeries(p.samples,p.feedLog,(p.stock||0));
+  const curSeries=bmBuildSeries(p.samples,p.feedLog,pRelease(p));
   const curAbw=curSeries.abwAtAge(curAge),refAbw=ref.series.abwAtAge(curAge);
   const curSurv=curSeries.survivalAtAge(curAge),refSurv=ref.series.survivalAtAge(curAge);
   const curFcr=getFCR(p),refFcrRaw=ref.series.fcrAtAge(curAge);
@@ -9108,7 +9107,7 @@ function calcBiomass(){
   const el=document.getElementById('sp-biomass');
   if(!pid||!abw||!surv){el.value='';return}
   const p=pond(pid);if(!p)return;
-  el.value=((p.stock||0)*(surv/100)*abw/1000).toFixed(0);
+  el.value=(pRelease(p)*(surv/100)*abw/1000).toFixed(0);
   const samps=p.samples||[];const pdgEl=document.getElementById('sp-pdg-info');
   if(samps.length>0){
     const last=samps[samps.length-1];const days=parseInt(document.getElementById('sp-age').value)-last.age;
@@ -9333,8 +9332,8 @@ function renderMtSummary(){
   const log=cropMortalityLog(p);
   const todayCount=log.filter(r=>r.date===today()).reduce((s,r)=>s+(r.count||0),0);
   const cumCount=log.reduce((s,r)=>s+(r.count||0),0);
-  // ── หารด้วย "ยอดสั่งซื้อ" (p.stock) ให้อยู่ฐานเดียวกับอัตรารอด — เดิมหารด้วยยอดปล่อยรวมแถม ทำให้ 2 ตัวเลขนี้เอามาบวก/ลบกันไม่ได้ ──
-  const pct=(p.stock||0)>0?(cumCount/p.stock*100):null;
+  // ── หารด้วยยอดปล่อยจริง (สั่งซื้อ+แถม) ให้อยู่ฐานเดียวกับอัตรารอด ──
+  const pct=pRelease(p)>0?(cumCount/pRelease(p)*100):null;
   const todayCls=todayCount>0?(todayCount>=mtAvg7(p)*2&&todayCount>=3?'danger':'warn'):'ok';
   el.innerHTML=`<div class="ovd-sum-strip">
     <div class="ovd-sum-chip ${todayCls}"><div class="n">${todayCount}</div><div class="l">ตายวันนี้</div></div>
@@ -9754,7 +9753,7 @@ function trialAdgInRange(p,lo,hi){
   return(rows[rows.length-1].abw-rows[0].abw)/days;
 }
 function trialFcrInRange(p,lo,hi){
-  const release=p.stock||0;if(!release)return null;
+  const release=pRelease(p);if(!release)return null;
   const sStart=trialNearestSampleAtOrBefore(p.samples,lo),sEnd=trialNearestSampleAtOrBefore(p.samples,hi);
   if(!sStart||!sEnd||sStart===sEnd)return null;
   const bStart=trialBiomassAt(sStart,release),bEnd=trialBiomassAt(sEnd,release);
@@ -10806,7 +10805,7 @@ function renderManage(){
     // ── บ่อที่ "ยังไม่ลงกุ้ง" (startDate ว่าง) แต่ log ยังไม่ว่างจริง — ข้อมูลรอบเก่าค้างจากปิดรอบ (เช่น sync ดันกลับ) ไม่ได้ตั้งใจ ──
     const orphaned=!active&&!p.startDate&&[p.records.length,(p.feedLog||[]).length,(p.samples||[]).length,(p.labResults||[]).length,(p.waterLog||[]).length,(p.chemLog||[]).length,(p.partialHarvests||[]).length].some(n=>n>0);
     const cleanupBtn=orphaned?`<button class="btn btn-d btn-sm" title="ล้างข้อมูลค้างจากรอบก่อน" onclick="cleanupOrphanData('${p.id}')">🧹</button>`:'';
-    return`<tr><td><strong style="color:var(--p)">${p.name}</strong></td><td>${p.stock.toLocaleString()}</td><td>${p.size}</td><td>${dens(p)} ตัว/ตรม.</td><td>${p.startDate?fD(p.startDate):'-'}</td><td>${ageCell}</td><td>${mgCountCell(p.records.length,active)}</td><td>${mgCountCell((p.feedLog||[]).length,active)}</td><td>${mgCountCell((p.samples||[]).length,active)}</td><td>${mgCountCell((p.labResults||[]).length,active)}</td><td>${adgCell}</td><td style="display:flex;gap:6px">${cleanupBtn}<button class="btn btn-s btn-sm" onclick="editPond('${p.id}')">✏️</button><button class="btn btn-d btn-sm" onclick="delPond('${p.id}')">🗑️</button></td></tr>`;
+    return`<tr><td><strong style="color:var(--p)">${p.name}</strong></td><td>${pRelease(p).toLocaleString()}${p.stockBonus?`<div style="font-size:var(--fs10);color:var(--tx3)">สั่ง ${p.stock.toLocaleString()} + แถม ${p.stockBonus.toLocaleString()}</div>`:''}</td><td>${p.size}</td><td>${dens(p)} ตัว/ตรม.</td><td>${p.startDate?fD(p.startDate):'-'}</td><td>${ageCell}</td><td>${mgCountCell(p.records.length,active)}</td><td>${mgCountCell((p.feedLog||[]).length,active)}</td><td>${mgCountCell((p.samples||[]).length,active)}</td><td>${mgCountCell((p.labResults||[]).length,active)}</td><td>${adgCell}</td><td style="display:flex;gap:6px">${cleanupBtn}<button class="btn btn-s btn-sm" onclick="editPond('${p.id}')">✏️</button><button class="btn btn-d btn-sm" onclick="delPond('${p.id}')">🗑️</button></td></tr>`;
   }).join('');
 }
 // ── ล้างข้อมูลค้าง (feedLog/samples/labResults ฯลฯ) ของบ่อที่ปิดรอบไปแล้วแต่ log ไม่ถูกเคลียร์ตาม (เช่น sync ดันข้อมูลรอบเก่ากลับมา) — ใช้ path เดียวกับตอนปิดรอบจริง (tombstone แล้วล้าง array) ──
@@ -11756,8 +11755,8 @@ function calcCropEcon(){
   const caughtClose=w&&sz?Math.round(w*sz):0;
   const caught=caughtClose+Math.round(pt.count);
   document.getElementById('cm-caught').value=caught||'';
-  // survival rate — หารด้วยยอดสั่งซื้อ (ไม่รวมแถม) ตาม entry #174
-  const survival=caught&&p.stock?(caught/p.stock*100):0;
+  // survival rate — หารด้วยยอดปล่อยจริง (สั่งซื้อ+แถม) ตาม entry #179
+  const survival=caught&&pRelease(p)?(caught/pRelease(p)*100):0;
   document.getElementById('cm-survival').value=survival?survival.toFixed(1):'';
   // fcr = อาหารสะสมทั้งรอบ ÷ ผลผลิตรวมทั้งรอบ
   const cumFeed=getCumFeed(p);
