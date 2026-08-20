@@ -2090,7 +2090,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
           <div class="fg"><label class="fl" for="cm-size">ไซส์จับเฉลี่ย (ตัว/กก.)</label><input type="number" class="fi" id="cm-size" step="1" placeholder="60"></div>
           <div class="fg" style="grid-column:1/-1"><div id="cm-partial-box" style="display:none;background:var(--pl);border:1px solid var(--p);border-radius:9px;padding:9px 12px"></div></div>
           <div class="fg"><label class="fl" for="cm-caught">ตัวที่จับได้ทั้งรอบ (ตัว) <span style="font-weight:400;color:var(--tx3)">(รวมพาเชียล)</span></label><input type="number" class="fi" id="cm-caught" placeholder="คำนวณจาก กก.×ไซส์"></div>
-          <div class="fg"><label class="fl" for="cm-survival">อัตรารอด (%)</label><input type="number" class="fi" id="cm-survival" step="0.1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--sf2)"></div>
+          <div class="fg"><label class="fl" for="cm-survival">อัตรารอด — ยอดปล่อยจริง (%) <span style="font-weight:400;color:var(--tx3)">(สั่งซื้อ+แถม)</span></label><input type="number" class="fi" id="cm-survival" step="0.1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--sf2)"></div>
+          <div class="fg"><label class="fl" for="cm-survival-order">อัตรารอด — ยอดสั่งซื้อ (%) <span style="font-weight:400;color:var(--tx3)">(ไม่รวมแถม · ไว้เทียบกับสมุดจด)</span></label><input type="number" class="fi" id="cm-survival-order" step="0.1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--sf2)"></div>
           <div class="fg"><label class="fl" for="cm-fcr">FCR สุดท้าย <span style="font-weight:400;color:var(--tx3)">(อัตราแลกเนื้อ)</span></label><input type="number" class="fi" id="cm-fcr" step="0.01" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--sf2)"></div>
           <div class="fg"><label class="fl" for="cm-price">ราคาขาย (บาท/กก.)</label><input type="number" class="fi" id="cm-price" step="0.5" placeholder="130"></div>
           <div class="fg"><label class="fl" for="cm-buyer">แพที่จับ / ผู้ซื้อ</label><input type="text" class="fi" id="cm-buyer" placeholder="ชื่อแพ / บริษัท"></div>
@@ -4285,24 +4286,29 @@ function partialTotals(list){
   });
   return{kg,count,baht};
 }
-// ── harvestResult ของรอบที่ปิดแล้ว "ฉบับคำนวณใหม่ให้นับพาเชียลด้วย" — ไม่แตะข้อมูลที่บันทึกไว้ใน Firebase เลย
-//    คำนวณสดตอนแสดงผลเท่านั้น (ย้อนกลับได้ ถ้าไม่ถูกใจแค่เลิกเรียกฟังก์ชันนี้) — รอบที่ไม่มีพาเชียลคืนค่าเดิมทุกตัว ไม่กระทบอะไร
+// ── harvestResult ของรอบที่ปิดแล้ว "ฉบับคำนวณใหม่" — ไม่แตะข้อมูลที่บันทึกไว้ใน Firebase เลย คำนวณสดตอนแสดงผลเท่านั้น
+//    (ย้อนกลับได้ ถ้าไม่ถูกใจแค่เลิกเรียกฟังก์ชันนี้) ทำ 2 อย่าง:
+//      1) นับพาเชียลเข้า FCR/อัตรารอด/รายได้ (entry #176)
+//      2) คำนวณ FCR/อัตรารอด ใหม่จากฐาน "ยอดสั่งซื้อ + แถม" เสมอ แม้รอบนั้นไม่มีพาเชียล (entry #180)
+//         — จำเป็นเพราะรอบที่ปิดช่วง entry #174→#179 ถูกบันทึกด้วยฐาน "ยอดสั่งซื้ออย่างเดียว" ถ้าไม่คำนวณใหม่จะค้างอยู่คนละฐานกับรอบใหม่
 //    ⚠️ totalWeight คงไว้เป็น "น้ำหนักปิดบ่อ" เหมือนเดิมโดยตั้งใจ เพราะ getCloseSummary()/hsBuyersFromApp() บวกพาเชียลแยกอยู่แล้ว ถ้าไปรวมตรงนี้ด้วยจะนับซ้ำ 2 เท่า ──
 function cropHarvestResult(c){
   const hr=c&&c.harvestResult;if(!hr)return hr;
+  const stock=(parseFloat(c.stock)||0)+(parseFloat(c.stockBonus)||0);   // ยอดปล่อยจริง = สั่งซื้อ+แถม
   const pt=partialTotals(c.partialHarvests);
-  if(!(pt.kg>0))return hr;                                   // ไม่มีพาเชียล = ค่าเดิมถูกอยู่แล้ว
-  const out={...hr,_phAdj:true,_phKg:pt.kg};                 // _phAdj = ธงบอก UI ว่าแถวนี้คำนวณใหม่แล้ว
   const closeKg=parseFloat(hr.totalWeight)||0;
   const allKg=closeKg+pt.kg;
-  out.totalWeightAll=allKg;
-  const feed=(c.feedLog||[]).reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0);
-  if(feed>0&&allKg>0)out.fcr=+(feed/allKg).toFixed(2);
-  const stock=(parseFloat(c.stock)||0)+(parseFloat(c.stockBonus)||0);   // ยอดปล่อยจริง = สั่งซื้อ+แถม
   const closeCount=parseFloat(hr.caught)||0;
-  if(stock>0&&(closeCount+pt.count)>0){
-    out.caught=Math.round(closeCount+pt.count);
-    out.survivalRate=+((closeCount+pt.count)/stock*100).toFixed(1);
+  const allCount=closeCount+pt.count;
+  const feed=(c.feedLog||[]).reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0);
+  const out={...hr};
+  if(pt.kg>0){out._phAdj=true;out._phKg=pt.kg;out.totalWeightAll=allKg;}   // _phAdj = ธงบอก UI ว่าแถวนี้รวมพาเชียลแล้ว
+  if(feed>0&&allKg>0)out.fcr=+(feed/allKg).toFixed(2);
+  if(allCount>0){
+    out.caught=Math.round(allCount);
+    if(stock>0)out.survivalRate=+(allCount/stock*100).toFixed(1);              // ฐานหลัก: ยอดปล่อยจริง (สั่งซื้อ+แถม)
+    const order=parseFloat(c.stock)||0;
+    if(order>0)out.survivalRateOrder=+(allCount/order*100).toFixed(1);          // ฐานเทียบ: ยอดสั่งซื้ออย่างเดียว (เท่ากับสมุดจดมือ)
   }
   if(pt.baht>0){
     const closeBaht=hr.revenue!=null?(parseFloat(hr.revenue)||0):(closeKg*(parseFloat(hr.price)||0));
@@ -10345,7 +10351,8 @@ function closeSummaryHtml(p,s,opt){
     ${row('จำนวนปล่อย (ตัว)',s.stock?s.stock.toLocaleString():null)}
     ${row('ไซส์ปิดบ่อ (ตัว/กก.)',s.closeSize)}
     ${row('น้ำหนักรวม (กก.)',s.totalWeight?s.totalWeight.toLocaleString():null)}
-    ${row('อัตรารอด (%)',s.survivalRate)}
+    ${row('อัตรารอด — ยอดปล่อยจริง (%)',s.survivalRate)}
+    ${row('อัตรารอด — ยอดสั่งซื้อ (%)',s.survivalRateOrder)}
     ${row('FCR (อัตราแลกเนื้อ)',s.fcr)}
     ${row('ADG/อัตราการเติบโต (กรัม/วัน)',s.adg)}
     ${row('Yield/ผลผลิตต่อไร่ (กก./ไร่)',s.yieldPerRai)}
@@ -10449,6 +10456,7 @@ function getCloseSummary(p,cropIdx){
   const finalWeightG=closeSize?1000/closeSize:null;
   const adg=(finalWeightG!=null&&ageDays)?+(((finalWeightG-(plWeight||0))/ageDays).toFixed(3)):null;
   const survivalRate=harvestResult&&harvestResult.survivalRate?harvestResult.survivalRate:null;
+  const survivalRateOrder=harvestResult&&harvestResult.survivalRateOrder?harvestResult.survivalRateOrder:null;   // ชุดเทียบ: ฐานยอดสั่งซื้ออย่างเดียว
   const yieldPerRai=(totalWeight&&p.size)?+(totalWeight/p.size).toFixed(1):null;
   const notesAll=[notesCrop,...rows.map(r=>r.notes).filter(Boolean)].filter(Boolean).join(' / ');
   const samples=lastCrop?(lastCrop.samples||[]):(p.samples||[]);
@@ -10477,7 +10485,7 @@ function getCloseSummary(p,cropIdx){
   const netProfit=(harvestResult&&harvestResult.netProfit!=null)?harvestResult.netProfit:((revenue!=null&&totalCost!=null)?revenue-totalCost:null);
   const marginPct=(revenue&&netProfit!=null)?+((netProfit/revenue)*100).toFixed(1):null;
   const costPerKg=(totalWeight&&totalCost!=null)?+(totalCost/totalWeight).toFixed(1):null;
-  return{pondName:p.name,cropLabel:lastCrop?`รอบที่ ${lastCrop.cropNum}/${yearBE(lastCrop.cropYear)}`:'(รอบปัจจุบัน ยังไม่ปิด)',hatchery,stock,buyer,price,totalWeight,totalBaht,partialCount,ageDays,totalFeed,fcr,closeSize,adg,survivalRate,yieldPerRai,notesAll,closeDate,startDate,rows,feedLog,samples,
+  return{pondName:p.name,cropLabel:lastCrop?`รอบที่ ${lastCrop.cropNum}/${yearBE(lastCrop.cropYear)}`:'(รอบปัจจุบัน ยังไม่ปิด)',hatchery,stock,buyer,price,totalWeight,totalBaht,partialCount,ageDays,totalFeed,fcr,closeSize,adg,survivalRate,survivalRateOrder,yieldPerRai,notesAll,closeDate,startDate,rows,feedLog,samples,
     costFry,costFeed,costMed,costLime,costLabor,costElec,costFuel,costEquip,costEquipOut,costCatch,pctCaretaker,pctManager,amtCaretaker,amtManager,costChemLegacy,costOtherLegacy,hasCostData,totalCost,revenue,netProfit,marginPct,costPerKg};
 }
 // ===== PDF หน้าเดียว (ใช้เมื่อเลือกบ่อเดียว) — 4 KPI + ข้อมูลย่อ 3 คอลัมน์ + 2 กราฟผู้บริหาร + ต้นทุนต่อกิโล =====
@@ -10503,7 +10511,8 @@ function pdfProdTradeGridHtml(s){
     ${row('ลูกกุ้งจากที่ไหน',s.hatchery)}
     ${row('จำนวนปล่อย',s.stock?s.stock.toLocaleString()+' ตัว':null)}
     ${row('ไซส์ปิดบ่อ',s.closeSize?s.closeSize+' ตัว/กก.':null)}
-    ${row('อัตรารอด',s.survivalRate!=null?s.survivalRate+'%':null)}
+    ${row('อัตรารอด (ยอดปล่อยจริง)',s.survivalRate!=null?s.survivalRate+'%':null)}
+    ${row('อัตรารอด (ยอดสั่งซื้อ)',s.survivalRateOrder!=null?s.survivalRateOrder+'%':null)}
     ${row('FCR',s.fcr)}
     ${row('ADG',s.adg!=null?s.adg+' ก./วัน':null)}
     ${row('Yield/ไร่',s.yieldPerRai!=null?s.yieldPerRai+' กก./ไร่':null)}
@@ -11317,7 +11326,7 @@ function renderClosedDetail(){
   wrap.innerHTML=`
     <div class="g5" style="margin-bottom:16px">
       <div class="metric-card metric-card-accent"><div class="mv">${s.totalWeight?s.totalWeight.toLocaleString():'-'}</div><div class="ml">ผลผลิตรวม (กก.)</div></div>
-      <div class="metric-card metric-card-accent"><div class="mv">${s.survivalRate!=null?s.survivalRate.toFixed(1)+'%':'-'}</div><div class="ml">อัตรารอด</div></div>
+      <div class="metric-card metric-card-accent"><div class="mv">${s.survivalRate!=null?s.survivalRate.toFixed(1)+'%':'-'}</div><div class="ml">อัตรารอด${s.survivalRateOrder!=null?`<div style="font-size:var(--fs10);color:var(--tx3)">ยอดสั่งซื้อ ${s.survivalRateOrder.toFixed(1)}%</div>`:''}</div></div>
       <div class="metric-card metric-card-accent"><div class="mv">${s.fcr||'-'}</div><div class="ml">FCR</div></div>
       <div class="metric-card metric-card-accent"><div class="mv">${s.ageDays||'-'} วัน</div><div class="ml">ระยะเลี้ยง</div></div>
       ${isAdminCh?`<div class="metric-card metric-card-accent"><div class="mv" style="color:var(--ok)">${netSales!=null?Math.round(netSales).toLocaleString():'-'}</div><div class="ml">ยอดขายสุทธิ (บาท)</div></div>`:''}
@@ -11715,6 +11724,7 @@ function openCropModal(pid){
   });
   document.getElementById('cm-cost-catch').value='';
   document.getElementById('cm-survival').value='';
+  {const e=document.getElementById('cm-survival-order');if(e)e.value='';}
   document.getElementById('cm-revenue').value='';
   document.getElementById('cm-profit').value='';
   document.getElementById('cm-notes').value='';
@@ -11755,9 +11765,13 @@ function calcCropEcon(){
   const caughtClose=w&&sz?Math.round(w*sz):0;
   const caught=caughtClose+Math.round(pt.count);
   document.getElementById('cm-caught').value=caught||'';
-  // survival rate — หารด้วยยอดปล่อยจริง (สั่งซื้อ+แถม) ตาม entry #179
+  // ── อัตรารอด 2 ชุด เก็บคู่กันเพื่อเทียบว่าฐานไหนใกล้ความจริงกว่า (พี่ขอ entry #181) ──
+  //    ชุดหลัก = ยอดปล่อยจริง (สั่งซื้อ+แถม) ตาม entry #179 · ชุดเทียบ = ยอดสั่งซื้ออย่างเดียว (ฐานเดียวกับสมุดจดมือของฟาร์ม)
   const survival=caught&&pRelease(p)?(caught/pRelease(p)*100):0;
   document.getElementById('cm-survival').value=survival?survival.toFixed(1):'';
+  const survivalOrder=caught&&p.stock?(caught/p.stock*100):0;
+  const soEl=document.getElementById('cm-survival-order');
+  if(soEl)soEl.value=survivalOrder?survivalOrder.toFixed(1):'';
   // fcr = อาหารสะสมทั้งรอบ ÷ ผลผลิตรวมทั้งรอบ
   const cumFeed=getCumFeed(p);
   const fcr=cumFeed&&totalKg?(cumFeed/totalKg).toFixed(2):'';
@@ -11813,6 +11827,7 @@ function confirmCloseCrop(){
     size:parseInt(document.getElementById('cm-size').value)||null,
     caught:parseInt(document.getElementById('cm-caught').value)||null,
     survivalRate:parseFloat(document.getElementById('cm-survival').value)||null,
+    survivalRateOrder:parseFloat(document.getElementById('cm-survival-order')?.value)||null,   // ชุดเทียบ: หารด้วยยอดสั่งซื้ออย่างเดียว (ฐานเดียวกับสมุดจดมือ)
     fcr:parseFloat(document.getElementById('cm-fcr').value)||null,
     price:parseFloat(document.getElementById('cm-price').value)||null,
     buyer:document.getElementById('cm-buyer').value.trim()||null,
@@ -12570,10 +12585,10 @@ function exportPLCSV(){
       r.costFuel||'',r.costEquip||'',r.costEquipOut||'',r.costCatch||'',
       r.pctCaretaker||'',r.amtCaretaker||'',r.pctManager||'',r.amtManager||'',
       r.costChem||'',r.costOther||'',
-      r.netProfit||'',r.fcr||'',r.survivalRate||'']);
+      r.netProfit||'',r.fcr||'',r.survivalRate||'',r.survivalRateOrder||'']);
   });});
   if(!rows.length){alert('ไม่มีข้อมูลสำหรับ export');return;}
-  const hdr='บ่อ,รอบ,วันปิด,ผลผลิต(กก.),ราคา,รายได้,ต้นทุนลูกกุ้ง,ต้นทุนอาหารกุ้ง,ต้นทุนเวชภัณฑ์,ต้นทุนปูน,ต้นทุนค่าแรง,ต้นทุนค่าไฟฟ้า,ต้นทุนน้ำมัน,อุปกรณ์,อุปกรณ์นอก,ค่าจับกุ้ง,%คนเลี้ยง,ส่วนแบ่งคนเลี้ยง,%ผู้จัดการ,ส่วนแบ่งผู้จัดการ,สารเคมี(เดิม),อื่นๆ(เดิม),กำไรสุทธิ,FCR,อัตรารอด(%)';
+  const hdr='บ่อ,รอบ,วันปิด,ผลผลิต(กก.),ราคา,รายได้,ต้นทุนลูกกุ้ง,ต้นทุนอาหารกุ้ง,ต้นทุนเวชภัณฑ์,ต้นทุนปูน,ต้นทุนค่าแรง,ต้นทุนค่าไฟฟ้า,ต้นทุนน้ำมัน,อุปกรณ์,อุปกรณ์นอก,ค่าจับกุ้ง,%คนเลี้ยง,ส่วนแบ่งคนเลี้ยง,%ผู้จัดการ,ส่วนแบ่งผู้จัดการ,สารเคมี(เดิม),อื่นๆ(เดิม),กำไรสุทธิ,FCR,อัตรารอด(%),อัตรารอด-ยอดสั่งซื้อ(%)';
   const csv=hdr+'\n'+rows.map(r=>r.join(',')).join('\n');
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='TawanFarm_PL_'+(yr||'all')+'.csv';a.click();URL.revokeObjectURL(url);
