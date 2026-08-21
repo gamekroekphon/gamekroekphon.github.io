@@ -567,6 +567,9 @@ body.role-admin .side-nav .sn-link.admin-only{display:block!important}
 .stock-cat-seed{background:#FCE7F3;color:#9D174D}
 .admin-only{display:none}
 body.role-admin .admin-only{display:revert!important}
+/* คู่ตรงข้ามของ .admin-only — ข้อความ/ส่วนที่แสดงเฉพาะ staff (ใช้เขียนคำอธิบายเวอร์ชันที่ไม่พูดถึงเงิน) */
+.staff-only{display:none}
+body:not(.role-admin) .staff-only{display:revert}
 /* .admin-only{display:revert} รีเซ็ตกลับเป็นค่า default ของ browser (inline-block สำหรับ button) ไม่ใช่ค่า display:flex ที่ .home-quick button ต้องการ ต้องระบุทับเฉพาะจุดนี้ */
 /* .home-quick button{display:flex} (class+type = 0,0,1,1) มี specificity สูงกว่า .admin-only{display:none} (0,0,1,0) เฉยๆ ทำให้ปุ่มโชว์ทุก role ถ้าไม่ระบุทับตรงนี้ */
 .home-quick .admin-only{display:none!important}
@@ -1007,7 +1010,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <button class="sn-link tab-item" onclick="goTab('pl',this)">📊 P&amp;L สรุป</button>
     </div>
 
-    <button class="sn-top tab-item admin-only" onclick="goTab('forecast',this)"><span>🔮</span> คำนวณ &amp; คาดการณ์</button>
+    <button class="sn-top tab-item" onclick="goTab('forecast',this)"><span>🔮</span> คำนวณ &amp; คาดการณ์</button>
   </nav>
   <div class="sn-label">สวนปาล์ม</div>
   <nav class="sn-nav">
@@ -1090,7 +1093,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
           <button class="tab-item" id="tab-elec" onclick="goTab('elec',this)">⚡ ค่าไฟฟ้า</button>
           <button class="tab-item" id="tab-abw" onclick="goTab('abw',this)">📈 ABW Growth</button>
           <button class="tab-item" id="tab-pl" onclick="goTab('pl',this)">📊 P&amp;L สรุป</button>
-          <button class="tab-item admin-only" id="tab-forecast" onclick="goTab('forecast',this)">🔮 คำนวณ &amp; คาดการณ์</button>
+          <button class="tab-item" id="tab-forecast" onclick="goTab('forecast',this)">🔮 คำนวณ &amp; คาดการณ์</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-settings">
@@ -1144,7 +1147,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <button class="mob-sheet-item" data-t="elec" onclick="mobMenuGo(this)"><span class="ic">⚡</span>ค่าไฟฟ้า</button>
     <button class="mob-sheet-item" data-t="abw" onclick="mobMenuGo(this)"><span class="ic">📈</span>ABW Growth</button>
     <button class="mob-sheet-item" data-t="pl" onclick="mobMenuGo(this)"><span class="ic">📊</span>P&amp;L สรุป</button>
-    <button class="mob-sheet-item admin-only" data-t="forecast" onclick="mobMenuGo(this)"><span class="ic">🔮</span>คำนวณ &amp; คาดการณ์</button>
+    <button class="mob-sheet-item" data-t="forecast" onclick="mobMenuGo(this)"><span class="ic">🔮</span>คำนวณ &amp; คาดการณ์</button>
     <div class="mob-sheet-grp">🌴 สวนปาล์ม</div>
     <button class="mob-sheet-item admin-only" data-t="palm" onclick="mobMenuGo(this)"><span class="ic">🌴</span>ตะวันปาล์ม</button>
     <div class="mob-sheet-grp">⚙️ ทั่วไป</div>
@@ -1173,9 +1176,9 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <div class="fg"><label class="fl" for="fc-rel">ยอดปล่อย (ตัว)</label><input type="number" step="any" class="fi fc-auto" id="fc-rel" oninput="fcCalc()"></div>
       <div class="fg"><label class="fl" for="fc-rai">ขนาดบ่อ (ไร่)</label><input type="number" step="any" class="fi fc-auto" id="fc-rai" oninput="fcCalc()"></div>
       <div class="fg"><label class="fl" for="fc-fcr">FCR ที่คาด</label><input type="number" step="any" class="fi fc-auto" id="fc-fcr" oninput="fcCalc()"></div>
-      <div class="fg"><label class="fl" for="fc-fp">ราคาอาหาร (บ./กก.)</label><input type="number" step="any" class="fi fc-auto" id="fc-fp" oninput="fcCalc()"></div>
-      <div class="fg"><label class="fl" for="fc-fx">ต้นทุนคงที่/วัน (บ.)</label><input type="number" step="any" class="fi fc-auto" id="fc-fx" oninput="fcCalc()"><span class="hint">ค่าไฟ + ค่าแรง เฉลี่ยต่อบ่อ</span></div>
-      <div class="fg"><label class="fl" for="fc-cost0">ต้นทุนสะสมถึงวันนี้ (บ.)</label><input type="number" step="any" class="fi fc-auto" id="fc-cost0" oninput="fcCalc()"></div>
+      <div class="fg admin-only"><label class="fl" for="fc-fp">ราคาอาหาร (บ./กก.)</label><input type="number" step="any" class="fi fc-auto" id="fc-fp" oninput="fcCalc()"></div>
+      <div class="fg admin-only"><label class="fl" for="fc-fx">ต้นทุนคงที่/วัน (บ.)</label><input type="number" step="any" class="fi fc-auto" id="fc-fx" oninput="fcCalc()"><span class="hint">ค่าไฟ + ค่าแรง เฉลี่ยต่อบ่อ</span></div>
+      <div class="fg admin-only"><label class="fl" for="fc-cost0">ต้นทุนสะสมถึงวันนี้ (บ.)</label><input type="number" step="any" class="fi fc-auto" id="fc-cost0" oninput="fcCalc()"></div>
       <div class="fg"><label class="fl" for="fc-ytgt">เกณฑ์พาเชียล (กก./ไร่)</label><input type="number" step="any" class="fi" id="fc-ytgt" oninput="fcCalc()"><span class="hint">ถึงเกณฑ์แล้วขึ้นเขียวในตาราง</span></div>
     </div>
     <div id="fc-warn" style="margin-top:12px"></div>
@@ -1186,7 +1189,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <div class="fc-res3" id="fc-res"></div>
   </div>
 
-  <div class="card" style="margin-bottom:14px">
+  <div class="card admin-only" style="margin-bottom:14px">
     <div class="card-t">💵 ราคาขายตามไซส์ <span style="font-size:var(--fs11);font-weight:400;color:var(--tx3)">(กรอกเอง · บันทึกถาวร ใช้ร่วมทุกบ่อ)</span></div>
     <div class="card-sub">ไซส์ที่อยู่ระหว่างช่วง ระบบเทียบสัดส่วนให้อัตโนมัติ (เช่น 45 ตัว/กก. จะได้ราคาระหว่างช่วง 50 กับ 40)</div>
     <div id="fc-ptbl" class="fc-pgrid"></div>
@@ -1199,12 +1202,13 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   </div>
 
   <div class="card">
-    <div class="card-t">📊 เทียบผลตอบแทนตามวันจับ</div>
-    <div class="card-sub">โตขึ้นได้น้ำหนักเพิ่มและราคา/กก. ดีขึ้น แต่ต้องจ่ายค่าอาหาร+ค่าไฟ+ค่าแรงเพิ่ม และกุ้งทยอยตาย — ตารางนี้หักลบให้หมดแล้ว</div>
+    <div class="card-t"><span class="admin-only">📊 เทียบผลตอบแทนตามวันจับ</span><span class="staff-only">📊 การเติบโตตามวันจับ</span></div>
+    <div class="card-sub admin-only">โตขึ้นได้น้ำหนักเพิ่มและราคา/กก. ดีขึ้น แต่ต้องจ่ายค่าอาหาร+ค่าไฟ+ค่าแรงเพิ่ม และกุ้งทยอยตาย — ตารางนี้หักลบให้หมดแล้ว</div>
+    <div class="card-sub staff-only">คาดการณ์ไซส์ น้ำหนัก และ กก./ไร่ ในแต่ละวันข้างหน้า (กุ้งทยอยตายตามอัตราที่ตั้งไว้)</div>
     <div class="tbl-wrap" id="fc-tbl-wrap"></div>
     <div class="ai warn" style="margin-top:12px"><span>⚠️</span><div>
       ตัวเลขนี้ตั้งอยู่บนสมมติฐานว่า <b>กุ้งโตสม่ำเสมอตาม PDG</b> และ <b>ไม่เกิดโรค</b> — ยิ่งเลี้ยงนานยิ่งเสี่ยง (EHP/ขี้ขาว/อากาศ) ใช้ดูแนวโน้มว่า "รอต่อคุ้มไหม" ไม่ใช่คำสั่งให้รอ<br>
-      <b>ตัวเลขเล็กใต้กำไร</b> = ช่วงกำไรถ้าอัตรารอดพลาดไป ±5% — ถ้าช่วงกว้างมากแปลว่ายังไม่น่าเชื่อถือ ควรสุ่มเช็คอัตรารอดให้แน่ก่อนตัดสินใจ
+      <span class="admin-only"><b>ตัวเลขเล็กใต้กำไร</b> = ช่วงกำไรถ้าอัตรารอดพลาดไป ±5% — ถ้าช่วงกว้างมากแปลว่ายังไม่น่าเชื่อถือ ควรสุ่มเช็คอัตรารอดให้แน่ก่อนตัดสินใจ</span>
     </div></div>
   </div>
 </div>
@@ -4850,7 +4854,7 @@ function snToggleGrp(btn,id){
   }
 }
 // ── หน้าที่เปิดได้เฉพาะ admin — กันเข้าถึงระดับ "หน้า" ไม่ใช่แค่ซ่อนปุ่มด้วย CSS (ปุ่มอาจโผล่จาก specificity ที่ชนกัน หรือถูกเรียกผ่าน goTabByName/console) ──
-const ADMIN_ONLY_TABS=['palm','users','forecast'];
+const ADMIN_ONLY_TABS=['palm','users'];
 function goTab(t,btn){
   if(ADMIN_ONLY_TABS.includes(t)&&APP_ROLE!=='admin')return;
   document.querySelectorAll('.tab,.tab-item,.sn-top,.sn-link').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
@@ -8022,7 +8026,6 @@ function fcPriceAt(size){
 }
 const _fcG=id=>parseFloat(document.getElementById(id)?.value)||0;
 function initForecast(){
-  if(APP_ROLE!=='admin')return;
   const sel=document.getElementById('fc-pond');if(!sel)return;
   const list=sortPondsByAge(wqfeedActivePonds());
   const cur=sel.value;
@@ -8072,8 +8075,10 @@ function fcLoadPond(){
   if(!_fcAuto.abw)miss.push('ABW (ต้องสุ่มตัวอย่างก่อน)');
   if(!_fcAuto.surv)miss.push('อัตรารอด (กรอกตอนสุ่มตัวอย่าง)');
   if(!_fcAuto.pdg)miss.push('PDG (ต้องสุ่มอย่างน้อย 2 ครั้ง)');
-  if(!_fcAuto.fp)miss.push('ราคาอาหาร (ยังไม่มีสินค้าหมวดอาหารในสต็อก)');
-  if(!_fcAuto.fx)miss.push('ต้นทุนคงที่/วัน (ยังไม่มีข้อมูลค่าแรง/ค่าไฟ) — ถ้าปล่อยเป็น 0 กำไรในตารางจะสูงเกินจริง');
+  if(APP_ROLE==='admin'){   // เตือนเรื่องต้นทุนเฉพาะ admin — staff ไม่เห็นคอลัมน์เงินอยู่แล้ว
+    if(!_fcAuto.fp)miss.push('ราคาอาหาร (ยังไม่มีสินค้าหมวดอาหารในสต็อก)');
+    if(!_fcAuto.fx)miss.push('ต้นทุนคงที่/วัน (ยังไม่มีข้อมูลค่าแรง/ค่าไฟ) — ถ้าปล่อยเป็น 0 กำไรในตารางจะสูงเกินจริง');
+  }
   if(warn)warn.innerHTML=miss.length
     ?'<div class="ai warn"><span>⚠️</span><div>ข้อมูลบางอย่างดึงอัตโนมัติไม่ได้ — <b>'+miss.join(' · ')+'</b><br>กรอกเองในช่องด้านบนได้ ตัวเลขจะคำนวณให้ทันที</div></div>'
     :'';
@@ -8178,18 +8183,22 @@ function fcCalc(){
     if(e.profit>best){best=e.profit;bestD=d;}
     return{d:d,e:e,lo:fcEcon(d,-5),hi:fcEcon(d,5)};
   });
+  // ⚠️ staff เห็นเฉพาะคอลัมน์การเติบโต (ไซส์/น้ำหนัก/กก.ต่อไร่) — คอลัมน์เงินทั้งหมดไม่ถูก render ออกมาเลย
+  //    (ไม่ใช่แค่ซ่อนด้วย CSS เพราะดู DOM ก็ยังเห็นตัวเลขได้)
+  const fcMoney=(APP_ROLE==='admin');
   wrapEl.innerHTML=
    '<div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวาเพื่อดูทุกค่า →</div>'+
    '<table class="fc-tbl"><thead><tr>'+
      '<th>จับเมื่อ</th><th>DOC</th><th>ไซส์<br>(ตัว/กก.)</th><th>อัตรารอด</th><th>น้ำหนัก<br>(กก.)</th>'+
-     '<th>กก./ไร่</th><th>ราคา<br>(บ./กก.)</th><th>รายได้</th><th>ต้นทุนรวม</th><th>ต้นทุน/กก.</th>'+
-     '<th>กำไร<br><span style="font-weight:400;color:var(--tx3)">(ช่วง ±5% รอด)</span></th>'+
+     '<th>กก./ไร่</th>'+
+     (fcMoney?'<th>ราคา<br>(บ./กก.)</th><th>รายได้</th><th>ต้นทุนรวม</th><th>ต้นทุน/กก.</th>'+
+              '<th>กำไร<br><span style="font-weight:400;color:var(--tx3)">(ช่วง ±5% รอด)</span></th>':'')+
    '</tr></thead><tbody>'+
    data.map(r=>{
      const e=r.e;
-     const cls=r.d===0?'now':(r.d===bestD?'best':'');
+     const cls=r.d===0?'now':(fcMoney&&r.d===bestD?'best':'');
      let pill=r.d===0?'<span class="fc-pill" style="color:var(--pd);background:var(--pl);border:1px solid var(--p)">ตอนนี้</span>'
-            :(r.d===bestD?'<span class="fc-pill" style="color:var(--ok);background:var(--ob);border:1px solid var(--ok)">กำไรสูงสุด</span>':'');
+            :((fcMoney&&r.d===bestD)?'<span class="fc-pill" style="color:var(--ok);background:var(--ob);border:1px solid var(--ok)">กำไรสูงสุด</span>':'');
      if(r.d===pd&&r.d!==0)pill+='<span class="fc-pill" style="color:var(--in);background:var(--ib);border:1px solid var(--in)">วันที่เลือก</span>';
      const yOk=yMark(e.yr);
      return '<tr class="'+cls+'">'+
@@ -8197,10 +8206,12 @@ function fcCalc(){
        '<td>'+(DOC0+r.d)+'</td><td><b>'+Math.round(e.size)+'</b></td><td>'+e.surv.toFixed(1)+'%</td>'+
        '<td>'+kg(e.bio)+'</td>'+
        '<td'+(yOk?' style="color:var(--ok);font-weight:700"':'')+'>'+kg(e.yr)+(yOk?' ✓':'')+'</td>'+
-       '<td>'+e.pr+'</td><td>'+kg(e.rev)+'</td><td>'+kg(e.cost)+'</td><td>'+e.cpk.toFixed(1)+'</td>'+
-       '<td style="font-weight:700;color:'+(e.profit>=0?'var(--ok)':'var(--d)')+'">'+(e.profit>=0?'+':'')+kg(e.profit)+
-         '<div style="font-size:var(--fs10);font-weight:400;color:var(--tx3)">'+kg(r.lo.profit)+' – '+kg(r.hi.profit)+'</div>'+
-       '</td>'+
+       (fcMoney?
+         '<td>'+e.pr+'</td><td>'+kg(e.rev)+'</td><td>'+kg(e.cost)+'</td><td>'+e.cpk.toFixed(1)+'</td>'+
+         '<td style="font-weight:700;color:'+(e.profit>=0?'var(--ok)':'var(--d)')+'">'+(e.profit>=0?'+':'')+kg(e.profit)+
+           '<div style="font-size:var(--fs10);font-weight:400;color:var(--tx3)">'+kg(r.lo.profit)+' – '+kg(r.hi.profit)+'</div>'+
+         '</td>'
+       :'')+
      '</tr>';
    }).join('')+
    '</tbody></table>';
