@@ -105,6 +105,12 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .side-nav .sn-link.on{color:var(--sn-lime);font-weight:600}
 .sn-link.on::before{content:'';position:absolute;left:18px;top:7px;bottom:7px;width:3px;background:var(--sn-lime);border-radius:2px}
 body.role-admin .sn-link.admin-only{display:block!important}
+/* ── ⚠️ .side-nav .sn-top / .sn-link (class+class = 0,0,2,0) มี specificity สูงกว่า .admin-only{display:none} (0,0,1,0)
+      ทำให้ปุ่มเมนูข้างที่ติด .admin-only ยังโผล่ให้ staff เห็น (เคยรั่ว: 🌴 ตะวันปาล์ม, 👤 จัดการผู้ใช้)
+      ต้องประกาศ !important ทั้ง 2 ทางตรงนี้ — ซ่อนเป็นค่าตั้งต้น แล้วเปิดคืนเฉพาะ role-admin (บัคแบบเดียวกับ entry #21) ── */
+.side-nav .sn-top.admin-only,.side-nav .sn-link.admin-only{display:none!important}
+body.role-admin .side-nav .sn-top.admin-only{display:flex!important}
+body.role-admin .side-nav .sn-link.admin-only{display:block!important}
 .sn-side-card{margin-top:auto;background:var(--sn-bg2);border-radius:12px;padding:11px;font-size:var(--fs11);color:#bcd3c3;margin-top:12px}
 .sn-side-card b{color:#fff}
 .sn-profile{display:flex;align-items:center;gap:9px;margin-top:12px;padding-top:12px;border-top:1px solid #2b5741}
@@ -4103,6 +4109,7 @@ function pondRunningCost(p){
 }
 // ── สลับแท็บด้วยชื่อ section (หา nav button ให้เอง) — ใช้กับปุ่มทางลัดข้ามหน้า เช่น ประวัติ→PDF, ปิดรอบเสร็จ→เตรียมบ่อ ──
 function goTabByName(t){
+  if(ADMIN_ONLY_TABS.includes(t)&&APP_ROLE!=='admin')return;   // กันทางลัดข้ามหน้าเปิดหน้า admin-only ให้ staff
   const btn=[...document.querySelectorAll('.tab,.tab-item,.sn-top,.sn-link')].find(b=>(b.getAttribute('onclick')||'').includes("'"+t+"'"));
   if(btn)goTab(t,btn);
   else{document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));const sec=document.getElementById('sec-'+t);if(sec)sec.classList.add('on');}
@@ -4761,7 +4768,10 @@ function snToggleGrp(btn,id){
     if(sub){sub.classList.add('open');snForceReflow(sub);}
   }
 }
+// ── หน้าที่เปิดได้เฉพาะ admin — กันเข้าถึงระดับ "หน้า" ไม่ใช่แค่ซ่อนปุ่มด้วย CSS (ปุ่มอาจโผล่จาก specificity ที่ชนกัน หรือถูกเรียกผ่าน goTabByName/console) ──
+const ADMIN_ONLY_TABS=['palm','users'];
 function goTab(t,btn){
+  if(ADMIN_ONLY_TABS.includes(t)&&APP_ROLE!=='admin')return;
   document.querySelectorAll('.tab,.tab-item,.sn-top,.sn-link').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
   document.querySelectorAll('.tab-grp').forEach(g=>g.classList.remove('grp-on','grp-open'));
   const grp=btn.closest('.tab-grp');if(grp)grp.classList.add('grp-on');
@@ -7910,6 +7920,7 @@ function initPalm(){
   palmTab(_palmActiveTab,document.getElementById('palmb-'+_palmActiveTab));
 }
 function palmTab(paneId,btn){
+  if(APP_ROLE!=='admin')return;   // กันเปิดแท็บย่อยตรงๆ (โดยเฉพาะ "รายรับ-รายจ่าย"/"กองทุน" ที่มีจำนวนเงิน) — CSS ซ่อนปุ่มอย่างเดียวไม่พอ
   _palmActiveTab=paneId;
   document.querySelectorAll('#sec-palm .stock-pane').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('#sec-palm .stock-sub-btn').forEach(b=>b.classList.remove('on'));
