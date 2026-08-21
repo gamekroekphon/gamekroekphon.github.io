@@ -259,6 +259,28 @@ body.role-admin .side-nav .sn-link.admin-only{display:block!important}
 .pd-sub{font-size:12px;color:var(--tx3);margin-top:4px;line-height:1.5}
 .pd-alert{margin-top:14px}
 .pd-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+/* ═══ หน้า "คำนวณ & คาดการณ์" ═══ */
+.fc-auto{background:var(--ib);border-color:#bfdbfe;color:#0369a1;font-weight:700}
+.fc-res3{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px}
+.fc-res{background:var(--sf2);border:1px solid var(--bd);border-radius:12px;padding:14px}
+.fc-res.hi{border-color:var(--p)}
+.fc-res .h{font-size:11.5px;color:var(--tx2);font-weight:600;margin-bottom:8px}
+.fc-res .v{font-size:27px;font-weight:700;color:var(--p);line-height:1.05}
+.fc-res .u{font-size:11px;color:var(--tx3);margin-top:2px}
+.fc-res .sub{font-size:11.5px;color:var(--tx2);margin-top:7px;padding-top:6px;border-top:1px dashed var(--bd);display:flex;justify-content:space-between;gap:8px}
+.fc-res .sub.nb{border-top:none;padding-top:2px;margin-top:3px}
+.fc-pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:9px}
+.fc-pband{background:var(--sf2);border:1px solid var(--bd);border-radius:9px;padding:9px 10px;position:relative}
+.fc-pband .x{position:absolute;top:4px;right:6px;border:none;background:none;color:var(--tx3);cursor:pointer;font-size:13px;line-height:1}
+.fc-pband .l{font-size:10.5px;color:var(--tx2);font-weight:600;margin-bottom:3px}
+.fc-pband input{width:100%;border:1px solid var(--bd);border-radius:7px;padding:5px 8px;font-size:13px;font-family:inherit;background:var(--sf);color:var(--tx)}
+.fc-tbl{width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap}
+.fc-tbl th{text-align:right;font-weight:700;color:var(--tx2);padding:8px 10px;border-bottom:1.5px solid var(--bd);font-size:11px;background:var(--sf2)}
+.fc-tbl th:first-child,.fc-tbl td:first-child{text-align:left}
+.fc-tbl td{padding:8px 10px;border-bottom:1px solid var(--sf2);text-align:right;font-variant-numeric:tabular-nums}
+.fc-tbl tr.now{background:var(--pl)}
+.fc-tbl tr.best{background:var(--ob)}
+.fc-pill{font-size:9.5px;font-weight:700;padding:1px 7px;border-radius:99px;margin-left:5px;white-space:nowrap}
 .pd-water-row{display:flex;justify-content:space-between;padding:7px 0;border-top:.5px solid var(--bd);font-size:13px}
 .pd-surv-hero{display:flex;align-items:center;gap:16px;padding:4px 0 14px;border-bottom:1px solid var(--sf2);margin-bottom:12px}
 .pd-surv-ring{position:relative;width:76px;height:76px;flex:none}
@@ -984,6 +1006,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <button class="sn-link tab-item" onclick="goTab('abw',this)">📈 ABW Growth</button>
       <button class="sn-link tab-item" onclick="goTab('pl',this)">📊 P&amp;L สรุป</button>
     </div>
+
+    <button class="sn-top tab-item admin-only" onclick="goTab('forecast',this)"><span>🔮</span> คำนวณ &amp; คาดการณ์</button>
   </nav>
   <div class="sn-label">สวนปาล์ม</div>
   <nav class="sn-nav">
@@ -1066,6 +1090,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
           <button class="tab-item" id="tab-elec" onclick="goTab('elec',this)">⚡ ค่าไฟฟ้า</button>
           <button class="tab-item" id="tab-abw" onclick="goTab('abw',this)">📈 ABW Growth</button>
           <button class="tab-item" id="tab-pl" onclick="goTab('pl',this)">📊 P&amp;L สรุป</button>
+          <button class="tab-item admin-only" id="tab-forecast" onclick="goTab('forecast',this)">🔮 คำนวณ &amp; คาดการณ์</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-settings">
@@ -1119,6 +1144,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <button class="mob-sheet-item" data-t="elec" onclick="mobMenuGo(this)"><span class="ic">⚡</span>ค่าไฟฟ้า</button>
     <button class="mob-sheet-item" data-t="abw" onclick="mobMenuGo(this)"><span class="ic">📈</span>ABW Growth</button>
     <button class="mob-sheet-item" data-t="pl" onclick="mobMenuGo(this)"><span class="ic">📊</span>P&amp;L สรุป</button>
+    <button class="mob-sheet-item admin-only" data-t="forecast" onclick="mobMenuGo(this)"><span class="ic">🔮</span>คำนวณ &amp; คาดการณ์</button>
     <div class="mob-sheet-grp">🌴 สวนปาล์ม</div>
     <button class="mob-sheet-item admin-only" data-t="palm" onclick="mobMenuGo(this)"><span class="ic">🌴</span>ตะวันปาล์ม</button>
     <div class="mob-sheet-grp">⚙️ ทั่วไป</div>
@@ -1127,6 +1153,61 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   </div>
 </div>
 <div class="main">
+<!-- FORECAST (คำนวณ & คาดการณ์ — admin เท่านั้น เพราะแสดงต้นทุน/รายได้/กำไร)
+     ⚠️ หน้านี้ "อ่านอย่างเดียว" ไม่เขียนข้อมูลบ่อใดๆ — ค่าที่แก้ในฟอร์มเป็นการลองสมมติชั่วคราว ไม่บันทึก
+     ยกเว้นตารางราคาตามไซส์ (D.forecastPrices) ที่บันทึกถาวรเพราะใช้ร่วมทุกบ่อ -->
+<div id="sec-forecast" class="sec">
+  <div class="sec-hdr"><div class="sec-title">🔮 คำนวณ &amp; คาดการณ์</div></div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-t">⚙️ ตัวแปรที่ใช้คำนวณ</div>
+    <div class="card-sub">ช่องพื้นฟ้า = ดึงจากข้อมูลจริงของบ่อให้อัตโนมัติ แก้ทับได้ถ้าอยากลองสมมติ — <b>ไม่บันทึกถาวร</b> เปลี่ยนบ่อหรือเปิดใหม่แล้วกลับเป็นค่าอัตโนมัติ</div>
+    <div class="fgrid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+      <div class="fg"><label class="fl" for="fc-pond">บ่อ</label><select class="fi" id="fc-pond" onchange="fcLoadPond()"></select></div>
+      <div class="fg"><label class="fl" for="fc-abw">ABW ตอนนี้ (ก./ตัว)</label><input type="number" step="any" class="fi fc-auto" id="fc-abw" oninput="fcCalc()"><span class="hint" id="fc-abw-hint"></span></div>
+      <div class="fg"><label class="fl" for="fc-pdg">PDG อัตราโต (ก./วัน)</label>
+        <div style="display:flex;gap:6px"><input type="number" step="any" class="fi fc-auto" id="fc-pdg" oninput="fcCalc()"><button class="btn btn-s" type="button" onclick="fcResetField('pdg')" title="คืนค่าอัตโนมัติ">↺</button></div>
+        <span class="hint" id="fc-pdg-hint"></span></div>
+      <div class="fg"><label class="fl" for="fc-surv">อัตรารอดตอนนี้ (%)</label><input type="number" step="any" class="fi fc-auto" id="fc-surv" oninput="fcCalc()"></div>
+      <div class="fg"><label class="fl" for="fc-decl">อัตรารอดลดลง (%/10 วัน)</label><input type="number" step="any" class="fi" id="fc-decl" value="1" oninput="fcCalc()"><span class="hint">เผื่อกุ้งทยอยตาย — ใส่ 0 ถ้าไม่ต้องการเผื่อ</span></div>
+      <div class="fg"><label class="fl" for="fc-rel">ยอดปล่อย (ตัว)</label><input type="number" step="any" class="fi fc-auto" id="fc-rel" oninput="fcCalc()"></div>
+      <div class="fg"><label class="fl" for="fc-rai">ขนาดบ่อ (ไร่)</label><input type="number" step="any" class="fi fc-auto" id="fc-rai" oninput="fcCalc()"></div>
+      <div class="fg"><label class="fl" for="fc-fcr">FCR ที่คาด</label><input type="number" step="any" class="fi fc-auto" id="fc-fcr" oninput="fcCalc()"></div>
+      <div class="fg"><label class="fl" for="fc-fp">ราคาอาหาร (บ./กก.)</label><input type="number" step="any" class="fi fc-auto" id="fc-fp" oninput="fcCalc()"></div>
+      <div class="fg"><label class="fl" for="fc-fx">ต้นทุนคงที่/วัน (บ.)</label><input type="number" step="any" class="fi fc-auto" id="fc-fx" oninput="fcCalc()"><span class="hint">ค่าไฟ + ค่าแรง เฉลี่ยต่อบ่อ</span></div>
+      <div class="fg"><label class="fl" for="fc-cost0">ต้นทุนสะสมถึงวันนี้ (บ.)</label><input type="number" step="any" class="fi fc-auto" id="fc-cost0" oninput="fcCalc()"></div>
+      <div class="fg"><label class="fl" for="fc-ytgt">เกณฑ์พาเชียล (กก./ไร่)</label><input type="number" step="any" class="fi" id="fc-ytgt" oninput="fcCalc()"><span class="hint">ถึงเกณฑ์แล้วขึ้นเขียวในตาราง</span></div>
+    </div>
+    <div id="fc-warn" style="margin-top:12px"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-t">📐 ผลคำนวณ</div>
+    <div class="fc-res3" id="fc-res"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-t">💵 ราคาขายตามไซส์ <span style="font-size:var(--fs11);font-weight:400;color:var(--tx3)">(กรอกเอง · บันทึกถาวร ใช้ร่วมทุกบ่อ)</span></div>
+    <div class="card-sub">ไซส์ที่อยู่ระหว่างช่วง ระบบเทียบสัดส่วนให้อัตโนมัติ (เช่น 45 ตัว/กก. จะได้ราคาระหว่างช่วง 50 กับ 40)</div>
+    <div id="fc-ptbl" class="fc-pgrid"></div>
+    <div style="display:flex;gap:8px;margin-top:11px;flex-wrap:wrap">
+      <button class="btn btn-s" type="button" onclick="fcAddBand()">+ เพิ่มช่วงไซส์</button>
+      <button class="btn btn-s" type="button" onclick="fcFillFromSales()">📥 ดึงจากการขายล่าสุด</button>
+      <button class="btn btn-s" type="button" onclick="fcResetBands()">↺ คืนค่าเริ่มต้น</button>
+      <span id="fc-pmsg" style="font-size:12px;align-self:center"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-t">📊 เทียบผลตอบแทนตามวันจับ</div>
+    <div class="card-sub">โตขึ้นได้น้ำหนักเพิ่มและราคา/กก. ดีขึ้น แต่ต้องจ่ายค่าอาหาร+ค่าไฟ+ค่าแรงเพิ่ม และกุ้งทยอยตาย — ตารางนี้หักลบให้หมดแล้ว</div>
+    <div class="tbl-wrap" id="fc-tbl-wrap"></div>
+    <div class="ai warn" style="margin-top:12px"><span>⚠️</span><div>
+      ตัวเลขนี้ตั้งอยู่บนสมมติฐานว่า <b>กุ้งโตสม่ำเสมอตาม PDG</b> และ <b>ไม่เกิดโรค</b> — ยิ่งเลี้ยงนานยิ่งเสี่ยง (EHP/ขี้ขาว/อากาศ) ใช้ดูแนวโน้มว่า "รอต่อคุ้มไหม" ไม่ใช่คำสั่งให้รอ<br>
+      <b>ตัวเลขเล็กใต้กำไร</b> = ช่วงกำไรถ้าอัตรารอดพลาดไป ±5% — ถ้าช่วงกว้างมากแปลว่ายังไม่น่าเชื่อถือ ควรสุ่มเช็คอัตรารอดให้แน่ก่อนตัดสินใจ
+    </div></div>
+  </div>
+</div>
 <!-- PALM (ตะวันปาล์ม — admin เท่านั้น, ข้อมูลการเงิน/สวนปาล์มแยกอิสระจากฟาร์มกุ้งทั้งหมด ไม่แตะ D.ponds/D.inventoryLog/ต้นทุนกุ้งใดๆเลย) -->
 <div id="sec-palm" class="sec">
   <div class="sec-hdr">
@@ -4769,7 +4850,7 @@ function snToggleGrp(btn,id){
   }
 }
 // ── หน้าที่เปิดได้เฉพาะ admin — กันเข้าถึงระดับ "หน้า" ไม่ใช่แค่ซ่อนปุ่มด้วย CSS (ปุ่มอาจโผล่จาก specificity ที่ชนกัน หรือถูกเรียกผ่าน goTabByName/console) ──
-const ADMIN_ONLY_TABS=['palm','users'];
+const ADMIN_ONLY_TABS=['palm','users','forecast'];
 function goTab(t,btn){
   if(ADMIN_ONLY_TABS.includes(t)&&APP_ROLE!=='admin')return;
   document.querySelectorAll('.tab,.tab-item,.sn-top,.sn-link').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
@@ -4794,6 +4875,7 @@ function goTab(t,btn){
   if(t==='compare')initCompare();if(t==='risk'){if(_wxDaily)renderRisk(_wxDaily);else fetchWx();}if(t==='export')initExport();if(t==='wqfeed')initWqFeed();if(t==='hatchery')initHatchery();
   if(t==='manage')renderManage();
   if(t==='palm')initPalm();
+  if(t==='forecast')initForecast();
   if(t==='users')renderUsers();
   if(t==='harvest')initHarvest();
   if(t==='crops')renderCrops();
@@ -7915,6 +7997,267 @@ function palmMoneyList(){return D.palmMoney||[];}
 function palmFertList(){return D.palmFertilizer||[];}
 function palmPlotName(id){if(!id)return'ไม่ระบุ / รวมทั้งสวน';const p=palmPlots().find(x=>x.id===id);return p?p.name:'(แปลงที่ถูกลบ)';}
 let _palmActiveTab='ov';
+/* ══════════ หน้า "คำนวณ & คาดการณ์" (admin เท่านั้น) ══════════
+   ⚠️ อ่านอย่างเดียว — ไม่เขียนข้อมูลบ่อใดๆ ค่าที่แก้ในฟอร์มเป็นการลองสมมติชั่วคราว
+   ยกเว้น D.forecastPrices (ตารางราคาตามไซส์) ที่บันทึกถาวรเพราะใช้ร่วมทุกบ่อ */
+const FC_DEF_PRICES=[[70,120],[60,130],[50,145],[40,165],[30,190]];
+const FC_FEED_KG_PER_SACK=25;   // ต้องตรงกับสมมติฐานใน pondFeedCost()
+let _fcAuto={};                 // ค่าอัตโนมัติของบ่อที่เลือกอยู่ (ไว้กดคืนค่า)
+let _fcPickVal=null;            // วันที่เลือกในปฏิทิน (คงไว้ข้าม re-render)
+function fcPrices(){
+  if(!Array.isArray(D.forecastPrices)||!D.forecastPrices.length)D.forecastPrices=FC_DEF_PRICES.map(r=>r.slice());
+  return D.forecastPrices;
+}
+// ราคา ณ ไซส์ใดๆ — อยู่ระหว่างช่วงให้เทียบสัดส่วนเชิงเส้น, นอกช่วงใช้ค่าปลายสุด (ไม่ทำนายเกินข้อมูลจริงที่กรอกไว้)
+function fcPriceAt(size){
+  const b=fcPrices().filter(r=>r[0]>0).slice().sort((a,b)=>b[0]-a[0]);
+  if(!b.length||!(size>0))return 0;
+  if(size>=b[0][0])return b[0][1];
+  if(size<=b[b.length-1][0])return b[b.length-1][1];
+  for(let i=0;i<b.length-1;i++){
+    const s1=b[i][0],p1=b[i][1],s2=b[i+1][0],p2=b[i+1][1];
+    if(size<=s1&&size>=s2){const t=(s1-size)/(s1-s2);return Math.round(p1+(p2-p1)*t);}
+  }
+  return b[b.length-1][1];
+}
+const _fcG=id=>parseFloat(document.getElementById(id)?.value)||0;
+function initForecast(){
+  if(APP_ROLE!=='admin')return;
+  const sel=document.getElementById('fc-pond');if(!sel)return;
+  const list=sortPondsByAge(wqfeedActivePonds());
+  const cur=sel.value;
+  sel.innerHTML=list.length
+    ?list.map(p=>'<option value="'+p.id+'">บ่อ '+p.name+' — DOC '+pondCurAge(p)+' วัน</option>').join('')
+    :'<option value="">— ยังไม่มีบ่อที่กำลังเลี้ยง —</option>';
+  if(cur&&list.some(p=>p.id===cur))sel.value=cur;
+  fcRenderBands();
+  fcLoadPond();
+}
+// ── ดึงค่าอัตโนมัติของบ่อที่เลือกมาเติมลงฟอร์ม (เขียนทับค่าที่เคยแก้ไว้ — ตั้งใจ เพราะเปลี่ยนบ่อแล้วค่าเดิมใช้ไม่ได้) ──
+function fcLoadPond(){
+  const pid=document.getElementById('fc-pond')?.value;
+  const p=pid?pond(pid):null;
+  const warn=document.getElementById('fc-warn');
+  if(!p){if(warn)warn.innerHTML='';fcCalc();return;}
+  const samples=(p.samples||[]).filter(s=>s.abw!=null&&s.abw!=='');
+  const lat=samples.length?samples[samples.length-1]:null;
+  const pdgRaw=parseFloat(getPDG(p.samples||[]));
+  const rc=pondRunningCost(p);
+  const age=pondCurAge(p);
+  // ราคาอาหารเฉลี่ย/กก. จากสินค้าหมวด feed ในสต็อก (unitPrice = ราคาต่อกระสอบ)
+  const feedItems=(D.inventoryItems||[]).filter(i=>i.category==='feed'&&i.unitPrice>0);
+  const feedPerKg=feedItems.length?feedItems.reduce((s,i)=>s+i.unitPrice,0)/feedItems.length/FC_FEED_KG_PER_SACK:0;
+  // ต้นทุนคงที่/วัน = (ค่าแรง+ค่าไฟ ที่สะสมมา) ÷ จำนวนวันที่เลี้ยง
+  const fixDay=age>0&&rc?((rc.labor+rc.elec)/age):0;
+  const fcrNow=parseFloat(getFCR(p));
+  _fcAuto={
+    abw:lat&&lat.abw?+lat.abw:0,
+    pdg:pdgRaw>0?pdgRaw:0,
+    surv:lat&&lat.survivalRate!=null?+lat.survivalRate:0,
+    rel:pRelease(p),
+    rai:p.size||0,
+    fcr:fcrNow>0?fcrNow:1.5,
+    fp:feedPerKg>0?Math.round(feedPerKg*100)/100:0,
+    fx:fixDay>0?Math.round(fixDay):0,
+    cost0:rc?Math.round(rc.total):0
+  };
+  Object.keys(_fcAuto).forEach(k=>{const e=document.getElementById('fc-'+k);if(e)e.value=_fcAuto[k]||'';});
+  const yt=document.getElementById('fc-ytgt');if(yt&&!yt.value)yt.value=PARTIAL_YIELD_TARGET;
+  const ah=document.getElementById('fc-abw-hint');
+  if(ah)ah.textContent=lat?('จากสุ่มล่าสุด '+fD(lat.date)):'ยังไม่เคยสุ่มตัวอย่าง';
+  const ph=document.getElementById('fc-pdg-hint');
+  if(ph)ph.textContent=pdgRaw>0?'จากสุ่ม 2 ครั้งล่าสุด':'ยังคำนวณไม่ได้ (ต้องสุ่ม ≥2 ครั้ง) — กรอกเอง';
+  // เตือนถ้าข้อมูลไม่พอ — บอกให้ชัดว่าขาดอะไรและแก้ยังไง แทนที่จะโชว์ 0 เงียบๆ
+  const miss=[];
+  if(!_fcAuto.abw)miss.push('ABW (ต้องสุ่มตัวอย่างก่อน)');
+  if(!_fcAuto.surv)miss.push('อัตรารอด (กรอกตอนสุ่มตัวอย่าง)');
+  if(!_fcAuto.pdg)miss.push('PDG (ต้องสุ่มอย่างน้อย 2 ครั้ง)');
+  if(!_fcAuto.fp)miss.push('ราคาอาหาร (ยังไม่มีสินค้าหมวดอาหารในสต็อก)');
+  if(!_fcAuto.fx)miss.push('ต้นทุนคงที่/วัน (ยังไม่มีข้อมูลค่าแรง/ค่าไฟ) — ถ้าปล่อยเป็น 0 กำไรในตารางจะสูงเกินจริง');
+  if(warn)warn.innerHTML=miss.length
+    ?'<div class="ai warn"><span>⚠️</span><div>ข้อมูลบางอย่างดึงอัตโนมัติไม่ได้ — <b>'+miss.join(' · ')+'</b><br>กรอกเองในช่องด้านบนได้ ตัวเลขจะคำนวณให้ทันที</div></div>'
+    :'';
+  fcCalc();
+}
+function fcResetField(k){
+  const e=document.getElementById('fc-'+k);
+  if(e&&_fcAuto[k]!=null){e.value=_fcAuto[k]||'';fcCalc();}
+}
+// ── สภาพบ่อ ณ วัน d ข้างหน้า (off = ส่วนต่างอัตรารอดที่ลองสมมติ เช่น ±5) ──
+//    ABW ไม่ขึ้นกับอัตรารอด เปลี่ยนแค่จำนวนตัวที่เหลือ
+function fcSnap(d,off){
+  const abw=_fcG('fc-abw')+_fcG('fc-pdg')*d;
+  const surv=Math.max(0,_fcG('fc-surv')+(off||0)-_fcG('fc-decl')*(d/10));
+  const bio=_fcG('fc-rel')*(surv/100)*abw/1000;
+  const rai=_fcG('fc-rai');
+  return{abw:abw,surv:surv,bio:bio,size:abw>0?1000/abw:0,yr:rai>0?bio/rai:0};
+}
+function fcEcon(d,off){
+  const s=fcSnap(d,off),base=fcSnap(0,off);
+  const pr=fcPriceAt(s.size);
+  const feedKg=Math.max(0,s.bio-base.bio)*_fcG('fc-fcr');
+  const cost=_fcG('fc-cost0')+feedKg*_fcG('fc-fp')+d*_fcG('fc-fx');
+  const rev=s.bio*pr;
+  return{abw:s.abw,surv:s.surv,bio:s.bio,size:s.size,yr:s.yr,pr:pr,rev:rev,cost:cost,feedKg:feedKg,
+         cpk:s.bio>0?cost/s.bio:0,profit:rev-cost};
+}
+function _fcPickedDays(){
+  const el=document.getElementById('fc-pickd');
+  const v=el&&el.value?el.value:_fcPickVal;
+  if(!v)return 14;
+  _fcPickVal=v;
+  return Math.max(0,dDiff(today(),v));
+}
+function fcQuick(n){_fcPickVal=addDays(today(),n);const e=document.getElementById('fc-pickd');if(e)e.value=_fcPickVal;fcCalc();}
+function fcCalc(){
+  const resEl=document.getElementById('fc-res');if(!resEl)return;
+  const wrapEl=document.getElementById('fc-tbl-wrap');
+  const abw=_fcG('fc-abw'),pdg=_fcG('fc-pdg');
+  if(!(abw>0)){
+    resEl.innerHTML='<div style="color:var(--tx3);font-size:13px;padding:8px 0">กรอก ABW ก่อน จึงจะคำนวณได้</div>';
+    if(wrapEl)wrapEl.innerHTML='';
+    return;
+  }
+  const pid=document.getElementById('fc-pond')?.value,p=pid?pond(pid):null;
+  const DOC0=p?pondCurAge(p):0;
+  const pd=_fcPickedDays();
+  const sP=fcSnap(pd,0),now=fcSnap(0,0);
+  const ytgt=_fcG('fc-ytgt');
+  const tgtSize=_fcG('fc-tgtsize')||40;
+  const tgtAbw=tgtSize>0?1000/tgtSize:0;
+  const days=pdg>0?Math.max(0,Math.ceil((tgtAbw-abw)/pdg)):null;
+  const sT=days!=null?fcSnap(days,0):null;
+  const kg=n=>Math.round(n).toLocaleString();
+  const yMark=v=>(v>=ytgt&&ytgt>0);
+  resEl.innerHTML=
+   '<div class="fc-res hi">'+
+     '<div class="h">📅 เลือกวันที่อยากดู</div>'+
+     '<div style="margin-bottom:9px">'+
+       '<input type="date" class="fi" id="fc-pickd" style="padding:6px 9px;font-size:13px" onchange="fcCalc()" value="'+(_fcPickVal||addDays(today(),14))+'">'+
+       '<div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap">'+
+         '<button class="btn btn-s" type="button" onclick="fcQuick(7)">+7 วัน</button>'+
+         '<button class="btn btn-s" type="button" onclick="fcQuick(14)">+14 วัน</button>'+
+         '<button class="btn btn-s" type="button" onclick="fcQuick(30)">+30 วัน</button>'+
+       '</div>'+
+     '</div>'+
+     '<div class="v">'+(sP.size>0?Math.round(sP.size):'—')+'</div>'+
+     '<div class="u">ตัว/กก.</div>'+
+     '<div class="sub"><span>ABW</span><span>'+sP.abw.toFixed(1)+' ก.</span></div>'+
+     '<div class="sub nb"><span>อีก</span><span>'+(pd===0?'วันนี้':pd+' วัน')+' (DOC '+(DOC0+pd)+')</span></div>'+
+     '<div class="sub nb"><span>น้ำหนักในบ่อ</span><span>'+kg(sP.bio)+' กก.</span></div>'+
+     '<div class="sub nb"><span>กก./ไร่</span><span'+(yMark(sP.yr)?' style="color:var(--ok);font-weight:700"':'')+'>'+kg(sP.yr)+(yMark(sP.yr)?' ✓':'')+'</span></div>'+
+   '</div>'+
+   '<div class="fc-res">'+
+     '<div class="h">🎯 ถึงไซส์เป้าหมาย ใช้กี่วัน</div>'+
+     '<div style="display:flex;gap:6px;align-items:center;margin-bottom:9px">'+
+       '<input type="number" step="any" class="fi" id="fc-tgtsize" value="'+tgtSize+'" style="width:80px;padding:5px 8px;font-size:13px" oninput="fcCalc()">'+
+       '<span style="font-size:11.5px;color:var(--tx3)">ตัว/กก.</span>'+
+     '</div>'+
+     '<div class="v">'+(days==null?'—':(days>0?days:'ถึงแล้ว'))+'</div>'+
+     '<div class="u">'+(days!=null&&days>0?'วัน':'&nbsp;')+'</div>'+
+     '<div class="sub"><span>จะถึงวันที่</span><span>'+(days!=null&&days>0?fD(addDays(today(),days))+' (DOC '+(DOC0+days)+')':'—')+'</span></div>'+
+     (days==null?'<div class="sub nb" style="color:var(--w)">ต้องมีค่า PDG ก่อน</div>':'')+
+   '</div>'+
+   '<div class="fc-res">'+
+     '<div class="h">⚖️ น้ำหนักในบ่อ ณ วันนั้น</div>'+
+     '<div class="v">'+(sT?kg(sT.bio):'—')+'</div>'+
+     '<div class="u">กก. (ที่ไซส์เป้าหมาย)</div>'+
+     '<div class="sub"><span>ตอนนี้</span><span>'+kg(now.bio)+' กก.</span></div>'+
+     '<div class="sub nb"><span>เพิ่มขึ้น</span><span>'+(sT?'+'+kg(sT.bio-now.bio)+' กก.':'—')+'</span></div>'+
+     '<div class="sub nb"><span>กก./ไร่</span><span'+(sT&&yMark(sT.yr)?' style="color:var(--ok);font-weight:700"':'')+'>'+(sT?kg(sT.yr):'—')+(sT&&yMark(sT.yr)?' ✓':'')+'</span></div>'+
+   '</div>';
+  if(!wrapEl)return;
+  // ── ตารางเทียบวันจับ ──
+  const rows=[0,7,pd,days,(days!=null?days+14:null)]
+    .filter(v=>v!=null&&v>=0)
+    .filter((v,i,a)=>a.indexOf(v)===i)
+    .sort((a,b)=>a-b);
+  let best=-Infinity,bestD=null;
+  const data=rows.map(d=>{
+    const e=fcEcon(d,0);
+    if(e.profit>best){best=e.profit;bestD=d;}
+    return{d:d,e:e,lo:fcEcon(d,-5),hi:fcEcon(d,5)};
+  });
+  wrapEl.innerHTML=
+   '<div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวาเพื่อดูทุกค่า →</div>'+
+   '<table class="fc-tbl"><thead><tr>'+
+     '<th>จับเมื่อ</th><th>DOC</th><th>ไซส์<br>(ตัว/กก.)</th><th>อัตรารอด</th><th>น้ำหนัก<br>(กก.)</th>'+
+     '<th>กก./ไร่</th><th>ราคา<br>(บ./กก.)</th><th>รายได้</th><th>ต้นทุนรวม</th><th>ต้นทุน/กก.</th>'+
+     '<th>กำไร<br><span style="font-weight:400;color:var(--tx3)">(ช่วง ±5% รอด)</span></th>'+
+   '</tr></thead><tbody>'+
+   data.map(r=>{
+     const e=r.e;
+     const cls=r.d===0?'now':(r.d===bestD?'best':'');
+     let pill=r.d===0?'<span class="fc-pill" style="color:var(--pd);background:var(--pl);border:1px solid var(--p)">ตอนนี้</span>'
+            :(r.d===bestD?'<span class="fc-pill" style="color:var(--ok);background:var(--ob);border:1px solid var(--ok)">กำไรสูงสุด</span>':'');
+     if(r.d===pd&&r.d!==0)pill+='<span class="fc-pill" style="color:var(--in);background:var(--ib);border:1px solid var(--in)">วันที่เลือก</span>';
+     const yOk=yMark(e.yr);
+     return '<tr class="'+cls+'">'+
+       '<td>'+(r.d===0?'วันนี้':'+'+r.d+' วัน')+pill+'<div style="font-size:var(--fs10);color:var(--tx3)">'+fD(addDays(today(),r.d))+'</div></td>'+
+       '<td>'+(DOC0+r.d)+'</td><td><b>'+Math.round(e.size)+'</b></td><td>'+e.surv.toFixed(1)+'%</td>'+
+       '<td>'+kg(e.bio)+'</td>'+
+       '<td'+(yOk?' style="color:var(--ok);font-weight:700"':'')+'>'+kg(e.yr)+(yOk?' ✓':'')+'</td>'+
+       '<td>'+e.pr+'</td><td>'+kg(e.rev)+'</td><td>'+kg(e.cost)+'</td><td>'+e.cpk.toFixed(1)+'</td>'+
+       '<td style="font-weight:700;color:'+(e.profit>=0?'var(--ok)':'var(--d)')+'">'+(e.profit>=0?'+':'')+kg(e.profit)+
+         '<div style="font-size:var(--fs10);font-weight:400;color:var(--tx3)">'+kg(r.lo.profit)+' – '+kg(r.hi.profit)+'</div>'+
+       '</td>'+
+     '</tr>';
+   }).join('')+
+   '</tbody></table>';
+}
+// ── ตารางราคาตามไซส์ (บันทึกถาวรใน D.forecastPrices — ใช้ร่วมทุกบ่อ) ──
+function fcRenderBands(){
+  const el=document.getElementById('fc-ptbl');if(!el)return;
+  el.innerHTML=fcPrices().map((r,i)=>
+    '<div class="fc-pband">'+
+      '<button class="x" type="button" title="ลบช่วงนี้" onclick="fcDelBand('+i+')">✕</button>'+
+      '<div class="l">ไซส์ (ตัว/กก.)</div>'+
+      '<input type="number" step="any" value="'+r[0]+'" onchange="fcSetBand('+i+',0,this.value)">'+
+      '<div class="l" style="margin-top:6px">ราคา (บ./กก.)</div>'+
+      '<input type="number" step="any" value="'+r[1]+'" onchange="fcSetBand('+i+',1,this.value)" style="color:var(--p);font-weight:700">'+
+    '</div>').join('');
+}
+function fcSetBand(i,j,v){const b=fcPrices();if(!b[i])return;b[i][j]=parseFloat(v)||0;save();fcCalc();fcPMsg('บันทึกแล้ว','ok');}
+function fcDelBand(i){
+  const b=fcPrices();
+  if(b.length<=2){fcPMsg('ต้องมีอย่างน้อย 2 ช่วงไซส์','err');return;}
+  b.splice(i,1);save();fcRenderBands();fcCalc();fcPMsg('ลบแล้ว','ok');
+}
+function fcAddBand(){
+  const b=fcPrices(),last=b[b.length-1];
+  b.push([Math.max(1,(last?last[0]:40)-5),(last?last[1]:150)+12]);
+  save();fcRenderBands();fcCalc();fcPMsg('เพิ่มช่วงแล้ว','ok');
+}
+function fcResetBands(){
+  if(!confirm('คืนค่าตารางราคาเป็นค่าเริ่มต้น? ราคาที่กรอกไว้จะหายทั้งหมด'))return;
+  D.forecastPrices=FC_DEF_PRICES.map(r=>r.slice());
+  save();fcRenderBands();fcCalc();fcPMsg('คืนค่าแล้ว','ok');
+}
+// ── ดึงราคาจากการขายจริงที่เคยบันทึก (พาเชียล + ปิดรอบ) — ไซส์เดียวกันเอาราคาครั้งล่าสุด ──
+function fcFillFromSales(){
+  const rec=[];
+  (D.ponds||[]).forEach(p=>{
+    (p.partialHarvests||[]).forEach(r=>{if(r.size>0&&r.price>0)rec.push({date:r.date||'',size:+r.size,price:+r.price});});
+    (p.cropHistory||[]).forEach(c=>{
+      (c.partialHarvests||[]).forEach(r=>{if(r.size>0&&r.price>0)rec.push({date:r.date||'',size:+r.size,price:+r.price});});
+      const hr=c.harvestResult;
+      if(hr&&hr.size>0&&hr.price>0)rec.push({date:c.closeDate||'',size:+hr.size,price:+hr.price});
+    });
+  });
+  if(!rec.length){fcPMsg('ยังไม่มีประวัติการขายที่มีทั้งไซส์และราคา','err');return;}
+  rec.sort((a,b)=>(a.date||'').localeCompare(b.date||''));   // เก่า→ใหม่ ค่าท้ายสุดของแต่ละไซส์ = ล่าสุด
+  const byS={};rec.forEach(r=>{byS[Math.round(r.size)]=r.price;});
+  const bands=Object.keys(byS).map(k=>[+k,byS[k]]).sort((a,b)=>b[0]-a[0]);
+  if(bands.length<2){fcPMsg('มีข้อมูลขายแค่ไซส์เดียว ต้องมีอย่างน้อย 2 ไซส์','err');return;}
+  if(!confirm('พบราคาขายจริง '+bands.length+' ไซส์\n'+bands.map(b=>'• '+b[0]+' ตัว/กก. = '+b[1]+' บ.').join('\n')+'\n\nนำมาแทนตารางราคาปัจจุบันทั้งหมด?'))return;
+  D.forecastPrices=bands;save();fcRenderBands();fcCalc();
+  fcPMsg('ดึงมา '+bands.length+' ไซส์แล้ว — แก้ทับได้','ok');
+}
+function fcPMsg(t,cls){
+  const el=document.getElementById('fc-pmsg');if(!el)return;
+  el.textContent=t;el.style.color=cls==='err'?'var(--d)':'var(--ok)';
+  clearTimeout(el._t);el._t=setTimeout(()=>{el.textContent='';},2500);
+}
 function initPalm(){
   if(APP_ROLE!=='admin')return;
   palmTab(_palmActiveTab,document.getElementById('palmb-'+_palmActiveTab));
