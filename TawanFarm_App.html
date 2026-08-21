@@ -9527,7 +9527,15 @@ function setCmpCat(cat,btn){
 function initCompare(){
   if(!_wqHmDate)_wqHmDate=today();
   const selEl=document.getElementById('cmp-sel');
-  if(selEl){selEl.innerHTML=sortedPonds().map(p=>`<span class="pond-chk${cmpP.has(p.id)?' on':''}" onclick="tglCmp('${p.id}',this)"><input type="checkbox"${cmpP.has(p.id)?' checked':''}>บ่อ ${p.name}</span>`).join('');selEl.style.display=cmpCat==='wq'?'none':'flex';}
+  // ── โชว์เฉพาะบ่อที่มีกุ้งอยู่ตอนนี้ (ตัดบ่อเตรียม/ว่าง/ปิดแล้วออก) — เดิมลิสต์ทุกบ่อ ทำให้มีบ่อให้กดเยอะเกินไปและบางบ่อยังไม่มีข้อมูลเลย ──
+  const cmpPonds=sortPondsByAge(wqfeedActivePonds());
+  cmpP.forEach(id=>{if(!cmpPonds.some(p=>p.id===id))cmpP.delete(id);});   // ล้างบ่อที่เคยเลือกไว้แล้วตอนนี้ไม่มีกุ้งแล้ว กันกราฟค้างข้อมูลบ่อที่หายไปจากลิสต์
+  if(selEl){
+    selEl.innerHTML=cmpPonds.length
+      ?cmpPonds.map(p=>`<span class="pond-chk${cmpP.has(p.id)?' on':''}" onclick="tglCmp('${p.id}',this)"><input type="checkbox"${cmpP.has(p.id)?' checked':''}>บ่อ ${p.name}</span>`).join('')
+      :'<span style="font-size:13px;color:var(--tx3);font-style:italic">ยังไม่มีบ่อที่กำลังเลี้ยงอยู่</span>';
+    selEl.style.display=cmpCat==='wq'?'none':'flex';
+  }
   const pmEl=document.getElementById('cmp-param');if(pmEl)pmEl.innerHTML=PARAMS.map(p=>`<option value="${p.key}">${p.lbl}</option>`).join('');
   const isWq=cmpCat==='wq';
   const hmEl=document.getElementById('cmp-wq-heatmap');if(hmEl)hmEl.style.display=isWq?'':'none';
@@ -9542,7 +9550,11 @@ function renderCompare(){
   if(cmpCat==='lab')return renderCmpLab();
   if(cmpCat==='water')return renderCmpWater();
 }
-function getSelPonds(){return cmpP.size>0?D.ponds.filter(p=>cmpP.has(p.id)):D.ponds;}
+// ── ไม่ได้ติ๊กเลย = แสดงทุกบ่อที่มีกุ้งอยู่ตอนนี้ (ไม่ใช่ทุกบ่อใน D.ponds ที่รวมบ่อว่าง/ปิดแล้วซึ่งไม่มีข้อมูลให้เทียบ) ──
+function getSelPonds(){
+  const act=wqfeedActivePonds();
+  return cmpP.size>0?act.filter(p=>cmpP.has(p.id)):act;
+}
 function renderCmpWQ(){
   const key=document.getElementById('cmp-param')?.value;const pm=PARAMS.find(p=>p.key===key);if(!pm)return;
   document.getElementById('cmp-title').textContent=`เปรียบเทียบ ${pm.lbl}${pm.unit?' ('+pm.unit+')':''} ระหว่างบ่อ`;
