@@ -8020,6 +8020,7 @@ const FC_DEF_PRICES=[[70,120],[60,130],[50,145],[40,165],[30,190]];
 const FC_FEED_KG_PER_SACK=25;   // ต้องตรงกับสมมติฐานใน pondFeedCost()
 let _fcAuto={};                 // ค่าอัตโนมัติของบ่อที่เลือกอยู่ (ไว้กดคืนค่า)
 let _fcPickVal=null;            // วันที่เลือกในปฏิทิน (คงไว้ข้าม re-render)
+let _fcDOC0=0;                  // อายุกุ้ง (DOC) ของบ่อที่เลือก ณ วันนี้ — fcSnap ใช้คำนวณ feeding rate ตามอายุ ต้องเซ็ตก่อนเรียก fcSnap เสมอ
 function fcPrices(){
   if(!Array.isArray(D.forecastPrices)||!D.forecastPrices.length)D.forecastPrices=FC_DEF_PRICES.map(r=>r.slice());
   return D.forecastPrices;
@@ -8108,9 +8109,18 @@ function fcResetField(k){
 function fcSnap(d,off){
   const abw=_fcG('fc-abw')+_fcG('fc-pdg')*d;
   const surv=Math.max(0,_fcG('fc-surv')+(off||0)-_fcG('fc-decl')*(d/10));
-  const bio=_fcG('fc-rel')*(surv/100)*abw/1000;
+  const rel=_fcG('fc-rel');
+  const bio=rel*(surv/100)*abw/1000;
   const rai=_fcG('fc-rai');
-  return{abw:abw,surv:surv,bio:bio,size:abw>0?1000/abw:0,yr:rai>0?bio/rai:0};
+  // ── อาหารที่ควรให้ต่อวัน ณ วันนั้น: ใช้สูตร Precision Feeding (ดร.พุทธ) ตัวเดียวกับการ์ด "เปรียบเทียบ Biomass 2 วิธี"
+  //    feeding rate(%) ขึ้นกับอายุ+น้ำหนักตัว → อาหาร/วัน = biomass × rate%
+  //    "กก./แสนตัว" หารด้วย "ยอดปล่อย" (ไม่ใช่ตัวที่รอด) ให้ตรงกับที่หน้าอาหาร/รายละเอียดบ่อใช้อยู่ (feedPer100k) จะได้เทียบกันได้ ──
+  const doc=_fcDOC0+d;
+  const rate=bcFeedRateFormula(doc,abw);
+  const fdDay=(rate!=null&&bio>0)?bio*rate/100:null;
+  const fd100k=(fdDay!=null&&rel>0)?feedPer100k(fdDay,rel):null;
+  return{abw:abw,surv:surv,bio:bio,size:abw>0?1000/abw:0,yr:rai>0?bio/rai:0,
+         rate:rate,fdDay:fdDay,fd100k:fd100k};
 }
 function fcEcon(d,off){
   const s=fcSnap(d,off),base=fcSnap(0,off);
@@ -8119,6 +8129,7 @@ function fcEcon(d,off){
   const cost=_fcG('fc-cost0')+feedKg*_fcG('fc-fp')+d*_fcG('fc-fx');
   const rev=s.bio*pr;
   return{abw:s.abw,surv:s.surv,bio:s.bio,size:s.size,yr:s.yr,pr:pr,rev:rev,cost:cost,feedKg:feedKg,
+         rate:s.rate,fdDay:s.fdDay,fd100k:s.fd100k,
          cpk:s.bio>0?cost/s.bio:0,profit:rev-cost};
 }
 function _fcPickedDays(){
@@ -8140,6 +8151,7 @@ function fcCalc(){
   }
   const pid=document.getElementById('fc-pond')?.value,p=pid?pond(pid):null;
   const DOC0=p?pondCurAge(p):0;
+  _fcDOC0=DOC0;                 // ⚠️ ต้องเซ็ตก่อนเรียก fcSnap/fcEcon ด้านล่าง
   const pd=_fcPickedDays();
   const sP=fcSnap(pd,0),now=fcSnap(0,0);
   const ytgt=_fcG('fc-ytgt');
@@ -8158,6 +8170,8 @@ function fcCalc(){
      '<div class="sub nb"><span>อีก</span><span>'+(pd===0?'วันนี้':pd+' วัน')+' (DOC '+(DOC0+pd)+')</span></div>'+
      '<div class="sub nb"><span>น้ำหนักในบ่อ</span><span>'+kg(sP.bio)+' กก.</span></div>'+
      '<div class="sub nb"><span>กก./ไร่</span><span'+(yMark(sP.yr)?' style="color:var(--ok);font-weight:700"':'')+'>'+kg(sP.yr)+(yMark(sP.yr)?' ✓':'')+'</span></div>'+
+     '<div class="sub nb"><span>อาหาร/วัน</span><span>'+(sP.fdDay!=null?kg(sP.fdDay)+' กก.':'—')+'</span></div>'+
+     '<div class="sub nb"><span>อาหาร กก./แสนตัว</span><span style="font-weight:700;color:var(--p)">'+(sP.fd100k!=null?sP.fd100k.toFixed(1):'—')+'</span></div>'+
    '</div>'+
    '<div class="fc-res">'+
      '<div class="h">🎯 ถึงไซส์ '+tgtSize+' ตัว/กก. ใช้กี่วัน</div>'+
@@ -8193,7 +8207,7 @@ function fcCalc(){
    '<div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวาเพื่อดูทุกค่า →</div>'+
    '<table class="fc-tbl"><thead><tr>'+
      '<th>จับเมื่อ</th><th>DOC</th><th>ไซส์<br>(ตัว/กก.)</th><th>อัตรารอด</th><th>น้ำหนัก<br>(กก.)</th>'+
-     '<th>กก./ไร่</th>'+
+     '<th>กก./ไร่</th><th>อาหาร/วัน<br>(กก.)</th><th>อาหาร<br>กก./แสน</th>'+
      (fcMoney?'<th>ราคา<br>(บ./กก.)</th><th>รายได้</th><th>ต้นทุนรวม</th><th>ต้นทุน/กก.</th>'+
               '<th>กำไร<br><span style="font-weight:400;color:var(--tx3)">(ช่วง ±5% รอด)</span></th>':'')+
    '</tr></thead><tbody>'+
@@ -8209,6 +8223,8 @@ function fcCalc(){
        '<td>'+(DOC0+r.d)+'</td><td><b>'+Math.round(e.size)+'</b></td><td>'+e.surv.toFixed(1)+'%</td>'+
        '<td>'+kg(e.bio)+'</td>'+
        '<td'+(yOk?' style="color:var(--ok);font-weight:700"':'')+'>'+kg(e.yr)+(yOk?' ✓':'')+'</td>'+
+       '<td>'+(e.fdDay!=null?kg(e.fdDay):'—')+'</td>'+
+       '<td style="font-weight:700;color:var(--p)">'+(e.fd100k!=null?e.fd100k.toFixed(1):'—')+'</td>'+
        (fcMoney?
          '<td>'+e.pr+'</td><td>'+kg(e.rev)+'</td><td>'+kg(e.cost)+'</td><td>'+e.cpk.toFixed(1)+'</td>'+
          '<td style="font-weight:700;color:'+(e.profit>=0?'var(--ok)':'var(--d)')+'">'+(e.profit>=0?'+':'')+kg(e.profit)+
