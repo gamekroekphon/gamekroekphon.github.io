@@ -1180,6 +1180,18 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <div class="fg admin-only"><label class="fl" for="fc-fx">ต้นทุนคงที่/วัน (บ.)</label><input type="number" step="any" class="fi fc-auto" id="fc-fx" oninput="fcCalc()"><span class="hint">ค่าไฟ + ค่าแรง เฉลี่ยต่อบ่อ</span></div>
       <div class="fg admin-only"><label class="fl" for="fc-cost0">ต้นทุนสะสมถึงวันนี้ (บ.)</label><input type="number" step="any" class="fi fc-auto" id="fc-cost0" oninput="fcCalc()"></div>
       <div class="fg"><label class="fl" for="fc-ytgt">เกณฑ์พาเชียล (กก./ไร่)</label><input type="number" step="any" class="fi" id="fc-ytgt" oninput="fcCalc()"><span class="hint">ถึงเกณฑ์แล้วขึ้นเขียวในตาราง</span></div>
+      <!-- ⚠️ 2 ช่องนี้ต้องอยู่ในการ์ดตั้งค่า (ที่ไม่เคยถูก re-render) ห้ามย้ายกลับเข้าไปใน #fc-res
+           เพราะ fcCalc() ล้าง innerHTML ของ #fc-res ทิ้งทุกครั้ง ถ้าช่องกรอกอยู่ในนั้น ตัว input จะถูกทำลาย
+           ระหว่างพิมพ์ → เคอร์เซอร์หลุด พิมพ์ได้ทีละตัว (บั๊กที่พี่เจอ entry #185) -->
+      <div class="fg"><label class="fl" for="fc-pickd">📅 วันที่อยากดู</label>
+        <input type="date" class="fi" id="fc-pickd" onchange="fcCalc()">
+        <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap">
+          <button class="btn btn-s" type="button" onclick="fcQuick(7)">+7 วัน</button>
+          <button class="btn btn-s" type="button" onclick="fcQuick(14)">+14 วัน</button>
+          <button class="btn btn-s" type="button" onclick="fcQuick(30)">+30 วัน</button>
+        </div>
+      </div>
+      <div class="fg"><label class="fl" for="fc-tgtsize">🎯 ไซส์เป้าหมาย (ตัว/กก.)</label><input type="number" step="any" class="fi" id="fc-tgtsize" value="40" oninput="fcCalc()"><span class="hint">ใช้คำนวณว่าอีกกี่วันจะถึงไซส์นี้</span></div>
     </div>
     <div id="fc-warn" style="margin-top:12px"></div>
   </div>
@@ -8033,6 +8045,9 @@ function initForecast(){
     ?list.map(p=>'<option value="'+p.id+'">บ่อ '+p.name+' — DOC '+pondCurAge(p)+' วัน</option>').join('')
     :'<option value="">— ยังไม่มีบ่อที่กำลังเลี้ยง —</option>';
   if(cur&&list.some(p=>p.id===cur))sel.value=cur;
+  // ── ตั้งค่าเริ่มต้นช่องปฏิทิน (ตอนนี้เป็น input ถาวรในการ์ดตั้งค่า ไม่ได้ถูกสร้างใหม่ทุก render แล้ว จึงต้องเซ็ตค่าเองตอนเปิดหน้า) ──
+  const dEl=document.getElementById('fc-pickd');
+  if(dEl&&!dEl.value){dEl.value=_fcPickVal||addDays(today(),14);_fcPickVal=dEl.value;}
   fcRenderBands();
   fcLoadPond();
 }
@@ -8136,15 +8151,7 @@ function fcCalc(){
   const yMark=v=>(v>=ytgt&&ytgt>0);
   resEl.innerHTML=
    '<div class="fc-res hi">'+
-     '<div class="h">📅 เลือกวันที่อยากดู</div>'+
-     '<div style="margin-bottom:9px">'+
-       '<input type="date" class="fi" id="fc-pickd" style="padding:6px 9px;font-size:13px" onchange="fcCalc()" value="'+(_fcPickVal||addDays(today(),14))+'">'+
-       '<div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap">'+
-         '<button class="btn btn-s" type="button" onclick="fcQuick(7)">+7 วัน</button>'+
-         '<button class="btn btn-s" type="button" onclick="fcQuick(14)">+14 วัน</button>'+
-         '<button class="btn btn-s" type="button" onclick="fcQuick(30)">+30 วัน</button>'+
-       '</div>'+
-     '</div>'+
+     '<div class="h">📅 วันที่เลือก · '+fD(_fcPickVal||addDays(today(),14))+'</div>'+
      '<div class="v">'+(sP.size>0?Math.round(sP.size):'—')+'</div>'+
      '<div class="u">ตัว/กก.</div>'+
      '<div class="sub"><span>ABW</span><span>'+sP.abw.toFixed(1)+' ก.</span></div>'+
@@ -8153,11 +8160,7 @@ function fcCalc(){
      '<div class="sub nb"><span>กก./ไร่</span><span'+(yMark(sP.yr)?' style="color:var(--ok);font-weight:700"':'')+'>'+kg(sP.yr)+(yMark(sP.yr)?' ✓':'')+'</span></div>'+
    '</div>'+
    '<div class="fc-res">'+
-     '<div class="h">🎯 ถึงไซส์เป้าหมาย ใช้กี่วัน</div>'+
-     '<div style="display:flex;gap:6px;align-items:center;margin-bottom:9px">'+
-       '<input type="number" step="any" class="fi" id="fc-tgtsize" value="'+tgtSize+'" style="width:80px;padding:5px 8px;font-size:13px" oninput="fcCalc()">'+
-       '<span style="font-size:11.5px;color:var(--tx3)">ตัว/กก.</span>'+
-     '</div>'+
+     '<div class="h">🎯 ถึงไซส์ '+tgtSize+' ตัว/กก. ใช้กี่วัน</div>'+
      '<div class="v">'+(days==null?'—':(days>0?days:'ถึงแล้ว'))+'</div>'+
      '<div class="u">'+(days!=null&&days>0?'วัน':'&nbsp;')+'</div>'+
      '<div class="sub"><span>จะถึงวันที่</span><span>'+(days!=null&&days>0?fD(addDays(today(),days))+' (DOC '+(DOC0+days)+')':'—')+'</span></div>'+
