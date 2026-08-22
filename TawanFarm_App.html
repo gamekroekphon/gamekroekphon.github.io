@@ -1176,6 +1176,13 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <div class="fg"><label class="fl" for="fc-rel">ยอดปล่อย (ตัว)</label><input type="number" step="any" class="fi fc-auto" id="fc-rel" oninput="fcCalc()"></div>
       <div class="fg"><label class="fl" for="fc-rai">ขนาดบ่อ (ไร่)</label><input type="number" step="any" class="fi fc-auto" id="fc-rai" oninput="fcCalc()"></div>
       <div class="fg"><label class="fl" for="fc-fcr">FCR ที่คาด</label><input type="number" step="any" class="fi fc-auto" id="fc-fcr" oninput="fcCalc()"></div>
+      <div class="fg"><label class="fl" for="fc-fd100k">อาหาร กก./แสนตัว (ที่ให้จริง)</label>
+        <div style="display:flex;gap:6px"><input type="number" step="any" class="fi fc-auto" id="fc-fd100k" oninput="fcCalc()"><button class="btn btn-s" type="button" onclick="fcResetField('fd100k')" title="คืนค่าอัตโนมัติ">↺</button></div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--tx2);margin-top:5px;cursor:pointer">
+          <input type="checkbox" id="fc-fdgrow" checked onchange="fcCalc()" style="width:auto;margin:0"> ให้เพิ่มขึ้นตามขนาดกุ้ง
+        </label>
+        <span class="hint" id="fc-fd100k-hint"></span>
+      </div>
       <div class="fg admin-only"><label class="fl" for="fc-fp">ราคาอาหาร (บ./กก.)</label><input type="number" step="any" class="fi fc-auto" id="fc-fp" oninput="fcCalc()"></div>
       <div class="fg admin-only"><label class="fl" for="fc-fx">ต้นทุนคงที่/วัน (บ.)</label><input type="number" step="any" class="fi fc-auto" id="fc-fx" oninput="fcCalc()"><span class="hint">ค่าไฟ + ค่าแรง เฉลี่ยต่อบ่อ</span></div>
       <div class="fg admin-only"><label class="fl" for="fc-cost0">ต้นทุนสะสมถึงวันนี้ (บ.)</label><input type="number" step="any" class="fi fc-auto" id="fc-cost0" oninput="fcCalc()"></div>
@@ -8069,6 +8076,19 @@ function fcLoadPond(){
   // ต้นทุนคงที่/วัน = (ค่าแรง+ค่าไฟ ที่สะสมมา) ÷ จำนวนวันที่เลี้ยง
   const fixDay=age>0&&rc?((rc.labor+rc.elec)/age):0;
   const fcrNow=parseFloat(getFCR(p));
+  // ── อาหาร กก./แสนตัว ที่ให้จริงล่าสุด (จากบันทึกอาหาร) — ถ้ายังไม่เคยกรอกอาหาร ใช้ค่าที่สูตร Precision Feeding แนะนำแทน ──
+  const fLog=(p.feedLog||[]).filter(r=>r.totalFeed>0);
+  const latFeed=fLog.length?fLog[fLog.length-1]:null;
+  let fdRateNow=latFeed?feedPer100k(latFeed.totalFeed,pRelease(p)):0;
+  let fdSrc=latFeed?('จากบันทึกอาหารล่าสุด '+fD(latFeed.date)):'';
+  if(!(fdRateNow>0)&&lat&&lat.abw>0&&lat.survivalRate!=null&&pRelease(p)>0){
+    const r0=bcFeedRateFormula(age,lat.abw);
+    if(r0!=null){
+      const bio0=pRelease(p)*(lat.survivalRate/100)*lat.abw/1000;
+      fdRateNow=feedPer100k(bio0*r0/100,pRelease(p))||0;
+      fdSrc='ยังไม่มีบันทึกอาหาร — ใช้ค่าที่สูตรแนะนำ';
+    }
+  }
   _fcAuto={
     abw:lat&&lat.abw?+lat.abw:0,
     pdg:pdgRaw>0?pdgRaw:0,
@@ -8076,6 +8096,7 @@ function fcLoadPond(){
     rel:pRelease(p),
     rai:p.size||0,
     fcr:fcrNow>0?fcrNow:1.5,
+    fd100k:fdRateNow>0?Math.round(fdRateNow*10)/10:0,
     fp:feedPerKg>0?Math.round(feedPerKg*100)/100:0,
     fx:fixDay>0?Math.round(fixDay):0,
     cost0:rc?Math.round(rc.total):0
@@ -8086,6 +8107,8 @@ function fcLoadPond(){
   if(ah)ah.textContent=lat?('จากสุ่มล่าสุด '+fD(lat.date)):'ยังไม่เคยสุ่มตัวอย่าง';
   const ph=document.getElementById('fc-pdg-hint');
   if(ph)ph.textContent=pdgRaw>0?'จากสุ่ม 2 ครั้งล่าสุด':'ยังคำนวณไม่ได้ (ต้องสุ่ม ≥2 ครั้ง) — กรอกเอง';
+  const fh=document.getElementById('fc-fd100k-hint');
+  if(fh)fh.textContent=fdSrc||'กรอกเองได้ — ถ้าเว้นว่างจะใช้สูตรคำนวณให้';
   // เตือนถ้าข้อมูลไม่พอ — บอกให้ชัดว่าขาดอะไรและแก้ยังไง แทนที่จะโชว์ 0 เงียบๆ
   const miss=[];
   if(!_fcAuto.abw)miss.push('ABW (ต้องสุ่มตัวอย่างก่อน)');
@@ -8117,19 +8140,50 @@ function fcSnap(d,off){
   //    "กก./แสนตัว" หารด้วย "ยอดปล่อย" (ไม่ใช่ตัวที่รอด) ให้ตรงกับที่หน้าอาหาร/รายละเอียดบ่อใช้อยู่ (feedPer100k) จะได้เทียบกันได้ ──
   const doc=_fcDOC0+d;
   const rate=bcFeedRateFormula(doc,abw);
-  const fdDay=(rate!=null&&bio>0)?bio*rate/100:null;
-  const fd100k=(fdDay!=null&&rel>0)?feedPer100k(fdDay,rel):null;
+  let fdDay=(rate!=null&&bio>0)?bio*rate/100:null;
+  let fd100k=(fdDay!=null&&rel>0)?feedPer100k(fdDay,rel):null;
+  // ── ถ้าผู้ใช้กรอก "อาหาร กก./แสนตัว ที่ให้จริง" ให้ใช้ค่านั้นแทนสูตร ──
+  //    ติ๊ก "ให้เพิ่มขึ้นตามขนาดกุ้ง" = เอาค่าที่กรอกมาเทียบกับที่สูตรแนะนำ ณ วันนี้ ได้เป็นตัวคูณ แล้วคูณกับเส้นโค้งของสูตรไปตลอด
+    //    (กุ้งโตขึ้นย่อมกินมากขึ้น ถ้าใช้ค่าคงที่ตลอดจะประเมินอาหารต่ำเกินจริงเมื่อทอดยาวหลายสิบวัน)
+  //    ไม่ติ๊ก = ใช้ค่าที่กรอกคงที่ตลอดช่วงคาดการณ์
+  const userFd=_fcG('fc-fd100k');
+  if(userFd>0&&rel>0){
+    const grow=document.getElementById('fc-fdgrow')?.checked!==false;
+    if(grow){
+      const abw0=_fcG('fc-abw'),surv0=_fcG('fc-surv');
+      const bio0=rel*(surv0/100)*abw0/1000;
+      const rate0=bcFeedRateFormula(_fcDOC0,abw0);
+      const base100k=(rate0!=null&&bio0>0)?feedPer100k(bio0*rate0/100,rel):0;
+      const factor=base100k>0?userFd/base100k:1;
+      fd100k=(fd100k!=null)?fd100k*factor:userFd;
+    }else{
+      fd100k=userFd;
+    }
+    fdDay=fd100k*rel/100000;
+  }
   return{abw:abw,surv:surv,bio:bio,size:abw>0?1000/abw:0,yr:rai>0?bio/rai:0,
          rate:rate,fdDay:fdDay,fd100k:fd100k};
 }
 function fcEcon(d,off){
   const s=fcSnap(d,off),base=fcSnap(0,off);
   const pr=fcPriceAt(s.size);
-  const feedKg=Math.max(0,s.bio-base.bio)*_fcG('fc-fcr');
+  const gain=Math.max(0,s.bio-base.bio);
+  // ── อาหารสะสมจากวันนี้ถึงวัน d ──
+  //    ถ้าผู้ใช้กรอก "อาหาร กก./แสนตัว ที่ให้จริง" → รวมอาหารรายวันจริงๆ (ตรงกว่า เพราะรู้อัตราการให้แล้ว)
+  //    ถ้าไม่กรอก → ประมาณจาก FCR แบบเดิม (เนื้อที่เพิ่ม × FCR)
+  let feedKg,feedSrc;
+  if(_fcG('fc-fd100k')>0){
+    let sum=0;
+    for(let i=1;i<=d;i++){const x=fcSnap(i,off);if(x.fdDay>0)sum+=x.fdDay;}
+    feedKg=sum;feedSrc='sum';
+  }else{
+    feedKg=gain*_fcG('fc-fcr');feedSrc='fcr';
+  }
+  const impFcr=gain>0?feedKg/gain:null;   // FCR ที่เป็นผลจากอัตราการให้อาหาร — ไว้ไขว้ตรวจกับช่อง FCR ที่คาด
   const cost=_fcG('fc-cost0')+feedKg*_fcG('fc-fp')+d*_fcG('fc-fx');
   const rev=s.bio*pr;
   return{abw:s.abw,surv:s.surv,bio:s.bio,size:s.size,yr:s.yr,pr:pr,rev:rev,cost:cost,feedKg:feedKg,
-         rate:s.rate,fdDay:s.fdDay,fd100k:s.fd100k,
+         rate:s.rate,fdDay:s.fdDay,fd100k:s.fd100k,gain:gain,impFcr:impFcr,feedSrc:feedSrc,
          cpk:s.bio>0?cost/s.bio:0,profit:rev-cost};
 }
 function _fcPickedDays(){
@@ -8154,6 +8208,7 @@ function fcCalc(){
   _fcDOC0=DOC0;                 // ⚠️ ต้องเซ็ตก่อนเรียก fcSnap/fcEcon ด้านล่าง
   const pd=_fcPickedDays();
   const sP=fcSnap(pd,0),now=fcSnap(0,0);
+  const ePick=pd>0?fcEcon(pd,0):null;   // ใช้ดึงอาหารสะสม + FCR ที่จะได้จริง ณ วันที่เลือก
   const ytgt=_fcG('fc-ytgt');
   const tgtSize=_fcG('fc-tgtsize')||40;
   const tgtAbw=tgtSize>0?1000/tgtSize:0;
@@ -8172,6 +8227,10 @@ function fcCalc(){
      '<div class="sub nb"><span>กก./ไร่</span><span'+(yMark(sP.yr)?' style="color:var(--ok);font-weight:700"':'')+'>'+kg(sP.yr)+(yMark(sP.yr)?' ✓':'')+'</span></div>'+
      '<div class="sub nb"><span>อาหาร/วัน</span><span>'+(sP.fdDay!=null?kg(sP.fdDay)+' กก.':'—')+'</span></div>'+
      '<div class="sub nb"><span>อาหาร กก./แสนตัว</span><span style="font-weight:700;color:var(--p)">'+(sP.fd100k!=null?sP.fd100k.toFixed(1):'—')+'</span></div>'+
+     '<div class="sub nb"><span>อาหารรวมถึงวันนั้น</span><span>'+(ePick?kg(ePick.feedKg)+' กก.':'—')+'</span></div>'+
+     (ePick&&ePick.impFcr!=null&&ePick.feedSrc==='sum'
+       ?'<div class="sub nb"><span>FCR ที่จะได้จริง</span><span'+(Math.abs(ePick.impFcr-_fcG('fc-fcr'))>0.25?' style="color:var(--w);font-weight:700"':'')+'>'+ePick.impFcr.toFixed(2)+'</span></div>'
+       :'')+
    '</div>'+
    '<div class="fc-res">'+
      '<div class="h">🎯 ถึงไซส์ '+tgtSize+' ตัว/กก. ใช้กี่วัน</div>'+
