@@ -272,6 +272,12 @@ body.role-admin .side-nav .sn-link.admin-only{display:block!important}
 .fc-pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:9px}
 .fc-pband{background:var(--sf2);border:1px solid var(--bd);border-radius:9px;padding:9px 10px;position:relative}
 /* ═══ Protocol เวชภัณฑ์ (แท็บหัวข้อ) ═══ */
+.mp-grps{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--bd)}
+.mp-grp{border:1.5px solid var(--bd);background:var(--sf);color:var(--tx2);border-radius:10px;padding:9px 18px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.15s}
+.mp-grp:hover{border-color:var(--p)}
+.mp-grp.on{background:var(--pl);border-color:var(--p);color:var(--pd)}
+.mp-grp .n{font-size:var(--fs10);font-weight:600;color:var(--tx3);background:var(--sf2);border-radius:99px;padding:1px 8px}
+.mp-grp.on .n{background:var(--sf);color:var(--pd)}
 .mp-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
 .mp-tb{border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);border-radius:99px;padding:7px 14px;font-size:12.5px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:.15s}
 .mp-tb:hover{border-color:var(--p)}
@@ -281,6 +287,13 @@ body.role-admin .side-nav .sn-link.admin-only{display:block!important}
 .mp-tb.on .dot{background:#fff}
 .mp-ttl-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .mp-ttl-row .t{font-size:15px;font-weight:700;color:var(--p)}
+/* ⚠️ แถบปุ่มจัดการหัวข้อ (admin เท่านั้น) — ใช้ .mp-actions ตัวเดียว ห้ามใส่ .admin-only ซ้ำ
+   เหตุผล 2 ข้อที่เจอตอนทำ entry #190:
+   1) เดิมใส่ style="display:flex" แบบ inline คู่กับ .admin-only → inline ชนะ class เสมอ ปุ่มโผล่ให้ staff เห็น
+   2) พอย้ายเป็น class แล้วยังใส่ .admin-only ไว้ด้วย → ชน body.role-admin .admin-only{display:revert!important}
+      ที่ specificity เท่ากันแต่ประกาศทีหลัง ทำให้ admin ได้ display:block แทน flex (ปุ่มเรียงเพี้ยน) */
+.mp-actions{display:none}
+body.role-admin .mp-actions{display:flex!important;gap:2px;flex-wrap:wrap}
 .mp-mini{border:none;background:none;color:var(--tx3);cursor:pointer;font-size:12px;padding:3px 6px;border-radius:5px;font-family:inherit}
 .mp-mini:hover{background:var(--sf2);color:var(--tx)}
 .mp-mini.danger:hover{background:var(--db);color:var(--d)}
@@ -1258,15 +1271,17 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   <div class="sec-hdr"><div class="sec-title">💊 Protocol เวชภัณฑ์ล่าสุด</div></div>
   <div class="card">
     <div class="card-sub" style="margin-bottom:14px">โปรแกรมที่ใช้จริงหน้างาน — ไม่ผูกกับบ่อใดบ่อหนึ่ง อัปเดตอิสระเมื่อหน้างานเปลี่ยน · จุดเขียวบนแท็บ = หัวข้อนั้นกรอกแล้ว</div>
+    <div class="mp-grps" id="mp-grps"></div>
     <div class="mp-tabs" id="mp-tabs"></div>
     <div class="mp-ttl-row">
       <span class="t" id="mp-cur-ttl">—</span>
       <span id="mp-pin-badge"></span>
-      <span class="admin-only" style="display:flex;gap:2px;flex-wrap:wrap">
+      <span class="mp-actions">
         <button class="mp-mini" type="button" onclick="mpRename()" title="เปลี่ยนชื่อหัวข้อ">✏️ เปลี่ยนชื่อ</button>
         <button class="mp-mini" type="button" onclick="mpTogglePin()" title="ตั้งเป็นหัวข้อที่โชว์ในหน้าภาพรวม">📌 ตั้งเป็นหัวข้อหลัก</button>
         <button class="mp-mini" type="button" onclick="mpMove(-1)" title="เลื่อนขึ้น">↑</button>
         <button class="mp-mini" type="button" onclick="mpMove(1)" title="เลื่อนลง">↓</button>
+        <button class="mp-mini" type="button" onclick="mpMoveGroup()" title="ย้ายไปอีกกลุ่ม">🔀 ย้ายกลุ่ม</button>
         <button class="mp-mini danger" type="button" onclick="mpDel()" title="ลบหัวข้อนี้">🗑️ ลบ</button>
       </span>
     </div>
@@ -3893,20 +3908,33 @@ let cmpP=new Set(['B1','B2']);let cmpCat='wq';let selWC='';
 // พี่ขอย้ายออกมาเป็นเมนูของตัวเอง + แบ่งเป็นหัวข้อที่ "เพิ่ม/แก้ชื่อ/ลบ/เลื่อนลำดับเองได้" (ไม่ต้องแก้โค้ดเวลาหน้างานเปลี่ยน)
 // ⚠️ ข้อมูลเดิม 2 ช่องถูกย้ายเข้าหัวข้อที่ตรงกันอัตโนมัติ (กิน→หัวข้อ 1, ลงน้ำ→หัวข้อ 4) และ **ไม่ลบ D.medProtocolOverview ทิ้ง**
 //    เก็บไว้เป็น backup เผื่อ migrate พลาด/ต้องย้อนดูค่าเดิม (ไม่มีที่ไหนอ่านมันแล้ว)
+// ── 2 กลุ่มหลัก (ผสมกิน / ลงน้ำ) — เก็บใน D.medProtoGroups เพื่อให้เปลี่ยนชื่อกลุ่มได้ทีหลังโดยไม่ต้องแก้โค้ด
+//    key คงที่ ('feed'/'water') ใช้ผูกกับหัวข้อ ห้ามเปลี่ยน เพราะ topic อ้างถึงด้วย key นี้ ──
+const MEDPROTO_GROUPS=[{key:'feed',title:'🍚 ผสมกิน'},{key:'water',title:'💧 ลงน้ำ'}];
 const MEDPROTO_DEFAULT_TOPICS=[
-  '🍚 โปรแกรมผสมอาหาร (กุ้งปกติ)',
-  '🦠 โปรแกรมผสมอาหาร (พบเชื้อ เขียว 10² เหลือง 10⁴)',
-  '🦐 โปรแกรมผสมอาหาร (กุ้งใหญ่ หน้า 4 ลงมา)',
-  '💧 โปรแกรมลงน้ำ (กุ้งปกติ)',
-  '🧪 โปรแกรมตัดเชื้อน้ำ (หลังน้ำเข้า)'
+  {grp:'feed', t:'🍚 กุ้งปกติ'},
+  {grp:'feed', t:'🦠 พบเชื้อ (เขียว 10² เหลือง 10⁴)'},
+  {grp:'feed', t:'🦐 กุ้งใหญ่ (หน้า 4 ลงมา)'},
+  {grp:'water',t:'💧 กุ้งปกติ'},
+  {grp:'water',t:'🧪 ตัดเชื้อน้ำ (หลังน้ำเข้า)'}
 ];
 const MEDPROTO_FEED_IDX=0, MEDPROTO_WATER_IDX=3;   // หัวข้อปลายทางของข้อมูลเดิม 2 ช่อง
+function medProtoGroups(){
+  if(!Array.isArray(D.medProtoGroups)||!D.medProtoGroups.length)D.medProtoGroups=MEDPROTO_GROUPS.map(g=>({...g}));
+  return D.medProtoGroups;
+}
 function migrateMedProtocols(d){
-  if(Array.isArray(d.medProtocols)&&d.medProtocols.length)return;
+  if(!Array.isArray(d.medProtoGroups)||!d.medProtoGroups.length)d.medProtoGroups=MEDPROTO_GROUPS.map(g=>({...g}));
+  if(Array.isArray(d.medProtocols)&&d.medProtocols.length){
+    // ── ข้อมูลที่สร้างไว้ก่อนมีระบบกลุ่ม (entry #189) ยังไม่มี field grp — เดาจากชื่อหัวข้อ ถ้าเดาไม่ได้ให้ไปกลุ่มแรก ──
+    d.medProtocols.forEach(x=>{if(!x.grp)x.grp=/ลงน้ำ|ตัดเชื้อ|น้ำเข้า/.test(x.title||'')?'water':'feed';});
+    return;
+  }
   const old=d.medProtocolOverview||{};
-  d.medProtocols=MEDPROTO_DEFAULT_TOPICS.map((t,i)=>({
+  d.medProtocols=MEDPROTO_DEFAULT_TOPICS.map((o,i)=>({
     id:'mp'+i+'_'+Date.now().toString(36),
-    title:t,
+    grp:o.grp,
+    title:o.t,
     text:i===MEDPROTO_FEED_IDX?(old.feedNote||''):(i===MEDPROTO_WATER_IDX?(old.waterNote||''):''),
     updatedAt:(i===MEDPROTO_FEED_IDX&&old.feedNote)||(i===MEDPROTO_WATER_IDX&&old.waterNote)?(old.updatedAt||''):'',
     updatedBy:(i===MEDPROTO_FEED_IDX&&old.feedNote)||(i===MEDPROTO_WATER_IDX&&old.waterNote)?(old.updatedBy||''):'',
@@ -9416,14 +9444,29 @@ function mpCanEdit(){return APP_ROLE==='admin';}
 function mpDirty(){_mpDirty=true;}
 function initMedProto(){_mpDirty=false;mpRender();}
 function mpRender(){
-  const list=mpList();
+  const list=mpList(),groups=medProtoGroups();
   if(_mpCur>=list.length)_mpCur=Math.max(0,list.length-1);
-  const tabsEl=document.getElementById('mp-tabs');if(!tabsEl)return;
-  tabsEl.innerHTML=list.map((x,i)=>
-    '<button type="button" class="mp-tb'+(i===_mpCur?' on':'')+'" onclick="mpGo('+i+')">'+
-      '<span class="dot'+((x.text||'').trim()?'':' empty')+'"></span>'+(i+1)+'. '+mpEsc(x.title||'(ไม่มีชื่อ)')+
-    '</button>').join('');
   const cur=list[_mpCur]||{};
+  // ยึดกลุ่มที่ผู้ใช้กดเลือกเป็นหลัก — ถ้ายึด cur.grp อย่างเดียว พอกดกลุ่มที่ยังไม่มีหัวข้อ จะเด้งกลับกลุ่มเดิมทันที
+  const curGrp=(_mpGrpSel&&groups.some(g=>g.key===_mpGrpSel))?_mpGrpSel:(cur.grp||groups[0].key);
+  // ── ชั้น 1: กลุ่มหลัก (ผสมกิน / ลงน้ำ) พร้อมตัวนับ "กรอกแล้ว/ทั้งหมด" ของกลุ่มนั้น ──
+  const grpsEl=document.getElementById('mp-grps');
+  if(grpsEl)grpsEl.innerHTML=groups.map(g=>{
+    const inG=list.filter(x=>x.grp===g.key);
+    const done=inG.filter(x=>(x.text||'').trim()).length;
+    const q=String.fromCharCode(39);   // ' — เลี่ยงปัญหา escape ซ้อนชั้นตอน build string ใน onclick
+    return '<button type="button" class="mp-grp'+(g.key===curGrp?' on':'')+'" onclick="mpGoGroup('+q+g.key+q+')">'+
+      mpEsc(g.title)+'<span class="n">'+done+'/'+inG.length+'</span></button>';
+  }).join('');
+  // ── ชั้น 2: หัวข้อย่อยเฉพาะในกลุ่มที่เลือก ──
+  const tabsEl=document.getElementById('mp-tabs');if(!tabsEl)return;
+  const sub=list.map((x,i)=>({x,i})).filter(o=>o.x.grp===curGrp);
+  tabsEl.innerHTML=sub.length
+    ?sub.map((o,n)=>
+      '<button type="button" class="mp-tb'+(o.i===_mpCur?' on':'')+'" onclick="mpGo('+o.i+')">'+
+        '<span class="dot'+((o.x.text||'').trim()?'':' empty')+'"></span>'+(n+1)+'. '+mpEsc(o.x.title||'(ไม่มีชื่อ)')+
+      '</button>').join('')
+    :'<span style="font-size:13px;color:var(--tx3);font-style:italic">กลุ่มนี้ยังไม่มีหัวข้อ — กด "+ เพิ่มหัวข้อ" เพื่อเริ่ม</span>';
   const ttl=document.getElementById('mp-cur-ttl');if(ttl)ttl.textContent=cur.title||'—';
   const pb=document.getElementById('mp-pin-badge');
   if(pb)pb.innerHTML=cur.pinned?'<span class="mp-pin">📌 โชว์ในหน้าภาพรวม</span>':'';
@@ -9435,10 +9478,22 @@ function mpRender(){
   if(upd)upd.innerHTML=cur.updatedAt?('🕒 อัปเดตล่าสุด <b style="color:var(--tx2)">'+mpEsc(cur.updatedAt)+'</b> โดย '+mpEsc(cur.updatedBy||'-')):'ยังไม่เคยบันทึกหัวข้อนี้';
   _mpDirty=false;
 }
+// ── กดกลุ่มหลัก → เด้งไปหัวข้อแรกของกลุ่มนั้น (ถ้ากลุ่มว่างให้จำกลุ่มไว้เฉยๆ) ──
+let _mpGrpSel=null;
+function mpGoGroup(key){
+  if(_mpDirty&&mpCanEdit()&&!confirm('หัวข้อนี้ยังไม่ได้บันทึก — ออกไปแล้วข้อความที่พิมพ์จะหาย ยืนยันหรือไม่?'))return;
+  const list=mpList();
+  const first=list.findIndex(x=>x.grp===key);
+  _mpGrpSel=key;
+  if(first>=0)_mpCur=first;
+  mpRender();
+}
 function mpGo(i){
   // เตือนก่อนสลับแท็บถ้ายังไม่บันทึก — textarea ถูกเขียนทับตอน render ข้อความที่พิมพ์จะหายเงียบๆ
   if(_mpDirty&&mpCanEdit()&&!confirm('หัวข้อนี้ยังไม่ได้บันทึก — ออกไปแล้วข้อความที่พิมพ์จะหาย ยืนยันหรือไม่?'))return;
-  _mpCur=i;mpRender();
+  _mpCur=i;
+  const t=mpList()[i];if(t&&t.grp)_mpGrpSel=t.grp;
+  mpRender();
 }
 function mpSave(){
   if(!mpCanEdit())return;
@@ -9456,7 +9511,9 @@ function mpAdd(){
   if(n===null)return;
   if(!n.trim()){showMsg('mp-msg','warn','กรุณากรอกชื่อหัวข้อ');return;}
   const list=mpList();
-  list.push({id:'mp'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),title:n.trim(),text:'',updatedAt:'',updatedBy:'',pinned:false});
+  const groups=medProtoGroups();
+  const g=(_mpGrpSel&&groups.some(x=>x.key===_mpGrpSel))?_mpGrpSel:((list[_mpCur]||{}).grp||groups[0].key);
+  list.push({id:'mp'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),grp:g,title:n.trim(),text:'',updatedAt:'',updatedBy:'',pinned:false});
   _mpCur=list.length-1;save();mpRender();
   showMsg('mp-msg','ok','✅ เพิ่มหัวข้อแล้ว');
 }
@@ -9486,11 +9543,28 @@ function mpDel(){
 }
 function mpMove(dir){
   if(!mpCanEdit())return;
-  const list=mpList(),j=_mpCur+dir;
-  if(j<0||j>=list.length)return;
-  const t=list[_mpCur];list[_mpCur]=list[j];list[j]=t;
-  _mpCur=j;save();mpRender();
+  const list=mpList(),cur=list[_mpCur];if(!cur)return;
+  // ── เลื่อนลำดับภายในกลุ่มเดียวกันเท่านั้น — ถ้าสลับข้ามกลุ่ม หัวข้อจะกระโดดไปโผล่อีกกลุ่มโดยไม่ได้ตั้งใจ ──
+  const sib=list.map((x,i)=>({x,i})).filter(o=>o.x.grp===cur.grp);
+  const pos=sib.findIndex(o=>o.i===_mpCur);
+  const tgt=pos+dir;
+  if(pos<0||tgt<0||tgt>=sib.length){showMsg('mp-msg','warn','อยู่บนสุด/ล่างสุดของกลุ่มนี้แล้ว');return;}
+  const a=sib[pos].i,b=sib[tgt].i;
+  const t=list[a];list[a]=list[b];list[b]=t;
+  _mpCur=b;save();mpRender();
   showMsg('mp-msg','ok','✅ เลื่อนลำดับแล้ว');
+}
+// ── ย้ายหัวข้อไปอีกกลุ่ม (มี 2 กลุ่ม จึงสลับไปอีกฝั่งเลย) ──
+function mpMoveGroup(){
+  if(!mpCanEdit())return;
+  const list=mpList(),cur=list[_mpCur],groups=medProtoGroups();if(!cur)return;
+  const i=groups.findIndex(g=>g.key===cur.grp);
+  const next=groups[(i+1)%groups.length];
+  if(!next||next.key===cur.grp)return;
+  if(!confirm('ย้ายหัวข้อ "'+cur.title+'" ไปกลุ่ม "'+next.title+'"?'))return;
+  cur.grp=next.key;_mpGrpSel=next.key;
+  save();mpRender();renderOvMedProtocol();
+  showMsg('mp-msg','ok','🔀 ย้ายไปกลุ่ม "'+next.title+'" แล้ว');
 }
 function mpTogglePin(){
   if(!mpCanEdit())return;
@@ -9512,7 +9586,8 @@ function renderOvMedProtocol(){
     box.innerHTML='<div style="color:var(--tx3);font-size:13px;padding:6px 0">ยังไม่มีข้อมูล Protocol — '+(mpCanEdit()?'กด "ดูทั้งหมด" เพื่อกรอก':'รอ Admin กรอก')+'</div>';
     return;
   }
-  box.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--p);margin-bottom:6px">'+mpEsc(pick.title||'')+'</div>'+
+  const g=medProtoGroups().find(x=>x.key===pick.grp);
+  box.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--p);margin-bottom:6px">'+(g?'<span style="color:var(--tx3);font-weight:600">'+mpEsc(g.title)+' › </span>':'')+mpEsc(pick.title||'')+'</div>'+
     '<div class="ovmp-txt">'+mpEsc(pick.text)+'</div>'+
     (pick.updatedAt?'<div style="font-size:var(--fs105);color:var(--tx3);margin-top:7px">🕒 อัปเดต '+mpEsc(pick.updatedAt)+' โดย '+mpEsc(pick.updatedBy||'-')+'</div>':'');
 }
