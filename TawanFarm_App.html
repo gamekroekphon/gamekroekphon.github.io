@@ -271,6 +271,25 @@ body.role-admin .side-nav .sn-link.admin-only{display:block!important}
 .fc-res .sub.nb{border-top:none;padding-top:2px;margin-top:3px}
 .fc-pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:9px}
 .fc-pband{background:var(--sf2);border:1px solid var(--bd);border-radius:9px;padding:9px 10px;position:relative}
+/* ═══ Protocol เวชภัณฑ์ (แท็บหัวข้อ) ═══ */
+.mp-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.mp-tb{border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);border-radius:99px;padding:7px 14px;font-size:12.5px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:.15s}
+.mp-tb:hover{border-color:var(--p)}
+.mp-tb.on{background:var(--p);color:#fff;border-color:var(--p);font-weight:700}
+.mp-tb .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:none}
+.mp-tb .dot.empty{background:var(--tx3);opacity:.4}
+.mp-tb.on .dot{background:#fff}
+.mp-ttl-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.mp-ttl-row .t{font-size:15px;font-weight:700;color:var(--p)}
+.mp-mini{border:none;background:none;color:var(--tx3);cursor:pointer;font-size:12px;padding:3px 6px;border-radius:5px;font-family:inherit}
+.mp-mini:hover{background:var(--sf2);color:var(--tx)}
+.mp-mini.danger:hover{background:var(--db);color:var(--d)}
+.mp-ta{min-height:210px;font-family:inherit;line-height:1.75;font-size:15px;resize:vertical}
+.mp-foot{display:flex;justify-content:space-between;align-items:center;margin-top:11px;padding-top:10px;border-top:1px solid var(--bd);flex-wrap:wrap;gap:8px}
+.mp-pin{font-size:var(--fs10);font-weight:700;color:var(--pd);background:var(--pl);border:1px solid var(--p);padding:1px 8px;border-radius:99px}
+/* สรุปในหน้าภาพรวม */
+.ovmp-txt{white-space:pre-wrap;font-size:13.5px;line-height:1.7;color:var(--tx);background:var(--sf2);border-radius:9px;padding:11px 13px;max-height:190px;overflow:auto}
+
 .fc-pband .x{position:absolute;top:4px;right:6px;border:none;background:none;color:var(--tx3);cursor:pointer;font-size:13px;line-height:1}
 .fc-pband .l{font-size:10.5px;color:var(--tx2);font-weight:600;margin-bottom:3px}
 .fc-pband input{width:100%;border:1px solid var(--bd);border-radius:7px;padding:5px 8px;font-size:13px;font-family:inherit;background:var(--sf);color:var(--tx)}
@@ -1011,6 +1030,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     </div>
 
     <button class="sn-top tab-item" onclick="goTab('forecast',this)"><span>🔮</span> คำนวณ &amp; คาดการณ์</button>
+    <button class="sn-top tab-item" onclick="goTab('medproto',this)"><span>💊</span> Protocol เวชภัณฑ์</button>
   </nav>
   <div class="sn-label">สวนปาล์ม</div>
   <nav class="sn-nav">
@@ -1094,6 +1114,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
           <button class="tab-item" id="tab-abw" onclick="goTab('abw',this)">📈 ABW Growth</button>
           <button class="tab-item" id="tab-pl" onclick="goTab('pl',this)">📊 P&amp;L สรุป</button>
           <button class="tab-item" id="tab-forecast" onclick="goTab('forecast',this)">🔮 คำนวณ &amp; คาดการณ์</button>
+          <button class="tab-item" id="tab-medproto" onclick="goTab('medproto',this)">💊 Protocol เวชภัณฑ์</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-settings">
@@ -1148,6 +1169,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <button class="mob-sheet-item" data-t="abw" onclick="mobMenuGo(this)"><span class="ic">📈</span>ABW Growth</button>
     <button class="mob-sheet-item" data-t="pl" onclick="mobMenuGo(this)"><span class="ic">📊</span>P&amp;L สรุป</button>
     <button class="mob-sheet-item" data-t="forecast" onclick="mobMenuGo(this)"><span class="ic">🔮</span>คำนวณ &amp; คาดการณ์</button>
+    <button class="mob-sheet-item" data-t="medproto" onclick="mobMenuGo(this)"><span class="ic">💊</span>Protocol เวชภัณฑ์</button>
     <div class="mob-sheet-grp">🌴 สวนปาล์ม</div>
     <button class="mob-sheet-item admin-only" data-t="palm" onclick="mobMenuGo(this)"><span class="ic">🌴</span>ตะวันปาล์ม</button>
     <div class="mob-sheet-grp">⚙️ ทั่วไป</div>
@@ -1229,6 +1251,34 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       ตัวเลขนี้ตั้งอยู่บนสมมติฐานว่า <b>กุ้งโตสม่ำเสมอตาม PDG</b> และ <b>ไม่เกิดโรค</b> — ยิ่งเลี้ยงนานยิ่งเสี่ยง (EHP/ขี้ขาว/อากาศ) ใช้ดูแนวโน้มว่า "รอต่อคุ้มไหม" ไม่ใช่คำสั่งให้รอ<br>
       <span class="admin-only"><b>ตัวเลขเล็กใต้กำไร</b> = ช่วงกำไรถ้าอัตรารอดพลาดไป ±5% — ถ้าช่วงกว้างมากแปลว่ายังไม่น่าเชื่อถือ ควรสุ่มเช็คอัตรารอดให้แน่ก่อนตัดสินใจ</span>
     </div></div>
+  </div>
+</div>
+<!-- MED PROTOCOL (Protocol เวชภัณฑ์ — แยกเป็นหัวข้อ เพิ่ม/แก้/ลบเองได้ · staff เห็นแต่แก้ไม่ได้) -->
+<div id="sec-medproto" class="sec">
+  <div class="sec-hdr"><div class="sec-title">💊 Protocol เวชภัณฑ์ล่าสุด</div></div>
+  <div class="card">
+    <div class="card-sub" style="margin-bottom:14px">โปรแกรมที่ใช้จริงหน้างาน — ไม่ผูกกับบ่อใดบ่อหนึ่ง อัปเดตอิสระเมื่อหน้างานเปลี่ยน · จุดเขียวบนแท็บ = หัวข้อนั้นกรอกแล้ว</div>
+    <div class="mp-tabs" id="mp-tabs"></div>
+    <div class="mp-ttl-row">
+      <span class="t" id="mp-cur-ttl">—</span>
+      <span id="mp-pin-badge"></span>
+      <span class="admin-only" style="display:flex;gap:2px;flex-wrap:wrap">
+        <button class="mp-mini" type="button" onclick="mpRename()" title="เปลี่ยนชื่อหัวข้อ">✏️ เปลี่ยนชื่อ</button>
+        <button class="mp-mini" type="button" onclick="mpTogglePin()" title="ตั้งเป็นหัวข้อที่โชว์ในหน้าภาพรวม">📌 ตั้งเป็นหัวข้อหลัก</button>
+        <button class="mp-mini" type="button" onclick="mpMove(-1)" title="เลื่อนขึ้น">↑</button>
+        <button class="mp-mini" type="button" onclick="mpMove(1)" title="เลื่อนลง">↓</button>
+        <button class="mp-mini danger" type="button" onclick="mpDel()" title="ลบหัวข้อนี้">🗑️ ลบ</button>
+      </span>
+    </div>
+    <textarea class="fi mp-ta" id="mp-ta" oninput="mpDirty()" placeholder="พิมพ์โปรแกรมที่ใช้จริงของหัวข้อนี้..."></textarea>
+    <div class="mp-foot">
+      <span id="mp-upd" style="font-size:var(--fs105);color:var(--tx3)"></span>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn btn-s admin-only" type="button" onclick="mpAdd()">+ เพิ่มหัวข้อ</button>
+        <button class="btn btn-sm btn-p admin-only" type="button" id="mp-save-btn" onclick="mpSave()">💾 บันทึก</button>
+      </div>
+    </div>
+    <div id="mp-msg" style="margin-top:10px"></div>
   </div>
 </div>
 <!-- PALM (ตะวันปาล์ม — admin เท่านั้น, ข้อมูลการเงิน/สวนปาล์มแยกอิสระจากฟาร์มกุ้งทั้งหมด ไม่แตะ D.ponds/D.inventoryLog/ต้นทุนกุ้งใดๆเลย) -->
@@ -1491,15 +1541,11 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <div class="ovd-cards" id="ovd-cards-body"></div>
   </div>
   <div class="card" style="margin-bottom:14px" id="ov-medproto-card">
-    <div class="card-t">💊 Protocol เวชภัณฑ์ล่าสุด</div>
-    <div style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--tx2);margin-bottom:5px"><span style="width:8px;height:8px;border-radius:50%;background:var(--p)"></span>🍚 โปรแกรมผสมอาหาร (กิน)</div>
-    <textarea class="fi" id="ov-mprot-feed" rows="5" style="margin-bottom:10px;font-family:inherit;line-height:1.6;font-size:15px" placeholder="เช่น บ่อทั่วไป: In-out 5g + โปรไบโอติก 5g สลับ 3 วัน..."></textarea>
-    <div style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--tx2);margin-bottom:5px"><span style="width:8px;height:8px;border-radius:50%;background:var(--in)"></span>💧 โปรแกรมลงน้ำ</div>
-    <textarea class="fi" id="ov-mprot-water" rows="5" style="margin-bottom:6px;font-family:inherit;line-height:1.6;font-size:15px" placeholder="เช่น I-bac ยืนทุกวัน, Super PS ทุกวันอาทิตย์..."></textarea>
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:6px;padding-top:8px;border-top:1px solid var(--bd)">
-      <span id="ov-mprot-upd" style="font-size:var(--fs105);color:var(--tx3)"></span>
-      <button class="btn btn-sm btn-p" id="ov-mprot-save-btn" onclick="ovProtoSave()">💾 บันทึก</button>
+    <div class="card-t" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <span>💊 Protocol เวชภัณฑ์ล่าสุด <span id="ov-mprot-count" style="font-size:var(--fs11);font-weight:400;color:var(--tx3)"></span></span>
+      <span style="font-size:var(--fs115);color:var(--p);font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-style:dashed;text-underline-offset:3px" onclick="goTabByName('medproto')">ดูทั้งหมด ›</span>
     </div>
+    <div id="ov-mprot-box"></div>
   </div>
   <div class="card" style="margin-bottom:14px;display:none" id="ov-partial-card">
     <div class="card-t">🗓️ ปฏิทินจับกุ้ง &amp; พาเชียล</div>
@@ -3842,6 +3888,31 @@ let D=loadData();
 seedPonds();
 let cmpCh=null,fdCh=null,spCh=null,secCh=null;
 let cmpP=new Set(['B1','B2']);let cmpCat='wq';let selWC='';
+// ══════ Protocol เวชภัณฑ์ — แยกเป็นหลายหัวข้อ (D.medProtocols) ══════
+// เดิมเป็น 2 ช่องตายตัวใน D.medProtocolOverview {feedNote, waterNote} อยู่บนหน้าภาพรวม
+// พี่ขอย้ายออกมาเป็นเมนูของตัวเอง + แบ่งเป็นหัวข้อที่ "เพิ่ม/แก้ชื่อ/ลบ/เลื่อนลำดับเองได้" (ไม่ต้องแก้โค้ดเวลาหน้างานเปลี่ยน)
+// ⚠️ ข้อมูลเดิม 2 ช่องถูกย้ายเข้าหัวข้อที่ตรงกันอัตโนมัติ (กิน→หัวข้อ 1, ลงน้ำ→หัวข้อ 4) และ **ไม่ลบ D.medProtocolOverview ทิ้ง**
+//    เก็บไว้เป็น backup เผื่อ migrate พลาด/ต้องย้อนดูค่าเดิม (ไม่มีที่ไหนอ่านมันแล้ว)
+const MEDPROTO_DEFAULT_TOPICS=[
+  '🍚 โปรแกรมผสมอาหาร (กุ้งปกติ)',
+  '🦠 โปรแกรมผสมอาหาร (พบเชื้อ เขียว 10² เหลือง 10⁴)',
+  '🦐 โปรแกรมผสมอาหาร (กุ้งใหญ่ หน้า 4 ลงมา)',
+  '💧 โปรแกรมลงน้ำ (กุ้งปกติ)',
+  '🧪 โปรแกรมตัดเชื้อน้ำ (หลังน้ำเข้า)'
+];
+const MEDPROTO_FEED_IDX=0, MEDPROTO_WATER_IDX=3;   // หัวข้อปลายทางของข้อมูลเดิม 2 ช่อง
+function migrateMedProtocols(d){
+  if(Array.isArray(d.medProtocols)&&d.medProtocols.length)return;
+  const old=d.medProtocolOverview||{};
+  d.medProtocols=MEDPROTO_DEFAULT_TOPICS.map((t,i)=>({
+    id:'mp'+i+'_'+Date.now().toString(36),
+    title:t,
+    text:i===MEDPROTO_FEED_IDX?(old.feedNote||''):(i===MEDPROTO_WATER_IDX?(old.waterNote||''):''),
+    updatedAt:(i===MEDPROTO_FEED_IDX&&old.feedNote)||(i===MEDPROTO_WATER_IDX&&old.waterNote)?(old.updatedAt||''):'',
+    updatedBy:(i===MEDPROTO_FEED_IDX&&old.feedNote)||(i===MEDPROTO_WATER_IDX&&old.waterNote)?(old.updatedBy||''):'',
+    pinned:i===MEDPROTO_FEED_IDX        // หัวข้อที่โชว์สรุปในหน้าภาพรวม
+  }));
+}
 function loadData(){
   try{const s=localStorage.getItem(SK);if(s){
     const d=JSON.parse(s);
@@ -3850,6 +3921,7 @@ function loadData(){
     if(!d.categories)d.categories=[...DEFAULT_CATS];
     if(!d.settings)d.settings={};
     if(!d.settings.cropsPerYear)d.settings.cropsPerYear=2;
+    migrateMedProtocols(d);
     return d;
   }const d=cln(DEFAULT);d.categories=[...DEFAULT_CATS];d.settings={cropsPerYear:2};return d}catch{const d=cln(DEFAULT);d.categories=[...DEFAULT_CATS];d.settings={cropsPerYear:2};return d}
 }
@@ -4899,6 +4971,7 @@ function goTab(t,btn){
   if(t==='manage')renderManage();
   if(t==='palm')initPalm();
   if(t==='forecast')initForecast();
+  if(t==='medproto')initMedProto();
   if(t==='users')renderUsers();
   if(t==='harvest')initHarvest();
   if(t==='crops')renderCrops();
@@ -9330,30 +9403,118 @@ function renderPdMedHistory(p){
 }
 
 
-// ── หน้าภาพรวม: Protocol เวชภัณฑ์ล่าสุดของทั้งฟาร์ม (ไม่ผูกรายบ่อ) — พี่แจ้งว่าหน้างานเปลี่ยนโปรแกรมกิน/ลงน้ำอยู่ตลอด ตารางวันต่อวันตามไม่ทัน ใช้ Note อิสระ 2 ช่องแทน ──
-function ovProtoSave(){
-  if(APP_ROLE!=='admin')return; // ให้แก้ได้เฉพาะ admin — กันเผื่อกดผ่านช่องทางอื่น (UI ก็ปิดไว้แล้วสำหรับ role อื่น)
-  if(!D.medProtocolOverview)D.medProtocolOverview={feedNote:'',waterNote:'',updatedAt:'',updatedBy:''};
-  const feedEl=document.getElementById('ov-mprot-feed'),waterEl=document.getElementById('ov-mprot-water');
-  if(!feedEl||!waterEl)return;
-  D.medProtocolOverview.feedNote=feedEl.value.trim();
-  D.medProtocolOverview.waterNote=waterEl.value.trim();
-  D.medProtocolOverview.updatedAt=new Date().toLocaleString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-  D.medProtocolOverview.updatedBy=curUserLabel();
-  save();
-  renderOvMedProtocol();
+// ══════ Protocol เวชภัณฑ์ — หน้าเต็ม (แท็บหัวข้อ) + สรุปย่อในหน้าภาพรวม ══════
+// ⚠️ อ่าน/เขียนผ่าน mpList() จุดเดียวเสมอ — กันกรณี D.medProtocols ยังไม่ถูก migrate (เช่นข้อมูลจากเครื่องอื่นที่ sync เข้ามา)
+let _mpCur=0, _mpDirty=false;
+// escape HTML — ชื่อหัวข้อ/ข้อความ Protocol ผู้ใช้พิมพ์เองได้ ถ้าใส่ < > เข้าไปแล้วยัดเข้า innerHTML ตรงๆ จะพังหรือแทรก tag ได้
+function mpEsc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function mpList(){
+  if(!Array.isArray(D.medProtocols)||!D.medProtocols.length)migrateMedProtocols(D);
+  return D.medProtocols;
 }
+function mpCanEdit(){return APP_ROLE==='admin';}
+function mpDirty(){_mpDirty=true;}
+function initMedProto(){_mpDirty=false;mpRender();}
+function mpRender(){
+  const list=mpList();
+  if(_mpCur>=list.length)_mpCur=Math.max(0,list.length-1);
+  const tabsEl=document.getElementById('mp-tabs');if(!tabsEl)return;
+  tabsEl.innerHTML=list.map((x,i)=>
+    '<button type="button" class="mp-tb'+(i===_mpCur?' on':'')+'" onclick="mpGo('+i+')">'+
+      '<span class="dot'+((x.text||'').trim()?'':' empty')+'"></span>'+(i+1)+'. '+mpEsc(x.title||'(ไม่มีชื่อ)')+
+    '</button>').join('');
+  const cur=list[_mpCur]||{};
+  const ttl=document.getElementById('mp-cur-ttl');if(ttl)ttl.textContent=cur.title||'—';
+  const pb=document.getElementById('mp-pin-badge');
+  if(pb)pb.innerHTML=cur.pinned?'<span class="mp-pin">📌 โชว์ในหน้าภาพรวม</span>':'';
+  const ta=document.getElementById('mp-ta');
+  if(ta&&document.activeElement!==ta)ta.value=cur.text||'';
+  const canEdit=mpCanEdit();
+  if(ta){ta.readOnly=!canEdit;ta.style.background=canEdit?'':'var(--sf2)';}
+  const upd=document.getElementById('mp-upd');
+  if(upd)upd.innerHTML=cur.updatedAt?('🕒 อัปเดตล่าสุด <b style="color:var(--tx2)">'+mpEsc(cur.updatedAt)+'</b> โดย '+mpEsc(cur.updatedBy||'-')):'ยังไม่เคยบันทึกหัวข้อนี้';
+  _mpDirty=false;
+}
+function mpGo(i){
+  // เตือนก่อนสลับแท็บถ้ายังไม่บันทึก — textarea ถูกเขียนทับตอน render ข้อความที่พิมพ์จะหายเงียบๆ
+  if(_mpDirty&&mpCanEdit()&&!confirm('หัวข้อนี้ยังไม่ได้บันทึก — ออกไปแล้วข้อความที่พิมพ์จะหาย ยืนยันหรือไม่?'))return;
+  _mpCur=i;mpRender();
+}
+function mpSave(){
+  if(!mpCanEdit())return;
+  const list=mpList(),cur=list[_mpCur];if(!cur)return;
+  const ta=document.getElementById('mp-ta');if(!ta)return;
+  cur.text=ta.value.trim();
+  cur.updatedAt=new Date().toLocaleString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  cur.updatedBy=curUserLabel();
+  save();_mpDirty=false;mpRender();renderOvMedProtocol();
+  showMsg('mp-msg','ok','✅ บันทึกหัวข้อ "'+cur.title+'" แล้ว');
+}
+function mpAdd(){
+  if(!mpCanEdit())return;
+  const n=prompt('ชื่อหัวข้อใหม่:','');
+  if(n===null)return;
+  if(!n.trim()){showMsg('mp-msg','warn','กรุณากรอกชื่อหัวข้อ');return;}
+  const list=mpList();
+  list.push({id:'mp'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),title:n.trim(),text:'',updatedAt:'',updatedBy:'',pinned:false});
+  _mpCur=list.length-1;save();mpRender();
+  showMsg('mp-msg','ok','✅ เพิ่มหัวข้อแล้ว');
+}
+function mpRename(){
+  if(!mpCanEdit())return;
+  const list=mpList(),cur=list[_mpCur];if(!cur)return;
+  const n=prompt('เปลี่ยนชื่อหัวข้อ:',cur.title||'');
+  if(n===null)return;
+  if(!n.trim()){showMsg('mp-msg','warn','ชื่อหัวข้อว่างไม่ได้');return;}
+  cur.title=n.trim();save();mpRender();renderOvMedProtocol();
+  showMsg('mp-msg','ok','✅ เปลี่ยนชื่อแล้ว');
+}
+function mpDel(){
+  if(!mpCanEdit())return;
+  const list=mpList(),cur=list[_mpCur];if(!cur)return;
+  if(list.length<=1){showMsg('mp-msg','warn','ต้องเหลืออย่างน้อย 1 หัวข้อ');return;}
+  const hasTxt=(cur.text||'').trim().length>0;
+  const warnTxt='\n\n⚠️ หัวข้อนี้มีข้อความอยู่ ลบแล้วข้อความจะหายถาวร';
+  if(!confirm('ลบหัวข้อ "'+cur.title+'"?'+(hasTxt?warnTxt:'')))return;
+  const wasPinned=cur.pinned;
+  if(cur.id){D.deletedIds=D.deletedIds||[];D.deletedIds.push(cur.id);}
+  list.splice(_mpCur,1);
+  if(wasPinned&&list.length)list[0].pinned=true;   // ลบหัวข้อหลักไป ต้องมีตัวแทนเสมอ ไม่งั้นหน้าภาพรวมว่าง
+  _mpCur=Math.max(0,_mpCur-1);
+  save();mpRender();renderOvMedProtocol();
+  showMsg('mp-msg','ok','🗑️ ลบหัวข้อแล้ว');
+}
+function mpMove(dir){
+  if(!mpCanEdit())return;
+  const list=mpList(),j=_mpCur+dir;
+  if(j<0||j>=list.length)return;
+  const t=list[_mpCur];list[_mpCur]=list[j];list[j]=t;
+  _mpCur=j;save();mpRender();
+  showMsg('mp-msg','ok','✅ เลื่อนลำดับแล้ว');
+}
+function mpTogglePin(){
+  if(!mpCanEdit())return;
+  const list=mpList(),cur=list[_mpCur];if(!cur)return;
+  list.forEach(x=>x.pinned=false);   // มีหัวข้อหลักได้ทีละ 1 อัน
+  cur.pinned=true;
+  save();mpRender();renderOvMedProtocol();
+  showMsg('mp-msg','ok','📌 ตั้ง "'+cur.title+'" เป็นหัวข้อที่โชว์ในหน้าภาพรวมแล้ว');
+}
+// ── สรุปย่อในหน้าภาพรวม: โชว์หัวข้อที่ปักหมุด (ถ้าว่างเปล่า ใช้หัวข้อแรกที่มีข้อความแทน) + ลิงก์ไปหน้าเต็ม ──
 function renderOvMedProtocol(){
-  const feedEl=document.getElementById('ov-mprot-feed'),waterEl=document.getElementById('ov-mprot-water'),updEl=document.getElementById('ov-mprot-upd'),btnEl=document.getElementById('ov-mprot-save-btn');
-  if(!feedEl||!waterEl||!updEl)return;
-  const mp=D.medProtocolOverview||{};
-  if(document.activeElement!==feedEl)feedEl.value=mp.feedNote||'';
-  if(document.activeElement!==waterEl)waterEl.value=mp.waterNote||'';
-  const canEdit=APP_ROLE==='admin';
-  feedEl.readOnly=!canEdit;waterEl.readOnly=!canEdit;
-  feedEl.style.background=canEdit?'':'var(--sf2)';waterEl.style.background=canEdit?'':'var(--sf2)';
-  if(btnEl)btnEl.style.display=canEdit?'':'none';
-  updEl.innerHTML=mp.updatedAt?`🕒 อัปเดตล่าสุด <b style="color:var(--tx2)">${mp.updatedAt}</b> โดย ${mp.updatedBy||'-'}`:'ยังไม่เคยบันทึก';
+  const box=document.getElementById('ov-mprot-box');if(!box)return;
+  const list=mpList();
+  const filled=list.filter(x=>(x.text||'').trim());
+  const pick=list.find(x=>x.pinned&&(x.text||'').trim())||filled[0]||list.find(x=>x.pinned)||list[0];
+  const cnt=document.getElementById('ov-mprot-count');
+  if(cnt)cnt.textContent=filled.length+'/'+list.length+' หัวข้อ';
+  if(!pick||!(pick.text||'').trim()){
+    box.innerHTML='<div style="color:var(--tx3);font-size:13px;padding:6px 0">ยังไม่มีข้อมูล Protocol — '+(mpCanEdit()?'กด "ดูทั้งหมด" เพื่อกรอก':'รอ Admin กรอก')+'</div>';
+    return;
+  }
+  box.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--p);margin-bottom:6px">'+mpEsc(pick.title||'')+'</div>'+
+    '<div class="ovmp-txt">'+mpEsc(pick.text)+'</div>'+
+    (pick.updatedAt?'<div style="font-size:var(--fs105);color:var(--tx3);margin-top:7px">🕒 อัปเดต '+mpEsc(pick.updatedAt)+' โดย '+mpEsc(pick.updatedBy||'-')+'</div>':'');
 }
 
 // ===== EDIT HISTORY FUNCTIONS =====
