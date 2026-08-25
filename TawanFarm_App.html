@@ -2420,13 +2420,14 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
             <option value="กุ้งตาย">จับกุ้งตาย</option>
           </select>
         </div>
-        <div class="fg"><label class="fl" for="hv-size">ไซส์ (ตัว/กก.)</label><input type="number" class="fi" id="hv-size" placeholder="60" step="1"></div>
-        <div class="fg"><label class="fl" for="hv-weight">น้ำหนักรวม (กก.)</label><input type="number" class="fi" id="hv-weight" placeholder="1000" step="0.1"></div>
-        <div class="fg"><label class="fl" for="hv-price">ราคา (บาท/กก.)</label><input type="number" class="fi" id="hv-price" placeholder="120" step="0.5"></div>
+        <div class="fg"><label class="fl" for="hv-size">ไซส์ (ตัว/กก.) <span style="color:var(--d)">*</span></label><input type="number" class="fi" id="hv-size" placeholder="60" step="1"><span class="hint">ใช้แปลง กก. → จำนวนตัว ถ้าไม่กรอก biomass/FCR/อัตรารอด จะเพี้ยน</span></div>
+        <div class="fg"><label class="fl" for="hv-weight">น้ำหนักรวม (กก.) <span style="color:var(--d)">*</span></label><input type="number" class="fi" id="hv-weight" placeholder="1000" step="0.1"></div>
+        <div class="fg"><label class="fl" for="hv-price">ราคา (บาท/กก.)</label><input type="number" class="fi" id="hv-price" placeholder="120" step="0.5"><span class="hint">ถ้าไม่กรอก รายได้/ยอดขายรายแพ จะไม่ถูกนับ</span></div>
       </div>
       <div class="fg" style="margin-top:8px"><label class="fl" for="hv-notes">หมายเหตุ</label><input type="text" class="fi" id="hv-notes" placeholder="..."></div>
       <div style="margin-top:14px;display:flex;align-items:center;gap:10px">
-        <button class="btn btn-p" onclick="savePartialHarvest()">💾 บันทึกพาเชียล</button>
+        <button class="btn btn-p" id="hv-save-btn" onclick="savePartialHarvest()">💾 บันทึกพาเชียล</button>
+        <button class="btn btn-s" id="hv-cancel-edit" style="display:none" onclick="cancelEditPartial()">✕ ยกเลิกแก้ไข</button>
         <span id="hv-msg" style="font-size:12px"></span>
       </div>
     </div>
@@ -12675,12 +12676,56 @@ function savePartialHarvest(){
   const weight=document.getElementById('hv-weight').value?parseFloat(document.getElementById('hv-weight').value):null;
   const price=document.getElementById('hv-price').value?parseFloat(document.getElementById('hv-price').value):null;
   const notes=document.getElementById('hv-notes').value.trim();
-  p.partialHarvests.push({id:'PH'+Date.now(),date,buyer,live,size,weight,price,notes});
+  // ── ⚠️ ไซส์+น้ำหนัก บังคับกรอก — ระบบแปลง กก.→จำนวนตัว ด้วยไซส์ (partialTotals)
+  //    ถ้าไม่มีไซส์ จะหักกุ้งออกจากบ่อ 0 ตัว → biomass ไม่ลด, FCR นับกุ้งซ้ำ 2 รอบ, อัตรารอดตอนปิดบ่อต่ำผิดปกติ ──
+  if(!(weight>0)){showMsg('hv-msg','warn','⚠️ กรุณากรอก "น้ำหนักรวม (กก.)" — ถ้าไม่กรอก ระบบจะไม่รู้ว่าจับออกไปเท่าไร');return;}
+  if(!(size>0)){showMsg('hv-msg','warn','⚠️ กรุณากรอก "ไซส์ (ตัว/กก.)" — ระบบใช้แปลงน้ำหนักเป็นจำนวนตัว ถ้าเว้นว่าง Biomass จะไม่ลด · FCR และอัตรารอดตอนปิดบ่อจะเพี้ยน');return;}
+  const noPriceWarn='ยังไม่ได้กรอก "ราคา (บาท/กก.)"\n\nพาเชียลครั้งนี้จะไม่ถูกนับเป็นรายได้ (รายได้ตอนปิดบ่อ + ยอดขายรายแพ จะขาดไป)\n\nยืนยันบันทึกโดยไม่ใส่ราคา?';
+  if(!(price>0)&&!confirm(noPriceWarn))return;
+  let msg;
+  if(_phEditId){
+    const old=p.partialHarvests.find(x=>x.id===_phEditId);
+    if(!old){showMsg('hv-msg','warn','ไม่พบรายการที่กำลังแก้ไข (อาจถูกลบไปแล้ว)');_phEditId=null;return;}
+    Object.assign(old,{date,buyer,live,size,weight,price,notes});
+    msg=`✅ อัปเดตรายการพาเชียลบ่อ ${p.name} แล้ว`;
+    _phEditId=null;
+    const btn=document.getElementById('hv-save-btn');if(btn)btn.textContent='💾 บันทึกพาเชียล';
+    const cx=document.getElementById('hv-cancel-edit');if(cx)cx.style.display='none';
+  }else{
+    p.partialHarvests.push({id:'PH'+Date.now(),date,buyer,live,size,weight,price,notes});
+    msg=`✅ บันทึกพาเชียลบ่อ ${p.name} สำเร็จ`;
+  }
   p.partialHarvests.sort((a,b)=>b.date.localeCompare(a.date));
   save();fbSave();
-  showMsg('hv-msg','ok',`✅ บันทึกพาเชียลบ่อ ${p.name} สำเร็จ`);
+  showMsg('hv-msg','ok',msg);
   ['hv-buyer','hv-live','hv-size','hv-weight','hv-price','hv-notes'].forEach(id=>{document.getElementById(id).value='';});
-  renderPartialList();
+  renderPartialList();renderHvRoundStrip();renderOv();
+}
+// ── แก้ไขรายการพาเชียล — เดิมมีแค่ปุ่มลบ ถ้ากรอกผิดต้องลบทิ้งแล้วพิมพ์ใหม่ทั้งแถว
+//    โหลดค่าเดิมขึ้นฟอร์มด้านบน แล้วจำ id ไว้ใน _phEditId เพื่อให้ savePartialHarvest() เขียนทับแถวเดิมแทนที่จะเพิ่มใหม่ ──
+let _phEditId=null;
+function editPartialHarvest(pid,id){
+  const p=pond(pid);if(!p)return;
+  const r=(p.partialHarvests||[]).find(x=>x.id===id);if(!r){alert('ไม่พบรายการ');return;}
+  const sel=document.getElementById('hv-pond');if(sel)sel.value=pid;
+  const tp=document.getElementById('hv-type');
+  if(tp&&tp.value!=='พาเชียล'){tp.value='พาเชียล';onHvTypeChange();}
+  const set=(id2,v)=>{const e=document.getElementById(id2);if(e)e.value=v==null?'':v;};
+  set('hv-date',r.date);set('hv-buyer',r.buyer);set('hv-live',r.live);
+  set('hv-size',r.size);set('hv-weight',r.weight);set('hv-price',r.price);set('hv-notes',r.notes);
+  syncDateHint(document.getElementById('hv-date'));
+  _phEditId=id;
+  const btn=document.getElementById('hv-save-btn');if(btn)btn.textContent='💾 อัปเดตรายการ';
+  const cx=document.getElementById('hv-cancel-edit');if(cx)cx.style.display='';
+  showMsg('hv-msg','warn','✏️ กำลังแก้ไขรายการวันที่ '+fD(r.date)+' — แก้ค่าแล้วกด "อัปเดตรายการ"');
+  document.getElementById('hv-partial-fields')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function cancelEditPartial(){
+  _phEditId=null;
+  ['hv-buyer','hv-live','hv-size','hv-weight','hv-price','hv-notes'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const btn=document.getElementById('hv-save-btn');if(btn)btn.textContent='💾 บันทึกพาเชียล';
+  const cx=document.getElementById('hv-cancel-edit');if(cx)cx.style.display='none';
+  showMsg('hv-msg','ok','ยกเลิกการแก้ไขแล้ว');
 }
 function deletePartialHarvest(pid,id){
   const p=pond(pid);if(!p)return;
@@ -12711,7 +12756,9 @@ function renderPartialList(){
   </tr></thead><tbody>${rows.map(r=>{
     const total=(r.weight&&r.price)?Math.round(r.weight*r.price):null;
     const liveClr=r.live==='กุ้งตาย'?'var(--tx3)':'var(--ok)';
-    return`<tr style="border-bottom:1px solid var(--bd)">
+    // ── รายการเก่าที่บันทึกไว้ก่อนมีการบังคับกรอก อาจไม่มีไซส์/ราคา → ไฮไลต์เตือนให้กดแก้ไข ──
+    const bad=!(r.size>0)||!(r.price>0);
+    return`<tr style="border-bottom:1px solid var(--bd)${bad?';background:var(--wb)':''}" ${bad?'title="ข้อมูลไม่ครบ — กด ✏️ เพื่อแก้ไข"':''}>
       <td style="padding:8px 10px">${fD(r.date)}</td>
       <td style="padding:8px 10px">${r.buyer||'-'}</td>
       <td style="padding:8px 10px"><span style="color:${liveClr}">${r.live||'-'}</span></td>
@@ -12720,7 +12767,7 @@ function renderPartialList(){
       <td style="padding:8px 10px;text-align:right">${r.price?r.price.toLocaleString():'-'}</td>
       <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--ok)">${total?total.toLocaleString():'-'}</td>
       <td style="padding:8px 10px;color:var(--tx3);font-size:12px">${r.notes||''}</td>
-      <td style="padding:8px 6px;text-align:center"><button onclick="deletePartialHarvest('${pid}','${r.id}')" style="background:none;border:none;cursor:pointer;color:var(--d);font-size:14px" title="ลบ">🗑️</button></td>
+      <td style="padding:8px 6px;text-align:center;white-space:nowrap"><button onclick="editPartialHarvest('${pid}','${r.id}')" style="background:none;border:none;cursor:pointer;font-size:14px" title="แก้ไข">✏️</button><button onclick="deletePartialHarvest('${pid}','${r.id}')" style="background:none;border:none;cursor:pointer;color:var(--d);font-size:14px" title="ลบ">🗑️</button></td>
     </tr>`;
   }).join('')}</tbody></table></div>`;
 }
