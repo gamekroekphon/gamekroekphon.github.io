@@ -2973,8 +2973,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   <div class="stock-pane" id="skp-log">
     <div class="card">
       <div style="display:flex;gap:0;background:var(--sf2);border-radius:8px;padding:3px;margin-bottom:14px;width:fit-content">
-        <button id="skl-mode-out" class="stock-mode-btn on-out" onclick="setStockLogMode('out')">📤 เบิกออก รายบ่อ</button>
-        <button id="skl-mode-in" class="stock-mode-btn" onclick="setStockLogMode('in')">📥 รับเข้าส่วนกลาง</button>
+        <button id="skl-mode-out" class="stock-mode-btn on-out" onclick="setStockLogMode('out')">📤 เบิกออก</button>
+        <button id="skl-mode-in" class="stock-mode-btn" onclick="setStockLogMode('in')">📥 รับเข้า</button>
         <button id="skl-mode-shared" class="stock-mode-btn" onclick="setStockLogMode('shared')">🔧 แชร์ทุกบ่อ</button>
       </div>
       <div id="skl-pane-out">
@@ -7875,7 +7875,8 @@ function populateStockOutFilters(){
   const sel=document.getElementById('skl-out-pond');if(!sel)return;
   const cur=sel.value;
   const pondIds=[...new Set((D.inventoryLog||[]).filter(l=>l.type==='out'&&l.pondId).map(l=>l.pondId))];
-  const opts=pondIds.map(id=>({id,name:pondNameById(id)})).sort((a,b)=>a.name.localeCompare(b.name,'th'));
+  // เรียงตามอายุกุ้งมากไปน้อย (บ่ออายุเยอะสุดอยู่บนสุด) — บ่อที่ไม่มี startDate/หาไม่เจอ อายุ=0 ตกท้ายลิสต์
+  const opts=pondIds.map(id=>({id,name:pondNameById(id),age:pondCurAge(pond(id))})).sort((a,b)=>b.age-a.age);
   sel.innerHTML='<option value="">ทุกบ่อ</option>'+opts.map(o=>`<option value="${o.id}"${o.id===cur?' selected':''}>${o.name}</option>`).join('');
 }
 function clearStockOutFilter(){
