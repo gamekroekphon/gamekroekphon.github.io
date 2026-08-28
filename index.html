@@ -316,7 +316,16 @@ body.role-admin .mp-actions{display:flex!important;gap:2px;flex-wrap:wrap}
 .mp-mini{border:none;background:none;color:var(--tx3);cursor:pointer;font-size:12px;padding:3px 6px;border-radius:5px;font-family:inherit}
 .mp-mini:hover{background:var(--sf2);color:var(--tx)}
 .mp-mini.danger:hover{background:var(--db);color:var(--d)}
-.mp-ta{min-height:210px;font-family:inherit;line-height:1.75;font-size:15px;resize:vertical}
+.mp-ta{min-height:210px;font-family:inherit;line-height:1.75;font-size:15px;resize:vertical;cursor:pointer}
+.mp-ta-tap-hint{font-size:11.5px;color:var(--tx3);margin-top:6px;font-style:italic}
+.mp-exp-modal{width:720px;max-width:96vw;height:92vh;max-height:92vh;padding:16px;display:flex;flex-direction:column;border-radius:14px}
+.mp-exp-hdr{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-bottom:10px;border-bottom:2px solid var(--p);margin-bottom:10px;flex:none}
+.mp-exp-ttl{font-size:16px;font-weight:800;color:var(--p)}
+.mp-exp-x{border:none;background:var(--sf2);color:var(--tx2);width:34px;height:34px;border-radius:50%;font-size:16px;cursor:pointer;flex:none}
+.mp-exp-x:hover{background:var(--db);color:var(--d)}
+.mp-ta-big{flex:1;width:100%;font-family:inherit;line-height:1.85;font-size:16.5px;resize:none;min-height:0}
+.mp-exp-foot{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--bd);margin-top:10px;gap:10px;flex:none}
+@media(max-width:620px){.mp-exp-modal{width:100%;height:100%;max-height:100vh;border-radius:0;padding:14px}}
 .mp-foot{display:flex;justify-content:space-between;align-items:center;margin-top:11px;padding-top:10px;border-top:1px solid var(--bd);flex-wrap:wrap;gap:8px}
 .mp-pin{font-size:var(--fs10);font-weight:700;color:var(--pd);background:var(--pl);border:1px solid var(--p);padding:1px 8px;border-radius:99px}
 /* สรุปในหน้าภาพรวม */
@@ -1304,15 +1313,29 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
         <button class="mp-mini danger" type="button" onclick="mpDel()" title="ลบหัวข้อนี้">🗑️ ลบ</button>
       </span>
     </div>
-    <textarea class="fi mp-ta" id="mp-ta" oninput="mpDirty()" placeholder="พิมพ์โปรแกรมที่ใช้จริงของหัวข้อนี้..."></textarea>
+    <textarea class="fi mp-ta" id="mp-ta" readonly onclick="mpExpand()" placeholder="แตะที่นี่เพื่อเปิดหน้าเต็มจอสำหรับอ่าน/พิมพ์..."></textarea>
+    <div class="mp-ta-tap-hint">👆 แตะกล่องด้านบนเพื่อขยายเป็นหน้าเต็มจอ อ่าน/พิมพ์ได้ง่ายขึ้นบนมือถือ</div>
     <div class="mp-foot">
       <span id="mp-upd" style="font-size:var(--fs105);color:var(--tx3)"></span>
       <div style="display:flex;gap:7px;flex-wrap:wrap">
         <button class="btn btn-s admin-only" type="button" onclick="mpAdd()">+ เพิ่มหัวข้อ</button>
-        <button class="btn btn-sm btn-p admin-only" type="button" id="mp-save-btn" onclick="mpSave()">💾 บันทึก</button>
       </div>
     </div>
     <div id="mp-msg" style="margin-top:10px"></div>
+  </div>
+</div>
+<!-- MED PROTOCOL — หน้าต่างขยายเต็มจอ อ่าน/พิมพ์ข้อความยาวๆ ได้สบายตาบนมือถือ -->
+<div class="modal-bg" id="mpExpandModal">
+  <div class="modal mp-exp-modal">
+    <div class="mp-exp-hdr">
+      <div class="mp-exp-ttl" id="mp-exp-ttl">—</div>
+      <button class="mp-exp-x" type="button" onclick="mpExpandClose()">✕</button>
+    </div>
+    <textarea class="fi mp-ta-big" id="mp-ta-big" oninput="mpDirty()" placeholder="พิมพ์โปรแกรมที่ใช้จริงของหัวข้อนี้..."></textarea>
+    <div class="mp-exp-foot">
+      <span id="mp-exp-hint" style="font-size:var(--fs105);color:var(--tx3)"></span>
+      <button class="btn btn-p admin-only" type="button" onclick="mpExpandSave()">💾 บันทึก</button>
+    </div>
   </div>
 </div>
 <!-- PALM (ตะวันปาล์ม — admin เท่านั้น, ข้อมูลการเงิน/สวนปาล์มแยกอิสระจากฟาร์มกุ้งทั้งหมด ไม่แตะ D.ponds/D.inventoryLog/ต้นทุนกุ้งใดๆเลย) -->
@@ -9642,14 +9665,38 @@ function mpGo(i){
   const t=mpList()[i];if(t&&t.grp)_mpGrpSel=t.grp;
   mpRender();
 }
-function mpSave(){
+// ── หน้าต่างขยายเต็มจอ: กดที่กล่อง mp-ta เล็ก → เปิดหน้าใหญ่สำหรับอ่าน/พิมพ์ (แก้ปัญหากล่องเล็กอ่าน/พิมพ์ลำบากบนมือถือ) ──
+function mpExpand(){
+  const list=mpList(),cur=list[_mpCur];if(!cur)return;
+  const modal=document.getElementById('mpExpandModal');if(!modal)return;
+  const ttl=document.getElementById('mp-exp-ttl');if(ttl)ttl.textContent=cur.title||'—';
+  const canEdit=mpCanEdit();
+  const ta=document.getElementById('mp-ta-big');
+  if(ta){
+    ta.value=cur.text||'';
+    ta.readOnly=!canEdit;
+    ta.style.background=canEdit?'':'var(--sf2)';
+  }
+  const hint=document.getElementById('mp-exp-hint');
+  if(hint)hint.textContent=canEdit?(cur.updatedAt?'🕒 อัปเดตล่าสุด '+mpEsc(cur.updatedAt)+' โดย '+mpEsc(cur.updatedBy||'-'):'ยังไม่เคยบันทึกหัวข้อนี้'):'อ่านอย่างเดียว — ให้ Admin เป็นคนแก้ไข';
+  modal.classList.add('on');
+  if(canEdit&&ta)setTimeout(()=>ta.focus(),80);
+}
+function mpExpandClose(){
+  if(_mpDirty&&mpCanEdit()&&!confirm('ยังไม่ได้บันทึก — ปิดหน้าต่างแล้วข้อความที่พิมพ์จะหาย ยืนยันหรือไม่?'))return;
+  const modal=document.getElementById('mpExpandModal');if(modal)modal.classList.remove('on');
+  _mpDirty=false;
+}
+function mpExpandSave(){
   if(!mpCanEdit())return;
   const list=mpList(),cur=list[_mpCur];if(!cur)return;
-  const ta=document.getElementById('mp-ta');if(!ta)return;
+  const ta=document.getElementById('mp-ta-big');if(!ta)return;
   cur.text=ta.value.trim();
   cur.updatedAt=new Date().toLocaleString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
   cur.updatedBy=curUserLabel();
-  save();_mpDirty=false;mpRender();renderOvMedProtocol();
+  save();_mpDirty=false;
+  const modal=document.getElementById('mpExpandModal');if(modal)modal.classList.remove('on');
+  mpRender();renderOvMedProtocol();
   showMsg('mp-msg','ok','✅ บันทึกหัวข้อ "'+cur.title+'" แล้ว');
 }
 function mpAdd(){
@@ -13105,6 +13152,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   populateAll();renderOv();
   initA11yKeyboardChips();
   document.getElementById('pondModal').addEventListener('click',e=>{if(e.target===document.getElementById('pondModal'))closePond()});
+  document.getElementById('mpExpandModal').addEventListener('click',e=>{if(e.target===document.getElementById('mpExpandModal'))mpExpandClose()});
   fetchWx().catch(()=>{});
   if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
   firebase.auth().onAuthStateChanged(async user=>{
