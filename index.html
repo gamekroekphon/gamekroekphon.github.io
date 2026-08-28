@@ -5801,8 +5801,13 @@ function renderPondDetail(id){
       +pdCostCatRow('fry','ลูกกุ้ง',pdFryCost,pdFryDetail)
       +pdCostCatRow('labor','ค่าแรง',pdLaborCost,pdLaborElecDetail(pdLaborCost))
       +pdCostCatRow('elec','ค่าไฟ',pdElecCost,pdLaborElecDetail(pdElecCost));
-    // ── ประมาณต้นทุนบาท/กก. ณ วันนี้ = ต้นทุนสะสมทั้งหมด ÷ น้ำหนักกุ้งที่มีตอนนี้ (biomass ประเมิน, ตัวเดียวกับที่ใช้ใน kpiHero) — เป็นค่าประมาณระหว่างเลี้ยง ไม่ใช่ต้นทุน/กก. สุดท้ายตอนปิดรอบ (คำนวณจากน้ำหนักจับจริง คนละค่ากันโดยตั้งใจ) ──
-    const pdCostPerKg=(biomass&&biomass>0)?pdCostTotal/biomass:null;
+    // ── ประมาณต้นทุนบาท/กก. ณ วันนี้ = ต้นทุนสะสมทั้งหมด ÷ "เนื้อกุ้งที่ผลิตได้แล้วทั้งหมด"
+    //    ⚠️ ตัวหารต้องเป็น biomass ในบ่อ + ที่พาเชียลไปแล้ว — ไม่ใช่ biomass ในบ่ออย่างเดียว
+    //    เพราะ getLatestBiomass() หักกุ้งที่จับไปแล้วออก (entry #176) แต่ต้นทุนที่เลี้ยงกุ้งชุดนั้นยังอยู่ในตัวตั้ง
+    //    ถ้าหารด้วย biomass เฉยๆ พอพาเชียลปุ๊บ ต้นทุน/กก. จะพุ่งทันที ทั้งที่ยังไม่ได้จ่ายเงินเพิ่มเลย
+    //    (หลักเดียวกับ getFCR ที่ใช้ produced = biomass + partialKg) ──
+    const pdProducedKg=(biomass!=null?biomass:0)+partialTotals(p.partialHarvests).kg;
+    const pdCostPerKg=(pdProducedKg>0&&biomass!=null)?pdCostTotal/pdProducedKg:null;
     costCardHtml=pdCard('cost',
       `💰 ต้นทุนสะสม <span style="color:var(--p);font-weight:800">${ceoMoney(pdCostTotal)}</span> <span class="pd-admin-tag">ADMIN</span>`,
       `<div class="ceo-cost-total-row" style="border-top:none;padding-top:0"><span class="lbl">รวมต้นทุนสะสมของบ่อนี้</span><span class="val">${ceoMoney(pdCostTotal)}</span></div>
@@ -5811,7 +5816,7 @@ function renderPondDetail(id){
         <span style="font-size:12px;color:var(--p);font-weight:600">ดูรายละเอียดแยกหมวด <span class="ceo-cat-caret" id="pd-cost-detail-caret">▾</span></span>
       </div>
       <div class="ceo-cat-items" id="pd-cost-detail" style="padding-left:0">
-        ${pdCostPerKg==null?`<div style="font-size:var(--fs11);color:var(--tx3);padding:2px 0 6px">ยังไม่มีข้อมูลสุ่มตัวอย่าง คำนวณ Biomass ประเมินไม่ได้</div>`:`<div style="font-size:var(--fs11);color:var(--tx3);padding:2px 0 6px">= ต้นทุนสะสม ÷ Biomass ประเมิน ${Math.round(biomass).toLocaleString()} กก. — เป็นค่าประมาณระหว่างเลี้ยง ไม่ใช่ต้นทุน/กก. สุดท้ายตอนปิดรอบ</div>`}
+        ${pdCostPerKg==null?`<div style="font-size:var(--fs11);color:var(--tx3);padding:2px 0 6px">ยังไม่มีข้อมูลสุ่มตัวอย่าง คำนวณ Biomass ประเมินไม่ได้</div>`:`<div style="font-size:var(--fs11);color:var(--tx3);padding:2px 0 6px">= ต้นทุนสะสม ÷ ${Math.round(pdProducedKg).toLocaleString()} กก.${partialTotals(p.partialHarvests).kg>0?` (Biomass ในบ่อ ${Math.round(biomass).toLocaleString()} + พาเชียลไปแล้ว ${Math.round(partialTotals(p.partialHarvests).kg).toLocaleString()})`:` (Biomass ประเมิน)`} — เป็นค่าประมาณระหว่างเลี้ยง ไม่ใช่ต้นทุน/กก. สุดท้ายตอนปิดรอบ</div>`}
         <div style="font-size:var(--fs11);color:var(--tx3);padding:0 0 8px">📦 สต็อก/เวชภัณฑ์/อุปกรณ์นอก นับตั้งแต่ ${fD(pdCostFrom)} (ครอบช่วงเตรียมบ่อก่อนลงกุ้ง) · ค่าแรง/ค่าไฟ นับจากวันลงกุ้ง ${fD(p.startDate)}</div>
         ${pdCatRowsHtml}
       </div>`);
@@ -8201,11 +8206,15 @@ function fcResetField(k){
 }
 // ── สภาพบ่อ ณ วัน d ข้างหน้า (off = ส่วนต่างอัตรารอดที่ลองสมมติ เช่น ±5) ──
 //    ABW ไม่ขึ้นกับอัตรารอด เปลี่ยนแค่จำนวนตัวที่เหลือ
+let _fcPhCount=0;   // จำนวนตัวที่พาเชียลไปแล้วของบ่อที่เลือก (หักออกจากคาดการณ์)
 function fcSnap(d,off){
   const abw=_fcG('fc-abw')+_fcG('fc-pdg')*d;
   const surv=Math.max(0,_fcG('fc-surv')+(off||0)-_fcG('fc-decl')*(d/10));
   const rel=_fcG('fc-rel');
-  const bio=rel*(surv/100)*abw/1000;
+  // ── ⚠️ ต้องหักกุ้งที่พาเชียลไปแล้วออก ไม่งั้นคาดการณ์เหมือนกุ้งที่ขายไปแล้วยังอยู่ในบ่อและโตต่อ
+  //    (หลักเดียวกับ getLatestBiomass() entry #176) — บ่อที่พาเชียลไปแล้วจะประเมินผลผลิต/รายได้สูงเกินจริงมาก ──
+  const aliveCount=Math.max(0,rel*(surv/100)-_fcPhCount);
+  const bio=aliveCount*abw/1000;
   const rai=_fcG('fc-rai');
   // ── อาหารที่ควรให้ต่อวัน ณ วันนั้น: ใช้สูตร Precision Feeding (ดร.พุทธ) ตัวเดียวกับการ์ด "เปรียบเทียบ Biomass 2 วิธี"
   //    feeding rate(%) ขึ้นกับอายุ+น้ำหนักตัว → อาหาร/วัน = biomass × rate%
@@ -8278,6 +8287,7 @@ function fcCalc(){
   const pid=document.getElementById('fc-pond')?.value,p=pid?pond(pid):null;
   const DOC0=p?pondCurAge(p):0;
   _fcDOC0=DOC0;                 // ⚠️ ต้องเซ็ตก่อนเรียก fcSnap/fcEcon ด้านล่าง
+  _fcPhCount=p?partialTotals(p.partialHarvests).count:0;   // ⚠️ เช่นกัน — กุ้งที่พาเชียลไปแล้วต้องไม่ถูกนับว่ายังอยู่ในบ่อ
   const pd=_fcPickedDays();
   const sP=fcSnap(pd,0),now=fcSnap(0,0);
   const ePick=pd>0?fcEcon(pd,0):null;   // ใช้ดึงอาหารสะสม + FCR ที่จะได้จริง ณ วันที่เลือก
