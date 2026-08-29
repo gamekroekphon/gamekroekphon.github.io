@@ -5712,6 +5712,9 @@ function renderPondDetail(id){
   const latPrev=samples.length>1?samples[samples.length-2]:null;
   const fcr=getFCR(p);
   const pdSC=pondShrimpCount(p);   // จำนวนกุ้งรอดสะสม / จับพาเชียลไปแล้ว / คงเหลือในบ่อ — ใช้ร่วมทั้งหน้า
+  // กก./ไร่ — สูตรเดียวกับ partialHarvestInfo() (biomass ในบ่อ ÷ ขนาดบ่อ) จะได้ตรงกับการ์ดพาเชียลเสมอ
+  const pdYr=(p.size>0&&pdSC)?pdSC.biomass/p.size:null;
+  const pdYrHit=pdYr!=null&&pdYr>=_phTarget;
   const biomass=getLatestBiomass(p);
   const feedLog=p.feedLog||[];const latFeed=feedLog.length?feedLog[feedLog.length-1]:null;
   // ฐาน กก./แสนตัว = ยอดปล่อย หักตัวที่พาเชียลไปแล้ว ณ วันที่ให้อาหารนั้น
@@ -5772,6 +5775,11 @@ function renderPondDetail(id){
       <div style="font-size:22px;font-weight:500;color:#1d4ed8;line-height:1">${biomass?Math.round(biomass).toLocaleString():'—'}</div>
       <div style="font-size:var(--fs10);color:#3b82f6;margin-top:3px">กก. (ประเมิน)</div>
     </div>
+    <div style="background:#eff6ff;border:0.5px solid #bfdbfe;border-radius:10px;padding:10px 12px" title="${pdYr!=null?'น้ำหนักรวมในบ่อ ÷ ขนาดบ่อ '+p.size+' ไร่ — ใช้สูตรเดียวกับการ์ดพาเชียล (หักกุ้งที่จับไปแล้วออก)':'ต้องมีขนาดบ่อ (ไร่) + ผลสุ่มตัวอย่าง จึงคำนวณได้'}">
+      <div style="font-size:var(--fs10);color:#3b82f6;margin-bottom:4px">กก./ไร่</div>
+      <div style="font-size:22px;font-weight:500;color:${pdYrHit?'#15803d':'#1d4ed8'};line-height:1">${pdYr!=null?Math.round(pdYr).toLocaleString():'—'}</div>
+      <div style="font-size:var(--fs10);color:#3b82f6;margin-top:3px">${pdYr!=null?(pdYrHit?'✓ ถึงเกณฑ์พาเชียล '+_phTarget.toLocaleString():'เกณฑ์พาเชียล '+_phTarget.toLocaleString()):'กก./ไร่'}</div>
+    </div>
     <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px">
       <div style="font-size:var(--fs10);color:#16a34a;margin-bottom:4px">อาหารวันนี้</div>
       <div style="font-size:22px;font-weight:500;color:#15803d;line-height:1">${latFeed&&latFeed.totalFeed!=null?latFeed.totalFeed:'—'}</div>
@@ -5796,6 +5804,11 @@ function renderPondDetail(id){
       <div style="font-size:var(--fs10);color:#16a34a;margin-bottom:4px">อัตรารอด${pdSC&&pdSC.hasPartial?' (สะสม)':''}</div>
       <div style="font-size:22px;font-weight:500;color:${lat&&lat.survivalRate!=null?survRingColor(lat.survivalRate):'#15803d'};line-height:1">${lat&&lat.survivalRate!=null?lat.survivalRate+'%':'—'}</div>
       <div style="font-size:var(--fs10);color:#16a34a;margin-top:3px">${pdSC&&pdSC.hasPartial?`ในบ่อ ${pdSC.inPondPct.toFixed(1)}% · จับไป ${Math.round(pdSC.phCount).toLocaleString()} ตัว`:'ล่าสุด'+(lat&&lat.date?' '+fD(lat.date):'')}</div>
+    </div>
+    <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px" title="ประเมินจาก ยอดปล่อย × อัตรารอดที่สุ่มได้ล่าสุด${pdSC&&pdSC.hasPartial?' แล้วหักจำนวนตัวที่จับพาเชียลไปแล้วออก':''} — เป็นค่าประเมิน ไม่ใช่การนับจริง">
+      <div style="font-size:var(--fs10);color:#16a34a;margin-bottom:4px">กุ้งคงเหลือในบ่อ</div>
+      <div style="font-size:22px;font-weight:500;color:#15803d;line-height:1">${pdSC?Math.round(pdSC.inPond).toLocaleString():'—'}</div>
+      <div style="font-size:var(--fs10);color:#16a34a;margin-top:3px">${pdSC?(pdSC.hasPartial?`ตัว · จากรอด ${Math.round(pdSC.aliveAll).toLocaleString()} − จับ ${Math.round(pdSC.phCount).toLocaleString()}`:'ตัว (ประเมิน)'):'ตัว'}</div>
     </div>
   </div>`;
 
