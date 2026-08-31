@@ -6105,7 +6105,8 @@ function renderSurvivalCard(p){
         <span class="pd-surv-cmp-val" style="color:var(--pd)">${Math.round(sc.inPond).toLocaleString()} ตัว</span>
         <div style="font-size:11.5px;color:var(--tx2);margin-top:2px">${Math.round(sc.biomass).toLocaleString()} กก.</div>
       </div>
-    </div>`;
+    </div>
+    ${sc.phCount>sc.aliveAll?`<div class="ai danger" style="margin-top:10px"><span>🔴</span><div><b>จับไปแล้วมากกว่าที่ประเมินว่ามีในบ่อ</b> — จับสะสม ${Math.round(sc.phCount).toLocaleString()} ตัว แต่อัตรารอด ${sc.survAll}% คิดเป็นแค่ ${Math.round(sc.aliveAll).toLocaleString()} ตัว<br>แปลว่า<b>อัตรารอดที่กรอกไว้ต่ำกว่าความจริง</b> — ตอนนี้ Biomass / กก.ไร่ / กุ้งคงเหลือ จะขึ้น 0 ทั้งที่ยังมีกุ้งอยู่ ควรสุ่มตัวอย่างใหม่แล้วแก้อัตรารอดให้ตรง</div></div>`:''}`;
   }
   const bc=getBioCompareCalc(p);
   let cmpHtml='';
@@ -12674,7 +12675,8 @@ function openCropModal(pid){
     document.getElementById(id).value='';
   });
   // ── แพที่จับ: ดึงจากพาเชียลล่าสุดของรอบนี้มาให้ (ถ้ามี) เผื่อจับที่แพเดิม แก้ไขได้ถ้าไม่ตรง ──
-  const lastPartial=(p.partialHarvests||[]).slice(-1)[0];
+  // ⚠️ partialHarvests เรียงใหม่->เก่า (savePartialHarvest sort b.date-a.date) ตัวล่าสุดคือ [0] ไม่ใช่ slice(-1)
+  const lastPartial=(p.partialHarvests||[]).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];
   document.getElementById('cm-buyer').value=lastPartial?.buyer||'';
   // ── ต้นทุนลูกกุ้ง/อาหาร ดึงจากข้อมูลที่มีอยู่แล้วในระบบมาให้ ไม่ต้องพิมพ์ซ้ำ (ลูกกุ้งยังแก้ไขได้ถ้าตัวเลขจริงต่างจากนี้) ──
   document.getElementById('cm-cost-fry').value=p.costFry||'';
@@ -13060,6 +13062,36 @@ function savePartialHarvest(){
   if(!(size>0)){showMsg('hv-msg','warn','⚠️ กรุณากรอก "ไซส์ (ตัว/กก.)" — ระบบใช้แปลงน้ำหนักเป็นจำนวนตัว ถ้าเว้นว่าง Biomass จะไม่ลด · FCR และอัตรารอดตอนปิดบ่อจะเพี้ยน');return;}
   const noAmtWarn='ยังไม่ได้กรอก "ยอดเงินรวมสุดท้าย"\n\nการจับครั้งนี้จะไม่ถูกนับเป็นรายได้ (รายได้ตอนปิดบ่อ + ยอดขายรายแพ จะขาดไป)\n\nยืนยันบันทึกโดยไม่ใส่ยอดเงิน?';
   if(!(amount>0)&&!confirm(noAmtWarn))return;
+  // ── ⚠️ กันวันที่พิมพ์ผิด (เช่นปี 2027 แทน 2026) — partialTotals ไม่กรองวันที่
+  //    ถ้าหลุดเข้าไป กุ้งจะถูกหักออกจากบ่อทันทีทั้งที่ยังไม่ได้จับ biomass/กก.ไร่ จะต่ำผิด ──
+  if(date>today()){
+    const futWarn='วันที่ '+fD(date)+' เป็นวันในอนาคต\n\nระบบจะหักกุ้งจำนวนนี้ออกจากบ่อทันที ทำให้ Biomass / กก.ไร่ / กุ้งคงเหลือ ต่ำกว่าความจริง\n\nกรอกวันที่ถูกต้องแล้วใช่ไหม?';
+    if(!confirm(futWarn))return;
+  }
+  // ── ⚠️ กันบันทึกซ้ำ (กดปุ่มสองที / กรอกซ้ำเพราะไม่แน่ใจว่าบันทึกไปยัง)
+  //    ซ้ำแล้วผลผลิต+รายได้จะเบิ้ล และกุ้งถูกหักออกจากบ่อ 2 เท่า ──
+  if(!_phEditId){
+    const dup=p.partialHarvests.find(x=>x.date===date&&(parseFloat(x.weight)||0)===weight&&(x.buyer||'')===buyer);
+    if(dup){
+      const dupWarn='มีรายการวันที่ '+fD(date)+' น้ำหนัก '+weight.toLocaleString()+' กก.'+(buyer?' แพ '+buyer:'')+' อยู่แล้ว\n\nถ้าบันทึกซ้ำ ผลผลิตและรายได้จะถูกนับ 2 เท่า และกุ้งจะถูกหักออกจากบ่อ 2 เท่า\n\nนี่เป็นการจับ "อีกเที่ยวหนึ่ง" จริงๆ ใช่ไหม?';
+      if(!confirm(dupWarn))return;
+    }
+  }
+  // ── ⚠️ เตือนถ้าจับเกินจำนวนกุ้งที่ประเมินว่ามีอยู่ในบ่อ
+  //    ไม่บล็อก เพราะ "การจับเกิดขึ้นจริงแล้ว" ตัวเลขที่ผิดคืออัตรารอดที่กรอกไว้ต่างหาก
+  //    ถ้าปล่อยผ่านเงียบๆ inPond จะถูก clamp เป็น 0 → Biomass/กก.ไร่/กุ้งคงเหลือ = 0 ทั้งที่ยังให้อาหารอยู่ ──
+  const _sc=pondShrimpCount(p);
+  if(_sc&&_sc.aliveAll>0){
+    const rowKg=weight+grades.reduce((s,g)=>s+(parseFloat(g.kg)||0),0);
+    const rowCount=rowKg*size;
+    const otherCount=partialTotals(p.partialHarvests.filter(x=>x.id!==_phEditId)).count;
+    const newTotal=otherCount+rowCount;
+    if(newTotal>_sc.aliveAll){
+      const over=Math.round(newTotal-_sc.aliveAll);
+      const overWarn='⚠️ จับรวมทั้งรอบ '+Math.round(newTotal).toLocaleString()+' ตัว — มากกว่าที่ประเมินว่ามีอยู่ในบ่อ ('+Math.round(_sc.aliveAll).toLocaleString()+' ตัว) อยู่ '+over.toLocaleString()+' ตัว\n\nแปลว่าอัตรารอด '+_sc.survAll+'% ที่กรอกไว้จากการสุ่มน่าจะต่ำกว่าความจริง\n\nบันทึกได้ (การจับเกิดขึ้นจริง) แต่ควรสุ่มตัวอย่างใหม่แล้วแก้อัตรารอดให้ตรง ไม่งั้น Biomass / กก.ไร่ / กุ้งคงเหลือ จะขึ้น 0\n\nยืนยันบันทึก?';
+      if(!confirm(overWarn))return;
+    }
+  }
   let msg;
   if(_phEditId){
     const old=p.partialHarvests.find(x=>x.id===_phEditId);
