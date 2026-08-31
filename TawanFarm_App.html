@@ -1760,8 +1760,9 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
         </div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
           <div class="fg">
-            <label class="fl" for="sp-biomass">Biomass รวม <span style="font-weight:400;color:var(--tx3)">(น้ำหนักกุ้งทั้งบ่อ, กก.)</span> — คำนวณ</label>
+            <label class="fl" for="sp-biomass">Biomass <span style="font-weight:400;color:var(--tx3)">(กุ้งที่อยู่ในบ่อตอนนี้, กก.)</span> — คำนวณ</label>
             <input type="number" class="fi" id="sp-biomass" readonly style="background:var(--sf2);color:var(--p);font-weight:700">
+            <span class="lbl-std" id="sp-bio-breakdown"></span>
             <span class="lbl-std" id="sp-pdg-info"></span>
           </div>
         </div>
@@ -10116,9 +10117,24 @@ function calcBiomass(){
   const abw=parseFloat(document.getElementById('sp-abw').value)||0;
   const surv=parseFloat(document.getElementById('sp-surv').value)||0;
   const el=document.getElementById('sp-biomass');
-  if(!pid||!abw||!surv){el.value='';return}
+  const bd=document.getElementById('sp-bio-breakdown');
+  if(!pid||!abw||!surv){el.value='';if(bd)bd.textContent='';return}
   const p=pond(pid);if(!p)return;
-  el.value=(pRelease(p)*(surv/100)*abw/1000).toFixed(0);
+  // ── ⚠️ ต้องหักกุ้งที่พาเชียลไปแล้วออก ให้ตรงกับ getLatestBiomass()/หน้ารายละเอียดบ่อ
+  //    เดิมคิด ยอดปล่อย × อัตรารอด × ABW เฉยๆ → หลังพาเชียลได้เลขที่ไม่ใช่ทั้งกุ้งในบ่อและไม่ใช่ผลผลิตรวม
+  //    (อัตรารอดที่กรอกคือ "อัตรารอดสะสม" นับกุ้งที่จับไปแล้วด้วย ตามนิยาม entry #200) ──
+  const ph=partialTotals(p.partialHarvests);
+  const aliveAll=pRelease(p)*(surv/100);
+  const inPond=Math.max(0,aliveAll-ph.count);
+  el.value=(inPond*abw/1000).toFixed(0);
+  if(bd){
+    if(ph.count>0||ph.kg>0){
+      const inPondKg=inPond*abw/1000;
+      bd.innerHTML='รอดสะสม '+Math.round(aliveAll).toLocaleString()+' ตัว − จับพาเชียลไปแล้ว '+Math.round(ph.count).toLocaleString()+' ตัว = <b>'+Math.round(inPond).toLocaleString()+' ตัว</b> ในบ่อ'+
+        '<br>🎣 จับไปแล้ว '+Math.round(ph.kg).toLocaleString()+' กก. · 📦 ผลผลิตรวมทั้งรอบ <b>'+Math.round(inPondKg+ph.kg).toLocaleString()+' กก.</b>';
+      bd.style.color='var(--tx2)';
+    }else{bd.textContent='';}
+  }
   const samps=p.samples||[];const pdgEl=document.getElementById('sp-pdg-info');
   if(samps.length>0){
     const last=samps[samps.length-1];const days=parseInt(document.getElementById('sp-age').value)-last.age;
@@ -10176,14 +10192,32 @@ function clearSample(){
   document.getElementById('sp-pdg-info').textContent='';
   document.getElementById('sp-msg').innerHTML='';calcAge('sp');
 }
+// ── biomass "ในบ่อ" ณ วันที่สุ่มแต่ละครั้ง — หักพาเชียลที่เกิดก่อน/เท่ากับวันสุ่มนั้น
+//    ⚠️ คิดตามวันที่ ไม่ใช่หักยอดพาเชียลทั้งหมดกับทุกแถว ไม่งั้นแถวเก่าก่อนพาเชียลจะถูกหักผิด
+//    ถ้าข้อมูลไม่พอ (ไม่มี ABW/อัตรารอด) ตกกลับไปใช้ค่าที่บันทึกไว้เดิม
+function sampleInPondBiomass(p,r){
+  const fallback=(r&&r.biomass!=null)?r.biomass:null;
+  if(!p||!r||!r.abw||r.survivalRate==null||r.survivalRate==='')return fallback;
+  const rel=pRelease(p);if(!rel)return fallback;
+  const ph=partialTotals((p.partialHarvests||[]).filter(x=>!r.date||!x.date||x.date<=r.date)).count;
+  return Math.max(0,rel*(parseFloat(r.survivalRate)/100)-ph)*r.abw/1000;
+}
 function renderSampleMetrics(pid){
   if(!pid)return;const p=pond(pid);if(!p)return;
   const samps=p.samples||[];const lat=samps.slice(-1)[0];const pdg=getPDG(samps);const ph=projHarvest(p);
+  // ── ⚠️ อ่าน biomass ผ่าน getLatestBiomass() ไม่ใช่ lat.biomass ที่บันทึกไว้
+  //    เพราะบันทึกเก่า (ก่อนแก้ calcBiomass) เก็บค่าที่ยังไม่หักพาเชียล — คำนวณใหม่ตอนแสดงผลจึงถูกเสมอ
+  //    และไม่ต้องไปแก้ข้อมูลเก่าใน Firebase (หลักเดียวกับ cropHarvestResult() entry #176) ──
+  const spBio=getLatestBiomass(p);
+  const spPh=partialTotals(p.partialHarvests);
+  const hasPh=spPh.count>0||spPh.kg>0;
   document.getElementById('sp-metrics').innerHTML=`
     <div class="metric-card"><div class="mv" style="color:var(--p)">${lat?lat.abw+'g':'-'}</div><div class="ml">ABW ล่าสุด</div></div>
     <div class="metric-card"><div class="mv" style="color:var(--in)">${lat&&lat.plCount?lat.plCount+' ตัว/กก.':'-'}</div><div class="ml">ไซส์ล่าสุด</div></div>
-    <div class="metric-card"><div class="mv">${lat&&lat.biomass?lat.biomass.toFixed(0)+'kg':'-'}</div><div class="ml">Biomass รวม <span style="font-size:var(--fs9);opacity:.7">(น้ำหนักกุ้งทั้งบ่อ)</span></div></div>
-    <div class="metric-card"><div class="mv">${lat&&lat.survivalRate?lat.survivalRate+'%':'-'}</div><div class="ml">Survival Rate</div></div>
+    <div class="metric-card"><div class="mv">${spBio!=null?Math.round(spBio).toLocaleString()+'kg':'-'}</div><div class="ml">Biomass <span style="font-size:var(--fs9);opacity:.7">(กุ้งในบ่อตอนนี้)</span></div></div>
+    ${hasPh?`<div class="metric-card"><div class="mv" style="color:var(--in)">${Math.round(spPh.kg).toLocaleString()}kg</div><div class="ml">🎣 จับพาเชียลไปแล้ว <span style="font-size:var(--fs9);opacity:.7">(${Math.round(spPh.count).toLocaleString()} ตัว)</span></div></div>
+    <div class="metric-card"><div class="mv" style="color:var(--pd)">${spBio!=null?Math.round(spBio+spPh.kg).toLocaleString()+'kg':'-'}</div><div class="ml">📦 ผลผลิตรวมทั้งรอบ <span style="font-size:var(--fs9);opacity:.7">(ในบ่อ + จับไปแล้ว)</span></div></div>`:''}
+    <div class="metric-card"><div class="mv">${lat&&lat.survivalRate?lat.survivalRate+'%':'-'}</div><div class="ml">Survival Rate${hasPh?' <span style="font-size:var(--fs9);opacity:.7">(สะสม)</span>':''}</div></div>
     <div class="metric-card"><div class="mv">${pdg?pdg+'g':'-'}</div><div class="ml">PDG (g/วัน)</div></div>
     <div class="metric-card"><div class="mv" style="color:var(--in)">${ph&&!ph.ready?ph.days+'วัน':ph&&ph.ready?'พร้อมจับ!':'-'}</div><div class="ml">เหลือ (target 22g)</div></div>
   `;
@@ -10211,8 +10245,8 @@ function renderSampleTable(){
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
   const p=pond(pid);const rows=(p?.samples||[]).slice().reverse();
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">บ่อนี้ยังไม่มีข้อมูลสุ่มตัวอย่าง — บันทึกได้จากฟอร์มด้านบน</p>';return}
-  wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ตัวอย่าง</th><th>น้ำหนักรวม (กก.)</th><th>ABW (g)</th><th>ไซส์ (ตัว/กก.)</th><th>Survival%</th><th>Biomass (kg)</th><th>PDG (g/วัน)</th><th>หมายเหตุ</th></tr></thead><tbody>${
-    rows.map((r,i)=>`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editSample('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteSample('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.sampleCount||'-'}</td><td>${r.sampleWeight!=null?r.sampleWeight+' กก.':'-'}</td><td><strong style="color:var(--p)">${r.abw?.toFixed(2)||'-'}</strong></td><td><strong style="color:var(--in)">${r.plCount||'-'}</strong></td><td>${r.survivalRate?r.survivalRate+'%':'-'}</td><td>${r.biomass?.toFixed(0)||'-'}</td><td>${r.pdg||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')}</tbody></table>`;
+  wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ตัวอย่าง</th><th>น้ำหนักรวม (กก.)</th><th>ABW (g)</th><th>ไซส์ (ตัว/กก.)</th><th>Survival%</th><th>Biomass ในบ่อ (kg)</th><th>PDG (g/วัน)</th><th>หมายเหตุ</th></tr></thead><tbody>${
+    rows.map((r,i)=>`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editSample('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteSample('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.sampleCount||'-'}</td><td>${r.sampleWeight!=null?r.sampleWeight+' กก.':'-'}</td><td><strong style="color:var(--p)">${r.abw?.toFixed(2)||'-'}</strong></td><td><strong style="color:var(--in)">${r.plCount||'-'}</strong></td><td>${r.survivalRate?r.survivalRate+'%':'-'}</td><td>${(()=>{const b=sampleInPondBiomass(p,r);return b!=null?Math.round(b).toLocaleString():'-';})()}</td><td>${r.pdg||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')}</tbody></table>`;
 }
 function deleteSample(pid,id){
   const p=pond(pid);if(!p)return;
@@ -12503,8 +12537,8 @@ function renderChFeedTable(c){
 function renderChSampleTable(c){
   const rows=(c.samples||[]).slice().sort((a,b)=>(a.age||0)-(b.age||0));
   if(!rows.length)return '<p style="color:var(--tx3);text-align:center;padding:14px;font-style:italic">ไม่มีข้อมูล</p>';
-  return `<table class="tbl"><thead><tr><th>วันที่</th><th>อายุ</th><th>ABW (ก.)</th><th>ไซส์</th><th>อัตรารอด(%)</th><th>Biomass</th><th>PDG</th><th>หมายเหตุ</th></tr></thead><tbody>${
-    rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.abw||'-'}</td><td>${r.plCount||'-'}</td><td>${r.survivalRate||'-'}</td><td>${r.biomass||'-'}</td><td>${r.pdg||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')
+  return `<table class="tbl"><thead><tr><th>วันที่</th><th>อายุ</th><th>ABW (ก.)</th><th>ไซส์</th><th>อัตรารอด(%)</th><th>Biomass ในบ่อ</th><th>PDG</th><th>หมายเหตุ</th></tr></thead><tbody>${
+    rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.abw||'-'}</td><td>${r.plCount||'-'}</td><td>${r.survivalRate||'-'}</td><td>${(()=>{const b=sampleInPondBiomass(c,r);return b!=null?Math.round(b).toLocaleString():'-';})()}</td><td>${r.pdg||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')
   }</tbody></table>`;
 }
 function renderChWqTable(c){
