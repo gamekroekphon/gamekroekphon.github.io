@@ -2383,11 +2383,15 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <input type="hidden" id="ecm-pond-id">
       <input type="hidden" id="ecm-crop-id">
       <input type="hidden" id="ecm-crop-idx">
-      <!-- แสดงเฉพาะตอน "เพิ่มข้อมูล" รอบเก่าที่ตกหล่น (ไม่มีบ่อ/รอบ/ปีให้อ้างอิงจากที่ไหนมาก่อน) -->
+      <!-- แสดงเฉพาะตอน "เพิ่มข้อมูล" รอบเก่าที่ตกหล่น (ไม่มีบ่อให้อ้างอิงจากที่ไหนมาก่อน) -->
       <div id="ecm-new-fields" style="display:none;margin-bottom:18px">
-        <div style="font-weight:700;font-size:13px;color:#d97706;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">📌 ระบุบ่อ/รอบ (สำหรับข้อมูลเก่าที่ตกหล่น)</div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr 1fr">
-          <div class="fg" style="grid-column:1/-1"><label class="fl" for="ecm-new-pond">บ่อ *</label><select class="fi" id="ecm-new-pond"><option value="">-- เลือกบ่อ --</option></select></div>
+        <div style="font-weight:700;font-size:13px;color:#d97706;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">📌 ระบุบ่อ (สำหรับข้อมูลเก่าที่ตกหล่น)</div>
+        <div class="fg"><label class="fl" for="ecm-new-pond">บ่อ *</label><select class="fi" id="ecm-new-pond"><option value="">-- เลือกบ่อ --</option></select></div>
+      </div>
+      <!-- รอบที่/ปี — แก้ได้ทั้งตอนเพิ่มรอบเก่าและตอนแก้รอบที่มีอยู่แล้ว (เดิมแก้ได้แค่ตอนเพิ่ม พิมพ์ปีผิดแล้วแก้ทีหลังไม่ได้) -->
+      <div style="margin-bottom:18px">
+        <div style="font-weight:700;font-size:13px;color:#d97706;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">🔢 รอบที่ / ปี</div>
+        <div class="fgrid" style="grid-template-columns:1fr 1fr">
           <div class="fg"><label class="fl" for="ecm-new-cropnum">รอบที่ *</label><input type="number" class="fi" id="ecm-new-cropnum" step="1" placeholder="1"></div>
           <div class="fg"><label class="fl" for="ecm-new-cropyear">ปี (พ.ศ.) *</label><input type="number" class="fi" id="ecm-new-cropyear" step="1" placeholder="2568"></div>
         </div>
@@ -12207,6 +12211,8 @@ function openEditCropModal(pondId,cropId,idx){
   document.getElementById('ecm-name').textContent=(p.name||pondId)+' รอบ '+(c.cropNum||'');
   // fill fields
   const fv=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v!=null&&v!==''?v:''};
+  // ── รอบที่/ปี ของรอบที่มีอยู่แล้ว — เดิมแก้ไม่ได้เลย พิมพ์ปีผิด (เช่น พ.ศ./ค.ศ. สลับกัน) ต้องแก้ตรงนี้ ──
+  fv('ecm-new-cropnum',c.cropNum||1);fv('ecm-new-cropyear',yearBE(c.cropYear||c.year));
   fv('ecm-hatchery',c.hatchery);fv('ecm-pltype',c.plType);fv('ecm-plweight',c.plWeight);
   fv('ecm-weight',hr.totalWeight);fv('ecm-size',hr.size);fv('ecm-caught',hr.caught);
   fv('ecm-survival',hr.survivalRate);fv('ecm-fcr',hr.fcr);fv('ecm-price',hr.price);
@@ -12291,6 +12297,14 @@ function saveEditCrop(){
   const p=pond(pondId);if(!p||!p.cropHistory)return;
   const c=(cropId&&p.cropHistory.find(x=>x.id===cropId))||p.cropHistory[idx];
   if(!c){alert('ไม่พบรายการ');return;}
+  // ── รอบที่/ปี — validate เหมือนโหมดเพิ่มรอบเก่า กันเลขว่าง/ซ้ำกับรอบอื่นของบ่อเดียวกัน ──
+  const cropNumNew=parseInt(document.getElementById('ecm-new-cropnum').value);
+  const cropYearBENew=parseInt(document.getElementById('ecm-new-cropyear').value);
+  if(!cropNumNew){alert('กรุณาระบุรอบที่');return;}
+  if(!cropYearBENew){alert('กรุณาระบุปี (พ.ศ.)');return;}
+  const dupRound=p.cropHistory.some(x=>x!==c&&(x.cropNum||1)===cropNumNew&&yearBE(x.cropYear||x.year)===cropYearBENew);
+  if(dupRound&&!confirm(`บ่อ ${p.name} มีรอบที่ ${cropNumNew} ปี ${cropYearBENew} อยู่แล้ว\nยืนยันบันทึกซ้ำ?`))return;
+  c.cropNum=cropNumNew;c.cropYear=cropYearBENew-543;c.year=c.cropYear;
   c.startDate=document.getElementById('ecm-start-date').value||c.startDate;
   c.closeDate=document.getElementById('ecm-close-date').value||c.closeDate;
   c.notes=document.getElementById('ecm-notes').value||'';
