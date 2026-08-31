@@ -4174,6 +4174,40 @@ function wqEntryPonds(){
 // ── อายุกุ้งปัจจุบันของบ่อ (วัน) — ใช้จุดเดียวกันทุกที่ที่ต้องเรียงบ่อตามอายุ/แสดงอายุบ่อที่กำลังเลี้ยงอยู่ — วันลงกุ้ง = อายุ 1 วัน (ไม่ใช่ 0) ตามที่พี่ยืนยัน ──
 function pondCurAge(p){return p&&p.startDate?dDiff(p.startDate,today())+1:0;}
 function sortPondsByAge(list){return list.slice().sort((a,b)=>pondCurAge(b)-pondCurAge(a));}
+// ── ⚠️ ตัวเลือกบ่อของ dropdown ที่ใช้กรอกข้อมูลรายวัน ต้องเรียง+ติดป้ายเหมือนกันทุกหน้า
+//    เดิม populateAll() ใช้ sortedPonds() (เรียงตามชื่อ ไม่มี DOC) แต่หน้าคุณภาพน้ำ/อาหาร/คาดการณ์
+//    ใช้ sortPondsByAge() → ลำดับบ่อไม่ตรงกันข้ามหน้า พนักงานที่ชินว่า "บ่อบนสุด = A.14" จากหน้าค่าน้ำ
+//    พอมาหน้ากุ้งตาย บนสุดกลายเป็น A.1 แล้วเลือกผิดบ่อได้ (พี่สั่งเรียงตามอายุไว้ตั้งแต่ entry #193 แต่ตอนนั้นแก้แค่หน้าสต็อก)
+//    ⚠️ ไม่กรองบ่อออก — บ่อเตรียม/ปิดแล้วยังต้องบันทึกค่าน้ำ/ผลแล็บ/จัดการน้ำ ได้ (pondCurAge=0 จะไปอยู่ท้ายเอง)
+function pondOptionsHtml(){
+  return sortPondsByAge(D.ponds).map(p=>{
+    const age=pondCurAge(p);
+    return '<option value="'+p.id+'">บ่อ '+p.name+(age>0?' — DOC '+age:'')+'</option>';
+  }).join('');
+}
+// ── จำบ่อที่เลือกล่าสุด แล้วเติมให้หน้าอื่นอัตโนมัติ
+//    พนักงานเดินตรวจทีละบ่อ แล้วบันทึกหลายอย่างของบ่อเดียวกัน (ค่าน้ำ → กุ้งตาย → จัดการน้ำ)
+//    เดิมทุกหน้าเริ่มจากว่าง ต้องเลือกบ่อเดิมซ้ำทุกหน้า
+//    เติมเฉพาะตอนที่หน้านั้น "ยังไม่ได้เลือกบ่อ" — ไม่เขียนทับสิ่งที่ผู้ใช้เลือกไว้เอง ──
+let _curPondId=null;
+const POND_SEL_IDS=['sp-pond','wl-pond','lb-pond','mt-pond','hv-pond'];
+function setCurPond(pid){if(pid)_curPondId=pid;}
+function applyCurPond(){
+  if(!_curPondId||!D.ponds.some(p=>p.id===_curPondId))return;   // บ่ออาจถูกลบไปแล้ว
+  POND_SEL_IDS.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el&&!el.value&&[...el.options].some(o=>o.value===_curPondId)){
+      el.value=_curPondId;
+      el.dispatchEvent(new Event('change'));   // ให้ onXxPond() เดิมทำงานตามปกติ (โหลดตาราง/สรุปของบ่อนั้น)
+    }
+  });
+}
+function initCurPondSync(){
+  POND_SEL_IDS.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.addEventListener('change',()=>setCurPond(el.value));
+  });
+}
 function wqfeedPondStats(p){
   const recs=(p.records||[]).filter(r=>r.date).slice().sort((a,b)=>a.date.localeCompare(b.date));
   const feeds=(p.feedLog||[]).filter(r=>r.date).slice().sort((a,b)=>a.date.localeCompare(b.date));
@@ -4695,20 +4729,25 @@ function populateAll(){
   const simple={
     'sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all','mt-pond':'','cash-pond':'',
   };
+  // ── ⚠️ ช่องเลือกบ่อของงานกรอกรายวัน (สุ่ม/จัดการน้ำ/ผลแล็บ/กุ้งตาย/จับกุ้ง/เวชภัณฑ์)
+  //    ใช้ pondOptionsHtml() = เรียงตามอายุกุ้ง + ป้าย DOC ให้ตรงกับหน้าคุณภาพน้ำ/อาหาร
+  //    ยกเว้น ex-pond/cash-pond (หน้ารายงาน ไม่ใช่หน้ากรอก) กับ prep-pond (บ่อเตรียมอายุ 0 เรียงตามอายุไม่มีความหมาย) ──
+  const AGE_SORTED_SELS=['sp-pond','wl-pond','lb-pond','mt-pond'];
   Object.entries(simple).forEach(([id,def])=>{
     const el=document.getElementById(id);if(!el)return;const cur=el.value;
-    el.innerHTML=(def==='all'?'<option value="all">ทุกบ่อ</option>':'<option value="">-- เลือกบ่อ --</option>')+sortedPonds().map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');
+    const opts=AGE_SORTED_SELS.includes(id)?pondOptionsHtml():sortedPonds().map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');
+    el.innerHTML=(def==='all'?'<option value="all">ทุกบ่อ</option>':'<option value="">-- เลือกบ่อ --</option>')+opts;
     if(cur)el.value=cur;
   });
   ['ch-pond','ch-tbl-pond'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;const cur=el.value;
-    el.innerHTML='<option value="all">ทุกบ่อ</option>'+sortedPonds().map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');
+    el.innerHTML='<option value="all">ทุกบ่อ</option>'+pondOptionsHtml();
     if(cur)el.value=cur;
   });
   // harvest pond selectors
   ['hv-pond'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;const cur=el.value;
-    el.innerHTML='<option value="">-- เลือกบ่อ --</option>'+sortedPonds().map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');
+    el.innerHTML='<option value="">-- เลือกบ่อ --</option>'+pondOptionsHtml();
     if(cur)el.value=cur;
   });
   // prep checklist pond selector
@@ -5139,6 +5178,7 @@ function goTab(t,btn){
   const tw=document.querySelector('.tabs-wrap');if(tw)tw.classList.remove('mob-open');
   closeMobMenu();
   syncAllDateHints();
+  applyCurPond();   // เดินตรวจบ่อเดียวแล้วบันทึกหลายอย่าง — ไม่ต้องเลือกบ่อซ้ำทุกหน้า
 }
 function updateTabsArrows(){
   const el=document.getElementById('mainTabs');
@@ -9273,6 +9313,7 @@ function updateEpHeader(){
 }
 function selectEPond(id){
   document.getElementById('ep-pond').value=id;
+  setCurPond(id);   // จำไว้ให้หน้าอื่นเลือกตาม
   onEPond();
   renderEpChips();updateEpHeader();
   document.getElementById('ep-fields')?.scrollIntoView({behavior:'smooth',block:'start'});
@@ -13273,6 +13314,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const _hdrDate=document.getElementById('hdr-date');if(_hdrDate)_hdrDate.textContent=new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   populateAll();renderOv();
   initA11yKeyboardChips();
+  initCurPondSync();
   document.getElementById('pondModal').addEventListener('click',e=>{if(e.target===document.getElementById('pondModal'))closePond()});
   document.getElementById('mpExpandModal').addEventListener('click',e=>{if(e.target===document.getElementById('mpExpandModal'))mpExpandClose()});
   fetchWx().catch(()=>{});
