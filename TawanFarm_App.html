@@ -1360,8 +1360,17 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
         <div class="card-t" style="margin-bottom:0">📈 แนวโน้มผลผลิต (12 เดือนล่าสุด)</div>
         <div class="chip-row" id="palm-yield-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
       </div>
-      <div class="card-sub">น้ำหนักปาล์มที่ขายได้ (กก.) รายเดือน คำนวณจากรายรับที่มีบันทึกน้ำหนักในแท็บ "รายรับ-รายจ่าย"</div>
-      <div style="position:relative;height:220px"><canvas id="palm-yield-chart"></canvas></div>
+      <div class="card-sub">แท่งเขียว = น้ำหนักที่ขายได้ (กก.) · เส้นส้ม = ราคาเฉลี่ย/กก. เดือนนั้น — ดูได้ว่าเดือนไหนราคาดีที่สุด</div>
+      <div id="palm-yield-best" style="margin-bottom:8px"></div>
+      <div style="position:relative;height:240px"><canvas id="palm-yield-chart"></canvas></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:4px">
+        <div class="card-t" style="margin-bottom:0">🌴 สรุปรายแปลง (ปีนี้)</div>
+        <span id="palm-ov-plotyear" style="font-size:var(--fs11);color:var(--tx3)"></span>
+      </div>
+      <div class="card-sub">ตัดไปแล้วกี่กิโล ได้เงินเท่าไร ใส่ปุ๋ยไปเท่าไร — นับเฉพาะปีปัจจุบัน (1 ม.ค. ถึงวันนี้)</div>
+      <div id="palm-ov-plots"></div>
     </div>
     <div class="card">
       <div class="card-t">⏰ แปลงที่ใกล้/เลยกำหนดใส่ปุ๋ยรอบถัดไป</div>
@@ -8634,6 +8643,7 @@ function renderPalmOverview(){
     <div class="kpi-card"><div class="kpi-lbl">พื้นที่รวม</div><div class="kpi-val">${totalArea.toLocaleString()}</div><div class="kpi-sub">ไร่</div></div>
     <div class="kpi-card"><div class="kpi-lbl">รายได้สะสม (ตั้งแต่ต้นปี)</div><div class="kpi-val" style="color:var(--ok)">฿${Math.round(totalIn).toLocaleString()}</div></div>
     <div class="kpi-card"><div class="kpi-lbl">กำไรสุทธิสะสม (ตั้งแต่ต้นปี)</div><div class="kpi-val">฿${Math.round(totalIn-totalOut).toLocaleString()}</div></div>`;
+  renderPalmOvPlots(thisYear);
   const remEl=document.getElementById('palm-ov-reminders');if(!remEl)return;
   const today0=today();
   const rows=plots.map(p=>{
@@ -8649,6 +8659,58 @@ function renderPalmOverview(){
     else if(daysLeft<=7){icon='🟡';badge='<span class="badge b-warn">ใกล้ถึง</span>';}
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border:1px solid var(--bd);border-radius:8px;margin-bottom:8px;font-size:12.5px"><span>${icon} <b>${p.name}</b> ${txt}</span>${badge}</div>`;
   }).join('');
+}
+// ── สรุปรายแปลงปีนี้ในหน้าภาพรวม — ตัดไปกี่กิโล/ได้เงินเท่าไร/ใส่ปุ๋ยไปเท่าไร ──
+// ⚠️ อ่านจาก D.palmMoney / D.palmFertilizer ชุดเดียวกับแท็บ "แปลงปาล์ม" ไม่คำนวณคู่ขนาน
+//    "รายรับ" ใช้ r.amount = ยอดสุทธิหลังหักค่าจ้างทีมตัดแล้ว ตรงกับที่เข้ากระเป๋าจริง
+//    ราคาเฉลี่ยถัวด้วยน้ำหนัก (ไม่ใช่ amount/kg) ด้วยเหตุผลเดียวกับกราฟ
+function renderPalmOvPlots(year){
+  const el=document.getElementById('palm-ov-plots');if(!el)return;
+  const yEl=document.getElementById('palm-ov-plotyear');if(yEl)yEl.textContent='ปี '+yearBE(year);
+  const plots=palmPlots();
+  if(!plots.length){el.innerHTML='<p style="color:var(--tx3);padding:16px;font-style:italic;text-align:center">ยังไม่มีแปลงปาล์ม — เพิ่มได้ที่แท็บ "แปลงปาล์ม"</p>';return;}
+  const money=palmMoneyList(),fert=palmFertList();
+  const inYear=r=>(r.date||'').startsWith(year);
+  const rows=plots.map(p=>{
+    const inc=money.filter(r=>r.plotId===p.id&&r.type==='income'&&inYear(r));
+    const exp=money.filter(r=>r.plotId===p.id&&r.type==='expense'&&inYear(r));
+    const kg=inc.reduce((s,r)=>s+(r.weightKg||0),0);
+    const baht=inc.reduce((s,r)=>s+(r.amount||0),0);
+    const spend=exp.reduce((s,r)=>s+(r.amount||0),0);
+    let psum=0,pkg=0;
+    inc.forEach(r=>{if(r.pricePerKg>0&&r.weightKg>0){psum+=r.pricePerKg*r.weightKg;pkg+=r.weightKg;}});
+    const avgPrice=pkg>0?psum/pkg:null;
+    const fRecs=fert.filter(r=>r.plotId===p.id&&inYear(r));
+    const fertKg=fRecs.reduce((s,r)=>s+(r.kg||0),0);
+    const lastCut=inc.map(r=>r.date).filter(Boolean).sort().slice(-1)[0]||null;
+    return{p,kg,baht,spend,avgPrice,fertKg,fertTimes:fRecs.length,cuts:inc.length,lastCut,net:baht-spend};
+  });
+  const tot=rows.reduce((a,r)=>({kg:a.kg+r.kg,baht:a.baht+r.baht,spend:a.spend+r.spend,fertKg:a.fertKg+r.fertKg,net:a.net+r.net}),{kg:0,baht:0,spend:0,fertKg:0,net:0});
+  const B=v=>'฿'+Math.round(v).toLocaleString();
+  const row=(l,v,c)=>'<div class="plot-stat"><span>'+l+'</span><b'+(c?' style="color:'+c+'"':'')+'>'+v+'</b></div>';
+  el.innerHTML='<div class="plot-grid">'+rows.map(r=>{
+    const p=r.p;
+    return '<div class="plot-card">'+
+      '<div class="pn">'+mpEsc(p.name)+'</div>'+
+      '<div class="pa">'+(p.area?p.area.toLocaleString()+' ไร่':'')+(p.trees?' · '+p.trees.toLocaleString()+' ต้น':'')+'</div>'+
+      row('🌴 ตัดไปแล้ว',r.kg?r.kg.toLocaleString()+' กก.':'— ยังไม่ได้ตัด')+
+      row('💰 รายรับสุทธิ',r.baht?B(r.baht):'-','var(--ok)')+
+      row('🏷️ ราคาเฉลี่ย',r.avgPrice!=null?'฿'+r.avgPrice.toFixed(2)+'/กก.':'-')+
+      row('🧪 ใส่ปุ๋ยไปแล้ว',r.fertKg?r.fertKg.toLocaleString()+' กก. ('+r.fertTimes+' ครั้ง)':'— ยังไม่ได้ใส่')+
+      row('💸 รายจ่ายปีนี้',r.spend?B(r.spend):'-','var(--d)')+
+      row('📊 กำไรสุทธิปีนี้',B(r.net),r.net>=0?'var(--ok)':'var(--d)')+
+      (p.area?row('⚖️ ผลผลิต/ไร่',r.kg?(r.kg/p.area).toFixed(0)+' กก./ไร่':'-'):'')+
+      row('✂️ จำนวนครั้งที่ตัด',r.cuts+' ครั้ง'+(r.lastCut?' · ล่าสุด '+fD(r.lastCut):''))+
+    '</div>';
+  }).join('')+'</div>'+
+  (rows.length>1?'<div style="margin-top:12px;padding:12px 14px;background:var(--pl);border:1.5px solid var(--p);border-radius:11px">'+
+    '<div style="font-size:12.5px;font-weight:700;color:var(--pd);margin-bottom:8px">📦 รวมทั้ง '+rows.length+' แปลง (ปีนี้)</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;font-size:12.5px">'+
+      '<div><div style="color:var(--tx3);font-size:var(--fs10)">ตัดไปแล้ว</div><b>'+tot.kg.toLocaleString()+' กก.</b></div>'+
+      '<div><div style="color:var(--tx3);font-size:var(--fs10)">รายรับสุทธิ</div><b style="color:var(--ok)">'+B(tot.baht)+'</b></div>'+
+      '<div><div style="color:var(--tx3);font-size:var(--fs10)">ปุ๋ยที่ใส่</div><b>'+tot.fertKg.toLocaleString()+' กก.</b></div>'+
+      '<div><div style="color:var(--tx3);font-size:var(--fs10)">กำไรสุทธิ</div><b style="color:'+(tot.net>=0?'var(--ok)':'var(--d)')+'">'+B(tot.net)+'</b></div>'+
+    '</div></div>':'');
 }
 let _palmYieldChart=null;
 let _palmYieldFilterPlot='';
@@ -8675,14 +8737,44 @@ function renderPalmYieldChart(){
   }
   const list=palmMoneyList().filter(r=>r.type==='income'&&r.weightKg&&(_palmYieldFilterPlot?r.plotId===_palmYieldFilterPlot:true));
   const data=months.map(mo=>list.filter(r=>(r.date||'').startsWith(mo.ym)).reduce((s,r)=>s+r.weightKg,0));
+  // ── ราคาเฉลี่ย/กก. ของแต่ละเดือน — ถัวเฉลี่ย "ถ่วงน้ำหนัก" ด้วย กก. ของแต่ละครั้ง (ครั้งที่ตัดเยอะมีน้ำหนักต่อค่าเฉลี่ยมากกว่า)
+  //    ⚠️ ใช้ pricePerKg ที่กรอกไว้ตอนบันทึก ไม่คำนวณจาก amount/weightKg เพราะ amount คือรายรับ "สุทธิ" หลังหักค่าจ้างทีมตัดแล้ว
+  //    (หลักเดียวกับ renderPalmHarvestChart ในแท็บประวัติตัดปาล์ม — ต่างกันแค่ที่นั่นรวมทุกปีตามเดือนปฏิทิน ที่นี่ไล่ 12 เดือนจริงย้อนหลัง) ──
+  const priceData=months.map(mo=>{
+    let sum=0,kg=0;
+    list.forEach(r=>{
+      if(!(r.pricePerKg>0)||!(r.date||'').startsWith(mo.ym))return;
+      sum+=r.pricePerKg*r.weightKg;kg+=r.weightKg;
+    });
+    return kg>0?+(sum/kg).toFixed(2):null;
+  });
+  // เดือนที่ราคาดีที่สุดในช่วง 12 เดือนนี้
+  let bestIdx=-1;
+  priceData.forEach((v,i)=>{if(v!=null&&(bestIdx===-1||v>priceData[bestIdx]))bestIdx=i;});
+  const bestEl=document.getElementById('palm-yield-best');
+  if(bestEl){
+    bestEl.innerHTML=bestIdx>=0
+      ?`<span class="badge b-ok">⭐ ราคาดีที่สุดใน 12 เดือนนี้: ${months[bestIdx].label} — ฿${priceData[bestIdx].toFixed(2)}/กก.</span>`
+      :'<span style="color:var(--tx3);font-size:12px">ยังไม่มีข้อมูลราคา — กรอกช่อง "ราคา/กก." ตอนบันทึกรายรับ จึงจะคำนวณได้</span>';
+  }
+  if(typeof Chart==='undefined')return;
   _palmYieldChart=new Chart(canvas,{
-    type:'line',
-    data:{labels:months.map(m=>m.label),datasets:[{label:'ผลผลิต (กก.)',data,borderColor:'#2F7D4F',backgroundColor:'rgba(47,125,79,.15)',borderWidth:2.5,pointRadius:3,pointBackgroundColor:'#2F7D4F',fill:true,tension:.3}]},
+    data:{labels:months.map(m=>m.label),datasets:[
+      {type:'bar',label:'ผลผลิต (กก.)',data,backgroundColor:'rgba(47,125,79,.55)',borderColor:'#2F7D4F',borderWidth:1,borderRadius:4,yAxisID:'y',order:2},
+      {type:'line',label:'ราคาเฉลี่ย (฿/กก.)',data:priceData,borderColor:'#D97706',backgroundColor:'#D97706',borderWidth:2.5,
+       pointRadius:priceData.map((v,i)=>i===bestIdx?6:3),
+       pointBackgroundColor:priceData.map((v,i)=>i===bestIdx?'#15803D':'#D97706'),
+       fill:false,tension:.3,spanGaps:true,yAxisID:'y1',order:1}
+    ]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y.toLocaleString()} กก.`}}},
+      plugins:{legend:{display:true,labels:{font:{size:10.5},boxWidth:12,color:'var(--tx2)'}},
+        tooltip:{callbacks:{label:ctx=>ctx.dataset.yAxisID==='y1'
+          ?(ctx.parsed.y!=null?` ราคาเฉลี่ย ฿${ctx.parsed.y.toFixed(2)}/กก.`:' ไม่มีข้อมูลราคา')
+          :` ${ctx.parsed.y.toLocaleString()} กก.`}}},
       scales:{
         x:{ticks:{font:{size:9.5},color:'var(--tx3)'},grid:{display:false}},
-        y:{beginAtZero:true,ticks:{font:{size:9.5},color:'var(--tx3)',callback:v=>fmtKM(v)},grid:{color:'rgba(0,0,0,0.04)'}}
+        y:{position:'left',beginAtZero:true,ticks:{font:{size:9.5},color:'var(--tx3)',callback:v=>fmtKM(v)},grid:{color:'rgba(0,0,0,0.04)'},title:{display:true,text:'กก.',font:{size:9.5},color:'var(--tx3)'}},
+        y1:{position:'right',beginAtZero:true,ticks:{font:{size:9.5},color:'#D97706',callback:v=>'฿'+v},grid:{drawOnChartArea:false},title:{display:true,text:'฿/กก.',font:{size:9.5},color:'#D97706'}}
       }
     }
   });
