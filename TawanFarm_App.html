@@ -3179,11 +3179,11 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <div style="display:flex;flex-direction:column;gap:14px">
       <input type="hidden" id="mdl-id">
       <div class="fg"><label class="fl" for="mdl-name">ชื่อบ่อ * (A.1, B.3)</label><input type="text" class="fi" id="mdl-name" placeholder="A.1"></div>
-      <div class="fg"><label class="fl" for="mdl-stock">ยอดสั่งซื้อ (ตัว) *</label><input type="number" class="fi" id="mdl-stock" placeholder="500000" oninput="syncMdlTotal()"></div>
+      <div class="fg"><label class="fl" for="mdl-stock">ยอดสั่งซื้อ (ตัว)</label><input type="number" class="fi" id="mdl-stock" placeholder="500000" oninput="syncMdlTotal()"><span class="lbl-std">เว้นว่างได้ถ้ายังไม่ลงกุ้ง / ยกเลิกการลง</span></div>
       <div class="fg"><label class="fl" for="mdl-stockbonus">ยอดแถม (ตัว)</label><input type="number" class="fi" id="mdl-stockbonus" placeholder="0" oninput="syncMdlTotal()"></div>
       <div class="fg"><label class="fl" for="mdl-total">ยอดปล่อยจริง (ตัว)</label><input type="text" class="fi" id="mdl-total" readonly style="background:var(--sf2);color:var(--p);font-weight:700"><span class="lbl-std">ใช้คำนวณ Biomass/FCR/อัตรารอด/ความหนาแน่นทั้งระบบ</span></div>
       <div class="fg"><label class="fl" for="mdl-size">ขนาดบ่อ (ไร่) *</label><input type="number" class="fi" id="mdl-size" step="0.1" placeholder="4.0"></div>
-      <div class="fg"><label class="fl" for="mdl-start">วันที่ปล่อยกุ้ง *</label><input type="date" class="fi" id="mdl-start"></div>
+      <div class="fg"><label class="fl" for="mdl-start">วันที่ปล่อยกุ้ง</label><input type="date" class="fi" id="mdl-start"><span class="lbl-std">ล้างช่องนี้ = ยกเลิกการลงกุ้ง / ยังไม่มีแผน (บ่อจะกลายเป็น "บ่อว่าง")</span></div>
       <div class="fg"><label class="fl" for="mdl-hatchery">โรงเพาะ / บริษัทลูกกุ้ง</label><input type="text" class="fi" id="mdl-hatchery" placeholder="ซีพี, ซายอควา, ไทยแปซิฟิก..." list="hatchery-list"><datalist id="hatchery-list"><option value="ซีพี"><option value="ซายอควา"><option value="ไทยแปซิฟิก"><option value="เจริญโภคภัณฑ์"><option value="SIS"></datalist></div>
       <div class="fg"><label class="fl" for="mdl-plType">ระยะลูกกุ้งตอนปล่อย</label><select class="fi" id="mdl-plType"><option value="">-- เลือกระยะ --</option><option value="PL10">PL10</option><option value="PL12">PL12</option><option value="PL15">PL15</option><option value="PL17">PL17</option><option value="SuperPL">SuperPL</option><option value="ชำนอก">ชำนอก</option></select></div>
       <div class="fg"><label class="fl" for="mdl-plWeight">น้ำหนักกุ้งตอนปล่อย (กรัม/ตัว)</label><input type="number" class="fi" id="mdl-plWeight" step="0.001" placeholder="0.003"></div>
@@ -12107,7 +12107,7 @@ function renderManage(){
     // ── บ่อที่ "ยังไม่ลงกุ้ง" (startDate ว่าง) แต่ log ยังไม่ว่างจริง — ข้อมูลรอบเก่าค้างจากปิดรอบ (เช่น sync ดันกลับ) ไม่ได้ตั้งใจ ──
     const orphaned=!active&&!p.startDate&&[p.records.length,(p.feedLog||[]).length,(p.samples||[]).length,(p.labResults||[]).length,(p.waterLog||[]).length,(p.chemLog||[]).length,(p.partialHarvests||[]).length].some(n=>n>0);
     const cleanupBtn=orphaned?`<button class="btn btn-d btn-sm" title="ล้างข้อมูลค้างจากรอบก่อน" onclick="cleanupOrphanData('${p.id}')">🧹</button>`:'';
-    return`<tr><td><strong style="color:var(--p)">${p.name}</strong></td><td>${pRelease(p).toLocaleString()}${p.stockBonus?`<div style="font-size:var(--fs10);color:var(--tx3)">สั่ง ${p.stock.toLocaleString()} + แถม ${p.stockBonus.toLocaleString()}</div>`:''}</td><td>${p.size}</td><td>${dens(p)} ตัว/ตรม.</td><td>${p.startDate?fD(p.startDate):'-'}</td><td>${ageCell}</td><td>${mgCountCell(p.records.length,active)}</td><td>${mgCountCell((p.feedLog||[]).length,active)}</td><td>${mgCountCell((p.samples||[]).length,active)}</td><td>${mgCountCell((p.labResults||[]).length,active)}</td><td>${adgCell}</td><td style="display:flex;gap:6px">${cleanupBtn}<button class="btn btn-s btn-sm" onclick="editPond('${p.id}')">✏️</button><button class="btn btn-d btn-sm" onclick="delPond('${p.id}')">🗑️</button></td></tr>`;
+    return`<tr><td><strong style="color:var(--p)">${p.name}</strong></td><td>${!p.startDate?'<span style="color:var(--tx3)">-</span>':pRelease(p).toLocaleString()}${p.startDate&&p.stockBonus?`<div style="font-size:var(--fs10);color:var(--tx3)">สั่ง ${p.stock.toLocaleString()} + แถม ${p.stockBonus.toLocaleString()}</div>`:''}</td><td>${p.size}</td><td>${p.startDate?dens(p)+' ตัว/ตรม.':'<span style="color:var(--tx3)">-</span>'}</td><td>${p.startDate?fD(p.startDate):'-'}</td><td>${ageCell}</td><td>${mgCountCell(p.records.length,active)}</td><td>${mgCountCell((p.feedLog||[]).length,active)}</td><td>${mgCountCell((p.samples||[]).length,active)}</td><td>${mgCountCell((p.labResults||[]).length,active)}</td><td>${adgCell}</td><td style="display:flex;gap:6px">${cleanupBtn}<button class="btn btn-s btn-sm" onclick="editPond('${p.id}')">✏️</button><button class="btn btn-d btn-sm" onclick="delPond('${p.id}')">🗑️</button></td></tr>`;
   }).join('');
 }
 // ── ล้างข้อมูลค้าง (feedLog/samples/labResults ฯลฯ) ของบ่อที่ปิดรอบไปแล้วแต่ log ไม่ถูกเคลียร์ตาม (เช่น sync ดันข้อมูลรอบเก่ากลับมา) — ใช้ path เดียวกับตอนปิดรอบจริง (tombstone แล้วล้าง array) ──
@@ -12161,12 +12161,22 @@ function savePond(){
   const plType=document.getElementById('mdl-plType').value;
   const plWeight=document.getElementById('mdl-plWeight').value?parseFloat(document.getElementById('mdl-plWeight').value):null;
   const costFry=document.getElementById('mdl-costfry').value?parseFloat(document.getElementById('mdl-costfry').value):null;
-  if(!name||!stock||!size||!startDate){alert('กรุณากรอกข้อมูลให้ครบ');return}
+  // ── ⚠️ วันลงกุ้ง/ยอดสั่งซื้อ ไม่บังคับแล้ว — บ่อที่ยกเลิกการลงกุ้งและยังไม่มีแผน ต้องล้างวันที่ออกได้
+  //    (เดิมบังคับ startDate ทำให้บ่อที่ยกเลิกแล้วยังค้างวันลงกุ้งเก่า โผล่เป็น "กำลังเลี้ยง" ทั้งที่ไม่มีกุ้ง) ──
+  if(!name||!size){alert('กรุณากรอกชื่อบ่อ และขนาดบ่อ (ไร่)');return}
+  if(startDate&&!(stock>0)){alert('ระบุวันที่ปล่อยกุ้งแล้ว ต้องกรอก "ยอดสั่งซื้อ" ด้วย\n\nถ้าต้องการยกเลิกการลงกุ้ง ให้ล้างช่องวันที่ปล่อยกุ้งออก');return}
+  if(!startDate&&id){
+    // เตือนถ้าบ่อยังมีข้อมูลของรอบที่กำลังเลี้ยงค้างอยู่ — ล้างวันที่แล้วข้อมูลจะกำพร้า (ไม่มีรอบสังกัด)
+    const pc=pond(id);
+    const keys=['records','feedLog','samples','waterLog','chemLog','labResults','partialHarvests','mortalityLog'];
+    const n=keys.reduce((s,k)=>s+((pc&&pc[k])||[]).length,0);
+    if(n>0&&!confirm('บ่อ '+(pc?pc.name:'')+' ยังมีข้อมูลของรอบปัจจุบันค้างอยู่ '+n+' รายการ (ค่าน้ำ/อาหาร/สุ่ม/ฯลฯ)\n\nล้างวันที่ปล่อยกุ้งแล้ว บ่อจะกลายเป็น "บ่อว่าง" แต่ข้อมูลเหล่านี้ยังอยู่และจะไม่ถูกนับเข้ารอบไหนเลย\n\nถ้าเป็นการยกเลิกการลงกุ้งจริง ควรลบข้อมูลพวกนี้ทิ้งด้วย\n\nยืนยันล้างวันที่?'))return;
+  }
   if(id){
     const p=pond(id);
     const wasIdle=!p.startDate; // ลงลูกกุ้งรอบใหม่ (เดิมว่างจากการปิดรอบ) — ไม่ใช่แค่แก้ไขข้อมูลรอบเดิม
-    Object.assign(p,{name,stock,stockBonus,size,startDate,hatchery,plType,plWeight,costFry});
-    if(wasIdle){
+    Object.assign(p,{name,stock:stock||0,stockBonus,size,startDate,hatchery,plType,plWeight,costFry});
+    if(wasIdle&&startDate){   // ⚠️ ต้องมีวันลงกุ้งจริงถึงจะนับเป็นรอบใหม่ — ล้างวันที่ทิ้งไม่ใช่การเริ่มรอบ
       const nxt=computeNextCrop(p,startDate);
       p.cropNum=nxt.cropNum;p.cropYear=nxt.cropYear;
       // ลงกุ้งแล้ว = เตรียมบ่อจบหน้าที่ — ล้างเช็คลิสต์พร้อม tombstone กัน merge ดันกลับ
@@ -12178,9 +12188,9 @@ function savePond(){
     }
   }
   else{
-    const np={id:'P'+Date.now(),name,stock,stockBonus,size,startDate,hatchery,plType,plWeight,costFry,records:[],feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[]};
-    const nxt=computeNextCrop(np,startDate);
-    np.cropNum=nxt.cropNum;np.cropYear=nxt.cropYear;
+    const np={id:'P'+Date.now(),name,stock:stock||0,stockBonus,size,startDate,hatchery,plType,plWeight,costFry,records:[],feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[]};
+    if(startDate){const nxt=computeNextCrop(np,startDate);np.cropNum=nxt.cropNum;np.cropYear=nxt.cropYear;}
+    else{np.cropNum=1;np.cropYear=new Date().getFullYear();}
     D.ponds.push(np);
   }
   save();closePond();renderManage();populateAll();renderOv();
@@ -12257,7 +12267,11 @@ function renderCrops(){
   const tbody=document.getElementById('cr-tbody');if(!tbody)return;
   // ⚠️ เรียงบ่อแบบธรรมชาติ A.1 → A.2 → ... → A.27 (sortedPonds แยกตัวอักษร/ตัวเลข) ไม่ใช่ลำดับดิบใน D.ponds
   tbody.innerHTML=sortedPonds().map(p=>{
-    const history=(p.cropHistory||[]).filter(c=>yearBE(c.cropYear||c.year||curY)===selYear).sort((a,b)=>(a.cropNum||1)-(b.cropNum||1));
+    // ⚠️ เรียงตาม "วันที่" ไม่ใช่ cropNum — ข้อมูลจริงมีหลายรอบที่ cropNum เป็น 1 ซ้ำกัน
+    //    (รอบที่กรอกย้อนหลังเอง / รอบที่เปลี่ยนวันลงกุ้งโดยไม่ผ่านการปิดรอบ ทำให้ savePond ไม่ได้คำนวณเลขรอบใหม่)
+    //    ถ้าเรียงด้วย cropNum ที่ซ้ำกัน ลำดับจะมั่วและป้ายขึ้น "รอบ 1" ทั้งคู่
+    const history=(p.cropHistory||[]).filter(c=>yearBE(c.cropYear||c.year||curY)===selYear)
+      .sort((a,b)=>String(a.startDate||a.closeDate||'').localeCompare(String(b.startDate||b.closeDate||'')));
     const isCurYear=yearBE(p.cropYear||curY)===selYear;
     const curAge=p.startDate?dDiff(p.startDate,today()):0;
     const hasStarted=!!p.startDate&&curAge>=0;
@@ -12276,15 +12290,21 @@ function renderCrops(){
         '<span>'+d1+'</span><span style="color:var(--tx3)">→</span><span>'+d2+'</span>'+
         '<span style="font-weight:700;color:'+color+'">'+days+'</span>'+(extra||'')+
       '</div>';
+    // ⚠️ ป้าย "รอบ N" นับจากลำดับจริงในปีนั้น (i+1) ไม่ใช่ c.cropNum ที่ข้อมูลจริงซ้ำกันได้
+    //    ถ้า cropNum ที่บันทึกไว้ไม่ตรงกับลำดับ โชว์ต่อท้ายให้เห็นด้วย จะได้รู้ว่าต้องไปแก้ที่ปุ่ม ✏️
     const lines=history.map((c,i)=>{
       const days=c.startDate&&c.closeDate?dDiff(c.startDate,c.closeDate):null;
       const dClr=days!=null?(days>=90&&days<=120?'var(--ok)':days>120?'var(--w)':'var(--d)'):'var(--tx3)';
-      return roundLine('รอบ '+(c.cropNum||i+1),fD(c.startDate||'')||'-',fD(c.closeDate||'')||'-',days!=null?days+' วัน':'-',dClr);
+      const mismatch=(c.cropNum!=null&&+c.cropNum!==i+1)
+        ?'<span style="font-size:var(--fs10);color:var(--w)" title="เลขรอบที่บันทึกไว้ไม่ตรงกับลำดับจริง — แก้ได้ที่ปุ่ม ✏️ ในตารางประวัติด้านล่าง">(บันทึกไว้ว่ารอบ '+c.cropNum+')</span>'
+        :'';
+      return roundLine('รอบ '+(i+1),fD(c.startDate||'')||'-',fD(c.closeDate||'')||'-',days!=null?days+' วัน':'-',dClr,mismatch);
     });
     if(hasCurrentRound){
+      const curNo=history.length+1;
       lines.push(onTrackNow
-        ? roundLine('รอบ '+(p.cropNum||history.length+1),fD(p.startDate),'<span style="color:var(--in)">กำลังเลี้ยง</span>',curAge+' วัน','var(--p)')
-        : roundLine('รอบ '+(p.cropNum||history.length+1),fD(p.startDate),'<span style="color:var(--w)">เตรียมบ่อ</span>','เหลือ '+Math.abs(curAge)+' วัน','var(--tx3)'));
+        ? roundLine('รอบ '+curNo,fD(p.startDate),'<span style="color:var(--in)">กำลังเลี้ยง</span>',curAge+' วัน','var(--p)')
+        : roundLine('รอบ '+curNo,fD(p.startDate),'<span style="color:var(--w)">เตรียมบ่อ</span>','เหลือ '+Math.abs(curAge)+' วัน','var(--tx3)'));
     }
     if(!lines.length)lines.push('<div style="font-size:12px;color:var(--tx3);padding:3px 0">— ยังไม่มีรอบในปีนี้ —</div>');
     return`<tr style="border-bottom:1px solid var(--bd);${isCurYear?'background:var(--pl)':''}">
