@@ -2207,7 +2207,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 <div id="sec-crops" class="sec">
   <div class="sec-hdr">
     <div class="sec-title">🌾 รอบเลี้ยง (Crop Cycles)</div>
-    <span style="font-size:12px;color:var(--tx3)">เป้าหมาย: 2 รอบ/ปี/บ่อ · ระยะเลี้ยง 90–120 วัน</span>
+    <span style="font-size:12px;color:var(--tx3)">แสดงทุกรอบที่เลี้ยงในปีนั้น (บางบ่อทำได้ 3 รอบ/ปี) · ระยะเลี้ยงปกติ 90–120 วัน</span>
   </div>
   <div class="g5" id="cr-metrics" style="margin-bottom:20px"></div>
   <div class="card">
@@ -2223,21 +2223,10 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
         <thead>
           <tr style="background:var(--sf2);border-bottom:2px solid var(--bd)">
             <th style="text-align:left;padding:9px 12px;font-size:12px;color:var(--tx2)">บ่อ</th>
-            <th style="text-align:center;padding:9px 12px;font-size:12px;color:var(--tx2)" colspan="3">รอบที่ 1</th>
-            <th style="text-align:center;padding:9px 12px;font-size:12px;color:var(--tx2)" colspan="3">รอบที่ 2</th>
+            <th style="text-align:left;padding:9px 12px;font-size:12px;color:var(--tx2)">รอบเลี้ยงในปีนี้ (ทุกรอบ)</th>
             <th style="text-align:center;padding:9px 12px;font-size:12px;color:var(--tx2)">ปิดแล้ว</th>
             <th style="text-align:center;padding:9px 12px;font-size:12px;color:var(--tx2)">สถานะ</th>
             <th style="padding:9px 6px"></th>
-          </tr>
-          <tr style="background:var(--sf2);border-bottom:1px solid var(--bd)">
-            <th></th>
-            <th style="text-align:center;padding:4px 10px;font-size:var(--fs11);color:var(--tx3)">วันลง</th>
-            <th style="text-align:center;padding:4px 10px;font-size:var(--fs11);color:var(--tx3)">วันปิด</th>
-            <th style="text-align:center;padding:4px 10px;font-size:var(--fs11);color:var(--tx3)">ระยะ(วัน)</th>
-            <th style="text-align:center;padding:4px 10px;font-size:var(--fs11);color:var(--tx3)">วันลง</th>
-            <th style="text-align:center;padding:4px 10px;font-size:var(--fs11);color:var(--tx3)">วันปิด</th>
-            <th style="text-align:center;padding:4px 10px;font-size:var(--fs11);color:var(--tx3)">ระยะ(วัน)</th>
-            <th></th><th></th><th></th>
           </tr>
         </thead>
         <tbody id="cr-tbody"></tbody>
@@ -4660,8 +4649,14 @@ function cropHarvestResult(c){
   const pt=partialTotals(c.partialHarvests);
   const closeKg=(parseFloat(hr.totalWeight)||0)+gradeKg(hr);   // รวมเกรดพิเศษตอนปิดบ่อ
   const allKg=closeKg+pt.kg;
-  const closeCount=parseFloat(hr.caught)||0;
-  const allCount=closeCount+pt.count;
+  // ── ⚠️ จำนวนตัวที่จับได้: รอบที่ปิดผ่านฟอร์มปัจจุบันรวมพาเชียลมาแล้ว ห้ามบวกซ้ำ (ดูเหตุผลเดียวกับ revenue ด้านล่าง)
+  //    รอบเก่าที่ไม่มีธง: ถ้ายอดตรงกับ "ปิดบ่อ×ไซส์ + ตัวพาเชียล" พอดี แปลว่ารวมมาแล้วเหมือนกัน
+  const rawCaught=parseFloat(hr.caught)||0;
+  const szClose=parseFloat(hr.size)||0;
+  const closeOnlyCount=closeKg*szClose;
+  const caughtIncluded=hr.caughtIncludesPartial===true
+    ||(rawCaught>0&&szClose>0&&closeOnlyCount>0&&Math.abs(rawCaught-(closeOnlyCount+pt.count))<=Math.max(2,pt.count*0.005));
+  const allCount=caughtIncluded?rawCaught:(rawCaught+pt.count);
   const feed=(c.feedLog||[]).reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0);
   const out={...hr};
   if(pt.kg>0){out._phAdj=true;out._phKg=pt.kg;out.totalWeightAll=allKg;}   // _phAdj = ธงบอก UI ว่าแถวนี้รวมพาเชียลแล้ว
@@ -4672,10 +4667,22 @@ function cropHarvestResult(c){
     const order=parseFloat(c.stock)||0;
     if(order>0)out.survivalRateOrder=+(allCount/order*100).toFixed(1);          // ฐานเทียบ: ยอดสั่งซื้ออย่างเดียว (เท่ากับสมุดจดมือ)
   }
+  // ── ⚠️ บวกพาเชียลเข้ารายได้ "เฉพาะรอบเก่าที่ยังไม่ได้รวมมา" เท่านั้น
+  //    รอบที่ปิดผ่านฟอร์มปัจจุบันมี revenueIncludesPartial=true เพราะ calcCropEcon() บวกพาเชียลให้ตั้งแต่ในฟอร์มแล้ว
+  //    ถ้าบวกซ้ำ รายได้/กำไรจะเกินจริงเท่ายอดพาเชียลพอดี (เจอตอนตรวจ flow ปิดบ่อ A.1 ก่อนปิดจริง)
+  //    รอบเก่าที่ไม่มีธง: ตรวจซ้ำด้วยว่ายอดที่กรอกตรงกับ "ปิดบ่อ+เกรด+พาเชียล" พอดีไหม (= ค่าที่ปุ่ม "ใช้ตัวเลขที่คำนวณ" เติมให้)
+  //    ถ้าตรงพอดีแปลว่ารวมมาแล้วเหมือนกัน ห้ามบวกซ้ำ — เช็คเฉพาะตอนมีราคา/กก. ไม่งั้น closeOnly เป็น 0 แล้วเดาผิด
   if(pt.baht>0){
-    const closeBaht=hr.revenue!=null?(parseFloat(hr.revenue)||0):(closeKg*(parseFloat(hr.price)||0));
-    out.revenue=closeBaht+pt.baht;
-    if(hr.netProfit!=null)out.netProfit=(parseFloat(hr.netProfit)||0)+pt.baht;  // ต้นทุนเท่าเดิม กำไรจึงเพิ่มเท่ารายได้ที่เพิ่ม
+    const price=parseFloat(hr.price)||0;
+    const closeOnly=closeKg*price+gradeBaht(hr);
+    const rev=hr.revenue!=null?(parseFloat(hr.revenue)||0):null;
+    const looksIncluded=hr.revenueIncludesPartial===true
+      ||(rev!=null&&price>0&&closeOnly>0&&Math.abs(rev-(closeOnly+pt.baht))<=Math.max(2,pt.baht*0.005));
+    if(!looksIncluded){
+      const closeBaht=rev!=null?rev:closeOnly;
+      out.revenue=closeBaht+pt.baht;
+      if(hr.netProfit!=null)out.netProfit=(parseFloat(hr.netProfit)||0)+pt.baht;  // ต้นทุนเท่าเดิม กำไรจึงเพิ่มเท่ารายได้ที่เพิ่ม
+    }
   }
   return out;
 }
@@ -12090,7 +12097,8 @@ function mgCountCell(n,active){
   return n;
 }
 function renderManage(){
-  document.getElementById('mg-tbody').innerHTML=D.ponds.map(p=>{
+  // ⚠️ เรียง A.1 → A.2 → ... → A.27 (ไม่ใช่ลำดับดิบใน D.ponds ที่เรียงตามลำดับที่ถูกสร้าง)
+  document.getElementById('mg-tbody').innerHTML=sortedPonds().map(p=>{
     const age=p.startDate?dDiff(p.startDate,today()):null;
     const ageCell=(age===null)?'<span style="color:var(--tx3)">ยังไม่ลงกุ้ง</span>':age<0?`<span style="color:var(--in)">เตรียมบ่อ (เหลือ ${Math.abs(age)} วัน)</span>`:`${age+1} วัน`;
     const active=age!==null&&age>=0; // ลงกุ้งแล้วและไม่ได้อยู่ระหว่างเตรียมบ่อ — ใช้ตัดสินว่า "ควรมีข้อมูล" หรือยัง
@@ -12224,27 +12232,31 @@ function renderCrops(){
   D.ponds.forEach(p=>{(p.cropHistory||[]).forEach(c=>{years.add(yearBE(c.cropYear||c.year||curY));});years.add(yearBE(p.cropYear||curY));});
   const yrEl=document.getElementById('cr-year');
   if(yrEl){const cv=yrEl.value||yearBE(curY);yrEl.innerHTML=[...years].sort((a,b)=>b-a).map(y=>`<option value="${y}"${y==cv?' selected':''}>${y} พ.ศ.</option>`).join('');}
-  // metrics
-  let totalClosed=0,onTrack=0,behindTrack=0;
+  // ── metrics ──
+  // ⚠️ ไม่ยึด "2 ครอป/ปี" อีกต่อไป (บางบ่อเลี้ยงได้ 3 ครอป/ปี) — เลิกใช้คำว่า "ทันเป้า/ล่าช้า/เป้ารวม"
+  //    เปลี่ยนเป็นรายงานความจริง: ปิดไปกี่รอบ · กำลังเลี้ยงกี่บ่อ · บ่อว่างกี่บ่อ · เฉลี่ยรอบ/บ่อ
+  let totalClosed=0,activeNow=0,prepNow=0,idleNow=0;
+  const closedPerPond=[];
   D.ponds.forEach(p=>{
     const closed=(p.cropHistory||[]).filter(c=>yearBE(c.cropYear||c.year||curY)===selYear).length;
-    totalClosed+=closed;
-    const curIsThisYear=yearBE(p.cropYear||curY)===selYear;
-    if(curIsThisYear){
-      const age=p.startDate?dDiff(p.startDate,today()):0;
-      const total=closed+(age>0?1:0);
-      if(total>=2)onTrack++;else if(closed+(age>=90?1:0)>=1)onTrack++;else behindTrack++;
-    }
+    totalClosed+=closed;closedPerPond.push(closed);
+    const age=p.startDate?dDiff(p.startDate,today()):null;
+    if(p.startDate&&age>=0)activeNow++;
+    else if(p.startDate&&age<0)prepNow++;
+    else idleNow++;
   });
+  const avgPerPond=D.ponds.length?(totalClosed/D.ponds.length):0;
+  const maxPerPond=closedPerPond.length?Math.max(...closedPerPond):0;
   document.getElementById('cr-metrics').innerHTML=`
     <div class="metric-card metric-card-accent"><div class="mv">${D.ponds.length}</div><div class="ml">บ่อทั้งหมด</div></div>
-    <div class="metric-card metric-card-accent"><div class="mv">${totalClosed}</div><div class="ml">รอบปิดแล้ว (${selYear})</div></div>
-    <div class="metric-card metric-card-accent"><div class="mv" style="color:var(--ok)">${onTrack}</div><div class="ml">บ่อทันเป้า</div></div>
-    <div class="metric-card metric-card-accent"><div class="mv" style="color:${behindTrack>0?'var(--d)':'var(--tx3)'}">${behindTrack}</div><div class="ml">บ่อล่าช้า</div></div>
-    <div class="metric-card metric-card-accent"><div class="mv">${D.ponds.length*2}</div><div class="ml">เป้ารวม (รอบ)</div></div>`;
+    <div class="metric-card metric-card-accent"><div class="mv">${totalClosed}</div><div class="ml">รอบที่ปิดแล้ว (${selYear})</div></div>
+    <div class="metric-card metric-card-accent"><div class="mv" style="color:var(--in)">${activeNow}</div><div class="ml">กำลังเลี้ยง</div></div>
+    <div class="metric-card metric-card-accent"><div class="mv" style="color:var(--w)">${prepNow+idleNow}</div><div class="ml">เตรียมบ่อ / บ่อว่าง</div></div>
+    <div class="metric-card metric-card-accent"><div class="mv">${avgPerPond.toFixed(1)}</div><div class="ml">เฉลี่ยรอบ/บ่อ${maxPerPond?' (สูงสุด '+maxPerPond+')':''}</div></div>`;
   // table body
   const tbody=document.getElementById('cr-tbody');if(!tbody)return;
-  tbody.innerHTML=D.ponds.map(p=>{
+  // ⚠️ เรียงบ่อแบบธรรมชาติ A.1 → A.2 → ... → A.27 (sortedPonds แยกตัวอักษร/ตัวเลข) ไม่ใช่ลำดับดิบใน D.ponds
+  tbody.innerHTML=sortedPonds().map(p=>{
     const history=(p.cropHistory||[]).filter(c=>yearBE(c.cropYear||c.year||curY)===selYear).sort((a,b)=>(a.cropNum||1)-(b.cropNum||1));
     const isCurYear=yearBE(p.cropYear||curY)===selYear;
     const curAge=p.startDate?dDiff(p.startDate,today()):0;
@@ -12253,44 +12265,33 @@ function renderCrops(){
     const isPrepNow=isCurYear&&p.startDate&&curAge<0;
     const totalClosed=history.length;
     const prog=totalClosed+(hasStarted?1:0);
-    const progColor=prog>=2?'var(--ok)':prog>=1?'var(--w)':'var(--d)';
-    function cropCells(c,isCurrent){
-      if(isCurrent&&onTrackNow){
-        return`<td style="padding:8px 10px;text-align:center;font-size:12px">${fD(p.startDate)}</td>
-               <td style="padding:8px 10px;text-align:center;color:var(--in);font-size:12px">กำลังเลี้ยง</td>
-               <td style="padding:8px 10px;text-align:center;font-weight:700;color:var(--p)">${curAge} วัน</td>`;
-      }
-      if(isCurrent&&isPrepNow){
-        return`<td style="padding:8px 10px;text-align:center;font-size:12px">${fD(p.startDate)}</td>
-               <td style="padding:8px 10px;text-align:center;color:var(--w);font-size:12px">เตรียมบ่อ</td>
-               <td style="padding:8px 10px;text-align:center;font-weight:700;color:var(--tx3)">เหลือ ${Math.abs(curAge)} วัน</td>`;
-      }
-      if(c){
-        const days=c.startDate&&c.closeDate?dDiff(c.startDate,c.closeDate):'-';
-        const dClr=days!=='-'?(days>=90&&days<=120?'var(--ok)':days>120?'var(--w)':'var(--d)'):'var(--tx3)';
-        return`<td style="padding:8px 10px;text-align:center;font-size:12px">${fD(c.startDate||'')}</td>
-               <td style="padding:8px 10px;text-align:center;font-size:12px">${fD(c.closeDate||'')}</td>
-               <td style="padding:8px 10px;text-align:center;font-weight:700;color:${dClr}">${days}</td>`;
-      }
-      return`<td style="padding:8px 10px;text-align:center;color:var(--tx3)">-</td><td style="padding:8px 10px;text-align:center;color:var(--tx3)">-</td><td style="padding:8px 10px;text-align:center;color:var(--tx3)">-</td>`;
-    }
-    // ── 2 ช่องในตารางนี้แสดงได้แค่ 2 รอบ/บ่อ/ปี — เดิมเลือกช่องแสดงผลจาก "totalClosed" ตรงๆ (0→ช่อง1, 1→ช่อง2, ≥2→ไม่โชว่ที่ไหนเลย) ทำให้บ่อที่ปิดไปแล้ว ≥2 รอบแล้วกำลังเลี้ยงรอบถัดไปอยู่ รอบที่กำลังเลี้ยงหายไปจากตารางเงียบๆ (มองไม่เห็นว่าบ่อนี้กำลังเลี้ยงรอบอะไรอยู่เลย) — แก้ให้รอบปัจจุบัน (กำลังเลี้ยง/เตรียมบ่อ) ต้องโชว่เสมอถ้ามี ไม่ว่าจะเคยปิดไปแล้วกี่รอบ ช่องที่เหลือโชว่รอบปิด "ล่าสุด" (ไม่ใช่รอบเก่าสุด) ประวัติรอบเก่ากว่านั้นยังดูครบได้ที่ตาราง "ประวัติรอบเลี้ยง" ด้านล่างซึ่งไม่จำกัดจำนวน ──
+    // ⚠️ ไม่มี "เป้า 2 รอบ" แล้ว — สีบอกแค่ว่ามีความเคลื่อนไหวในปีนี้ไหม (บางบ่อทำได้ 3 ครอป/ปี)
+    const progColor=prog>=1?'var(--ok)':'var(--tx3)';
+    // ── ⚠️ เดิมตารางมีแค่ 2 ช่อง = โชว์ได้สูงสุด 2 รอบ/บ่อ/ปี บ่อที่เลี้ยง 3 ครอป/ปี จะมีรอบหายไปจากตาราง
+    //    เปลี่ยนเป็นลิสต์รอบทั้งหมดในช่องเดียว รองรับกี่รอบก็ได้ (รอบที่กำลังเลี้ยง/เตรียมบ่อ ต่อท้ายเสมอ) ──
     const hasCurrentRound=isCurYear&&(onTrackNow||isPrepNow);
-    let leftCrop,rightCrop,rightIsCurrent;
+    const roundLine=(label,d1,d2,days,color,extra)=>
+      '<div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:12px;white-space:nowrap">'+
+        '<span style="font-weight:700;color:var(--tx2);min-width:44px">'+label+'</span>'+
+        '<span>'+d1+'</span><span style="color:var(--tx3)">→</span><span>'+d2+'</span>'+
+        '<span style="font-weight:700;color:'+color+'">'+days+'</span>'+(extra||'')+
+      '</div>';
+    const lines=history.map((c,i)=>{
+      const days=c.startDate&&c.closeDate?dDiff(c.startDate,c.closeDate):null;
+      const dClr=days!=null?(days>=90&&days<=120?'var(--ok)':days>120?'var(--w)':'var(--d)'):'var(--tx3)';
+      return roundLine('รอบ '+(c.cropNum||i+1),fD(c.startDate||'')||'-',fD(c.closeDate||'')||'-',days!=null?days+' วัน':'-',dClr);
+    });
     if(hasCurrentRound){
-      leftCrop=history.length?history[history.length-1]:null;
-      rightCrop=null;rightIsCurrent=true;
-    }else{
-      leftCrop=history.length>=2?history[history.length-2]:(history[0]||null);
-      rightCrop=history.length>=2?history[history.length-1]:null;
-      rightIsCurrent=false;
+      lines.push(onTrackNow
+        ? roundLine('รอบ '+(p.cropNum||history.length+1),fD(p.startDate),'<span style="color:var(--in)">กำลังเลี้ยง</span>',curAge+' วัน','var(--p)')
+        : roundLine('รอบ '+(p.cropNum||history.length+1),fD(p.startDate),'<span style="color:var(--w)">เตรียมบ่อ</span>','เหลือ '+Math.abs(curAge)+' วัน','var(--tx3)'));
     }
+    if(!lines.length)lines.push('<div style="font-size:12px;color:var(--tx3);padding:3px 0">— ยังไม่มีรอบในปีนี้ —</div>');
     return`<tr style="border-bottom:1px solid var(--bd);${isCurYear?'background:var(--pl)':''}">
-      <td style="padding:8px 12px;font-weight:800">บ่อ ${p.name}</td>
-      ${cropCells(leftCrop,false)}
-      ${cropCells(rightCrop,rightIsCurrent)}
-      <td style="padding:8px 10px;text-align:center;font-size:20px;font-weight:800;color:${progColor}">${totalClosed}/2</td>
-      <td style="padding:8px 10px;text-align:center"><span class="badge ${prog>=2?'b-ok':prog>=1?'b-warn':'b-danger'}">${prog>=2?'✅ ครบ':prog>=1?'⏳ 1/2':'⚠️ ยังไม่มี'}</span></td>
+      <td style="padding:8px 12px;font-weight:800;vertical-align:top">บ่อ ${p.name}</td>
+      <td style="padding:6px 12px">${lines.join('')}</td>
+      <td style="padding:8px 10px;text-align:center;font-size:20px;font-weight:800;color:${progColor}">${totalClosed}</td>
+      <td style="padding:8px 10px;text-align:center">${onTrackNow?'<span class="badge b-info">🦐 กำลังเลี้ยง</span>':isPrepNow?'<span class="badge b-warn">🧹 เตรียมบ่อ</span>':totalClosed>0?'<span class="badge b-ok">✅ ปิดแล้ว '+totalClosed+' รอบ</span>':'<span class="badge b-na">⚪ บ่อว่าง</span>'}</td>
       <td style="padding:8px 6px;text-align:center">${isCurYear&&hasStarted&&APP_ROLE==='admin'?`<button class="btn btn-sm" style="background:var(--p);color:#fff;border:none;font-size:12px" onclick="openCropModal('${p.id}')">ปิดรอบ</button>${(()=>{
         // ต้นทุนสะสม realtime (admin) — เลขชุดเดียวกับ auto-fill ตอนปิดรอบ เห็นก่อนตัดสินใจโดยไม่ต้องเปิดฟอร์มปิดรอบเสี่ยงกดยืนยันพลาด
         const rc=pondRunningCost(p);if(!rc)return'';
@@ -13141,12 +13142,19 @@ function confirmCloseCrop(){
     grades:cmCleanGrades(),
     size:parseInt(document.getElementById('cm-size').value)||null,
     caught:parseInt(document.getElementById('cm-caught').value)||null,
+    // ⚠️ เช่นเดียวกับ revenue: ช่อง "ตัวที่จับได้" ถูก calcCropEcon() คำนวณเป็นยอดรวมทั้งรอบ (ปิดบ่อ + พาเชียล) มาให้แล้ว
+    //    ถ้าไม่ติดธง cropHarvestResult() จะบวกจำนวนตัวพาเชียลซ้ำ → อัตรารอดพุ่งเกินจริง (เจอ 99% ทั้งที่จริง 61.5%)
+    caughtIncludesPartial:true,
     survivalRate:parseFloat(document.getElementById('cm-survival').value)||null,
     survivalRateOrder:parseFloat(document.getElementById('cm-survival-order')?.value)||null,   // ชุดเทียบ: หารด้วยยอดสั่งซื้ออย่างเดียว (ฐานเดียวกับสมุดจดมือ)
     fcr:parseFloat(document.getElementById('cm-fcr').value)||null,
     price:parseFloat(document.getElementById('cm-price').value)||null,
     buyer:document.getElementById('cm-buyer').value.trim()||null,
     revenue:parseFloat(document.getElementById('cm-revenue').value)||null,
+    // ⚠️ ธงสำคัญ: "รายได้" ในฟอร์มนี้คือ "ยอดรวมทั้งรอบ" (ปิดบ่อ + เกรดพิเศษ + พาเชียล) เพราะ calcCropEcon()
+    //    เสนอ _cmCalcAll ที่บวกพาเชียลมาให้แล้ว และปุ่ม "ใช้ตัวเลขที่คำนวณ" ก็เติมค่านั้น
+    //    ถ้าไม่ติดธงนี้ cropHarvestResult() จะบวกพาเชียลซ้ำอีกรอบตอนแสดงผล → รายได้/กำไรเกินจริงเท่ายอดพาเชียล
+    revenueIncludesPartial:true,
     costFry:parseFloat(document.getElementById('cm-cost-fry').value)||null,
     costFeed:parseFloat(document.getElementById('cm-cost-feed').value)||null,
     costMed:parseFloat(document.getElementById('cm-cost-med').value)||null,
@@ -13219,9 +13227,12 @@ let _cdmPondId=null,_cdmCropId=null;
 function openCloseDoneModal(p,archived){
   _cdmPondId=p.id;_cdmCropId=archived.id;
   document.getElementById('cdm-title').textContent=`ปิดรอบที่ ${archived.cropNum} บ่อ ${p.name} สำเร็จ`;
-  const hr=archived.harvestResult||{};
+  // ⚠️ อ่านผ่าน cropHarvestResult() เพื่อให้ "ผลผลิต" เป็นยอดรวมทั้งรอบ (ปิดบ่อ + เกรดพิเศษ + พาเชียล)
+  //    เดิมโชว์ hr.totalWeight ซึ่งเป็นกุ้งปกติวันปิดบ่ออย่างเดียว บ่อที่พาเชียลไปหลายตันจะดูเหมือนผลผลิตน้อยกว่าความจริงมาก
+  const hr=cropHarvestResult(archived)||archived.harvestResult||{};
   const parts=[];
-  if(hr.totalWeight)parts.push(`ผลผลิต ${hr.totalWeight.toLocaleString()} กก.`);
+  const wAll=hr.totalWeightAll!=null?hr.totalWeightAll:hr.totalWeight;
+  if(wAll)parts.push(`ผลผลิต ${Math.round(wAll).toLocaleString()} กก.${hr._phAdj?' (รวมพาเชียล)':''}`);
   if(APP_ROLE==='admin'&&hr.netProfit!=null)parts.push(`กำไรสุทธิ ${(hr.netProfit>=0?'+':'')}${Math.round(hr.netProfit).toLocaleString()} บ.`);
   parts.push('เก็บเข้าประวัติแล้ว');
   document.getElementById('cdm-sub').textContent=parts.join(' · ');
