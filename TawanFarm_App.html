@@ -1253,17 +1253,19 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 
   <div class="card" style="margin-bottom:14px">
     <div class="card-t">⚙️ ตัวแปรที่ใช้คำนวณ</div>
-    <div class="card-sub">ช่องพื้นฟ้า = ดึงจากข้อมูลจริงของบ่อให้อัตโนมัติ แก้ทับได้ถ้าอยากลองสมมติ — <b>ไม่บันทึกถาวร</b> เปลี่ยนบ่อหรือเปิดใหม่แล้วกลับเป็นค่าอัตโนมัติ</div>
+    <div class="card-sub">ช่องพื้นฟ้า = ดึงจากข้อมูลจริงของบ่อให้อัตโนมัติ · แก้ตัวเลขในหน้านี้ได้เต็มที่ <b>ไม่กระทบข้อมูลจริงของบ่อ</b> — เป็นการลองสมมติชั่วคราว</div>
     <div class="fgrid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
       <div class="fg"><label class="fl" for="fc-pond">บ่อ</label><select class="fi" id="fc-pond" onchange="fcLoadPond()"></select></div>
+      <div style="grid-column:1/-1;font-size:12.5px;font-weight:800;color:var(--pd);margin:6px 0 -2px;padding-bottom:5px;border-bottom:1px solid var(--bd)">🦐 สภาพกุ้งตอนนี้ <span style="font-weight:400;color:var(--tx3)">— ดึงจากข้อมูลจริงของบ่อ แก้ทับได้ถ้าไม่ตรง</span></div>
       <div class="fg"><label class="fl" for="fc-abw">ABW ตอนนี้ (ก./ตัว)</label><input type="number" step="any" class="fi fc-auto" id="fc-abw" oninput="fcCalc()"><span class="hint" id="fc-abw-hint"></span></div>
       <div class="fg"><label class="fl" for="fc-pdg">PDG อัตราโต (ก./วัน)</label>
         <div style="display:flex;gap:6px"><input type="number" step="any" class="fi fc-auto" id="fc-pdg" oninput="fcCalc()"><button class="btn btn-s" type="button" onclick="fcResetField('pdg')" title="คืนค่าอัตโนมัติ">↺</button></div>
         <span class="hint" id="fc-pdg-hint"></span></div>
       <div class="fg"><label class="fl" for="fc-surv">อัตรารอดตอนนี้ (%)</label><input type="number" step="any" class="fi fc-auto" id="fc-surv" oninput="fcCalc()"><span class="hint" id="fc-surv-hint"></span></div>
-      <div class="fg"><label class="fl" for="fc-decl">อัตรารอดลดลง (%/10 วัน)</label><input type="number" step="any" class="fi" id="fc-decl" value="1" oninput="fcCalc()"><span class="hint">เผื่อกุ้งทยอยตาย — ใส่ 0 ถ้าไม่ต้องการเผื่อ</span></div>
       <div class="fg"><label class="fl" for="fc-rel">ยอดปล่อย (ตัว)</label><input type="number" step="any" class="fi fc-auto" id="fc-rel" oninput="fcCalc()"></div>
       <div class="fg"><label class="fl" for="fc-rai">ขนาดบ่อ (ไร่)</label><input type="number" step="any" class="fi fc-auto" id="fc-rai" oninput="fcCalc()"></div>
+      <div style="grid-column:1/-1;font-size:12.5px;font-weight:800;color:var(--pd);margin:6px 0 -2px;padding-bottom:5px;border-bottom:1px solid var(--bd)">🔮 สมมติฐานที่ใช้ทำนาย <span style="font-weight:400;color:var(--tx3)">— ลองปรับดูได้ ไม่กระทบข้อมูลจริง</span></div>
+      <div class="fg"><label class="fl" for="fc-decl">อัตรารอดลดลง (%/10 วัน)</label><input type="number" step="any" class="fi" id="fc-decl" value="1" oninput="fcCalc()"><span class="hint">เผื่อกุ้งทยอยตาย — ใส่ 0 ถ้าไม่ต้องการเผื่อ</span></div>
       <div class="fg"><label class="fl" for="fc-fcr">FCR ที่คาด</label><input type="number" step="any" class="fi fc-auto" id="fc-fcr" oninput="fcCalc()"></div>
       <div class="fg"><label class="fl" for="fc-fd100k">อาหาร กก./แสนตัว (ที่ให้จริง)</label>
         <div style="display:flex;gap:6px"><input type="number" step="any" class="fi fc-auto" id="fc-fd100k" oninput="fcCalc()"><button class="btn btn-s" type="button" onclick="fcResetField('fd100k')" title="คืนค่าอัตโนมัติ">↺</button></div>
@@ -1272,10 +1274,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
         </label>
         <span class="hint" id="fc-fd100k-hint"></span>
       </div>
-      <div class="fg admin-only"><label class="fl" for="fc-fp">ราคาอาหาร (บ./กก.)</label><input type="number" step="any" class="fi fc-auto" id="fc-fp" oninput="fcCalc()"></div>
-      <div class="fg admin-only"><label class="fl" for="fc-fx">ต้นทุนคงที่/วัน (บ.)</label><input type="number" step="any" class="fi fc-auto" id="fc-fx" oninput="fcCalc()"><span class="hint">ค่าไฟ + ค่าแรง เฉลี่ยต่อบ่อ</span></div>
-      <div class="fg admin-only"><label class="fl" for="fc-cost0">ต้นทุนสะสมถึงวันนี้ (บ.)</label><input type="number" step="any" class="fi fc-auto" id="fc-cost0" oninput="fcCalc()"></div>
-      <div class="fg"><label class="fl" for="fc-ytgt">เกณฑ์พาเชียล (กก./ไร่)</label><input type="number" step="any" class="fi" id="fc-ytgt" oninput="fcCalc()"><span class="hint">ถึงเกณฑ์แล้วขึ้นเขียวในตาราง</span></div>
+      <div style="grid-column:1/-1;font-size:12.5px;font-weight:800;color:var(--pd);margin:6px 0 -2px;padding-bottom:5px;border-bottom:1px solid var(--bd)">📋 อยากรู้อะไร</div>
+      <div class="fg"><label class="fl" for="fc-ytgt">เกณฑ์พาเชียล (กก./ไร่)</label><input type="number" step="any" class="fi" id="fc-ytgt" oninput="fcCalc()"><span class="hint">ถึงเกณฑ์แล้ว กก./ไร่ ในผลคำนวณจะขึ้นสีเขียว ✓</span></div>
       <!-- ⚠️ 2 ช่องนี้ต้องอยู่ในการ์ดตั้งค่า (ที่ไม่เคยถูก re-render) ห้ามย้ายกลับเข้าไปใน #fc-res
            เพราะ fcCalc() ล้าง innerHTML ของ #fc-res ทิ้งทุกครั้ง ถ้าช่องกรอกอยู่ในนั้น ตัว input จะถูกทำลาย
            ระหว่างพิมพ์ → เคอร์เซอร์หลุด พิมพ์ได้ทีละตัว (บั๊กที่พี่เจอ entry #185) -->
@@ -1297,28 +1297,6 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <div class="fc-res3" id="fc-res"></div>
   </div>
 
-  <div class="card admin-only" style="margin-bottom:14px">
-    <div class="card-t">💵 ราคาขายตามไซส์ <span style="font-size:var(--fs11);font-weight:400;color:var(--tx3)">(กรอกเอง · บันทึกถาวร ใช้ร่วมทุกบ่อ)</span></div>
-    <div class="card-sub">ไซส์ที่อยู่ระหว่างช่วง ระบบเทียบสัดส่วนให้อัตโนมัติ (เช่น 45 ตัว/กก. จะได้ราคาระหว่างช่วง 50 กับ 40)</div>
-    <div id="fc-ptbl" class="fc-pgrid"></div>
-    <div style="display:flex;gap:8px;margin-top:11px;flex-wrap:wrap">
-      <button class="btn btn-s" type="button" onclick="fcAddBand()">+ เพิ่มช่วงไซส์</button>
-      <button class="btn btn-s" type="button" onclick="fcFillFromSales()">📥 ดึงจากการขายล่าสุด</button>
-      <button class="btn btn-s" type="button" onclick="fcResetBands()">↺ คืนค่าเริ่มต้น</button>
-      <span id="fc-pmsg" style="font-size:12px;align-self:center"></span>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-t"><span class="admin-only">📊 เทียบผลตอบแทนตามวันจับ</span><span class="staff-only">📊 การเติบโตตามวันจับ</span></div>
-    <div class="card-sub admin-only">โตขึ้นได้น้ำหนักเพิ่มและราคา/กก. ดีขึ้น แต่ต้องจ่ายค่าอาหาร+ค่าไฟ+ค่าแรงเพิ่ม และกุ้งทยอยตาย — ตารางนี้หักลบให้หมดแล้ว</div>
-    <div class="card-sub staff-only">คาดการณ์ไซส์ น้ำหนัก และ กก./ไร่ ในแต่ละวันข้างหน้า (กุ้งทยอยตายตามอัตราที่ตั้งไว้)</div>
-    <div class="tbl-wrap" id="fc-tbl-wrap"></div>
-    <div class="ai warn" style="margin-top:12px"><span>⚠️</span><div>
-      ตัวเลขนี้ตั้งอยู่บนสมมติฐานว่า <b>กุ้งโตสม่ำเสมอตาม PDG</b> และ <b>ไม่เกิดโรค</b> — ยิ่งเลี้ยงนานยิ่งเสี่ยง (EHP/ขี้ขาว/อากาศ) ใช้ดูแนวโน้มว่า "รอต่อคุ้มไหม" ไม่ใช่คำสั่งให้รอ<br>
-      <span class="admin-only"><b>ตัวเลขเล็กใต้กำไร</b> = ช่วงกำไรถ้าอัตรารอดพลาดไป ±5% — ถ้าช่วงกว้างมากแปลว่ายังไม่น่าเชื่อถือ ควรสุ่มเช็คอัตรารอดให้แน่ก่อนตัดสินใจ</span>
-    </div></div>
-  </div>
 </div>
 <!-- MED PROTOCOL (Protocol เวชภัณฑ์ — แยกเป็นหัวข้อ เพิ่ม/แก้/ลบเองได้ · staff เห็นแต่แก้ไม่ได้) -->
 <div id="sec-medproto" class="sec">
@@ -8370,27 +8348,12 @@ let _palmActiveTab='ov';
 /* ══════════ หน้า "คำนวณ & คาดการณ์" (admin เท่านั้น) ══════════
    ⚠️ อ่านอย่างเดียว — ไม่เขียนข้อมูลบ่อใดๆ ค่าที่แก้ในฟอร์มเป็นการลองสมมติชั่วคราว
    ยกเว้น D.forecastPrices (ตารางราคาตามไซส์) ที่บันทึกถาวรเพราะใช้ร่วมทุกบ่อ */
-const FC_DEF_PRICES=[[70,120],[60,130],[50,145],[40,165],[30,190]];
-const FC_FEED_KG_PER_SACK=25;   // ต้องตรงกับสมมติฐานใน pondFeedCost()
+/* ══════ หน้า "คำนวณ & คาดการณ์" (admin เท่านั้น) ══════
+   ⚠️ อ่านอย่างเดียว — ไม่เขียนข้อมูลบ่อใดๆ ค่าที่แก้ในฟอร์มเป็นการลองสมมติชั่วคราว
+   (ตัดตารางราคาตามไซส์ออกแล้ว entry #216 — หน้านี้จึงไม่เขียนข้อมูลถาวรอะไรเลย) */
 let _fcAuto={};                 // ค่าอัตโนมัติของบ่อที่เลือกอยู่ (ไว้กดคืนค่า)
 let _fcPickVal=null;            // วันที่เลือกในปฏิทิน (คงไว้ข้าม re-render)
 let _fcDOC0=0;                  // อายุกุ้ง (DOC) ของบ่อที่เลือก ณ วันนี้ — fcSnap ใช้คำนวณ feeding rate ตามอายุ ต้องเซ็ตก่อนเรียก fcSnap เสมอ
-function fcPrices(){
-  if(!Array.isArray(D.forecastPrices)||!D.forecastPrices.length)D.forecastPrices=FC_DEF_PRICES.map(r=>r.slice());
-  return D.forecastPrices;
-}
-// ราคา ณ ไซส์ใดๆ — อยู่ระหว่างช่วงให้เทียบสัดส่วนเชิงเส้น, นอกช่วงใช้ค่าปลายสุด (ไม่ทำนายเกินข้อมูลจริงที่กรอกไว้)
-function fcPriceAt(size){
-  const b=fcPrices().filter(r=>r[0]>0).slice().sort((a,b)=>b[0]-a[0]);
-  if(!b.length||!(size>0))return 0;
-  if(size>=b[0][0])return b[0][1];
-  if(size<=b[b.length-1][0])return b[b.length-1][1];
-  for(let i=0;i<b.length-1;i++){
-    const s1=b[i][0],p1=b[i][1],s2=b[i+1][0],p2=b[i+1][1];
-    if(size<=s1&&size>=s2){const t=(s1-size)/(s1-s2);return Math.round(p1+(p2-p1)*t);}
-  }
-  return b[b.length-1][1];
-}
 const _fcG=id=>parseFloat(document.getElementById(id)?.value)||0;
 function initForecast(){
   const sel=document.getElementById('fc-pond');if(!sel)return;
@@ -8403,7 +8366,6 @@ function initForecast(){
   // ── ตั้งค่าเริ่มต้นช่องปฏิทิน (ตอนนี้เป็น input ถาวรในการ์ดตั้งค่า ไม่ได้ถูกสร้างใหม่ทุก render แล้ว จึงต้องเซ็ตค่าเองตอนเปิดหน้า) ──
   const dEl=document.getElementById('fc-pickd');
   if(dEl&&!dEl.value){dEl.value=_fcPickVal||addDays(today(),14);_fcPickVal=dEl.value;}
-  fcRenderBands();
   fcLoadPond();
 }
 // ── ดึงค่าอัตโนมัติของบ่อที่เลือกมาเติมลงฟอร์ม (เขียนทับค่าที่เคยแก้ไว้ — ตั้งใจ เพราะเปลี่ยนบ่อแล้วค่าเดิมใช้ไม่ได้) ──
@@ -8415,13 +8377,7 @@ function fcLoadPond(){
   const samples=(p.samples||[]).filter(s=>s.abw!=null&&s.abw!=='');
   const lat=samples.length?samples[samples.length-1]:null;
   const pdgRaw=parseFloat(getPDG(p.samples||[]));
-  const rc=pondRunningCost(p);
   const age=pondCurAge(p);
-  // ราคาอาหารเฉลี่ย/กก. จากสินค้าหมวด feed ในสต็อก (unitPrice = ราคาต่อกระสอบ)
-  const feedItems=(D.inventoryItems||[]).filter(i=>i.category==='feed'&&i.unitPrice>0);
-  const feedPerKg=feedItems.length?feedItems.reduce((s,i)=>s+i.unitPrice,0)/feedItems.length/FC_FEED_KG_PER_SACK:0;
-  // ต้นทุนคงที่/วัน = (ค่าแรง+ค่าไฟ ที่สะสมมา) ÷ จำนวนวันที่เลี้ยง
-  const fixDay=age>0&&rc?((rc.labor+rc.elec)/age):0;
   const fcrNow=parseFloat(getFCR(p));
   // ── อาหาร กก./แสนตัว ที่ให้จริงล่าสุด (จากบันทึกอาหาร) — ถ้ายังไม่เคยกรอกอาหาร ใช้ค่าที่สูตร Precision Feeding แนะนำแทน ──
   const fLog=(p.feedLog||[]).filter(r=>r.totalFeed>0);
@@ -8443,10 +8399,7 @@ function fcLoadPond(){
     rel:pRelease(p),
     rai:p.size||0,
     fcr:fcrNow>0?fcrNow:1.5,
-    fd100k:fdRateNow>0?Math.round(fdRateNow*10)/10:0,
-    fp:feedPerKg>0?Math.round(feedPerKg*100)/100:0,
-    fx:fixDay>0?Math.round(fixDay):0,
-    cost0:rc?Math.round(rc.total):0
+    fd100k:fdRateNow>0?Math.round(fdRateNow*10)/10:0
   };
   Object.keys(_fcAuto).forEach(k=>{const e=document.getElementById('fc-'+k);if(e)e.value=_fcAuto[k]||'';});
   const yt=document.getElementById('fc-ytgt');if(yt&&!yt.value)yt.value=PARTIAL_YIELD_TARGET;
@@ -8468,10 +8421,6 @@ function fcLoadPond(){
   if(!_fcAuto.abw)miss.push('ABW (ต้องสุ่มตัวอย่างก่อน)');
   if(!_fcAuto.surv)miss.push('อัตรารอด (กรอกตอนสุ่มตัวอย่าง)');
   if(!_fcAuto.pdg)miss.push('PDG (ต้องสุ่มอย่างน้อย 2 ครั้ง)');
-  if(APP_ROLE==='admin'){   // เตือนเรื่องต้นทุนเฉพาะ admin — staff ไม่เห็นคอลัมน์เงินอยู่แล้ว
-    if(!_fcAuto.fp)miss.push('ราคาอาหาร (ยังไม่มีสินค้าหมวดอาหารในสต็อก)');
-    if(!_fcAuto.fx)miss.push('ต้นทุนคงที่/วัน (ยังไม่มีข้อมูลค่าแรง/ค่าไฟ) — ถ้าปล่อยเป็น 0 กำไรในตารางจะสูงเกินจริง');
-  }
   if(warn)warn.innerHTML=miss.length
     ?'<div class="ai warn"><span>⚠️</span><div>ข้อมูลบางอย่างดึงอัตโนมัติไม่ได้ — <b>'+miss.join(' · ')+'</b><br>กรอกเองในช่องด้านบนได้ ตัวเลขจะคำนวณให้ทันที</div></div>'
     :'';
@@ -8530,7 +8479,6 @@ function fcSnap(d,off){
 }
 function fcEcon(d,off){
   const s=fcSnap(d,off),base=fcSnap(0,off);
-  const pr=fcPriceAt(s.size);
   const gain=Math.max(0,s.bio-base.bio);
   // ── อาหารสะสมจากวันนี้ถึงวัน d ──
   //    ถ้าผู้ใช้กรอก "อาหาร กก./แสนตัว ที่ให้จริง" → รวมอาหารรายวันจริงๆ (ตรงกว่า เพราะรู้อัตราการให้แล้ว)
@@ -8544,11 +8492,8 @@ function fcEcon(d,off){
     feedKg=gain*_fcG('fc-fcr');feedSrc='fcr';
   }
   const impFcr=gain>0?feedKg/gain:null;   // FCR ที่เป็นผลจากอัตราการให้อาหาร — ไว้ไขว้ตรวจกับช่อง FCR ที่คาด
-  const cost=_fcG('fc-cost0')+feedKg*_fcG('fc-fp')+d*_fcG('fc-fx');
-  const rev=s.bio*pr;
-  return{abw:s.abw,surv:s.surv,bio:s.bio,size:s.size,yr:s.yr,pr:pr,rev:rev,cost:cost,feedKg:feedKg,
-         rate:s.rate,fdDay:s.fdDay,fd100k:s.fd100k,gain:gain,impFcr:impFcr,feedSrc:feedSrc,
-         cpk:s.bio>0?cost/s.bio:0,profit:rev-cost};
+  return{abw:s.abw,surv:s.surv,bio:s.bio,size:s.size,yr:s.yr,feedKg:feedKg,
+         rate:s.rate,fdDay:s.fdDay,fd100k:s.fd100k,gain:gain,impFcr:impFcr,feedSrc:feedSrc};
 }
 function _fcPickedDays(){
   const el=document.getElementById('fc-pickd');
@@ -8560,11 +8505,9 @@ function _fcPickedDays(){
 function fcQuick(n){_fcPickVal=addDays(today(),n);const e=document.getElementById('fc-pickd');if(e)e.value=_fcPickVal;fcCalc();}
 function fcCalc(){
   const resEl=document.getElementById('fc-res');if(!resEl)return;
-  const wrapEl=document.getElementById('fc-tbl-wrap');
   const abw=_fcG('fc-abw'),pdg=_fcG('fc-pdg');
   if(!(abw>0)){
     resEl.innerHTML='<div style="color:var(--tx3);font-size:13px;padding:8px 0">กรอก ABW ก่อน จึงจะคำนวณได้</div>';
-    if(wrapEl)wrapEl.innerHTML='';
     return;
   }
   const pid=document.getElementById('fc-pond')?.value,p=pid?pond(pid):null;
@@ -8612,105 +8555,6 @@ function fcCalc(){
      '<div class="sub nb"><span>เพิ่มขึ้น</span><span>'+(sT?'+'+kg(sT.bio-now.bio)+' กก.':'—')+'</span></div>'+
      '<div class="sub nb"><span>กก./ไร่</span><span'+(sT&&yMark(sT.yr)?' style="color:var(--ok);font-weight:700"':'')+'>'+(sT?kg(sT.yr):'—')+(sT&&yMark(sT.yr)?' ✓':'')+'</span></div>'+
    '</div>';
-  if(!wrapEl)return;
-  // ── ตารางเทียบวันจับ ──
-  const rows=[0,7,pd,days,(days!=null?days+14:null)]
-    .filter(v=>v!=null&&v>=0)
-    .filter((v,i,a)=>a.indexOf(v)===i)
-    .sort((a,b)=>a-b);
-  let best=-Infinity,bestD=null;
-  const data=rows.map(d=>{
-    const e=fcEcon(d,0);
-    if(e.profit>best){best=e.profit;bestD=d;}
-    return{d:d,e:e,lo:fcEcon(d,-5),hi:fcEcon(d,5)};
-  });
-  // ⚠️ staff เห็นเฉพาะคอลัมน์การเติบโต (ไซส์/น้ำหนัก/กก.ต่อไร่) — คอลัมน์เงินทั้งหมดไม่ถูก render ออกมาเลย
-  //    (ไม่ใช่แค่ซ่อนด้วย CSS เพราะดู DOM ก็ยังเห็นตัวเลขได้)
-  const fcMoney=(APP_ROLE==='admin');
-  wrapEl.innerHTML=
-   '<div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวาเพื่อดูทุกค่า →</div>'+
-   '<table class="fc-tbl"><thead><tr>'+
-     '<th>จับเมื่อ</th><th>DOC</th><th>ไซส์<br>(ตัว/กก.)</th><th>อัตรารอด</th><th>น้ำหนัก<br>(กก.)</th>'+
-     '<th>กก./ไร่</th><th>อาหาร/วัน<br>(กก.)</th><th>อาหาร<br>กก./แสน</th>'+
-     (fcMoney?'<th>ราคา<br>(บ./กก.)</th><th>รายได้</th><th>ต้นทุนรวม</th><th>ต้นทุน/กก.</th>'+
-              '<th>กำไร<br><span style="font-weight:400;color:var(--tx3)">(ช่วง ±5% รอด)</span></th>':'')+
-   '</tr></thead><tbody>'+
-   data.map(r=>{
-     const e=r.e;
-     const cls=r.d===0?'now':(fcMoney&&r.d===bestD?'best':'');
-     let pill=r.d===0?'<span class="fc-pill" style="color:var(--pd);background:var(--pl);border:1px solid var(--p)">ตอนนี้</span>'
-            :((fcMoney&&r.d===bestD)?'<span class="fc-pill" style="color:var(--ok);background:var(--ob);border:1px solid var(--ok)">กำไรสูงสุด</span>':'');
-     if(r.d===pd&&r.d!==0)pill+='<span class="fc-pill" style="color:var(--in);background:var(--ib);border:1px solid var(--in)">วันที่เลือก</span>';
-     const yOk=yMark(e.yr);
-     return '<tr class="'+cls+'">'+
-       '<td>'+(r.d===0?'วันนี้':'+'+r.d+' วัน')+pill+'<div style="font-size:var(--fs10);color:var(--tx3)">'+fD(addDays(today(),r.d))+'</div></td>'+
-       '<td>'+(DOC0+r.d)+'</td><td><b>'+Math.round(e.size)+'</b></td><td>'+e.surv.toFixed(1)+'%</td>'+
-       '<td>'+kg(e.bio)+'</td>'+
-       '<td'+(yOk?' style="color:var(--ok);font-weight:700"':'')+'>'+kg(e.yr)+(yOk?' ✓':'')+'</td>'+
-       '<td>'+(e.fdDay!=null?kg(e.fdDay):'—')+'</td>'+
-       '<td style="font-weight:700;color:var(--p)">'+(e.fd100k!=null?e.fd100k.toFixed(1):'—')+'</td>'+
-       (fcMoney?
-         '<td>'+e.pr+'</td><td>'+kg(e.rev)+'</td><td>'+kg(e.cost)+'</td><td>'+e.cpk.toFixed(1)+'</td>'+
-         '<td style="font-weight:700;color:'+(e.profit>=0?'var(--ok)':'var(--d)')+'">'+(e.profit>=0?'+':'')+kg(e.profit)+
-           '<div style="font-size:var(--fs10);font-weight:400;color:var(--tx3)">'+kg(r.lo.profit)+' – '+kg(r.hi.profit)+'</div>'+
-         '</td>'
-       :'')+
-     '</tr>';
-   }).join('')+
-   '</tbody></table>';
-}
-// ── ตารางราคาตามไซส์ (บันทึกถาวรใน D.forecastPrices — ใช้ร่วมทุกบ่อ) ──
-function fcRenderBands(){
-  const el=document.getElementById('fc-ptbl');if(!el)return;
-  el.innerHTML=fcPrices().map((r,i)=>
-    '<div class="fc-pband">'+
-      '<button class="x" type="button" title="ลบช่วงนี้" onclick="fcDelBand('+i+')">✕</button>'+
-      '<div class="l">ไซส์ (ตัว/กก.)</div>'+
-      '<input type="number" step="any" value="'+r[0]+'" onchange="fcSetBand('+i+',0,this.value)">'+
-      '<div class="l" style="margin-top:6px">ราคา (บ./กก.)</div>'+
-      '<input type="number" step="any" value="'+r[1]+'" onchange="fcSetBand('+i+',1,this.value)" style="color:var(--p);font-weight:700">'+
-    '</div>').join('');
-}
-function fcSetBand(i,j,v){const b=fcPrices();if(!b[i])return;b[i][j]=parseFloat(v)||0;save();fcCalc();fcPMsg('บันทึกแล้ว','ok');}
-function fcDelBand(i){
-  const b=fcPrices();
-  if(b.length<=2){fcPMsg('ต้องมีอย่างน้อย 2 ช่วงไซส์','err');return;}
-  b.splice(i,1);save();fcRenderBands();fcCalc();fcPMsg('ลบแล้ว','ok');
-}
-function fcAddBand(){
-  const b=fcPrices(),last=b[b.length-1];
-  b.push([Math.max(1,(last?last[0]:40)-5),(last?last[1]:150)+12]);
-  save();fcRenderBands();fcCalc();fcPMsg('เพิ่มช่วงแล้ว','ok');
-}
-function fcResetBands(){
-  if(!confirm('คืนค่าตารางราคาเป็นค่าเริ่มต้น? ราคาที่กรอกไว้จะหายทั้งหมด'))return;
-  D.forecastPrices=FC_DEF_PRICES.map(r=>r.slice());
-  save();fcRenderBands();fcCalc();fcPMsg('คืนค่าแล้ว','ok');
-}
-// ── ดึงราคาจากการขายจริงที่เคยบันทึก (พาเชียล + ปิดรอบ) — ไซส์เดียวกันเอาราคาครั้งล่าสุด ──
-function fcFillFromSales(){
-  const rec=[];
-  (D.ponds||[]).forEach(p=>{
-    (p.partialHarvests||[]).forEach(r=>{if(r.size>0&&r.price>0)rec.push({date:r.date||'',size:+r.size,price:+r.price});});
-    (p.cropHistory||[]).forEach(c=>{
-      (c.partialHarvests||[]).forEach(r=>{if(r.size>0&&r.price>0)rec.push({date:r.date||'',size:+r.size,price:+r.price});});
-      const hr=c.harvestResult;
-      if(hr&&hr.size>0&&hr.price>0)rec.push({date:c.closeDate||'',size:+hr.size,price:+hr.price});
-    });
-  });
-  if(!rec.length){fcPMsg('ยังไม่มีประวัติการขายที่มีทั้งไซส์และราคา','err');return;}
-  rec.sort((a,b)=>(a.date||'').localeCompare(b.date||''));   // เก่า→ใหม่ ค่าท้ายสุดของแต่ละไซส์ = ล่าสุด
-  const byS={};rec.forEach(r=>{byS[Math.round(r.size)]=r.price;});
-  const bands=Object.keys(byS).map(k=>[+k,byS[k]]).sort((a,b)=>b[0]-a[0]);
-  if(bands.length<2){fcPMsg('มีข้อมูลขายแค่ไซส์เดียว ต้องมีอย่างน้อย 2 ไซส์','err');return;}
-  if(!confirm('พบราคาขายจริง '+bands.length+' ไซส์\n'+bands.map(b=>'• '+b[0]+' ตัว/กก. = '+b[1]+' บ.').join('\n')+'\n\nนำมาแทนตารางราคาปัจจุบันทั้งหมด?'))return;
-  D.forecastPrices=bands;save();fcRenderBands();fcCalc();
-  fcPMsg('ดึงมา '+bands.length+' ไซส์แล้ว — แก้ทับได้','ok');
-}
-function fcPMsg(t,cls){
-  const el=document.getElementById('fc-pmsg');if(!el)return;
-  el.textContent=t;el.style.color=cls==='err'?'var(--d)':'var(--ok)';
-  clearTimeout(el._t);el._t=setTimeout(()=>{el.textContent='';},2500);
 }
 function initPalm(){
   if(APP_ROLE!=='admin')return;
