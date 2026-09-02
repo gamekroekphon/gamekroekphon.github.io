@@ -4295,11 +4295,19 @@ function hatcheryStats(){
       // ── ทุก record ใน cropHistory คือรอบที่ปิดแล้วอยู่แล้ว (ไม่ต้องพึ่ง c.closed ที่ confirmCloseCrop() ไม่เคยตั้งค่าให้) ──
       if(!c.harvestResult)return;
       const name=(c.hatchery||'').trim()||'ไม่ระบุ';
-      if(!groups[name])groups[name]={name,rounds:0,survSum:0,survN:0,fcrSum:0,fcrN:0,adgSum:0,adgN:0};
+      if(!groups[name])groups[name]={name,rounds:0,survSum:0,survN:0,fcrSum:0,fcrN:0,adgSum:0,adgN:0,
+        bonusSum:0,bonusN:0,ordSum:0,ordN:0,stockSum:0,bonusQtySum:0};
       const g=groups[name];
       g.rounds++;
       const hr=cropHarvestResult(c);   // นับพาเชียลรวมแล้ว
       if(hr.survivalRate!=null){g.survSum+=parseFloat(hr.survivalRate)||0;g.survN++;}
+      // ── % ยอดแถม ของแต่ละโรง — ไว้เทียบว่าโรงที่แถมเยอะ กุ้งรอดดีกว่า/แย่กว่าโรงที่แถมน้อยไหม
+      //    ⚠️ ถัวเฉลี่ยแบบถ่วงน้ำหนักด้วยยอดสั่งซื้อ (รวมตัวแถมทุกรอบ ÷ รวมยอดสั่งทุกรอบ)
+      //       ไม่ใช่เฉลี่ย % รายรอบ เพราะรอบที่สั่งน้อยจะดึงค่าเฉลี่ยเพี้ยน
+      const ord=parseFloat(c.stock)||0, bon=parseFloat(c.stockBonus)||0;
+      if(ord>0){g.stockSum+=ord;g.bonusQtySum+=bon;g.bonusN++;}
+      // อัตรารอดฐาน "ยอดสั่งซื้ออย่างเดียว" (ฐานเดียวกับสมุดจดมือของฟาร์ม) — ไว้เทียบคู่กับฐานรวมแถม
+      if(hr.survivalRateOrder!=null){g.ordSum+=parseFloat(hr.survivalRateOrder)||0;g.ordN++;}
       const totalFeed=(c.feedLog||[]).reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0);
       const fcr=hr.fcr!=null?parseFloat(hr.fcr):(totalFeed&&hr.totalWeight?+(totalFeed/hr.totalWeight).toFixed(2):null);
       if(fcr!=null&&!isNaN(fcr)){g.fcrSum+=fcr;g.fcrN++;}
@@ -4312,6 +4320,9 @@ function hatcheryStats(){
   return Object.values(groups).map(g=>({
     name:g.name,rounds:g.rounds,
     survAvg:g.survN?+(g.survSum/g.survN).toFixed(1):null,
+    survOrderAvg:g.ordN?+(g.ordSum/g.ordN).toFixed(1):null,
+    bonusAvg:g.stockSum>0?+(g.bonusQtySum/g.stockSum*100).toFixed(1):null,
+    stockSum:g.stockSum,bonusQtySum:g.bonusQtySum,
     fcrAvg:g.fcrN?+(g.fcrSum/g.fcrN).toFixed(2):null,
     adgAvg:g.adgN?+(g.adgSum/g.adgN).toFixed(3):null
   })).sort((a,b)=>(b.survAvg||0)-(a.survAvg||0));
@@ -4330,9 +4341,27 @@ function initHatchery(){
   if(tbl){
     if(!stats.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:10px">-</p>';}
     else{
-      tbl.innerHTML=`<table class="tbl"><thead><tr><th>โรงเพาะฟัก</th><th style="text-align:right">รอบที่เลี้ยง</th><th style="text-align:right">อัตรารอดเฉลี่ย</th><th style="text-align:right">FCR เฉลี่ย</th><th style="text-align:right">ADG เฉลี่ย</th></tr></thead><tbody>${
-        stats.map(s=>`<tr><td>${s.name}</td><td style="text-align:right">${s.rounds}</td><td style="text-align:right">${s.survAvg!=null?s.survAvg+'%':'-'}</td><td style="text-align:right">${s.fcrAvg!=null?s.fcrAvg:'-'}</td><td style="text-align:right">${s.adgAvg!=null?s.adgAvg+' ก./วัน':'-'}</td></tr>`).join('')
-      }</tbody></table>`;
+      // ── % ยอดแถม + อัตรารอด 2 ฐาน วางติดกัน เพื่อตอบว่า "โรงที่แถมเยอะ กุ้งรอดดีจริงไหม"
+      //    ฐานรวมแถม = แอปใช้คำนวณทั้งระบบ · ฐานยอดสั่งซื้อ = ตรงกับสมุดจดมือของฟาร์ม
+      const avgBonusAll=(()=>{const st=stats.reduce((a,s)=>a+(s.stockSum||0),0),bo=stats.reduce((a,s)=>a+(s.bonusQtySum||0),0);return st>0?bo/st*100:null;})();
+      tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>โรงเพาะฟัก</th><th style="text-align:right">รอบที่เลี้ยง</th><th style="text-align:right">% ยอดแถม</th><th style="text-align:right">อัตรารอด<br><span style="font-weight:400;font-size:var(--fs10)">(รวมแถม)</span></th><th style="text-align:right">อัตรารอด<br><span style="font-weight:400;font-size:var(--fs10)">(ยอดสั่งซื้อ)</span></th><th style="text-align:right">FCR เฉลี่ย</th><th style="text-align:right">ADG เฉลี่ย</th></tr></thead><tbody>${
+        stats.map(s=>{
+          // สีเทียบกับค่าเฉลี่ยแถมของทั้งฟาร์ม — เขียว = แถมมากกว่าเพื่อน
+          const bCol=(s.bonusAvg!=null&&avgBonusAll!=null)?(s.bonusAvg>=avgBonusAll?'var(--ok)':'var(--tx2)'):'var(--tx3)';
+          return `<tr><td>${mpEsc(s.name)}</td><td style="text-align:right">${s.rounds}</td>`+
+          `<td style="text-align:right;color:${bCol};font-weight:700">${s.bonusAvg!=null?'+'+s.bonusAvg+'%':'-'}`+
+            (s.bonusQtySum>0?`<div style="font-size:var(--fs10);color:var(--tx3);font-weight:400">แถม ${Math.round(s.bonusQtySum).toLocaleString()} จาก ${Math.round(s.stockSum).toLocaleString()}</div>`:'')+`</td>`+
+          `<td style="text-align:right;font-weight:700">${s.survAvg!=null?s.survAvg+'%':'-'}</td>`+
+          `<td style="text-align:right;color:var(--tx2)">${s.survOrderAvg!=null?s.survOrderAvg+'%':'-'}</td>`+
+          `<td style="text-align:right">${s.fcrAvg!=null?s.fcrAvg:'-'}</td>`+
+          `<td style="text-align:right">${s.adgAvg!=null?s.adgAvg+' ก./วัน':'-'}</td></tr>`;
+        }).join('')
+      }</tbody></table></div>
+      <div style="font-size:var(--fs11);color:var(--tx3);margin-top:9px;line-height:1.75">
+        <b>% ยอดแถม</b> = ตัวแถมรวมทุกรอบ ÷ ยอดสั่งซื้อรวมทุกรอบ (ถ่วงน้ำหนัก ไม่ใช่เฉลี่ย % รายรอบ) · สีเขียว = แถมมากกว่าค่าเฉลี่ยทั้งฟาร์ม${avgBonusAll!=null?' (+'+avgBonusAll.toFixed(1)+'%)':''}<br>
+        <b>อัตรารอด 2 ฐาน</b>: <b>รวมแถม</b> = ฐานที่แอปใช้คำนวณทุกอย่าง · <b>ยอดสั่งซื้อ</b> = ฐานเดียวกับสมุดจดมือ — โรงที่แถมเยอะ ตัวเลข 2 ช่องนี้จะห่างกันมากกว่าโรงที่แถมน้อย<br>
+        💡 <b>วิธีอ่าน</b>: ถ้าโรงไหน <b>แถมเยอะแต่อัตรารอด (รวมแถม) ต่ำ</b> แปลว่าแถมมาเพื่อชดเชยลูกกุ้งที่ไม่แข็งแรง — ได้จำนวนแต่ไม่ได้คุณภาพ
+      </div>`;
     }
   }
   const mergeCard=document.getElementById('hatchery-merge-card');
