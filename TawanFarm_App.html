@@ -649,6 +649,28 @@ body.role-admin .home-quick .admin-only{display:flex!important}
 .stock-mode-btn.on-out{background:var(--p);color:#fff}
 .stock-mode-btn.on-shared{background:#0d9488;color:#fff}
 .stock-mode-btn.on-sale{background:#7c3aed;color:#fff}
+/* ── ปุ่ม "เลือกงาน" หน้าสต็อก — แทนแถบโหมดเล็กๆ ที่พนักงานกดผิดบ่อย
+   แสดงเฉพาะงานที่ role นั้นทำได้ (staff เห็น 2 / admin เห็น 5) กดปุ่มเดียวได้โหมดที่ถูกเลย ── */
+.sk-kpi-bar{display:flex;gap:7px 16px;flex-wrap:wrap;align-items:center;background:var(--sf);border:1px solid var(--bd);
+  border-radius:11px;padding:11px 14px;margin-bottom:12px;font-size:12.5px;color:var(--tx2)}
+.sk-kpi-bar b{color:var(--tx);font-size:14.5px;font-weight:800}
+.sk-jobs{display:grid;gap:9px;margin-bottom:13px}
+@media(min-width:700px){.sk-jobs{grid-template-columns:1fr 1fr}}
+.sk-job{display:flex;align-items:center;gap:12px;border:1.5px solid var(--bd);border-radius:12px;padding:13px 14px;
+  background:var(--sf);cursor:pointer;font-family:inherit;text-align:left;width:100%;transition:.15s}
+.sk-job:hover{border-color:var(--p)}
+.sk-job .ic{font-size:25px;line-height:1;flex:none}
+.sk-job .t{display:block;font-size:14.5px;font-weight:700;color:var(--tx)}
+.sk-job .s{display:block;font-size:var(--fs11);color:var(--tx2);margin-top:2px;line-height:1.45}
+.sk-job.on{border-width:2px}
+.sk-job.on-out{border-color:var(--p);background:var(--pl)}
+.sk-job.on-out .t{color:var(--pd)}
+.sk-job.on-shared{border-color:#0d9488;background:#f0fdfa}
+.sk-job.on-shared .t{color:#0d9488}
+.sk-job.on-in{border-color:var(--ok);background:var(--ob)}
+.sk-job.on-in .t{color:var(--ok)}
+.sk-job.on-sale{border-color:#7c3aed;background:#f3e8ff}
+.sk-job.on-sale .t{color:#7c3aed}
 .badge-sale{background:#f3e8ff;color:#7c3aed}
 .month-pill{border:1px solid var(--bd);background:var(--sf);border-radius:16px;padding:6px 14px;font-size:12px;cursor:pointer;color:var(--tx2);font-family:inherit}
 .month-pill.on{background:#7c3aed;border-color:#7c3aed;color:#fff;font-weight:600}
@@ -2875,8 +2897,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <button class="stock-sub-btn on" id="skb-items" onclick="stockTab('items',this)">รายการพัสดุ</button>
     <button class="stock-sub-btn" id="skb-tx" onclick="stockTab('tx',this)">บันทึกรับ-เบิก</button>
     <button class="stock-sub-btn" id="skb-log" onclick="stockTab('log',this)">ประวัติ</button>
-    <button class="stock-sub-btn" id="skb-sale" onclick="stockTab('sale',this)">🛒 ยอดขายลูกค้าภายนอก</button>
-    <button class="stock-sub-btn" id="skb-cash" onclick="stockTab('cash',this)">💰 รายรับ-รายจ่าย (เสมียน)</button>
+    <button class="stock-sub-btn admin-only" id="skb-sale" onclick="stockTab('sale',this)">🛒 ยอดขายลูกค้าภายนอก</button>
+    <button class="stock-sub-btn admin-only" id="skb-cash" onclick="stockTab('cash',this)">💰 รายรับ-รายจ่าย (เสมียน)</button>
   </div>
   <!-- pane: รายการพัสดุ -->
   <div class="stock-pane on" id="skp-items">
@@ -2935,12 +2957,9 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   <div class="stock-pane" id="skp-tx">
     <div class="card">
       <div style="font-weight:700;color:var(--tx);margin-bottom:10px">บันทึกรับเข้า / เบิกออก</div>
-      <div style="display:flex;gap:0;background:var(--sf2);border-radius:8px;padding:3px;margin-bottom:12px;flex-wrap:wrap">
-        <button id="sk-mode-in" class="stock-mode-btn on-in" onclick="setStockMode('in')">+ รับเข้า สต็อกกลาง</button>
-        <button id="sk-mode-out" class="stock-mode-btn" onclick="setStockMode('out')">− เบิกออก ไปบ่อ</button>
-        <button id="sk-mode-shared" class="stock-mode-btn" onclick="setStockMode('shared')">🔧 แชร์ทุกบ่อ</button>
-        <button id="sk-mode-sale" class="stock-mode-btn" onclick="setStockMode('sale')">🛒 ขายลูกค้าภายนอก</button>
-      </div>
+      <!-- ⚠️ ปุ่มเลือกงาน — สร้างจาก JS ตาม role (staff เห็น 2 งาน / admin เห็น 5)
+           เดิมเป็นแถบโหมด 4 ปุ่มเท่ากันทุก role พนักงานจึงเห็นปุ่มที่ตัวเองใช้ไม่ได้ 2 ปุ่ม และเปิดมาติดโหมด "รับเข้า" ซึ่งเป็นงาน admin -->
+      <div class="sk-jobs" id="sk-jobs"></div>
       <div id="sk-tx-pond-row" style="display:none;margin-bottom:8px">
         <div class="fg"><label class="fl" for="sk-tx-pond">บ่อปลายทาง * <span style="color:var(--tx3);font-weight:400">(เชื่อม P&amp;L)</span></label>
           <select class="fi" id="sk-tx-pond"><option value="">— เลือกบ่อ —</option></select>
@@ -4190,7 +4209,9 @@ function sortPondsByAge(list){return list.slice().sort((a,b)=>pondCurAge(b)-pond
 function pondOptionsHtml(){
   return sortPondsByAge(D.ponds).map(p=>{
     const age=pondCurAge(p);
-    return '<option value="'+p.id+'">บ่อ '+p.name+(age>0?' — DOC '+age:'')+'</option>';
+    // บ่อที่ไม่มีวันลงกุ้ง = ว่าง/กำลังเตรียม (ตอนปิดบ่อระบบล้าง startDate ทิ้ง) — ติดป้ายให้ชัด
+    // จะได้ไม่สับสนกับบ่อที่มีกุ้ง เวลาเบิกปูน/คลอรีนลงบ่อเตรียม หรือบันทึกค่าน้ำก่อนลงกุ้ง
+    return '<option value="'+p.id+'">บ่อ '+p.name+(age>0?' — DOC '+age:' — เตรียมบ่อ')+'</option>';
   }).join('');
 }
 // ── จำบ่อที่เลือกล่าสุด แล้วเติมให้หน้าอื่นอัตโนมัติ
@@ -7402,15 +7423,52 @@ function seedStockCatalog(){
   showStockMsg('item',`✅ นำเข้าสำเร็จ ${toAdd.length} รายการ`,'ok');
 }
 
+// ── ⚠️ แท็บที่มีจำนวนเงิน — staff เปิดไม่ได้ (กันระดับฟังก์ชัน ไม่ใช่แค่ซ่อนปุ่มด้วย CSS
+//    เพราะปุ่มอาจโผล่จาก specificity ที่ชนกัน หรือถูกเรียกผ่าน console/โค้ดอื่น) ──
+const STOCK_ADMIN_TABS=['sale','cash'];
 function stockTab(paneId,btn){
+  if(STOCK_ADMIN_TABS.includes(paneId)&&APP_ROLE!=='admin')return;
   document.querySelectorAll('.stock-pane').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.stock-sub-btn').forEach(b=>b.classList.remove('on'));
   const p=document.getElementById('skp-'+paneId);if(p)p.classList.add('on');
   if(btn)btn.classList.add('on');
   if(paneId==='log'){setStockLogMode(_stockLogMode||'out');}
-  if(paneId==='tx'){setStockMode(_stockMode||'in');}
+  if(paneId==='tx'){setStockMode(_stockMode||stockDefaultMode());}
   if(paneId==='sale'){initSaleMonthPills();renderSalesReport();}
   if(paneId==='cash'){initClerkCash();}
+}
+// ── งานที่แต่ละ role ทำจริง — staff: เบิกไปบ่อ + เบิกใช้ร่วม · admin: รับเข้า/ขาย/เพิ่มรายการ เพิ่มมา ──
+function stockJobsForRole(){
+  const jobs=[
+    {mode:'out',   ic:'📤',t:'เบิกของไปบ่อ',        s:'ตัดสต็อก เข้าต้นทุนบ่อที่เลือก'},
+    {mode:'shared',ic:'🔧',t:'เบิกของใช้ร่วมทุกบ่อ', s:'หารเฉลี่ยให้ทุกบ่อที่มีกุ้งอัตโนมัติ'}
+  ];
+  if(APP_ROLE==='admin'){
+    jobs.unshift({mode:'in',ic:'📥',t:'รับเข้าสต็อกกลาง',s:'ของที่ซื้อเข้าฟาร์ม เพิ่มยอดคงเหลือ'});
+    jobs.push({mode:'sale',ic:'🛒',t:'ขายลูกค้าภายนอก',s:'ตัดสต็อก แต่ไม่เข้าต้นทุนบ่อไหนเลย'});
+    jobs.push({mode:'newitem',ic:'➕',t:'เพิ่ม/แก้รายการพัสดุ',s:'สร้างสินค้าใหม่ในคลัง (เฉพาะ Admin)'});
+  }
+  return jobs;
+}
+function stockDefaultMode(){return APP_ROLE==='admin'?'in':'out';}
+function renderStockJobs(){
+  const el=document.getElementById('sk-jobs');if(!el)return;
+  el.innerHTML=stockJobsForRole().map(j=>{
+    const on=(j.mode!=='newitem'&&_stockMode===j.mode)?(' on on-'+j.mode):'';
+    return '<button type="button" class="sk-job'+on+'" onclick="pickStockJob('+String.fromCharCode(39)+j.mode+String.fromCharCode(39)+')">'+
+      '<span class="ic">'+j.ic+'</span><span><span class="t">'+j.t+'</span><span class="s">'+j.s+'</span></span></button>';
+  }).join('');
+}
+function pickStockJob(mode){
+  // "เพิ่มรายการพัสดุ" ไม่ใช่โหมดบันทึกรับ-เบิก — พาไปแท็บรายการพัสดุแล้วโฟกัสฟอร์มให้เลย
+  if(mode==='newitem'){
+    if(APP_ROLE!=='admin')return;
+    stockTab('items',document.getElementById('skb-items'));
+    const n=document.getElementById('sk-name');
+    if(n){n.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>n.focus(),250);}
+    return;
+  }
+  setStockMode(mode);
 }
 
 function initStock(){
@@ -7419,7 +7477,10 @@ function initStock(){
   renderStockKPI();
   renderStockWarn();
   renderStockItems();
-  setStockMode('in');
+  // เปิดมาที่หน้าบันทึกเลย (งานหลักของทั้ง 2 role) พร้อมโหมดที่ตรงกับหน้าที่ของคนนั้น
+  // เดิมเปิดมาที่ "รายการพัสดุ" + โหมด "รับเข้า" เสมอ staff จึงต้องกดแก้ทาง 2 ครั้งทุกครั้ง
+  stockTab('tx',document.getElementById('skb-tx'));
+  setStockMode(stockDefaultMode());
 }
 
 function renderStockKPI(){
@@ -7434,13 +7495,15 @@ function renderStockKPI(){
   const isAdmin=APP_ROLE==='admin';
   const totalVal=items.reduce((s,i)=>s+(i.unitPrice||0)*(i.qty||0),0);
   const totalValK=fmtKM(totalVal);
-  el.className=isAdmin?'g5':'g4';
-  el.innerHTML=`
-    <div class="kpi-card"><div class="kpi-lbl">รายการทั้งหมด</div><div class="kpi-val">${items.length}</div><div class="kpi-sub">รายการ</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">ใกล้หมด / หมด</div><div class="kpi-val" style="color:${lowItems.length?'var(--er)':'var(--ok)'}">${lowItems.length}</div><div class="kpi-sub">รายการ</div></div>
-    ${isAdmin?`<div class="kpi-card"><div class="kpi-lbl">มูลค่าสต็อกรวม</div><div class="kpi-val">${totalVal?totalValK:'-'}</div><div class="kpi-sub">บาท</div></div>`:''}
-    <div class="kpi-card"><div class="kpi-lbl">รับเข้าเดือนนี้</div><div class="kpi-val">${txIn}</div><div class="kpi-sub">ครั้ง</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">เบิกออกเดือนนี้</div><div class="kpi-val">${txOut}</div><div class="kpi-sub">ครั้ง</div></div>`;
+  // ── ยุบเป็นแถบเดียว — เดิมเป็นการ์ด 4-5 ใบ ซึ่งบนมือถือเรียงลงมากินพื้นที่เกือบเต็มจอแรก
+  //    ต้องเลื่อนผ่านทุกครั้งกว่าจะถึงฟอร์มที่ต้องใช้จริง (ยอดเงินยังโชว์เฉพาะ admin เหมือนเดิม)
+  el.className='sk-kpi-bar';
+  el.innerHTML=
+    '<span>📦 <b>'+items.length+'</b> รายการ</span>'+
+    '<span style="color:'+(lowItems.length?'var(--d)':'var(--ok)')+'">'+(lowItems.length?'⚠️':'✅')+' <b>'+lowItems.length+'</b> ใกล้หมด</span>'+
+    (isAdmin&&totalVal?'<span>💰 มูลค่าสต็อก <b>'+totalValK+'</b></span>':'')+
+    '<span>📥 รับเข้าเดือนนี้ <b>'+txIn+'</b></span>'+
+    '<span>📤 เบิกออกเดือนนี้ <b>'+txOut+'</b></span>';
 }
 
 function renderStockWarn(){
@@ -7687,15 +7750,10 @@ let _stockCart=[];
 let _stockMode='in';
 
 function setStockMode(mode){
+  // ⚠️ รับเข้า/ขายลูกค้านอก เป็นงาน admin — กันไว้ที่ฟังก์ชันด้วย ไม่ใช่แค่ไม่สร้างปุ่มให้
+  if((mode==='in'||mode==='sale')&&APP_ROLE!=='admin')mode='out';
   _stockMode=mode;
-  const btnIn=document.getElementById('sk-mode-in');
-  const btnOut=document.getElementById('sk-mode-out');
-  const btnSale=document.getElementById('sk-mode-sale');
-  const btnShared=document.getElementById('sk-mode-shared');
-  if(btnIn){btnIn.className='stock-mode-btn'+(mode==='in'?' on-in':'');}
-  if(btnOut){btnOut.className='stock-mode-btn'+(mode==='out'?' on-out':'');}
-  if(btnSale){btnSale.className='stock-mode-btn'+(mode==='sale'?' on-sale':'');}
-  if(btnShared){btnShared.className='stock-mode-btn'+(mode==='shared'?' on-shared':'');}
+  renderStockJobs();
   const pr=document.getElementById('sk-tx-pond-row');
   if(pr)pr.style.display=mode==='out'?'':'none';
   const cr=document.getElementById('sk-tx-cust-row');
@@ -7712,10 +7770,12 @@ function setStockMode(mode){
   if(mode==='out'){
     const sel=document.getElementById('sk-tx-pond');if(!sel)return;
     const cur=sel.value;
-    sel.innerHTML='<option value="">— เลือกบ่อ —</option>';
-    (D.ponds||[]).filter(p=>p.startDate&&!p.closed).sort((a,b)=>a.name.localeCompare(b.name,'th')).forEach(p=>{
-      sel.innerHTML+=`<option value="${p.id}"${p.id===cur?' selected':''}>${p.name}</option>`;
-    });
+    // ⚠️ 2 เรื่องที่แก้ตรงนี้:
+    //    1) เดิมเรียงด้วย name.localeCompare ตรงๆ → "A.12" มาก่อน "A.2" ทำให้ A.2 ไปโผล่อันดับ 5 ติดกับ A.21/A.22 เสี่ยงเบิกผิดบ่อ
+    //    2) เดิมกรองเฉพาะบ่อที่มีกุ้ง (startDate) → เบิกปูน/คลอรีนให้ "บ่อที่กำลังเตรียม" ไม่ได้ ทั้งที่หน้างานต้องเบิกจริง
+    //       ใช้ pondOptionsHtml() ตัวเดียวกับหน้าอื่น — บ่อมีกุ้งขึ้น DOC / บ่อว่างขึ้น "เตรียมบ่อ" เรียงตามอายุเหมือนกันทุกหน้า
+    sel.innerHTML='<option value="">— เลือกบ่อ —</option>'+pondOptionsHtml();
+    if(cur&&[...sel.options].some(o=>o.value===cur))sel.value=cur;
   }
   if(mode==='sale')populateCustList();
 }
