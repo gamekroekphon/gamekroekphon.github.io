@@ -1075,7 +1075,6 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-crop')"><span>🌾</span> รอบเลี้ยง <span class="sn-caret">▾</span></button>
     <div class="sn-sub" id="sn-g-crop">
       <button class="sn-link tab-item" onclick="goTab('crops',this)">🌾 รอบเลี้ยง</button>
-      <button class="sn-link tab-item" onclick="goTab('prep',this)">🧹 เตรียมบ่อ</button>
       <button class="sn-link tab-item" onclick="goTab('harvest',this)">🦐 จับกุ้ง</button>
       <button class="sn-link tab-item" onclick="goTab('harveststat',this)">📊 สถิติจับกุ้ง</button>
       <button class="sn-link tab-item" onclick="goTab('export',this)">📄 PDF ปิดบ่อ</button>
@@ -1159,7 +1158,6 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <button class="grp-btn" onclick="toggleGrp('crop')">🌾 รอบเลี้ยง <span class="grp-caret">▾</span></button>
     <div class="tab-dropdown">
       <button class="tab-item" id="tab-crops" onclick="goTab('crops',this)">🌾 รอบเลี้ยง</button>
-      <button class="tab-item" id="tab-prep" onclick="goTab('prep',this)">🧹 เตรียมบ่อ</button>
       <button class="tab-item" id="tab-harvest" onclick="goTab('harvest',this)">🦐 จับกุ้ง</button>
       <button class="tab-item" id="tab-harveststat" onclick="goTab('harveststat',this)">📊 สถิติจับกุ้ง</button>
       <button class="tab-item" id="tab-export" onclick="goTab('export',this)">📄 PDF ปิดบ่อ</button>
@@ -1222,7 +1220,6 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <button class="mob-sheet-item" data-t="mortality" onclick="mobMenuGo(this)"><span class="ic">🦐</span>กุ้งตาย</button>
     <div class="mob-sheet-grp">🌾 รอบเลี้ยง</div>
     <button class="mob-sheet-item" data-t="crops" onclick="mobMenuGo(this)"><span class="ic">🌾</span>รอบเลี้ยง</button>
-    <button class="mob-sheet-item" data-t="prep" onclick="mobMenuGo(this)"><span class="ic">🧹</span>เตรียมบ่อ</button>
     <button class="mob-sheet-item" data-t="harvest" onclick="mobMenuGo(this)"><span class="ic">🦐</span>จับกุ้ง</button>
     <button class="mob-sheet-item" data-t="harveststat" onclick="mobMenuGo(this)"><span class="ic">📊</span>สถิติจับกุ้ง</button>
     <button class="mob-sheet-item" data-t="export" onclick="mobMenuGo(this)"><span class="ic">📄</span>PDF ปิดบ่อ</button>
@@ -2289,21 +2286,6 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 </div>
 
 <!-- PREP -->
-<div id="sec-prep" class="sec">
-  <div class="sec-hdr">
-    <div class="sec-title">🧹 เตรียมบ่อ</div>
-  </div>
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-t">เลือกบ่อที่ต้องการเตรียม</div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <select class="fi" id="prep-pond" style="flex:1"><option value="">-- เลือกบ่อ --</option></select>
-      <button onclick="addPrepPond()" style="background:var(--p);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">+ เพิ่มบ่อ</button>
-    </div>
-    <div id="prep-msg" style="margin-top:6px;font-size:12px"></div>
-  </div>
-  <div id="prep-checklist-wrap"><div style="color:var(--tx3);text-align:center;padding:40px;font-size:14px">คลิก "+ เพิ่มบ่อ" เพื่อเริ่มเตรียมบ่อ</div></div>
-</div>
-
 <!-- CLOSE CROP MODAL -->
 <!-- ปิดรอบสำเร็จ — เสนอทางไปต่อ 3 ทาง (ประวัติ/PDF/เตรียมบ่อ) แทน alert เปล่าๆ -->
 <div id="closeDoneModal" class="modal-bg">
@@ -2313,7 +2295,6 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
       <button class="btn" onclick="cdmGoHistory()">📚 ดูประวัติรอบนี้</button>
       <button class="btn" onclick="cdmGoPdf()">📄 สร้าง PDF สรุปปิดบ่อ</button>
-      <button class="btn btn-p" onclick="cdmGoPrep()">🧹 เริ่มเตรียมบ่อรอบถัดไป</button>
     </div>
     <button onclick="closeCdm()" style="margin-top:14px;background:none;border:none;color:var(--tx3);font-size:12px;cursor:pointer;text-decoration:underline">ปิดหน้าต่างนี้</button>
   </div>
@@ -4192,13 +4173,15 @@ function today(){return new Date(Date.now()+7*3600000).toISOString().split('T')[
 function dDiff(a,b){return Math.floor((new Date(b)-new Date(a))/86400000)}
 function wqfeedActivePonds(){return D.ponds.filter(p=>{const cls=pondStatusOv(p);return cls!=='prep'&&cls!=='empty'&&cls!=='closed';});}
 // ── บ่อที่กรอกคุณภาพน้ำได้: เหมือน wqfeedActivePonds() แต่เพิ่มบ่อ "เตรียมบ่อ" ที่ใกล้ลงกุ้งด้วย — ตรวจน้ำก่อนลงกุ้งจริงเริ่มล่วงหน้า 7 วันก่อนวันลงกุ้งที่วางแผนไว้ (ไม่ใช่ทุกบ่อที่สถานะเตรียม เฉพาะบ่อที่ตั้งวันลงกุ้งไว้แล้วและใกล้ถึงวันนั้น) ใช้เฉพาะหน้า "บันทึกคุณภาพน้ำ" จุดเดียว หน้าอื่น (อาหาร/สุ่มตัวอย่าง/โรค ฯลฯ) ที่ต้องมีกุ้งในบ่อจริงยังใช้ wqfeedActivePonds() เหมือนเดิม ──
+// ⚠️ วันลงกุ้งที่วางแผนไว้อ่านจาก p.startDate (ตั้งได้ที่หน้า "จัดการบ่อ")
+//    เดิมอ่านจาก p.prepChecklist.stockDate ซึ่งมีแต่หน้า "เตรียมบ่อ" เขียน — พอลบหน้านั้นออก (entry #213) ค่าจะไม่มีวันถูกตั้ง
+//    ฟีเจอร์นี้จะตายเงียบ จึงย้ายมาใช้ startDate ที่เป็นแหล่งเดียวของ "วันลงกุ้ง" อยู่แล้ว (prepChecklist.stockDate ก็ seed มาจากตัวนี้)
 function wqEntryPonds(){
   return D.ponds.filter(p=>{
     const cls=pondStatusOv(p);
     if(cls!=='prep')return cls!=='empty'&&cls!=='closed';
-    const stockDate=p.prepChecklist&&p.prepChecklist.stockDate;
-    if(!stockDate)return false;                      // ยังไม่ตั้งวันลงกุ้ง — ยังไม่ถึงช่วงตรวจน้ำ
-    return dDiff(today(),stockDate)<=7;               // เหลือ ≤7 วันก่อนลงกุ้ง (รวมกรณีเลยกำหนดแล้วยังไม่ได้ลง)
+    if(!p.startDate)return false;                    // ยังไม่ตั้งวันลงกุ้ง — ยังไม่ถึงช่วงตรวจน้ำ
+    return dDiff(today(),p.startDate)<=7;            // เหลือ ≤7 วันก่อนลงกุ้ง (รวมกรณีเลยกำหนดแล้วยังไม่ได้ลง)
   });
 }
 // ── อายุกุ้งปัจจุบันของบ่อ (วัน) — ใช้จุดเดียวกันทุกที่ที่ต้องเรียงบ่อตามอายุ/แสดงอายุบ่อที่กำลังเลี้ยงอยู่ — วันลงกุ้ง = อายุ 1 วัน (ไม่ใช่ 0) ตามที่พี่ยืนยัน ──
@@ -4781,7 +4764,7 @@ function populateAll(){
   };
   // ── ⚠️ ช่องเลือกบ่อของงานกรอกรายวัน (สุ่ม/จัดการน้ำ/ผลแล็บ/กุ้งตาย/จับกุ้ง/เวชภัณฑ์)
   //    ใช้ pondOptionsHtml() = เรียงตามอายุกุ้ง + ป้าย DOC ให้ตรงกับหน้าคุณภาพน้ำ/อาหาร
-  //    ยกเว้น ex-pond/cash-pond (หน้ารายงาน ไม่ใช่หน้ากรอก) กับ prep-pond (บ่อเตรียมอายุ 0 เรียงตามอายุไม่มีความหมาย) ──
+  //    ยกเว้น ex-pond/cash-pond (หน้ารายงาน ไม่ใช่หน้ากรอก) ──
   const AGE_SORTED_SELS=['sp-pond','wl-pond','lb-pond','mt-pond'];
   Object.entries(simple).forEach(([id,def])=>{
     const el=document.getElementById(id);if(!el)return;const cur=el.value;
@@ -4800,9 +4783,6 @@ function populateAll(){
     el.innerHTML='<option value="">-- เลือกบ่อ --</option>'+pondOptionsHtml();
     if(cur)el.value=cur;
   });
-  // prep checklist pond selector
-  const prepSel=document.getElementById('prep-pond');
-  if(prepSel){const cur=prepSel.value;prepSel.innerHTML='<option value="">-- เลือกบ่อ --</option>'+sortedPonds().map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');if(cur)prepSel.value=cur;}
 }
 function toggleGrp(g){
   const el=document.getElementById('grp-'+g);
@@ -5219,7 +5199,6 @@ function goTab(t,btn){
   if(t==='users')renderUsers();
   if(t==='harvest')initHarvest();
   if(t==='crops')renderCrops();
-  if(t==='prep'){initPrep();}
   if(t==='harveststat')initHarvestStat();
   // ── sync bottom nav (ข้อ 6) ──
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
@@ -5766,17 +5745,6 @@ function homeRow(p,age,cls,reason){
     <div class="grow"><div class="name">บ่อ ${p.name}</div>${reason?`<div class="reason">${reason}</div>`:''}</div>
     ${age!==null&&age!==undefined?`<span class="age">${age} วัน</span>`:''}<span class="chev">›</span>
   </div>`;
-}
-// ── ล้างแผนเตรียมบ่อ (ใช้เมื่อเปลี่ยนแผนการเลี้ยง) — ไม่ลบบ่อออกจาก D.ponds แค่รีเซ็ต prepChecklist กลับเป็น null บ่อยังอยู่ในกลุ่ม "เตรียมบ่อ" พร้อมเริ่มวางแผนใหม่ ──
-function resetPrepPond(pid){
-  const p=pond(pid);if(!p)return;
-  if(!confirm(`ล้างแผนเตรียมบ่อ "${p.name}" ?\n(ใช้เมื่อเปลี่ยนแผนการเลี้ยง — ไม่ลบบ่อออกจากระบบ แค่ล้างเช็คลิสต์เตรียมบ่อเดิม)`))return;
-  // tombstone id เช็คลิสต์ — กัน save()/เครื่องอื่น merge เช็คลิสต์เดิมกลับมาหลังล้าง
-  if(p.prepChecklist&&p.prepChecklist.id){D.deletedIds=D.deletedIds||[];D.deletedIds.push(p.prepChecklist.id);}
-  p.prepChecklist=null;
-  if(typeof _prepPonds!=='undefined')_prepPonds=_prepPonds.filter(x=>x!==pid);
-  save();fbSave();renderOv();
-  if(typeof renderPrep==='function')renderPrep();
 }
 function openPondDetail(id){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
@@ -6376,21 +6344,6 @@ function homeQuickAlerts(){
   if(ael)ael.scrollIntoView({behavior:'smooth',block:'start'});
 }
 // ── การ์ด "เตรียมบ่อ" — เดิมชื่อ pondCard() รองรับทั้งบ่อกำลังเลี้ยง/เตรียมบ่อ แต่ตอนนี้สถานะ/ไซส์/Biomass/อาหาร/ค่าผิดปกติของบ่อที่กำลังเลี้ยงย้ายไปรวมในตาราง "สถานะบ่อทั้งหมด" หมดแล้ว เหลือเรียกใช้แค่กรณีเตรียมบ่อจุดเดียว เปลี่ยนชื่อ+ตัดกิ่งที่ตายแล้วออกให้ตรงกับการใช้งานจริง ──
-function renderPrepPondCard(p){
-  const cl=p.prepChecklist;
-  const steps=PREP_STEPS.map(s=>{
-    const done=cl?.steps?.[s.key]?.done;
-    return`<div class="pc-ov-step"><span style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:${done?'var(--ok)':'var(--bd)'}"></span><span style="${done?'':'color:var(--tx3)'}">${s.label}</span></div>`;
-  }).join('');
-  const done=cl?PREP_STEPS.filter(s=>cl.steps&&cl.steps[s.key]?.done).length:0;
-  const overdueN=prepOverdueSteps(p).length;
-  return`<div class="pc-ov" onclick="jumpPrep('${p.id}')">
-    <div class="pc-ov-top"><span class="pc-ov-name">${p.name}</span><span style="display:flex;gap:5px;align-items:center">${overdueN?`<span class="pc-ov-badge" style="background:var(--db);color:var(--d)">⚠️ เลยกำหนด ${overdueN}</span>`:''}<span class="pc-ov-badge pcb-prep">เตรียมบ่อ</span><button class="admin-only" onclick="event.stopPropagation();resetPrepPond('${p.id}')" title="ล้างแผนเตรียมบ่อ (ใช้เมื่อเปลี่ยนแผนการเลี้ยง)" style="background:none;border:none;cursor:pointer;color:var(--d);font-size:14px;padding:6px;margin:-6px;line-height:1;min-width:28px;min-height:28px;display:inline-flex;align-items:center;justify-content:center">🗑️</button></span></div>
-    <div style="font-size:var(--fs10);color:var(--tx2);margin-bottom:4px">เตรียมแล้ว <b style="color:${done===PREP_STEPS.length?'var(--ok)':done>=PREP_STEPS.length/2?'var(--w)':'var(--d)'}">${done}/${PREP_STEPS.length}</b>${cl?.stockDate?` · ลงกุ้ง ${fD(cl.stockDate)}`:''}${done===PREP_STEPS.length?' ✅ พร้อมลง':''}</div>
-    <div style="background:var(--bd);border-radius:3px;height:4px;margin-bottom:6px"><div style="background:${done===PREP_STEPS.length?'var(--ok)':done>=PREP_STEPS.length/2?'var(--w)':'var(--p)'};height:4px;border-radius:3px;width:${Math.round(done/PREP_STEPS.length*100)}%"></div></div>
-    <div class="pc-ov-prep">${steps}</div>
-  </div>`;
-}
 function renderOv(){
   const meta=D.ponds.map(p=>{
     if(!Array.isArray(p.records))p.records=[];
@@ -6404,13 +6357,9 @@ function renderOv(){
   const dcP=meta.filter(m=>m.cls==='danger').length,wcP=meta.filter(m=>m.cls==='warn').length;
   document.getElementById('hdr-alert').textContent=dcP>0&&wcP>0?`🔴 ${dcP} ต้องดู · ⚠️ ${wcP} เฝ้าระวัง`:dcP>0?`🔴 ${dcP} ต้องดู`:wcP>0?`⚠️ ${wcP} เฝ้าระวัง`:'✅ ทุกบ่อปกติ';
   const active=meta.filter(m=>m.cls!=='prep');
-  // ── บ่อสถานะ prep แต่ยังไม่มีข้อมูลเตรียมบ่อจริง (ไม่มี prepChecklist หรือมีแต่ว่างเปล่า ไม่มีวันลงกุ้ง/เช็คลิสต์ใดๆ) = ยังไม่ได้เริ่มเตรียมจริง ไม่ควรมาโชว์เป็นการ์ดในภาพรวม (นับรวมเป็น "ว่าง/พักบ่อ" แทน) — ใช้เกณฑ์เดียวกับ auto-detect ของหน้า "เตรียมบ่อ" (initPrep()) ──
-  const allPrep=meta.filter(m=>m.cls==='prep');
-  const prepM=allPrep.filter(m=>{
-    const cl=m.p.prepChecklist;
-    return!!(cl&&(cl.stockDate||(cl.steps&&Object.keys(cl.steps).length>0)));
-  });
-  const idleNotPrepped=allPrep.length-prepM.length;
+  // ── ลบหน้า "เตรียมบ่อ" ออกแล้ว (entry #213 — ไม่มีคนกรอกจริง)
+  //    บ่อที่ยังไม่มีกุ้งจึงนับเป็น "ว่าง/พักบ่อ" ทั้งหมด — สถานะ 'prep' ยังใช้ที่อื่นอยู่ (ป้ายใน dropdown / กรองหน้ากรอกน้ำ) ──
+  const idleNotPrepped=meta.filter(m=>m.cls==='prep').length;
   const warnM=meta.filter(m=>m.cls==='warn'||m.cls==='danger');
   const closedCount=Math.max(0,TOTAL_PONDS-D.ponds.length)+idleNotPrepped;
   const totalBio=active.reduce((s,{p})=>s+(getLatestBiomass(p)||0),0);
@@ -6422,7 +6371,7 @@ function renderOv(){
     ?`<div class="ov-kk ov-kk-dark" style="background:linear-gradient(135deg,#4a3208,#382608)"><div class="ov-kk-l" style="color:#e7cf94">💰 ต้นทุนสะสมรวมทั้งฟาร์ม</div><div class="ov-kk-v">${(active.reduce((s,{p})=>s+ceoTotalCost(p),0)/1e6).toFixed(2)}<span class="ov-kk-u"> ล้าน฿</span></div><div style="font-size:var(--fs10);color:#e7cf94">${active.length} บ่อที่กำลังเลี้ยงอยู่ตอนนี้</div></div>`
     :`<div class="ov-kk ov-kk-dark"><div class="ov-kk-l">⚠️ บ่อต้องดู</div><div class="ov-kk-v" style="color:${dcP>0?'#ff8a70':'inherit'}">${dcP}<span class="ov-kk-u"> / เฝ้าระวัง ${wcP}</span></div></div>`;
   document.getElementById('ov-kpi-bar').innerHTML=`
-    <div class="ov-kk ov-kk-dark"><div class="ov-kk-l">🦐 บ่อที่เลี้ยงอยู่</div><div class="ov-kk-v">${active.length}<span class="ov-kk-u"> / ${TOTAL_PONDS} บ่อ</span></div><div class="ov-kk-sub">เตรียมบ่อ ${prepM.length} · ว่าง ${closedCount}</div></div>
+    <div class="ov-kk ov-kk-dark"><div class="ov-kk-l">🦐 บ่อที่เลี้ยงอยู่</div><div class="ov-kk-v">${active.length}<span class="ov-kk-u"> / ${TOTAL_PONDS} บ่อ</span></div><div class="ov-kk-sub">ว่าง / พักบ่อ ${closedCount}</div></div>
     <div class="ov-kk ov-kk-dark"><div class="ov-kk-l">⚖️ Biomass รวม</div><div class="ov-kk-v">${totalBio>0?(totalBio/1000).toFixed(1):'-'}<span class="ov-kk-u"> ตัน</span></div></div>
     <div class="ov-kk ov-kk-dark"><div class="ov-kk-l">🍖 อาหารรวมต่อวัน</div><div class="ov-kk-v">${totalFeedToday>0?totalFeedToday.toFixed(0):'-'}<span class="ov-kk-u"> กก./วัน</span></div><div style="font-size:var(--fs10);color:#a9c9b3">ทั้งฟาร์ม</div></div>
     ${kk4}`;
@@ -6432,7 +6381,6 @@ function renderOv(){
   renderOvMedProtocol();
   // ── สถานะ/ไซส์/Biomass/อาหาร/เช็คลิสต์/ค่าผิดปกติของบ่อที่กำลังเลี้ยงอยู่ ย้ายไปรวมในตาราง "สถานะบ่อทั้งหมด" (renderOvDashboard) หมดแล้ว — เหลือแค่เตรียมบ่อ+ว่าง ที่นี่ (คนละโครงสร้างข้อมูล ใส่ในตารางเดียวกันไม่ได้) ──
   let html='';
-  if(prepM.length>0)html+=`<div class="ov-sec-lbl">เตรียมบ่อ</div><div class="ov-grid">${prepM.map(({p})=>renderPrepPondCard(p)).join('')}</div>`;
   if(closedCount>0){
     html+=`<div class="ov-sec-lbl">ว่าง / พักบ่อ</div><p class="empty-line">${closedCount} บ่อ ยังไม่มีรอบเลี้ยง</p>`;
   }
@@ -6571,21 +6519,6 @@ function renderOvRiskList(){
   }).join('');
 }
 function jumpEntry(id){document.getElementById('tab-entry').click();setTimeout(()=>{selectEPond(id);},80)}
-// ── การ์ดเตรียมบ่อในหน้าภาพรวม กดแล้วเด้งไปหน้า "เตรียมบ่อ" ตรงๆ (แทนหน้ารายละเอียดบ่อ) เพราะบ่อยังไม่มีกุ้ง ไม่มีอะไรให้ดูในหน้ารายละเอียดบ่อ — เปิดการ์ดของบ่อนั้นให้อัตโนมัติ+เลื่อนไปหาให้เลย ──
-function jumpPrep(pid){
-  const p=pond(pid);
-  // บ่อสถานะ "เตรียมบ่อ" (startDate ตั้งไว้ล่วงหน้า) บางบ่ออาจยังไม่เคยเริ่มเช็คลิสต์เลย (ไม่มี prepChecklist) — หน้า "เตรียมบ่อ" แสดงเฉพาะบ่อที่เริ่มแล้วเท่านั้น (initPrep()) ต้องเริ่มให้อัตโนมัติเหมือน addPrepPond() ไม่งั้นการ์ดที่จะเด้งไปจะไม่มีอยู่จริงในหน้าปลายทาง
-  if(p){
-    if(!p.prepChecklist)p.prepChecklist={id:'prep_'+pid+'_'+Date.now(),steps:{},stockDate:p.startDate||'',notes:''};
-    if(!_prepPonds.includes(pid)){_prepPonds=[..._prepPonds,pid];save();}
-  }
-  document.getElementById('tab-prep').click();
-  setTimeout(()=>{
-    _prepOpen.add(pid);
-    renderPrep();
-    document.getElementById('prep-card-'+pid)?.scrollIntoView({behavior:'smooth',block:'start'});
-  },80);
-}
 // ===== ค่าแรง / แรงงาน =====
 function laborTab(paneId, btn) {
   document.querySelectorAll('.labor-sub-btn').forEach(b=>b.classList.remove('on'));
@@ -6714,6 +6647,12 @@ function addDaysStr(dateStr,days){
   const x=new Date(dateStr+'T00:00:00');
   x.setDate(x.getDate()+days);
   return ymdLocal(x);
+}
+// ⚠️ ฟังก์ชันนี้เดิมอยู่ในบล็อก "เตรียมบ่อ" ที่ถูกลบไป (entry #213) แต่เป็นตัวช่วยทั่วไป
+//    ใช้อยู่ในหน้าคำนวณ&คาดการณ์ (5 จุด) และกราฟหน้าทดลองเวชภัณฑ์ — ย้ายมาอยู่รวมกับฟังก์ชันวันที่ตัวอื่น
+function addDays(dateStr,days){
+  if(!dateStr)return'';
+  const d=new Date(dateStr);d.setDate(d.getDate()+days);return d.toISOString().split('T')[0];
 }
 // ── ระหว่างพัฒนาฟีเจอร์นี้เคยเปลี่ยนชื่อฟิลด์ระบุสัปดาห์ 3 รอบ (weekStart→payDate→weekEnd) — เผื่อมีรายการเก่าที่ยังค้างชื่อฟิลด์เดิมอยู่ใน Firebase จริง แปลงให้เป็น weekEnd อัตโนมัติตอนโหลด กันไม่ให้ .sort()/.filter() ที่คาดว่ามี weekEnd เจอ undefined แล้วพังทั้งฟังก์ชัน (บั๊กที่พี่เจอ: กรอกแล้ว "ไม่มีอะไรเกิดขึ้น" เพราะ renderDailyWeekTable() throw กลางฟังก์ชัน saveDailyWeek() ทำให้โค้ดหลังจากนั้น รวมถึงการอัปเดตแท็บ "ประวัติ/สรุป" ไม่ทำงานเลย) ──
 function normalizeDailyLaborWeeks(){
@@ -12290,7 +12229,6 @@ function savePond(){
         if(p.prepChecklist.id){D.deletedIds=D.deletedIds||[];D.deletedIds.push(p.prepChecklist.id);}
         p.prepChecklist=null;
       }
-      if(typeof _prepPonds!=='undefined')_prepPonds=_prepPonds.filter(x=>x!==id);
     }
   }
   else{
@@ -12325,19 +12263,6 @@ function pondNameById(pondId){
   return dn?dn+' (ลบแล้ว)':pondId;
 }
 // ===== CROP CYCLES =====
-const PREP_STEPS = [
-  {key:'drain',    label:'ตากบ่อ',            detail:'ตากบ่อ 2 เดือน',                   daysBeforeStock:-60},
-  {key:'fill',     label:'เข้าน้ำ',            detail:'เข้าน้ำ 30 วันก่อนลงกุ้ง',          daysBeforeStock:-30},
-  {key:'soda',     label:'โซดาไฟ',            detail:'ปรับ pH ≥ 10 รอ pH ลง 8.5 ก่อนลง', daysBeforeStock:-28},
-  {key:'copper',   label:'คอปเปอร์ซัลเฟต',   detail:'1 กระสอบ/บ่อ กำจัดตะไคร่+ปลา',     daysBeforeStock:-25},
-  {key:'dichlo',   label:'ไดโครวอส',          detail:'25 ลิตร/บ่อ กำจัดแมลง',             daysBeforeStock:-21},
-  {key:'chain',    label:'ลากโซ่',            detail:'คลุกเคล้าสารอินทรีย์ก้นบ่อ',        daysBeforeStock:-14},
-  {key:'chlorine', label:'คลอรีน',            detail:'30 ppm — 4 วันสุดท้าย',             daysBeforeStock:-4},
-  {key:'bacillus', label:'บาซิลัส',           detail:'3 วันก่อนลง ปรับสมดุลจุลินทรีย์',   daysBeforeStock:-3},
-  {key:'blue',     label:'สีน้ำเงิน',         detail:'1 กก./ไร่ 2 วันก่อนลง',             daysBeforeStock:-2},
-  {key:'micro',    label:'จุลินทรีย์',        detail:'วันลงกุ้ง',                          daysBeforeStock:0},
-];
-
 function renderCrops(){
   // หมายเหตุ: ตัวเลือกในดรอปดาวน์ปีเป็น พ.ศ. (BE) เสมอ ต้อง normalize ผ่าน yearBE() ทุกจุดที่เทียบปี กันปีเดียวกันแยกเป็น 2 ตัวเลือก (ข้อมูลเก่าบางรายการเก็บเป็น ค.ศ. บางรายการเป็น พ.ศ. ปนกัน)
   const curY=new Date().getFullYear();
@@ -12949,165 +12874,6 @@ function exportChPdf(pid,idx){
   genPDF();
 }
 
-// ===== PREP CHECKLIST =====
-let _prepPonds=[];
-function initPrep(){
-  populateAll();
-  // Auto-populate: บ่อที่มี prepChecklist และยังไม่ได้ปล่อยกุ้ง
-  const auto=D.ponds.filter(p=>{
-    const cl=p.prepChecklist;
-    if(!cl)return false;
-    const hasData=cl.stockDate||(cl.steps&&Object.keys(cl.steps).length>0);
-    if(!hasData)return false;
-    // เดิมเช็คว่า startDate ต้องตรงกับ stockDate เป๊ะๆ ถึงจะถือว่าปล่อยกุ้งแล้วซ่อนออก — ถ้าวันลงจริงคลาดจากแผนแม้แค่วันเดียว (เรื่องปกติมาก) เงื่อนไขจะไม่ตรง บ่อที่ลงกุ้งเลี้ยงจริงแล้วเลยยังค้างโผล่ในหน้าเตรียมบ่อ ── เปลี่ยนไปใช้มาตรฐานเดียวกับ pondStatusOv() ที่หน้าอื่นในแอปใช้กันหมด (ไม่ใช่ 'prep' แล้ว = ลงกุ้งเลี้ยงจริงแล้ว ไม่ว่าจะตรงแผนเป๊ะหรือไม่)
-    if(pondStatusOv(p)!=='prep')return false;
-    return true;
-  }).map(p=>p.id);
-  // merge auto + manually added, no duplicates
-  _prepPonds=[...new Set([...auto,..._prepPonds])];
-  renderPrep();
-}
-function addPrepPond(){
-  const pid=document.getElementById('prep-pond').value;
-  if(!pid){showMsg('prep-msg','warn','กรุณาเลือกบ่อก่อน');return}
-  if(_prepPonds.includes(pid)){showMsg('prep-msg','warn','บ่อนี้อยู่ในรายการแล้ว');return}
-  const p=pond(pid);
-  if(!p.prepChecklist)p.prepChecklist={id:'prep_'+pid+'_'+Date.now(),steps:{},stockDate:p.startDate||'',notes:''};
-  _prepPonds=[..._prepPonds.filter(id=>id!==pid),pid];
-  document.getElementById('prep-msg').innerHTML='';
-  save();renderPrep();
-}
-// (ปุ่ม × เอาออกจากรายการเดิมถูกแทนด้วย 🗑️ ล้างแผน — ความหมายเดียวกับปุ่มบนการ์ดภาพรวม ลดปุ่มซ้ำซ้อน)
-// ── เช็คลิสต์ครบ 100% → ลงลูกกุ้งต่อได้เลยในปุ่มเดียว: เปิดฟอร์มบ่อพร้อมวันลงจากเช็คลิสต์ เคลียร์ค่ารอบเก่า
-//    การล้างเช็คลิสต์+คำนวณรอบ/ปีใหม่เกิดใน savePond() ตอนบันทึก (เส้นทางเดียวกับการลงกุ้งปกติ ไม่มี logic ซ้ำ) ──
-function startCropFromPrep(pid){
-  const p=pond(pid);if(!p)return;
-  editPond(pid);
-  document.getElementById('mdl-title').textContent=`🦐 ลงลูกกุ้ง — เริ่มรอบใหม่ บ่อ ${p.name}`;
-  const sd=(p.prepChecklist&&p.prepChecklist.stockDate)||today();
-  document.getElementById('mdl-start').value=sd;syncDateHint(document.getElementById('mdl-start'));
-  ['mdl-stock','mdl-stockbonus','mdl-hatchery','mdl-plWeight','mdl-costfry'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
-  syncMdlTotal();
-  const pt=document.getElementById('mdl-plType');if(pt)pt.value='';
-}
-// ── เดิม renderPrep() วางการ์ดเต็ม (ตาราง 10 ขั้นตอน) ของทุกบ่อต่อกันยาวๆ — ถ้าเตรียมหลายบ่อพร้อมกันจะเลื่อนยาวเหมือนปัญหาที่เจอในหน้าภาพรวม (ข้อ 91) แก้ด้วยแพทเทิร์นเดียวกัน: ยุบเหลือแถวสรุปเป็นค่าเริ่มต้น เปิดเต็มอัตโนมัติเฉพาะบ่อที่มีขั้นตอนเลยกำหนดจริง (ครั้งแรกที่เจอ) ที่เหลือกดเปิด/ปิดเองได้ ──
-let _prepOpen=new Set();
-let _prepSeenDefault=new Set();
-function togglePrepOpen(pid){
-  if(_prepOpen.has(pid))_prepOpen.delete(pid);else _prepOpen.add(pid);
-  renderPrep();
-}
-function renderPrep(){
-  const wrap=document.getElementById('prep-checklist-wrap');if(!wrap)return;
-  if(!_prepPonds.length){wrap.innerHTML='<div style="color:var(--tx3);text-align:center;padding:40px;font-size:14px">ยังไม่มีบ่อที่กำลังเตรียม · คลิก "+ เพิ่มบ่อ" เพื่อเริ่ม</div>';return}
-  _prepPonds.forEach(pid=>{
-    if(_prepSeenDefault.has(pid))return;
-    _prepSeenDefault.add(pid);
-    const p=pond(pid);
-    if(p&&prepOverdueSteps(p).length>0)_prepOpen.add(pid);
-  });
-  wrap.innerHTML=_prepPonds.map(pid=>renderPrepCard(pid)).join('');
-  syncAllDateHints();
-}
-function renderPrepCard(pid){
-  const p=pond(pid);if(!p)return'';
-  if(!p.prepChecklist)p.prepChecklist={id:'prep_'+pid+'_'+Date.now(),steps:{},stockDate:p.startDate||'',notes:''};
-  const cl=p.prepChecklist;
-  const stockDate=cl.stockDate||p.startDate||'';
-  const checked=PREP_STEPS.filter(s=>cl.steps[s.key]?.done).length;
-  const pct=Math.round(checked/PREP_STEPS.length*100);
-  const overdue=prepOverdueSteps(p);
-  const isOpen=_prepOpen.has(pid);
-  return`<div class="card" id="prep-card-${pid}" style="margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;cursor:pointer" onclick="togglePrepOpen('${pid}')">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span class="prep-caret" style="display:inline-block;font-size:var(--fs11);color:var(--tx3);transition:transform .15s;transform:rotate(${isOpen?90:0}deg)">▸</span>
-        <span style="font-weight:500;font-size:14px">🧹 บ่อ ${p.name}</span>
-        <span style="font-size:12px;color:var(--tx3)">รอบ ${p.cropNum||1}</span>
-        <span style="font-size:12px;font-weight:500;color:${pct===100?'var(--ok)':pct>=50?'var(--w)':'var(--d)'}">${checked}/${PREP_STEPS.length} (${pct}%)${pct===100?' ✅':''}</span>
-        ${overdue.length?`<span style="font-size:var(--fs11);font-weight:700;color:var(--d);background:var(--db);padding:2px 8px;border-radius:99px">⚠️ เลยกำหนด ${overdue.length} ขั้นตอน</span>`:''}
-      </div>
-      <div style="display:flex;align-items:center;gap:8px" onclick="event.stopPropagation()">
-        <label style="font-size:var(--fs11);color:var(--tx3)" for="prep-stock-date-${pid}">วันลงกุ้ง:</label>
-        <input type="date" class="fi" id="prep-stock-date-${pid}" value="${stockDate}" onchange="updatePrepStockDate('${pid}')" style="width:120px;padding:3px 7px;font-size:var(--fs11)">
-        <button onclick="resetPrepPond('${pid}')" title="ล้างแผนเตรียมบ่อ (ใช้เมื่อเปลี่ยนแผนการเลี้ยง)" style="background:none;border:1px solid var(--bd);border-radius:5px;padding:2px 8px;font-size:13px;cursor:pointer;color:var(--d);line-height:1.4">🗑️ ล้างแผน</button>
-      </div>
-    </div>
-    <div style="background:var(--bd);border-radius:3px;height:5px;margin-top:8px"><div style="background:${pct===100?'var(--ok)':pct>=50?'var(--w)':'var(--p)'};height:5px;border-radius:3px;width:${pct}%;transition:width .3s"></div></div>
-    ${isOpen?`
-    ${pct===100&&!p.startDate?`<div style="background:var(--ob);border:1px solid #bbe3c8;border-radius:8px;padding:12px;text-align:center;margin:10px 0">
-      <button class="btn" style="background:var(--ok);color:#fff;font-weight:600;font-size:13.5px;padding:9px 20px;border:none;border-radius:8px;cursor:pointer" onclick="startCropFromPrep('${pid}')">🦐 ลงลูกกุ้ง — เริ่มรอบใหม่บ่อนี้</button>
-      <div style="font-size:var(--fs11);color:var(--tx2);margin-top:6px">เปิดฟอร์มลงกุ้งพร้อมวันลงจากเช็คลิสต์ · บันทึกแล้วระบบล้างเช็คลิสต์และเริ่มรอบใหม่ให้เอง</div>
-    </div>`:''}
-    <div style="overflow-x:auto;margin-top:10px">
-    <table style="width:100%;border-collapse:collapse;font-size:12px">
-      <thead><tr style="background:var(--sf2)">
-        <th style="padding:5px 8px;text-align:center;width:24px;border-bottom:1px solid var(--bd)">✓</th>
-        <th style="padding:5px 8px;text-align:left;border-bottom:1px solid var(--bd)">ขั้นตอน</th>
-        <th style="padding:5px 8px;text-align:center;width:90px;border-bottom:1px solid var(--bd);white-space:nowrap">เป้าหมาย</th>
-        <th style="padding:5px 8px;text-align:center;width:120px;border-bottom:1px solid var(--bd);white-space:nowrap">วันที่ทำ</th>
-        <th style="padding:5px 8px;text-align:left;border-bottom:1px solid var(--bd)">หมายเหตุ/โดส</th>
-      </tr></thead>
-      <tbody>${PREP_STEPS.map((s,i)=>{
-        const step=cl.steps[s.key]||{done:false,date:'',notes:''};
-        const targetDate=stockDate&&s.daysBeforeStock!==undefined?addDays(stockDate,s.daysBeforeStock):'';
-        const isDone=step.done;
-        const isOverdue=overdue.some(o=>o.key===s.key);
-        return`<tr style="background:${isOverdue?'var(--db)':isDone?'var(--ob)':'transparent'};border-bottom:1px solid var(--bd)">
-          <td style="padding:5px 8px;text-align:center"><input type="checkbox" ${isDone?'checked':''} onchange="togglePrepStep('${pid}','${s.key}',this.checked)" style="width:14px;height:14px;cursor:pointer;accent-color:var(--ok)"></td>
-          <td style="padding:5px 8px;${isDone?'text-decoration:line-through;color:var(--tx3)':''}"><span style="font-weight:600">${i+1}. ${s.label}</span><br><span style="font-size:var(--fs11);color:var(--tx3)">${s.detail}</span></td>
-          <td style="padding:5px 8px;text-align:center;font-size:var(--fs11);${isOverdue?'color:var(--d);font-weight:700':'color:var(--in)'}">${targetDate?fD(targetDate):'-'}${isOverdue?'<br>⚠ เลยกำหนด':''}</td>
-          <td style="padding:3px 6px"><input type="date" class="fi" value="${step.date||''}" onchange="updatePrepStepDate('${pid}','${s.key}',this.value)" style="width:112px;padding:3px 5px;font-size:var(--fs11)"></td>
-          <td style="padding:3px 6px"><input type="text" class="fi" value="${step.notes||''}" onchange="updatePrepStepNotes('${pid}','${s.key}',this.value)" style="width:100%;padding:3px 5px;font-size:var(--fs11)" placeholder="หมายเหตุ"></td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table></div>`:''}
-  </div>`;
-}
-function addDays(dateStr,days){
-  if(!dateStr)return'';
-  const d=new Date(dateStr);d.setDate(d.getDate()+days);return d.toISOString().split('T')[0];
-}
-// ── ขั้นตอนเตรียมบ่อที่เลยกำหนด (มีวันที่เป้าหมายแล้ว + ยังไม่ติ๊กว่าทำ + วันนี้เลยเป้าหมายไปแล้ว) — ใช้ทั้งการ์ดเต็มหน้า "เตรียมบ่อ" และการ์ดย่อในหน้าภาพรวม กันเขียนเกณฑ์ซ้ำ 2 ที่ ──
-function prepOverdueSteps(p){
-  const cl=p&&p.prepChecklist;if(!cl)return[];
-  const stockDate=cl.stockDate||p.startDate||'';if(!stockDate)return[];
-  const td=today();
-  return PREP_STEPS.filter(s=>{
-    const step=cl.steps[s.key];
-    if(step&&step.done)return false;
-    const targetDate=s.daysBeforeStock!==undefined?addDays(stockDate,s.daysBeforeStock):'';
-    return targetDate&&targetDate<td;
-  });
-}
-function updatePrepStockDate(pid){
-  const p=pond(pid);if(!p)return;
-  const d=document.getElementById(`prep-stock-date-${pid}`)?.value;
-  if(!p.prepChecklist)p.prepChecklist={id:'prep_'+pid+'_'+Date.now(),steps:{},stockDate:'',notes:''};
-  p.prepChecklist.stockDate=d||'';
-  save();fbSave();renderPrep();
-}
-function togglePrepStep(pid,key,checked){
-  const p=pond(pid);if(!p)return;
-  if(!p.prepChecklist)p.prepChecklist={id:'prep_'+pid+'_'+Date.now(),steps:{},stockDate:p.startDate||'',notes:''};
-  if(!p.prepChecklist.steps[key])p.prepChecklist.steps[key]={done:false,date:'',notes:''};
-  p.prepChecklist.steps[key].done=checked;
-  if(checked&&!p.prepChecklist.steps[key].date)p.prepChecklist.steps[key].date=today();
-  save();fbSave();renderPrep();
-}
-function updatePrepStepDate(pid,key,val){
-  const p=pond(pid);if(!p||!p.prepChecklist)return;
-  if(!p.prepChecklist.steps[key])p.prepChecklist.steps[key]={done:false,date:'',notes:''};
-  p.prepChecklist.steps[key].date=val;
-  save();fbSave();
-}
-function updatePrepStepNotes(pid,key,val){
-  const p=pond(pid);if(!p||!p.prepChecklist)return;
-  if(!p.prepChecklist.steps[key])p.prepChecklist.steps[key]={done:false,date:'',notes:''};
-  p.prepChecklist.steps[key].notes=val;
-  save();fbSave();
-}
-
 // ===== CLOSE CROP MODAL =====
 function openCropModal(pid){
   const p=pond(pid);if(!p)return;
@@ -13371,13 +13137,6 @@ function cdmGoPdf(){
   const p=pond(_cdmPondId);if(!p)return;
   const idx=(p.cropHistory||[]).findIndex(c=>c.id===_cdmCropId);
   goPdfForCrop(_cdmPondId,idx>=0?idx:null);
-}
-function cdmGoPrep(){
-  closeCdm();goTabByName('prep');
-  if(_cdmPondId&&typeof _prepPonds!=='undefined'&&!_prepPonds.includes(_cdmPondId)){
-    const p=pond(_cdmPondId);
-    if(p){if(!p.prepChecklist)p.prepChecklist={id:'prep_'+_cdmPondId+'_'+Date.now(),steps:{},stockDate:'',notes:''};_prepPonds=[..._prepPonds,_cdmPondId];save();renderPrep();}
-  }
 }
 // ── กระโดดไปหน้า PDF ปิดบ่อ พร้อมเลือกบ่อ+รอบให้เลย (ใช้จากปุ่ม 📄 ท้ายแถวประวัติ และ dialog หลังปิดรอบ) ──
 function goPdfForCrop(pondId,idx){
@@ -13671,7 +13430,7 @@ const ceoMoney=v=>'฿'+Math.round(v||0).toLocaleString('th-TH');
 const CEO_CAT_DOT={seed:'#9D174D',chem:'#1D4ED8',feed:'#92400E',chemOral:'#1D4ED8',chemWater:'#0369A1',probioOral:'#4338CA',probioWater:'#A21CAF',lime:'#57534E',equip:'#166534',fuel:'#C2410C',fry:'#9D174D',labor:'#0F766E',elec:'#B45309',shared:'#9333EA'};
 // ── รายการเบิกสต็อกจริงของบ่อ ไม่รวมอาหาร (คิดแยกจาก pondFeedCost อยู่แล้ว) เรียงล่าสุดก่อน ──
 // ── วันเริ่มนับต้นทุน "สต็อก/เวชภัณฑ์" ของรอบปัจจุบัน — ย้อนจากวันลงกุ้ง 60 วัน ให้ครอบช่วงเตรียมบ่อ
-//    (PREP_STEPS ขั้นแรกสุด "ตากบ่อ" คือ -60 วัน) เพราะของที่เบิกไปเตรียมบ่อ — โซดาไฟ/คอปเปอร์/ไดโครวอส/คลอรีน —
+//    (ขั้นแรกสุดของการเตรียมบ่อคือ "ตากบ่อ" ราว 60 วันก่อนลงกุ้ง) เพราะของที่เบิกไปเตรียมบ่อ — โซดาไฟ/คอปเปอร์/ไดโครวอส/คลอรีน —
 //    เบิกก่อนลงกุ้งเป็นเดือน ถ้านับจาก p.startDate เฉยๆ จะตกหล่นทั้งหมด
 //    ⚠️ กันนับซ้อนรอบก่อน: ไม่ย้อนเลยวันปิดรอบก่อนหน้าของบ่อเดียวกัน ไม่งั้นต้นทุนปลายรอบเก่าจะถูกดึงมานับซ้ำในรอบใหม่
 //    ⚠️ ใช้เฉพาะต้นทุนสต็อก/เวชภัณฑ์/อุปกรณ์นอกเท่านั้น — ค่าแรง/ค่าไฟยังนับจาก p.startDate เหมือนเดิม
