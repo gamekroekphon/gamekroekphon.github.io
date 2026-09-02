@@ -671,6 +671,13 @@ body.role-admin .home-quick .admin-only{display:flex!important}
 .sk-job.on-in .t{color:var(--ok)}
 .sk-job.on-sale{border-color:#7c3aed;background:#f3e8ff}
 .sk-job.on-sale .t{color:#7c3aed}
+/* งานที่ทำลายข้อมูล (ปิดรอบ) — ต้องหน้าตาไม่เหมือนงานปกติ กันกดพลาด */
+.sk-job-danger .s{color:var(--d)}
+.sk-job-danger:hover{border-color:var(--d)}
+.sk-job.on-close{border-color:var(--d);background:var(--db)}
+.sk-job.on-close .t{color:var(--d)}
+.sk-job .t{display:block}
+.sk-job .s{display:block}
 .badge-sale{background:#f3e8ff;color:#7c3aed}
 .month-pill{border:1px solid var(--bd);background:var(--sf);border-radius:16px;padding:6px 14px;font-size:12px;cursor:pointer;color:var(--tx2);font-family:inherit}
 .month-pill.on{background:#7c3aed;border-color:#7c3aed;color:#fff;font-weight:600}
@@ -1444,10 +1451,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <div class="card" style="margin-bottom:12px">
       <div class="card-t">💰 บันทึกรายรับ-รายจ่าย</div>
       <div class="card-sub">แยกบัญชีเป็นของสวนปาล์มเองทั้งหมด — <b>ไม่นำไปรวม/คำนวณกับข้อมูลการเงินฝั่งตะวันฟาร์ม (กุ้ง) เลย</b> เพราะรายได้จากขายปาล์มนำไปลงทุนกองทุนต่อ ไม่ได้เข้ากองกลางฟาร์มกุ้ง</div>
-      <div class="type-row">
-        <button type="button" class="type-btn on-income" id="pm-mode-income" onclick="setPalmMoneyMode('income')">📥 รายรับ (ขายปาล์ม)</button>
-        <button type="button" class="type-btn" id="pm-mode-expense" onclick="setPalmMoneyMode('expense')">📤 รายจ่าย</button>
-      </div>
+      <div class="sk-jobs" id="pm-jobs"></div>
+      <div style="display:none"><button id="pm-mode-income"></button><button id="pm-mode-expense"></button></div>
       <div class="fgrid">
         <div class="fg"><label class="fl" for="pm-plot">แปลง</label><select class="fi" id="pm-plot"><option value="">ไม่ระบุ / รวมทั้งสวน</option></select></div>
         <div class="fg"><label class="fl" for="pm-date">วันที่</label><input type="date" class="fi" id="pm-date"></div>
@@ -2490,16 +2495,17 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   <div class="sec-hdr"><div class="sec-title">🦐 บันทึกการจับกุ้ง</div></div>
   <div class="card" style="margin-bottom:20px">
     <div class="card-t">➕ บันทึกการจับกุ้ง</div>
-    <div class="fgrid" style="grid-template-columns:1fr 1fr">
-      <div class="fg"><label class="fl" for="hv-pond">บ่อ *</label><select class="fi" id="hv-pond" onchange="onHvPondChange()"><option value="">-- เลือกบ่อ --</option></select></div>
-      <div class="fg"><label class="fl" for="hv-type">รูปแบบการจับ *</label>
-        <select class="fi" id="hv-type" onchange="onHvTypeChange()">
-          <option value="">-- เลือก --</option>
-          <option value="พาเชียล">พาเชียล (จับบางส่วน บ่อยังเลี้ยงต่อ)</option>
-          <option value="ปิดรอบ">ปิดรอบ (จับหมด ปิดบ่อจริง)</option>
-        </select>
-      </div>
-    </div>
+    <div class="fg"><label class="fl" for="hv-pond">บ่อ *</label><select class="fi" id="hv-pond" onchange="onHvPondChange()"><option value="">-- เลือกบ่อ --</option></select></div>
+    <!-- ⚠️ รูปแบบการจับ = จุดที่เลือกผิดแล้วเสียหายหนักที่สุดในแอป (เลือก "ปิดรอบ" ผิด = ปิดบ่อจริง ล้างข้อมูลรอบทิ้ง)
+         เดิมเป็น dropdown เล็กๆ หน้าตาเหมือนช่องอื่น มองข้ามง่าย — เปลี่ยนเป็นปุ่มงานใหญ่มีคำอธิบาย + สีเตือน
+         คง <select id="hv-type"> ไว้เป็น hidden เพื่อไม่ต้องแก้โค้ดที่อ่านค่านี้อยู่หลายจุด (savePartialHarvest/editPartialHarvest ฯลฯ) -->
+    <label class="fl" style="margin-top:2px">รูปแบบการจับ *</label>
+    <div class="sk-jobs" id="hv-jobs" style="margin-top:5px"></div>
+    <select id="hv-type" onchange="onHvTypeChange()" style="display:none">
+      <option value="">-- เลือก --</option>
+      <option value="พาเชียล">พาเชียล (จับบางส่วน บ่อยังเลี้ยงต่อ)</option>
+      <option value="ปิดรอบ">ปิดรอบ (จับหมด ปิดบ่อจริง)</option>
+    </select>
     <div id="hv-round-strip" style="display:none;margin-top:12px;gap:8px;flex-wrap:wrap"></div>
     <div id="hv-partial-fields" style="display:none">
       <div class="fgrid" style="grid-template-columns:1fr 1fr">
@@ -3098,16 +3104,13 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 
     <div class="card" style="margin-bottom:12px">
       <div class="card-t">บันทึกรายการใหม่</div>
-      <div style="display:flex;gap:0;background:var(--sf2);border-radius:8px;padding:3px;margin-bottom:14px;width:fit-content">
-        <button id="cash-mode-in" class="stock-mode-btn on-in" onclick="setCashMode('in')">📥 รายรับ (เบิกเงินมาเติม)</button>
-        <button id="cash-mode-out" class="stock-mode-btn" onclick="setCashMode('out')">📤 รายจ่าย</button>
-      </div>
-      <div id="cash-subtype-row" style="margin-bottom:14px">
-        <div style="font-size:var(--fs115);font-weight:600;color:var(--tx2);margin-bottom:8px">เลือกประเภทรายรับ</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <span class="trial-chip on" id="cash-sub-transfer" onclick="setCashSubtype('transfer',this)">🏦 เบิกจากส่วนกลาง</span>
-          <span class="trial-chip" id="cash-sub-sale" onclick="setCashSubtype('sale',this)">🦐 ขายกุ้งสุ่ม/กุ้งเสีย</span>
-        </div>
+      <!-- ⚠️ เดิมเป็น 2 ชั้น: เลือกโหมด (รายรับ/รายจ่าย) ก่อน แล้วค่อยเลือกประเภทรายรับอีกที
+           ยุบเป็นปุ่มงาน 3 อันชั้นเดียว เพราะประเภทย่อยมีเฉพาะฝั่งรายรับอยู่แล้ว — กดครั้งเดียวจบ -->
+      <div class="sk-jobs" id="cash-jobs" style="margin-bottom:14px"></div>
+      <div id="cash-subtype-row" style="display:none"></div>
+      <div style="display:none">
+        <button id="cash-mode-in"></button><button id="cash-mode-out"></button>
+        <span id="cash-sub-transfer"></span><span id="cash-sub-sale"></span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div class="fg"><label class="fl" for="cash-date">วันที่</label><input type="date" class="fi" id="cash-date"></div>
@@ -8199,9 +8202,37 @@ function setCashSubtype(subtype,btn){
   document.querySelectorAll('#cash-subtype-row .trial-chip').forEach(el=>el.classList.remove('on'));
   if(btn)btn.classList.add('on');
   const saleF=document.getElementById('cash-sale-fields');if(saleF)saleF.style.display=subtype==='sale'?'grid':'none';
+  renderCashJobs();
+}
+// ── ปุ่มเลือกงานหน้าเสมียน — ยุบ "โหมด + ประเภทย่อย" ให้เหลือชั้นเดียว 3 ปุ่ม ──
+const CASH_JOBS=[
+  {m:'in', st:'transfer',ic:'🏦',t:'รายรับ — เบิกจากส่วนกลาง',s:'ย้ายเงินมาเติมกระเป๋าตอนเงินสดไม่พอ',cls:'on-in'},
+  {m:'in', st:'sale',    ic:'🦐',t:'รายรับ — ขายกุ้งสุ่ม/กุ้งเสีย',s:'เงินขายกุ้งที่เข้ากระเป๋าเสมียนไว้ใช้ในฟาร์ม',cls:'on-in'},
+  {m:'out',st:'',        ic:'📤',t:'รายจ่าย',s:'ค่าใช้จ่ายเบ็ดเตล็ดในฟาร์ม เช่น ของทำอาหารให้คนงาน',cls:'on-out'}
+];
+function renderCashJobs(){
+  const el=document.getElementById('cash-jobs');if(!el)return;
+  const q=String.fromCharCode(39);
+  el.innerHTML=CASH_JOBS.map(j=>{
+    const on=_cashMode===j.m&&(j.m==='out'||_cashSubtype===j.st);
+    return '<button type="button" class="sk-job'+(on?' on '+j.cls:'')+'" onclick="cashPickJob('+q+j.m+q+','+q+j.st+q+')">'+
+      '<span class="ic">'+j.ic+'</span>'+
+      '<span><span class="t">'+j.t+'</span><span class="s">'+j.s+'</span></span>'+
+    '</button>';
+  }).join('');
+}
+function cashPickJob(mode,subtype){
+  _cashMode=mode;
+  const subRow=document.getElementById('cash-subtype-row');if(subRow)subRow.style.display='none';
+  if(mode==='in')setCashSubtype(subtype||'transfer',null);
+  else{
+    _cashSubtype='';
+    const saleF=document.getElementById('cash-sale-fields');if(saleF)saleF.style.display='none';
+    renderCashJobs();
+  }
 }
 function initClerkCash(){
-  setCashMode('in');
+  cashPickJob('in','transfer');
   const dEl=document.getElementById('cash-date');if(dEl&&!dEl.value)dEl.value=today();
   clearCashFilter();
 }
@@ -9081,6 +9112,21 @@ function setPalmMoneyMode(mode){
   if(be)be.className='type-btn'+(mode==='expense'?' on-expense':'');
   const incFields=document.getElementById('pm-income-fields');if(incFields)incFields.style.display=mode==='income'?'':'none';
   const amtLbl=document.getElementById('pm-amount-lbl');if(amtLbl)amtLbl.textContent=mode==='income'?'ยอดรวม (บาท)':'จำนวนเงิน (บาท)';
+  renderPalmMoneyJobs();
+}
+// ── ปุ่มเลือกงานหน้ารายรับ-รายจ่ายปาล์ม (รูปแบบเดียวกับหน้าสต็อก/จับกุ้ง/เสมียน) ──
+const PM_JOBS=[
+  {v:'income', ic:'🌴',t:'รายรับ — ขายปาล์ม',s:'บันทึกน้ำหนัก + ราคา/กก. ระบบคิดยอดให้',cls:'on-in'},
+  {v:'expense',ic:'📤',t:'รายจ่าย',s:'ค่าปุ๋ย ค่าแรง ค่าน้ำมัน และอื่นๆ ของสวนปาล์ม',cls:'on-out'}
+];
+function renderPalmMoneyJobs(){
+  const el=document.getElementById('pm-jobs');if(!el)return;
+  const q=String.fromCharCode(39);
+  el.innerHTML=PM_JOBS.map(j=>
+    '<button type="button" class="sk-job'+(_palmMoneyMode===j.v?' on '+j.cls:'')+'" onclick="setPalmMoneyMode('+q+j.v+q+')">'+
+      '<span class="ic">'+j.ic+'</span>'+
+      '<span><span class="t">'+j.t+'</span><span class="s">'+j.s+'</span></span>'+
+    '</button>').join('');
 }
 function palmMoneyPreview(){
   const w=parseFloat(document.getElementById('pm-weight').value)||0;
@@ -13345,6 +13391,7 @@ function goPdfForCrop(pondId,idx){
 // ===== HARVEST =====
 function initHarvest(){
   const dEl=document.getElementById('hv-date');if(dEl&&!dEl.value)dEl.value=today();
+  renderHvJobs();
   renderPartialList();renderHvRoundStrip();
 }
 function onHvPondChange(){renderPartialList();renderHvRoundStrip();}
@@ -13367,10 +13414,32 @@ function renderHvRoundStrip(){
   el.innerHTML=chips.join('');
   el.style.display='flex';
 }
+// ── ปุ่มเลือก "รูปแบบการจับ" (รูปแบบเดียวกับปุ่มเลือกงานหน้าสต็อก)
+//    ⚠️ "ปิดรอบ" เป็นงานทำลายข้อมูล (ล้างรอบทิ้ง) จึงย้อมสีแดงและเขียนเตือนไว้ใต้ชื่อ ไม่ให้หน้าตาเหมือนพาเชียล
+const HV_JOBS=[
+  {v:'พาเชียล',ic:'🦐',t:'พาเชียล — จับบางส่วน',s:'บ่อยังเลี้ยงต่อ กุ้งที่เหลืออยู่ในบ่อ · ใช้บ่อยที่สุด',cls:'on-out'},
+  {v:'ปิดรอบ', ic:'🏁',t:'ปิดรอบ — จับหมดทั้งบ่อ',s:'⚠️ ปิดบ่อจริง สรุปผลรอบนี้แล้วล้างข้อมูลเริ่มรอบใหม่',cls:'on-close'}
+];
+function renderHvJobs(){
+  const el=document.getElementById('hv-jobs');if(!el)return;
+  const cur=(document.getElementById('hv-type')||{}).value||'';
+  const q=String.fromCharCode(39);
+  el.innerHTML=HV_JOBS.map(j=>
+    '<button type="button" class="sk-job'+(cur===j.v?' on '+j.cls:'')+(j.v==='ปิดรอบ'?' sk-job-danger':'')+'" onclick="hvPickType('+q+j.v+q+')">'+
+      '<span class="ic">'+j.ic+'</span>'+
+      '<span><span class="t">'+j.t+'</span><span class="s">'+j.s+'</span></span>'+
+    '</button>').join('');
+}
+function hvPickType(v){
+  const sel=document.getElementById('hv-type');if(!sel)return;
+  sel.value=v;
+  onHvTypeChange();
+}
 function onHvTypeChange(){
   const type=document.getElementById('hv-type').value;
   document.getElementById('hv-partial-fields').style.display=type==='พาเชียล'?'':'none';
   document.getElementById('hv-close-fields').style.display=type==='ปิดรอบ'?'':'none';
+  renderHvJobs();
 }
 function openCropModalFromHarvest(){
   const pid=document.getElementById('hv-pond').value;
