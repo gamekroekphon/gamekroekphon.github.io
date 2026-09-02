@@ -2805,7 +2805,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 </div>
 <div id="sec-elec" class="sec">
   <div class="sec-hdr"><div class="sec-title">⚡ ค่าไฟฟ้า</div></div>
-  <div class="g4" id="el-kpi" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px"></div>
+  <!-- auto-fit แทน repeat(4,1fr) — พอเพิ่มการ์ดที่ 5 (ค่าไฟรวมปีนี้) จะได้ไหลเองไม่เหลือช่องโหว่ -->
+  <div class="g4" id="el-kpi" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px;margin-bottom:18px"></div>
   <div class="elec-sub">
     <button class="elec-sub-btn on" onclick="elecTab('ep-bill',this)">📝 บันทึกบิล</button>
     <button class="elec-sub-btn" onclick="elecTab('ep-summary',this)">📋 ประวัติ/สรุป</button>
@@ -7053,8 +7054,14 @@ function renderElecKPI(){
     }).filter(v=>v!==null&&v>0);
     if(vals.length)avgPerKg=vals.reduce((s,v)=>s+v,0)/vals.length;
   }
+  // ── ค่าไฟรวมของปีปัจจุบัน (พ.ศ.) — ฐานเดียวกับการ์ด "ค่าไฟ/กก. เฉลี่ย" ที่ยึดปีปัจจุบันอยู่แล้ว
+  //    (แถบสรุปในตารางประวัติด้านล่างจะเปลี่ยนตามปีที่เลือกในตัวกรอง ส่วนการ์ดนี้ยึดปีปัจจุบันเสมอ) ──
+  const yrBills=bills.filter(b=>b.month&&yearBE(parseInt(b.month.split('-')[0],10))===curYearBE);
+  const yrTotal=yrBills.reduce((a,b)=>a+(b.totalBaht||0),0);
+  const yrKwh=yrBills.reduce((a,b)=>a+(b.m1kwh||0)+(b.m2kwh||0)+(b.m3kwh||0),0);
   el.innerHTML=`
     <div class="kpi-card"><div class="kpi-label">บิลเดือนล่าสุด</div><div class="kpi-val">${latest?latest.totalBaht.toLocaleString():'-'} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">${latest?fmtMonth(latest.month):'ยังไม่มีข้อมูล'}</div></div>
+    <div class="kpi-card" style="border-top:3px solid var(--w)"><div class="kpi-label">ค่าไฟรวมปี ${curYearBE}</div><div class="kpi-val">${yrTotal?Math.round(yrTotal).toLocaleString():'-'} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">${yrBills.length?yrBills.length+' เดือน'+(yrKwh>0?' · '+Math.round(yrKwh).toLocaleString()+' kWh':''):'ยังไม่มีบิลปีนี้'}</div></div>
     <div class="kpi-card"><div class="kpi-label">บ่อที่กำลังเลี้ยงตอนนี้</div><div class="kpi-val">${activePonds.length} <span class="kpi-unit">บ่อ</span></div><div class="kpi-sub">ใช้ตรวจสอบว่าตรงหน้างานไหม</div></div>
     <div class="kpi-card"><div class="kpi-label">ค่าไฟ/บ่อ/วัน (ตอนนี้)</div><div class="kpi-val">${Math.round(perPondDay).toLocaleString()} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">จากบิลล่าสุด ÷ บ่อที่เลี้ยงอยู่</div></div>
     <div class="kpi-card" style="border-top:3px solid var(--p)"><div class="kpi-label">ค่าไฟ/กก. เฉลี่ย (รอบที่ปิดปีนี้)</div><div class="kpi-val">${avgPerKg!==null?avgPerKg.toFixed(2):'-'} <span class="kpi-unit">บาท/กก.</span></div><div class="kpi-sub">${closed.length} รอบ · ปี ${curYearBE}</div></div>`;
@@ -7158,10 +7165,47 @@ function renderElecHistory(){
   const bills=elHistYearSel==='all'?allBills:allBills.filter(b=>yearBE(parseInt(b.month.split('-')[0],10))===Number(elHistYearSel));
   const opts=`<option value="all"${elHistYearSel==='all'?' selected':''}>ทุกปี</option>`+
     years.map(y=>`<option value="${y}"${String(y)===elHistYearSel?' selected':''}>ปี ${y} (${yearCounts[y]} เดือน)</option>`).join('');
+  // ── สรุปยอดของช่วงที่เลือก + เทียบปีก่อนหน้า (บิลย้อนไปถึงปี 2563 จึงเทียบได้จริง) ──
+  const sumOf=list=>list.reduce((a,b)=>a+(b.totalBaht||0),0);
+  const kwhOf=list=>list.reduce((a,b)=>a+(b.m1kwh||0)+(b.m2kwh||0)+(b.m3kwh||0),0);
+  const elTotal=sumOf(bills), elKwh=kwhOf(bills);
+  const elAvgMonth=bills.length?elTotal/bills.length:0;
+  const elHi=bills.reduce((a,b)=>(!a||b.totalBaht>a.totalBaht)?b:a,null);
+  const elLo=bills.reduce((a,b)=>(!a||b.totalBaht<a.totalBaht)?b:a,null);
+  // ⚠️ เทียปีก่อนเฉพาะ "จำนวนเดือนเท่ากัน" ไม่งั้นปีที่ยังไม่ครบ 12 เดือนจะดูเหมือนถูกลงมาก
+  let elYoy='';
+  if(elHistYearSel!=='all'&&bills.length){
+    const prevBE=Number(elHistYearSel)-1;
+    const prevAll=allBills.filter(b=>yearBE(parseInt(b.month.split('-')[0],10))===prevBE);
+    if(prevAll.length){
+      const prevSame=[...prevAll].sort((a,b)=>a.month.localeCompare(b.month)).slice(0,bills.length);
+      const prevTotal=sumOf(prevSame);
+      if(prevTotal>0){
+        const pct=(elTotal-prevTotal)/prevTotal*100, up=pct>0;
+        elYoy='<div style="margin-top:9px;padding-top:9px;border-top:1px dashed var(--p);font-size:12.5px;color:var(--tx2)">'+
+          'เทียบปี '+prevBE+' ช่วง '+bills.length+' เดือนแรกเหมือนกัน (฿'+Math.round(prevTotal).toLocaleString()+') → '+
+          '<b style="color:'+(up?'var(--d)':'var(--ok)')+'">'+(up?'▲ แพงขึ้น':'▼ ถูกลง')+' '+Math.abs(pct).toFixed(1)+'%</b> '+
+          '<span style="color:var(--tx3)">('+(up?'+':'')+Math.round(elTotal-prevTotal).toLocaleString()+' บาท)</span></div>';
+      }
+    }
+  }
+  const elCell=(l,v,sub,c)=>'<div><div style="font-size:var(--fs10);color:var(--tx3);margin-bottom:2px">'+l+'</div>'+
+    '<div style="font-size:17px;font-weight:800;line-height:1.15'+(c?';color:'+c:'')+'">'+v+'</div>'+
+    (sub?'<div style="font-size:var(--fs10);color:var(--tx3);margin-top:1px">'+sub+'</div>':'')+'</div>';
+  const elSumBar=!bills.length?'':'<div style="background:var(--pl);border:1.5px solid var(--p);border-radius:11px;padding:12px 14px;margin-bottom:12px">'+
+    '<div style="font-size:12.5px;font-weight:700;color:var(--pd);margin-bottom:9px">⚡ รวม'+(elHistYearSel==='all'?'ทุกปี':'ปี '+elHistYearSel)+' · '+bills.length+' เดือน</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:11px">'+
+      elCell('ค่าไฟรวม','฿'+Math.round(elTotal).toLocaleString(),'','var(--pd)')+
+      elCell('เฉลี่ย/เดือน','฿'+Math.round(elAvgMonth).toLocaleString())+
+      (elKwh>0?elCell('หน่วยไฟรวม',Math.round(elKwh).toLocaleString()+' kWh','เฉลี่ย ฿'+(elTotal/elKwh).toFixed(2)+'/หน่วย'):'')+
+      (elHi?elCell('เดือนแพงสุด','฿'+Math.round(elHi.totalBaht).toLocaleString(),fmtMonth(elHi.month),'var(--d)'):'')+
+      (elLo&&bills.length>1?elCell('เดือนถูกสุด','฿'+Math.round(elLo.totalBaht).toLocaleString(),fmtMonth(elLo.month),'var(--ok)'):'')+
+    '</div>'+elYoy+'</div>';
   el.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
     <div style="font-weight:700;color:var(--tx)">📋 ประวัติบิลค่าไฟ</div>
     <select class="fi" id="el-hist-year" onchange="elHistYearSel=this.value;renderElecHistory()" style="width:180px;font-size:12px;padding:4px 8px">${opts}</select>
   </div>
+  ${elSumBar}
   ${!bills.length?'<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ไม่มีข้อมูลในปีที่เลือก</p>':`<table class="tbl"><thead><tr><th>เดือน</th><th>หม้อ 1 (หน่วย/฿)</th><th>หม้อ 2 (หน่วย/฿)</th><th>หม้อ 3 (หน่วย/฿)</th><th>รวม (฿)</th><th>อัตรา/วัน (฿)</th><th>บ่อที่กำลังเลี้ยง</th><th>อัตรา/บ่อ/วัน (฿)</th><th></th></tr></thead><tbody>${
     bills.map(b=>{
       const [y,m]=b.month.split('-').map(Number);
