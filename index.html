@@ -5924,7 +5924,25 @@ function renderPondDetail(id){
     const pdFryPieces=pRelease(p);
     const pdFryPerPiece=pdFryPieces>0&&pdFryCost>0?pdFryCost/pdFryPieces:null;
     const pdFryDetail=pdFryPieces>0?`<div class="ceo-cat-item-row" style="border-bottom:none"><span><b>${pdFryPieces.toLocaleString()} ตัว</b></span><span>${pdFryPerPiece!=null?'× ฿'+pdFryPerPiece.toFixed(2)+'/ตัว':'-'}</span></div>`:'';
-    const pdLaborElecDetail=(val)=>age>0?`<div class="ceo-cat-item-row" style="border-bottom:none"><span>เลี้ยงมาแล้ว <b>${age} วัน</b></span><span>เฉลี่ย <b>฿${Math.round(val/age).toLocaleString()}/วัน</b></span></div>`:'';
+    // ── ค่าแรง/ค่าไฟ เป็นต้นทุนที่ "หารกัน" กับบ่ออื่น — ตัวเลขต่อบ่อจึงขึ้นกับว่าวันนั้นเลี้ยงกี่บ่อพร้อมกัน
+    //    เดิมโชว์แค่ "N วัน / เฉลี่ย X บาท/วัน" อธิบายไม่ได้ว่าทำไมแพง — ตอนนี้แสดงที่มาทั้งสูตร ──
+    const pdRow=(l,r)=>`<div class="ceo-cat-item-row"><span>${l}</span><span>${r}</span></div>`;
+    const pdLB=laborBreakdownForPond(p.id,p.startDate,today());
+    const pdLaborDetail=(pdLB&&pdLB.farmTotal>0)?(
+      pdRow('ค่าแรงทั้งฟาร์ม (เฉลี่ย)','<b>฿'+Math.round(pdLB.farmPerDay).toLocaleString()+'/วัน</b>')
+      +pdRow('÷ บ่อที่เลี้ยงพร้อมกัน',
+        '<b>'+pdLB.avgPonds.toFixed(1)+' บ่อ</b>'+(pdLB.minPonds!==pdLB.maxPonds?' <span style="color:var(--tx3)">('+pdLB.minPonds+'–'+pdLB.maxPonds+')</span>':''))
+      +pdRow('= ตกบ่อนี้','<b style="color:var(--p)">฿'+Math.round(pdLB.perPondPerDay).toLocaleString()+'/วัน</b> × '+pdLB.days+' วัน')
+      +pdRow('↳ เงินเดือนประจำ (คงที่)','฿'+Math.round(pdLB.staff).toLocaleString())
+      +`<div class="ceo-cat-item-row" style="border-bottom:none"><span>↳ พนักงานรายวัน (ผันแปร)</span><span>฿${Math.round(pdLB.daily).toLocaleString()}</span></div>`
+    ):'';
+    const pdEB=elecBreakdownForPeriod(p.startDate,today());
+    const pdElecDetail=(pdEB&&pdEB.farmTotal>0)?(
+      pdRow('ค่าไฟทั้งฟาร์ม (เฉลี่ย)','<b>฿'+Math.round(pdEB.farmPerDay).toLocaleString()+'/วัน</b>')
+      +pdRow('÷ บ่อที่เลี้ยงพร้อมกัน',
+        '<b>'+pdEB.avgPonds.toFixed(1)+' บ่อ</b>'+(pdEB.minPonds!==pdEB.maxPonds?' <span style="color:var(--tx3)">('+pdEB.minPonds+'–'+pdEB.maxPonds+')</span>':''))
+      +`<div class="ceo-cat-item-row" style="border-bottom:none"><span>= ตกบ่อนี้</span><span><b style="color:var(--p)">฿${Math.round(pdEB.perPondPerDay).toLocaleString()}/วัน</b> × ${pdEB.days} วัน</span></div>`
+    ):'';
     const pdCostCatRow=(key,lbl,val,detailHtml)=>{
       const items=Object.values(pdCatItems[key]||{});
       const hasDetail=!!detailHtml;
@@ -5944,8 +5962,8 @@ function renderPondDetail(id){
       +pdCostCatRow('shared','อุปกรณ์นอก (แชร์)',pdSharedCost)
       +pdCostCatRow('fuel','น้ำมัน (แชร์)',pdFuelCost)
       +pdCostCatRow('fry','ลูกกุ้ง',pdFryCost,pdFryDetail)
-      +pdCostCatRow('labor','ค่าแรง',pdLaborCost,pdLaborElecDetail(pdLaborCost))
-      +pdCostCatRow('elec','ค่าไฟ',pdElecCost,pdLaborElecDetail(pdElecCost));
+      +pdCostCatRow('labor','ค่าแรง',pdLaborCost,pdLaborDetail)
+      +pdCostCatRow('elec','ค่าไฟ',pdElecCost,pdElecDetail);
     // ── ประมาณต้นทุนบาท/กก. ณ วันนี้ = ต้นทุนสะสมทั้งหมด ÷ "เนื้อกุ้งที่ผลิตได้แล้วทั้งหมด"
     //    ⚠️ ตัวหารต้องเป็น biomass ในบ่อ + ที่พาเชียลไปแล้ว — ไม่ใช่ biomass ในบ่ออย่างเดียว
     //    เพราะ getLatestBiomass() หักกุ้งที่จับไปแล้วออก (entry #176) แต่ต้นทุนที่เลี้ยงกุ้งชุดนั้นยังอยู่ในตัวตั้ง
@@ -6775,20 +6793,39 @@ function dailyWeeklyWorkerRate(dateStr){
   return wk?wk.amount/7:0;
 }
 // ── ต้นทุนค่าแรงของบ่อในช่วงวันที่กำหนด — วนรายวัน (เงินเดือนประจำ+พนักงานรายวัน) หารด้วยจำนวนบ่อที่เลี้ยงพร้อมกันจริงวันนั้นๆ แล้วบวกสะสม — คงชื่อ/พารามิเตอร์เดิมไว้ ทุกจุดที่เรียกอยู่แล้ว (ceoTotalCost, pondRunningCost, closeSummary ฯลฯ) ได้ผลลัพธ์ใหม่อัตโนมัติโดยไม่ต้องแก้จุดเรียก ──
-function getLaborCostForPond(pondId, fromDate, toDate){
-  if(!fromDate)return 0;
+function laborBreakdownForPond(pondId, fromDate, toDate){
+  if(!fromDate)return null;
   const end=toDate||today();
-  if(fromDate>end)return 0;
-  let total=0;
+  if(fromDate>end)return null;
+  let staff=0,daily=0,farmStaff=0,farmDaily=0,cntSum=0,days=0,minP=Infinity,maxP=0;
   let d=new Date(fromDate+'T00:00:00');
   const endD=new Date(end+'T00:00:00');
   while(d<=endD){
     const ds=ymdLocal(d);
     const activeCount=activePondCountOnDate(ds)||1;
-    total+=(dailyFixedStaffRate(ds)+dailyWeeklyWorkerRate(ds))/activeCount;
+    const fs=dailyFixedStaffRate(ds),fd=dailyWeeklyWorkerRate(ds);
+    staff+=fs/activeCount; daily+=fd/activeCount;
+    farmStaff+=fs; farmDaily+=fd;
+    cntSum+=activeCount; days++;
+    if(activeCount<minP)minP=activeCount;
+    if(activeCount>maxP)maxP=activeCount;
     d.setDate(d.getDate()+1);
   }
-  return total;
+  if(!days)return null;
+  const total=staff+daily, farmTotal=farmStaff+farmDaily;
+  // ⚠️ ตัวหารที่โชว์ต้องเป็น "ตัวหารที่มีผลจริง" = ค่าแรงทั้งฟาร์ม ÷ ส่วนที่บ่อนี้รับ
+  //    ไม่ใช่ค่าเฉลี่ยจำนวนบ่อธรรมดา — เพราะหารรายวันก่อนค่อยเฉลี่ย ไม่เท่ากับเฉลี่ยก่อนหาร
+  //    ถ้าโชว์ค่าเฉลี่ยธรรมดา พี่เอาเครื่องคิดเลขตามจะไม่ตรง กลายเป็นเหมือนแอปคำนวณผิด
+  return{staff,daily,total,days,
+    avgPonds:total>0?farmTotal/total:0,   // ตัวหารที่มีผลจริง (คูณหารกลับได้ตรง)
+    plainAvgPonds:cntSum/days,            // ค่าเฉลี่ยธรรมดา เก็บไว้เผื่ออ้างอิง
+    minPonds:minP===Infinity?0:minP, maxPonds:maxP,
+    farmTotal, farmPerDay:farmTotal/days,
+    perPondPerDay:total/days};
+}
+function getLaborCostForPond(pondId, fromDate, toDate){
+  const b=laborBreakdownForPond(pondId,fromDate,toDate);
+  return b?b.total:0;
 }
 function renderLaborKPI(){
   const el=document.getElementById('lb-kpi');if(!el)return;
@@ -7037,19 +7074,30 @@ function dailyElecRate(dateStr){
   const daysInMonth=new Date(y,m,0).getDate();
   return bill.totalBaht/daysInMonth;
 }
-function getElecCostForPeriod(fromDate,toDate){
-  if(!fromDate||!toDate)return 0;
-  if(fromDate>toDate)return 0;
-  let total=0;
+function elecBreakdownForPeriod(fromDate,toDate){
+  if(!fromDate||!toDate||fromDate>toDate)return null;
+  let total=0,farmTotal=0,days=0,minP=Infinity,maxP=0;
   let d=new Date(fromDate+'T00:00:00');
   const endD=new Date(toDate+'T00:00:00');
   while(d<=endD){
     const ds=ymdLocal(d);
     const activeCount=activePondCountOnDate(ds)||1;
-    total+=dailyElecRate(ds)/activeCount;
+    const rate=dailyElecRate(ds);
+    total+=rate/activeCount; farmTotal+=rate; days++;
+    if(activeCount<minP)minP=activeCount;
+    if(activeCount>maxP)maxP=activeCount;
     d.setDate(d.getDate()+1);
   }
-  return total;
+  if(!days)return null;
+  // ตัวหารที่โชว์ = ตัวหารที่มีผลจริง (คูณหารกลับได้ตรง) — หลักเดียวกับ laborBreakdownForPond
+  return{total,farmTotal,days,
+    avgPonds:total>0?farmTotal/total:0,
+    minPonds:minP===Infinity?0:minP, maxPonds:maxP,
+    farmPerDay:farmTotal/days, perPondPerDay:total/days};
+}
+function getElecCostForPeriod(fromDate,toDate){
+  const b=elecBreakdownForPeriod(fromDate,toDate);
+  return b?b.total:0;
 }
 // ── วันแรกที่มีข้อมูลบิลค่าไฟจริงย้อนหลังสุด — ใช้ตัดรอบที่ปิดไปแล้วก่อนหน้านี้ออกจากค่าเฉลี่ยค่าไฟ/กก. (แพทเทิร์นเดียวกับ laborDataStartDate) ──
 function elecDataStartDate(){
