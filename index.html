@@ -776,6 +776,11 @@ input.sk-cart-price{width:90px!important;text-align:center;font-size:13px;paddin
   .tbl{font-size:12.5px}
   .tbl th,.tbl td{padding:9px 8px}
   .chart-wrap{height:240px}
+  /* ── KPI บนมือถือ: จอแคบ การ์ดเล็ก ตัวเลข 7 หลักที่ 22px จะล้นออกนอกกรอบ — ย่อฟอนต์+ลด padding ให้พอดีกัน ── */
+  .kpi-card{padding:11px 12px;gap:3px}
+  .kpi-val{font-size:18px;line-height:1.25;overflow-wrap:anywhere}
+  .kpi-unit{font-size:12px}
+  .kpi-lbl,.kpi-label{line-height:1.35}
   /* ── ขยับฟอนต์เล็กขึ้นทั้งชุดเฉพาะบนมือถือ (ตัวแปรประกาศไว้ที่ :root ด้านบน)
      ขยับแบบพอดี ~1-2px ไม่ให้ตัวโตจนเลย์เอาต์แตก แค่ให้ป้ายกำกับ/หัวตารางอ่านออกสบายตาขึ้น ── */
   :root{--fs9:10.5px;--fs95:10.5px;--fs10:11.5px;--fs105:11.5px;--fs11:12px;--fs115:12.5px}
@@ -2689,7 +2694,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 <!-- ค่าแรง -->
 <div id="sec-labor" class="sec">
   <div class="sec-hdr"><div class="sec-title">👷 ต้นทุนแรงงาน / ค่าแรงต่อรอบ</div></div>
-  <div class="g4" id="lb-kpi" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px"></div>
+  <div class="g4" id="lb-kpi" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px;margin-bottom:18px"></div>
   <div class="link-note" id="lb-link-note" style="background:var(--ob);border:1px solid var(--ok);color:var(--ok);border-radius:10px;padding:10px 14px;font-size:12.5px;margin-bottom:16px;line-height:1.6">
     ✅ <strong>เชื่อมกับ "ปิดรอบ" อัตโนมัติแล้ว</strong> — ตอนกดปุ่ม "ปิดรอบ" ช่องต้นทุนค่าแรงจะดึงยอดจากหน้านี้ (เงินเดือนประจำ+พนักงานรายวัน) มาให้อัตโนมัติ ยังแก้ไขตัวเลขเองได้ถ้าจำเป็น
   </div>
@@ -2752,6 +2757,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     </div>
     <div class="card">
       <div class="card-t">📋 ประวัติจ่ายค่าแรงรายสัปดาห์</div>
+      <div id="dw-gap-warn"></div>
       <div id="dw-table"></div>
       <div class="hint" style="margin-top:10px">* 🔒 = ตัดรอบแล้ว (จ่ายจริงแล้ว) ไม่ถูกคำนวณย้อนหลังใหม่ · 📅 = ยังไม่ถึงวันตัดรอบ/ประมาณการ</div>
     </div>
@@ -2763,7 +2769,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <div class="card-t">✅ สถานะตอนนี้ — สำหรับตรวจสอบความถูกต้อง</div>
       <div class="card-sub" style="font-size:var(--fs115);color:var(--tx3);margin-bottom:10px">ใช้เช็คตาเปล่าว่าจำนวนบ่อที่ระบบนับตรงกับความจริงหน้างานไหม (ถ้าลืมกรอกวันลงกุ้ง/ปิดรอบ ตัวเลขนี้จะผิด)</div>
       <div id="lb-active-banner"></div>
-      <div class="g3" id="lb-rate-kpi" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px"></div>
+      <div class="g3" id="lb-rate-kpi" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px"></div>
     </div>
     <div class="card" style="margin-bottom:16px">
       <div class="card-t">📈 แนวโน้มค่าแรงรวมทั้งฟาร์ม — รายเดือน</div>
@@ -6674,16 +6680,17 @@ function normalizeDailyLaborWeeks(){
   if(changed)save();
 }
 function renderDailyWeekTable(){
+  renderDailyWeekGapWarn();
   const el=document.getElementById('dw-table');if(!el)return;
   const list=(D.dailyLaborWeeks||[]).filter(r=>r.weekEnd).slice().sort((a,b)=>b.weekEnd.localeCompare(a.weekEnd));
   if(!list.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล — บันทึกยอดจ่ายจริงได้ที่ฟอร์มด้านบน</p>';return;}
   const todayStr=today();
-  el.innerHTML=`<table class="tbl"><thead><tr><th>วันตัดรอบ (พุธ)</th><th>ช่วงที่คุม</th><th>สถานะ</th><th>บ่อที่กำลังเลี้ยง</th><th>จำนวนคน</th><th>ยอดจ่ายจริง (บาท)</th><th>เฉลี่ย/วัน</th><th></th></tr></thead><tbody>${
+  el.innerHTML=`<table class="tbl"><thead><tr><th>วันตัดรอบ (พุธ)</th><th>ช่วงที่คุม</th><th>สถานะ</th><th>บ่อที่กำลังเลี้ยง</th><th>จำนวนคน</th><th>ยอดจ่ายจริง (บาท)</th><th>เฉลี่ย/วัน</th><th>บาท/คน/สัปดาห์</th><th></th></tr></thead><tbody>${
     list.map(r=>{
       const periodStart=addDaysStr(r.weekEnd,-6);
       const locked=r.weekEnd<=todayStr;
       const activePonds=activePondCountOnDate(r.weekEnd); // จำนวนบ่อที่กำลังเลี้ยงอยู่จริง ณ วันตัดรอบ (วันสุดท้าย) ของสัปดาห์นั้น
-      return`<tr><td>${fD(r.weekEnd)}</td><td style="font-size:12px;color:var(--tx3)">${fD(periodStart)} – ${fD(r.weekEnd)}</td><td>${locked?'🔒 ตัดรอบแล้ว':'📅 ประมาณการ'}</td><td>${activePonds} บ่อ</td><td>${r.people?r.people+' คน':'-'}</td><td>${r.amount.toLocaleString()}</td><td>${Math.round(r.amount/7).toLocaleString()}</td><td style="display:flex;gap:6px"><button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="editDailyWeek('${r.id}')">✏️</button><button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="deleteDailyWeek('${r.id}')">🗑️</button></td></tr>`;
+      return`<tr><td>${fD(r.weekEnd)}</td><td style="font-size:12px;color:var(--tx3)">${fD(periodStart)} – ${fD(r.weekEnd)}</td><td>${locked?'🔒 ตัดรอบแล้ว':'📅 ประมาณการ'}</td><td>${activePonds} บ่อ</td><td>${r.people?r.people+' คน':'-'}</td><td>${r.amount.toLocaleString()}</td><td>${Math.round(r.amount/7).toLocaleString()}</td><td>${r.people>0?Math.round(r.amount/r.people).toLocaleString():'-'}</td><td style="display:flex;gap:6px"><button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="editDailyWeek('${r.id}')">✏️</button><button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="deleteDailyWeek('${r.id}')">🗑️</button></td></tr>`;
     }).join('')
   }</tbody></table>`;
 }
@@ -6705,6 +6712,41 @@ function laborDataStartDate(){
   if(!weeks.length)return null;
   const earliestWeekEnd=weeks.reduce((min,w)=>w.weekEnd<min?w.weekEnd:min,weeks[0].weekEnd);
   return addDaysStr(earliestWeekEnd,-6);
+}
+// ── แถบเตือนสัปดาห์ที่ยังไม่ได้กรอก — ต้องเตือน เพราะระบบจะเงียบและใช้ยอดสัปดาห์ก่อนหน้าแทนให้เอง ──
+function renderDailyWeekGapWarn(){
+  const el=document.getElementById('dw-gap-warn');if(!el)return;
+  const miss=missingLaborWeeks();
+  if(!miss.length){el.innerHTML='';return;}
+  const show=miss.slice(-8).reverse();
+  el.innerHTML=`<div style="background:var(--wb);border:1.5px solid var(--w);border-radius:10px;padding:11px 14px;margin-bottom:12px;font-size:12.5px;line-height:1.65;color:var(--w-tx)">
+    <div style="font-weight:700;margin-bottom:5px">⚠️ มี ${miss.length} สัปดาห์ที่ยังไม่ได้กรอกยอดจ่าย</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">${show.map(d=>`<span style="background:var(--sf);border:1px solid var(--w);border-radius:999px;padding:2px 9px;font-weight:600">${fD(d)}</span>`).join('')}${miss.length>show.length?`<span style="padding:2px 4px">และอีก ${miss.length-show.length} สัปดาห์</span>`:''}</div>
+    <div>สัปดาห์ที่ขาด ระบบจะใช้ยอดของสัปดาห์ก่อนหน้าแทนให้อัตโนมัติ — ต้นทุนค่าแรงของบ่อในช่วงนั้นจึงเป็นค่าประมาณ ไม่ใช่ยอดจ่ายจริง</div>
+  </div>`;
+}
+// ── ค่าแรงจ่ายจริงสะสมทั้งฟาร์มในช่วงวันที่ (ไม่หารรายบ่อ) — ใช้กับ KPI "ค่าแรงรวมปีนี้" แบบเดียวกับ "ค่าไฟรวมปีนี้" ──
+function laborSpendRange(fromDate,toDate){
+  if(!fromDate||!toDate||fromDate>toDate)return 0;
+  let total=0;
+  let d=new Date(fromDate+'T00:00:00');
+  const e=new Date(toDate+'T00:00:00');
+  while(d<=e){const ds=ymdLocal(d);total+=dailyFixedStaffRate(ds)+dailyWeeklyWorkerRate(ds);d.setDate(d.getDate()+1);}
+  return total;
+}
+// ── สัปดาห์ที่ยังไม่ได้กรอก: ไล่ทีละ 7 วันจากสัปดาห์แรกที่บันทึกไว้จนถึงวันนี้ ──
+//    ⚠️ ถ้าลืมกรอกสัปดาห์ไหน weekOfDate() จะ fallback ไปใช้ยอดของสัปดาห์ก่อนหน้าแทนแบบ "เงียบ" ไม่มี error
+//    ต้นทุนค่าแรงของบ่อในช่วงนั้นจึงผิดโดยไม่มีใครรู้ — ต้องเตือนให้เห็น
+//    เผื่อคลาดเคลื่อน ±2 วัน กันกรณีบางสัปดาห์กรอกวันไม่ตรงพุธเป๊ะแล้วนับเป็นขาดผิดๆ
+function missingLaborWeeks(){
+  const weeks=(D.dailyLaborWeeks||[]).filter(w=>w.weekEnd).map(w=>w.weekEnd).sort();
+  if(!weeks.length)return[];
+  const t=today(),out=[];
+  for(let d=weeks[0];d<=t;d=addDaysStr(d,7)){
+    if(!weeks.some(w=>Math.abs(dDiff(w,d))<=2))out.push(d);
+    if(out.length>60)break; // กันลูปยาวผิดปกติถ้าข้อมูลเพี้ยน
+  }
+  return out;
 }
 // ── เงินเดือนพนักงานประจำ ณ วันใดๆ (ใช้ค่าที่มีผลล่าสุด ณ วันนั้น — แบบเดียวกับที่ renderStaffTable ใช้อยู่แล้ว) แปลงเป็นอัตรา/วันด้วย ×12÷365 (แม่นกว่า ÷30 เพราะเฉลี่ยทั้งปีคือ 30.4 วัน/เดือน) ──
 function dailyFixedStaffRate(dateStr){
@@ -6769,19 +6811,28 @@ function renderLaborKPI(){
     if(yearBE(parseInt(c.closeDate.split('-')[0],10))!==curYearBE)return;
     closed.push({...c,pondId:p.id,_w:w});
   }));
-  let avgPerKg=null;
-  if(closed.length){
-    const vals=closed.map(c=>{
-      const lc=getLaborCostForPond(c.pondId,c.startDate,c.closeDate);
-      return c._w?lc/c._w:null;
-    }).filter(v=>v!==null&&v>0);
-    if(vals.length)avgPerKg=vals.reduce((s,v)=>s+v,0)/vals.length;
-  }
+  // ── ถ่วงน้ำหนัก: ค่าแรงรวมทุกรอบ / น้ำหนักรวมทุกรอบ ไม่ใช่เฉลี่ยค่า บาท/กก. รายรอบ
+  //    (เฉลี่ยรายรอบทำให้บ่อที่จับได้ 800 กก. ถ่วงเท่าบ่อที่จับได้ 12,000 กก. ตัวเลขจะเพี้ยน) ──
+  let avgPerKg=null,totLaborY=0,totKgY=0;
+  closed.forEach(c=>{
+    const lc=getLaborCostForPond(c.pondId,c.startDate,c.closeDate);
+    if(lc>0&&c._w>0){totLaborY+=lc;totKgY+=c._w;}
+  });
+  if(totKgY>0)avgPerKg=totLaborY/totKgY;
+  // ── ค่าแรงจ่ายจริงสะสมปีนี้ (1 ม.ค. – วันนี้) — คู่ขนานกับการ์ด "ค่าไฟรวมปีนี้" ในหน้าค่าไฟ
+  //    ตัดต้นช่วงไว้ที่วันแรกที่มีข้อมูลรายสัปดาห์จริง ไม่งั้นวันก่อนหน้านั้นส่วนพนักงานรายวันจะเป็น 0 แล้วยอดต่ำเกินจริง ──
+  const jan1=new Date().getFullYear()+'-01-01';
+  const ytdFrom=(laborStart&&laborStart>jan1)?laborStart:jan1;
+  const ytdClipped=!!(laborStart&&laborStart>jan1);
+  const ytdTo=today();
+  const ytd=ytdFrom<=ytdTo?laborSpendRange(ytdFrom,ytdTo):0;
+  const ytdDays=ytdFrom<=ytdTo?dDiff(ytdFrom,ytdTo)+1:0;
   el.innerHTML=`
     <div class="kpi-card"><div class="kpi-label">เงินเดือนประจำ/เดือน</div><div class="kpi-val">${monthlyStaff.toLocaleString()} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">${staffCount} คน</div></div>
     <div class="kpi-card"><div class="kpi-label">พนักงานรายวัน (เทียบเท่า/เดือน)</div><div class="kpi-val">${Math.round(monthlyDailyEquiv).toLocaleString()} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">จากยอดสัปดาห์ล่าสุดที่บันทึก</div></div>
     <div class="kpi-card"><div class="kpi-label">รวมค่าแรงทั้งหมด (เทียบเท่า/เดือน)</div><div class="kpi-val">${Math.round(monthlyStaff+monthlyDailyEquiv).toLocaleString()} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">เงินเดือน + รายวัน</div></div>
-    <div class="kpi-card"><div class="kpi-label">ค่าแรง/กก. เฉลี่ย (รอบที่ปิดปีนี้)</div><div class="kpi-val">${avgPerKg!==null?avgPerKg.toFixed(2):'-'} <span class="kpi-unit">บาท/กก.</span></div><div class="kpi-sub">${closed.length} รอบ · ปี ${curYearBE}</div></div>`;
+    <div class="kpi-card" style="border-top:3px solid var(--w)"><div class="kpi-label">ค่าแรงรวมปี ${curYearBE}</div><div class="kpi-val">${ytd>0?Math.round(ytd).toLocaleString():'-'} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">${ytd>0?ytdDays+' วัน ('+fD(ytdFrom)+' – วันนี้)':'ยังไม่มีข้อมูลปีนี้'}${ytdClipped?' · เริ่มนับจากวันแรกที่มีข้อมูล':''}</div></div>
+    <div class="kpi-card" style="border-top:3px solid var(--p)"><div class="kpi-label">ค่าแรง/กก. เฉลี่ย (รอบที่ปิดปีนี้)</div><div class="kpi-val">${avgPerKg!==null?avgPerKg.toFixed(2):'-'} <span class="kpi-unit">บาท/กก.</span></div><div class="kpi-sub">${closed.length} รอบ · ปี ${curYearBE}${totKgY>0?' · '+Math.round(totKgY).toLocaleString()+' กก.':''}</div></div>`;
 }
 // ── ส่วน 1 ของ "ประวัติ/สรุป": แถบตรวจสอบบ่อ active วันนี้ + ค่าแรง/บ่อ/วัน ปัจจุบัน ──
 function renderLaborActiveSection(){
@@ -6858,8 +6909,10 @@ function renderLaborCropSummary(){
   const curYearBE=yearBE(new Date().getFullYear());
   if(lbCropYearSel===null||!years.includes(Number(lbCropYearSel)))lbCropYearSel=String(years.includes(curYearBE)?curYearBE:years[0]);
   const rows=allRows.filter(r=>r.yearBE===Number(lbCropYearSel)).sort((a,b)=>new Date(b.closeDate)-new Date(a.closeDate));
-  const validPerKg=rows.map(r=>r.perKg).filter(v=>v!==null&&v>0);
-  const avg=validPerKg.length?validPerKg.reduce((s,v)=>s+v,0)/validPerKg.length:null;
+  // ถ่วงน้ำหนักด้วย กก. เหมือน renderLaborKPI (สูตรเดียวกัน ตัวเลข 2 ที่ต้องตรงกัน)
+  let totLabor=0,totKg=0;
+  rows.forEach(r=>{if(r.perKg!==null&&r.perKg>0&&r.weight>0){totLabor+=r.labor;totKg+=r.weight;}});
+  const avg=totKg>0?totLabor/totKg:null;
   const yearOpts=years.map(y=>`<option value="${y}"${String(y)===lbCropYearSel?' selected':''}>ปี ${y} (${yearCounts[y]} รอบ)</option>`).join('');
   const selectorHtml=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
     <div style="font-weight:700;color:var(--tx)">📊 ค่าแรง/กก. เทียบรอบที่ปิด</div>
@@ -7024,14 +7077,13 @@ function renderElecKPI(){
     if(yearBE(parseInt(c.closeDate.split('-')[0],10))!==curYearBE)return;
     closed.push({...c,pondId:p.id,_w:w});
   }));
-  let avgPerKg=null;
-  if(closed.length){
-    const vals=closed.map(c=>{
-      const ec=getElecCostForPeriod(c.startDate,c.closeDate);
-      return c._w?ec/c._w:null;
-    }).filter(v=>v!==null&&v>0);
-    if(vals.length)avgPerKg=vals.reduce((s,v)=>s+v,0)/vals.length;
-  }
+  // ถ่วงน้ำหนักด้วย กก. (ค่าไฟรวมทุกรอบ / น้ำหนักรวมทุกรอบ) — สูตรเดียวกับ renderLaborKPI
+  let avgPerKg=null,totElecY=0,totKgY=0;
+  closed.forEach(c=>{
+    const ec=getElecCostForPeriod(c.startDate,c.closeDate);
+    if(ec>0&&c._w>0){totElecY+=ec;totKgY+=c._w;}
+  });
+  if(totKgY>0)avgPerKg=totElecY/totKgY;
   // ── ค่าไฟรวมของปีปัจจุบัน (พ.ศ.) — ฐานเดียวกับการ์ด "ค่าไฟ/กก. เฉลี่ย" ที่ยึดปีปัจจุบันอยู่แล้ว
   //    (แถบสรุปในตารางประวัติด้านล่างจะเปลี่ยนตามปีที่เลือกในตัวกรอง ส่วนการ์ดนี้ยึดปีปัจจุบันเสมอ) ──
   const yrBills=bills.filter(b=>b.month&&yearBE(parseInt(b.month.split('-')[0],10))===curYearBE);
@@ -7103,8 +7155,10 @@ function renderElecCropSummary(){
   const curYearBE=yearBE(new Date().getFullYear());
   if(elCropYearSel===null||!years.includes(Number(elCropYearSel)))elCropYearSel=String(years.includes(curYearBE)?curYearBE:years[0]);
   const rows=allRows.filter(r=>r.yearBE===Number(elCropYearSel)).sort((a,b)=>new Date(b.closeDate)-new Date(a.closeDate));
-  const validPerKg=rows.map(r=>r.perKg).filter(v=>v!==null&&v>0);
-  const avg=validPerKg.length?validPerKg.reduce((s,v)=>s+v,0)/validPerKg.length:null;
+  // ถ่วงน้ำหนักด้วย กก. (บั๊กเดียวกับหน้าค่าแรง — เฉลี่ยรายรอบทำให้บ่อเล็กถ่วงเท่าบ่อใหญ่)
+  let totElec=0,totKg=0;
+  rows.forEach(r=>{if(r.perKg!==null&&r.perKg>0&&r.weight>0){totElec+=r.elec;totKg+=r.weight;}});
+  const avg=totKg>0?totElec/totKg:null;
   const yearOpts=years.map(y=>`<option value="${y}"${String(y)===elCropYearSel?' selected':''}>ปี ${y} (${yearCounts[y]} รอบ)</option>`).join('');
   const selectorHtml=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
     <div style="font-weight:700;color:var(--tx)">📊 ค่าไฟ/กก. เทียบรอบที่ปิด</div>
