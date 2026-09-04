@@ -4715,8 +4715,16 @@ function cropHarvestResult(c){
 //      inPond / biomass   = ที่ยังว่ายอยู่ในบ่อจริง = รอดทั้งหมด − ที่จับออกไปแล้ว
 //                           (ตัวเลขนี้ต้องลดลงทันทีที่พาเชียล — ใช้กับอาหาร/Feed Rate/ความหนาแน่น/น้ำหนักคงเหลือ)
 // ⚠️ ฐานจำนวนลูกกุ้งใช้ pRelease(p) = ยอดสั่งซื้อ + ยอดแถม เสมอ ตามที่พี่ยืนยัน entry #179
+// ── ⚠️ p.samples เรียงผิดลำดับได้ — ตอนกดบันทึกใหม่มี sort ให้ แต่ save() ที่ merge กับ remote
+//    ต่อท้ายของจากเครื่องอื่นเข้า array โดยไม่เรียงใหม่ → ตัวสุดท้ายของ array อาจไม่ใช่ครั้งล่าสุด
+//    ทุกที่ที่ต้องการ “ครั้งล่าสุด” ต้องเรียงตามวันที่ก่อน ห้ามหยิบ s[s.length-1] ตรงๆ
+//    แก้ตอนแสดงผล ไม่ไปยุ่งข้อมูลใน Firebase ──
+function sortedSamples(p){
+  return (((p&&p.samples)||[])).slice().sort((a,b)=>String(a&&a.date||'').localeCompare(String(b&&b.date||'')));
+}
+function latestSample(p){const s=sortedSamples(p);return s.length?s[s.length-1]:null;}
 function pondShrimpCount(p){
-  const s=(p&&p.samples)||[];if(!s.length)return null;
+  const s=sortedSamples(p);if(!s.length)return null;
   const lat=s[s.length-1];if(!lat.abw||!lat.survivalRate)return null;
   const release=pRelease(p);if(!release)return null;
   const ph=partialTotals(p.partialHarvests);
@@ -4754,7 +4762,9 @@ function getFCR(p){
   return(f/produced).toFixed(2);
 }
 function getPDG(samples){
-  if(samples.length<2)return null;
+  if(!samples||samples.length<2)return null;
+  // เรียงตามวันที่ก่อน — รับ array มาตรงๆ จึงเรียงที่นี่เอง (ไม่แก้ของเดิม คืนสำเนาใหม่)
+  samples=samples.slice().sort((x,y)=>String(x&&x.date||'').localeCompare(String(y&&y.date||'')));
   const a=samples[samples.length-2],b=samples[samples.length-1];
   const days=b.age-a.age;if(days<=0||!a.abw||!b.abw)return null;return((b.abw-a.abw)/days).toFixed(2);
 }
@@ -4765,7 +4775,7 @@ function secchiSt(cm){
 }
 function vibSt(v){if(!v)return'na';if(v>1000)return'danger';if(v>100)return'warn';return'ok'}
 function projHarvest(p,target=22){
-  const s=p.samples||[];if(s.length<2)return null;
+  const s=sortedSamples(p);if(s.length<2)return null;
   const lat=s[s.length-1];const pdg=parseFloat(getPDG(s));
   if(!pdg||pdg<=0||!lat.abw)return null;
   if(lat.abw>=target)return{ready:true};
@@ -5780,7 +5790,7 @@ function renderPondDetail(id){
   const reason=reasonOv(p,last,age);
   const badgeTxt={danger:'ต้องดู!',warn:'เฝ้าระวัง',ok:'ปกติ',prep:'กำลังเตรียม'}[cls]||'ปกติ';
   const badgeCls={danger:'b-danger',warn:'b-warn',ok:'b-ok',prep:'b-info'}[cls]||'b-ok';
-  const samples=p.samples||[];
+  const samples=sortedSamples(p);
   const lat=samples.length?samples[samples.length-1]:null;
   const latPrev=samples.length>1?samples[samples.length-2]:null;
   const fcr=getFCR(p);
@@ -6433,7 +6443,7 @@ function _ovdRows(active){
     const hasFeed=(p.feedLog||[]).some(r=>r.date===td);
     const hasStock=(D.inventoryLog||[]).some(r=>r.date===td&&r.type==='out'&&(!r.pondId||r.pondId===p.id));
     const reasons=allReasonsOv(p,last,age);
-    const latS=(p.samples||[]).slice(-1)[0];
+    const latS=latestSample(p);
     const size=latS&&latS.abw?Math.round(1000/latS.abw):null;
     const bio=getLatestBiomass(p);
     const latF=(p.feedLog||[]).length?p.feedLog[p.feedLog.length-1]:null;
@@ -7644,7 +7654,7 @@ function partialHarvestInfo(p){
   if(bio==null||bio<=0)return null;                // ยังไม่มีผลสุ่ม (ต้องมี ABW + อัตรารอด)
   const yr=bio/p.size;
   const pct=Math.min(100,yr/_phTarget*100);
-  const s=p.samples||[],lat=s[s.length-1];
+  const s=sortedSamples(p),lat=s[s.length-1];
   if(yr>=_phTarget)return{ready:true,yr,pct:100,bio,abw:lat?lat.abw:null};
   const pdg=parseFloat(getPDG(s));
   // ── ต้องสุ่มอย่างน้อย 2 ครั้งถึงจะรู้อัตราโต (PDG) — ไม่งั้นคาดการณ์วันไม่ได้ ──
@@ -8482,9 +8492,9 @@ function fcLoadPond(){
   const p=pid?pond(pid):null;
   const warn=document.getElementById('fc-warn');
   if(!p){if(warn)warn.innerHTML='';fcCalc();return;}
-  const samples=(p.samples||[]).filter(s=>s.abw!=null&&s.abw!=='');
+  const samples=sortedSamples(p).filter(s=>s.abw!=null&&s.abw!=='');
   const lat=samples.length?samples[samples.length-1]:null;
-  const pdgRaw=parseFloat(getPDG(p.samples||[]));
+  const pdgRaw=parseFloat(getPDG(sortedSamples(p)));
   const age=pondCurAge(p);
   const fcrNow=parseFloat(getFCR(p));
   // ── อาหาร กก./แสนตัว ที่ให้จริงล่าสุด (จากบันทึกอาหาร) — ถ้ายังไม่เคยกรอกอาหาร ใช้ค่าที่สูตร Precision Feeding แนะนำแทน ──
@@ -10520,7 +10530,7 @@ function sampleInPondBiomass(p,r){
 }
 function renderSampleMetrics(pid){
   if(!pid)return;const p=pond(pid);if(!p)return;
-  const samps=p.samples||[];const lat=samps.slice(-1)[0];const pdg=getPDG(samps);const ph=projHarvest(p);
+  const samps=sortedSamples(p);const lat=samps.slice(-1)[0];const pdg=getPDG(samps);const ph=projHarvest(p);
   // ── ⚠️ อ่าน biomass ผ่าน getLatestBiomass() ไม่ใช่ lat.biomass ที่บันทึกไว้
   //    เพราะบันทึกเก่า (ก่อนแก้ calcBiomass) เก็บค่าที่ยังไม่หักพาเชียล — คำนวณใหม่ตอนแสดงผลจึงถูกเสมอ
   //    และไม่ต้องไปแก้ข้อมูลเก่าใน Firebase (หลักเดียวกับ cropHarvestResult() entry #176) ──
