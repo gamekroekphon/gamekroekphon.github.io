@@ -8456,7 +8456,12 @@ let _palmActiveTab='ov';
    (ตัดตารางราคาตามไซส์ออกแล้ว entry #216 — หน้านี้จึงไม่เขียนข้อมูลถาวรอะไรเลย) */
 let _fcAuto={};                 // ค่าอัตโนมัติของบ่อที่เลือกอยู่ (ไว้กดคืนค่า)
 let _fcPickVal=null;            // วันที่เลือกในปฏิทิน (คงไว้ข้าม re-render)
-let _fcDOC0=0;                  // อายุกุ้ง (DOC) ของบ่อที่เลือก ณ วันนี้ — fcSnap ใช้คำนวณ feeding rate ตามอายุ ต้องเซ็ตก่อนเรียก fcSnap เสมอ
+let _fcDOC0=0;                  // อายุกุ้ง (DOC) ณ วันสุ่มที่ใช้เป็นจุดตั้งต้น — fcSnap ใช้คำนวณ feeding rate ตามอายุ ต้องเซ็ตก่อนเรียก fcSnap เสมอ
+// ── วันที่สุ่มตัวอย่างที่เอา ABW มา = “จุดตั้งต้น” ของการคาดการณ์ทั้งหมด
+//    ⚠️ เดิมนับวันจาก today() แต่ใช้ ABW ของวันสุ่ม → ช่วงระหว่างวันสุ่มกับวันนี้หายไปเฉยๆ
+//    (สุ่มจันทร์ เปิดดูพฤหัส กุ้งโตมาแล้ว 3 วัน แต่ระบบคิดเหมือนเพิ่งสุ่มวันนี้) ──
+let _fcAnchor=null;             // 'YYYY-MM-DD' วันสุ่มล่าสุด — null = ยังไม่เคยสุ่ม ให้ fallback เป็น today()
+function fcAnchor(){return _fcAnchor||today();}
 const _fcG=id=>parseFloat(document.getElementById(id)?.value)||0;
 function initForecast(){
   const sel=document.getElementById('fc-pond');if(!sel)return;
@@ -8495,6 +8500,7 @@ function fcLoadPond(){
       fdSrc='ยังไม่มีบันทึกอาหาร — ใช้ค่าที่สูตรแนะนำ';
     }
   }
+  _fcAnchor=(lat&&lat.date)?lat.date:null;   // ยึดวันสุ่มเป็นจุดตั้งต้น ไม่ใช่วันที่เปิดหน้า
   _fcAuto={
     abw:lat&&lat.abw?+lat.abw:0,
     pdg:pdgRaw>0?pdgRaw:0,
@@ -8603,7 +8609,7 @@ function _fcPickedDays(){
   const v=el&&el.value?el.value:_fcPickVal;
   if(!v)return 14;
   _fcPickVal=v;
-  return Math.max(0,dDiff(today(),v));
+  return Math.max(0,dDiff(fcAnchor(),v));   // นับจากวันสุ่ม ไม่ใช่วันนี้ — ABW ตั้งต้นคือค่าของวันสุ่ม
 }
 function fcQuick(n){_fcPickVal=addDays(today(),n);const e=document.getElementById('fc-pickd');if(e)e.value=_fcPickVal;fcCalc();}
 function fcCalc(){
@@ -8614,11 +8620,13 @@ function fcCalc(){
     return;
   }
   const pid=document.getElementById('fc-pond')?.value,p=pid?pond(pid):null;
-  const DOC0=p?pondCurAge(p):0;
+  // DOC ณ วันสุ่ม (ไม่ใช่ ณ วันนี้) — เพราะ fcSnap คิด doc = _fcDOC0 + d ที่ d นับจากวันสุ่ม
+  const DOC0=p&&p.startDate?dDiff(p.startDate,fcAnchor())+1:0;
+  const dNow=Math.max(0,dDiff(fcAnchor(),today()));   // จากวันสุ่มถึงวันนี้กี่วัน
   _fcDOC0=DOC0;                 // ⚠️ ต้องเซ็ตก่อนเรียก fcSnap/fcEcon ด้านล่าง
   _fcPhCount=p?partialTotals(p.partialHarvests).count:0;   // ⚠️ เช่นกัน — กุ้งที่พาเชียลไปแล้วต้องไม่ถูกนับว่ายังอยู่ในบ่อ
   const pd=_fcPickedDays();
-  const sP=fcSnap(pd,0),now=fcSnap(0,0);
+  const sP=fcSnap(pd,0),now=fcSnap(dNow,0);   // now = วันนี้จริง (โตจากวันสุ่มมาแล้ว dNow วัน)
   const ePick=pd>0?fcEcon(pd,0):null;   // ใช้ดึงอาหารสะสม + FCR ที่จะได้จริง ณ วันที่เลือก
   const ytgt=_fcG('fc-ytgt');
   const tgtSize=_fcG('fc-tgtsize')||40;
@@ -8633,7 +8641,9 @@ function fcCalc(){
      '<div class="v">'+(sP.size>0?Math.round(sP.size):'—')+'</div>'+
      '<div class="u">ตัว/กก.</div>'+
      '<div class="sub"><span>ABW</span><span>'+sP.abw.toFixed(1)+' ก.</span></div>'+
-     '<div class="sub nb"><span>อีก</span><span>'+(pd===0?'วันนี้':pd+' วัน')+' (DOC '+(DOC0+pd)+')</span></div>'+
+     '<div class="sub nb"><span>อีก</span><span>'+((pd-dNow)<=0?'วันนี้':(pd-dNow)+' วัน')+' (DOC '+(DOC0+pd)+')</span></div>'+
+     '<div class="sub nb"><span>คิดจากผลสุ่ม</span><span>'+fD(fcAnchor())+(_fcAnchor?' (DOC '+DOC0+')':' — ยังไม่เคยสุ่ม')+'</span></div>'+
+     '<div class="sub nb"><span>โตจากวันสุ่ม</span><span>'+pd+' วัน</span></div>'+
      '<div class="sub nb"><span>น้ำหนักในบ่อ</span><span>'+kg(sP.bio)+' กก.</span></div>'+
      '<div class="sub nb"><span>กก./ไร่</span><span'+(yMark(sP.yr)?' style="color:var(--ok);font-weight:700"':'')+'>'+kg(sP.yr)+(yMark(sP.yr)?' ✓':'')+'</span></div>'+
      '<div class="sub nb"><span>อาหาร/วัน</span><span>'+(sP.fdDay!=null?kg(sP.fdDay)+' กก.':'—')+'</span></div>'+
@@ -8647,7 +8657,7 @@ function fcCalc(){
      '<div class="h">🎯 ถึงไซส์ '+tgtSize+' ตัว/กก. ใช้กี่วัน</div>'+
      '<div class="v">'+(days==null?'—':(days>0?days:'ถึงแล้ว'))+'</div>'+
      '<div class="u">'+(days!=null&&days>0?'วัน':'&nbsp;')+'</div>'+
-     '<div class="sub"><span>จะถึงวันที่</span><span>'+(days!=null&&days>0?fD(addDays(today(),days))+' (DOC '+(DOC0+days)+')':'—')+'</span></div>'+
+     '<div class="sub"><span>จะถึงวันที่</span><span>'+(days!=null&&days>0?fD(addDays(fcAnchor(),days))+' (DOC '+(DOC0+days)+')':'—')+'</span></div>'+
      (days==null?'<div class="sub nb" style="color:var(--w)">ต้องมีค่า PDG ก่อน</div>':'')+
    '</div>'+
    '<div class="fc-res">'+
