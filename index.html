@@ -1083,7 +1083,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <button class="sn-link tab-item" onclick="goTab('harvest',this)">🦐 จับกุ้ง</button>
       <button class="sn-link tab-item" onclick="goTab('harveststat',this)">📊 สถิติจับกุ้ง</button>
       <button class="sn-link tab-item" onclick="goTab('export',this)">📄 PDF ปิดบ่อ</button>
-      <button class="sn-link tab-item" onclick="goTab('pl',this)">📊 P&amp;L สรุป</button>
+      <button class="sn-link tab-item admin-only" onclick="goTab('pl',this)">📊 P&amp;L สรุป</button>
     </div>
 
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-analyze')"><span>📊</span> วิเคราะห์ <span class="sn-caret">▾</span></button>
@@ -1099,8 +1099,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-market')"><span>💰</span> ค่าแรง / ค่าไฟ <span class="sn-caret">▾</span></button>
     <div class="sn-sub" id="sn-g-market">
-      <button class="sn-link tab-item" onclick="goTab('labor',this)">👷 ค่าแรง</button>
-      <button class="sn-link tab-item" onclick="goTab('elec',this)">⚡ ค่าไฟฟ้า</button>
+      <button class="sn-link tab-item admin-only" onclick="goTab('labor',this)">👷 ค่าแรง</button>
+      <button class="sn-link tab-item admin-only" onclick="goTab('elec',this)">⚡ ค่าไฟฟ้า</button>
     </div>
 
     <button class="sn-top tab-item" onclick="goTab('forecast',this)"><span>🔮</span> คำนวณ &amp; คาดการณ์</button>
@@ -1166,7 +1166,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <button class="tab-item" id="tab-harvest" onclick="goTab('harvest',this)">🦐 จับกุ้ง</button>
       <button class="tab-item" id="tab-harveststat" onclick="goTab('harveststat',this)">📊 สถิติจับกุ้ง</button>
       <button class="tab-item" id="tab-export" onclick="goTab('export',this)">📄 PDF ปิดบ่อ</button>
-      <button class="tab-item" id="tab-pl" onclick="goTab('pl',this)">📊 P&amp;L สรุป</button>
+      <button class="tab-item admin-only" id="tab-pl" onclick="goTab('pl',this)">📊 P&amp;L สรุป</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-analyze">
@@ -1184,8 +1184,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   <div class="tab-grp" id="grp-market">
     <button class="grp-btn" onclick="toggleGrp('market')">💰 ค่าแรง / ค่าไฟ <span class="grp-caret">▾</span></button>
     <div class="tab-dropdown">
-      <button class="tab-item" id="tab-labor" onclick="goTab('labor',this)">👷 ค่าแรง</button>
-          <button class="tab-item" id="tab-elec" onclick="goTab('elec',this)">⚡ ค่าไฟฟ้า</button>
+      <button class="tab-item admin-only" id="tab-labor" onclick="goTab('labor',this)">👷 ค่าแรง</button>
+          <button class="tab-item admin-only" id="tab-elec" onclick="goTab('elec',this)">⚡ ค่าไฟฟ้า</button>
     </div>
   </div>
   <button class="tab" id="tab-forecast" onclick="goTab('forecast',this)">🔮 คำนวณ &amp; คาดการณ์</button>
@@ -1228,7 +1228,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <button class="mob-sheet-item" data-t="harvest" onclick="mobMenuGo(this)"><span class="ic">🦐</span>จับกุ้ง</button>
     <button class="mob-sheet-item" data-t="harveststat" onclick="mobMenuGo(this)"><span class="ic">📊</span>สถิติจับกุ้ง</button>
     <button class="mob-sheet-item" data-t="export" onclick="mobMenuGo(this)"><span class="ic">📄</span>PDF ปิดบ่อ</button>
-    <button class="mob-sheet-item" data-t="pl" onclick="mobMenuGo(this)"><span class="ic">📊</span>P&amp;L สรุป</button>
+    <button class="mob-sheet-item admin-only" data-t="pl" onclick="mobMenuGo(this)"><span class="ic">📊</span>P&amp;L สรุป</button>
     <div class="mob-sheet-grp">📊 วิเคราะห์</div>
     <button class="mob-sheet-item" data-t="lab" onclick="mobMenuGo(this)"><span class="ic">🔬</span>ผลแล็บ</button>
     <button class="mob-sheet-item" data-t="trial" onclick="mobMenuGo(this)"><span class="ic">🧪</span>ทดลองเวชภัณฑ์</button>
@@ -1238,8 +1238,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <button class="mob-sheet-item" data-t="hatchery" onclick="mobMenuGo(this)"><span class="ic">🦐</span>โรงเพาะฟัก</button>
     <button class="mob-sheet-item" data-t="abw" onclick="mobMenuGo(this)"><span class="ic">📈</span>ABW Growth</button>
     <div class="mob-sheet-grp">💰 ค่าแรง / ค่าไฟ</div>
-    <button class="mob-sheet-item" data-t="labor" onclick="mobMenuGo(this)"><span class="ic">👷</span>ค่าแรง</button>
-    <button class="mob-sheet-item" data-t="elec" onclick="mobMenuGo(this)"><span class="ic">⚡</span>ค่าไฟฟ้า</button>
+    <button class="mob-sheet-item admin-only" data-t="labor" onclick="mobMenuGo(this)"><span class="ic">👷</span>ค่าแรง</button>
+    <button class="mob-sheet-item admin-only" data-t="elec" onclick="mobMenuGo(this)"><span class="ic">⚡</span>ค่าไฟฟ้า</button>
     <div class="mob-sheet-grp">🔧 เครื่องมือ</div>
     <button class="mob-sheet-item" data-t="forecast" onclick="mobMenuGo(this)"><span class="ic">🔮</span>คำนวณ &amp; คาดการณ์</button>
     <button class="mob-sheet-item" data-t="medproto" onclick="mobMenuGo(this)"><span class="ic">💊</span>Protocol เวชภัณฑ์</button>
@@ -5194,7 +5194,10 @@ function snToggleGrp(btn,id){
   }
 }
 // ── หน้าที่เปิดได้เฉพาะ admin — กันเข้าถึงระดับ "หน้า" ไม่ใช่แค่ซ่อนปุ่มด้วย CSS (ปุ่มอาจโผล่จาก specificity ที่ชนกัน หรือถูกเรียกผ่าน goTabByName/console) ──
-const ADMIN_ONLY_TABS=['palm','users'];
+// ── หน้าที่มีจำนวนเงิน ห้ามให้ staff เข้า — กันที่ function ด้วย ไม่ใช่ซ่อนด้วย CSS อย่างเดียว
+//    (CSS ซ่อนแค่ปุ่มเมนู แต่เรียก goTab('pl') จาก console หรือทางลัดข้ามหน้าก็ยังเข้าได้)
+//    labor = เงินเดือนรายคน + ค่าจ้างรายสัปดาห์ · elec = บิลค่าไฟ · pl = กำไร-ขาดทุน ──
+const ADMIN_ONLY_TABS=['palm','users','labor','elec','pl'];
 function goTab(t,btn){
   if(ADMIN_ONLY_TABS.includes(t)&&APP_ROLE!=='admin')return;
   document.querySelectorAll('.tab,.tab-item,.sn-top,.sn-link').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
@@ -6570,6 +6573,7 @@ function laborTab(paneId, btn) {
   document.getElementById(paneId).classList.add('on');
 }
 function initLabor(){
+  if(APP_ROLE!=='admin')return;   // กันเรียกตรง — หน้านี้มีเงินเดือนรายคน
   populateAll();
   document.getElementById('st-start').value=today();
   renderStaffTable();
@@ -6992,6 +6996,7 @@ function elecTab(paneId,btn){
   document.getElementById(paneId).classList.add('on');
 }
 function initElec(){
+  if(APP_ROLE!=='admin')return;   // กันเรียกตรง — หน้านี้มีบิลค่าไฟ
   populateAll();
   const el=document.getElementById('el-month');
   if(el&&!el.value){const now=new Date();el.value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');}
@@ -13863,6 +13868,7 @@ function getStockCostGroupsForPond(pondId,startDate,closeDate){
 }
 let _plDonutChart=null;
 function initPL(){
+  if(APP_ROLE!=='admin')return;   // กันเรียกตรง — หน้านี้คือกำไร-ขาดทุน
   const years=new Set();
   D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{
     if(c.harvestResult&&c.closeDate)years.add(c.closeDate.slice(0,4));
