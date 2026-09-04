@@ -1083,6 +1083,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <button class="sn-link tab-item" onclick="goTab('harvest',this)">🦐 จับกุ้ง</button>
       <button class="sn-link tab-item" onclick="goTab('harveststat',this)">📊 สถิติจับกุ้ง</button>
       <button class="sn-link tab-item" onclick="goTab('export',this)">📄 PDF ปิดบ่อ</button>
+      <button class="sn-link tab-item" onclick="goTab('pl',this)">📊 P&amp;L สรุป</button>
     </div>
 
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-analyze')"><span>📊</span> วิเคราะห์ <span class="sn-caret">▾</span></button>
@@ -1093,14 +1094,13 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <button class="sn-link tab-item" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
       <button class="sn-link tab-item" onclick="goTab('wqfeed',this)">🌡️ น้ำ-อาหาร</button>
       <button class="sn-link tab-item" onclick="goTab('hatchery',this)">🦐 โรงเพาะฟัก</button>
+      <button class="sn-link tab-item" onclick="goTab('abw',this)">📈 ABW Growth</button>
     </div>
 
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-market')"><span>💰</span> ค่าแรง / ค่าไฟ <span class="sn-caret">▾</span></button>
     <div class="sn-sub" id="sn-g-market">
       <button class="sn-link tab-item" onclick="goTab('labor',this)">👷 ค่าแรง</button>
       <button class="sn-link tab-item" onclick="goTab('elec',this)">⚡ ค่าไฟฟ้า</button>
-      <button class="sn-link tab-item" onclick="goTab('abw',this)">📈 ABW Growth</button>
-      <button class="sn-link tab-item" onclick="goTab('pl',this)">📊 P&amp;L สรุป</button>
     </div>
 
     <button class="sn-top tab-item" onclick="goTab('forecast',this)"><span>🔮</span> คำนวณ &amp; คาดการณ์</button>
@@ -1166,6 +1166,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <button class="tab-item" id="tab-harvest" onclick="goTab('harvest',this)">🦐 จับกุ้ง</button>
       <button class="tab-item" id="tab-harveststat" onclick="goTab('harveststat',this)">📊 สถิติจับกุ้ง</button>
       <button class="tab-item" id="tab-export" onclick="goTab('export',this)">📄 PDF ปิดบ่อ</button>
+      <button class="tab-item" id="tab-pl" onclick="goTab('pl',this)">📊 P&amp;L สรุป</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-analyze">
@@ -1177,6 +1178,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <button class="tab-item" id="tab-risk" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
       <button class="tab-item" id="tab-wqfeed" onclick="goTab('wqfeed',this)">🌡️ น้ำ-อาหาร</button>
       <button class="tab-item" id="tab-hatchery" onclick="goTab('hatchery',this)">🦐 โรงเพาะฟัก</button>
+      <button class="tab-item" id="tab-abw" onclick="goTab('abw',this)">📈 ABW Growth</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-market">
@@ -1184,8 +1186,6 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <div class="tab-dropdown">
       <button class="tab-item" id="tab-labor" onclick="goTab('labor',this)">👷 ค่าแรง</button>
           <button class="tab-item" id="tab-elec" onclick="goTab('elec',this)">⚡ ค่าไฟฟ้า</button>
-          <button class="tab-item" id="tab-abw" onclick="goTab('abw',this)">📈 ABW Growth</button>
-          <button class="tab-item" id="tab-pl" onclick="goTab('pl',this)">📊 P&amp;L สรุป</button>
           <button class="tab-item" id="tab-forecast" onclick="goTab('forecast',this)">🔮 คำนวณ &amp; คาดการณ์</button>
           <button class="tab-item" id="tab-medproto" onclick="goTab('medproto',this)">💊 Protocol เวชภัณฑ์</button>
     </div>
@@ -1228,6 +1228,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <button class="mob-sheet-item" data-t="harvest" onclick="mobMenuGo(this)"><span class="ic">🦐</span>จับกุ้ง</button>
     <button class="mob-sheet-item" data-t="harveststat" onclick="mobMenuGo(this)"><span class="ic">📊</span>สถิติจับกุ้ง</button>
     <button class="mob-sheet-item" data-t="export" onclick="mobMenuGo(this)"><span class="ic">📄</span>PDF ปิดบ่อ</button>
+    <button class="mob-sheet-item" data-t="pl" onclick="mobMenuGo(this)"><span class="ic">📊</span>P&amp;L สรุป</button>
     <div class="mob-sheet-grp">📊 วิเคราะห์</div>
     <button class="mob-sheet-item" data-t="lab" onclick="mobMenuGo(this)"><span class="ic">🔬</span>ผลแล็บ</button>
     <button class="mob-sheet-item" data-t="trial" onclick="mobMenuGo(this)"><span class="ic">🧪</span>ทดลองเวชภัณฑ์</button>
@@ -1235,11 +1236,10 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <button class="mob-sheet-item" data-t="risk" onclick="mobMenuGo(this)"><span class="ic">⚠️</span>ความเสี่ยง</button>
     <button class="mob-sheet-item" data-t="wqfeed" onclick="mobMenuGo(this)"><span class="ic">🌡️</span>น้ำ-อาหาร</button>
     <button class="mob-sheet-item" data-t="hatchery" onclick="mobMenuGo(this)"><span class="ic">🦐</span>โรงเพาะฟัก</button>
+    <button class="mob-sheet-item" data-t="abw" onclick="mobMenuGo(this)"><span class="ic">📈</span>ABW Growth</button>
     <div class="mob-sheet-grp">💰 ค่าแรง / ค่าไฟ</div>
     <button class="mob-sheet-item" data-t="labor" onclick="mobMenuGo(this)"><span class="ic">👷</span>ค่าแรง</button>
     <button class="mob-sheet-item" data-t="elec" onclick="mobMenuGo(this)"><span class="ic">⚡</span>ค่าไฟฟ้า</button>
-    <button class="mob-sheet-item" data-t="abw" onclick="mobMenuGo(this)"><span class="ic">📈</span>ABW Growth</button>
-    <button class="mob-sheet-item" data-t="pl" onclick="mobMenuGo(this)"><span class="ic">📊</span>P&amp;L สรุป</button>
     <button class="mob-sheet-item" data-t="forecast" onclick="mobMenuGo(this)"><span class="ic">🔮</span>คำนวณ &amp; คาดการณ์</button>
     <button class="mob-sheet-item" data-t="medproto" onclick="mobMenuGo(this)"><span class="ic">💊</span>Protocol เวชภัณฑ์</button>
     <div class="mob-sheet-grp">🌴 สวนปาล์ม</div>
