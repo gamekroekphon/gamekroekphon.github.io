@@ -650,8 +650,34 @@ html[data-uisize="xl"]{--ui-scale:1.25}
 .sn-uisize .uisize-seg button{color:#e2efe8}
 .sn-uisize .uisize-seg button[aria-pressed="true"]{background:var(--sn-lime);color:#163a28}
 .mob-uisize{padding:11px 16px 13px;border-bottom:1px solid var(--bd)}
+/* ══ ปุ่ม “ต้นทุนทุกบ่อ” หน้าภาพรวม + หน้าต่างสรุปต้นทุน ══ */
+.ov-cost-btn{width:100%;display:flex;align-items:center;gap:12px;margin-bottom:14px;
+  background:var(--sf);border:1.5px solid var(--p);border-radius:14px;padding:14px 16px;
+  cursor:pointer;font-family:inherit;text-align:left;min-height:66px;transition:background .15s}
+.ov-cost-btn:hover{background:var(--wb)}
+.ov-cost-btn .ic{font-size:calc(25px * var(--ui-scale));line-height:1;flex:0 0 auto}
+.ov-cost-btn .tx{flex:1;min-width:0}
+.ov-cost-btn .tx b{display:block;font-size:calc(15px * var(--ui-scale));color:var(--tx);font-weight:700}
+.ov-cost-btn .tx small{display:block;font-size:calc(12px * var(--ui-scale));color:var(--tx2);margin-top:2px;line-height:1.45}
+.ov-cost-btn .go{font-size:calc(22px * var(--ui-scale));color:var(--p);font-weight:700;flex:0 0 auto}
+.cost-sum-modal{width:min(1000px,96vw);max-height:92vh;display:flex;flex-direction:column;padding:0;overflow:hidden}
+.cost-sum-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:15px 18px;border-bottom:1px solid var(--bd);flex:0 0 auto}
+.cost-sum-ttl{font-weight:700;font-size:calc(16px * var(--ui-scale))}
+#cost-sum-body{overflow:auto;padding:15px 18px 20px}
+.cs-tot{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.cs-tot .b{background:var(--sf2);border:1px solid var(--bd);border-radius:9px;padding:10px 13px;min-width:0}
+.cs-tot .k{font-size:calc(12px * var(--ui-scale));color:var(--tx3);font-weight:600}
+.cs-tot .v{font-size:calc(19px * var(--ui-scale));font-weight:700;margin-top:2px;line-height:1.2}
+/* ปุ่มเรียงลำดับ — ต้องกันกฎมือถือ .btn{width:100%} ไม่งั้นเรียงตั้งเต็มความกว้างทีละปุ่ม */
+.cs-sort{display:inline-flex;align-items:center;width:auto!important;min-height:44px;padding:0 13px;border:1px solid var(--bd);background:var(--sf);color:var(--tx2);border-radius:99px;cursor:pointer;font-family:inherit;font-weight:600;font-size:calc(12.5px * var(--ui-scale))}
+.cs-sort.on{background:var(--p);border-color:var(--p);color:#fff}
 .admin-only{display:none}
 body.role-admin .admin-only{display:revert!important}
+/* ⚠️ กับดักเดิมที่เคยเจอกับ .home-quick — body.role-admin .admin-only{display:revert!important}
+   จะทับ display ของ class ตัวเอง ปุ่มที่ต้องเป็น flex จะกลายเป็น inline-block แล้วเลย์เอาต์แตก
+   ต้องประกาศทับด้วย !important เฉพาะจุด (แพทเทิร์นเดียวกับ .mob-sheet-item.admin-only) */
+body.role-admin .ov-cost-btn{display:flex!important}
 /* คู่ตรงข้ามของ .admin-only — ข้อความ/ส่วนที่แสดงเฉพาะ staff (ใช้เขียนคำอธิบายเวอร์ชันที่ไม่พูดถึงเงิน) */
 .staff-only{display:none}
 body:not(.role-admin) .staff-only{display:revert}
@@ -1386,6 +1412,16 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   </div>
 </div>
 <!-- MED PROTOCOL — หน้าต่างขยายเต็มจอ อ่าน/พิมพ์ข้อความยาวๆ ได้สบายตาบนมือถือ -->
+<!-- ══ ต้นทุนทุกบ่อในหน้าเดียว (admin เท่านั้น) ══ -->
+<div class="modal-bg" id="costSumModal">
+  <div class="modal cost-sum-modal">
+    <div class="cost-sum-hdr">
+      <div class="cost-sum-ttl">💰 ต้นทุนทุกบ่อที่กำลังเลี้ยง</div>
+      <button class="mp-exp-x" type="button" onclick="closeCostSummary()">✕</button>
+    </div>
+    <div id="cost-sum-body"></div>
+  </div>
+</div>
 <div class="modal-bg" id="mpExpandModal">
   <div class="modal mp-exp-modal">
     <div class="mp-exp-hdr">
@@ -1658,6 +1694,11 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <div class="mhd-search" onclick="document.getElementById('bnav-more')?.click()">🔍 ค้นหาบ่อ / ข้อมูล...</div>
   </div>
   <div class="ov-kpi-bar" id="ov-kpi-bar"></div>
+  <button class="ov-cost-btn admin-only" type="button" onclick="openCostSummary()">
+    <span class="ic">💰</span>
+    <span class="tx"><b>ต้นทุนทุกบ่อ ในหน้าเดียว</b><small id="ov-cost-btn-sub">ดูต้นทุนสะสม · ต้นทุน/กก. · ต้นทุน/วัน ทุกบ่อพร้อมกัน</small></span>
+    <span class="go">›</span>
+  </button>
   <div class="card" style="margin-bottom:14px" id="ovd-card">
     <div class="card-t">📊 สถานะบ่อทั้งหมด</div>
     <div class="ovd-sum-strip" id="ovd-sum-strip"></div>
@@ -9018,6 +9059,91 @@ function initHarvestDecide(){
   renderHvDaily();
   hvCalc();
 }
+// ═════ ต้นทุนทุกบ่อในหน้าเดียว (admin เท่านั้น) ═════
+// เดิมต้องเปิดการ์ดรายละเอียดทีละบ่อถึงจะเห็นต้นทุนสะสม — หน้านี้เอามารวมไว้ที่เดียว
+// ใช้ pondRunningCost() / pondDailyCost() ตัวเดียวกับการ์ดรายละเอียดบ่อ — ห้ามคำนวณคู่ขนาน
+let _csSort='doc';
+function openCostSummary(){
+  if(APP_ROLE!=='admin')return;
+  const m=document.getElementById('costSumModal');if(!m)return;
+  m.classList.add('on');
+  renderCostSummary();
+}
+function closeCostSummary(){
+  const m=document.getElementById('costSumModal');if(m)m.classList.remove('on');
+}
+function csSort(k){_csSort=k;renderCostSummary();}
+function renderCostSummary(){
+  const el=document.getElementById('cost-sum-body');if(!el)return;
+  if(APP_ROLE!=='admin'){el.innerHTML='';return;}
+  const money=n=>Math.round(n).toLocaleString();
+  let ponds=wqfeedActivePonds();
+  if(!ponds.length){
+    el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:24px;font-style:italic">ยังไม่มีบ่อที่กำลังเลี้ยง</p>';return;
+  }
+  const rows=ponds.map(p=>{
+    const rc=pondRunningCost(p);
+    const dc=pondDailyCost(p);
+    const bio=getLatestBiomass(p);
+    const produced=(bio!=null?bio:0)+partialTotals(p.partialHarvests).kg;
+    return{p,rc,dc,bio,produced,
+      age:pondCurAge(p),
+      total:rc?rc.total:0,
+      perKg:(rc&&produced>0)?rc.total/produced:null,
+      perDay:dc?dc.total:null};
+  });
+  const cmp={doc:(a,b)=>b.age-a.age, total:(a,b)=>b.total-a.total,
+             perKg:(a,b)=>(b.perKg||0)-(a.perKg||0), perDay:(a,b)=>(b.perDay||0)-(a.perDay||0)}[_csSort];
+  rows.sort(cmp);
+  const T=rows.reduce((o,r)=>({total:o.total+r.total, day:o.day+(r.perDay||0), kg:o.kg+r.produced,
+    fry:o.fry+(r.rc?r.rc.fry:0), feed:o.feed+(r.rc?r.rc.feed:0),
+    labor:o.labor+(r.rc?r.rc.labor:0), elec:o.elec+(r.rc?r.rc.elec:0),
+    other:o.other+(r.rc?(r.rc.chem+r.rc.shared+r.rc.fuel):0)}),
+    {total:0,day:0,kg:0,fry:0,feed:0,labor:0,elec:0,other:0});
+  const sortBtn=(k,lbl)=>'<button type="button" class="cs-sort'+(_csSort===k?' on':'')+'" onclick="csSort(\''+k+'\')">'+lbl+'</button>';
+  el.innerHTML=
+    '<div class="cs-tot">'+
+      '<div class="b"><div class="k">ต้นทุนสะสมทั้งฟาร์ม</div><div class="v">'+money(T.total)+'</div></div>'+
+      '<div class="b"><div class="k">ต้นทุนเดินเครื่อง/วัน</div><div class="v">'+money(T.day)+'</div></div>'+
+      '<div class="b"><div class="k">เนื้อกุ้งที่ผลิตได้</div><div class="v">'+money(T.kg)+' <span style="font-size:calc(12px * var(--ui-scale));color:var(--tx3)">กก.</span></div></div>'+
+      '<div class="b"><div class="k">ต้นทุนรวม/กก.</div><div class="v">'+(T.kg>0?money(T.total/T.kg):'-')+'</div></div>'+
+      '<div class="b"><div class="k">จำนวนบ่อ</div><div class="v">'+rows.length+' <span style="font-size:calc(12px * var(--ui-scale));color:var(--tx3)">บ่อ</span></div></div>'+
+    '</div>'+
+    '<div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:11px">'+
+      '<span style="font-size:calc(12.5px * var(--ui-scale));color:var(--tx2);font-weight:600">เรียงตาม</span>'+
+      sortBtn('doc','อายุบ่อ')+sortBtn('total','ต้นทุนสะสม')+
+      sortBtn('perKg','ต้นทุน/กก.')+sortBtn('perDay','ต้นทุน/วัน')+
+    '</div>'+
+    '<div style="overflow-x:auto"><table class="tbl"><thead><tr>'+
+      '<th>บ่อ</th><th>DOC</th><th>เนื้อกุ้ง</th>'+
+      '<th>ลูกกุ้ง</th><th>อาหาร</th><th>ค่าแรง</th><th>ค่าไฟ</th><th>อื่นๆ</th>'+
+      '<th>ต้นทุนสะสม</th><th>ต้นทุน/กก.</th><th>ต้นทุน/วัน</th>'+
+    '</tr></thead><tbody>'+
+    rows.map(r=>{
+      const c=r.rc;
+      if(!c)return'<tr><td><b>'+r.p.name+'</b></td><td>'+r.age+'</td><td colspan="9" style="color:var(--tx3);font-style:italic">ยังคำนวณไม่ได้ — ต้องมีวันลงกุ้ง</td></tr>';
+      return'<tr style="cursor:pointer" onclick="closeCostSummary();openPondDetail(\''+r.p.id+'\')" title="แตะเพื่อดูรายละเอียดบ่อนี้">'+
+        '<td><b>'+r.p.name+'</b></td>'+
+        '<td>'+r.age+'</td>'+
+        '<td>'+(r.produced>0?money(r.produced)+' กก.':'-')+'</td>'+
+        '<td>'+money(c.fry)+'</td>'+
+        '<td>'+money(c.feed)+'</td>'+
+        '<td>'+money(c.labor)+'</td>'+
+        '<td>'+money(c.elec)+'</td>'+
+        '<td>'+money(c.chem+c.shared+c.fuel)+'</td>'+
+        '<td style="font-weight:700">'+money(c.total)+'</td>'+
+        '<td style="font-weight:700;color:var(--p)">'+(r.perKg!=null?money(r.perKg):'-')+'</td>'+
+        '<td>'+(r.perDay!=null?money(r.perDay):'-')+'</td></tr>';
+    }).join('')+
+    '<tr style="background:var(--sf2);font-weight:700"><td>รวม</td><td>-</td><td>'+money(T.kg)+' กก.</td>'+
+      '<td>'+money(T.fry)+'</td><td>'+money(T.feed)+'</td><td>'+money(T.labor)+'</td><td>'+money(T.elec)+'</td>'+
+      '<td>'+money(T.other)+'</td><td>'+money(T.total)+'</td>'+
+      '<td>'+(T.kg>0?money(T.total/T.kg):'-')+'</td><td>'+money(T.day)+'</td></tr>'+
+    '</tbody></table></div>'+
+    '<div class="hint" style="margin-top:10px">แตะที่แถวเพื่อเปิดหน้ารายละเอียดบ่อนั้น · '+
+      '<b>เนื้อกุ้ง</b> = ที่อยู่ในบ่อ + ที่พาเชียลไปแล้ว · '+
+      '<b>ต้นทุน/วัน</b> คืออัตราเดินเครื่องตอนนี้ ไม่ใช่ค่าเฉลี่ยทั้งรอบ</div>';
+}
 function initPalm(){
   if(APP_ROLE!=='admin')return;
   palmTab(_palmActiveTab,document.getElementById('palmb-'+_palmActiveTab));
@@ -13894,6 +14020,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   initCurPondSync();
   document.getElementById('pondModal').addEventListener('click',e=>{if(e.target===document.getElementById('pondModal'))closePond()});
   document.getElementById('mpExpandModal').addEventListener('click',e=>{if(e.target===document.getElementById('mpExpandModal'))mpExpandClose()});
+  document.getElementById('costSumModal').addEventListener('click',e=>{if(e.target===document.getElementById('costSumModal'))closeCostSummary()});
   fetchWx().catch(()=>{});
   if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
   firebase.auth().onAuthStateChanged(async user=>{
