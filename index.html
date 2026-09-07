@@ -1331,6 +1331,29 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <div class="fc-res3" id="fc-res"></div>
   </div>
 
+  <!-- ══ ต้นทุนเดินเครื่องต่อวัน รายบ่อ (admin เท่านั้น — มีจำนวนเงิน) ══ -->
+  <div class="card admin-only" style="margin-top:14px">
+    <div class="card-t">💸 ต้นทุนเฉลี่ยต่อวัน — ทุกบ่อที่กำลังเลี้ยง <span class="pd-admin-tag">ADMIN</span></div>
+    <div class="card-sub" style="font-size:var(--fs115);color:var(--tx3);margin-bottom:10px">ค่าอาหารต่างกันตามขนาดกุ้งและน้ำหนักในบ่อ · ค่าแรงกับค่าไฟหารเท่ากันตามจำนวนบ่อที่เลี้ยงพร้อมกัน · เวชภัณฑ์/ปูนใช้ค่าเฉลี่ยจริงของบ่อนั้น</div>
+    <div id="hv-daily"></div>
+  </div>
+
+  <!-- ══ จับวันนี้ หรือ ลากต่อ (admin เท่านั้น) ══ -->
+  <div class="card admin-only" style="margin-top:14px">
+    <div class="card-t">⚖️ จับวันนี้ หรือ ลากต่อ <span class="pd-admin-tag">ADMIN</span></div>
+    <div class="card-sub" style="font-size:var(--fs115);color:var(--tx3);margin-bottom:10px">ใส่ราคาที่แพให้มาในแต่ละไซส์ ระบบคำนวณให้ว่าลากต่อแล้ว<b>กำไรเพิ่มขึ้นจริงเท่าไร</b> หลังหักค่าอาหาร ค่าแรง ค่าไฟ เวชภัณฑ์ที่จ่ายเพิ่ม</div>
+    <div class="fgrid" style="margin-bottom:12px">
+      <div class="fg"><label class="fl" for="hv-price-now">ราคาถ้าจับวันนี้ (บ./กก.)</label>
+        <input type="number" step="any" class="fi" id="hv-price-now" placeholder="เช่น 245" oninput="hvCalc()"></div>
+      <div class="fg"><label class="fl" for="hv-feedprice">ราคาอาหาร (บ./กก.)</label>
+        <input type="number" step="any" class="fi" id="hv-feedprice" oninput="hvCalc()">
+        <span class="hint" id="hv-feedprice-hint"></span></div>
+    </div>
+    <div id="hv-rows"></div>
+    <div style="margin-top:10px"><button class="btn btn-s" type="button" onclick="hvAddRow()">+ เพิ่มไซส์ที่อยากเทียบ</button></div>
+    <div id="hv-res" style="margin-top:14px"></div>
+  </div>
+
 </div>
 <!-- MED PROTOCOL (Protocol เวชภัณฑ์ — แยกเป็นหัวข้อ เพิ่ม/แก้/ลบเองได้ · staff เห็นแต่แก้ไม่ได้) -->
 <div id="sec-medproto" class="sec">
@@ -4469,6 +4492,67 @@ function histRecYear(c){
 //   3) ชิปต้นทุนในตารางรอบเลี้ยง  4) แถบสรุปรอบหน้าจับกุ้ง
 // เดิมมี 3 สูตรแยกกัน และ 2 ใน 3 ลืมบวก "อุปกรณ์นอก/น้ำมัน" (โหมดแชร์ทุกบ่อ) ทำให้ตัวเลขไม่ตรงกันระหว่างหน้า
 // คืนค่าดิบไม่ปัดเศษ — ให้ผู้เรียกปัดตอนแสดงผลเอง เพื่อให้ยอดรวมกับยอดรายหมวดไม่เพี้ยนจากการปัดซ้อนกัน
+// ═════ ต้นทุนเดินเครื่องต่อวัน และ ตัดสินใจ “จับวันนี้ หรือ ลากต่อ” ═════
+// ⚠️ ทั้งชุดนี้เป็นข้อมูลเงิน — เรียกจาก UI ที่กัน admin เท่านั้น
+
+// ราคาอาหารต่อ กก. — จากราคาสินค้าในสต็อก (หน่วยเก็บเป็นกระสอบ 25 กก.)
+//    ใช้หลักเดียวกับ pondFeedCost() ที่คิดต้นทุนอาหารย้อนหลังอยู่ จะได้ตัวเลขเทียบกันได้
+function feedPricePerKg(){
+  const items=(D.inventoryItems||[]).filter(i=>i.category==='feed'&&i.unitPrice>0);
+  if(!items.length)return 0;
+  return items.reduce((s,i)=>s+i.unitPrice,0)/items.length/25;
+}
+// เวชภัณฑ์/ปูน เฉลี่ยต่อวัน — จากที่เบิกจริงในรอบนี้ หารด้วยจำนวนวันที่เลี้ยมาแล้ว
+function pondMedPerDay(p){
+  if(!p||!p.startDate)return 0;
+  const from=pondCostStartDate(p),to=today();
+  const g=getStockCostGroupsForPond(p.id,from,to);
+  const days=Math.max(1,dDiff(p.startDate,to)+1);
+  return((g.med||0)+(g.lime||0))/days;
+}
+// ต้นทุนเดินเครื่องของบ่อนี้ ต่อวัน — อาหารต่างกันตามขนาดกุ้ง · ค่าแรง/ค่าไฟหารเท่ากันทุกบ่อ
+function pondDailyCost(p){
+  if(!p||!p.startDate)return null;
+  const d=today();
+  const sc=pondShrimpCount(p);
+  const bio=sc?sc.biomass:null, abw=sc?sc.abw:null;
+  const age=pondCurAge(p);
+  const rate=(bio!=null&&abw>0)?bcFeedRateFormula(age,abw):null;
+  const feedKg=(rate!=null&&bio>0)?bio*rate/100:0;
+  const feed=feedKg*feedPricePerKg();
+  const n=activePondCountOnDate(d)||1;
+  const labor=(dailyFixedStaffRate(d)+dailyWeeklyWorkerRate(d))/n;
+  const elec=dailyElecRate(d)/n;
+  const med=pondMedPerDay(p);
+  return{bio,abw,age,rate,feedKg,feed,labor,elec,med,total:feed+labor+elec+med};
+}
+// จำลองลากต่อจนถึงไซส์เป้า — เดินทีละวันจริง ไม่เหมา
+//    เพราะอัตราการให้อาหาร (%) ลดลงทุกวันตามอายุ+ขนาด แต่ biomass เพิ่มขึ้น — เหมาจะเพี้ยนมาก
+function hvSimulate(p,targetSize,opt){
+  const o=opt||{};
+  const sc=pondShrimpCount(p);
+  if(!sc||!sc.abw||!(sc.inPond>0))return null;
+  const pdg=o.pdg>0?o.pdg:parseFloat(getPDG(sortedSamples(p)));
+  if(!(pdg>0))return null;
+  const decl=o.decl!=null?o.decl:1;          // % อัตรารอดลดต่อ 10 วัน
+  const fp=o.feedPrice>0?o.feedPrice:feedPricePerKg();
+  const dc=pondDailyCost(p);
+  const abwT=1000/targetSize;
+  let abw=sc.abw, alive=sc.inPond, age=pondCurAge(p);
+  let days=0, cost=0, feedKg=0;
+  while(abw<abwT&&days<500){
+    abw+=pdg; age++; days++;
+    alive*=(1-(decl/100)/10);
+    const bio=alive*abw/1000;
+    const r=bcFeedRateFormula(age,abw);
+    const fk=(r!=null&&bio>0)?bio*r/100:0;
+    feedKg+=fk;
+    cost+=fk*fp+(dc?dc.labor+dc.elec+dc.med:0);
+  }
+  return{days,alive,abw:abwT,kg:alive*abwT/1000,cost,feedKg,
+         reached:abw>=abwT,
+         runPerDay:dc?dc.labor+dc.elec+dc.med:0};
+}
 function pondRunningCost(p){
   if(!p||!p.startDate)return null;
   const from=pondCostStartDate(p),to=today();
@@ -8527,6 +8611,7 @@ function initForecast(){
   const dEl=document.getElementById('fc-pickd');
   if(dEl&&!dEl.value){dEl.value=_fcPickVal||addDays(today(),14);_fcPickVal=dEl.value;}
   fcLoadPond();
+  initHarvestDecide();
 }
 // ── ดึงค่าอัตโนมัติของบ่อที่เลือกมาเติมลงฟอร์ม (เขียนทับค่าที่เคยแก้ไว้ — ตั้งใจ เพราะเปลี่ยนบ่อแล้วค่าเดิมใช้ไม่ได้) ──
 function fcLoadPond(){
@@ -8572,6 +8657,8 @@ function fcLoadPond(){
   if(fh)fh.textContent=fdSrc||'กรอกเองได้ — ถ้าเว้นว่างจะใช้สูตรคำนวณให้';
   // ── บอกให้ชัดว่าช่องนี้คือ "อัตรารอดสะสม" และระบบหักตัวที่พาเชียลไปแล้วให้เองในการคำนวณ (ผู้ใช้ไม่ต้องหักเอง) ──
   //    ⚠️ คำนวณจาก p ตรงนี้เลย ห้ามอ่าน _fcPhCount — ตัวนั้นถูกเซ็ตใน fcCalc() ซึ่งเรียกทีหลัง จะได้ค่าของบ่อก่อนหน้า
+  _hvSizes=null;   // เปลี่ยนบ่อแล้วไซส์ตั้งต้นต้องคำนวณใหม่
+  if(typeof initHarvestDecide==='function')setTimeout(initHarvestDecide,0);
   const sh=document.getElementById('fc-surv-hint');
   const phN=partialTotals(p.partialHarvests).count;
   if(sh)sh.textContent=phN>0
@@ -8720,6 +8807,141 @@ function fcCalc(){
      '<div class="sub nb"><span>เพิ่มขึ้น</span><span>'+(sT?'+'+kg(sT.bio-now.bio)+' กก.':'—')+'</span></div>'+
      '<div class="sub nb"><span>กก./ไร่</span><span'+(sT&&yMark(sT.yr)?' style="color:var(--ok);font-weight:700"':'')+'>'+(sT?kg(sT.yr):'—')+(sT&&yMark(sT.yr)?' ✓':'')+'</span></div>'+
    '</div>';
+}
+// ═════ ต้นทุนต่อวันรายบ่อ + จับวันนี้/ลากต่อ (admin เท่านั้น) ═════
+let _hvSizes=null;   // ไซส์+ราคาที่ผู้ใช้ใส่ — เก็บในหน่วยความจำอย่างเดียว ไม่เขียนลง Firebase (ราคาเปลี่ยนทุกรอบ)
+const _hvMoney=n=>Math.round(n).toLocaleString();
+
+function renderHvDaily(){
+  const el=document.getElementById('hv-daily');if(!el)return;
+  if(APP_ROLE!=='admin'){el.innerHTML='';return;}
+  const ponds=sortPondsByAge(wqfeedActivePonds());
+  if(!ponds.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:16px;font-style:italic">ยังไม่มีบ่อที่กำลังเลี้ยง</p>';return;}
+  const fp=feedPricePerKg();
+  const cur=document.getElementById('fc-pond')?.value;
+  let tF=0,tL=0,tE=0,tM=0,tA=0,nOk=0;
+  const rows=ponds.map(p=>{
+    const c=pondDailyCost(p);
+    if(!c||c.bio==null){
+      return'<tr><td>'+p.name+'</td><td>'+pondCurAge(p)+'</td><td colspan="6" style="color:var(--tx3);font-style:italic">ยังไม่มีผลสุ่ม — คำนวณไม่ได้</td></tr>';
+    }
+    tF+=c.feed;tL+=c.labor;tE+=c.elec;tM+=c.med;tA+=c.total;nOk++;
+    const sz=c.abw>0?Math.round(1000/c.abw):null;
+    return'<tr'+(p.id===cur?' style="background:var(--wb)"':'')+'>'+
+      '<td><b>'+p.name+'</b>'+(p.id===cur?'<div style="font-size:var(--fs10);color:var(--tx3)">บ่อที่เลือกอยู่</div>':'')+'</td>'+
+      '<td>'+c.age+'</td>'+
+      '<td>'+(sz?sz+' ตัว/กก.':'-')+'</td>'+
+      '<td>'+_hvMoney(c.bio)+' กก.</td>'+
+      '<td>'+_hvMoney(c.feed)+'<div style="font-size:var(--fs10);color:var(--tx3)">'+Math.round(c.feedKg)+' กก.'+(c.rate!=null?' · '+c.rate.toFixed(1)+'%':'')+'</div></td>'+
+      '<td>'+_hvMoney(c.labor+c.elec)+'</td>'+
+      '<td>'+_hvMoney(c.med)+'</td>'+
+      '<td style="font-weight:700">'+_hvMoney(c.total)+'</td></tr>';
+  }).join('');
+  const warn=fp>0?'':'<div style="background:var(--wb);border:1px solid var(--w);color:var(--w-tx);border-radius:8px;padding:9px 12px;font-size:var(--fs115);margin-bottom:10px">⚠️ ยังไม่มีราคาอาหารในสต็อก — ค่าอาหารจะเป็น 0 จนกว่าจะเพิ่มราคาสินค้าหมวดอาหาร</div>';
+  el.innerHTML=warn+'<div style="overflow-x:auto"><table class="tbl"><thead><tr>'+
+    '<th>บ่อ</th><th>DOC</th><th>ไซส์</th><th>น้ำหนักในบ่อ</th>'+
+    '<th>อาหาร/วัน</th><th>แรง+ไฟ/วัน</th><th>เวชภัณฑ์/วัน</th><th>รวม/วัน</th>'+
+    '</tr></thead><tbody>'+rows+
+    (nOk?'<tr style="background:var(--sf2);font-weight:700"><td>รวมทั้งฟาร์ม</td><td colspan="3">'+nOk+' บ่อ</td>'+
+      '<td>'+_hvMoney(tF)+'</td><td>'+_hvMoney(tL+tE)+'</td><td>'+_hvMoney(tM)+'</td><td>'+_hvMoney(tA)+'</td></tr>':'')+
+    '</tbody></table></div>'+
+    '<div class="hint" style="margin-top:8px">อาหาร/วัน = น้ำหนักในบ่อ × อัตราการให้อาหารตามอายุ+ขนาดกุ้ง (สูตรเดียวกับการ์ดเปรียบเทียบ Biomass) × ราคาอาหาร</div>';
+}
+
+function hvDefaultSizes(p){
+  const sc=pondShrimpCount(p);
+  const cur=(sc&&sc.abw>0)?Math.round(1000/sc.abw):25;
+  // ── ใช้สัดส่วนไม่ใช่ลบตัวเลขคงที่ — กุ้งเล็ก (80 ตัว/กก.) ขยับทีละ 2 ตัวไม่มีความหมาย
+  //    ต้องเป็น 72/68/60 ถึงจะเป็นทางเลือกจริง ส่วนกุ้งใหญ่ (23) จะได้ 21/20/17 ──
+  const step=r=>Math.max(1,Math.round(cur*r));
+  const out=[];
+  [0.9,0.85,0.75].forEach(r=>{const v=step(r);if(v<cur&&!out.some(x=>x.size===v))out.push({size:v,price:null});});
+  return out.length?out:[{size:Math.max(1,cur-1),price:null}];
+}
+function hvAddRow(){
+  if(!_hvSizes)_hvSizes=[];
+  const last=_hvSizes.length?_hvSizes[_hvSizes.length-1].size:20;
+  _hvSizes.push({size:Math.max(1,last-2),price:null});
+  hvRenderRows();hvCalc();
+}
+function hvDelRow(i){_hvSizes.splice(i,1);hvRenderRows();hvCalc();}
+function hvSetSize(i,v){_hvSizes[i].size=parseFloat(v)||0;hvCalc();}
+function hvSetPrice(i,v){_hvSizes[i].price=v===''?null:parseFloat(v);hvCalc();}
+
+function hvRenderRows(){
+  const el=document.getElementById('hv-rows');if(!el)return;
+  el.innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr>'+
+    '<th>ไซส์เป้า (ตัว/กก.)</th><th>ราคาที่แพให้ (บ./กก.)</th><th></th></tr></thead><tbody>'+
+    (_hvSizes||[]).map((r,i)=>'<tr>'+
+      '<td><input type="number" step="any" class="fi" style="width:110px" value="'+(r.size||'')+'" oninput="hvSetSize('+i+',this.value)"></td>'+
+      '<td><input type="number" step="any" class="fi" style="width:130px" value="'+(r.price==null?'':r.price)+'" placeholder="ใส่ราคา" oninput="hvSetPrice('+i+',this.value)"></td>'+
+      '<td><button class="btn btn-s" type="button" onclick="hvDelRow('+i+')" title="ลบแถวนี้">🗑️</button></td></tr>').join('')+
+    '</tbody></table></div>';
+}
+
+function hvCalc(){
+  const el=document.getElementById('hv-res');if(!el)return;
+  if(APP_ROLE!=='admin'){el.innerHTML='';return;}
+  const pid=document.getElementById('fc-pond')?.value, p=pid?pond(pid):null;
+  if(!p){el.innerHTML='';return;}
+  const sc=pondShrimpCount(p);
+  const pNow=parseFloat(document.getElementById('hv-price-now')?.value);
+  const fpIn=parseFloat(document.getElementById('hv-feedprice')?.value);
+  if(!sc||!sc.abw){el.innerHTML='<p style="color:var(--tx3);font-style:italic;padding:8px 0">ต้องมีผลสุ่มตัวอย่างก่อน จึงคำนวณได้</p>';return;}
+  if(!(pNow>0)){el.innerHTML='<p style="color:var(--tx3);font-style:italic;padding:8px 0">ใส่ราคาถ้าจับวันนี้ก่อน จึงจะเทียบได้</p>';return;}
+  const pdg=parseFloat(getPDG(sortedSamples(p)));
+  if(!(pdg>0)){el.innerHTML='<p style="color:var(--w);font-style:italic;padding:8px 0">⚠️ ต้องสุ่มอย่างน้อย 2 ครั้งเพื่อหาอัตราโต (PDG) จึงคาดการณ์วันได้</p>';return;}
+  const wNow=sc.biomass, revNow=wNow*pNow;
+  const curSize=Math.round(1000/sc.abw);
+  const opt={feedPrice:fpIn>0?fpIn:0};
+  const rows=(_hvSizes||[]).filter(r=>r.size>0).map(r=>{
+    if(r.size>=curSize)return{...r,err:'ไซส์นี้เล็กกว่า/เท่ากุ้งตอนนี้'};
+    const sim=hvSimulate(p,r.size,opt);
+    if(!sim)return{...r,err:'คำนวณไม่ได้'};
+    if(!sim.reached)return{...r,err:'นานเกิน 500 วัน'};
+    const rev=r.price>0?sim.kg*r.price:null;
+    return{...r,sim,rev,net:rev!=null?(rev-revNow)-sim.cost:null};
+  });
+  const valid=rows.filter(r=>r.net!=null);
+  const best=valid.length?valid.reduce((a,b)=>b.net>a.net?b:a):null;
+  const worth=best&&best.net>0;
+  el.innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr>'+
+    '<th>จับที่ไซส์</th><th>ลากอีก</th><th>น้ำหนักที่ได้</th><th>รายได้</th><th>ต้นทุนเพิ่ม</th><th>กำไรเทียบจับวันนี้</th>'+
+    '</tr></thead><tbody>'+
+    '<tr style="background:var(--sf2)"><td><b>'+curSize+' ตัว/กก.</b><div style="font-size:var(--fs10);color:var(--tx3)">จับวันนี้</div></td>'+
+    '<td>—</td><td>'+_hvMoney(wNow)+' กก.</td><td>'+_hvMoney(revNow)+'</td><td>—</td><td>—</td></tr>'+
+    rows.map(r=>{
+      if(r.err)return'<tr><td><b>'+r.size+' ตัว/กก.</b></td><td colspan="5" style="color:var(--tx3);font-style:italic">'+r.err+'</td></tr>';
+      const isB=worth&&r===best;
+      return'<tr'+(isB?' style="background:var(--ob)"':'')+'>'+
+        '<td><b>'+r.size+' ตัว/กก.</b>'+(isB?' <span class="badge b-ok">คุ้มสุด</span>':'')+'</td>'+
+        '<td>'+r.sim.days+' วัน</td>'+
+        '<td>'+_hvMoney(r.sim.kg)+' กก.<div style="font-size:var(--fs10);color:var(--tx3)">'+_hvMoney(r.sim.alive)+' ตัว</div></td>'+
+        '<td>'+(r.rev!=null?_hvMoney(r.rev):'<span style="color:var(--tx3)">ใส่ราคา</span>')+'</td>'+
+        '<td>'+_hvMoney(r.sim.cost)+'</td>'+
+        '<td style="font-weight:700;color:'+(r.net>=0?'var(--ok)':'var(--d)')+'">'+(r.net>=0?'+':'')+_hvMoney(r.net)+'</td></tr>';
+    }).join('')+'</tbody></table></div>'+
+    (best?'<div style="margin-top:12px;border-radius:10px;padding:12px 14px;font-size:var(--fs115);line-height:1.65;'+
+      (worth?'background:var(--ob);border:1.5px solid var(--ok);color:var(--ok)':'background:var(--db);border:1.5px solid var(--d);color:var(--d)')+'">'+
+      (worth
+        ?'<b>✅ ลากต่อคุ้ม — ถึงไซส์ '+best.size+' ตัว/กก. อีก '+best.sim.days+' วัน</b><br>กำไรเพิ่มจากจับวันนี้ประมาณ <b>'+_hvMoney(best.net)+' บาท</b> — หักค่าอาหาร ค่าแรง ค่าไฟ เวชภัณฑ์ที่จ่ายเพิ่มแล้ว'
+        :'<b>⚠️ ที่ราคานี้ — จับวันนี้คุ้มกว่า</b><br>ลากต่อทุกทางเลือกได้กำไรน้อยลง ทางที่เสียหายน้อยสุดคือ '+best.size+' ตัว/กก. ซึ่งยังขาด <b>'+_hvMoney(Math.abs(best.net))+' บาท</b>')+
+      '</div>':'')+
+    '<div class="hint" style="margin-top:10px">⚠️ ตัวเลขนี้คือกรณีที่ทุกอย่างไปได้ดี — ยิ่งลากนาน ยิ่งเสี่ยงโรค/น้ำเสีย/กุ้งตายยกบ่อ ซึ่งระบบคำนวณให้ไม่ได้</div>';
+}
+
+function initHarvestDecide(){
+  if(APP_ROLE!=='admin')return;
+  const pid=document.getElementById('fc-pond')?.value, p=pid?pond(pid):null;
+  if(!_hvSizes&&p)_hvSizes=hvDefaultSizes(p);
+  const fpEl=document.getElementById('hv-feedprice');
+  const fp=feedPricePerKg();
+  if(fpEl&&!fpEl.value&&fp>0)fpEl.value=Math.round(fp*100)/100;
+  const hint=document.getElementById('hv-feedprice-hint');
+  if(hint)hint.textContent=fp>0?('จากราคาสินค้าหมวดอาหารในสต็อก — แก้ได้'):'ยังไม่มีราคาอาหารในสต็อก — กรอกเอง';
+  hvRenderRows();
+  renderHvDaily();
+  hvCalc();
 }
 function initPalm(){
   if(APP_ROLE!=='admin')return;
