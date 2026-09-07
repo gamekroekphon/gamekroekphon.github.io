@@ -3289,6 +3289,9 @@ function normalizeD(d) {
     });
     // assign id ให้ log รายวัน (ใช้ key ที่ deterministic เพื่อ tombstone ทำงานได้)
     (p.feedLog||[]).forEach((r,i)=>{ if(!r.id) r.id='fd_'+(p.id||'')+'_'+(r.date||'')+'_'+i; });
+    // จัดลำดับให้ถูกตั้งแต่ตอนโหลด — ข้อมูลที่เคยเพี้ยนจาก merge รอบก่อนจะกลับมาเรียงเอง
+    ['feedLog','samples','waterLog','chemLog','labResults','partialHarvests','cropHistory']
+      .forEach(k=>{ if(Array.isArray(p[k])) p[k]=sortLogArr(k,p[k]); });
     (p.samples||[]).forEach((r,i)=>{ if(!r.id) r.id='sp_'+(p.id||'')+'_'+(r.date||'')+'_'+i; });
     (p.waterLog||[]).forEach((r,i)=>{ if(!r.id) r.id='wl_'+(p.id||'')+'_'+(r.date||'')+'_'+(r.action||'')+'_'+i; });
     (p.chemLog||[]).forEach((r,i)=>{ if(!r.id) r.id='ch_'+(p.id||'')+'_'+(r.date||'')+'_'+(r.product||'')+'_'+i; });
@@ -4079,6 +4082,17 @@ function loadData(){
     return d;
   }const d=cln(DEFAULT);d.categories=[...DEFAULT_CATS];d.settings={cropsPerYear:2};return d}catch{const d=cln(DEFAULT);d.categories=[...DEFAULT_CATS];d.settings={cropsPerYear:2};return d}
 }
+// ══ ⚠️ หัวใจของบั๊ก “รายการเรียงผิดลำดับ” ══
+//    mergeArr() ใช้ Map ซึ่งเก็บตามลำดับที่ใส่ครั้งแรก — รายการที่มีเฉพาะฝั่ง local จะไปต่อท้ายเสมอ
+//    พอแก้ข้อมูลเก่า (เช่น อาหารวันที่ 19 ส.ค.) แล้วซิงค์ → รายการนั้นไปอยู่ท้าย array
+//    หน้าที่โชว์ประวัติใช้ .reverse() โดยสมมติว่า array เรียงตามวันที่ → ของเก่าเด้งมาอยู่บนสุด
+//    แก้ที่ต้นทาง: เรียงใหม่ทุกครั้งหลัง merge — แก้จุดเดียว ครอบทุกหน้าที่พึ่งลำดับ
+function sortLogArr(key, arr) {
+  if (!Array.isArray(arr)) return arr;
+  const f = key === 'cropHistory' ? (x => (x && (x.closeDate || x.startDate)) || '')
+                                  : (x => (x && x.date) || '');
+  return arr.slice().sort((a, b) => String(f(a)).localeCompare(String(f(b))));
+}
 function mergeArr(localArr, remoteArr) {
   if (!Array.isArray(remoteArr)) return localArr || [];
   if (!Array.isArray(localArr)) return remoteArr || [];
@@ -4129,7 +4143,7 @@ function mergeRemote(local, remote) {
   merged.ponds.forEach(p => {
     const rp = remotePonds[p.id];
     if (!rp) return;
-    LOG_KEYS.forEach(k => { p[k] = dropDead(mergeArr(p[k], rp[k])); });
+    LOG_KEYS.forEach(k => { p[k] = sortLogArr(k, dropDead(mergeArr(p[k], rp[k]))); });
     // ── เช็คลิสต์เตรียมบ่อ: เคารพ tombstone ก่อน merge — ถ้าฝั่งใดถูกล้างไปแล้ว (id อยู่ใน deletedIds) ห้ามให้อีกฝั่งดันกลับมา ──
     const lc = p.prepChecklist, rc = rp.prepChecklist;
     const lDead = !!(lc && lc.id && dead.has(lc.id)), rDead = !!(rc && rc.id && dead.has(rc.id));
@@ -5928,12 +5942,12 @@ function renderPondDetail(id){
   const pdYr=(p.size>0&&pdSC)?pdSC.biomass/p.size:null;
   const pdYrHit=pdYr!=null&&pdYr>=_phTarget;
   const biomass=getLatestBiomass(p);
-  const feedLog=p.feedLog||[];const latFeed=feedLog.length?feedLog[feedLog.length-1]:null;
+  const feedLog=sortLogArr('feedLog',p.feedLog||[]);const latFeed=feedLog.length?feedLog[feedLog.length-1]:null;
   // ฐาน กก./แสนตัว = ยอดปล่อย หักตัวที่พาเชียลไปแล้ว ณ วันที่ให้อาหารนั้น
   const per100kBase=latFeed?pondFeedBaseOnDate(p,latFeed.date):null;
   const per100kCut=per100kBase!=null&&pRelease(p)>0&&per100kBase<pRelease(p);   // หักพาเชียลไปแล้วหรือยัง
   const per100k=latFeed&&latFeed.totalFeed?feedPer100k(latFeed.totalFeed,per100kBase):null;
-  const waterLog=p.waterLog||[];const latWater=waterLog.length?waterLog[waterLog.length-1]:null;
+  const waterLog=sortLogArr('waterLog',p.waterLog||[]);const latWater=waterLog.length?waterLog[waterLog.length-1]:null;
   const pdg=getPDG(samples);
   const sizeCount=lat&&lat.abw&&lat.abw>0?Math.round(1000/lat.abw):null;
 
@@ -6226,7 +6240,7 @@ function bcFeedRateFormula(age,abw){
 // ── ⚠️ single source of truth ของการคำนวณเปรียบเทียบ biomass/อัตรารอด 2 แบบ — ใช้ร่วมกันทั้งการ์ด "เปรียบเทียบ Biomass 2 วิธี" และการ์ด "อัตรารอด" ห้ามคำนวณคู่ขนานแยกกัน ──
 function getBioCompareCalc(p){
   const sc=pondShrimpCount(p);
-  const feedLog=p.feedLog||[];const latFeed=feedLog.length?feedLog[feedLog.length-1]:null;
+  const feedLog=sortLogArr('feedLog',p.feedLog||[]);const latFeed=feedLog.length?feedLog[feedLog.length-1]:null;
   if(!sc||!latFeed||!latFeed.totalFeed)return null;
   const lat=sc.lat,abw=sc.abw,todayFeed=latFeed.totalFeed,release=sc.release;
   const age=lat.age||(p.startDate?dDiff(p.startDate,lat.date||today()):null);
@@ -6570,7 +6584,7 @@ function _ovdRows(active){
     const latS=latestSample(p);
     const size=latS&&latS.abw?Math.round(1000/latS.abw):null;
     const bio=getLatestBiomass(p);
-    const latF=(p.feedLog||[]).length?p.feedLog[p.feedLog.length-1]:null;
+    const _fl=sortLogArr('feedLog',p.feedLog||[]);const latF=_fl.length?_fl[_fl.length-1]:null;
     const feedTxt=latF&&latF.totalFeed!=null?Number(latF.totalFeed).toFixed(1)+' กก.'+(latF.date!==td?' ('+fD(latF.date)+')':''):null;
     return{id:p.id,name:p.name,age,cls,hasWQ,hasFeed,hasStock,size,bio,feedTxt,reasons};
   });
@@ -8626,7 +8640,7 @@ function fcLoadPond(){
   const fcrNow=parseFloat(getFCR(p));
   // ── อาหาร กก./แสนตัว ที่ให้จริงล่าสุด (จากบันทึกอาหาร) — ถ้ายังไม่เคยกรอกอาหาร ใช้ค่าที่สูตร Precision Feeding แนะนำแทน ──
   const fLog=(p.feedLog||[]).filter(r=>r.totalFeed>0);
-  const latFeed=fLog.length?fLog[fLog.length-1]:null;
+  const _fls=sortLogArr('feedLog',fLog);const latFeed=_fls.length?_fls[_fls.length-1]:null;
   let fdRateNow=latFeed?feedPer100k(latFeed.totalFeed,pondFeedBaseOnDate(p,latFeed.date)):0;
   let fdSrc=latFeed?('จากบันทึกอาหารล่าสุด '+fD(latFeed.date)):'';
   if(!(fdRateNow>0)&&lat&&lat.abw>0&&lat.survivalRate!=null&&pRelease(p)>0){
@@ -10101,7 +10115,7 @@ function renderPdFeedHistory(p){
   const tbl=document.getElementById('pd-feed-hist-table');if(!tbl||!p)return;
   const chipsEl=document.getElementById('pd-feed-hist-chips');
   if(chipsEl)chipsEl.innerHTML=pdHistPeriodChips(_pdFeedPeriod,'setPdFeedPeriod');
-  let rec=[...(p.feedLog||[])].reverse();
+  let rec=sortLogArr('feedLog',p.feedLog||[]).reverse();   // เรียงตามวันที่ก่อนเสมอ ห้ามสมมติว่า array เรียงมาแล้ว
   if(_pdFeedPeriod!=='all')rec=rec.slice(0,_pdFeedPeriod);
   if(!rec.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลอาหารของบ่อนี้ — บันทึกได้ที่หน้า "อาหาร & FCR"</p>';return;}
   const tableHtml=`<div class="pd-hist-tblwrap"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ยี่ห้อ/เบอร์</th><th style="text-align:right">อาหาร (กก.)</th><th>หมายเหตุ</th></tr></thead><tbody>${
