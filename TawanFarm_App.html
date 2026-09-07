@@ -8671,10 +8671,12 @@ function fcLoadPond(){
   const age=pondCurAge(p);
   const fcrNow=parseFloat(getFCR(p));
   // ── อาหาร กก./แสนตัว ที่ให้จริงล่าสุด (จากบันทึกอาหาร) — ถ้ายังไม่เคยกรอกอาหาร ใช้ค่าที่สูตร Precision Feeding แนะนำแทน ──
-  const fLog=(p.feedLog||[]).filter(r=>r.totalFeed>0);
-  const _fls=sortLogArr('feedLog',fLog);const latFeed=_fls.length?_fls[_fls.length-1]:null;
-  let fdRateNow=latFeed?feedPer100k(latFeed.totalFeed,pondFeedBaseOnDate(p,latFeed.date)):0;
-  let fdSrc=latFeed?('จากบันทึกอาหารล่าสุด '+fD(latFeed.date)):'';
+  // ── ⚠️ ใช้ pondFeedPerDay() ตัวเดียวกับการ์ด "ต้นทุนต่อวัน" — ห้ามคำนวณคู่ขนาน
+  //    เดิมที่นี่ใช้ "บันทึกล่าสุดวันเดียว" ส่วนการ์ดต้นทุนใช้ "เฉลี่ย 7 วัน" → 2 หน้าให้เลขคนละค่าจากข้อมูลชุดเดียวกัน
+  //    วันที่ให้อาหารผิดปกติวันเดียวจะเหวี่ยงคาดการณ์ทั้งชุด ถ้ายึดวันเดียว
+  const _act=pondFeedPerDay(p);
+  let fdRateNow=_act?(feedPer100k(_act.kg,pondFeedBaseOnDate(p))||0):0;
+  let fdSrc=_act?(_act.src==='actual'?('เฉลี่ยที่ให้จริง '+_act.n+' วันล่าสุด'):('จากบันทึกล่าสุด '+fD(_act.date))):'';
   if(!(fdRateNow>0)&&lat&&lat.abw>0&&lat.survivalRate!=null&&pRelease(p)>0){
     const r0=bcFeedRateFormula(age,lat.abw);
     if(r0!=null){
