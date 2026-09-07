@@ -4347,11 +4347,18 @@ function hatcheryStats(){
       if(!c.harvestResult)return;
       const name=(c.hatchery||'').trim()||'ไม่ระบุ';
       if(!groups[name])groups[name]={name,rounds:0,survSum:0,survN:0,fcrSum:0,fcrN:0,adgSum:0,adgN:0,
-        bonusSum:0,bonusN:0,ordSum:0,ordN:0,stockSum:0,bonusQtySum:0};
+        bonusSum:0,bonusN:0,ordSum:0,ordN:0,stockSum:0,bonusQtySum:0,
+        caughtSum:0,relSum:0,ordCaughtSum:0,ordStockSum:0,feedSum:0,kgSum:0};   // ยอดรวมสำหรับถัวเฉลี่ยแบบถ่วงน้ำหนัก
       const g=groups[name];
       g.rounds++;
       const hr=cropHarvestResult(c);   // นับพาเชียลรวมแล้ว
       if(hr.survivalRate!=null){g.survSum+=parseFloat(hr.survivalRate)||0;g.survN++;}
+      // ── ยอดรวมจริงไว้ถัวเฉลี่ยแบบถ่วงน้ำหนัก — รอบที่จับได้ 800 กก. ต้องไม่ถ่วงเท่ารอบ 12,000 กก. ──
+      const _rel=(parseFloat(c.stock)||0)+(parseFloat(c.stockBonus)||0);
+      const _caught=parseFloat(hr.caught)||0;
+      if(_rel>0&&_caught>0){g.caughtSum+=_caught;g.relSum+=_rel;}
+      const _ord=parseFloat(c.stock)||0;
+      if(_ord>0&&_caught>0){g.ordCaughtSum+=_caught;g.ordStockSum+=_ord;}
       // ── % ยอดแถม ของแต่ละโรง — ไว้เทียบว่าโรงที่แถมเยอะ กุ้งรอดดีกว่า/แย่กว่าโรงที่แถมน้อยไหม
       //    ⚠️ ถัวเฉลี่ยแบบถ่วงน้ำหนักด้วยยอดสั่งซื้อ (รวมตัวแถมทุกรอบ ÷ รวมยอดสั่งทุกรอบ)
       //       ไม่ใช่เฉลี่ย % รายรอบ เพราะรอบที่สั่งน้อยจะดึงค่าเฉลี่ยเพี้ยน
@@ -4360,8 +4367,12 @@ function hatcheryStats(){
       // อัตรารอดฐาน "ยอดสั่งซื้ออย่างเดียว" (ฐานเดียวกับสมุดจดมือของฟาร์ม) — ไว้เทียบคู่กับฐานรวมแถม
       if(hr.survivalRateOrder!=null){g.ordSum+=parseFloat(hr.survivalRateOrder)||0;g.ordN++;}
       const totalFeed=(c.feedLog||[]).reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0);
-      const fcr=hr.fcr!=null?parseFloat(hr.fcr):(totalFeed&&hr.totalWeight?+(totalFeed/hr.totalWeight).toFixed(2):null);
+      // ⚠️ ตัวหารต้องเป็นน้ำหนักที่จับได้ทั้งหมด (รวมพาเชียล) — hr.totalWeightAll มีเฉพาะตอนมีพาเชียล
+      //    ถ้า fallback ไปใช้ hr.totalWeight (เฉพาะตอนปิดบ่อ) FCR จะสูงเกินจริง
+      const _kgAll=(parseFloat(hr.totalWeightAll)||parseFloat(hr.totalWeight)||0);
+      const fcr=hr.fcr!=null?parseFloat(hr.fcr):(totalFeed&&_kgAll?+(totalFeed/_kgAll).toFixed(2):null);
       if(fcr!=null&&!isNaN(fcr)){g.fcrSum+=fcr;g.fcrN++;}
+      if(totalFeed>0&&_kgAll>0){g.feedSum+=totalFeed;g.kgSum+=_kgAll;}
       const ageDays=c.startDate?dDiff(c.startDate,c.closeDate||today()):null;
       const finalWeightG=hr.size?1000/hr.size:null;
       const adg=(finalWeightG!=null&&ageDays)?(finalWeightG-(c.plWeight||0))/ageDays:null;
@@ -4370,11 +4381,14 @@ function hatcheryStats(){
   });
   return Object.values(groups).map(g=>({
     name:g.name,rounds:g.rounds,
-    survAvg:g.survN?+(g.survSum/g.survN).toFixed(1):null,
-    survOrderAvg:g.ordN?+(g.ordSum/g.ordN).toFixed(1):null,
+    // ── ถ่วงน้ำหนัก: กุ้งที่จับได้รวม ÷ ยอดปล่อยรวม — ไม่ใช่เฉลี่ย % รายรอบ
+    //    (หลักเดียวกับ bonusAvg ข้างล่าง และ ค่าแรง/กก. ใน #217) — fallback เป็นค่าเฉลี่ยธรรมดาถ้าขาดข้อมูลจำนวนตัว ──
+    survAvg:g.relSum>0?+(g.caughtSum/g.relSum*100).toFixed(1):(g.survN?+(g.survSum/g.survN).toFixed(1):null),
+    survOrderAvg:g.ordStockSum>0?+(g.ordCaughtSum/g.ordStockSum*100).toFixed(1):(g.ordN?+(g.ordSum/g.ordN).toFixed(1):null),
     bonusAvg:g.stockSum>0?+(g.bonusQtySum/g.stockSum*100).toFixed(1):null,
     stockSum:g.stockSum,bonusQtySum:g.bonusQtySum,
-    fcrAvg:g.fcrN?+(g.fcrSum/g.fcrN).toFixed(2):null,
+    // FCR ถ่วงน้ำหนัก: อาหารรวมทุกรอบ ÷ น้ำหนักรวมทุกรอบ
+    fcrAvg:g.kgSum>0?+(g.feedSum/g.kgSum).toFixed(2):(g.fcrN?+(g.fcrSum/g.fcrN).toFixed(2):null),
     adgAvg:g.adgN?+(g.adgSum/g.adgN).toFixed(3):null
   })).sort((a,b)=>(b.survAvg||0)-(a.survAvg||0));
 }
@@ -5766,8 +5780,14 @@ function fcPeriodFCR(p){
   const samples=(p.samples||[]).filter(s=>s.date&&s.abw!=null&&s.abw!==''&&s.survivalRate!=null&&s.survivalRate!=='').slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
   if(samples.length<2||!pRelease(p))return null;
   const a=samples[samples.length-2],b=samples[samples.length-1];
-  const bioA=a.abw*(a.survivalRate/100)*pRelease(p)/1000;
-  const bioB=b.abw*(b.survivalRate/100)*pRelease(p)/1000;
+  // ⚠️ ต้องหักกุ้งที่พาเชียลไปแล้วก่อนแต่ละครั้งสุ่ม — ไม่งั้น biomass ทั้ง 2 ฝั่งจะสูงเกินจริง
+  //    และเพราะ abwB > abwA ส่วนที่เกินของ B จะมากกว่า → gain สูงเกิน → FCR ต่ำเกินจริง
+  //    (หลักเดียวกับ pondShrimpCount / getLatestBiomass ที่หักพาเชียลอยู่แล้ว)
+  const phBeforeA=partialTotals((p.partialHarvests||[]).filter(r=>r.date<=a.date)).count;
+  const aliveA=Math.max(0,pRelease(p)*(a.survivalRate/100)-phBeforeA);
+  const aliveB=Math.max(0,pRelease(p)*(b.survivalRate/100)-phBeforeA);
+  const bioA=a.abw*aliveA/1000;
+  const bioB=b.abw*aliveB/1000;
   // ── ถ้ามีพาเชียลคั่นระหว่าง 2 ครั้งสุ่ม ต้องบวกน้ำหนักที่จับออกไปกลับเข้า "เนื้อที่โตขึ้น" ไม่งั้น gain ติดลบ/ต่ำเกินจริง แล้ว FCR ช่วงนั้นเพี้ยน ──
   const phBetween=partialTotals((p.partialHarvests||[]).filter(r=>r.date>a.date&&r.date<=b.date)).kg;
   const gain=bioB+phBetween-bioA;if(gain<=0)return null;
