@@ -3292,6 +3292,8 @@ function normalizeD(d) {
     // จัดลำดับให้ถูกตั้งแต่ตอนโหลด — ข้อมูลที่เคยเพี้ยนจาก merge รอบก่อนจะกลับมาเรียงเอง
     ['feedLog','samples','waterLog','chemLog','labResults','partialHarvests','cropHistory']
       .forEach(k=>{ if(Array.isArray(p[k])) p[k]=sortLogArr(k,p[k]); });
+    (p.records||[]).forEach((r,i)=>{ if(!r.id) r.id='wq_'+(p.id||'')+'_'+(r.date||''); });
+    (p.mortalityLog||[]).forEach((r,i)=>{ if(!r.id) r.id='mt_'+(p.id||'')+'_'+(r.date||''); });
     (p.samples||[]).forEach((r,i)=>{ if(!r.id) r.id='sp_'+(p.id||'')+'_'+(r.date||'')+'_'+i; });
     (p.waterLog||[]).forEach((r,i)=>{ if(!r.id) r.id='wl_'+(p.id||'')+'_'+(r.date||'')+'_'+(r.action||'')+'_'+i; });
     (p.chemLog||[]).forEach((r,i)=>{ if(!r.id) r.id='ch_'+(p.id||'')+'_'+(r.date||'')+'_'+(r.product||'')+'_'+i; });
@@ -4137,7 +4139,11 @@ function mergeRemote(local, remote) {
   merged.deletedIds = [...new Set([...(local.deletedIds||[]), ...(remote.deletedIds||[])])];
   const dead = new Set(merged.deletedIds);
   const dropDead = arr => (arr||[]).filter(x => !x || x.id===undefined || !dead.has(x.id));
-  const LOG_KEYS = ['feedLog','samples','waterLog','chemLog','labResults','partialHarvests','cropHistory'];
+  // ⚠️ records (คุณภาพน้ำ) กับ mortalityLog (กุ้งตาย) เคยตกหล่นจากรายการนี้
+  //    ผลคือข้อมูลจากอีกเครื่อง**หาย**ไม่ใช่แค่เรียงผิด — ใครบันทึกทีหลังทับของอีกคน
+  //    (ทดสอบยืนยันแล้ว — สองเครื่องกรอกคนละวัน merge แล้วเหลือวันเดียว)
+  //    ทั้งคู่มี id ถาวรแล้ว (wq_/mt_ + บ่อ + วันที่) จึง merge ได้โดยไม่ซ้ำ
+  const LOG_KEYS = ['feedLog','samples','waterLog','chemLog','labResults','partialHarvests','cropHistory','records','mortalityLog'];
   const remotePonds = {};
   (remote.ponds||[]).forEach(p => { remotePonds[p.id] = p; });
   merged.ponds.forEach(p => {
@@ -4667,7 +4673,7 @@ function pondStatusOv(p){
     if(last.phM!=null&&last.phA!=null&&last.phM!==''&&last.phA!=='')
       level=worstOv(level,classifyOv('phSwing',Math.abs(last.phM-last.phA)));
   }
-  const lab=(p.labResults||[]).slice(-1)[0];
+  const lab=sortLogArr('labResults',p.labResults||[]).slice(-1)[0];
   if(lab){
     [['tcbsGreen',lab.tcbsGreen],['tcbsYellow',lab.tcbsYellow],['tvc',lab.tvc],
      ['ehp',lab.ehp],['ehpLarva',lab.ehpLarva],['hepato',lab.hepato]].forEach(([k,v])=>{
@@ -5682,7 +5688,7 @@ function allReasonsOv(p,last,age){
     consider('tM',last.tM);consider('tA',last.tA);consider('alk',last.alk);consider('sal',last.sal);consider('phM',last.phM);
     if(last.phM!=null&&last.phA!=null&&last.phM!==''&&last.phA!=='')consider('phSwing',Math.abs(last.phM-last.phA));
   }
-  const lab=(p.labResults||[]).slice(-1)[0];
+  const lab=sortLogArr('labResults',p.labResults||[]).slice(-1)[0];
   if(lab){
     consider('tcbsGreen',lab.tcbsGreen);consider('tcbsYellow',lab.tcbsYellow);consider('tvc',lab.tvc);
     consider('ehp',lab.ehp);consider('ehpLarva',lab.ehpLarva);consider('hepato',lab.hepato);
@@ -5812,7 +5818,7 @@ function pondRiskStability(p,last){
 }
 function pondRiskDisease(p,last){
   const cands=[];
-  const lab=(p.labResults||[]).slice(-1)[0];
+  const lab=sortLogArr('labResults',p.labResults||[]).slice(-1)[0];
   if(lab){
     [['tcbsGreen','TCBS เขียว'],['tcbsYellow','TCBS เหลือง'],['tvc','TVC'],['ehp','EHP'],['ehpLarva','EHP ตัวอ่อน'],['hepato','ตับอ่อน']].forEach(([k,lbl])=>{
       const v=lab[k];if(v==null||v==='')return;
@@ -8570,7 +8576,7 @@ function renderClerkCash(){
   const tbl=document.getElementById('cash-table');if(!tbl)return;
   let rows=withBalance;
   if(_cashFilterMonth)rows=rows.filter(c=>(c.date||'').startsWith(_cashFilterMonth));
-  rows=rows.slice().reverse();
+  rows=sortLogArr('cash',rows).reverse();
   if(!rows.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติรายรับ-รายจ่าย'+(_cashFilterMonth?'ตามตัวกรองนี้ — ลองเลือกเดือนอื่น':' — บันทึกได้จากฟอร์มด้านบน')+'</p>';return;}
   tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>ประเภท</th><th style="text-align:right">จำนวนเงิน</th><th style="text-align:right">คงเหลือสะสม</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
     rows.map(c=>{
@@ -9989,7 +9995,8 @@ function saveWQ(){
   const p=pond(pid);if(!p)return;
   // ข้อ 1: คำนวณอายุอัตโนมัติ — ไม่อ่านจาก input (ป้องกันค่าผิดจากการกรอกมือ)
   // บ่อเตรียม (ยังไม่ลงกุ้ง จึงไม่มี startDate) เก็บ age เป็น null แทน NaN — เป็นค่าตรวจน้ำก่อนลงกุ้ง ไม่มี "อายุกุ้ง" ให้คำนวณ
-  const rec={date:d,age:p.startDate?dDiff(p.startDate,d):null};
+  // id ต้องคงที่ข้ามเครื่อง — mergeArr() ใช้ id เป็นกุญแจ ถ้าไม่มีจะรวมข้อมูลข้ามเครื่องไม่ได้
+  const rec={id:'wq_'+pid+'_'+d,date:d,age:p.startDate?dDiff(p.startDate,d):null};
   PARAMS.forEach(pm=>{const v=document.getElementById('ef-'+pm.key)?.value;rec[pm.key]=v===''||v===undefined?null:parseFloat(v)});
   rec.notes=document.getElementById('ep-notes').value;
   const idx=p.records.findIndex(r=>r.date===d);
@@ -10021,7 +10028,7 @@ function renderWQTable(){
   const wrap=document.getElementById('tbl-wrap');if(!wrap)return;
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
   const p=pond(pid);if(!p||!p.records.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">บ่อนี้ยังไม่มีข้อมูลคุณภาพน้ำ — บันทึกได้จากฟอร์มด้านบน</p>';return}
-  const rec=[...p.records].reverse().slice(0,rows);
+  const rec=sortLogArr('records',p.records).reverse().slice(0,rows);
   const show=PARAMS.slice(0,8);
   // ข้อ 4: แสดงชื่อบ่อในหัวตาราง
   const pondHdr=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:calc(13px * var(--ui-scale));color:var(--tx3)">ประวัติค่าน้ำ:</span><span style="font-size:calc(14px * var(--ui-scale));font-weight:700;color:var(--p)">${p.name}</span><span style="font-size:var(--fs11);color:var(--tx3)">(${p.records.length} บันทึก)</span></div>`;
@@ -10060,7 +10067,7 @@ function renderPdWqHistory(p){
   const tbl=document.getElementById('pd-wq-hist-table');if(!tbl||!p)return;
   const chipsEl=document.getElementById('pd-wq-hist-chips');
   if(chipsEl)chipsEl.innerHTML=pdHistPeriodChips(_pdWqPeriod,'setPdWqPeriod');
-  let rec=[...(p.records||[])].reverse();
+  let rec=sortLogArr('records',p.records||[]).reverse();
   if(_pdWqPeriod!=='all')rec=rec.slice(0,_pdWqPeriod);
   if(!rec.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลคุณภาพน้ำของบ่อนี้ — บันทึกได้ที่หน้า "คุณภาพน้ำ"</p>';return;}
   const show=PARAMS;   // เดิม slice(0,8) ทำให้ NH4/NO2/NO3/Ca/Mg/Hardness หายไปจากตาราง ทั้งที่กรอกไว้ในหน้าคุณภาพน้ำ
@@ -10847,7 +10854,7 @@ function renderSampleTable(){
   const pid=document.getElementById('sp-pond')?.value;
   const wrap=document.getElementById('sp-tbl-wrap');if(!wrap)return;
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
-  const p=pond(pid);const rows=(p?.samples||[]).slice().reverse();
+  const p=pond(pid);const rows=sortLogArr('samples',p?.samples||[]).reverse();
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">บ่อนี้ยังไม่มีข้อมูลสุ่มตัวอย่าง — บันทึกได้จากฟอร์มด้านบน</p>';return}
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ตัวอย่าง</th><th>น้ำหนักรวม (กก.)</th><th>ABW (g)</th><th>ไซส์ (ตัว/กก.)</th><th>Survival%</th><th>Biomass ในบ่อ (kg)</th><th>PDG (g/วัน)</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rows.map((r,i)=>`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editSample('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteSample('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.sampleCount||'-'}</td><td>${r.sampleWeight!=null?r.sampleWeight+' กก.':'-'}</td><td><strong style="color:var(--p)">${r.abw?.toFixed(2)||'-'}</strong></td><td><strong style="color:var(--in)">${r.plCount||'-'}</strong></td><td>${r.survivalRate?r.survivalRate+'%':'-'}</td><td>${(()=>{const b=sampleInPondBiomass(p,r);return b!=null?Math.round(b).toLocaleString():'-';})()}</td><td>${r.pdg||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')}</tbody></table>`;
@@ -10900,9 +10907,9 @@ function renderWaterTable(){
   const pid=document.getElementById('wl-pond')?.value;
   const wrap=document.getElementById('wl-tbl-wrap');if(!wrap)return;
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
-  const p=pond(pid);const rows=(p?.waterLog||[]).slice().reverse();
+  const p=pond(pid);const rows=sortLogArr('waterLog',p?.waterLog||[]).reverse();
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">บ่อนี้ยังไม่มีข้อมูลจัดการน้ำ — บันทึกได้จากฟอร์มด้านบน</p>';return}
-  const wlPond=pond(pid);const wlFull=(wlPond?.waterLog||[]).slice().reverse();
+  const wlPond=pond(pid);const wlFull=sortLogArr('waterLog',wlPond?.waterLog||[]).reverse();
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>การดำเนินการ</th><th>ปริมาณ (ซม.)</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rows.map((r,i)=>{const origIdx=(wlPond?.waterLog||[]).indexOf(r);return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editWaterLog('${pid}',${origIdx})">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteWaterLog('${pid}','${r.id||origIdx}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td><span class="badge b-info">${WL_ACT[r.action]||r.action}</span></td><td>${r.vol?r.vol+' ซม.':'-'}</td><td>${r.notes||'-'}</td></tr>`}).join('')}</tbody></table>`;
 }
@@ -11012,7 +11019,7 @@ function renderMtTable(){
   const pid=document.getElementById('mt-pond')?.value;
   const wrap=document.getElementById('mt-tbl-wrap');if(!wrap)return;
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
-  const p=pond(pid);const rows=cropMortalityLog(p).slice().reverse();
+  const p=pond(pid);const rows=sortLogArr('mortalityLog',cropMortalityLog(p)).reverse();
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">บ่อนี้ยังไม่มีบันทึกกุ้งตาย — บันทึกได้จากฟอร์มด้านบน</p>';return}
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>จำนวนตาย</th><th>สาเหตุ</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rows.map(r=>`<tr><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editMortality('${pid}','${r.id}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteMortality('${pid}','${r.id}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age>0?r.age+' วัน':'-'}</td><td style="font-weight:700${r.count>=3?';color:var(--w)':''}">${r.count} ตัว</td><td>${r.cause?`<span class="badge b-warn">${MT_CAUSE_LBL[r.cause]||r.cause}</span>`:'<span style="color:var(--tx3)">-</span>'}</td><td style="color:var(--tx2)">${r.notes||'-'}</td></tr>`).join('')
@@ -11116,7 +11123,7 @@ function renderLabTable(){
   const pid=document.getElementById('lb-pond')?.value;
   const wrap=document.getElementById('lb-tbl-wrap');if(!wrap)return;
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
-  const p=pond(pid);const rows=(p?.labResults||[]).slice().reverse();
+  const p=pond(pid);const rows=sortLogArr('labResults',p?.labResults||[]).reverse();
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">บ่อนี้ยังไม่มีผลแล็บ — บันทึกได้จากฟอร์มด้านบน</p>';return}
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>แล็บ</th><th>🟢 เชื้อเขียว (น้ำ)</th><th>🟡 เชื้อเหลือง (น้ำ)</th><th>🟢 เชื้อเขียว (ตับ)</th><th>🟡 เชื้อเหลือง (ตับ)</th><th>TVC (น้ำ)</th><th>TVC (ตับ)</th><th>EHP</th><th>ตัวอ่อน EHP</th><th>ลำไส้อักเสบ</th><th>เม็ดไขมันรวม</th><th>ตับอ่อน</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rows.map((r,i)=>{
@@ -11813,7 +11820,7 @@ function calcRisk(d,ix,p){
       else if(last.no2>=1){score+=1;pondReasons.push({l:'warn',m:`ไนไตรท์ (NO2) เริ่มสูง (${last.no2})`})}
     }
   }
-  const latLab=(p.labResults||[]).slice(-1)[0];
+  const latLab=sortLogArr('labResults',p.labResults||[]).slice(-1)[0];
   if(latLab){
     const tcbsTotal=(latLab.tcbsGreen||0)+(latLab.tcbsYellow||0);
     if(tcbsTotal>1000){score+=1;pondReasons.push({l:'warn',m:`TCBS รวมสูง (${tcbsTotal.toLocaleString()}) ระวังความเครียด`})}
