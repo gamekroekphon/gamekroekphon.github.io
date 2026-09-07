@@ -4531,6 +4531,16 @@ function pondMedPerDay(p){
   return((g.med||0)+(g.lime||0))/days;
 }
 // ต้นทุนเดินเครื่องของบ่อนี้ ต่อวัน — อาหารต่างกันตามขนาดกุ้ง · ค่าแรง/ค่าไฟหารเท่ากันทุกบ่อ
+// ── อาหารที่ให้จริงต่อวัน — เฉลี่ยจากบันทึกอาหารย้อนหลังไม่เกิน 7 วัน
+//    เฉลี่ยหลายวันเพื่อกันวันที่ให้ผิดปกติวันเดียวมาเหวี่ยงค่า
+function pondFeedPerDay(p){
+  const d=today();
+  const fl=sortLogArr('feedLog',(p&&p.feedLog)||[]).filter(r=>r.date&&r.date<=d&&r.totalFeed>0);
+  const recent=fl.filter(r=>dDiff(r.date,d)<=7);
+  if(recent.length)return{kg:recent.reduce((s,r)=>s+r.totalFeed,0)/recent.length,src:'actual',n:recent.length};
+  if(fl.length){const last=fl[fl.length-1];return{kg:last.totalFeed,src:'last',date:last.date};}
+  return null;
+}
 function pondDailyCost(p){
   if(!p||!p.startDate)return null;
   const d=today();
@@ -4538,13 +4548,21 @@ function pondDailyCost(p){
   const bio=sc?sc.biomass:null, abw=sc?sc.abw:null;
   const age=pondCurAge(p);
   const rate=(bio!=null&&abw>0)?bcFeedRateFormula(age,abw):null;
-  const feedKg=(rate!=null&&bio>0)?bio*rate/100:0;
+  const formulaKg=(rate!=null&&bio>0)?bio*rate/100:0;
+  // ⚠️ ใช้ "ที่ให้จริง" ก่อนเสมอ — สูตรเป็นแค่ตัวสำรองตอนยังไม่มีบันทึก
+  //    (สูตรคือ "ควรให้เท่าไร" ไม่ใช่ "ให้ไปเท่าไร" — ต้นทุนจริงต้องมาจากของจริง)
+  const act=pondFeedPerDay(p);
+  const feedKg=act?act.kg:formulaKg;
+  const feedSrc=act?act.src:(formulaKg>0?'formula':'none');
+  const actRate=(bio>0&&feedKg>0)?feedKg/bio*100:null;
   const feed=feedKg*feedPricePerKg();
   const n=activePondCountOnDate(d)||1;
   const labor=(dailyFixedStaffRate(d)+dailyWeeklyWorkerRate(d))/n;
   const elec=dailyElecRate(d)/n;
   const med=pondMedPerDay(p);
-  return{bio,abw,age,rate,feedKg,feed,labor,elec,med,total:feed+labor+elec+med};
+  return{bio,abw,age,rate,actRate,feedKg,formulaKg,feedSrc,
+         feedDays:act?act.n:0,feedLastDate:act?act.date:null,
+         feed,labor,elec,med,total:feed+labor+elec+med};
 }
 // จำลองลากต่อจนถึงไซส์เป้า — เดินทีละวันจริง ไม่เหมา
 //    เพราะอัตราการให้อาหาร (%) ลดลงทุกวันตามอายุ+ขนาด แต่ biomass เพิ่มขึ้น — เหมาจะเพี้ยนมาก
@@ -4560,12 +4578,20 @@ function hvSimulate(p,targetSize,opt){
   const abwT=1000/targetSize;
   let abw=sc.abw, alive=sc.inPond, age=pondCurAge(p);
   let days=0, cost=0, feedKg=0;
+  // ── ผูกการคาดการณ์เข้ากับที่ให้จริง ──
+  //    สูตรบอกแค่ "รูปทรง" ว่าอัตราจะลดลงยังไง แต่ระดับจริงของแต่ละฟาร์มไม่เท่าสูตร
+  //    เทียบที่ให้จริงวันนี้กับที่สูตรบอกวันนี้ → ได้ตัวคูณ แล้วคูณกับเส้นโค้งของสูตรไปตลอด
+  //    จำกัด 0.3–3 เท่า กันข้อมูลผิดปกติวันเดียวทำให้คาดการณ์เพี้ยนทั้งชุด
+  let factor=1;
+  if(dc&&dc.feedSrc!=='formula'&&dc.feedSrc!=='none'&&dc.formulaKg>0&&dc.feedKg>0){
+    factor=Math.max(0.3,Math.min(3,dc.feedKg/dc.formulaKg));
+  }
   while(abw<abwT&&days<500){
     abw+=pdg; age++; days++;
     alive*=(1-(decl/100)/10);
     const bio=alive*abw/1000;
     const r=bcFeedRateFormula(age,abw);
-    const fk=(r!=null&&bio>0)?bio*r/100:0;
+    const fk=(r!=null&&bio>0)?bio*r/100*factor:0;
     feedKg+=fk;
     cost+=fk*fp+(dc?dc.labor+dc.elec+dc.med:0);
   }
@@ -8852,7 +8878,10 @@ function renderHvDaily(){
       '<td>'+c.age+'</td>'+
       '<td>'+(sz?sz+' ตัว/กก.':'-')+'</td>'+
       '<td>'+_hvMoney(c.bio)+' กก.</td>'+
-      '<td>'+_hvMoney(c.feed)+'<div style="font-size:var(--fs10);color:var(--tx3)">'+Math.round(c.feedKg)+' กก.'+(c.rate!=null?' · '+c.rate.toFixed(1)+'%':'')+'</div></td>'+
+      '<td>'+_hvMoney(c.feed)+'<div style="font-size:var(--fs10);color:var(--tx3)">'+Math.round(c.feedKg)+' กก.'+(c.actRate!=null?' · '+c.actRate.toFixed(1)+'%':'')+'<br>'+
+        (c.feedSrc==='actual'?'จากที่ให้จริง '+c.feedDays+' วัน'
+         :c.feedSrc==='last'?'ครั้งล่าสุด '+fD(c.feedLastDate)
+         :'<span style="color:var(--w)">ยังไม่มีบันทึก — ใช้สูตร</span>')+'</div></td>'+
       '<td>'+_hvMoney(c.labor+c.elec)+'</td>'+
       '<td>'+_hvMoney(c.med)+'</td>'+
       '<td style="font-weight:700">'+_hvMoney(c.total)+'</td></tr>';
@@ -8865,7 +8894,7 @@ function renderHvDaily(){
     (nOk?'<tr style="background:var(--sf2);font-weight:700"><td>รวมทั้งฟาร์ม</td><td colspan="3">'+nOk+' บ่อ</td>'+
       '<td>'+_hvMoney(tF)+'</td><td>'+_hvMoney(tL+tE)+'</td><td>'+_hvMoney(tM)+'</td><td>'+_hvMoney(tA)+'</td></tr>':'')+
     '</tbody></table></div>'+
-    '<div class="hint" style="margin-top:8px">อาหาร/วัน = น้ำหนักในบ่อ × อัตราการให้อาหารตามอายุ+ขนาดกุ้ง (สูตรเดียวกับการ์ดเปรียบเทียบ Biomass) × ราคาอาหาร</div>';
+    '<div class="hint" style="margin-top:8px">อาหาร/วัน = <b>ที่ให้จริงจากบันทึกอาหาร</b> เฉลี่ยย้อนหลังไม่เกิน 7 วัน × ราคาอาหาร · % คือสัดส่วนต่อน้ำหนักในบ่อ · บ่อที่ยังไม่เคยบันทึกอาหารจึงจะใช้สูตรแทน</div>';
 }
 
 function hvDefaultSizes(p){
@@ -8951,7 +8980,11 @@ function hvCalc(){
 }
 
 function initHarvestDecide(){
-  if(APP_ROLE!=='admin')return;
+  if(APP_ROLE!=='admin'){
+    // ⚠️ ต้องล้าง DOM ด้วย ไม่ใช่แค่ return — ถ้าเคย render ตอนเป็น admin ไว้ เลขจะค้างให้ staff อ่านได้จาก devtools
+    ['hv-daily','hv-rows','hv-res'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='';});
+    return;
+  }
   const pid=document.getElementById('fc-pond')?.value, p=pid?pond(pid):null;
   if(!_hvSizes&&p)_hvSizes=hvDefaultSizes(p);
   const fpEl=document.getElementById('hv-feedprice');
