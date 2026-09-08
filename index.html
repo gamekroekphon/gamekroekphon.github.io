@@ -3339,6 +3339,9 @@ function normalizeD(d) {
     (p.waterLog||[]).forEach((r,i)=>{ if(!r.id) r.id='wl_'+(p.id||'')+'_'+(r.date||'')+'_'+(r.action||'')+'_'+i; });
     (p.chemLog||[]).forEach((r,i)=>{ if(!r.id) r.id='ch_'+(p.id||'')+'_'+(r.date||'')+'_'+(r.product||'')+'_'+i; });
     (p.labResults||[]).forEach((r,i)=>{ if(!r.id) r.id='lb_'+(p.id||'')+'_'+(r.date||'')+'_'+i; });
+    // ⚠️ partialHarvests เคยตกหล่นจากรายการนี้ — confirmCloseCrop() tombstone ด้วย id
+    //    รายการเก่าที่ไม่มี id จึง tombstone ไม่ติด → ปิดรอบแล้ว merge จากเครื่องอื่นดันพาเชียลรอบเก่ากลับเข้ารอบใหม่
+    (p.partialHarvests||[]).forEach((r,i)=>{ if(!r.id) r.id='ph_'+(p.id||'')+'_'+(r.date||'')+'_'+i; });
   });
   if (!d.categories) d.categories = [...DEFAULT_CATS];
   if (!d.settings) d.settings = {};
@@ -4915,6 +4918,17 @@ function cropHarvestResult(c){
   }
   return out;
 }
+// ── ⚠️ SINGLE SOURCE OF TRUTH ของ "ผลผลิตรวมทั้งรอบ" = น้ำหนักวันปิดบ่อ + เกรดพิเศษ + พาเชียล
+//    ทุกที่ที่หมายถึง "ผลผลิตทั้งรอบ" ต้องเรียกตัวนี้ ห้ามอ่าน harvestResult.totalWeight ตรงๆ
+//    (totalWeight = น้ำหนักวันปิดบ่ออย่างเดียว — เก็บไว้แบบนี้โดยตั้งใจ ดู cropHarvestResult)
+//    ⚠️ ข้อยกเว้นเดียว: hsBuyersFromApp() ไล่รายการพาเชียลแยกอยู่แล้ว ใช้ตัวนี้จะนับซ้ำ ──
+function cropTotalKg(c){
+  if(!c)return 0;
+  const hr=cropHarvestResult(c);
+  if(!hr)return parseFloat(c.totalWeight)||0;
+  if(hr.totalWeightAll!=null)return parseFloat(hr.totalWeightAll)||0;
+  return ((parseFloat(hr.totalWeight)||0)+gradeKg(hr))||(parseFloat(c.totalWeight)||0);
+}
 // ── ⚠️ SINGLE SOURCE OF TRUTH ของ "กุ้งมีกี่ตัว/หนักเท่าไร ณ ตอนนี้" — ทุกที่ที่ต้องรู้ต้องเรียกตัวนี้ ห้ามคำนวณคู่ขนาน
 //    แยกให้ชัด 2 ตัวเลข เพราะพาเชียลไม่ได้ทำให้กุ้งตาย แค่ขายออกไป:
 //      survAll / aliveAll = "อัตรารอดสะสม" ที่กรอกเองจากสุ่มตัวอย่าง — นับกุ้งที่จับพาเชียลไปแล้วเป็นตัวที่รอดด้วย
@@ -5173,9 +5187,17 @@ function hsBuyersFromApp(shortYr){
     (p.partialHarvests||[]).forEach(r=>add(r.date,r.buyer,harvestRowKg(r),harvestRowBaht(r)));
     (p.cropHistory||[]).forEach(c=>{
       (c.partialHarvests||[]).forEach(r=>add(r.date,r.buyer,harvestRowKg(r),harvestRowBaht(r)));
+      // ⚠️ แถวพาเชียลถูกบวกไปข้างบนแล้ว แถว "ปิดบ่อ" จึงต้องเหลือเฉพาะยอดวันปิดบ่อล้วนๆ
+      //    แต่ harvestResult.revenue คือ "ยอดรวมทั้งรอบ" (รวมพาเชียลมาแล้วตั้งแต่ในฟอร์ม) — ถ้าเอามาบวกตรงๆ
+      //    ยอดของแพจะเกินจริงเท่ายอดพาเชียลพอดี (เจอตอนตรวจ flow ปิดบ่อ A.19)
+      //    หักผ่าน cropHarvestResult() ที่ normalize รายได้เป็น "ทั้งรอบ" เสมอ — ไม่ทำตรรกะเดาซ้ำสองที่
       const hr=c.harvestResult||{};
-      const rev=hr.revenue!=null?hr.revenue:((hr.totalWeight&&hr.price)?hr.totalWeight*hr.price:0);
-      add(c.closeDate,hr.buyer,hr.totalWeight,rev);
+      const hrAll=cropHarvestResult(c)||{};
+      const ptc=partialTotals(c.partialHarvests);
+      const closeKgRow=(parseFloat(hr.totalWeight)||0)+gradeKg(hr);
+      const revAll=hrAll.revenue!=null?(parseFloat(hrAll.revenue)||0):0;
+      const rev=revAll?Math.max(0,revAll-ptc.baht):(closeKgRow*(parseFloat(hr.price)||0)+gradeBaht(hr));
+      add(c.closeDate,hr.buyer,closeKgRow,rev);
     });
   });
   return Object.entries(byName).map(([name,v])=>[name,Math.round(v.rev),Math.round(v.kg)]).sort((a,b)=>b[1]-a[1]);
@@ -5348,7 +5370,7 @@ function hsCropStats(shortYr){
       // ── ทุก record ใน cropHistory คือรอบที่ปิดแล้วอยู่แล้ว (ไม่ต้องพึ่ง c.closed ที่ confirmCloseCrop() ไม่เคยตั้งค่าให้) ──
       // เทียบปีผ่าน histRecYear() — cropYear ในข้อมูลจริงมีทั้ง พ.ศ. (seed เก่า) และ ค.ศ. (รอบที่ปิดผ่านแอป) ถ้าลบ 2500 ตรงๆ รอบที่เป็น ค.ศ. จะหายจากสถิติทั้งหมด
       if(histRecYear(c)-2500!==shortYr)return;
-      totalKg+=((c.harvestResult||{}).totalWeight)||0;
+      totalKg+=cropTotalKg(c);   // รวมพาเชียล+เกรดพิเศษ ไม่งั้นจะต่ำกว่าตารางจับกุ้ง
       closedCount++;
     });
   });
@@ -7085,7 +7107,7 @@ function renderLaborKPI(){
   const curYearBE=yearBE(new Date().getFullYear());
   const closed=[];
   D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{
-    const w=c.totalWeight||(c.harvestResult||{}).totalWeight;
+    const w=cropTotalKg(c);   // ตัวหารต้องเป็นน้ำหนักที่จับได้ทั้งรอบ (รวมพาเชียล) — ไม่งั้น บาท/กก. จะสูงเกินจริง
     if(!c.closeDate||!w)return;
     if(laborStart&&c.closeDate<laborStart)return;
     if(yearBE(parseInt(c.closeDate.split('-')[0],10))!==curYearBE)return;
@@ -7175,7 +7197,7 @@ function renderLaborCropSummary(){
   const laborStart=laborDataStartDate();
   const allRows=[];
   D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{
-    const w=c.totalWeight||(c.harvestResult||{}).totalWeight; // น้ำหนักจับจริงเก็บที่ c.harvestResult.totalWeight (ตามที่ confirmCloseCrop() บันทึกจริง) ไม่ใช่ c.totalWeight — c.totalWeight มีแค่ใน seed data เก่าเท่านั้น
+    const w=cropTotalKg(c);   // ตัวหารต้องเป็นน้ำหนักที่จับได้ทั้งรอบ (รวมพาเชียล) — ไม่งั้น บาท/กก. จะสูงเกินจริง
     if(!c.closeDate||!w)return;
     if(laborStart&&c.closeDate<laborStart)return; // ตัดรอบที่ปิดก่อนมีข้อมูลรายสัปดาห์จริง (ค่าแรง/กก. จะต่ำเกินจริงเพราะไม่มีข้อมูลพนักงานรายวันของช่วงนั้น)
     const lc=getLaborCostForPond(p.id,c.startDate,c.closeDate);
@@ -7363,7 +7385,7 @@ function renderElecKPI(){
   const curYearBE=yearBE(new Date().getFullYear());
   const closed=[];
   D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{
-    const w=c.totalWeight||(c.harvestResult||{}).totalWeight;
+    const w=cropTotalKg(c);   // ตัวหารต้องเป็นน้ำหนักที่จับได้ทั้งรอบ (รวมพาเชียล) — ไม่งั้น บาท/กก. จะสูงเกินจริง
     if(!c.closeDate||!w)return;
     if(elecStart&&c.closeDate<elecStart)return;
     if(yearBE(parseInt(c.closeDate.split('-')[0],10))!==curYearBE)return;
@@ -7433,7 +7455,7 @@ function renderElecCropSummary(){
   const elecStart=elecDataStartDate();
   const allRows=[];
   D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{
-    const w=c.totalWeight||(c.harvestResult||{}).totalWeight;
+    const w=cropTotalKg(c);   // ตัวหารต้องเป็นน้ำหนักที่จับได้ทั้งรอบ (รวมพาเชียล) — ไม่งั้น บาท/กก. จะสูงเกินจริง
     if(!c.closeDate||!w)return;
     if(elecStart&&c.closeDate<elecStart)return;
     const days=c.startDate?dDiff(c.startDate,c.closeDate)+1:null;
@@ -12242,7 +12264,7 @@ function renderExChart(p){
   const fcrData=hist.map(c=>{const h=cropHarvestResult(c);return h&&h.fcr!=null?h.fcr:null;});
   const survData=hist.map(c=>{const h=cropHarvestResult(c);return h&&h.survivalRate!=null?h.survivalRate:null;});
   const yieldData=hist.map(c=>{
-    const tw=c.harvestResult?c.harvestResult.totalWeight:null;
+    const tw=cropTotalKg(c)||null;   // รวมพาเชียล
     return(tw&&p.size)?+(tw/p.size).toFixed(1):null;
   });
   if(_exChartInst){_exChartInst.destroy();_exChartInst=null;}
@@ -12284,7 +12306,9 @@ function getCloseSummary(p,cropIdx){
   const notesCrop=lastCrop?lastCrop.notes:'';
   // ติด type/date ให้ครบ — ตาราง "รายละเอียดการจับแต่ละครั้ง" ใน PDF ใช้ทั้งสอง field แยกสี badge และเรียงลำดับ
   const partialRows=((lastCrop?lastCrop.partialHarvests:(p.partialHarvests||[]))||[]).map(r=>({...r,type:'พาเชียล',weight:harvestRowKg(r),_baht:harvestRowBaht(r)}));
-  const closeRows=harvestResult?[{type:'ปิดบ่อ',date:closeDate||'',weight:harvestResult.totalWeight,price:harvestResult.price,size:harvestResult.size,buyer:harvestResult.buyer||''}]:[];
+  // ⚠️ แถวนี้ต้องรวม "เกรดพิเศษ" ด้วย — harvestResult.totalWeight เก็บเฉพาะกุ้งปกติ
+  //    ถ้าไม่บวก น้ำหนักรวมใน PDF ปิดบ่อจะหายไปเท่าเกรดพิเศษ — _baht คิดแยกราคาต่อเกรด ไม่ใช้ราคากุ้งปกติคูณรวด
+  const closeRows=harvestResult?[{type:'ปิดบ่อ',date:closeDate||'',weight:(parseFloat(harvestResult.totalWeight)||0)+gradeKg(harvestResult),price:harvestResult.price,size:harvestResult.size,buyer:harvestResult.buyer||'',_baht:(parseFloat(harvestResult.totalWeight)||0)*(parseFloat(harvestResult.price)||0)+gradeBaht(harvestResult)}]:[];
   const rows=[...partialRows,...closeRows];
   const totalWeight=rows.reduce((s,r)=>s+(r.weight||0),0)||(harvestResult?harvestResult.totalWeight:null);
   const totalBaht=rows.reduce((s,r)=>s+(r._baht!=null?r._baht:(r.weight&&r.price?r.weight*r.price:0)),0);
@@ -12914,7 +12938,7 @@ function renderCrops(){
         <td style="padding:8px;text-align:center;font-size:calc(12px * var(--ui-scale))">${fD(c.startDate||'')}</td>
         <td style="padding:8px;text-align:center;font-size:calc(12px * var(--ui-scale))">${fD(c.closeDate||'')}</td>
         <td style="padding:8px;text-align:center;font-weight:700;color:${dClr}">${days}</td>
-        <td style="padding:8px;text-align:right;font-weight:700">${hr.totalWeight?hr.totalWeight.toLocaleString():'-'}</td>
+        <td style="padding:8px;text-align:right;font-weight:700">${(()=>{const wA=hr.totalWeightAll!=null?hr.totalWeightAll:hr.totalWeight;return wA?Math.round(wA).toLocaleString():'-';})()}${hr._phAdj?`<div style="font-size:var(--fs10);color:var(--tx3);font-weight:400">รวมพาเชียล ${Math.round(hr._phKg).toLocaleString()}</div>`:''}</td>
         <td style="padding:8px;text-align:center">${ph.length?`<button onclick="togglePartialRow('${rowId}')" style="background:none;border:1px solid var(--bd);border-radius:6px;padding:2px 8px;font-size:var(--fs11);cursor:pointer;color:var(--in)">📦 ${ph.length}</button>`:'-'}</td>
         <td style="padding:8px;text-align:right">${hr.size||'-'}</td>
         <td style="padding:8px;text-align:right">${hr.survivalRate?hr.survivalRate.toFixed(1):'-'}</td>
@@ -12958,6 +12982,8 @@ function togglePartialRow(id){
   el.style.display=el.style.display==='none'?'':'none';
 }
 function deleteCropRecord(pondId,cropId,idx){
+  // ── กัน staff 2 ชั้น — ปุ่มซ่อนไว้แล้ว แต่เรียกตรงจาก console ยังเข้าได้ (ฟอร์มนี้มีตัวเลขต้นทุน/กำไร) ──
+  if(APP_ROLE!=='admin')return;
   if(!confirm('🗑️ ลบรายการปิดบ่อนี้?\nไม่สามารถกู้คืนได้'))return;
   const p=pond(pondId);if(!p||!p.cropHistory)return;
   const target=(cropId&&p.cropHistory.find(c=>c.id===cropId))||p.cropHistory[idx];
@@ -12987,6 +13013,8 @@ function openAddCropModal(){
   document.getElementById('editCropModal').classList.add('on');
 }
 function openEditCropModal(pondId,cropId,idx){
+  // ── กัน staff 2 ชั้น — ปุ่มซ่อนไว้แล้ว แต่เรียกตรงจาก console ยังเข้าได้ (ฟอร์มนี้มีตัวเลขต้นทุน/กำไร) ──
+  if(APP_ROLE!=='admin')return;
   const newFields=document.getElementById('ecm-new-fields');if(newFields)newFields.style.display='none';
   const titleEl=document.getElementById('ecm-title');if(titleEl)titleEl.textContent='✏️ แก้ไขข้อมูลปิดบ่อ';
   const p=pond(pondId);if(!p||!p.cropHistory)return;
@@ -13032,6 +13060,8 @@ function openEditCropModal(pondId,cropId,idx){
 }
 function closeEditCropModal(){document.getElementById('editCropModal').classList.remove('on');}
 function saveEditCrop(){
+  // ── กัน staff 2 ชั้น — ปุ่มซ่อนไว้แล้ว แต่เรียกตรงจาก console ยังเข้าได้ (ฟอร์มนี้มีตัวเลขต้นทุน/กำไร) ──
+  if(APP_ROLE!=='admin')return;
   const idx=parseInt(document.getElementById('ecm-crop-idx').value);
   const gn=(id)=>{const v=parseFloat(document.getElementById(id)?.value);return isNaN(v)?null:v;};
   const gs=(id)=>{const v=(document.getElementById(id)?.value||'').trim();return v||null;};
@@ -13382,6 +13412,8 @@ function exportChPdf(pid,idx){
 
 // ===== CLOSE CROP MODAL =====
 function openCropModal(pid){
+  // ── กัน staff 2 ชั้น — ปุ่มซ่อนไว้แล้ว แต่เรียกตรงจาก console ยังเข้าได้ (ฟอร์มนี้มีตัวเลขต้นทุน/กำไร) ──
+  if(APP_ROLE!=='admin')return;
   const p=pond(pid);if(!p)return;
   document.getElementById('cm-pond-id').value=pid;
   document.getElementById('cm-name').textContent=p.name;
@@ -13520,12 +13552,25 @@ function calcCropEcon(){
   // ── ต้นทุนตรงทั้งหมด รวม "% คนเลี้ยง" กับ "ส่วนแบ่งผู้จัดการ" ที่ตอนนี้เป็นยอดเงินกรอกเองล้วน ไม่มีสูตร % แล้วทั้งคู่ ──
   const totalCostDirect=gv('cm-cost-fry')+gv('cm-cost-feed')+gv('cm-cost-med')+gv('cm-cost-lime')+gv('cm-cost-labor')+gv('cm-cost-elec')+gv('cm-cost-fuel')+gv('cm-cost-equip')+gv('cm-cost-equip-out')+gv('cm-cost-catch')+gv('cm-pct-caretaker')+gv('cm-pct-manager');
   const netProfit=revenue-totalCostDirect;
-  document.getElementById('cm-profit').value=(revenue||totalCostDirect)?Math.round(netProfit):'';
+  // ⚠️ ช่อง "รายได้" กรอกเองเสมอ (หลายราคาปนกัน) — ถ้ายังไม่กรอก ห้ามโชว์กำไร
+  //    เดิมได้ 0 − ต้นทุน = ติดลบเท่าต้นทุนทั้งก้อน ดูเหมือนขาดทุนย่อยยับ
+  //    และถ้ากดยืนยันไปเลย ตัวเลขหลอกนี้จะถูกบันทึกถาวร ไปโผลทั้ง P&L / ประวัติ / กราฟ / PDF / CSV
+  //    (ฟอร์มแก้รอบ ecm-profit กันไว้อยู่แล้ว — ตัวนี้ตกหล่น)
+  const profEl=document.getElementById('cm-profit');
+  if(revEl&&revEl.value.trim()){
+    profEl.value=Math.round(netProfit);
+    profEl.placeholder='คำนวณอัตโนมัติ';
+  }else{
+    profEl.value='';
+    profEl.placeholder=totalCostDirect?'กรอก "รายได้" ก่อน จึงจะคำนวณกำไรได้':'คำนวณอัตโนมัติ';
+  }
 }
 function closeCropModal(){
   document.getElementById('cropModal').classList.remove('on');
 }
 function confirmCloseCrop(){
+  // ── กัน staff 2 ชั้น — ปุ่มซ่อนไว้แล้ว แต่เรียกตรงจาก console ยังเข้าได้ (ฟอร์มนี้มีตัวเลขต้นทุน/กำไร) ──
+  if(APP_ROLE!=='admin')return;
   const pid=document.getElementById('cm-pond-id').value;
   const p=pond(pid);if(!p)return;
   const closeDate=document.getElementById('cm-close-date').value;
@@ -13534,6 +13579,22 @@ function confirmCloseCrop(){
   // เตือนซ้ำต้องเทียบทั้งรอบ+ปี — เดิมเทียบแค่ cropNum ทำให้รอบ 1 ปีเก่าโดนเตือนปนกับรอบ 1 ปีนี้ และปิดวันเดียวกันซ้ำ 2 ครั้งกลับไม่เตือนเลย
   const sameCropExists=(p.cropHistory||[]).some(c=>c.cropNum===(p.cropNum||1)&&yearBE(c.cropYear||c.year)===yearBE(p.cropYear)&&c.closeDate);
   if(sameCropExists){if(!confirm(`⚠️ บ่อ ${p.name} รอบที่ ${p.cropNum||1} มีรายการปิดบ่ออยู่แล้ว\nยืนยันเพิ่มรายการใหม่?`))return;}
+  // ── กันปิดบ่อโดยลืมกรอก "รายได้" — รอบนั้นจะไม่มีกำไรสุทธิให้ดูทั้ง P&L / ประวัติ / กราฟ / PDF ──
+  const revRaw=(document.getElementById('cm-revenue').value||'').trim();
+  if(!revRaw){
+    const costSum=['cm-cost-fry','cm-cost-feed','cm-cost-med','cm-cost-lime','cm-cost-labor','cm-cost-elec','cm-cost-fuel','cm-cost-equip','cm-cost-equip-out','cm-cost-catch','cm-pct-caretaker','cm-pct-manager']
+      .reduce((t,id)=>t+(parseFloat(document.getElementById(id)&&document.getElementById(id).value)||0),0);
+    if(costSum>0){
+      const sug=window._cmCalcAll?`
+
+ตัวช่วยคำนวณไว้ให้แล้ว ${Math.round(_cmCalcAll).toLocaleString()} บาท — กดปุ่ม "↙ ใช้ค่าที่คำนวณได้" ก็ได้`:'';
+      if(!confirm(`⚠️ ยังไม่ได้กรอก "รายได้" แต่กรอกต้นทุนไว้ ${Math.round(costSum).toLocaleString()} บาท
+
+ถ้าปิดตอนนี้ รอบนี้จะไม่มีกำไรสุทธิให้ดู${sug}
+
+ยืนยันปิดบ่อโดยไม่กรอกรายได้?`))return;
+    }
+  }
   // collect harvest result
   const hr={
     totalWeight:parseFloat(document.getElementById('cm-weight').value)||null,   // กุ้งปกติเท่านั้น — เกรดพิเศษเก็บแยกใน grades[]
@@ -13612,6 +13673,9 @@ function confirmCloseCrop(){
   p.startDate='';
   p.stock=0;p.stockBonus=0;
   p.hatchery='';p.plType='';p.plWeight=null;
+  // ── ต้นทุนลูกกุ้งต้องล้างด้วย — เก็บเข้าประวัติแล้วที่ hr.costFry
+  //    ถ้าไม่ล้าง รอบใหม่จะยืมตัวเลขรอบเก่าไปโผลในต้นทุนสะสม/ฟอร์มปิดบ่อครั้งหน้า โดยดูเหมือนเลขจริง
+  p.costFry=null;
   p.records=[];p.feedLog=[];p.samples=[];
   p.waterLog=[];p.chemLog=[];p.labResults=[];p.partialHarvests=[];p.mortalityLog=[];
   p.prepChecklist=null;
@@ -14364,7 +14428,7 @@ function renderPLKPI(rows){
   const totRev=rows.reduce((s,r)=>s+(r.revenue||0),0);
   const totCost=rows.reduce((s,r)=>s+((r.costFry||0)+(r.costFeed||0)+(r.costMed||0)+(r.costLime||0)+(r.costLabor||0)+(r.costElec||0)+(r.costFuel||0)+(r.costEquip||0)+(r.costEquipOut||0)+(r.costCatch||0)+(r.amtCaretaker||0)+(r.amtManager||0)+(r.costChem||0)+(r.costOther||0)),0);
   const totProfit=rows.reduce((s,r)=>s+(r.netProfit||0),0);
-  const totWeight=rows.reduce((s,r)=>s+(r.totalWeight||0),0);
+  const totWeight=rows.reduce((s,r)=>s+((r.totalWeightAll!=null?r.totalWeightAll:r.totalWeight)||0),0);   // ต้องตรงกับช่อง ฿/กก. รายแถวที่ใช้ totalWeightAll
   const fcrRows=rows.filter(r=>r.fcr&&r.fcr>0);
   const avgFcr=fcrRows.length?fcrRows.reduce((s,r)=>s+r.fcr,0)/fcrRows.length:0;
   const margin=totRev?totProfit/totRev*100:0;
@@ -14450,7 +14514,7 @@ function renderPLCostChart(rows){
   const totChem=rows.reduce((s,r)=>s+(r.costChem||0),0);
   const totOther=rows.reduce((s,r)=>s+(r.costOther||0),0);
   const total=totFry+totFeed+totMed+totLime+totLabor+totElec+totFuel+totEquip+totEquipOut+totCatch+totAmtCare+totAmtMgr+totChem+totOther;
-  const totWeight=rows.reduce((s,r)=>s+(r.totalWeight||0),0);
+  const totWeight=rows.reduce((s,r)=>s+((r.totalWeightAll!=null?r.totalWeightAll:r.totalWeight)||0),0);   // ต้องตรงกับช่อง ฿/กก. รายแถวที่ใช้ totalWeightAll
   const labels=['ลูกกุ้ง','อาหารกุ้ง','เวชภัณฑ์','ปูน','ค่าแรง','ค่าไฟฟ้า','น้ำมัน','อุปกรณ์','อุปกรณ์นอก','ค่าจับกุ้ง','ส่วนแบ่งคนเลี้ยง','ส่วนแบ่งผู้จัดการ','สารเคมี(เดิม)','อื่นๆ(เดิม)'];
   const vals=[totFry,totFeed,totMed,totLime,totLabor,totElec,totFuel,totEquip,totEquipOut,totCatch,totAmtCare,totAmtMgr,totChem,totOther];
   const colors=['#9A6A04','#3b82f6','#7c3aed','#a3a3a3','#0f6e56','#0ea5e9','#dc2626','#16a34a','#65a30d','#c026d3','#f59e0b','#ea580c','#94a3b8','#cbd5e1'];
