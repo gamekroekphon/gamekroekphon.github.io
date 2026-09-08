@@ -672,6 +672,16 @@ html[data-uisize="xl"]{--ui-scale:1.25}
 /* ปุ่มเรียงลำดับ — ต้องกันกฎมือถือ .btn{width:100%} ไม่งั้นเรียงตั้งเต็มความกว้างทีละปุ่ม */
 .cs-sort{display:inline-flex;align-items:center;width:auto!important;min-height:44px;padding:0 13px;border:1px solid var(--bd);background:var(--sf);color:var(--tx2);border-radius:99px;cursor:pointer;font-family:inherit;font-weight:600;font-size:calc(12.5px * var(--ui-scale))}
 .cs-sort.on{background:var(--p);border-color:var(--p);color:#fff}
+/* ══ แถวปุ่มท้ายโมดัลปิดบ่อ — 3 ปุ่ม ต้องไม่โดนกฎมือถือ .btn{width:100%} ══ */
+.cm-actions{display:flex;gap:9px;align-items:stretch;flex-wrap:wrap}
+.cm-actions .btn{width:auto!important}
+.cm-act{flex:1 1 190px;justify-content:center;padding:12px;min-height:48px}
+.cm-hold{background:var(--ib);color:var(--in);border:1.5px solid #b9d5ef;font-weight:700}
+.cm-cancel{flex:0 0 auto;padding:12px 20px;min-height:48px}
+@media(max-width:600px){.cm-act,.cm-cancel{flex:1 1 100%}}
+/* แถบสถานะ “ล้างบ่อ · รอปิดรอบ” */
+.cm-hold-note{background:var(--ib);border:1.5px solid #b9d5ef;border-radius:10px;padding:11px 14px;margin-bottom:14px;
+  font-size:calc(12.5px * var(--ui-scale));color:var(--in);line-height:1.55}
 .admin-only{display:none}
 body.role-admin .admin-only{display:revert!important}
 /* ⚠️ กับดักเดิมที่เคยเจอกับ .home-quick — body.role-admin .admin-only{display:revert!important}
@@ -2442,12 +2452,18 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
         <div class="fg"><label class="fl" for="cm-close-date">วันที่ปิดบ่อ</label><input type="date" class="fi" id="cm-close-date"></div>
         <div class="fg"><label class="fl" for="cm-notes">หมายเหตุ</label><input type="text" class="fi" id="cm-notes" placeholder="..."></div>
       </div>
+      <div class="cm-hold-note" id="cm-hold-note" style="display:none"></div>
       <div style="background:var(--wb);border-radius:8px;padding:12px;margin-bottom:16px;font-size:calc(12px * var(--ui-scale));color:#b45309">
         ⚠️ หลังปิดรอบ: ข้อมูลค่าน้ำ/อาหาร/สุ่มจะถูกเก็บเข้าประวัติและล้างออก เพื่อเริ่มรอบใหม่
       </div>
-      <div style="display:flex;gap:10px;align-items:center">
-        <button class="btn btn-p" onclick="confirmCloseCrop()" style="flex:1;justify-content:center;padding:12px">✅ ยืนยันปิดรอบ</button>
-        <button class="btn" onclick="closeCropModal()" style="padding:12px 20px">ยกเลิก</button>
+      <div class="cm-actions">
+        <button class="btn btn-p cm-act" onclick="confirmCloseCrop()">✅ ยืนยันปิดรอบ</button>
+        <button class="btn cm-act cm-hold" onclick="saveHarvestPending()">🧹 บันทึกผลจับ · ยังไม่ปิดรอบ</button>
+        <button class="btn cm-cancel" onclick="closeCropModal()">ยกเลิก</button>
+      </div>
+      <div style="font-size:calc(11.5px * var(--ui-scale));color:var(--tx3);margin-top:9px;line-height:1.5">
+        🧹 <b>บันทึกผลจับ</b> = ค่าไฟ/ค่าแรงของบ่อนี้ตัดจบที่วันจับ ไปแชร์กับบ่อที่เหลือทันที
+        แต่ปูนร้อน/ยาฆ่าเชื้อที่เบิกไปล้างบ่อหลังจากนี้ ยังนับเข้ารอบนี้อยู่ — ล้างบ่อเสร็จค่อยกลับมากด “ยืนยันปิดรอบ”
       </div>
     </div>
   </div>
@@ -4283,7 +4299,9 @@ function recAge(p,r){
   const a=docAge(p&&p.startDate,r.date);
   return a!=null?a:(r.age!=null?r.age:null);
 }
-function wqfeedActivePonds(){return D.ponds.filter(p=>{const cls=pondStatusOv(p);return cls!=='prep'&&cls!=='empty'&&cls!=='closed';});}
+// ── สถานะที่แปลว่า "ไม่มีกุ้งในบ่อ" — ห้ามเช็คแค่ 'prep' ตรงๆ จะตกหล่นสถานะ 'cleaning' ──
+function clsNoShrimp(cls){return cls==='prep'||cls==='cleaning'||cls==='empty'||cls==='closed';}
+function wqfeedActivePonds(){return D.ponds.filter(p=>!clsNoShrimp(pondStatusOv(p)));}
 // ── บ่อที่กรอกคุณภาพน้ำได้: เหมือน wqfeedActivePonds() แต่เพิ่มบ่อ "เตรียมบ่อ" ที่ใกล้ลงกุ้งด้วย — ตรวจน้ำก่อนลงกุ้งจริงเริ่มล่วงหน้า 7 วันก่อนวันลงกุ้งที่วางแผนไว้ (ไม่ใช่ทุกบ่อที่สถานะเตรียม เฉพาะบ่อที่ตั้งวันลงกุ้งไว้แล้วและใกล้ถึงวันนั้น) ใช้เฉพาะหน้า "บันทึกคุณภาพน้ำ" จุดเดียว หน้าอื่น (อาหาร/สุ่มตัวอย่าง/โรค ฯลฯ) ที่ต้องมีกุ้งในบ่อจริงยังใช้ wqfeedActivePonds() เหมือนเดิม ──
 // ⚠️ วันลงกุ้งที่วางแผนไว้อ่านจาก p.startDate (ตั้งได้ที่หน้า "จัดการบ่อ")
 //    เดิมอ่านจาก p.prepChecklist.stockDate ซึ่งมีแต่หน้า "เตรียมบ่อ" เขียน — พอลบหน้านั้นออก (entry #213) ค่าจะไม่มีวันถูกตั้ง
@@ -4291,6 +4309,7 @@ function wqfeedActivePonds(){return D.ponds.filter(p=>{const cls=pondStatusOv(p)
 function wqEntryPonds(){
   return D.ponds.filter(p=>{
     const cls=pondStatusOv(p);
+    if(cls==='cleaning')return false;   // จับกุ้งไปแล้ว ไม่ต้องตรวจน้ำ
     if(cls!=='prep')return cls!=='empty'&&cls!=='closed';
     if(!p.startDate)return false;                    // ยังไม่ตั้งวันลงกุ้ง — ยังไม่ถึงช่วงตรวจน้ำ
     return dDiff(today(),p.startDate)<=7;            // เหลือ ≤7 วันก่อนลงกุ้ง (รวมกรณีเลยกำหนดแล้วยังไม่ได้ลง)
@@ -4309,7 +4328,7 @@ function pondOptionsHtml(){
     const age=pondCurAge(p);
     // บ่อที่ไม่มีวันลงกุ้ง = ว่าง/กำลังเตรียม (ตอนปิดบ่อระบบล้าง startDate ทิ้ง) — ติดป้ายให้ชัด
     // จะได้ไม่สับสนกับบ่อที่มีกุ้ง เวลาเบิกปูน/คลอรีนลงบ่อเตรียม หรือบันทึกค่าน้ำก่อนลงกุ้ง
-    return '<option value="'+p.id+'">บ่อ '+p.name+(age>0?' — DOC '+age:' — เตรียมบ่อ')+'</option>';
+    return '<option value="'+p.id+'">บ่อ '+p.name+(p.harvestDate?' — ล้างบ่อ':age>0?' — DOC '+age:' — เตรียมบ่อ')+'</option>';
   }).join('');
 }
 // ── จำบ่อที่เลือกล่าสุด แล้วเติมให้หน้าอื่นอัตโนมัติ
@@ -4763,6 +4782,8 @@ function pondStatusOv(p){
   if(!Array.isArray(p.records))p.records=[];
   const last=p.records[p.records.length-1];
   const age=p.startDate?pondCurAge(p):(last&&last.age!=null?last.age:0);
+  // จับกุ้งแล้ว รอล้างบ่อ/เก็บบิลให้ครบก่อนกดปิดรอบ — ไม่มีกุ้งในบ่อแล้ว
+  if(p.harvestDate)return'cleaning';
   if(age<=0)return'prep';
   let level='ok';
   if(last){
@@ -6041,7 +6062,7 @@ function renderFarmCard(p){
     </div>`).join('');
 }
 function homeRow(p,age,cls,reason){
-  const dot=cls==='danger'?'var(--d)':cls==='warn'?'var(--w)':cls==='prep'?'var(--in)':'var(--ok)';
+  const dot=cls==='danger'?'var(--d)':cls==='warn'?'var(--w)':(cls==='prep'||cls==='cleaning')?'var(--in)':'var(--ok)';
   return`<div class="home-row" onclick="openPondDetail('${p.id}')">
     <span class="dot" style="background:${dot}"></span>
     <div class="grow"><div class="name">บ่อ ${p.name}</div>${reason?`<div class="reason">${reason}</div>`:''}</div>
@@ -6174,7 +6195,7 @@ function renderPondDetail(id){
 
   // ===== ต้นทุนสะสม (admin เท่านั้น) — ใช้สูตร/building block เดียวกับ ceoTotalCost/ceoMoney (Overview KPI bar) ไม่สร้างคำนวณคู่ขนาน =====
   let costCardHtml='';
-  if(APP_ROLE==='admin'&&cls!=='prep'){
+  if(APP_ROLE==='admin'&&!clsNoShrimp(cls)){
     const pdCostFrom=pondCostStartDate(p);
     const pdStockItems=getStockItemsForPond(p.id,pdCostFrom,today());
     const pdFeedCost=pondFeedCost(p);
@@ -6284,7 +6305,7 @@ function renderPondDetail(id){
     <div style="display:inline-flex;align-items:center;gap:6px;background:var(--a1);color:var(--a);font-size:calc(12px * var(--ui-scale));font-weight:600;padding:3px 10px;border-radius:99px;margin-bottom:12px">⏱ อายุ ${age} วัน</div>
     ${costCardHtml}
     ${reason?`<div class="pd-alert"><div class="ai ${cls==='prep'?'ok':cls}"><span>${cls==='danger'?'🔴':cls==='warn'?'⚠️':'✅'}</span><div>${reason}</div></div></div>`:''}
-    ${cls!=='prep'?pdCard('risk','🚦 ความเสี่ยงหลักของบ่อ','<div class="fc-grid" id="fc-grid"></div>'):''}
+    ${!clsNoShrimp(cls)?pdCard('risk','🚦 ความเสี่ยงหลักของบ่อ','<div class="fc-grid" id="fc-grid"></div>'):''}
     <div class="pd-gauges" id="pd-gauges"></div>
     ${kpiHero}
     ${pdCard('wqhist','📖 ประวัติค่าน้ำย้อนหลัง',
@@ -6321,7 +6342,7 @@ function renderPondDetail(id){
     </div>`;
   renderPdGauges(p,last);
   renderPdCharts(p);
-  if(cls!=='prep')renderFarmCard(p);
+  if(!clsNoShrimp(cls))renderFarmCard(p);
   renderSurvivalCard(p);
   renderPdHarvestCard(p);
   renderPdLabCard(p);
@@ -6673,10 +6694,10 @@ function renderOv(){
   renderOvStockWarn();
   const dcP=meta.filter(m=>m.cls==='danger').length,wcP=meta.filter(m=>m.cls==='warn').length;
   document.getElementById('hdr-alert').textContent=dcP>0&&wcP>0?`🔴 ${dcP} ต้องดู · ⚠️ ${wcP} เฝ้าระวัง`:dcP>0?`🔴 ${dcP} ต้องดู`:wcP>0?`⚠️ ${wcP} เฝ้าระวัง`:'✅ ทุกบ่อปกติ';
-  const active=meta.filter(m=>m.cls!=='prep');
+  const active=meta.filter(m=>!clsNoShrimp(m.cls));
   // ── ลบหน้า "เตรียมบ่อ" ออกแล้ว (entry #213 — ไม่มีคนกรอกจริง)
   //    บ่อที่ยังไม่มีกุ้งจึงนับเป็น "ว่าง/พักบ่อ" ทั้งหมด — สถานะ 'prep' ยังใช้ที่อื่นอยู่ (ป้ายใน dropdown / กรองหน้ากรอกน้ำ) ──
-  const idleNotPrepped=meta.filter(m=>m.cls==='prep').length;
+  const idleNotPrepped=meta.filter(m=>clsNoShrimp(m.cls)).length;
   const warnM=meta.filter(m=>m.cls==='warn'||m.cls==='danger');
   const closedCount=Math.max(0,TOTAL_PONDS-D.ponds.length)+idleNotPrepped;
   const totalBio=active.reduce((s,{p})=>s+(getLatestBiomass(p)||0),0);
@@ -7002,7 +7023,9 @@ function renderDailyWeekTable(){
 function allCropWindows(){
   const windows=[];
   D.ponds.forEach(p=>{
-    if(p.startDate)windows.push({start:p.startDate,end:null}); // null = ยังเลี้ยงอยู่ต่อเนื่องถึงวันนี้/อนาคต
+    // ⚠️ ปิดหน้าต่างที่ harvestDate (วันจับกุ้ง) ไม่ใช่วันกดปิดรอบ
+    //    บ่อที่จับกุ้งแล้วแต่ยังล้างบ่ออยู่ ต้องหลุดจากตัวหารทันที ค่าไฟ/ค่าแรงจะได้ไปแชร์กับบ่อที่เหลือทันที (พี่สั่ง entry #236)
+    if(p.startDate)windows.push({start:p.startDate,end:p.harvestDate||null}); // null = ยังเลี้ยงอยู่ต่อเนื่องถึงวันนี้/อนาคต
     (p.cropHistory||[]).forEach(c=>{if(c.startDate&&c.closeDate)windows.push({start:c.startDate,end:c.closeDate});});
   });
   return windows;
@@ -10117,7 +10140,7 @@ function renderEpChips(){
   const list=sortPondsByAge(wqEntryPonds());
   bar.innerHTML=list.map(p=>{
     const done=(p.records||[]).some(r=>r.date===d);
-    const isPrep=pondStatusOv(p)==='prep';
+    const isPrep=clsNoShrimp(pondStatusOv(p));
     const cls='pond-chk'+(done?' wq-done':'')+(p.id===activePid?' on':'');
     return`<span class="${cls}" onclick="selectEPond('${p.id}')">${done?'✓ ':''}บ่อ ${p.name}${isPrep?' 🧹':''}</span>`;
   }).join('');
@@ -12698,7 +12721,9 @@ function renderManage(){
   // ⚠️ เรียง A.1 → A.2 → ... → A.27 (ไม่ใช่ลำดับดิบใน D.ponds ที่เรียงตามลำดับที่ถูกสร้าง)
   document.getElementById('mg-tbody').innerHTML=sortedPonds().map(p=>{
     const age=docAge(p.startDate,today());
-    const ageCell=(age===null)?'<span style="color:var(--tx3)">ยังไม่ลงกุ้ง</span>':age<1?`<span style="color:var(--in)">เตรียมบ่อ (เหลือ ${1-age} วัน)</span>`:`${age} วัน`;
+    const ageCell=(age===null)?'<span style="color:var(--tx3)">ยังไม่ลงกุ้ง</span>'
+      :p.harvestDate?`<span style="color:var(--in);font-weight:700">🧹 ล้างบ่อ</span><div style="font-size:var(--fs10);color:var(--tx3)">จับ ${fD(p.harvestDate)} · รอปิดรอบ</div>`
+      :age<1?`<span style="color:var(--in)">เตรียมบ่อ (เหลือ ${1-age} วัน)</span>`:`${age} วัน`;
     const active=age!==null&&age>=1; // ลงกุ้งแล้วและไม่ได้อยู่ระหว่างเตรียมบ่อ — ใช้ตัดสินว่า "ควรมีข้อมูล" หรือยัง
     const adg=getPDG(p.samples||[]);
     const adgCell=adg?`${adg}`:'<span style="color:var(--tx3)">-</span>';
@@ -12769,6 +12794,27 @@ function savePond(){
     const keys=['records','feedLog','samples','waterLog','chemLog','labResults','partialHarvests','mortalityLog'];
     const n=keys.reduce((s,k)=>s+((pc&&pc[k])||[]).length,0);
     if(n>0&&!confirm('บ่อ '+(pc?pc.name:'')+' ยังมีข้อมูลของรอบปัจจุบันค้างอยู่ '+n+' รายการ (ค่าน้ำ/อาหาร/สุ่ม/ฯลฯ)\n\nล้างวันที่ปล่อยกุ้งแล้ว บ่อจะกลายเป็น "บ่อว่าง" แต่ข้อมูลเหล่านี้ยังอยู่และจะไม่ถูกนับเข้ารอบไหนเลย\n\nถ้าเป็นการยกเลิกการลงกุ้งจริง ควรลบข้อมูลพวกนี้ทิ้งด้วย\n\nยืนยันล้างวันที่?'))return;
+  }
+  // ── ⚠️ บ่อที่จับกุ้งแล้วแต่ยังไม่ได้กดปิดรอบ (สถานะ "ล้างบ่อ") แล้วมาลงลูกกุ้งรอบใหม่
+  //    ถ้าปล่อยผ่าน ข้อมูลรอบเก่าจะทับกับรอบใหม่ทันที (ผลจับ/ต้นทุนหาย) — ปิดรอบเก่าให้ก่อนตามที่พี่สั่ง ──
+  if(id&&startDate){
+    const pc=pond(id);
+    if(pc&&pc.harvestDate){
+      if(!confirm(`บ่อ ${pc.name} จับกุ้งไปเมื่อ ${fD(pc.harvestDate)} แต่ยังไม่ได้กดปิดรอบ\n\n`
+        +`จะปิดรอบเก่าให้ก่อน (เก็บเข้าประวัติพร้อมต้นทุนล้างบ่อทั้งหมด) แล้วค่อยลงลูกกุ้งรอบใหม่\n\nดำเนินการต่อ?`))return;
+      closePond();
+      if(!finalizePendingCrop(id)){alert('ปิดรอบเก่าไม่สำเร็จ — กรุณากด "ปิดรอบ" ที่หน้ารอบเลี้ยงให้เสร็จก่อน แล้วค่อยลงลูกกุ้งรอบใหม่');return;}
+      editPond(id);
+      document.getElementById('mdl-stock').value=stock||'';
+      document.getElementById('mdl-stockbonus').value=stockBonus||'';
+      document.getElementById('mdl-start').value=startDate;
+      document.getElementById('mdl-hatchery').value=hatchery;
+      document.getElementById('mdl-plType').value=plType;
+      document.getElementById('mdl-plWeight').value=plWeight||'';
+      document.getElementById('mdl-costfry').value=costFry||'';
+      alert(`✅ ปิดรอบเก่าของบ่อ ${pc.name} เรียบร้อยแล้ว\nตอนนี้กด "บันทึก" อีกครั้งเพื่อลงลูกกุ้งรอบใหม่`);
+      return;
+    }
   }
   if(id){
     const p=pond(id);
@@ -13459,15 +13505,18 @@ function openCropModal(pid){
   document.getElementById('cm-cost-med').value=stockGroups.med||'';
   document.getElementById('cm-cost-lime').value=stockGroups.lime||'';
   document.getElementById('cm-cost-equip').value=stockGroups.equip||'';
-  const autoElec=getElecCostForPeriod(p.startDate,today());
-  document.getElementById('cm-cost-elec').value=autoElec||'';
+  // ⚠️ ค่าไฟ/ค่าแรง/ของแชร์ คือต้นทุนที่หารกันรายวัน — ต้องหยุดที่วันจับกุ้ง
+  //    ส่วนเวชภัณฑ์/ปูน คือของที่เบิกเข้าบ่อนี้จริงๆ นับถึงวันที่กดปิดรอบ (รวมช่วงล้างบ่อ) — พี่สั่ง entry #236
+  const shareEnd=p.harvestDate||today();
+  const autoElec=getElecCostForPeriod(p.startDate,shareEnd);
+  document.getElementById('cm-cost-elec').value=autoElec?Math.round(autoElec):'';
   // ── ค่าแรง: ดึงจาก getLaborCostForPond (เงินเดือนประจำ+พนักงานรายวัน หารตามบ่อ active จริงรายวัน) แทนกรอกเองแล้ว — พี่ยืนยันแล้วว่าเทียบตัวเลขที่กรอกเองไว้ก่อนหน้ากับสูตรนี้ไม่ต่างกัน แก้ไขได้ถ้าจำเป็น ──
-  const autoLabor=getLaborCostForPond(pid,p.startDate,today());
+  const autoLabor=getLaborCostForPond(pid,p.startDate,shareEnd);
   document.getElementById('cm-cost-labor').value=autoLabor?Math.round(autoLabor):'';
   // ── อุปกรณ์นอก/น้ำมัน: ดึงจาก getSharedCostForPond (ส่วนแบ่งจากโหมด "แชร์ทุกบ่อ" หน้าสต็อก) แทนกรอกเองแล้ว — แยกหมวด 'fuel' ออกเป็นช่องน้ำมันต่างหาก ไม่ให้นับซ้ำในอุปกรณ์นอก — แก้ไขได้ถ้าจำเป็น ──
   const cmCostFrom=pondCostStartDate(p);
-  const autoFuelCost=getSharedCostForPond(pid,cmCostFrom,today(),'fuel');
-  const autoSharedCost=getSharedCostForPond(pid,cmCostFrom,today())-autoFuelCost;
+  const autoFuelCost=getSharedCostForPond(pid,cmCostFrom,shareEnd,'fuel');
+  const autoSharedCost=getSharedCostForPond(pid,cmCostFrom,shareEnd)-autoFuelCost;
   document.getElementById('cm-cost-equip-out').value=autoSharedCost?Math.round(autoSharedCost):'';
   document.getElementById('cm-cost-fuel').value=autoFuelCost?Math.round(autoFuelCost):'';
   // ── ค่าจับกุ้ง/% ส่วนแบ่ง — ยังกรอกเองทั้งหมด เพราะต้องดึงตัวเลขจากนอกแอป ──
@@ -13487,7 +13536,67 @@ function openCropModal(pid){
   ['cm-weight','cm-size','cm-price','cm-cost-fry','cm-cost-med','cm-cost-lime','cm-cost-labor','cm-cost-elec','cm-cost-fuel','cm-cost-equip','cm-cost-equip-out','cm-cost-catch','cm-pct-caretaker','cm-pct-manager'].forEach(id=>{
     document.getElementById(id).oninput=calcCropEcon;
   });
+  // ── ถ้าเคยกด "บันทึกผลจับ · ยังไม่ปิดรอบ" ไว้ — เติมค่าที่กรอกค้างไว้กลับมาทั้งหมด
+  //    ยกเว้น เวชภัณฑ์/ปูน/อุปกรณ์ ที่ต้องคำนวณใหม่เสมอ — ของที่เบิกไปล้างบ่อหลังจับต้องโผล่เพิ่ม ──
+  const holdEl=document.getElementById('cm-hold-note');
+  if(p.pendingHarvest){
+    const f=p.pendingHarvest.fields||{};
+    Object.keys(f).forEach(id=>{
+      if(id==='cm-cost-med'||id==='cm-cost-lime'||id==='cm-cost-equip')return;
+      const e=document.getElementById(id);
+      if(e&&f[id]!=null&&f[id]!=='')e.value=f[id];
+    });
+    _cmGrades=JSON.parse(JSON.stringify(p.pendingHarvest.grades||[]));cmRenderGrades();
+    if(holdEl){
+      holdEl.style.display='';
+      const extra=(stockGroups.med||0)+(stockGroups.lime||0)+(stockGroups.equip||0);
+      holdEl.innerHTML=`🧹 <b>บ่อนี้จับกุ้งไปแล้วเมื่อ ${fD(p.harvestDate)}</b> (บันทึกผลจับไว้ ${docAge(p.harvestDate,today())-1} วันก่อน)<br>
+        ค่าไฟ/ค่าแรงหยุดนับตั้งแต่วันนั้นแล้ว · เวชภัณฑ์/ปูน/อุปกรณ์ คำนวณใหม่ถึงวันนี้แล้ว <b>${Math.round(extra).toLocaleString()} บาท</b>`;
+    }
+  }else if(holdEl)holdEl.style.display='none';
   calcCropEcon();
+}
+// ══ ขั้นที่ 1: บันทึกผลจับ แต่ยังไม่ปิดรอบ ══
+// ทำไมต้องมี: หลังจับกุ้งยังมีการเบิกปูนร้อน/ยาฆ่าเชื้อมาล้างบ่ออีก 1-2 อาทิตย์ ซึ่งเป็นต้นทุนของรอบที่เพิ่งจับ
+// แต่ค่าไฟ/ค่าแรงต้องหยุดทันทีเพื่อไปแชร์กับบ่อที่เหลือ (พี่สั่ง entry #236)
+const CM_HOLD_FIELDS=['cm-close-date','cm-weight','cm-size','cm-caught','cm-survival','cm-survival-order','cm-fcr',
+  'cm-price','cm-buyer','cm-revenue','cm-cost-fry','cm-cost-feed','cm-cost-med','cm-cost-lime','cm-cost-labor',
+  'cm-cost-elec','cm-cost-fuel','cm-cost-equip','cm-cost-equip-out','cm-cost-catch','cm-pct-caretaker','cm-pct-manager','cm-notes'];
+function saveHarvestPending(){
+  if(APP_ROLE!=='admin')return;
+  const pid=document.getElementById('cm-pond-id').value;
+  const p=pond(pid);if(!p)return;
+  const closeDate=document.getElementById('cm-close-date').value;
+  if(!closeDate){alert('กรุณาระบุวันที่จับกุ้ง');return;}
+  if(closeDate>today()&&!confirm(`⚠️ วันที่จับ (${fD(closeDate)}) เป็นวันในอนาคต\nยืนยันว่าถูกต้อง?`))return;
+  const fields={};
+  CM_HOLD_FIELDS.forEach(id=>{const e=document.getElementById(id);if(e)fields[id]=e.value;});
+  p.harvestDate=closeDate;
+  p.pendingHarvest={savedAt:today(),fields,grades:JSON.parse(JSON.stringify(_cmGrades||[]))};
+  save();fbSave();
+  closeCropModal();
+  populateAll();renderOv();renderManage();
+  alert(`🧹 บันทึกผลจับบ่อ ${p.name} แล้ว — ยังไม่ปิดรอบ\n\n`
+    +`• ค่าไฟ/ค่าแรง หยุดนับที่ ${fD(closeDate)} ไปแชร์กับบ่อที่เหลือแล้ว\n`
+    +`• ปูนร้อน/ยาฆ่าเชื้อที่เบิกหลังจากนี้ ยังนับเข้ารอบนี้\n`
+    +`• ล้างบ่อเสร็จ กด "ปิดรอบ" ที่หน้ารอบเลี้ยง หรือหน้าจัดการบ่อ`);
+}
+// ── ยกเลิกสถานะล้างบ่อ — เผื่อกดผิด หรือยังไม่ได้จับจริง ──
+function cancelHarvestPending(pid){
+  if(APP_ROLE!=='admin')return;
+  const p=pond(pid);if(!p||!p.harvestDate)return;
+  if(!confirm(`ยกเลิกสถานะ "ล้างบ่อ" ของบ่อ ${p.name}?\n\nบ่อจะกลับไปเป็น "กำลังเลี้ยง" และกลับมาแชร์ค่าไฟ/ค่าแรงต่อ`))return;
+  p.harvestDate=null;p.pendingHarvest=null;
+  save();fbSave();populateAll();renderOv();renderManage();
+}
+// ── ปิดรอบที่ค้างสถานะล้างบ่อให้จบ — เปิดโมดัล (เติมค่าที่ค้างไว้ให้เอง) แล้วกดปิดตามเส้นทางปกติ
+//    ใช้โค้ดชุดเดียวกับการกดปิดเอง ไม่เขียนตรรกะเก็บประวัติซ้ำสองชุด ──
+function finalizePendingCrop(pid){
+  const p=pond(pid);if(!p||!p.harvestDate)return false;
+  if(!p.pendingHarvest){p.harvestDate=null;return false;}
+  openCropModal(pid);
+  confirmCloseCrop();
+  return !p.harvestDate;
 }
 // ── ส่วนแบ่งคนเลี้ยง: อัตราคงที่ตามไซส์กุ้งที่จับ (บาท/กก.) — ไม่ใช่ % ของกำไรอีกต่อไป (ยืนยันจากพี่: 91-99 ตัว/กก. นับเท่าช่วง 90-70, ช่วง 24-20 กับ 19 ลงไป อัตราเท่ากันจริง 3 บ./กก.) ──
 function caretakerRateBySize(size){
@@ -13679,6 +13788,9 @@ function confirmCloseCrop(){
     mortalityLog:(p.mortalityLog||[]).filter(r=>r&&r.date&&p.startDate&&r.date>=p.startDate),
     prepChecklist:p.prepChecklist?JSON.parse(JSON.stringify(p.prepChecklist)):null,
     harvestResult:hr,
+    // ⚠️ วันที่ต้นทุนของรอบนี้สิ้นสุดจริง (หลังล้างบ่อเสร็จ) — closeDate คือวันจับกุ้ง ใช้คนละหน้าที่
+    //    pondCostStartDate() ของรอบถัดไปต้องเริ่มหลังวันนี้ ไม่งั้นของล้างบ่อจะถูกนับซ้ำ 2 รอบ
+    costEndDate:(p.harvestDate&&today()>closeDate)?today():closeDate,
     notes,
     closed:true,
   };
@@ -13699,6 +13811,7 @@ function confirmCloseCrop(){
   // ── ต้นทุนลูกกุ้งต้องล้างด้วย — เก็บเข้าประวัติแล้วที่ hr.costFry
   //    ถ้าไม่ล้าง รอบใหม่จะยืมตัวเลขรอบเก่าไปโผลในต้นทุนสะสม/ฟอร์มปิดบ่อครั้งหน้า โดยดูเหมือนเลขจริง
   p.costFry=null;
+  p.harvestDate=null;p.pendingHarvest=null;   // ล้างสถานะ "ล้างบ่อ" ถ้ามาจากการปิด 2 ขั้นตอน
   p.records=[];p.feedLog=[];p.samples=[];
   p.waterLog=[];p.chemLog=[];p.labResults=[];p.partialHarvests=[];p.mortalityLog=[];
   p.prepChecklist=null;
@@ -14032,9 +14145,14 @@ const POND_PREP_LOOKBACK_DAYS=60;
 function pondCostStartDate(p){
   if(!p||!p.startDate)return null;
   const back=ymdLocal(addDaysLocal(new Date(p.startDate+'T00:00:00'),-POND_PREP_LOOKBACK_DAYS));
-  const prevClose=(p.cropHistory||[]).map(c=>c.closeDate).filter(d=>d&&d<p.startDate).sort().pop();
+  // ⚠️ ใช้ costEndDate (วันที่กดปิดรอบจริง หลังล้างบ่อเสร็จ) ก่อน closeDate (วันจับกุ้ง)
+  //    ไม่งั้นปูนร้อน/ยาฆ่าเชื้อที่เบิกไปล้างบ่อจะถูกนับซ้ำทั้งรอบเก่าและรอบใหม่
+  const prevClose=(p.cropHistory||[]).map(c=>c.costEndDate||c.closeDate).filter(d=>d&&d<=p.startDate).sort().pop();
   if(prevClose){
-    const dayAfter=ymdLocal(addDaysLocal(new Date(prevClose+'T00:00:00'),1));
+    let dayAfter=ymdLocal(addDaysLocal(new Date(prevClose+'T00:00:00'),1));
+    // ⚠️ ปิดรอบเก่าวันเดียวกับ (หรือหลัง) วันลงกุ้งรอบใหม่ — เกิดตอนกดลงกุ้งทั้งที่ยังค้างสถานะล้างบ่อ
+    //    ถ้าปล่อยให้ dayAfter เลยวันลงกุ้งไป รอบใหม่จะไม่นับต้นทุนวันแรกของตัวเอง จึงตรึงไว้ที่วันลงกุ้ง
+    if(dayAfter>p.startDate)dayAfter=p.startDate;
     return back<dayAfter?dayAfter:back;
   }
   return back;
