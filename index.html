@@ -4266,6 +4266,15 @@ function sortedPonds(){
 }
 function today(){return new Date(Date.now()+7*3600000).toISOString().split('T')[0]}
 function dDiff(a,b){return Math.floor((new Date(b)-new Date(a))/86400000)}
+// ── ⚠️ SINGLE SOURCE OF TRUTH ของ "อายุกุ้ง / DOC / ระยะเลี้ยง"
+//    กติกาที่พี่ยืนยัน: **วันลงกุ้งคือวันที่ 1** (ปล่อยวันที่ 8 → วันที่ 8 = day 1)
+//    ทุกที่ที่แสดง/เก็บ "อายุ" ต้องเรียกตัวนี้ ห้ามใช้ dDiff(startDate,...) ตรงๆ
+//    ค่าที่คืน: วันลงกุ้ง=1 · วันก่อนลง=0 · ก่อนหน้านั้นติดลบ (เช็ก "ลงกุ้งแล้วหรือยัง" ใช้ >=1)
+//    ⚠️ ห้ามใช้กับตัวนับช่องแบบ 0-based (เช่น pdWeekBuckets ที่หาร 7 หาสัปดาห์) ──
+function docAge(startDate,toDate){
+  if(!startDate)return null;
+  return dDiff(startDate,toDate||today())+1;
+}
 function wqfeedActivePonds(){return D.ponds.filter(p=>{const cls=pondStatusOv(p);return cls!=='prep'&&cls!=='empty'&&cls!=='closed';});}
 // ── บ่อที่กรอกคุณภาพน้ำได้: เหมือน wqfeedActivePonds() แต่เพิ่มบ่อ "เตรียมบ่อ" ที่ใกล้ลงกุ้งด้วย — ตรวจน้ำก่อนลงกุ้งจริงเริ่มล่วงหน้า 7 วันก่อนวันลงกุ้งที่วางแผนไว้ (ไม่ใช่ทุกบ่อที่สถานะเตรียม เฉพาะบ่อที่ตั้งวันลงกุ้งไว้แล้วและใกล้ถึงวันนั้น) ใช้เฉพาะหน้า "บันทึกคุณภาพน้ำ" จุดเดียว หน้าอื่น (อาหาร/สุ่มตัวอย่าง/โรค ฯลฯ) ที่ต้องมีกุ้งในบ่อจริงยังใช้ wqfeedActivePonds() เหมือนเดิม ──
 // ⚠️ วันลงกุ้งที่วางแผนไว้อ่านจาก p.startDate (ตั้งได้ที่หน้า "จัดการบ่อ")
@@ -4280,7 +4289,7 @@ function wqEntryPonds(){
   });
 }
 // ── อายุกุ้งปัจจุบันของบ่อ (วัน) — ใช้จุดเดียวกันทุกที่ที่ต้องเรียงบ่อตามอายุ/แสดงอายุบ่อที่กำลังเลี้ยงอยู่ — วันลงกุ้ง = อายุ 1 วัน (ไม่ใช่ 0) ตามที่พี่ยืนยัน ──
-function pondCurAge(p){return p&&p.startDate?dDiff(p.startDate,today())+1:0;}
+function pondCurAge(p){return (p&&docAge(p.startDate,today()))||0;}
 function sortPondsByAge(list){return list.slice().sort((a,b)=>pondCurAge(b)-pondCurAge(a));}
 // ── ⚠️ ตัวเลือกบ่อของ dropdown ที่ใช้กรอกข้อมูลรายวัน ต้องเรียง+ติดป้ายเหมือนกันทุกหน้า
 //    เดิม populateAll() ใช้ sortedPonds() (เรียงตามชื่อ ไม่มี DOC) แต่หน้าคุณภาพน้ำ/อาหาร/คาดการณ์
@@ -4417,7 +4426,7 @@ function hatcheryStats(){
       const fcr=hr.fcr!=null?parseFloat(hr.fcr):(totalFeed&&_kgAll?+(totalFeed/_kgAll).toFixed(2):null);
       if(fcr!=null&&!isNaN(fcr)){g.fcrSum+=fcr;g.fcrN++;}
       if(totalFeed>0&&_kgAll>0){g.feedSum+=totalFeed;g.kgSum+=_kgAll;}
-      const ageDays=c.startDate?dDiff(c.startDate,c.closeDate||today()):null;
+      const ageDays=docAge(c.startDate,c.closeDate||today());
       const finalWeightG=hr.size?1000/hr.size:null;
       const adg=(finalWeightG!=null&&ageDays)?(finalWeightG-(c.plWeight||0))/ageDays:null;
       if(adg!=null&&!isNaN(adg)){g.adgSum+=adg;g.adgN++;}
@@ -4585,7 +4594,7 @@ function pondMedPerDay(p){
   if(!p||!p.startDate)return 0;
   const from=pondCostStartDate(p),to=today();
   const g=getStockCostGroupsForPond(p.id,from,to);
-  const days=Math.max(1,dDiff(p.startDate,to)+1);
+  const days=Math.max(1,docAge(p.startDate,to)||1);
   return((g.med||0)+(g.lime||0))/days;
 }
 // ต้นทุนเดินเครื่องของบ่อนี้ ต่อวัน — อาหารต่างกันตามขนาดกุ้ง · ค่าแรง/ค่าไฟหารเท่ากันทุกบ่อ
@@ -4839,7 +4848,7 @@ function calcAge(pfx){
   const el=document.getElementById(pfx+'-age');if(!el)return;
   if(!pid||!d){el.value='';return}
   const p=pond(pid);if(!p)return;
-  el.value=p.startDate?dDiff(p.startDate,d):'';   // บ่อเตรียม (ยังไม่ลงกุ้ง) ไม่มี startDate — เว้นว่างแทน NaN
+  el.value=docAge(p.startDate,d)??'';   // บ่อเตรียม (ยังไม่ลงกุ้ง) ไม่มี startDate — เว้นว่างแทน NaN
 }
 function getCumFeed(p){return(p.feedLog||[]).reduce((s,r)=>s+(r.totalFeed||0),0)}
 // ══════ พาเชียล (จับบางส่วนระหว่างเลี้ยง) — รวมยอดเป็นชุดเดียว ใช้ร่วมกันทุกจุด ══════
@@ -6358,7 +6367,7 @@ function getBioCompareCalc(p){
   const feedLog=sortLogArr('feedLog',p.feedLog||[]);const latFeed=feedLog.length?feedLog[feedLog.length-1]:null;
   if(!sc||!latFeed||!latFeed.totalFeed)return null;
   const lat=sc.lat,abw=sc.abw,todayFeed=latFeed.totalFeed,release=sc.release;
-  const age=lat.age||(p.startDate?dDiff(p.startDate,lat.date||today()):null);
+  const age=docAge(p.startDate,lat.date||today())??lat.age??null;
   const docRate=bcFeedRateFormula(age,abw);
   const auto=!(p.id in _bcFeedRateOverride);
   const feedRate=auto?(docRate!=null?docRate:2.5):_bcFeedRateOverride[p.id];
@@ -6437,7 +6446,7 @@ function renderSurvivalCard(p){
   const r=30,circ=2*Math.PI*r;
   const offset=circ*(1-Math.min(100,Math.max(0,pct))/100);
   const ringColor=survRingColor(pct);
-  const age=lat.age||(p.startDate?dDiff(p.startDate,lat.date):null);
+  const age=docAge(p.startDate,lat.date)??lat.age??null;
   let trendHtml='';
   if(prev){
     const diff=Math.round((pct-parseFloat(prev.survivalRate))*10)/10;
@@ -6491,7 +6500,7 @@ function renderSurvivalCard(p){
   const chartHtml=chartSamples.length>1?`<div class="pd-surv-chart">${chartSamples.map(s=>{
     const v=parseFloat(s.survivalRate);
     const h=maxV>0?Math.max(8,v/maxV*100):8;
-    const sAge=s.age||(p.startDate?dDiff(p.startDate,s.date):null);
+    const sAge=docAge(p.startDate,s.date)??s.age??null;
     return`<div class="pd-surv-bar" style="height:${h}%;background:${s===lat?'linear-gradient(180deg,var(--p),var(--pd))':'linear-gradient(180deg,var(--in),#7DB4EA)'}"><span class="v">${v}%</span><span class="lbl">${sAge!=null?'DOC '+sAge:fD(s.date)}</span></div>`;
   }).join('')}</div>`:'';
   card.innerHTML=`
@@ -6547,6 +6556,8 @@ function renderPdGauges(p,last){
   }).join('');
 }
 function pdWeekBuckets(p){
+  // ⚠️ ตัวเดียวที่จงใจใช้ dDiff() ตรงๆ ไม่ใช้ docAge() — ตรงนี้เลขนี้คือ ตัวนับช่องสัปดาห์ ไม่ใช่อายุที่เอาไปแสดง
+  //    ต้องเริ่มที่ 0 เพื่อให้ Math.floor(age/7) จัดวันลงกุ้งเข้าสัปดาห์ที่ 1 ถ้าใส่ +1 สัปดาห์ที่ 1 จะกลายเป็นวันที่ 2-8
   const start=p.startDate;if(!start)return[];
   const curAge=Math.max(0,dDiff(start,today()));
   const nWeeks=Math.max(1,Math.ceil((curAge+1)/7));
@@ -7201,7 +7212,7 @@ function renderLaborCropSummary(){
     if(!c.closeDate||!w)return;
     if(laborStart&&c.closeDate<laborStart)return; // ตัดรอบที่ปิดก่อนมีข้อมูลรายสัปดาห์จริง (ค่าแรง/กก. จะต่ำเกินจริงเพราะไม่มีข้อมูลพนักงานรายวันของช่วงนั้น)
     const lc=getLaborCostForPond(p.id,c.startDate,c.closeDate);
-    const days=c.startDate?dDiff(c.startDate,c.closeDate)+1:null; // +1 นับรวมวันลงกุ้ง
+    const days=docAge(c.startDate,c.closeDate);
     allRows.push({name:p.name,cropNum:c.cropNum,closeDate:c.closeDate,weight:w,labor:lc,perKg:lc&&w?lc/w:null,days,yearBE:yearBE(parseInt(c.closeDate.split('-')[0],10))});
   }));
   if(!allRows.length){el.innerHTML=`<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีรอบที่ปิดแล้วตั้งแต่มีข้อมูลรายสัปดาห์จริง${laborStart?' ('+fD(laborStart)+' เป็นต้นไป)':''}</p>`;return;}
@@ -7458,7 +7469,7 @@ function renderElecCropSummary(){
     const w=cropTotalKg(c);   // ตัวหารต้องเป็นน้ำหนักที่จับได้ทั้งรอบ (รวมพาเชียล) — ไม่งั้น บาท/กก. จะสูงเกินจริง
     if(!c.closeDate||!w)return;
     if(elecStart&&c.closeDate<elecStart)return;
-    const days=c.startDate?dDiff(c.startDate,c.closeDate)+1:null;
+    const days=docAge(c.startDate,c.closeDate);
     const ec=getElecCostForPeriod(c.startDate,c.closeDate);
     allRows.push({name:p.name,cropNum:c.cropNum,closeDate:c.closeDate,weight:w,elec:ec,perKg:ec&&w?ec/w:null,days,yearBE:yearBE(parseInt(c.closeDate.split('-')[0],10))});
   }));
@@ -8891,7 +8902,7 @@ function fcCalc(){
   }
   const pid=document.getElementById('fc-pond')?.value,p=pid?pond(pid):null;
   // DOC ณ วันสุ่ม (ไม่ใช่ ณ วันนี้) — เพราะ fcSnap คิด doc = _fcDOC0 + d ที่ d นับจากวันสุ่ม
-  const DOC0=p&&p.startDate?dDiff(p.startDate,fcAnchor())+1:0;
+  const DOC0=(p&&docAge(p.startDate,fcAnchor()))||0;
   const dNow=Math.max(0,dDiff(fcAnchor(),today()));   // จากวันสุ่มถึงวันนี้กี่วัน
   _fcDOC0=DOC0;                 // ⚠️ ต้องเซ็ตก่อนเรียก fcSnap/fcEcon ด้านล่าง
   _fcPhCount=p?partialTotals(p.partialHarvests).count:0;   // ⚠️ เช่นกัน — กุ้งที่พาเชียลไปแล้วต้องไม่ถูกนับว่ายังอยู่ในบ่อ
@@ -10115,7 +10126,7 @@ function updateEpHeader(){
   if(!p){nameEl.textContent='— เลือกบ่อด้านบน —';if(subEl)subEl.textContent='';if(tagEl)tagEl.style.display='none';return;}
   nameEl.textContent='บ่อ '+p.name;
   const d=document.getElementById('ep-date')?.value||today();
-  const age=p.startDate?dDiff(p.startDate,d):0;
+  const age=docAge(p.startDate,d)||0;
   if(subEl)subEl.textContent=age>0?`อายุ ${age} วัน`:'';
   const done=(p.records||[]).some(r=>r.date===d);
   if(tagEl){
@@ -10199,7 +10210,7 @@ function saveWQ(){
   // ข้อ 1: คำนวณอายุอัตโนมัติ — ไม่อ่านจาก input (ป้องกันค่าผิดจากการกรอกมือ)
   // บ่อเตรียม (ยังไม่ลงกุ้ง จึงไม่มี startDate) เก็บ age เป็น null แทน NaN — เป็นค่าตรวจน้ำก่อนลงกุ้ง ไม่มี "อายุกุ้ง" ให้คำนวณ
   // id ต้องคงที่ข้ามเครื่อง — mergeArr() ใช้ id เป็นกุญแจ ถ้าไม่มีจะรวมข้อมูลข้ามเครื่องไม่ได้
-  const rec={id:'wq_'+pid+'_'+d,date:d,age:p.startDate?dDiff(p.startDate,d):null};
+  const rec={id:'wq_'+pid+'_'+d,date:d,age:docAge(p.startDate,d)};
   PARAMS.forEach(pm=>{const v=document.getElementById('ef-'+pm.key)?.value;rec[pm.key]=v===''||v===undefined?null:parseFloat(v)});
   rec.notes=document.getElementById('ep-notes').value;
   const idx=p.records.findIndex(r=>r.date===d);
@@ -10238,7 +10249,7 @@ function renderWQTable(){
   wrap.innerHTML=pondHdr+`<div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวาเพื่อดูทุกค่า →</div><table class="tbl" style="white-space:nowrap"><thead><tr><th style="white-space:nowrap"></th><th style="white-space:nowrap">วันที่</th><th style="white-space:nowrap">อายุ</th>${show.map(pm=>`<th style="white-space:nowrap">${pm.lbl}</th>`).join('')}<th style="white-space:nowrap">หมายเหตุ</th></tr></thead><tbody>${
     rec.map((r,i)=>{
       // ข้อ 1: คำนวณอายุจากวันปล่อย ไม่ใช้ค่าที่เก็บไว้ (ป้องกันค่าผิดจากการกรอกมือ)
-      const ageCalc=p.startDate?dDiff(p.startDate,r.date):r.age;
+      const ageCalc=docAge(p.startDate,r.date)??r.age;
       return`<tr class="${i===0?'hi':''}""><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editWQ('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteWQ('${pid}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc!=null?ageCalc:'-'}</td>${show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v,r);
         // ข้อ 5: null (ยังไม่กรอก) แสดง – สีเทา / 0 (ค่าจริง) แสดง 0 ตามสถานะ
         const cell=v===null||v===undefined
@@ -10276,14 +10287,14 @@ function renderPdWqHistory(p){
   const show=PARAMS;   // เดิม slice(0,8) ทำให้ NH4/NO2/NO3/Ca/Mg/Hardness หายไปจากตาราง ทั้งที่กรอกไว้ในหน้าคุณภาพน้ำ
   const tableHtml=`<div class="pd-hist-tblwrap"><div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวาเพื่อดูทุกค่า →</div><div style="overflow-x:auto"><table class="tbl" style="white-space:nowrap"><thead><tr><th></th><th>วันที่</th><th>อายุ</th>${show.map(pm=>`<th>${pm.lbl}</th>`).join('')}<th>หมายเหตุ</th></tr></thead><tbody>${
     rec.map((r,i)=>{
-      const ageCalc=p.startDate?dDiff(p.startDate,r.date):r.age;
+      const ageCalc=docAge(p.startDate,r.date)??r.age;
       return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdEditWQ('${p.id}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdDeleteWQ('${p.id}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc!=null?ageCalc:'-'}</td>${show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v,r);
         const cell=v===null||v===undefined?`<span style="color:var(--tx3);font-size:calc(12px * var(--ui-scale))" title="ยังไม่ได้กรอก">–</span>`:`<span style="color:${sc(s)}">${v}</span>`;
         return`<td>${cell}</td>`;}).join('')}<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.notes||'<span style="color:var(--tx3);font-size:calc(12px * var(--ui-scale))">–</span>'}</td></tr>`;
     }).join('')}</tbody></table></div></div>`;
   // ── มือถือ (≤600px): แสดงเป็นการ์ดแยกทีละวันแทนตารางเลื่อน กันปุ่ม ✏️/🗑️ ไปติดกับวันที่ (entry #146) ──
   const cardsHtml=`<div class="pd-hist-cards">${rec.map((r,i)=>{
-    const ageCalc=p.startDate?dDiff(p.startDate,r.date):r.age;
+    const ageCalc=docAge(p.startDate,r.date)??r.age;
     const items=show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v,r);
       const cls=s==='danger'?' danger':s==='warn'?' warn':'';
       const vHtml=v===null||v===undefined?'<span class="k" style="font-weight:400">–</span>':`<span class="v${cls}">${v}${pm.unit||''}</span>`;
@@ -10330,12 +10341,12 @@ function renderPdFeedHistory(p){
   if(!rec.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลอาหารของบ่อนี้ — บันทึกได้ที่หน้า "อาหาร & FCR"</p>';return;}
   const tableHtml=`<div class="pd-hist-tblwrap"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ยี่ห้อ/เบอร์</th><th style="text-align:right">อาหาร (กก.)</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rec.map((r,i)=>{
-      const ageCalc=p.startDate?dDiff(p.startDate,r.date):r.age;
+      const ageCalc=docAge(p.startDate,r.date)??r.age;
       return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdEditFeed('${p.id}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdDeleteFeedEntry('${p.id}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc}</td><td>${r.feedBrand||'-'}</td><td style="text-align:right">${(r.totalFeed||0).toLocaleString()}</td><td style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">${r.notes||'-'}</td></tr>`;
     }).join('')}</tbody></table></div></div>`;
   // ── มือถือ (≤600px): แสดงเป็นการ์ดแยกทีละวันแทนตารางเลื่อน (entry #146) ──
   const cardsHtml=`<div class="pd-hist-cards">${rec.map((r,i)=>{
-    const ageCalc=p.startDate?dDiff(p.startDate,r.date):r.age;
+    const ageCalc=docAge(p.startDate,r.date)??r.age;
     return`<div class="pd-rec-card${i===0?' hi':''}">
       <div class="pd-rec-top">
         <div class="pd-rec-date"><b>${fD(r.date)}</b><span>${ageCalc!=null?'อายุ '+ageCalc+' วัน':''}</span></div>
@@ -10533,7 +10544,7 @@ function renderPdCropHistCard(p){
     hist.map(c=>{
       const hr=cropHarvestResult(c)||{};
       const kg=hr.totalWeightAll||hr.totalWeight;
-      const days=c.startDate&&c.closeDate?dDiff(c.startDate,c.closeDate):null;
+      const days=c.closeDate?docAge(c.startDate,c.closeDate):null;
       const prof=hr.netProfit;
       return '<tr><td>รอบ '+(c.cropNum||'-')+'/'+(c.cropYear?yearBE(c.cropYear):'-')+(days!=null?'<div style="font-size:var(--fs10);color:var(--tx3)">'+days+' วัน</div>':'')+'</td>'+
         '<td>'+(c.closeDate?fD(c.closeDate):'-')+'</td>'+
@@ -10822,7 +10833,7 @@ function applyFeedStockDeduction(rec,pid,d,stockItemId,sacks){
 }
 function feedGridRow(p,d,feedItems){
   const existing=(p.feedLog||[]).find(r=>r.date===d);
-  const age=p.startDate?dDiff(p.startDate,d):0;
+  const age=docAge(p.startDate,d)||0;
   const bio=getLatestBiomass(p);
   const prev=(p.feedLog||[]).filter(r=>r.date<d).sort((a,b)=>a.date.localeCompare(b.date)).slice(-1)[0];
   const suggestedTotal=existing?existing.totalFeed:(prev?prev.totalFeed:null);
@@ -10890,7 +10901,7 @@ function saveFeedGridAll(){
     let newSacks=0;
     if(stockItemId)newSacks=Math.round((total/25)*100)/100;
     if(oldRec)reverseFeedStockDeduction(oldRec);
-    const rec={id:recId,date:d,age:p.startDate?dDiff(p.startDate,d):0,
+    const rec={id:recId,date:d,age:docAge(p.startDate,d)||0,
       feedBrand:brand,feedGrade:oldRec?.feedGrade||'',
       totalFeed:total,feedRate:null,notes};
     if(stockItemId)applyFeedStockDeduction(rec,p.id,d,stockItemId,newSacks);
@@ -11594,7 +11605,7 @@ function renderTrialPickedList(){
     const p=pond(pid);if(!p)return'';
     const label=_trialDraft.ponds[pid]||'';
     const rng=trialPondRange(p);
-    const docTxt=rng.outOfRange?'ไม่มีข้อมูลในช่วงทดลอง':`DOC ${dDiff(p.startDate,rng.lo)}–${dDiff(p.startDate,rng.hi)} ในช่วงทดลอง`;
+    const docTxt=rng.outOfRange?'ไม่มีข้อมูลในช่วงทดลอง':`DOC ${docAge(p.startDate,rng.lo)}–${docAge(p.startDate,rng.hi)} ในช่วงทดลอง`;
     const warnTxt=rng.clippedEnd?'⚠️ เกินวันนี้ — ตัดที่วันนี้':(rng.clippedStart?'⚠️ ก่อนวันลงกุ้งบ่อนี้ — ตัดที่วันลง':'');
     return `<div class="picked-row">
       <span class="picked-name">${p.name}</span><span class="picked-doc">${docTxt}${warnTxt?' · '+warnTxt:''}</span>
@@ -11762,7 +11773,7 @@ function renderTrialResults(){
     tblEl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>บ่อ</th><th>กลุ่ม</th><th>ช่วงที่มีข้อมูลจริง</th><th>DOC ในช่วง</th><th>ADG ในช่วง</th><th>FCR ในช่วง</th><th>กุ้งตายในช่วง</th><th>TCBS ตับ</th><th>EHP ตัวอ่อน</th><th>ลำไส้อักเสบ</th><th>ไขมันรวม</th></tr></thead><tbody>${
       withRange.map(x=>{
         if(x.rng.outOfRange)return `<tr><td>${x.p.name}</td><td><span class="grp-tag" style="background:${x.color}22;color:${x.color}">${x.label}</span></td><td colspan="8" style="color:var(--tx3);font-style:italic">ไม่มีข้อมูลในช่วงทดลองนี้</td></tr>`;
-        const docLo=dDiff(x.p.startDate,x.rng.lo),docHi=dDiff(x.p.startDate,x.rng.hi);
+        const docLo=docAge(x.p.startDate,x.rng.lo),docHi=docAge(x.p.startDate,x.rng.hi);
         const adg=trialAdgInRange(x.p,x.rng.lo,x.rng.hi);
         const fcr=trialFcrInRange(x.p,x.rng.lo,x.rng.hi);
         const mort=trialMortalityPctInRange(x.p,x.rng.lo,x.rng.hi);
@@ -12316,7 +12327,7 @@ function getCloseSummary(p,cropIdx){
   const buyer=lastCloseRow?lastCloseRow.buyer:'';
   const price=lastCloseRow?lastCloseRow.price:(totalWeight?Math.round((totalBaht/totalWeight)*100)/100:(harvestResult?harvestResult.price:null));
   const partialCount=partialRows.length;
-  const ageDays=startDate?dDiff(startDate,closeDate||today()):null;
+  const ageDays=docAge(startDate,closeDate||today());
   const totalFeed=(feedLog||[]).reduce((s,r)=>s+(r.totalFeed||0),0);
   const fcr=harvestResult&&harvestResult.fcr?harvestResult.fcr:(totalFeed&&totalWeight?+(totalFeed/totalWeight).toFixed(2):null);
   const closeSize=lastCloseRow?lastCloseRow.size:(harvestResult?harvestResult.size:null);
@@ -12674,9 +12685,9 @@ function mgCountCell(n,active){
 function renderManage(){
   // ⚠️ เรียง A.1 → A.2 → ... → A.27 (ไม่ใช่ลำดับดิบใน D.ponds ที่เรียงตามลำดับที่ถูกสร้าง)
   document.getElementById('mg-tbody').innerHTML=sortedPonds().map(p=>{
-    const age=p.startDate?dDiff(p.startDate,today()):null;
-    const ageCell=(age===null)?'<span style="color:var(--tx3)">ยังไม่ลงกุ้ง</span>':age<0?`<span style="color:var(--in)">เตรียมบ่อ (เหลือ ${Math.abs(age)} วัน)</span>`:`${age+1} วัน`;
-    const active=age!==null&&age>=0; // ลงกุ้งแล้วและไม่ได้อยู่ระหว่างเตรียมบ่อ — ใช้ตัดสินว่า "ควรมีข้อมูล" หรือยัง
+    const age=docAge(p.startDate,today());
+    const ageCell=(age===null)?'<span style="color:var(--tx3)">ยังไม่ลงกุ้ง</span>':age<1?`<span style="color:var(--in)">เตรียมบ่อ (เหลือ ${1-age} วัน)</span>`:`${age} วัน`;
+    const active=age!==null&&age>=1; // ลงกุ้งแล้วและไม่ได้อยู่ระหว่างเตรียมบ่อ — ใช้ตัดสินว่า "ควรมีข้อมูล" หรือยัง
     const adg=getPDG(p.samples||[]);
     const adgCell=adg?`${adg}`:'<span style="color:var(--tx3)">-</span>';
     // ── บ่อที่ "ยังไม่ลงกุ้ง" (startDate ว่าง) แต่ log ยังไม่ว่างจริง — ข้อมูลรอบเก่าค้างจากปิดรอบ (เช่น sync ดันกลับ) ไม่ได้ตั้งใจ ──
@@ -12811,9 +12822,9 @@ function renderCrops(){
   D.ponds.forEach(p=>{
     const closed=(p.cropHistory||[]).filter(c=>yearBE(c.cropYear||c.year||curY)===selYear).length;
     totalClosed+=closed;closedPerPond.push(closed);
-    const age=p.startDate?dDiff(p.startDate,today()):null;
-    if(p.startDate&&age>=0)activeNow++;
-    else if(p.startDate&&age<0)prepNow++;
+    const age=docAge(p.startDate,today());
+    if(p.startDate&&age>=1)activeNow++;
+    else if(p.startDate&&age<1)prepNow++;
     else idleNow++;
   });
   const avgPerPond=D.ponds.length?(totalClosed/D.ponds.length):0;
@@ -12834,10 +12845,10 @@ function renderCrops(){
     const history=(p.cropHistory||[]).filter(c=>yearBE(c.cropYear||c.year||curY)===selYear)
       .sort((a,b)=>String(a.startDate||a.closeDate||'').localeCompare(String(b.startDate||b.closeDate||'')));
     const isCurYear=yearBE(p.cropYear||curY)===selYear;
-    const curAge=p.startDate?dDiff(p.startDate,today()):0;
-    const hasStarted=!!p.startDate&&curAge>=0;
+    const curAge=docAge(p.startDate,today())||0;
+    const hasStarted=!!p.startDate&&curAge>=1;
     const onTrackNow=isCurYear&&hasStarted;
-    const isPrepNow=isCurYear&&p.startDate&&curAge<0;
+    const isPrepNow=isCurYear&&p.startDate&&curAge<1;
     const totalClosed=history.length;
     const prog=totalClosed+(hasStarted?1:0);
     // ⚠️ ไม่มี "เป้า 2 รอบ" แล้ว — สีบอกแค่ว่ามีความเคลื่อนไหวในปีนี้ไหม (บางบ่อทำได้ 3 ครอป/ปี)
@@ -12854,7 +12865,7 @@ function renderCrops(){
     // ⚠️ ป้าย "รอบ N" นับจากลำดับจริงในปีนั้น (i+1) ไม่ใช่ c.cropNum ที่ข้อมูลจริงซ้ำกันได้
     //    ถ้า cropNum ที่บันทึกไว้ไม่ตรงกับลำดับ โชว์ต่อท้ายให้เห็นด้วย จะได้รู้ว่าต้องไปแก้ที่ปุ่ม ✏️
     const lines=history.map((c,i)=>{
-      const days=c.startDate&&c.closeDate?dDiff(c.startDate,c.closeDate):null;
+      const days=c.closeDate?docAge(c.startDate,c.closeDate):null;
       const dClr=days!=null?(days>=90&&days<=120?'var(--ok)':days>120?'var(--w)':'var(--d)'):'var(--tx3)';
       const mismatch=(c.cropNum!=null&&+c.cropNum!==i+1)
         ?'<span style="font-size:var(--fs10);color:var(--w)" title="เลขรอบที่บันทึกไว้ไม่ตรงกับลำดับจริง — แก้ได้ที่ปุ่ม ✏️ ในตารางประวัติด้านล่าง">(บันทึกไว้ว่ารอบ '+c.cropNum+')</span>'
@@ -12926,7 +12937,7 @@ function renderCrops(){
     </tr></thead>
     <tbody>${filteredHistory.map(c=>{
       const hr=cropHarvestResult(c)||{};   // นับพาเชียลรวมแล้ว
-      const days=c.startDate&&c.closeDate?dDiff(c.startDate,c.closeDate):'-';
+      const days=(c.closeDate&&docAge(c.startDate,c.closeDate))||'-';
       const dClr=days!=='-'?(days>=90&&days<=120?'var(--ok)':days>120?'var(--w)':'var(--d)'):'var(--tx3)';
       const rowId=c._pondId+'_'+(c.id||c._idx);
       const ph=c.partialHarvests||[];
