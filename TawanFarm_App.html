@@ -4275,6 +4275,14 @@ function docAge(startDate,toDate){
   if(!startDate)return null;
   return dDiff(startDate,toDate||today())+1;
 }
+// ── ⚠️ อายุของ record รายวัน — คำนวณจากวันที่เสมอ ห้ามอ่าน r.age ที่เก็บไว้ในข้อมูล
+//    ข้อมูลที่บันทึกก่อน entry #234 ใช้ฐานเก่า (วันลงกุ้ง=0) จึงน้อยกว่าของใหม่ 1 วัน
+//    ถ้าอ่านตรงๆ กราฟ/ตารางจะมีข้อมูล 2 ฐานปนกัน — ใช้ r.age เป็นค่าสำรองเฉพาะบ่อที่ไม่มีวันลงกุ้ง ──
+function recAge(p,r){
+  if(!r)return null;
+  const a=docAge(p&&p.startDate,r.date);
+  return a!=null?a:(r.age!=null?r.age:null);
+}
 function wqfeedActivePonds(){return D.ponds.filter(p=>{const cls=pondStatusOv(p);return cls!=='prep'&&cls!=='empty'&&cls!=='closed';});}
 // ── บ่อที่กรอกคุณภาพน้ำได้: เหมือน wqfeedActivePonds() แต่เพิ่มบ่อ "เตรียมบ่อ" ที่ใกล้ลงกุ้งด้วย — ตรวจน้ำก่อนลงกุ้งจริงเริ่มล่วงหน้า 7 วันก่อนวันลงกุ้งที่วางแผนไว้ (ไม่ใช่ทุกบ่อที่สถานะเตรียม เฉพาะบ่อที่ตั้งวันลงกุ้งไว้แล้วและใกล้ถึงวันนั้น) ใช้เฉพาะหน้า "บันทึกคุณภาพน้ำ" จุดเดียว หน้าอื่น (อาหาร/สุ่มตัวอย่าง/โรค ฯลฯ) ที่ต้องมีกุ้งในบ่อจริงยังใช้ wqfeedActivePonds() เหมือนเดิม ──
 // ⚠️ วันลงกุ้งที่วางแผนไว้อ่านจาก p.startDate (ตั้งได้ที่หน้า "จัดการบ่อ")
@@ -4996,7 +5004,8 @@ function getPDG(samples){
   // เรียงตามวันที่ก่อน — รับ array มาตรงๆ จึงเรียงที่นี่เอง (ไม่แก้ของเดิม คืนสำเนาใหม่)
   samples=samples.slice().sort((x,y)=>String(x&&x.date||'').localeCompare(String(y&&y.date||'')));
   const a=samples[samples.length-2],b=samples[samples.length-1];
-  const days=b.age-a.age;if(days<=0||!a.abw||!b.abw)return null;return((b.abw-a.abw)/days).toFixed(2);
+  const days=dDiff(a.date,b.date);   // คิดจากวันที่ ไม่ใช้ b.age-a.age — สุ่มเก่า/ใหม่เก็บอายุคนละฐาน ผลต่างจะเพี้ยน 1 วัน
+  if(days<=0||!a.abw||!b.abw)return null;return((b.abw-a.abw)/days).toFixed(2);
 }
 function secchiSt(cm){
   if(!cm)return{s:'na',lbl:'-'};
@@ -5010,8 +5019,9 @@ function projHarvest(p,target=22){
   if(!pdg||pdg<=0||!lat.abw)return null;
   if(lat.abw>=target)return{ready:true};
   const days=Math.ceil((target-lat.abw)/pdg);
-  const hDate=new Date(p.startDate);hDate.setDate(hDate.getDate()+lat.age+days);
-  return{days,age:lat.age+days,date:hDate.toISOString().split('T')[0]};
+  // นับต่อจาก "วันสุ่มล่าสุด" ตรงๆ — เดิมบวก startDate+lat.age ซึ่งผูกกับฐานการนับอายุ พอเปลี่ยนเป็นวันลงกุ้ง=1 จะเลื่อไป 1 วัน
+  const hDate=new Date(lat.date);hDate.setDate(hDate.getDate()+days);
+  return{days,age:(docAge(p.startDate,lat.date)||0)+days,date:hDate.toISOString().split('T')[0]};
 }
 function populateAll(){
   const simple={
@@ -10462,7 +10472,7 @@ function renderPdLabCard(p){
   const row=(lbl,val)=>'<div class="pd-water-row"><span style="color:var(--tx2)">'+lbl+'</span><span style="font-weight:600">'+val+'</span></div>';
   const sg=classifyOv('tcbsGreen',lat.tcbsGreen),shg=classifyOv('hepatoGreen',lat.hepatoGreen);
   el.innerHTML=
-    '<div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-bottom:8px">ผลล่าสุด '+fD(lat.date)+(lat.labName?' · '+mpEsc(lat.labName):'')+(lat.age!=null?' · อายุ '+lat.age+' วัน':'')+'</div>'+
+    '<div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-bottom:8px">ผลล่าสุด '+fD(lat.date)+(lat.labName?' · '+mpEsc(lat.labName):'')+((recAge(p,lat)??lat.age)!=null?' · อายุ '+(recAge(p,lat)??lat.age)+' วัน':'')+'</div>'+
     row('🟢 เชื้อเขียว (น้ำ)','<span style="color:'+sc(sg)+'">'+num(lat.tcbsGreen)+'</span> CFU/mL')+
     row('🟡 เชื้อเหลือง (น้ำ)',num(lat.tcbsYellow)+' CFU/mL')+
     row('🟢 เชื้อเขียว (ตับ)','<span style="color:'+sc(shg)+'">'+num(lat.hepatoGreen)+'</span> CFU/g')+
@@ -10962,7 +10972,8 @@ function calcBiomass(){
   }
   const samps=p.samples||[];const pdgEl=document.getElementById('sp-pdg-info');
   if(samps.length>0){
-    const last=samps[samps.length-1];const days=parseInt(document.getElementById('sp-age').value)-last.age;
+    const ss=sortLogArr('samples',samps);const last=ss[ss.length-1];
+    const days=dDiff(last.date,document.getElementById('sp-date').value);   // คิดจากวันที่ ไม่ใช้ส่วนต่างของอายุ (อาจคนละฐาน)
     if(days>0&&last.abw&&abw)pdgEl.textContent=`PDG: ${((abw-last.abw)/days).toFixed(2)} g/วัน (จาก ${last.abw}g)`;
   }
 }
@@ -10992,7 +11003,8 @@ function saveSample(){
 // ── ผลทันทีหลังบันทึกสุ่ม — แปลผลให้เลยว่ากุ้งโตตามเกณฑ์อายุไหม ไม่ต้องเทียบตารางเอง + ทางลัดไปดู FCR/กราฟที่หน้ารายละเอียดบ่อ (FCR โชว์ที่เดียวตามนโยบายเดิม) ──
 function renderSampleResult(p,rec){
   const el=document.getElementById('sp-result');if(!el)return;
-  const target=getAbwTarget(rec.age||0);
+  const rAge=recAge(p,rec)||0;
+  const target=getAbwTarget(rAge);
   const chip=t=>`<span style="display:inline-flex;align-items:center;gap:5px;background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:3px 11px;font-size:calc(12px * var(--ui-scale))">${t}</span>`;
   const chips=[];
   const pdgTxt=rec.pdg!=null&&!isNaN(rec.pdg)?` <b style="color:${rec.pdg>=0.2?'var(--ok)':'var(--w)'}">${rec.pdg>=0?'▲':'▼'} ${rec.pdg} g/วัน</b>`:'';
@@ -11000,7 +11012,7 @@ function renderSampleResult(p,rec){
   if(target>0){
     const ratio=rec.abw/target;
     const verdict=ratio>=0.95?`<b style="color:var(--ok)">✓ ตามเกณฑ์</b>`:ratio>=0.85?`<b style="color:var(--w)">△ ต่ำกว่าเกณฑ์เล็กน้อย</b>`:`<b style="color:var(--d)">✗ ต่ำกว่าเกณฑ์ ควรติดตาม</b>`;
-    chips.push(chip(`เป้าหมายอายุ ${rec.age} วัน ~${target.toFixed(1)} g ${verdict}`));
+    chips.push(chip(`เป้าหมายอายุ ${rAge} วัน ~${target.toFixed(1)} g ${verdict}`));
   }
   if(rec.plCount)chips.push(chip(`ไซส์ ~${rec.plCount} ตัว/กก.`));
   if(rec.biomass)chips.push(chip(`Biomass ~${Math.round(rec.biomass).toLocaleString()} กก.`));
@@ -11050,8 +11062,8 @@ function renderSampleMetrics(pid){
 function renderSampleChart(){
   const pid=document.getElementById('sp-pond').value;if(!pid)return;
   const p=pond(pid);if(spCh){spCh.destroy();spCh=null;}
-  const sizePts=(p.samples||[]).filter(r=>r.plCount).map(r=>({x:r.age,y:r.plCount}));
-  const feedPts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.age!=null).map(r=>{const v=feedPer100k(r.totalFeed,pondFeedBaseOnDate(p,r.date));return v!=null?{x:r.age,y:parseFloat(v.toFixed(2))}:null}).filter(Boolean);
+  const sizePts=(p.samples||[]).filter(r=>r.plCount).map(r=>({x:recAge(p,r),y:r.plCount}));
+  const feedPts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.date).map(r=>{const v=feedPer100k(r.totalFeed,pondFeedBaseOnDate(p,r.date));return v!=null?{x:recAge(p,r),y:parseFloat(v.toFixed(2))}:null}).filter(Boolean);
   spCh=new Chart(document.getElementById('sampleChart'),{type:'line',data:{datasets:[
     {label:'ไซส์ (ตัว/กก.)',data:sizePts,borderColor:'#0f6e56',backgroundColor:'#0f6e5622',tension:.3,pointRadius:5,fill:true,yAxisID:'y'},
     {label:'การกิน (กก./แสน)',data:feedPts,borderColor:'#EA580C',backgroundColor:'transparent',tension:.3,pointRadius:3,fill:false,borderDash:[4,3],yAxisID:'y2'},
@@ -11071,7 +11083,7 @@ function renderSampleTable(){
   const p=pond(pid);const rows=sortLogArr('samples',p?.samples||[]).reverse();
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">บ่อนี้ยังไม่มีข้อมูลสุ่มตัวอย่าง — บันทึกได้จากฟอร์มด้านบน</p>';return}
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ตัวอย่าง</th><th>น้ำหนักรวม (กก.)</th><th>ABW (g)</th><th>ไซส์ (ตัว/กก.)</th><th>Survival%</th><th>Biomass ในบ่อ (kg)</th><th>PDG (g/วัน)</th><th>หมายเหตุ</th></tr></thead><tbody>${
-    rows.map((r,i)=>`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editSample('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteSample('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.sampleCount||'-'}</td><td>${r.sampleWeight!=null?r.sampleWeight+' กก.':'-'}</td><td><strong style="color:var(--p)">${r.abw?.toFixed(2)||'-'}</strong></td><td><strong style="color:var(--in)">${r.plCount||'-'}</strong></td><td>${r.survivalRate?r.survivalRate+'%':'-'}</td><td>${(()=>{const b=sampleInPondBiomass(p,r);return b!=null?Math.round(b).toLocaleString():'-';})()}</td><td>${r.pdg||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')}</tbody></table>`;
+    rows.map((r,i)=>`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editSample('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteSample('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${recAge(p,r)??r.age}</td><td>${r.sampleCount||'-'}</td><td>${r.sampleWeight!=null?r.sampleWeight+' กก.':'-'}</td><td><strong style="color:var(--p)">${r.abw?.toFixed(2)||'-'}</strong></td><td><strong style="color:var(--in)">${r.plCount||'-'}</strong></td><td>${r.survivalRate?r.survivalRate+'%':'-'}</td><td>${(()=>{const b=sampleInPondBiomass(p,r);return b!=null?Math.round(b).toLocaleString():'-';})()}</td><td>${r.pdg||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')}</tbody></table>`;
 }
 function deleteSample(pid,id){
   const p=pond(pid);if(!p)return;
@@ -11125,7 +11137,7 @@ function renderWaterTable(){
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">บ่อนี้ยังไม่มีข้อมูลจัดการน้ำ — บันทึกได้จากฟอร์มด้านบน</p>';return}
   const wlPond=pond(pid);const wlFull=sortLogArr('waterLog',wlPond?.waterLog||[]).reverse();
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>การดำเนินการ</th><th>ปริมาณ (ซม.)</th><th>หมายเหตุ</th></tr></thead><tbody>${
-    rows.map((r,i)=>{const origIdx=(wlPond?.waterLog||[]).indexOf(r);return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editWaterLog('${pid}',${origIdx})">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteWaterLog('${pid}','${r.id||origIdx}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td><span class="badge b-info">${WL_ACT[r.action]||r.action}</span></td><td>${r.vol?r.vol+' ซม.':'-'}</td><td>${r.notes||'-'}</td></tr>`}).join('')}</tbody></table>`;
+    rows.map((r,i)=>{const origIdx=(wlPond?.waterLog||[]).indexOf(r);return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editWaterLog('${pid}',${origIdx})">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteWaterLog('${pid}','${r.id||origIdx}')">🗑️</button></td><td>${fD(r.date)}</td><td>${recAge(p,r)??r.age}</td><td><span class="badge b-info">${WL_ACT[r.action]||r.action}</span></td><td>${r.vol?r.vol+' ซม.':'-'}</td><td>${r.notes||'-'}</td></tr>`}).join('')}</tbody></table>`;
 }
 function deleteWaterLog(pid,id){
   const p=pond(pid);if(!p)return;
@@ -11236,7 +11248,7 @@ function renderMtTable(){
   const p=pond(pid);const rows=sortLogArr('mortalityLog',cropMortalityLog(p)).reverse();
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">บ่อนี้ยังไม่มีบันทึกกุ้งตาย — บันทึกได้จากฟอร์มด้านบน</p>';return}
   wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>จำนวนตาย</th><th>สาเหตุ</th><th>หมายเหตุ</th></tr></thead><tbody>${
-    rows.map(r=>`<tr><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editMortality('${pid}','${r.id}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteMortality('${pid}','${r.id}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age>0?r.age+' วัน':'-'}</td><td style="font-weight:700${r.count>=3?';color:var(--w)':''}">${r.count} ตัว</td><td>${r.cause?`<span class="badge b-warn">${MT_CAUSE_LBL[r.cause]||r.cause}</span>`:'<span style="color:var(--tx3)">-</span>'}</td><td style="color:var(--tx2)">${r.notes||'-'}</td></tr>`).join('')
+    rows.map(r=>`<tr><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editMortality('${pid}','${r.id}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteMortality('${pid}','${r.id}')">🗑️</button></td><td>${fD(r.date)}</td><td>${(()=>{const a=recAge(p,r)??r.age;return a>0?a+' วัน':'-';})()}</td><td style="font-weight:700${r.count>=3?';color:var(--w)':''}">${r.count} ตัว</td><td>${r.cause?`<span class="badge b-warn">${MT_CAUSE_LBL[r.cause]||r.cause}</span>`:'<span style="color:var(--tx3)">-</span>'}</td><td style="color:var(--tx2)">${r.notes||'-'}</td></tr>`).join('')
   }</tbody></table>`;
 }
 function editMortality(pid,id){
@@ -11351,7 +11363,7 @@ function renderLabTable(){
       const gutCls=(typeof r.gutInflam==='number')?(r.gutInflam>30?'b-danger':r.gutInflam>10?'b-warn':'b-ok'):'b-na';
       const lipidDisp=(typeof r.lipidDroplet==='number')?`${r.lipidDroplet}%`:'-';
       const lipidCls=(typeof r.lipidDroplet==='number')?(r.lipidDroplet>=70?'b-ok':r.lipidDroplet>=50?'b-warn':'b-danger'):'b-na';
-      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editLab('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteLab('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.labName||'-'}</td><td style="font-weight:700;color:${sc(sg)}">${r.tcbsGreen!=null?r.tcbsGreen.toLocaleString():'-'}</td><td>${r.tcbsYellow!=null?r.tcbsYellow.toLocaleString():'-'}</td><td style="font-weight:700;color:${sc(shg)}">${r.hepatoGreen!=null?r.hepatoGreen.toLocaleString():'-'}</td><td>${r.hepatoYellow!=null?r.hepatoYellow.toLocaleString():'-'}</td><td>${r.tvc?r.tvc.toExponential(1):'-'}</td><td>${r.tvcHepato?r.tvcHepato.toExponential(1):'-'}</td><td><span class="badge ${ehpCls}">${ehpDisp}</span></td><td><span class="badge ${ehpLarvaCls}">${ehpLarvaDisp}</span></td><td><span class="badge ${gutCls}">${gutDisp}</span></td><td><span class="badge ${lipidCls}">${lipidDisp}</span></td><td><span class="badge ${!r.hepato?'b-na':r.hepato==='normal'?'b-ok':r.hepato==='pale'?'b-warn':'b-danger'}">${r.hepato?(HEPATO_LBL[r.hepato]||r.hepato):'-'}</span></td><td>${r.notes||'-'}</td></tr>`;
+      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editLab('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteLab('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${recAge(p,r)??r.age}</td><td>${r.labName||'-'}</td><td style="font-weight:700;color:${sc(sg)}">${r.tcbsGreen!=null?r.tcbsGreen.toLocaleString():'-'}</td><td>${r.tcbsYellow!=null?r.tcbsYellow.toLocaleString():'-'}</td><td style="font-weight:700;color:${sc(shg)}">${r.hepatoGreen!=null?r.hepatoGreen.toLocaleString():'-'}</td><td>${r.hepatoYellow!=null?r.hepatoYellow.toLocaleString():'-'}</td><td>${r.tvc?r.tvc.toExponential(1):'-'}</td><td>${r.tvcHepato?r.tvcHepato.toExponential(1):'-'}</td><td><span class="badge ${ehpCls}">${ehpDisp}</span></td><td><span class="badge ${ehpLarvaCls}">${ehpLarvaDisp}</span></td><td><span class="badge ${gutCls}">${gutDisp}</span></td><td><span class="badge ${lipidCls}">${lipidDisp}</span></td><td><span class="badge ${!r.hepato?'b-na':r.hepato==='normal'?'b-ok':r.hepato==='pale'?'b-warn':'b-danger'}">${r.hepato?(HEPATO_LBL[r.hepato]||r.hepato):'-'}</span></td><td>${r.notes||'-'}</td></tr>`;
     }).join('')}</tbody></table>`;
 }
 function deleteLab(pid,id){
@@ -11412,7 +11424,7 @@ function renderCmpWQ(){
   const key=document.getElementById('cmp-param')?.value;const pm=PARAMS.find(p=>p.key===key);if(!pm)return;
   document.getElementById('cmp-title').textContent=`เปรียบเทียบ ${pm.lbl}${pm.unit?' ('+pm.unit+')':''} ระหว่างบ่อ`;
   if(cmpCh){cmpCh.destroy();cmpCh=null;}
-  const datasets=getSelPonds().map((p,i)=>{const col=COLORS[i%COLORS.length];const pts=p.records.filter(r=>r[pm.key]!==null&&r[pm.key]!==undefined).map(r=>({x:r.age,y:r[pm.key]}));return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'33',tension:.3,pointRadius:4,fill:false}});
+  const datasets=getSelPonds().map((p,i)=>{const col=COLORS[i%COLORS.length];const pts=p.records.filter(r=>r[pm.key]!==null&&r[pm.key]!==undefined).map(r=>({x:recAge(p,r),y:r[pm.key]}));return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'33',tension:.3,pointRadius:4,fill:false}});
   // ── เพิ่ม: เส้นเกณฑ์มาตรฐาน (min/max) จาก PARAMS ลากคู่กับข้อมูลจริง เพื่อดูว่าค่าหลุดกรอบเมื่อไร ──
   const allAges=datasets.flatMap(d=>d.data.map(pt=>pt.x));
   if(allAges.length&&(pm.min!=null||pm.max!=null)){
@@ -11864,9 +11876,9 @@ function renderCmpFeed(){
   const lblMap={per100k:'การกิน (กก./แสน)',daily:'อาหารต่อวัน (กก.)',cumulative:'อาหารสะสม (กก.)'};
   const datasets=getSelPonds().map((p,i)=>{
     const col=COLORS[i%COLORS.length];let pts=[];
-    if(metric==='per100k'){pts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.age!=null).map(r=>{const v=feedPer100k(r.totalFeed,pondFeedBaseOnDate(p,r.date));return v!=null?{x:r.age,y:parseFloat(v.toFixed(2))}:null}).filter(Boolean);}
-    else if(metric==='daily'){pts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.age!=null).map(r=>({x:r.age,y:r.totalFeed}));}
-    else{let cum=0;pts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.age!=null).sort((a,b)=>a.age-b.age).map(r=>{cum+=r.totalFeed;return{x:r.age,y:parseFloat(cum.toFixed(1))};});}
+    if(metric==='per100k'){pts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.date).map(r=>{const v=feedPer100k(r.totalFeed,pondFeedBaseOnDate(p,r.date));return v!=null?{x:recAge(p,r),y:parseFloat(v.toFixed(2))}:null}).filter(Boolean);}
+    else if(metric==='daily'){pts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.date).map(r=>({x:recAge(p,r),y:r.totalFeed}));}
+    else{let cum=0;pts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.date).sort((a,b)=>String(a.date).localeCompare(String(b.date))).map(r=>{cum+=r.totalFeed;return{x:recAge(p,r),y:parseFloat(cum.toFixed(1))};});}
     return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'33',tension:.3,pointRadius:3,fill:false};
   });
   document.getElementById('cmp-title').textContent=`เปรียบเทียบ${lblMap[metric]} ระหว่างบ่อ`;
