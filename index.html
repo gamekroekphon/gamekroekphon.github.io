@@ -724,6 +724,10 @@ html[data-uisize="xl"]{--ui-scale:1.25}
    เลยไม่ยืดตามความสูงแถว — เจอจริง: ช่องสูง 43px แถวสูง 56px เส้นคั่นของช่องนี้จึงยกขึ้น 13px
    ต้องห่อ div ข้างในแทน (พี่สั่ง entry #241) ══ */
 .tbl-act{display:flex;gap:6px;align-items:center;flex-wrap:nowrap}
+/* กล่องหมายเหตุรอบ (เช่น ส่วนลดค่าลูกกุ้ง/ค่าขนส่ง) — โชว์ทั้งในฟอร์มปิดบ่อและหน้ารายละเอียดบ่อ */
+.cm-crop-note,.pd-crop-note{background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:11px 14px;
+  margin-bottom:14px;font-size:calc(12.5px * var(--ui-scale));color:#92400e;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.pd-crop-note{margin:0 0 12px}
 .admin-only{display:none}
 body.role-admin .admin-only{display:revert!important}
 /* ⚠️ กับดักเดิมที่เคยเจอกับ .home-quick — body.role-admin .admin-only{display:revert!important}
@@ -2497,6 +2501,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
         <div class="fg"><label class="fl" for="cm-notes">หมายเหตุ</label><input type="text" class="fi" id="cm-notes" placeholder="..."></div>
       </div>
       <div class="cm-hold-note" id="cm-hold-note" style="display:none"></div>
+      <div class="cm-crop-note" id="cm-crop-note" style="display:none"></div>
       <div style="background:var(--wb);border-radius:8px;padding:12px;margin-bottom:16px;font-size:calc(12px * var(--ui-scale));color:#b45309">
         ⚠️ หลังปิดรอบ: ข้อมูลค่าน้ำ/อาหาร/สุ่มจะถูกเก็บเข้าประวัติและล้างออก เพื่อเริ่มรอบใหม่
       </div>
@@ -3325,6 +3330,9 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <div class="fg"><label class="fl" for="mdl-plWeight">น้ำหนักกุ้งตอนปล่อย (กรัม/ตัว)</label><input type="number" class="fi" id="mdl-plWeight" step="0.001" placeholder="0.003"></div>
       <div class="fg"><label class="fl" for="mdl-costfry">ต้นทุนลูกกุ้ง (PL) โดยประมาณ (บาท)</label><input type="number" class="fi" id="mdl-costfry" step="1" placeholder="18000"><span class="lbl-std">ใช้คำนวณจุดคุ้มทุนตั้งแต่วันแรก กรอกภายหลังได้ — ใส่เฉพาะค่าลูกกุ้ง ค่าขนส่งแยกช่องด้านล่าง</span></div>
       <div class="fg"><label class="fl" for="mdl-costtransport">ค่าขนส่งลูกกุ้ง (บาท)</label><input type="number" class="fi" id="mdl-costtransport" step="1" placeholder="0"><span class="lbl-std">แยกออกจากค่าลูกกุ้ง (พี่สั่ง entry #241) — รอบเก่าที่ปิดไปแล้วยังรวมอยู่ในค่าลูกกุ้งตามเดิม</span></div>
+      <div class="fg"><label class="fl" for="mdl-note">หมายเหตุรอบนี้</label>
+        <textarea class="fi" id="mdl-note" rows="3" placeholder="เช่น ลูกกุ้งชุดนี้ลดราคา 50% · ลดค่าขนส่งจากยอดปกติ · เปลี่ยนโรงเพาะกลางรอบ" style="resize:vertical;min-height:70px;font-family:inherit"></textarea>
+        <span class="lbl-std">ติดไปกับรอบนี้ — เห็นที่หน้ารายละเอียดบ่อ ฟอร์มปิดบ่อ และเก็บเข้าประวัติตอนปิดรอบให้เอง</span></div>
       <div style="display:flex;gap:10px"><button class="btn btn-p" onclick="savePond()">💾 บันทึก</button><button class="btn btn-s" onclick="closePond()">ยกเลิก</button></div>
     </div>
   </div>
@@ -6357,6 +6365,8 @@ function renderPondDetail(id){
       <span class="${badgeCls}" style="padding:5px 12px;border-radius:14px;font-size:calc(12px * var(--ui-scale));font-weight:600;flex:none">${badgeTxt}</span>
     </div>
     <div style="display:inline-flex;align-items:center;gap:6px;background:var(--a1);color:var(--a);font-size:calc(12px * var(--ui-scale));font-weight:600;padding:3px 10px;border-radius:99px;margin-bottom:12px">⏱ อายุ ${age} วัน</div>
+    ${p.cropNote?`<div class="pd-crop-note">📝 <b>หมายเหตุรอบนี้</b>
+${String(p.cropNote).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`:''}
     ${costCardHtml}
     ${reason?`<div class="pd-alert"><div class="ai ${cls==='prep'?'ok':cls}"><span>${cls==='danger'?'🔴':cls==='warn'?'⚠️':'✅'}</span><div>${reason}</div></div></div>`:''}
     ${!clsNoShrimp(cls)?pdCard('risk','🚦 ความเสี่ยงหลักของบ่อ','<div class="fc-grid" id="fc-grid"></div>'):''}
@@ -12426,7 +12436,9 @@ function getCloseSummary(p,cropIdx){
   const survivalRate=harvestResult&&harvestResult.survivalRate?harvestResult.survivalRate:null;
   const survivalRateOrder=harvestResult&&harvestResult.survivalRateOrder?harvestResult.survivalRateOrder:null;   // ชุดเทียบ: ฐานยอดสั่งซื้ออย่างเดียว
   const yieldPerRai=(totalWeight&&p.size)?+(totalWeight/p.size).toFixed(1):null;
-  const notesAll=[notesCrop,...rows.map(r=>r.notes).filter(Boolean)].filter(Boolean).join(' / ');
+  // หมายเหตุรอบ (ส่วนลดค่าลูกกุ้ง/ค่าขนส่ง ฯลฯ) ต้องติดไปกับ PDF ด้วย — เป็นเหตุผลของตัวเลขต้นทุน (entry #242)
+  const noteCropExtra=lastCrop?(lastCrop.cropNote||''):(p.cropNote||'');
+  const notesAll=[notesCrop,noteCropExtra,...rows.map(r=>r.notes).filter(Boolean)].filter(Boolean).join(' / ');
   const samples=lastCrop?(lastCrop.samples||[]):(p.samples||[]);
   // ── สรุปการเงิน (ใช้ข้อมูลต้นทุน/กำไรที่กรอกไว้ตอนปิดรอบ) — แยกหมวดละเอียด 10 ต้นทุนตรง + ส่วนแบ่งกำไร 2 รายการ
   //    costChem/costOther เป็นหมวด "เดิม" ก่อนแยกละเอียด — รอบเก่าที่กรอกไว้แบบเดิมยังอ่านค่าได้ครบ ไม่หายไปจาก totalCost ──
@@ -12816,6 +12828,7 @@ function openAddPond(){
   ['mdl-id','mdl-name','mdl-stock','mdl-stockbonus','mdl-size','mdl-hatchery','mdl-plWeight'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('mdl-plType').value='';
   document.getElementById('mdl-start').value=today();
+  {const e=document.getElementById('mdl-note');if(e)e.value='';}
   document.getElementById('pondModal').classList.add('on');
   syncDateHint(document.getElementById('mdl-start'));
   syncMdlTotal();
@@ -12831,6 +12844,7 @@ function editPond(id){
   document.getElementById('mdl-plWeight').value=p.plWeight||'';
   document.getElementById('mdl-costfry').value=p.costFry||'';
   {const e=document.getElementById('mdl-costtransport');if(e)e.value=p.costTransport||'';}
+  {const e=document.getElementById('mdl-note');if(e)e.value=p.cropNote||'';}
   document.getElementById('pondModal').classList.add('on');
   syncDateHint(document.getElementById('mdl-start'));
   syncMdlTotal();
@@ -12843,6 +12857,7 @@ function savePond(){
   const plWeight=document.getElementById('mdl-plWeight').value?parseFloat(document.getElementById('mdl-plWeight').value):null;
   const costFry=document.getElementById('mdl-costfry').value?parseFloat(document.getElementById('mdl-costfry').value):null;
   const costTransport=(document.getElementById('mdl-costtransport')&&document.getElementById('mdl-costtransport').value)?parseFloat(document.getElementById('mdl-costtransport').value):null;
+  const cropNote=((document.getElementById('mdl-note')||{}).value||'').trim();
   // ── ⚠️ วันลงกุ้ง/ยอดสั่งซื้อ ไม่บังคับแล้ว — บ่อที่ยกเลิกการลงกุ้งและยังไม่มีแผน ต้องล้างวันที่ออกได้
   //    (เดิมบังคับ startDate ทำให้บ่อที่ยกเลิกแล้วยังค้างวันลงกุ้งเก่า โผล่เป็น "กำลังเลี้ยง" ทั้งที่ไม่มีกุ้ง) ──
   if(!name||!size){alert('กรุณากรอกชื่อบ่อ และขนาดบ่อ (ไร่)');return}
@@ -12872,6 +12887,7 @@ function savePond(){
       document.getElementById('mdl-plWeight').value=plWeight||'';
       document.getElementById('mdl-costfry').value=costFry||'';
       {const e=document.getElementById('mdl-costtransport');if(e)e.value=costTransport||'';}
+      {const e=document.getElementById('mdl-note');if(e)e.value=cropNote||'';}
       alert(`✅ ปิดรอบเก่าของบ่อ ${pc.name} เรียบร้อยแล้ว\nตอนนี้กด "บันทึก" อีกครั้งเพื่อลงลูกกุ้งรอบใหม่`);
       return;
     }
@@ -12879,7 +12895,7 @@ function savePond(){
   if(id){
     const p=pond(id);
     const wasIdle=!p.startDate; // ลงลูกกุ้งรอบใหม่ (เดิมว่างจากการปิดรอบ) — ไม่ใช่แค่แก้ไขข้อมูลรอบเดิม
-    Object.assign(p,{name,stock:stock||0,stockBonus,size,startDate,hatchery,plType,plWeight,costFry,costTransport});
+    Object.assign(p,{name,stock:stock||0,stockBonus,size,startDate,hatchery,plType,plWeight,costFry,costTransport,cropNote});
     if(wasIdle&&startDate){   // ⚠️ ต้องมีวันลงกุ้งจริงถึงจะนับเป็นรอบใหม่ — ล้างวันที่ทิ้งไม่ใช่การเริ่มรอบ
       const nxt=computeNextCrop(p,startDate);
       p.cropNum=nxt.cropNum;p.cropYear=nxt.cropYear;
@@ -12891,7 +12907,7 @@ function savePond(){
     }
   }
   else{
-    const np={id:'P'+Date.now(),name,stock:stock||0,stockBonus,size,startDate,hatchery,plType,plWeight,costFry,costTransport,records:[],feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[]};
+    const np={id:'P'+Date.now(),name,stock:stock||0,stockBonus,size,startDate,hatchery,plType,plWeight,costFry,costTransport,cropNote,records:[],feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[]};
     if(startDate){const nxt=computeNextCrop(np,startDate);np.cropNum=nxt.cropNum;np.cropYear=nxt.cropYear;}
     else{np.cropNum=1;np.cropYear=new Date().getFullYear();}
     D.ponds.push(np);
@@ -13617,6 +13633,9 @@ function openCropModal(pid){
   });
   // ── ถ้าเคยกด "บันทึกผลจับ · ยังไม่ปิดรอบ" ไว้ — เติมค่าที่กรอกค้างไว้กลับมาทั้งหมด
   //    ยกเว้น เวชภัณฑ์/ปูน/อุปกรณ์ ที่ต้องคำนวณใหม่เสมอ — ของที่เบิกไปล้างบ่อหลังจับต้องโผล่เพิ่ม ──
+  // ── หมายเหตุรอบนี้จากหน้าจัดการบ่อ — ตอนกรอกต้นทุนต้องเห็นว่ารอบนี้มีส่วนลดอะไรไว้ ──
+  {const cn=document.getElementById('cm-crop-note');
+   if(cn){if(p.cropNote){cn.style.display='';cn.innerHTML='\uD83D\uDCDD <b>หมายเหตุรอบนี้</b><br>'+String(p.cropNote).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');}else cn.style.display='none';}}
   const holdEl=document.getElementById('cm-hold-note');
   if(p.pendingHarvest){
     const f=p.pendingHarvest.fields||{};
@@ -13869,6 +13888,8 @@ function confirmCloseCrop(){
     mortalityLog:(p.mortalityLog||[]).filter(r=>r&&r.date&&p.startDate&&r.date>=p.startDate),
     prepChecklist:p.prepChecklist?JSON.parse(JSON.stringify(p.prepChecklist)):null,
     harvestResult:hr,
+    // หมายเหตุที่กรอกไว้ตอนลงกุ้ง (เช่น "ลูกกุ้งชุดนี้ลด 50%") — ต้องเก็บติดรอบไป ไม่งั้นหายตอนปิดรอบ (entry #242)
+    cropNote:p.cropNote||'',
     // ⚠️ วันที่ต้นทุนของรอบนี้สิ้นสุดจริง (หลังล้างบ่อเสร็จ) — closeDate คือวันจับกุ้ง ใช้คนละหน้าที่
     //    pondCostStartDate() ของรอบถัดไปต้องเริ่มหลังวันนี้ ไม่งั้นของล้างบ่อจะถูกนับซ้ำ 2 รอบ
     costEndDate:(p.harvestDate&&today()>closeDate)?today():closeDate,
@@ -13891,7 +13912,7 @@ function confirmCloseCrop(){
   p.hatchery='';p.plType='';p.plWeight=null;
   // ── ต้นทุนลูกกุ้งต้องล้างด้วย — เก็บเข้าประวัติแล้วที่ hr.costFry
   //    ถ้าไม่ล้าง รอบใหม่จะยืมตัวเลขรอบเก่าไปโผลในต้นทุนสะสม/ฟอร์มปิดบ่อครั้งหน้า โดยดูเหมือนเลขจริง
-  p.costFry=null;p.costTransport=null;
+  p.costFry=null;p.costTransport=null;p.cropNote=null;
   p.harvestDate=null;p.pendingHarvest=null;   // ล้างสถานะ "ล้างบ่อ" ถ้ามาจากการปิด 2 ขั้นตอน
   p.records=[];p.feedLog=[];p.samples=[];
   p.waterLog=[];p.chemLog=[];p.labResults=[];p.partialHarvests=[];p.mortalityLog=[];
