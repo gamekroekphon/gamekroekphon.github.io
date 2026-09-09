@@ -10494,18 +10494,44 @@ function renderPdMedHistory(p){
 
 
 // ══════ การ์ด "🦐 การจับกุ้ง / พาเชียล" หน้ารายละเอียดบ่อ — ดึงข้อมูลรอบปัจจุบันของบ่อนี้มาโชว์ ไม่ต้องออกไปหน้า "จับกุ้ง" ══════
-// ⚠️ ใช้ getSelPonds/partialHarvestInfo/harvestRowKg/harvestRowBaht ตัวเดียวกับหน้า "จับกุ้ง"/"ภาพรวม" ทั้งหมด ไม่คำนวณคู่ขนาน
+// ⚠️ ใช้ partialTotals/pondShrimpCount/harvestRowKg/harvestRowBaht ตัวเดียวกับหน้า "จับกุ้ง"/"ภาพรวม" ทั้งหมด ไม่คำนวณคู่ขนาน — เลิกใช้ partialHarvestInfo/_phTarget แล้วตั้งแต่ entry #244 (ตัวนั้นเหลือใช้เฉพาะหน้าปฏิทินพาเชียล)
 function renderPdHarvestCard(p){
   const el=document.getElementById('pd-harvest-card');if(!el||!p)return;
   const rows=(p.partialHarvests||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
-  const info=(p.size>0)?partialHarvestInfo(p):null;
+  // ── สรุปด้านบน 3 บรรทัด (พี่สั่ง entry #244):
+  //    เอาออกแล้ว = ผลผลิตสะสม (กก.) · ได้เงินเท่าไร · เหลือในบ่ออีกเท่าไร
+  //    เดิมเป็น กก./ไร่ + เกณฑ์พาเชียล + วันที่คาดว่าจะถึงเกณฑ์ — พี่ไม่ได้ใช้ตัดสินจากตรงนั้น
+  //    ⚠️ partialTotals() ใช้ harvestRowKg/harvestRowBaht ชุดเดียวกับตารางข้างล่าง ยอดจึงตรงกันเสมอ
+  const pt=partialTotals(p.partialHarvests);
+  const sc=pondShrimpCount(p);
+  const latS=latestSample(p);
+  const over=!!(sc&&sc.phCount>sc.aliveAll);   // จับเกินที่ประเมินไว้
   let sumHtml='';
-  if(info){
-    const yrOk=info.yr>=_phTarget;
-    sumHtml=`<div class="pd-water-row"><span style="color:var(--tx2)">ผลผลิตสะสม</span><span style="font-weight:700;color:${yrOk?'var(--ok)':'var(--tx)'}">${Math.round(info.yr).toLocaleString()} กก./ไร่${yrOk?' ✓ ถึงเกณฑ์':''}</span></div>
-      <div class="pd-water-row"><span style="color:var(--tx2)">เกณฑ์พาเชียล</span><span style="font-weight:600">${_phTarget.toLocaleString()} กก./ไร่</span></div>
-      ${info.ready?'':(info.noProj?'<div class="pd-water-row"><span style="color:var(--tx2)">คาดว่าจะถึงเกณฑ์</span><span style="color:var(--tx3)">ต้องสุ่มตัวอย่าง ≥2 ครั้งก่อนถึงจะคาดวันได้</span></div>'
-        :`<div class="pd-water-row"><span style="color:var(--tx2)">คาดว่าจะถึงเกณฑ์</span><span style="font-weight:600;color:var(--in)">อีก ${info.days} วัน (${fD(info.date)})</span></div>`)}`;
+  if(p.startDate&&(rows.length||sc)){
+    const row=(lbl,val)=>`<div class="pd-water-row"><span style="color:var(--tx2)">${lbl}</span><span>${val}</span></div>`;
+    sumHtml=
+      row('ผลผลิตสะสม (พาเชียลรอบนี้)',
+        `<b style="font-weight:700">${Math.round(pt.kg).toLocaleString()} กก.</b>`)
+     +row('รวมจำนวนเงิน',
+        `<b style="font-weight:700;color:var(--ok)">${Math.round(pt.baht).toLocaleString()} บาท</b>`)
+     +row('น้ำหนักกุ้งที่เหลืออยู่ในบ่อ',
+        (sc&&sc.biomass!=null)
+          ? (over
+              ? `<b style="font-weight:700;color:var(--w)">0 กก.</b>`
+              : `<b style="font-weight:700;color:var(--p)">${Math.round(sc.biomass).toLocaleString()} กก.</b>${latS&&latS.date?`<span style="color:var(--tx3);font-weight:400;font-size:var(--fs10)"> (จากสุ่ม ${fD(latS.date)})</span>`:''}`)
+          : '<span style="color:var(--tx3)">ต้องสุ่มตัวอย่างก่อน</span>')
+     // แถวที่ 4: อัตรารอดรวม = อัตรารอดสะสมจากสุ่มครั้งล่าสุด
+     // ⚠️ นับกุ้งที่จับพาเชียลไปแล้วเป็น "รอด" ด้วย — ตัวเลขนี้จึงไม่ตกเวลาพาเชียล (ถ้าตกแปลว่ากุ้งตายจริง)
+     +row('อัตรารอดรวม',
+        sc
+          ? `<b style="font-weight:700;color:${sc.survAll>=70?'var(--ok)':sc.survAll>=50?'var(--w)':'var(--d)'}">${sc.survAll}%</b><span style="color:var(--tx3);font-weight:400;font-size:var(--fs10)"> · ${Math.round(sc.aliveAll).toLocaleString()} ตัว จากที่ปล่อย ${sc.release.toLocaleString()}</span>`
+          : '<span style="color:var(--tx3)">ต้องสุ่มตัวอย่างก่อน</span>');
+    // ⚠️ จับไปแล้วมากกว่าที่อัตรารอดประเมินไว้ → inPond ถูก clamp เป็น 0
+    //    โชว์ "0 กก." เฉยๆ จะเข้าใจว่าบ่อหมดแล้ว ทั้งที่จริงๆ คืออัตรารอดที่กรอกไว้ต่ำกว่าความจริง (พี่สั่ง entry #244)
+    if(over)sumHtml+=`<div style="background:var(--wb);border:1px solid var(--w);border-radius:8px;padding:9px 12px;margin-top:8px;font-size:calc(11.5px * var(--ui-scale));color:#7c4a06;line-height:1.5">
+      ⚠️ จับพาเชียลไปแล้ว <b>${Math.round(sc.phCount).toLocaleString()} ตัว</b> มากกว่าที่ประเมินว่ามีในบ่อ (<b>${Math.round(sc.aliveAll).toLocaleString()} ตัว</b> จากอัตรารอด ${sc.survAll}%)<br>
+      แปลว่าอัตรารอดที่กรอกไว้<b>ต่ำกว่าความจริง</b> — ควรสุ่มใหม่แล้วแก้อัตรารอดให้ตรง ไม่งั้นตัวเลขนี้จะขึ้น 0 ตลอด
+    </div>`;
   }
   const histHtml=rows.length?`<div style="overflow-x:auto;margin-top:${sumHtml?'10px':'0'}"><table class="tbl" style="font-size:calc(12.5px * var(--ui-scale))"><thead><tr>
       <th>วันที่</th><th>แพ</th><th style="text-align:right">น้ำหนัก (กก.)</th><th style="text-align:right">รวม (บาท)</th><th></th>
