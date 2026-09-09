@@ -682,6 +682,43 @@ html[data-uisize="xl"]{--ui-scale:1.25}
 /* แถบสถานะ “ล้างบ่อ · รอปิดรอบ” */
 .cm-hold-note{background:var(--ib);border:1.5px solid #b9d5ef;border-radius:10px;padding:11px 14px;margin-bottom:14px;
   font-size:calc(12.5px * var(--ui-scale));color:var(--in);line-height:1.55}
+/* ══ ตารางหน้ารอบเลี้ยง — จัดแนวตั้ง/นอนให้ตรงกันทุกช่อง
+   ⚠️ เดิมเขียน style อินไลน์กระจัดกระจาย ช่องแรก vertical-align:top ช่องอื่น middle
+   แถวที่มีหลายรอบจึงเห็นชัดว่าตัวหนังสืออยู่คนละระดับ (พี่สั่ง entry #240) ══ */
+.cr-tbl{width:100%;border-collapse:collapse;font-size:calc(13px * var(--ui-scale))}
+.cr-tbl thead tr{background:var(--sf2);border-bottom:2px solid var(--bd)}
+.cr-tbl th{padding:10px 9px;font-size:calc(12px * var(--ui-scale));color:var(--tx2);font-weight:700;
+  vertical-align:middle;white-space:nowrap}
+.cr-tbl td{padding:10px 9px;vertical-align:middle}
+.cr-tbl tbody tr{border-bottom:1px solid var(--bd)}
+.cr-th-l,.cr-td-l{text-align:left}
+.cr-th-c,.cr-td-c{text-align:center}
+.cr-td-name{font-weight:800;white-space:nowrap}
+.cr-td-cnt{text-align:center;font-size:calc(17px * var(--ui-scale));font-weight:800;font-variant-numeric:tabular-nums;width:1%}
+/* ⚠️ ป้ายสถานะต้องอยู่บรรทัดเดียว — เจอตอนดูภาพจริงว่าตัดเป็น "🦐 กำลัง / เลี้ยง" ดูไม่สวย (วัดความสูงเห็นเท่ากัน จึงไม่เจอ) */
+.cr-tbl .badge{white-space:nowrap}
+.cr-tbl td.cr-td-c{white-space:nowrap;width:1%}
+.cr-td-act{padding:8px 8px!important;text-align:center;white-space:nowrap}
+/* กลุ่มรอบในช่องเดียว — ใช้ grid เพื่อให้ วันลง/วันปิด/จำนวนวัน ตรงเป็นคอลัมน์ทุกรอบ */
+/* ⚠️ ทุกคอลัมน์เป็น auto + justify-content:start — เดิมใช้ 1fr ที่ช่องวันปิด
+   มันดูดพื้นที่ว่างทั้งหมด ดันตารางกว้างเกินกรอบ คอลัมน์ปุ่มปิดรอบโดนตัดหาย */
+.cr-rounds{display:grid;grid-template-columns:auto auto auto auto auto;gap:3px 8px;align-items:center;
+  justify-content:start;font-size:calc(12px * var(--ui-scale));line-height:1.45}
+.cr-r-lbl{font-weight:700;color:var(--tx2);white-space:nowrap}
+.cr-r-d1,.cr-r-d2{white-space:nowrap}
+.cr-r-ar{color:var(--tx3);text-align:center}
+.cr-r-dy{font-weight:700;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+.cr-r-none{grid-column:1/-1;color:var(--tx3);font-style:italic}
+.cr-cost{font-size:var(--fs105);color:var(--pd);margin-top:5px;cursor:help;line-height:1.35}
+.cr-cost .k{color:var(--tx3);font-size:var(--fs10);font-weight:600;white-space:nowrap}
+.cr-cost .v{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+/* ตารางประวัติปิดบ่อ — คุมระยะขอบที่เดิมเขียนกระจัดกระจาย (8px / 8px 10px / 6px 8px)
+   ใช้ :scope > เพื่อไม่ให้โดนตารางพาเชียลที่ซ้อนอยู่ข้างใน */
+.cr-hist-tbl{width:100%;border-collapse:collapse;font-size:calc(13px * var(--ui-scale))}
+.cr-hist-tbl > thead > tr > th,
+.cr-hist-tbl > tbody > tr > td{padding:9px 10px!important;vertical-align:middle}
+.cr-hist-tbl > tbody > tr > td:last-child{padding:6px 10px!important}
+/* ⚠️ ต้อง !important เพราะทุก <td> มี style="padding:..." อินไลน์อยู่ ซึ่งชนะ selector ของคลาสเสมอ */
 .admin-only{display:none}
 body.role-admin .admin-only{display:revert!important}
 /* ⚠️ กับดักเดิมที่เคยเจอกับ .home-quick — body.role-admin .admin-only{display:revert!important}
@@ -2322,15 +2359,16 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
         <button class="btn" style="font-size:calc(12px * var(--ui-scale));padding:5px 10px;white-space:nowrap" onclick="goStatForCropYear()">📊 สถิติ →</button>
       </div>
     </div>
+    <div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:4px;text-align:right;display:none" id="cr-scroll-hint">← เลื่อนซ้าย-ขวาเพื่อดูสถานะ/ปุ่มปิดรอบ →</div>
     <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:calc(13px * var(--ui-scale))">
+      <table class="cr-tbl">
         <thead>
-          <tr style="background:var(--sf2);border-bottom:2px solid var(--bd)">
-            <th style="text-align:left;padding:9px 12px;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">บ่อ</th>
-            <th style="text-align:left;padding:9px 12px;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">รอบเลี้ยงในปีนี้ (ทุกรอบ)</th>
-            <th style="text-align:center;padding:9px 12px;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">ปิดแล้ว</th>
-            <th style="text-align:center;padding:9px 12px;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">สถานะ</th>
-            <th style="padding:9px 6px"></th>
+          <tr>
+            <th class="cr-th-l">บ่อ</th>
+            <th class="cr-th-l">รอบเลี้ยงในปีนี้ (ทุกรอบ)</th>
+            <th class="cr-th-c">ปิดแล้ว</th>
+            <th class="cr-th-c">สถานะ</th>
+            <th class="cr-th-c"></th>
           </tr>
         </thead>
         <tbody id="cr-tbody"></tbody>
@@ -12925,12 +12963,13 @@ function renderCrops(){
     // ── ⚠️ เดิมตารางมีแค่ 2 ช่อง = โชว์ได้สูงสุด 2 รอบ/บ่อ/ปี บ่อที่เลี้ยง 3 ครอป/ปี จะมีรอบหายไปจากตาราง
     //    เปลี่ยนเป็นลิสต์รอบทั้งหมดในช่องเดียว รองรับกี่รอบก็ได้ (รอบที่กำลังเลี้ยง/เตรียมบ่อ ต่อท้ายเสมอ) ──
     const hasCurrentRound=isCurYear&&(onTrackNow||isPrepNow||isWaitSum);
+    // แต่ละรอบคืน 5 ช่องของ grid ตรงๆ (ไม่ห่อ div) เพื่อให้คอลัมน์ตรงกันทุกรอบในบ่อเดียวกัน
     const roundLine=(label,d1,d2,days,color,extra)=>
-      '<div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:calc(12px * var(--ui-scale));white-space:nowrap">'+
-        '<span style="font-weight:700;color:var(--tx2);min-width:44px">'+label+'</span>'+
-        '<span>'+d1+'</span><span style="color:var(--tx3)">→</span><span>'+d2+'</span>'+
-        '<span style="font-weight:700;color:'+color+'">'+days+'</span>'+(extra||'')+
-      '</div>';
+      '<span class="cr-r-lbl">'+label+'</span>'+
+      '<span class="cr-r-d1">'+d1+'</span>'+
+      '<span class="cr-r-ar">→</span>'+
+      '<span class="cr-r-d2">'+d2+'</span>'+
+      '<span class="cr-r-dy" style="color:'+color+'">'+days+(extra||'')+'</span>';
     // ⚠️ ป้าย "รอบ N" นับจากลำดับจริงในปีนั้น (i+1) ไม่ใช่ c.cropNum ที่ข้อมูลจริงซ้ำกันได้
     //    ถ้า cropNum ที่บันทึกไว้ไม่ตรงกับลำดับ โชว์ต่อท้ายให้เห็นด้วย จะได้รู้ว่าต้องไปแก้ที่ปุ่ม ✏️
     const lines=history.map((c,i)=>{
@@ -12950,25 +12989,28 @@ function renderCrops(){
         ? roundLine('รอบ '+curNo,fD(p.startDate),'<span style="color:var(--in)">กำลังเลี้ยง</span>',curAge+' วัน','var(--p)')
         : roundLine('รอบ '+curNo,fD(p.startDate),'<span style="color:var(--w)">เตรียมบ่อ</span>','เหลือ '+(1-curAge)+' วัน','var(--tx3)'));   /* นับแบบเดียวกับหน้าจัดการบ่อ — วันลงกุ้งคือวันที่ 1 (entry #234) */
     }
-    if(!lines.length)lines.push('<div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);padding:3px 0">— ยังไม่มีรอบในปีนี้ —</div>');
-    return`<tr style="border-bottom:1px solid var(--bd);${isCurYear?'background:var(--pl)':''}">
-      <td style="padding:8px 12px;font-weight:800;vertical-align:top">บ่อ ${p.name}</td>
-      <td style="padding:6px 12px">${lines.join('')}</td>
-      <td style="padding:8px 10px;text-align:center;font-size:calc(20px * var(--ui-scale));font-weight:800;color:${progColor}">${totalClosed}</td>
-      <td style="padding:8px 10px;text-align:center">${isWaitSum?'<span class="badge b-warn">📋 รอทำสรุป</span>':onTrackNow?'<span class="badge b-info">🦐 กำลังเลี้ยง</span>':isPrepNow?'<span class="badge b-warn">🧹 เตรียมบ่อ</span>':totalClosed>0?'<span class="badge b-ok">✅ ปิดแล้ว '+totalClosed+' รอบ</span>':'<span class="badge b-na">⚪ บ่อว่าง</span>'}</td>
-      <td style="padding:8px 6px;text-align:center">${isCurYear&&hasStarted&&APP_ROLE==='admin'?`<button class="btn btn-sm" style="background:var(--p);color:#fff;border:none;font-size:calc(12px * var(--ui-scale))" onclick="openCropModal('${p.id}')">${isWaitSum?'📋 ทำสรุป · ปิดรอบ':'ปิดรอบ'}</button>${(()=>{
+    if(!lines.length)lines.push('<span class="cr-r-none">— ยังไม่มีรอบในปีนี้ —</span>');
+    return`<tr style="${isCurYear?'background:var(--pl)':''}">
+      <td class="cr-td-name">บ่อ ${p.name}</td>
+      <td class="cr-td-l"><div class="cr-rounds">${lines.join('')}</div></td>
+      <td class="cr-td-cnt" style="color:${progColor}">${totalClosed}</td>
+      <td class="cr-td-c">${isWaitSum?'<span class="badge b-warn">📋 รอทำสรุป</span>':onTrackNow?'<span class="badge b-info">🦐 กำลังเลี้ยง</span>':isPrepNow?'<span class="badge b-warn">🧹 เตรียมบ่อ</span>':totalClosed>0?'<span class="badge b-ok">✅ ปิดแล้ว '+totalClosed+' รอบ</span>':'<span class="badge b-na">⚪ บ่อว่าง</span>'}</td>
+      <td class="cr-td-act">${isCurYear&&hasStarted&&APP_ROLE==='admin'?`<button class="btn btn-sm" style="background:var(--p);color:#fff;border:none;font-size:calc(12px * var(--ui-scale))" onclick="openCropModal('${p.id}')">${isWaitSum?'📋 ทำสรุป · ปิดรอบ':'ปิดรอบ'}</button>${(()=>{
         // ต้นทุนสะสม realtime (admin) — เลขชุดเดียวกับ auto-fill ตอนปิดรอบ เห็นก่อนตัดสินใจโดยไม่ต้องเปิดฟอร์มปิดรอบเสี่ยงกดยืนยันพลาด
         const rc=pondRunningCost(p);if(!rc)return'';
         const rr=n=>Math.round(n).toLocaleString();
         // ต้องมีคำว่า "ต้นทุน" กำกับเสมอ — เดิมโชว์แค่ "💰 752,150 บ." เฉยๆ admin คนอื่นอ่านแล้วนึกว่าเป็นรายได้/กำไร (พี่สั่ง entry #239)
         const frozen=p.harvestDate?` · ค่าแรง/ค่าไฟ หยุดนับที่วันจับ ${fD(p.harvestDate)}`:'';
-        return`<div style="font-size:var(--fs105);color:var(--pd);margin-top:5px;cursor:help;line-height:1.35" title="ต้นทุนสะสมทั้งรอบ (ยังไม่หักรายได้) — ลูกกุ้ง ${rr(rc.fry)} · อาหาร ${rr(rc.feed)} · เคมี/เวชภัณฑ์ ${rr(rc.chem)} · ค่าแรง ${rr(rc.labor)} · ค่าไฟ ${rr(rc.elec)} · อุปกรณ์นอก ${rr(rc.shared)} · น้ำมัน ${rr(rc.fuel)} บาท${frozen} (สูตรเดียวกับการ์ดต้นทุนสะสม)">
-          <div style="color:var(--tx3);font-size:var(--fs10);font-weight:600;white-space:nowrap">💰 ต้นทุนสะสม</div>
-          <div style="font-weight:700;white-space:nowrap">${rr(rc.total)} บ.</div>
+        return`<div class="cr-cost" title="ต้นทุนสะสมทั้งรอบ (ยังไม่หักรายได้) — ลูกกุ้ง ${rr(rc.fry)} · อาหาร ${rr(rc.feed)} · เคมี/เวชภัณฑ์ ${rr(rc.chem)} · ค่าแรง ${rr(rc.labor)} · ค่าไฟ ${rr(rc.elec)} · อุปกรณ์นอก ${rr(rc.shared)} · น้ำมัน ${rr(rc.fuel)} บาท${frozen} (สูตรเดียวกับการ์ดต้นทุนสะสม)">
+          <div class="k">💰 ต้นทุนสะสม</div>
+          <div class="v">${rr(rc.total)} บ.</div>
         </div>`;
       })()}`:''}</td>
     </tr>`;
   }).join('');
+  // ── ป้าย "เลื่อนซ้าย-ขวา" — โชว์เฉพาะตอนตารางกว้างเกินกรอบจริง ไม่งั้นจอกว้างก็ขึ้นเก้อเปล่าๆ ──
+  {const t=document.querySelector('.cr-tbl'),h=document.getElementById('cr-scroll-hint');
+   if(t&&h)h.style.display=(t.scrollWidth>t.parentElement.clientWidth+2)?'':'none';}
   // history section
   const histEl=document.getElementById('cr-history');if(!histEl)return;
   const allHistory=[];D.ponds.forEach(p=>(p.cropHistory||[]).forEach((c,_idx)=>allHistory.push({...c,pondName:p.name,_pondId:p.id,_idx})));
@@ -12996,7 +13038,7 @@ function renderCrops(){
   }
   const filteredHistory=histYearFilter==='all'?allHistory:allHistory.filter(c=>String(histRecYear(c))===histYearFilter);
   const isAdminHist=APP_ROLE==='admin';
-  histEl.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:calc(13px * var(--ui-scale))">
+  histEl.innerHTML=`<div style="overflow-x:auto"><table class="cr-hist-tbl">
     <thead><tr style="background:var(--sf2);border-bottom:2px solid var(--bd)">
       <th style="text-align:left;padding:8px 10px;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">บ่อ</th>
       <th style="text-align:center;padding:8px;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">รอบ</th>
