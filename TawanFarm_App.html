@@ -2497,7 +2497,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       </div>
       <!-- Close Date + Notes -->
       <div class="fgrid" style="grid-template-columns:1fr 1fr;margin-bottom:12px">
-        <div class="fg"><label class="fl" for="cm-close-date">วันที่ปิดบ่อ</label><input type="date" class="fi" id="cm-close-date"></div>
+        <div class="fg"><label class="fl" for="cm-close-date">วันที่ปิดบ่อ</label><input type="date" class="fi" id="cm-close-date" onchange="cmOnCloseDateChange()"></div>
         <div class="fg"><label class="fl" for="cm-notes">หมายเหตุ</label><input type="text" class="fi" id="cm-notes" placeholder="..."></div>
       </div>
       <div class="cm-hold-note" id="cm-hold-note" style="display:none"></div>
@@ -6292,8 +6292,11 @@ function renderPondDetail(id){
     const pdFeedTotalKg=feedLog.reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0);
     const pdFeedDetail=pdFeedTotalKg>0?`<div class="ceo-cat-item-row" style="border-bottom:none"><span>รวม <b>${Math.round(pdFeedTotalKg).toLocaleString()} กก.</b></span><span>≈ <b>${Math.round(pdFeedTotalKg/25).toLocaleString()} กระสอบ</b></span></div>`:'';
     const pdFryPieces=pRelease(p);
+    // ⚠️ ราคาต่อตัวต่ำกว่า 1 บาท — ปัด 2 ตำแหน่งทำให้คูณกลับไม่ตรงยอดรวม
+    //    เช่น 59,040 ÷ 556,000 = 0.1062 แต่โชว์ 0.11 → คูณกลับได้ 61,160 เกินจริง 2,120 บาท
+    //    ต่ำกว่า 1 บาทจึงโชว์ 4 ตำแหน่ง (พี่สั่งให้ดูละเอียด entry #243)
     const pdFryPerPiece=pdFryPieces>0&&pdFryCost>0?pdFryCost/pdFryPieces:null;
-    const pdFryDetail=pdFryPieces>0?`<div class="ceo-cat-item-row" style="border-bottom:none"><span><b>${pdFryPieces.toLocaleString()} ตัว</b></span><span>${pdFryPerPiece!=null?'× ฿'+pdFryPerPiece.toFixed(2)+'/ตัว':'-'}</span></div>`:'';
+    const pdFryDetail=pdFryPieces>0?`<div class="ceo-cat-item-row" style="border-bottom:none"><span><b>${pdFryPieces.toLocaleString()} ตัว</b></span><span>${pdFryPerPiece!=null?'× ฿'+(pdFryPerPiece<1?pdFryPerPiece.toFixed(4):pdFryPerPiece.toFixed(2))+'/ตัว':'-'}</span></div>`:'';
     // ── ค่าแรง/ค่าไฟ เป็นต้นทุนที่ "หารกัน" กับบ่ออื่น — ตัวเลขต่อบ่อจึงขึ้นกับว่าวันนั้นเลี้ยงกี่บ่อพร้อมกัน
     //    เดิมโชว์แค่ "N วัน / เฉลี่ย X บาท/วัน" อธิบายไม่ได้ว่าทำไมแพง — ตอนนี้แสดงที่มาทั้งสูตร ──
     const pdRow=(l,r)=>`<div class="ceo-cat-item-row"><span>${l}</span><span>${r}</span></div>`;
@@ -13575,6 +13578,7 @@ function exportChPdf(pid,idx){
 
 // ===== CLOSE CROP MODAL =====
 function openCropModal(pid){
+  _cmAutoShare=null;   // ลืมค่าอัตโนมัติชุดก่อน กันเข้าใจว่าพี่แก้มือ
   // ── กัน staff 2 ชั้น — ปุ่มซ่อนไว้แล้ว แต่เรียกตรงจาก console ยังเข้าได้ (ฟอร์มนี้มีตัวเลขต้นทุน/กำไร) ──
   if(APP_ROLE!=='admin')return;
   const p=pond(pid);if(!p)return;
@@ -13600,20 +13604,11 @@ function openCropModal(pid){
   document.getElementById('cm-cost-med').value=stockGroups.med||'';
   document.getElementById('cm-cost-lime').value=stockGroups.lime||'';
   document.getElementById('cm-cost-equip').value=stockGroups.equip||'';
-  // ⚠️ ค่าไฟ/ค่าแรง/ของแชร์ คือต้นทุนที่หารกันรายวัน — ต้องหยุดที่วันจับกุ้ง
-  //    ส่วนเวชภัณฑ์/ปูน คือของที่เบิกเข้าบ่อนี้จริงๆ นับถึงวันที่กดปิดรอบ (รวมช่วงล้างบ่อ) — พี่สั่ง entry #236
-  const shareEnd=p.harvestDate||today();
-  const autoElec=getElecCostForPeriod(p.startDate,shareEnd);
-  document.getElementById('cm-cost-elec').value=autoElec?Math.round(autoElec):'';
+  cmFillShareCosts(p);
   // ── ค่าแรง: ดึงจาก getLaborCostForPond (เงินเดือนประจำ+พนักงานรายวัน หารตามบ่อ active จริงรายวัน) แทนกรอกเองแล้ว — พี่ยืนยันแล้วว่าเทียบตัวเลขที่กรอกเองไว้ก่อนหน้ากับสูตรนี้ไม่ต่างกัน แก้ไขได้ถ้าจำเป็น ──
-  const autoLabor=getLaborCostForPond(pid,p.startDate,shareEnd);
-  document.getElementById('cm-cost-labor').value=autoLabor?Math.round(autoLabor):'';
+
   // ── อุปกรณ์นอก/น้ำมัน: ดึงจาก getSharedCostForPond (ส่วนแบ่งจากโหมด "แชร์ทุกบ่อ" หน้าสต็อก) แทนกรอกเองแล้ว — แยกหมวด 'fuel' ออกเป็นช่องน้ำมันต่างหาก ไม่ให้นับซ้ำในอุปกรณ์นอก — แก้ไขได้ถ้าจำเป็น ──
-  const cmCostFrom=pondCostStartDate(p);
-  const autoFuelCost=getSharedCostForPond(pid,cmCostFrom,shareEnd,'fuel');
-  const autoSharedCost=getSharedCostForPond(pid,cmCostFrom,shareEnd)-autoFuelCost;
-  document.getElementById('cm-cost-equip-out').value=autoSharedCost?Math.round(autoSharedCost):'';
-  document.getElementById('cm-cost-fuel').value=autoFuelCost?Math.round(autoFuelCost):'';
+
   // ── ค่าจับกุ้ง/% ส่วนแบ่ง — ยังกรอกเองทั้งหมด เพราะต้องดึงตัวเลขจากนอกแอป ──
   ['cm-pct-caretaker','cm-pct-manager'].forEach(id=>{
     document.getElementById(id).value='';
@@ -13645,6 +13640,15 @@ function openCropModal(pid){
       if(e&&f[id]!=null&&f[id]!=='')e.value=f[id];
     });
     _cmGrades=JSON.parse(JSON.stringify(p.pendingHarvest.grades||[]));cmRenderGrades();
+    // ⚠️ ถ้ามีพาเชียลเพิ่ม/แก้หลังกด "บันทึกผลจับ" ยอดรายได้ที่เก็บไว้จะขาดไปเท่ายอดที่เพิ่ม
+    //    รีเฟรชให้เฉพาะกรณีที่ยอดเก่า = ตัวช่วยคำนวณเก่า (แปลว่ากดปุ่มมา ไม่ได้พิมพ์เอง)
+    //    ถ้าพี่พิมพ์ยอดจริงจากบิลแพ ห้ามแตะ — ปล่อยให้บรรทัด "ต่างจากที่คำนวณ" เตือนเอง
+    {const rv=document.getElementById('cm-revenue');
+     const saved=p.pendingHarvest.calcAllAtSave;
+     if(rv&&saved!=null&&(parseFloat(rv.value)||0)===saved){
+       calcCropEcon();
+       if(window._cmCalcAll!=null&&Math.round(_cmCalcAll)!==saved)rv.value=Math.round(_cmCalcAll);
+     }}
     if(holdEl){
       holdEl.style.display='';
       const extra=(stockGroups.med||0)+(stockGroups.lime||0)+(stockGroups.equip||0);
@@ -13670,7 +13674,8 @@ function saveHarvestPending(){
   const fields={};
   CM_HOLD_FIELDS.forEach(id=>{const e=document.getElementById(id);if(e)fields[id]=e.value;});
   p.harvestDate=closeDate;
-  p.pendingHarvest={savedAt:today(),fields,grades:JSON.parse(JSON.stringify(_cmGrades||[]))};
+  // เก็บยอดที่ตัวช่วยคำนวณไว้ ณ ตอนนั้นด้วย — ใช้ตัดสินตอนเรียกกลับว่ารายได้ที่เก็บไว้มาจากปุ่มตัวช่วย หรือพี่กรอกเอง (entry #243)
+  p.pendingHarvest={savedAt:today(),fields,grades:JSON.parse(JSON.stringify(_cmGrades||[])),calcAllAtSave:(window._cmCalcAll!=null?Math.round(_cmCalcAll):null)};
   save();fbSave();
   closeCropModal();
   populateAll();renderOv();renderManage();
@@ -13794,6 +13799,43 @@ function calcCropEcon(){
     profEl.value='';
     profEl.placeholder=totalCostDirect?'กรอก "รายได้" ก่อน จึงจะคำนวณกำไรได้':'คำนวณอัตโนมัติ';
   }
+}
+// ══ เติม ค่าไฟ/ค่าแรง/น้ำมัน/อุปกรณ์นอก — ต้นทุนกลุ่มที่ "หารกันรายวัน" ══
+// ⚠️ สิ้นสุดที่ "วันปิดบ่อ" ไม่ใช่ today()
+//    กรอกฟอร์มวันนี้แต่ตั้งวันปิดเป็นพรุ่งนี้ เดิมนับแค่ถึงวันนี้ → ค่าไฟ/ค่าแรงของวันปิดหายไปเฉยๆ
+//    ทั้งที่ allCropWindows() นับบ่อนี้เข้าตัวหารของวันนั้น กลายเป็นเงินที่ไม่มีบ่อไหนจ่าย (พี่สั่ง entry #243)
+//    บ่อที่อยู่สถานะ "รอทำสรุป" ใช้ harvestDate ก่อนเสมอ (entry #236 ตรงกัน)
+let _cmAutoShare=null;
+function cmFillShareCosts(p){
+  if(!p)return;
+  const cdEl=document.getElementById('cm-close-date');
+  const cd=(cdEl&&cdEl.value)||'';
+  const shareEnd=p.harvestDate||cd||today();
+  const cmCostFrom=pondCostStartDate(p);
+  const fuel=getSharedCostForPond(p.id,cmCostFrom,shareEnd,'fuel')||0;
+  const nowAuto={
+    elec:Math.round(getElecCostForPeriod(p.startDate,shareEnd)||0),
+    labor:Math.round(getLaborCostForPond(p.id,p.startDate,shareEnd)||0),
+    fuel:Math.round(fuel),
+    equipOut:Math.round((getSharedCostForPond(p.id,cmCostFrom,shareEnd)||0)-fuel)
+  };
+  // เขียนทับเฉพาะช่องที่ยังเป็นค่าที่ระบบเติมไว้เอง — ถ้าพี่แก้ด้วยมือแล้ว ห้ามทับ
+  const put=(id,key)=>{
+    const e=document.getElementById(id);if(!e)return;
+    const cur=(e.value||'').trim();
+    const wasAuto=!_cmAutoShare||cur===''||cur===String(_cmAutoShare[key]||'');
+    if(wasAuto)e.value=nowAuto[key]||'';
+  };
+  put('cm-cost-elec','elec');put('cm-cost-labor','labor');
+  put('cm-cost-fuel','fuel');put('cm-cost-equip-out','equipOut');
+  _cmAutoShare=nowAuto;
+}
+// วันปิดบ่อเปลี่ยน → คิดค่าไฟ/ค่าแรงใหม่ตามช่วงที่เปลี่ยนไป
+function cmOnCloseDateChange(){
+  const pid=document.getElementById('cm-pond-id').value;
+  const p=pond(pid);if(!p)return;
+  cmFillShareCosts(p);
+  calcCropEcon();
 }
 function closeCropModal(){
   document.getElementById('cropModal').classList.remove('on');
