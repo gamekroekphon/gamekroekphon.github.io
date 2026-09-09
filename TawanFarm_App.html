@@ -4696,13 +4696,18 @@ function hvSimulate(p,targetSize,opt){
 function pondRunningCost(p){
   if(!p||!p.startDate)return null;
   const from=pondCostStartDate(p),to=today();
+  // ⚠️ ต้องแยก 2 ช่วงเวลา ตามกฎเดียวกับฟอร์มปิดบ่อ (entry #236):
+  //    to        = ถึงวันนี้ — ของที่เบิกเข้าบ่อนี้จริงๆ (ลูกกุ้ง/อาหาร/เคมี) นับต่อได้หลังจับ
+  //    shareEnd  = วันจับกุ้ง — ต้นทุนที่หารกันรายวัน (ค่าแรง/ค่าไฟ/ของแชร์) ต้องหยุด
+  //    ถ้าใช้ to ทั้งก้อน บ่อที่ค้าง "รอทำสรุป" จะโตขึ้นทุกวัน และไม่ตรงกับเลขที่ฟอร์มปิดบ่อเติมให้
+  const shareEnd=p.harvestDate||to;
   const fry=p.costFry||0;
   const feed=pondFeedCost(p)||0;
   const chem=getStockCostBreakdownForPond(p.id,from,to).total||0;
-  const labor=getLaborCostForPond(p.id,p.startDate,to)||0;
-  const elec=getElecCostForPeriod(p.startDate,to)||0;
-  const fuel=getSharedCostForPond(p.id,from,to,'fuel')||0;              // หมวดน้ำมัน (แชร์ทุกบ่อ)
-  const shared=(getSharedCostForPond(p.id,from,to)||0)-fuel;            // อุปกรณ์นอกที่เหลือ (แชร์ทุกบ่อ) — ตัดน้ำมันออกกันนับซ้ำ
+  const labor=getLaborCostForPond(p.id,p.startDate,shareEnd)||0;
+  const elec=getElecCostForPeriod(p.startDate,shareEnd)||0;
+  const fuel=getSharedCostForPond(p.id,from,shareEnd,'fuel')||0;        // หมวดน้ำมัน (แชร์ทุกบ่อ)
+  const shared=(getSharedCostForPond(p.id,from,shareEnd)||0)-fuel;      // อุปกรณ์นอกที่เหลือ (แชร์ทุกบ่อ) — ตัดน้ำมันออกกันนับซ้ำ
   return{fry,feed,chem,labor,elec,shared,fuel,total:fry+feed+chem+labor+elec+shared+fuel};
 }
 // ── สลับแท็บด้วยชื่อ section (หา nav button ให้เอง) — ใช้กับปุ่มทางลัดข้ามหน้า เช่น ประวัติ→PDF, ปิดรอบเสร็จ→เตรียมบ่อ ──
