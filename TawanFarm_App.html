@@ -12960,7 +12960,12 @@ function renderCrops(){
         // ต้นทุนสะสม realtime (admin) — เลขชุดเดียวกับ auto-fill ตอนปิดรอบ เห็นก่อนตัดสินใจโดยไม่ต้องเปิดฟอร์มปิดรอบเสี่ยงกดยืนยันพลาด
         const rc=pondRunningCost(p);if(!rc)return'';
         const rr=n=>Math.round(n).toLocaleString();
-        return`<div style="font-size:var(--fs105);color:var(--pd);margin-top:4px;white-space:nowrap;cursor:help" title="ลูกกุ้ง ${rr(rc.fry)} · อาหาร ${rr(rc.feed)} · เคมี ${rr(rc.chem)} · แรงงาน ${rr(rc.labor)} · ไฟ ${rr(rc.elec)} · อุปกรณ์นอก ${rr(rc.shared)} · น้ำมัน ${rr(rc.fuel)} บาท (สูตรเดียวกับการ์ดต้นทุนสะสม)">💰 ${rr(rc.total)} บ.</div>`;
+        // ต้องมีคำว่า "ต้นทุน" กำกับเสมอ — เดิมโชว์แค่ "💰 752,150 บ." เฉยๆ admin คนอื่นอ่านแล้วนึกว่าเป็นรายได้/กำไร (พี่สั่ง entry #239)
+        const frozen=p.harvestDate?` · ค่าแรง/ค่าไฟ หยุดนับที่วันจับ ${fD(p.harvestDate)}`:'';
+        return`<div style="font-size:var(--fs105);color:var(--pd);margin-top:5px;cursor:help;line-height:1.35" title="ต้นทุนสะสมทั้งรอบ (ยังไม่หักรายได้) — ลูกกุ้ง ${rr(rc.fry)} · อาหาร ${rr(rc.feed)} · เคมี/เวชภัณฑ์ ${rr(rc.chem)} · ค่าแรง ${rr(rc.labor)} · ค่าไฟ ${rr(rc.elec)} · อุปกรณ์นอก ${rr(rc.shared)} · น้ำมัน ${rr(rc.fuel)} บาท${frozen} (สูตรเดียวกับการ์ดต้นทุนสะสม)">
+          <div style="color:var(--tx3);font-size:var(--fs10);font-weight:600;white-space:nowrap">💰 ต้นทุนสะสม</div>
+          <div style="font-weight:700;white-space:nowrap">${rr(rc.total)} บ.</div>
+        </div>`;
       })()}`:''}</td>
     </tr>`;
   }).join('');
