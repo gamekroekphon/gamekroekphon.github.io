@@ -2434,8 +2434,11 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     </div>
     <div style="padding:20px;max-height:75vh;overflow-y:auto">
       <input type="hidden" id="cm-pond-id">
+      <!-- ── แถบสรุป "ขั้นที่ 1" — โชว์เมื่อบ่อนี้บันทึกจับกุ้งปิดบ่อมาจากหน้าจับกุ้งแล้ว (entry #249)
+           ตอนกดปิดรอบพี่ต้องการเห็นช่องต้นทุนเป็นอย่างแรก ผลจับ/รายได้ที่กรอกไว้แล้วให้ย่อไว้ กดแก้ได้ ── -->
+      <div id="cm-step1-bar" style="display:none"></div>
       <!-- Harvest Results -->
-      <div style="margin-bottom:18px">
+      <div id="cm-sec-catch" style="margin-bottom:18px">
         <div style="font-weight:700;font-size:calc(13px * var(--ui-scale));color:var(--p);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">🦐 ผลจับจริง</div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
           <div class="fg"><label class="fl" for="cm-weight">น้ำหนักที่จับตอนปิดบ่อ (กก.) <span style="font-weight:400;color:var(--tx3)">(เฉพาะครั้งนี้ ไม่ต้องรวมพาเชียล)</span></label><input type="number" class="fi" id="cm-weight" step="0.1" placeholder="1500"></div>
@@ -2451,9 +2454,9 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       </div>
       <!-- Economics -->
       <div style="margin-bottom:18px">
-        <div style="font-weight:700;font-size:calc(13px * var(--ui-scale));color:var(--in);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">💰 รายได้ & ต้นทุน</div>
+        <div id="cm-econ-hdr" style="font-weight:700;font-size:calc(13px * var(--ui-scale));color:var(--in);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">💰 รายได้ &amp; ต้นทุน</div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg" style="grid-column:1/-1">
+          <div class="fg" style="grid-column:1/-1" id="cm-sec-revenue">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:4px">
               <span style="font-size:calc(12.5px * var(--ui-scale));font-weight:700;color:var(--tx2)">🏷️ กุ้งเกรดพิเศษตอนปิดบ่อ (ถ้ามี)</span>
               <button class="btn btn-s" type="button" onclick="cmAddGrade()">+ เพิ่มเกรด</button>
@@ -2625,6 +2628,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     </select>
     <div id="hv-round-strip" style="display:none;margin-top:12px;gap:8px;flex-wrap:wrap"></div>
     <div id="hv-partial-fields" style="display:none">
+      <!-- ── กล่องอธิบายโหมด (พาเชียล / ปิดบ่อ) — ฟอร์มเดียวใช้ทั้งสองโหมด (entry #249) ── -->
+      <div id="hv-mode-note" style="display:none"></div>
       <div class="fgrid" style="grid-template-columns:1fr 1fr">
         <div class="fg"><label class="fl" for="hv-date">วันที่จับ</label><input type="date" class="fi" id="hv-date"></div>
         <div class="fg"><label class="fl" for="hv-buyer">แพที่ทำการจับ</label><input type="text" class="fi" id="hv-buyer" placeholder="ชื่อแพ / บริษัท"></div>
@@ -2662,14 +2667,16 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       </div>
       <div class="fg" style="margin-top:8px"><label class="fl" for="hv-notes">หมายเหตุ</label><input type="text" class="fi" id="hv-notes" placeholder="..."></div>
       <div style="margin-top:14px;display:flex;align-items:center;gap:10px">
-        <button class="btn btn-p" id="hv-save-btn" onclick="savePartialHarvest()">💾 บันทึกพาเชียล</button>
+        <button class="btn btn-p" id="hv-save-btn" onclick="hvSaveByMode()">💾 บันทึกพาเชียล</button>
         <button class="btn btn-s" id="hv-cancel-edit" style="display:none" onclick="cancelEditPartial()">✕ ยกเลิกแก้ไข</button>
         <span id="hv-msg" style="font-size:calc(12px * var(--ui-scale))"></span>
       </div>
     </div>
+    <!-- ⚠️ เดิมโหมด "ปิดรอบ" มีแค่ปุ่มเด้งไปเปิดฟอร์มก้อนใหญ่ที่มีต้นทุน 13 ช่องปนอยู่ (entry #249)
+         ตอนนี้กรอกผลจับด้วยฟอร์มเดียวกับพาเชียลแล้ว กล่องนี้เหลือไว้เป็นทางลัดไปกรอกต้นทุนของบ่อที่บันทึกผลจับไปแล้ว -->
     <div id="hv-close-fields" style="display:none;margin-top:14px;padding:14px;background:var(--sf2);border-radius:8px">
-      <div style="font-size:calc(13px * var(--ui-scale));color:var(--tx2);margin-bottom:10px">การปิดรอบต้องกรอกผลผลิต/ต้นทุนแบบเต็มรูปแบบ (คำนวณ FCR, กำไร-ขาดทุน) กดเปิดฟอร์มปิดรอบได้เลย</div>
-      <button class="btn btn-p" onclick="openCropModalFromHarvest()">📋 เปิดฟอร์มปิดรอบเต็มรูปแบบ</button>
+      <div id="hv-close-hint" style="font-size:calc(13px * var(--ui-scale));color:var(--tx2);margin-bottom:10px"></div>
+      <button class="btn btn-p" onclick="openCropModalFromHarvest()">📋 เปิดฟอร์มปิดรอบ (กรอกต้นทุน)</button>
     </div>
   </div>
   <div class="card">
@@ -13687,7 +13694,7 @@ function openCropModal(pid){
   if(p.pendingHarvest){
     const f=p.pendingHarvest.fields||{};
     Object.keys(f).forEach(id=>{
-      if(id==='cm-cost-med'||id==='cm-cost-lime'||id==='cm-cost-equip')return;
+      if(CM_COST_FIELDS.includes(id))return;   // ต้นทุนคำนวณสดเสมอ (entry #249)
       const e=document.getElementById(id);
       if(e&&f[id]!=null&&f[id]!=='')e.value=f[id];
     });
@@ -13709,13 +13716,65 @@ function openCropModal(pid){
     }
   }else if(holdEl)holdEl.style.display='none';
   calcCropEcon();
+  cmRenderStep1Bar(p);   // ย่อผลจับ/รายได้ที่กรอกมาแล้ว ให้เห็นช่องต้นทุนก่อน (entry #249)
+}
+// ══════ แถบ "ขั้นที่ 1 บันทึกไว้แล้ว" ในฟอร์มปิดรอบ (entry #249) ══════
+// บ่อที่ผ่านหน้าจับกุ้งมาแล้ว ผลผลิต/รายได้กรอกครบตั้งแต่วันจับ — ตอนกดปิดรอบเหลืองานเดียวคือกรอกต้นทุน
+// จึงย่อสองส่วนนั้นไว้ แล้วสรุปเป็นบรรทัดเดียว กดขยายแก้ได้ถ้ากรอกผิด (ไม่ใช่ readonly — กันพิมพ์ผิดแล้วแก้ไม่ได้)
+function cmSetStep1Collapsed(on){
+  const a=document.getElementById('cm-sec-catch'),b=document.getElementById('cm-sec-revenue');
+  if(a)a.style.display=on?'none':'';
+  if(b)b.style.display=on?'none':'';
+  const bar=document.getElementById('cm-step1-bar');
+  if(bar)bar.dataset.collapsed=on?'1':'0';
+  const btn=document.getElementById('cm-step1-toggle');
+  if(btn)btn.textContent=on?'✏️ แก้ไขผลจับ':'▲ ย่อกลับ';
+  const hdr=document.getElementById('cm-econ-hdr');
+  if(hdr)hdr.textContent=on?'💵 ขั้นที่ 2 — กรอกต้นทุนรอบนี้':'💰 รายได้ & ต้นทุน';
+}
+function cmToggleStep1(){
+  const bar=document.getElementById('cm-step1-bar');if(!bar)return;
+  cmSetStep1Collapsed(bar.dataset.collapsed!=='1');
+}
+function cmRenderStep1Bar(p){
+  const bar=document.getElementById('cm-step1-bar');if(!bar)return;
+  // ไม่ได้มาจากขั้นที่ 1 (กดปิดรอบตรงๆ โดยไม่ผ่านหน้าจับกุ้ง) → ฟอร์มทำงานเหมือนเดิมทุกอย่าง
+  if(!p||!p.pendingHarvest){bar.style.display='none';cmSetStep1Collapsed(false);return;}
+  const gv=id=>parseFloat((document.getElementById(id)||{}).value)||0;
+  const pt=partialTotals(p.partialHarvests);
+  const grKg=_cmGrades.reduce((a,g)=>a+(parseFloat(g.kg)||0),0);
+  const totalKg=gv('cm-weight')+grKg+(pt.kg||0);
+  const rev=gv('cm-revenue');
+  const buyer=((document.getElementById('cm-buyer')||{}).value||'').trim();
+  const cell=(lb,v)=>'<div><div style="font-size:var(--fs10);color:var(--tx3);letter-spacing:.03em">'+lb+'</div>'
+    +'<div style="font-weight:700;font-size:calc(14px * var(--ui-scale));font-variant-numeric:tabular-nums">'+v+'</div></div>';
+  bar.style.display='';
+  bar.innerHTML='<div style="background:var(--ob);border:1.5px solid var(--ok);border-radius:10px;padding:12px 14px;margin-bottom:16px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:9px">'
+      +'<span style="font-weight:700;font-size:calc(12.5px * var(--ui-scale));color:var(--ok)">✅ ขั้นที่ 1 — บันทึกผลจับไว้แล้ว '+fD(p.harvestDate)+(buyer?' · '+mpEsc(buyer):'')+'</span>'
+      +'<button type="button" class="btn btn-s" id="cm-step1-toggle" onclick="cmToggleStep1()">✏️ แก้ไขผลจับ</button>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px">'
+      +cell('ผลผลิตรวมทั้งรอบ',totalKg?Math.round(totalKg).toLocaleString()+' กก.':'—')
+      +cell('ไซส์จับ',gv('cm-size')?gv('cm-size')+' ตัว/กก.':'—')
+      +cell('รายได้ทั้งรอบ',rev?'฿'+Math.round(rev).toLocaleString():'—')
+    +'</div>'
+    +'<div style="font-size:var(--fs10);color:var(--tx3);margin-top:7px">เหลือขั้นที่ 2 — กรอกต้นทุนด้านล่างแล้วกดปิดรอบ'+(pt.kg>0?' · ผลผลิตรวมนับพาเชียล '+Math.round(pt.kg).toLocaleString()+' กก. เข้าไปแล้ว':'')+'</div>'
+  +'</div>';
+  cmSetStep1Collapsed(true);
 }
 // ══ ขั้นที่ 1: บันทึกผลจับ แต่ยังไม่ปิดรอบ ══
 // ทำไมต้องมี: หลังจับกุ้งยังมีการเบิกปูนร้อน/ยาฆ่าเชื้อมาล้างบ่ออีก 1-2 อาทิตย์ ซึ่งเป็นต้นทุนของรอบที่เพิ่งจับ
 // แต่ค่าไฟ/ค่าแรงต้องหยุดทันทีเพื่อไปแชร์กับบ่อที่เหลือ (พี่สั่ง entry #236)
+// ⚠️ เก็บค้างเฉพาะ "ผลผลิต/รายได้" เท่านั้น — ต้นทุนไม่เก็บแล้ว (พี่สั่ง entry #249)
+//    เดิมเก็บต้นทุนไว้ด้วย แล้วมันค้างเก่าตลอด 1-2 อาทิตย์ที่ล้างบ่อ (ตามแก้มา 2 รอบแล้ว entry #243/#245)
+//    ย้ายไปกรอกตอนกดปิดรอบ = คำนวณสดเสมอ ปัญหาหายทั้งคลาส
 const CM_HOLD_FIELDS=['cm-close-date','cm-weight','cm-size','cm-caught','cm-survival','cm-survival-order','cm-fcr',
-  'cm-price','cm-buyer','cm-revenue','cm-cost-fry','cm-cost-transport','cm-cost-feed','cm-cost-med','cm-cost-lime','cm-cost-labor',
-  'cm-cost-elec','cm-cost-fuel','cm-cost-equip','cm-cost-equip-out','cm-cost-catch','cm-pct-caretaker','cm-pct-manager','cm-notes'];
+  'cm-price','cm-buyer','cm-revenue','cm-notes'];
+// ── ช่องต้นทุนทั้งหมด: ห้าม restore จาก pendingHarvest เด็ดขาด ต้องคำนวณสดทุกครั้งที่เปิดฟอร์มปิดรอบ
+//    (ต้องข้ามข้อมูลเก่าที่บันทึกไว้ก่อน #249 ด้วย ไม่งั้นบ่อที่ค้างอยู่ตอนนี้ยังโดนค่าเก่าทับ) ──
+const CM_COST_FIELDS=['cm-cost-fry','cm-cost-transport','cm-cost-feed','cm-cost-med','cm-cost-lime','cm-cost-labor',
+  'cm-cost-elec','cm-cost-fuel','cm-cost-equip','cm-cost-equip-out','cm-cost-catch','cm-pct-caretaker','cm-pct-manager'];
 function saveHarvestPending(){
   if(APP_ROLE!=='admin')return;
   const pid=document.getElementById('cm-pond-id').value;
@@ -14054,7 +14113,7 @@ function initHarvest(){
   renderHvJobs();
   renderPartialList();renderHvRoundStrip();
 }
-function onHvPondChange(){renderPartialList();renderHvRoundStrip();}
+function onHvPondChange(){renderPartialList();renderHvRoundStrip();hvApplyMode(hvMode()==='ปิดรอบ');}
 // ── แถบสรุปรอบปัจจุบันของบ่อที่เลือก — เห็นก่อนตัดสินใจจับ ไม่ต้องสลับหน้า (ต้นทุนสะสมโชว์เฉพาะ admin) ──
 function renderHvRoundStrip(){
   const el=document.getElementById('hv-round-strip');if(!el)return;
@@ -14067,6 +14126,8 @@ function renderHvRoundStrip(){
   const ph=p.partialHarvests||[];
   const phKg=ph.reduce((s,r)=>s+(r.weight||0),0);
   chips.push(chip(ph.length?`📦 พาเชียลแล้ว ${ph.length} ครั้ง · ${phKg.toLocaleString()} กก.`:'📦 ยังไม่มีพาเชียลรอบนี้'));
+  // ── บ่อที่บันทึกผลจับปิดบ่อไปแล้ว แต่ยังไม่ปิดรอบ — ต้องเห็นทันที กันบันทึกจับซ้ำ (entry #249) ──
+  if(p.harvestDate)chips.push(chip(`🏁 จับปิดบ่อแล้ว ${fD(p.harvestDate)} · รอทำสรุป`));
   if(APP_ROLE==='admin'&&p.startDate){
     const c=pondRunningCost(p);
     if(c)chips.push(chip(`💰 ต้นทุนสะสม ~${Math.round(c.total).toLocaleString()} บ.`));
@@ -14095,11 +14156,55 @@ function hvPickType(v){
   sel.value=v;
   onHvTypeChange();
 }
+// ── โหมดปัจจุบันของฟอร์มจับกุ้ง: 'พาเชียล' | 'ปิดรอบ' — ฟอร์มชุดเดียวกัน ต่างแค่ป้ายกับปุ่มบันทึก (entry #249)
+function hvMode(){return(document.getElementById('hv-type')||{}).value||'';}
 function onHvTypeChange(){
-  const type=document.getElementById('hv-type').value;
-  document.getElementById('hv-partial-fields').style.display=type==='พาเชียล'?'':'none';
-  document.getElementById('hv-close-fields').style.display=type==='ปิดรอบ'?'':'none';
+  const type=hvMode();
+  const isClose=type==='ปิดรอบ';
+  // ⚠️ โหมดปิดรอบใช้ฟอร์มเดียวกับพาเชียล — เดิมโชว์แค่ปุ่มเด้งไปฟอร์มก้อนใหญ่ที่มีต้นทุน 13 ช่องปนอยู่
+  //    พี่สั่งให้แยกเป็น 2 ขั้น: วันจับกรอกแค่ผลผลิต/รายได้ · ต้นทุนไปกรอกตอนกดปิดรอบ
+  document.getElementById('hv-partial-fields').style.display=type?'':'none';
+  hvApplyMode(isClose);
   renderHvJobs();
+}
+// ── ปรับป้าย/ปุ่ม/กล่องอธิบาย ให้ตรงกับโหมดที่เลือก — ไม่แตะ input ที่พี่กรอกค้างไว้ ──
+function hvApplyMode(isClose){
+  const setTxt=(id,t)=>{const e=document.getElementById(id);if(e)e.textContent=t;};
+  const setHtml=(id,h)=>{const e=document.getElementById(id);if(e)e.innerHTML=h;};
+  const p=pond((document.getElementById('hv-pond')||{}).value||'');
+  const btn=document.getElementById('hv-save-btn');
+  if(btn&&!_phEditId)btn.textContent=isClose?'🏁 บันทึกจับกุ้งปิดบ่อ':'💾 บันทึกพาเชียล';
+  // ป้ายช่องวันที่/น้ำหนัก ให้อ่านแล้วรู้ว่ากำลังกรอกอะไรอยู่
+  const lbDate=document.querySelector('label[for="hv-date"]');
+  if(lbDate)lbDate.textContent=isClose?'วันที่จับปิดบ่อ':'วันที่จับ';
+  const noteEl=document.getElementById('hv-mode-note');
+  if(noteEl){
+    if(isClose){
+      noteEl.style.display='';
+      noteEl.innerHTML='<div style="background:var(--wb);border:1.5px solid var(--w);border-radius:10px;padding:11px 14px;margin-bottom:12px;font-size:calc(12.5px * var(--ui-scale));line-height:1.65;color:var(--w-tx)">'
+        +'<div style="font-weight:700;margin-bottom:4px">🏁 ขั้นที่ 1 จาก 2 — บันทึกผลจับ</div>'
+        +'กรอกเหมือนพาเชียลเลย เอาแค่ <b>น้ำหนัก · ไซส์ · ยอดเงิน</b> — <b>ยังไม่ต้องกรอกต้นทุน</b><br>'
+        +'บันทึกแล้วบ่อจะขึ้นสถานะ <b>"รอทำสรุป"</b> · ค่าไฟ/ค่าแรงหยุดนับทันทีไปแชร์กับบ่อที่เหลือ · ปูน/ยาล้างบ่อที่เบิกหลังจากนี้ยังนับเข้ารอบนี้<br>'
+        +'ล้างบ่อเสร็จค่อยกด <b>"ปิดรอบ"</b> แล้วกรอกต้นทุนทีเดียว (ขั้นที่ 2)'
+        +'</div>';
+    }else noteEl.style.display='none';
+  }
+  hvRenderCloseShortcut(p,isClose);
+}
+// ── ทางลัด "ไปกรอกต้นทุน" — โชว์เฉพาะบ่อที่บันทึกผลจับไว้แล้ว (สถานะรอทำสรุป) ──
+function hvRenderCloseShortcut(p,isClose){
+  const box=document.getElementById('hv-close-fields');if(!box)return;
+  const show=!!(isClose&&p&&p.harvestDate&&APP_ROLE==='admin');
+  box.style.display=show?'':'none';
+  if(!show)return;
+  const hint=document.getElementById('hv-close-hint');
+  if(hint)hint.innerHTML='🧹 บ่อนี้บันทึกผลจับไว้แล้วเมื่อ <b>'+fD(p.harvestDate)+'</b> — เหลือขั้นที่ 2 กรอกต้นทุนแล้วกดปิดรอบ<br>'
+    +'<span style="color:var(--tx3)">ถ้ากรอกผลจับผิด แก้ในฟอร์มด้านบนแล้วกดบันทึกทับได้เลย</span>';
+}
+// ── ปุ่มบันทึกตัวเดียว แยกทางตามโหมด — กันกดผิดฟังก์ชัน ──
+function hvSaveByMode(){
+  if(hvMode()==='ปิดรอบ')saveCloseHarvest();
+  else savePartialHarvest();
 }
 function openCropModalFromHarvest(){
   const pid=document.getElementById('hv-pond').value;
@@ -14250,6 +14355,68 @@ function savePartialHarvest(){
   ['hv-buyer','hv-live','hv-size','hv-weight','hv-price','hv-notes','hv-amount'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   _hvGrades=[];hvRenderGrades();
   renderPartialList();renderHvRoundStrip();renderOv();
+}
+// ══════ ขั้นที่ 1 ของการปิดบ่อ: บันทึกผลจับด้วยฟอร์มเดียวกับพาเชียล (พี่สั่ง entry #249) ══════
+// เดิมต้องเปิดโมดัล "ปิดรอบเลี้ยง" ที่มีต้นทุน 13 ช่อง + %คนเลี้ยง + กำไร ปนอยู่ ทั้งที่วันจับยังไม่รู้ต้นทุนหลายตัว
+// (ค่าจับยังไม่เคลียร์ · ปูน/ยาล้างบ่อยังเบิกไม่เสร็จ · %คนเลี้ยงยังไม่ตกลง)
+// ตอนนี้: วันจับกรอกแค่ผลผลิต/รายได้ → ต้นทุนไปกรอกตอนกดปิดรอบ (ขั้นที่ 2)
+// ⚠️ เขียนลง p.harvestDate + p.pendingHarvest ซึ่งเป็นที่เก็บชุดเดิมของการปิด 2 ขั้น (entry #236)
+//    ไม่สร้างที่เก็บใหม่ ทุกอย่างปลายทาง (สถานะรอทำสรุป, หยุดค่าไฟ/ค่าแรง, openCropModal, finalizePendingCrop) ทำงานต่อได้เลย
+function saveCloseHarvest(){
+  if(APP_ROLE!=='admin'){alert('การปิดบ่อทำได้เฉพาะผู้ดูแลระบบ');return;}
+  const pid=document.getElementById('hv-pond').value;
+  if(!pid){showMsg('hv-msg','warn','กรุณาเลือกบ่อ');return;}
+  const p=pond(pid);if(!p)return;
+  if(!p.startDate){showMsg('hv-msg','warn','บ่อนี้ยังไม่ได้ลงกุ้ง');return;}
+  const gvs=id=>{const e=document.getElementById(id);return e?e.value:'';};
+  const date=gvs('hv-date');
+  if(!date){showMsg('hv-msg','warn','กรุณาระบุวันที่จับปิดบ่อ');return;}
+  const buyer=gvs('hv-buyer').trim();
+  const size=gvs('hv-size')?parseInt(gvs('hv-size')):null;
+  const weight=gvs('hv-weight')?parseFloat(gvs('hv-weight')):null;
+  const price=gvs('hv-price')?parseFloat(gvs('hv-price')):null;
+  const notes=gvs('hv-notes').trim();
+  const amtRaw=gvs('hv-amount');
+  const amount=(amtRaw&&amtRaw.trim())?parseFloat(amtRaw):null;
+  const grades=hvCleanGrades();
+  // ── บังคับ น้ำหนัก+ไซส์ เหมือนพาเชียล — ระบบใช้แปลง กก.→ตัว คิดอัตรารอด/FCR ตอนปิดรอบ ──
+  if(!(weight>0)){showMsg('hv-msg','warn','⚠️ กรุณากรอก "น้ำหนักรวม (กก.)" — ไม่งั้นอัตรารอด/FCR ตอนปิดรอบจะคำนวณไม่ได้');return;}
+  if(!(size>0)){showMsg('hv-msg','warn','⚠️ กรุณากรอก "ไซส์ (ตัว/กก.)" — ระบบใช้แปลงน้ำหนักเป็นจำนวนตัว ถ้าเว้นว่างอัตรารอดจะเพี้ยน');return;}
+  if(!(amount>0)&&!confirm('ยังไม่ได้กรอก "ยอดเงินรวมสุดท้าย"\n\nรายได้ของรอบนี้จะขาดยอดจับปิดบ่อไป\n\nยืนยันบันทึกโดยไม่ใส่ยอดเงิน?'))return;
+  if(date>today()&&!confirm('⚠️ วันที่จับ ('+fD(date)+') เป็นวันในอนาคต\n\nค่าไฟ/ค่าแรงจะหยุดนับที่วันนั้น\n\nยืนยันว่าถูกต้อง?'))return;
+  if(date<p.startDate){showMsg('hv-msg','warn','⚠️ วันที่จับอยู่ก่อนวันลงกุ้ง ('+fD(p.startDate)+') — ตรวจวันที่อีกครั้ง');return;}
+  // ── กดซ้ำ/แก้ผลจับ — บอกให้ชัดว่ากำลังเขียนทับของเดิม ──
+  if(p.harvestDate&&!confirm('บ่อ '+p.name+' บันทึกผลจับไว้แล้วเมื่อ '+fD(p.harvestDate)+'\n\nบันทึกทับด้วยข้อมูลชุดใหม่นี้?'))return;
+  // ── รายได้ที่เก็บลง cm-revenue = "รายได้ทั้งรอบ" (ปิดบ่อ + เกรดพิเศษ + พาเชียล)
+  //    ต่างจากช่องในฟอร์มนี้ที่เป็นยอดของการจับปิดบ่อครั้งนี้อย่างเดียว — ต้องบวกพาเชียลเข้าไปเอง
+  //    ไม่งั้นรายได้ทั้งรอบจะขาดยอดพาเชียลไปทั้งก้อน ──
+  const pt=partialTotals(p.partialHarvests);
+  const grBaht=grades.reduce((a,g)=>a+((parseFloat(g.kg)||0)*(parseFloat(g.pr)||0)),0);
+  const revenueAll=(amount||0)+(pt.baht||0);
+  // calcAllAtSave = ยอดที่ "ตัวช่วยบวก" คำนวณได้ ณ ตอนบันทึก — สูตรเดียวกับ calcCropEcon
+  // ใช้ตัดสินตอนเปิดฟอร์มปิดรอบว่ารายได้ที่เก็บไว้มาจากตัวช่วย (รีเฟรชได้) หรือพี่พิมพ์เองจากบิลแพ (ห้ามแตะ) — entry #243
+  const calcAll=Math.round((weight||0)*(price||0)+grBaht+(pt.baht||0));
+  const fields={
+    'cm-close-date':date,
+    'cm-weight':weight!=null?String(weight):'',
+    'cm-size':size!=null?String(size):'',
+    'cm-price':price!=null?String(price):'',
+    'cm-buyer':buyer,
+    'cm-revenue':revenueAll?String(Math.round(revenueAll)):'',
+    'cm-notes':notes
+  };
+  p.harvestDate=date;
+  p.pendingHarvest={savedAt:today(),fields,grades:JSON.parse(JSON.stringify(grades)),calcAllAtSave:calcAll,src:'harvestPage'};
+  save();fbSave();
+  showMsg('hv-msg','ok','🏁 บันทึกผลจับปิดบ่อ '+p.name+' แล้ว — บ่อขึ้นสถานะ "รอทำสรุป"');
+  ['hv-buyer','hv-live','hv-size','hv-weight','hv-price','hv-notes','hv-amount'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  _hvGrades=[];hvRenderGrades();
+  populateAll();renderOv();renderManage();renderPartialList();renderHvRoundStrip();
+  hvApplyMode(true);
+  alert('🏁 บันทึกผลจับบ่อ '+p.name+' แล้ว — ยังไม่ปิดรอบ\n\n'
+    +'• ค่าไฟ/ค่าแรง หยุดนับที่ '+fD(date)+' ไปแชร์กับบ่อที่เหลือแล้ว\n'
+    +'• ปูนร้อน/ยาฆ่าเชื้อที่เบิกหลังจากนี้ ยังนับเข้ารอบนี้\n'
+    +'• ล้างบ่อเสร็จ กด "ปิดรอบ" แล้วกรอกต้นทุนทีเดียว (ขั้นที่ 2)');
 }
 // ── แก้ไขรายการพาเชียล — เดิมมีแค่ปุ่มลบ ถ้ากรอกผิดต้องลบทิ้งแล้วพิมพ์ใหม่ทั้งแถว
 //    โหลดค่าเดิมขึ้นฟอร์มด้านบน แล้วจำ id ไว้ใน _phEditId เพื่อให้ savePartialHarvest() เขียนทับแถวเดิมแทนที่จะเพิ่มใหม่ ──
