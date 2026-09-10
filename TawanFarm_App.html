@@ -14359,7 +14359,11 @@ function getStockItemsForPond(pondId,startDate,endDate){
 function getSharedItemsInRange(fromDate,toDate,category){
   if(!fromDate)return[];
   const end=toDate||today();
-  return(D.inventoryLog||[]).filter(l=>l.type==='shared'&&l.date>=fromDate&&l.date<=end&&(!category||l.category===category));
+  // ⚠️ ต้องเรียงวันที่เสมอ — D.inventoryLog เรียงตามลำดับที่ merge กับ remote ไม่ใช่ตามวันที่
+  //    ถ้าไม่เรียง รายการในการ์ดต้นทุนจะสลับไปมา อ่านยาก (พี่แจ้ง entry #247)
+  //    เรียงใหม่→เก่า ให้ตรงกับ getStockItemsForPond() และตารางหน้าสต็อก
+  return(D.inventoryLog||[]).filter(l=>l.type==='shared'&&l.date>=fromDate&&l.date<=end&&(!category||l.category===category))
+    .slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
 }
 // ── ส่วนแบ่งต้นทุนแชร์ของบ่อนี้ = แต่ละรายการ ÷ จำนวนบ่อที่ active ณ วันที่บันทึกรายการนั้น (สูตรเดียวกับค่าไฟ/ค่าแรง — activePondCountOnDate — ต่างแค่คิดเป็นรายรายการแทนรายวัน เพราะเป็นเหตุการณ์ที่ไม่ต่อเนื่องแบบบิลรายเดือน) ──
 function getSharedCostForPond(pondId,fromDate,toDate,category){
