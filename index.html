@@ -4761,8 +4761,12 @@ function pondRunningCost(p){
   const chem=getStockCostBreakdownForPond(p.id,from,to).total||0;
   const labor=getLaborCostForPond(p.id,p.startDate,shareEnd)||0;
   const elec=getElecCostForPeriod(p.startDate,shareEnd)||0;
-  const fuel=getSharedCostForPond(p.id,from,shareEnd,'fuel')||0;        // หมวดน้ำมัน (แชร์ทุกบ่อ)
-  const shared=(getSharedCostForPond(p.id,from,shareEnd)||0)-fuel;      // อุปกรณ์นอกที่เหลือ (แชร์ทุกบ่อ) — ตัดน้ำมันออกกันนับซ้ำ
+  // ⚠️ ของแชร์ (อุปกรณ์นอก/น้ำมัน) เริ่มนับจาก p.startDate "วันลงกุ้ง" ไม่ใช่ from (ย้อน 60 วัน) — พี่สั่ง entry #248
+  //    ตัวหาร activePondCountOnDate() นับเฉพาะบ่อที่ลงกุ้งแล้ว ถ้าฝั่งบ่อย้อนไปก่อนวันลงกุ้ง
+  //    บ่อจะได้ส่วนแบ่งของรายการที่ตัวเองไม่ได้อยู่ในตัวหาร → รวมทุกบ่อแล้วเกินมูลค่าจริงของรายการนั้น
+  //    (ต่างจาก chem ข้างบนที่ผูก pondId ตรงๆ ย้อนไปช่วงเตรียมบ่อได้ ไม่มีการหารกับใคร)
+  const fuel=getSharedCostForPond(p.id,p.startDate,shareEnd,'fuel')||0;        // หมวดน้ำมัน (แชร์ทุกบ่อ)
+  const shared=(getSharedCostForPond(p.id,p.startDate,shareEnd)||0)-fuel;      // อุปกรณ์นอกที่เหลือ (แชร์ทุกบ่อ) — ตัดน้ำมันออกกันนับซ้ำ
   return{fry,transport,feed,chem,labor,elec,shared,fuel,total:fry+transport+feed+chem+labor+elec+shared+fuel};
 }
 // ── สลับแท็บด้วยชื่อ section (หา nav button ให้เอง) — ใช้กับปุ่มทางลัดข้ามหน้า เช่น ประวัติ→PDF, ปิดรอบเสร็จ→เตรียมบ่อ ──
@@ -6261,10 +6265,13 @@ function renderPondDetail(id){
     const pdFeedCost=pondFeedCost(p);
     const pdFryCost=p.costFry||0;
     const pdTransportCost=p.costTransport||0;   // แยกจากค่าลูกกุ้ง (entry #241)
-    const pdLaborCost=getLaborCostForPond(p.id,p.startDate,today());
-    const pdElecCost=getElecCostForPeriod(p.startDate,today());
+    // ⚠️ ต้นทุนที่ "หารกันรายวัน" (ค่าแรง/ค่าไฟ/ของแชร์) หยุดที่วันจับกุ้ง ไม่ใช่ today() — กฎเดียวกับ pondRunningCost/ฟอร์มปิดบ่อ (entry #236)
+    //    เดิมการ์ดนี้ใช้ today() บ่อที่ค้างสถานะ "รอทำสรุป" แถวรายหมวดจึงโตทุกวัน ทั้งที่ยอดรวมนิ่ง → บวกรายหมวดแล้วไม่เท่ายอดรวม (entry #248)
+    const pdShareEnd=p.harvestDate||today();
+    const pdLaborCost=getLaborCostForPond(p.id,p.startDate,pdShareEnd);
+    const pdElecCost=getElecCostForPeriod(p.startDate,pdShareEnd);
     // ── ต้นทุนแชร์ (โหมด "แชร์ทุกบ่อ" หน้าสต็อก) — แต่ละรายการหารด้วยจำนวนบ่อ active ณ วันที่บันทึก — แยกหมวด 'น้ำมัน' ออกจากที่เหลือ (อุปกรณ์นอก) เป็นคนละแถวในการ์ด แต่ยังใช้กลไกแชร์ต่อบ่อแบบเดียวกัน ──
-    const pdSharedItems=getSharedItemsInRange(pdCostFrom,today());
+    const pdSharedItems=getSharedItemsInRange(p.startDate,pdShareEnd);   // ⚠️ วันลงกุ้ง→วันจับกุ้ง ให้ตรงกับตัวหารและกับ pondRunningCost (entry #248)
     let pdSharedCost=0,pdFuelCost=0;
     const pdSharedCatItems={},pdFuelCatItems={};
     pdSharedItems.forEach(l=>{
@@ -6363,7 +6370,7 @@ function renderPondDetail(id){
       </div>
       <div class="ceo-cat-items" id="pd-cost-detail" style="padding-left:0">
         ${pdCostPerKg==null?`<div style="font-size:var(--fs11);color:var(--tx3);padding:2px 0 6px">ยังไม่มีข้อมูลสุ่มตัวอย่าง คำนวณ Biomass ประเมินไม่ได้</div>`:`<div style="font-size:var(--fs11);color:var(--tx3);padding:2px 0 6px">= ต้นทุนสะสม ÷ ${Math.round(pdProducedKg).toLocaleString()} กก.${partialTotals(p.partialHarvests).kg>0?` (Biomass ในบ่อ ${Math.round(biomass).toLocaleString()} + พาเชียลไปแล้ว ${Math.round(partialTotals(p.partialHarvests).kg).toLocaleString()})`:` (Biomass ประเมิน)`} — เป็นค่าประมาณระหว่างเลี้ยง ไม่ใช่ต้นทุน/กก. สุดท้ายตอนปิดรอบ</div>`}
-        <div style="font-size:var(--fs11);color:var(--tx3);padding:0 0 8px">📦 สต็อก/เวชภัณฑ์/อุปกรณ์นอก นับตั้งแต่ ${fD(pdCostFrom)} (ครอบช่วงเตรียมบ่อก่อนลงกุ้ง) · ค่าแรง/ค่าไฟ นับจากวันลงกุ้ง ${fD(p.startDate)}</div>
+        <div style="font-size:var(--fs11);color:var(--tx3);padding:0 0 8px">📦 สต็อก/เวชภัณฑ์ที่เบิกเข้าบ่อนี้ นับตั้งแต่ ${fD(pdCostFrom)} (ครอบช่วงเตรียมบ่อก่อนลงกุ้ง) · ค่าแรง/ค่าไฟ/อุปกรณ์นอก/น้ำมัน (ของที่หารกันทุกบ่อ) นับจากวันลงกุ้ง ${fD(p.startDate)}${p.harvestDate?' ถึงวันจับกุ้ง '+fD(p.harvestDate):''}</div>
         ${pdCatRowsHtml}
       </div>`);
   }
@@ -8557,9 +8564,13 @@ function renderStockShareLog(){
       const catLbl=STOCK_CAT_LABEL[l.category]||'-';
       const catCss=STOCK_CAT_CSS[l.category]||'';
       const value=(l.qty||0)*(l.unitCost||0);
-      const activeCount=activePondCountOnDate(l.date)||1;
+      // ⚠️ วันที่ไม่มีบ่อไหนเลี้ยงอยู่เลย → ไม่มีบ่อรับส่วนแบ่ง เงินก้อนนี้ไม่ได้ลงบ่อไหนทั้งนั้น
+      //    เดิม ||1 ทำให้โชว์ "แชร์ 1 บ่อ" เต็มมูลค่า ทั้งที่ความจริงไม่มีบ่อไหนจ่าย — ต้องเตือนให้เห็น (entry #248)
+      const activeRaw=activePondCountOnDate(l.date);
+      const activeCount=activeRaw||1;
       const share=value/activeCount;
-      const extra=isAdmin?`<td style="text-align:right">฿${(l.unitCost||0).toLocaleString()}</td><td style="text-align:right">฿${Math.round(value).toLocaleString()}</td><td style="text-align:right">${activeCount}</td><td style="text-align:right">฿${Math.round(share).toLocaleString()}</td>`:'';
+      const noPond=activeRaw===0;
+      const extra=isAdmin?`<td style="text-align:right">฿${(l.unitCost||0).toLocaleString()}</td><td style="text-align:right">฿${Math.round(value).toLocaleString()}</td><td style="text-align:right">${noPond?'<span style="color:var(--w);font-weight:700" title="วันนี้ไม่มีบ่อไหนกำลังเลี้ยงอยู่ — รายการนี้ไม่ได้ถูกคิดเป็นต้นทุนของบ่อใดเลย ถ้าไม่ถูกต้องให้แก้วันที่">0 ⚠️</span>':activeCount}</td><td style="text-align:right">${noPond?'<span style="color:var(--tx3)">—</span>':'฿'+Math.round(share).toLocaleString()}</td>`:'';
       return `<tr>
         <td>${fD(l.date)}</td>
         <td><span class="badge ${catCss}">${catLbl}</span></td>
@@ -13852,13 +13863,12 @@ function cmFillShareCosts(p){
   const cdEl=document.getElementById('cm-close-date');
   const cd=(cdEl&&cdEl.value)||'';
   const shareEnd=p.harvestDate||cd||today();
-  const cmCostFrom=pondCostStartDate(p);
-  const fuel=getSharedCostForPond(p.id,cmCostFrom,shareEnd,'fuel')||0;
+  const fuel=getSharedCostForPond(p.id,p.startDate,shareEnd,'fuel')||0;   // ⚠️ ของแชร์เริ่มนับจากวันลงกุ้ง เหมือนค่าไฟ/ค่าแรง (entry #248)
   const nowAuto={
     elec:Math.round(getElecCostForPeriod(p.startDate,shareEnd)||0),
     labor:Math.round(getLaborCostForPond(p.id,p.startDate,shareEnd)||0),
     fuel:Math.round(fuel),
-    equipOut:Math.round((getSharedCostForPond(p.id,cmCostFrom,shareEnd)||0)-fuel)
+    equipOut:Math.round((getSharedCostForPond(p.id,p.startDate,shareEnd)||0)-fuel)
   };
   // เขียนทับเฉพาะช่องที่ยังเป็นค่าที่ระบบเติมไว้เอง — ถ้าพี่แก้ด้วยมือแล้ว ห้ามทับ
   const put=(id,key)=>{
