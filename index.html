@@ -6291,12 +6291,15 @@ function renderPondDetail(id){
     // ── รายละเอียดเสริม 4 หมวด (พี่ขอ): อาหาร=กระสอบ+กก., ลูกกุ้ง=จำนวนตัว+ราคา/ตัว, ค่าแรง/ค่าไฟ=จำนวนวัน+เฉลี่ย/วัน — ไม่สร้างคำนวณคู่ขนาน ใช้ตัวเลขจริงจาก feedLog/pRelease/age เดียวกับที่การ์ดอื่นใช้อยู่แล้ว ──
     const pdFeedTotalKg=feedLog.reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0);
     const pdFeedDetail=pdFeedTotalKg>0?`<div class="ceo-cat-item-row" style="border-bottom:none"><span>รวม <b>${Math.round(pdFeedTotalKg).toLocaleString()} กก.</b></span><span>≈ <b>${Math.round(pdFeedTotalKg/25).toLocaleString()} กระสอบ</b></span></div>`:'';
-    const pdFryPieces=pRelease(p);
-    // ⚠️ ราคาต่อตัวต่ำกว่า 1 บาท — ปัด 2 ตำแหน่งทำให้คูณกลับไม่ตรงยอดรวม
-    //    เช่น 59,040 ÷ 556,000 = 0.1062 แต่โชว์ 0.11 → คูณกลับได้ 61,160 เกินจริง 2,120 บาท
-    //    ต่ำกว่า 1 บาทจึงโชว์ 4 ตำแหน่ง (พี่สั่งให้ดูละเอียด entry #243)
+    // ⚠️ ราคาลูกกุ้งต่อตัว หารด้วย "ยอดสั่งซื้อ" เท่านั้น ไม่รวมยอดแถม (พี่สั่ง entry #246)
+    //    เหตุผล: ยอดแถมแต่ละรอบไม่เท่ากัน ถ้าหารด้วยยอดปล่อยจริง จะไม่รู้ราคาจริงที่ตกลงกับโรงเพาะ เทียบรอบต่อรอบไม่ได้
+    //    (ต่างจากที่อื่นๆ ในแอปที่ใช้ pRelease เพราะตรงนั้นถามว่า "มีกุ้งกี่ตัว" — ตรงนี้ถามว่า "จ่ายไปตัวละเท่าไร")
+    const pdFryPieces=parseFloat(p.stock)||0;
+    // ⚠️ ราคาต่อตัวต่ำกว่า 1 บาท — ปัด 2 ตำแหน่งทำให้คูณกลับไม่ตรงยอดรวม (entry #243)
+    //    โชว์ได้ถึง 4 ตำแหน่ง แต่ตัดศูนยท้ายทิ้ง (0.1200 → 0.12)
     const pdFryPerPiece=pdFryPieces>0&&pdFryCost>0?pdFryCost/pdFryPieces:null;
-    const pdFryDetail=pdFryPieces>0?`<div class="ceo-cat-item-row" style="border-bottom:none"><span><b>${pdFryPieces.toLocaleString()} ตัว</b></span><span>${pdFryPerPiece!=null?'× ฿'+(pdFryPerPiece<1?pdFryPerPiece.toFixed(4):pdFryPerPiece.toFixed(2))+'/ตัว':'-'}</span></div>`:'';
+    const pdFryPerTxt=(v)=>v<1?String(+v.toFixed(4)):v.toFixed(2);
+    const pdFryDetail=pdFryPieces>0?`<div class="ceo-cat-item-row" style="border-bottom:none"><span><b>${pdFryPieces.toLocaleString()} ตัว</b> <span style="color:var(--tx3);font-size:var(--fs10)">(ยอดสั่งซื้อ)</span></span><span>${pdFryPerPiece!=null?'× ฿'+pdFryPerTxt(pdFryPerPiece)+'/ตัว':'-'}</span></div>`:'';
     // ── ค่าแรง/ค่าไฟ เป็นต้นทุนที่ "หารกัน" กับบ่ออื่น — ตัวเลขต่อบ่อจึงขึ้นกับว่าวันนั้นเลี้ยงกี่บ่อพร้อมกัน
     //    เดิมโชว์แค่ "N วัน / เฉลี่ย X บาท/วัน" อธิบายไม่ได้ว่าทำไมแพง — ตอนนี้แสดงที่มาทั้งสูตร ──
     const pdRow=(l,r)=>`<div class="ceo-cat-item-row"><span>${l}</span><span>${r}</span></div>`;
