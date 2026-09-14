@@ -2487,7 +2487,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
           <div class="fg"><label class="fl" for="cm-cost-fuel">ต้นทุนน้ำมัน (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากโหมด "แชร์ทุกบ่อ" ในสต็อกอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-fuel" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="cm-cost-equip">อุปกรณ์ (บาท) <span style="font-weight:400;color:var(--tx3)">(ในสต็อก ดึงอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-equip" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="cm-cost-equip-out">อุปกรณ์นอก (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากโหมด "แชร์ทุกบ่อ" ในสต็อกอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-equip-out" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl" for="cm-cost-catch">ค่าจับกุ้ง (บาท) <span style="font-weight:400;color:var(--tx3)">(1.5 บ./กก. ถ้าจับไม่ถึง 4 ตันคิด 6,000 บ. · นับน้ำหนักปิดบ่อรวมเกรดพิเศษ ไม่รวมพาเชียล — ตัวเลขในช่องเป็นแค่คำแนะนำ กรอกยืนยันเอง)</span></label><input type="number" class="fi" id="cm-cost-catch" step="1" placeholder="กรอกเอง"><div id="cm-catch-brk"></div></div>
+          <div class="fg"><label class="fl" for="cm-cost-catch">ค่าจับกุ้ง (บาท) <span style="font-weight:400;color:var(--tx3)">(1.5 บ./กก. ถ้าไม่ถึง 4 ตันคิด 6,000 บ. · คิดจาก<b>ผลผลิตรวมทั้งรอบ</b> รวมพาเชียลและเกรดพิเศษ — ตัวเลขในช่องเป็นแค่คำแนะนำ กรอกยืนยันเอง)</span></label><input type="number" class="fi" id="cm-cost-catch" step="1" placeholder="กรอกเอง"><div id="cm-catch-brk"></div></div>
         </div>
         <div style="font-weight:700;font-size:calc(12px * var(--ui-scale));color:var(--p);margin:14px 0 8px;padding-top:10px;border-top:1px dashed var(--bd)">🤝 ส่วนแบ่งกำไร <span style="font-weight:400;color:var(--tx3)">(หักออกเป็นต้นทุน)</span></div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
@@ -14316,20 +14316,28 @@ function calcCropEcon(){
     // ⚠️ ใช้ closeKg (น้ำหนักปิดบ่อ + เกรดพิเศษ) ไม่ใช่ w — ทีมจับยกกุ้งขึ้นวันเดียวกันทั้งหมด ไม่ได้แยกเกรด
     //    เกณฑ์ 4 ตันก็ต้องนับรวมเกรดด้วย บ่อที่จับ 3,900 + เกรด 200 = 4,100 ต้องคิด ×1.5 ไม่ใช่เหมา 6,000 (พี่ยืนยัน entry #254)
     //    ไม่รวมพาเชียล — ค่าจับคิดทีเดียวตอนปิดบ่อ พาเชียลไม่มีค่าจับแยก
-    const catchSuggest=catchCostByWeight(closeKg);
+    // ⚠️ ฐานน้ำหนัก = totalKg "ผลผลิตรวมทั้งรอบ" (ปิดบ่อ + เกรดพิเศษ + พาเชียล) — พี่แก้ entry #258
+    //    เดิมใช้ closeKg เพราะตีความ "คิดค่าจับทีเดียวตอนปิดบ่อ" ว่าคิดจากน้ำหนักวันปิดบ่อ
+    //    ที่จริงหมายถึง "เก็บเงินทีเดียวตอนปิดบ่อ แต่คิดจากน้ำหนักทั้งรอบ" — พาเชียลก็ทีมชุดจับเป็นคนจับเหมือนกัน
+    //    ⚠️ เกณฑ์ 4 ตันก็ต้องเทียบกับยอดรวมทั้งรอบด้วย ไม่ใช่เทียบเฉพาะวันปิดบ่อ
+    const catchSuggest=catchCostByWeight(totalKg);
     catchEl.placeholder=catchSuggest?`แนะนำ ${catchSuggest.toLocaleString()}`:'กรอกเอง';
-    // ── กล่องแจกแจงให้เหมือน 2 ช่องส่วนแบ่ง (พี่ขอ entry #257)
+    // ── กล่องแจกแจง แยกให้เห็นว่ายอดรวมมาจากไหนบ้าง (entry #257)
     //    placeholder อย่างเดียวจางและหายทันทีที่พิมพ์ — เห็นที่มาของเลขไม่ได้ ตรวจทานไม่ได้ ──
-    const underCap=closeKg>0&&closeKg<CATCH_FLAT_LIMIT;
-    cmRenderBrk('cm-catch-brk',
-      closeKg>0?[{
-        l:underCap
-          ?`น้ำหนักที่จับ ${Math.round(closeKg).toLocaleString()} กก. — ไม่ถึง ${(CATCH_FLAT_LIMIT/1000)} ตัน`
-          :`น้ำหนักที่จับ ${Math.round(closeKg).toLocaleString()} กก.${cmGrKg>0?` <span style="color:var(--tx3)">(ปิดบ่อ ${Math.round(w).toLocaleString()} + เกรดพิเศษ ${Math.round(cmGrKg).toLocaleString()})</span>`:''}`,
-        v:underCap?`คิดเหมา`:`× ${CATCH_RATE} บ./กก.`
-      }]:[],
-      catchSuggest,
-      closeKg>0?'ไม่รวมพาเชียล — ค่าจับคิดทีเดียวตอนปิดบ่อ':'');
+    const underCap=totalKg>0&&totalKg<CATCH_FLAT_LIMIT;
+    const catchRows=[];
+    if(totalKg>0){
+      catchRows.push({l:'ปิดบ่อ',v:Math.round(w).toLocaleString()+' กก.'});
+      if(cmGrKg>0)catchRows.push({l:'เกรดพิเศษ',v:'+ '+Math.round(cmGrKg).toLocaleString()+' กก.'});
+      if(pt.kg>0){
+        const phN=(p.partialHarvests||[]).filter(r=>harvestRowKg(r)>0).length;
+        catchRows.push({l:'พาเชียล'+(phN?' '+phN+' ครั้ง':''),v:'+ '+Math.round(pt.kg).toLocaleString()+' กก.'});
+      }
+      catchRows.push({
+        l:`<b>รวมทั้งรอบ ${Math.round(totalKg).toLocaleString()} กก.</b>`+(underCap?` <span style="color:var(--tx3)">— ไม่ถึง ${(CATCH_FLAT_LIMIT/1000)} ตัน</span>`:''),
+        v:underCap?'คิดเหมา':`× ${CATCH_RATE} บ./กก.`});
+    }
+    cmRenderBrk('cm-catch-brk',catchRows,catchSuggest,'');
   }
   // ── ต้นทุนตรงทั้งหมด รวม "% คนเลี้ยง" กับ "ส่วนแบ่งผู้จัดการ" ที่ตอนนี้เป็นยอดเงินกรอกเองล้วน ไม่มีสูตร % แล้วทั้งคู่ ──
   const totalCostDirect=gv('cm-cost-fry')+gv('cm-cost-transport')+gv('cm-cost-feed')+gv('cm-cost-med')+gv('cm-cost-lime')+gv('cm-cost-labor')+gv('cm-cost-elec')+gv('cm-cost-fuel')+gv('cm-cost-equip')+gv('cm-cost-equip-out')+gv('cm-cost-catch')+gv('cm-pct-caretaker')+gv('cm-pct-manager');
