@@ -3072,6 +3072,12 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
         <div class="fg"><label class="fl" for="sk-qty">จำนวนเริ่มต้น</label><input type="number" class="fi" id="sk-qty" placeholder="0" inputmode="decimal"></div>
         <div class="fg"><label class="fl" for="sk-min">ขั้นต่ำเตือน</label><input type="number" class="fi" id="sk-min" placeholder="5" inputmode="decimal"></div>
       </div>
+      <!-- ── สรรพคุณ/ความเข้มข้น — กันหยิบผิดตัวและกันลืมว่าตัวไหนทำอะไร (พี่สั่ง entry #260)
+           สำคัญกับหมวด ยากิน/ยาลงน้ำ/จุลินทรีย์กิน/จุลินทรีย์ลงน้ำ ที่มีหลายตัวและหน้าที่ไม่เหมือนกัน ── -->
+      <div class="fg"><label class="fl" for="sk-props">สรรพคุณ / หน้าที่</label>
+        <textarea class="fi" id="sk-props" rows="2" placeholder="เช่น ย่อยสลายของเสียก้นบ่อ ลดแอมโมเนีย · ยับยั้งวิบริโอ ใช้ตอนเชื้อเหลืองขึ้น" style="resize:vertical;min-height:52px;font-family:inherit"></textarea>
+        <span class="lbl-std">จะขึ้นให้เห็นตอนเบิกของ — จังหวะที่หยิบผิดตัวได้</span></div>
+      <div class="fg"><label class="fl" for="sk-potency">ความเข้มข้น <span style="font-weight:400;color:var(--tx3)">(จุลินทรีย์/ยา)</span></label><input class="fi" id="sk-potency" placeholder="เช่น 1x10^9 CFU/g · 5x10^8 CFU/mL"><span class="lbl-std">พิมพ์ <code>10^9</code> ระบบจะแสดงเป็น 10⁹ ให้เอง</span></div>
       <div class="fg"><label class="fl" for="sk-note-item">ผู้จำหน่าย/หมายเหตุ</label><input class="fi" id="sk-note-item" placeholder="—"></div>
       <div style="display:flex;gap:8px;margin-top:4px">
         <button onclick="saveStockItem()">💾 บันทึกรายการ</button>
@@ -4854,8 +4860,16 @@ function classifyOv(key,v){
     case'tM':case'tA':if(v>33||v<26)return'danger';if(v>32||v<28)return'warn';return'ok';
     case'alk':if(v<80||v>250)return'danger';if(v<100||v>200)return'warn';return'ok';
     case'sal':return v>35?'danger':v>30?'warn':'ok';
-    case'tcbsGreen':case'hepatoGreen':return v>1000?'danger':v>100?'warn':'ok';
-    case'tcbsYellow':case'hepatoYellow':return v>1000?'warn':'ok';
+    case'tcbsGreen':return v>1000?'danger':v>100?'warn':'ok';
+    // ⚠️ เชื้อเขียว "ในตับ" — ฟาร์มผสมยากินเมื่อถึง 10² = 100 พอดี จึงต้องเป็น >= ไม่ใช่ >
+    //    เดิม v>100 ทำให้ที่ 100 เป๊ะ (จุดลงมือจริง) ยังขึ้น ok (entry #260)
+    case'hepatoGreen':return v>=1000?'danger':v>=100?'warn':'ok';
+    case'tcbsYellow':return v>1000?'warn':'ok';
+    // ⚠️ เชื้อเหลือง "ในตับ" — ฟาร์มผสมยากินเมื่อถึง 10⁴ = 10,000 (พี่แจ้ง entry #260)
+    //    เดิมรวมเกณฑ์กับเชื้อเหลืองในน้ำ (>1,000 = warn เฉยๆ ไม่มีระดับอันตรายเลย)
+    //    ทำให้ที่ 10,000 ซึ่งเป็นจุดที่ต้องลงมือจริง แสดงระดับเดียวกับที่ 1,001 — ไม่มีสัญญาณตรงจุดตัดสินใจ
+    //    (เชื้อเขียวในตับไม่ต้องแก้ — เกณฑ์ฟาร์มคือ 10² = 100 ซึ่งตรงกับจุดที่ระบบขึ้น warn อยู่แล้ว)
+    case'hepatoYellow':return v>=10000?'danger':v>1000?'warn':'ok';
     case'tvc':case'tvcHepato':return v>1e7?'danger':v>=1e5?'warn':'ok';
     case'ehp':return v>5?'danger':v>0?'warn':'ok';
     case'ehpLarva':return v>25?'danger':v>0?'warn':'ok';
@@ -8556,7 +8570,9 @@ function saveStockItem(){
     unitPrice:parseFloat(document.getElementById('sk-price').value)||0,
     qty:parseFloat(document.getElementById('sk-qty').value)||0,
     minQty:parseFloat(document.getElementById('sk-min').value)||0,
-    note:document.getElementById('sk-note-item').value.trim()
+    note:document.getElementById('sk-note-item').value.trim(),
+    props:((document.getElementById('sk-props')||{}).value||'').trim(),
+    potency:((document.getElementById('sk-potency')||{}).value||'').trim()
   };
   if(!D.inventoryItems)D.inventoryItems=[];
   const idx=D.inventoryItems.findIndex(i=>i.id===id);
@@ -8568,7 +8584,7 @@ function saveStockItem(){
 }
 
 function clearStockItem(){
-  ['sk-name','sk-unit','sk-price','sk-qty','sk-min','sk-note-item'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';delete el.dataset.editId;}});
+  ['sk-name','sk-unit','sk-price','sk-qty','sk-min','sk-note-item','sk-props','sk-potency'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';delete el.dataset.editId;}});
   document.getElementById('sk-cat').value='feed';
   showStockMsg('item','','');
 }
@@ -8583,6 +8599,8 @@ function editStockItem(id){
   document.getElementById('sk-qty').value=item.qty||0;
   document.getElementById('sk-min').value=item.minQty||0;
   document.getElementById('sk-note-item').value=item.note||'';
+  {const e=document.getElementById('sk-props');if(e)e.value=item.props||'';}
+  {const e=document.getElementById('sk-potency');if(e)e.value=item.potency||'';}
   stockTab('items',document.getElementById('skb-items'));
   document.getElementById('sk-name').focus();
   document.getElementById('sk-name').scrollIntoView({behavior:'smooth',block:'center'});
@@ -8642,6 +8660,24 @@ function populateCustList(){
 function showStockDrop(){filterStockSearch();document.getElementById('sk-tx-drop').style.display='';}
 function hideStockDrop(){const d=document.getElementById('sk-tx-drop');if(d)d.style.display='none';}
 
+// ── แปลง 10^9 → 10⁹ ให้อ่านง่าย (พี่เรียกว่า "ยกกำลัง") — เก็บดิบไว้ในข้อมูล แปลงตอนแสดงผลเท่านั้น ──
+const _SUP={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+function fmtPotency(v){
+  return String(v||'').replace(/\^\s*(\d+)/g,(m,d)=>d.split('').map(c=>_SUP[c]||c).join(''));
+}
+// ── บรรทัดสรรพคุณ/ความเข้มข้นแบบย่อ ใช้ทั้งในดรอปดาวน์ค้นหาและในตะกร้า ──
+function itemPropsLine(item,max){
+  if(!item)return '';
+  const parts=[];
+  if(item.potency)parts.push('<b>'+mpEsc(fmtPotency(item.potency))+'</b>');
+  if(item.props){
+    // แปลงยกกำลังในข้อความสรรพคุณด้วย — พี่พิมพ์ "เชื้อเหลืองเกิน 10^4" ได้เป็นธรรมชาติ ไม่ใช่เฉพาะช่องความเข้มข้น
+    let t=fmtPotency(String(item.props).replace(/\s+/g,' ').trim());
+    if(max&&t.length>max)t=t.slice(0,max)+'…';
+    parts.push(mpEsc(t));
+  }
+  return parts.join(' · ');
+}
 function filterStockSearch(){
   const drop=document.getElementById('sk-tx-drop');if(!drop)return;
   const q=(document.getElementById('sk-tx-search')?.value||'').trim().toLowerCase();
@@ -8659,8 +8695,9 @@ function filterStockSearch(){
   const isLowFn=i=>i.minQty>0&&i.qty<=i.minQty;
   drop.innerHTML=items.map(i=>{
     const inCart=_stockCart.some(c=>c.itemId===i.id);
-    return `<div class="sk-drop-item${inCart?' sk-drop-in-cart':''}" onclick="addStockToCart('${i.id}')">
-      <span style="color:var(--tx)">${i.name}${inCart?' <span style="font-size:var(--fs11);color:var(--tx3)">(เพิ่มแล้ว)</span>':''}</span>
+    const pl=itemPropsLine(i,64);
+    return `<div class="sk-drop-item${inCart?' sk-drop-in-cart':''}" onclick="addStockToCart('${i.id}')"${pl?' style="align-items:flex-start"':''}>
+      <span style="color:var(--tx)">${i.name}${inCart?' <span style="font-size:var(--fs11);color:var(--tx3)">(เพิ่มแล้ว)</span>':''}${pl?`<div style="font-size:var(--fs10);color:var(--tx3);font-weight:400;line-height:1.5;margin-top:1px">${pl}</div>`:''}</span>
       <span class="sk-drop-stk${isLowFn(i)?' low':''}">${i.qty} ${i.unit}</span>
     </div>`;
   }).join('');
@@ -8730,7 +8767,7 @@ function renderStockCart(){
   list.innerHTML=_stockCart.map(c=>`
     <div class="sk-cart-item">
       ${isShared?`<span class="ceo-cat-dot" style="background:${CEO_CAT_DOT[c.category]||'var(--tx3)'}"></span>`:''}
-      <span class="sk-cart-name">${c.itemName}${c.manual?' <span style="font-size:var(--fs10);font-weight:700;color:var(--p)">(ของใหม่)</span>':''}</span>
+      <span class="sk-cart-name">${c.itemName}${c.manual?' <span style="font-size:var(--fs10);font-weight:700;color:var(--p)">(ของใหม่)</span>':''}${(()=>{const it=(D.inventoryItems||[]).find(x=>x.id===c.itemId);const pl=itemPropsLine(it,70);return pl?`<div style="font-size:var(--fs10);color:var(--tx3);font-weight:400;line-height:1.5;margin-top:1px">${pl}</div>`:'';})()}</span>
       <span class="sk-cart-unit">${c.unit}</span>
       <input type="number" id="sk-cart-qty-${c.cartId}" class="fi sk-cart-qty" min="0.01" step="any" value="${c.qty}" inputmode="decimal" onchange="updateCartQty('${c.cartId}',this.value)">
       ${isSale?`<input type="number" id="sk-cart-price-${c.cartId}" class="fi sk-cart-price" min="0" step="any" value="${c.sellPrice!=null?c.sellPrice:''}" placeholder="ราคา" inputmode="decimal" title="ราคาขาย/หน่วย" onchange="updateCartPrice('${c.cartId}',this.value)"><span class="sk-cart-price-lbl">฿/${c.unit}</span>`:''}
