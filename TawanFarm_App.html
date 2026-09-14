@@ -2483,11 +2483,11 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
           <div class="fg"><label class="fl" for="cm-cost-med">ต้นทุนเวชภัณฑ์ (บาท) <span style="font-weight:400;color:var(--tx3)">(ยากิน+ยาลงน้ำ+จุลินทรีย์ ดึงจากสต็อก แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-med" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="cm-cost-lime">ต้นทุนปูน (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากสต็อก แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-lime" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="cm-cost-labor">ต้นทุนค่าแรง (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากข้อมูลเงินเดือน+ค่าแรงรายสัปดาห์ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-labor" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl" for="cm-cost-elec">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="cm-cost-elec" step="1" placeholder="ดึงอัตโนมัติ 2,500 บาท/วัน" style="background:var(--sf2)"></div>
+          <div class="fg"><label class="fl" for="cm-cost-elec">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="cm-cost-elec" step="1" placeholder="ดึงจากบิลค่าไฟจริงอัตโนมัติ" style="background:var(--sf2)"></div>
           <div class="fg"><label class="fl" for="cm-cost-fuel">ต้นทุนน้ำมัน (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากโหมด "แชร์ทุกบ่อ" ในสต็อกอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-fuel" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="cm-cost-equip">อุปกรณ์ (บาท) <span style="font-weight:400;color:var(--tx3)">(ในสต็อก ดึงอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-equip" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="cm-cost-equip-out">อุปกรณ์นอก (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากโหมด "แชร์ทุกบ่อ" ในสต็อกอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-equip-out" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl" for="cm-cost-catch">ค่าจับกุ้ง (บาท) <span style="font-weight:400;color:var(--tx3)">(1.5 บ./กก. ถ้าจับไม่ถึง 4 ตันคิด 6,000 บ. — ตัวเลขในช่องเป็นแค่คำแนะนำ กรอกยืนยันเอง)</span></label><input type="number" class="fi" id="cm-cost-catch" step="1" placeholder="กรอกเอง"></div>
+          <div class="fg"><label class="fl" for="cm-cost-catch">ค่าจับกุ้ง (บาท) <span style="font-weight:400;color:var(--tx3)">(1.5 บ./กก. ถ้าจับไม่ถึง 4 ตันคิด 6,000 บ. · นับน้ำหนักปิดบ่อรวมเกรดพิเศษ ไม่รวมพาเชียล — ตัวเลขในช่องเป็นแค่คำแนะนำ กรอกยืนยันเอง)</span></label><input type="number" class="fi" id="cm-cost-catch" step="1" placeholder="กรอกเอง"></div>
         </div>
         <div style="font-weight:700;font-size:calc(12px * var(--ui-scale));color:var(--p);margin:14px 0 8px;padding-top:10px;border-top:1px dashed var(--bd)">🤝 ส่วนแบ่งกำไร <span style="font-weight:400;color:var(--tx3)">(หักออกเป็นต้นทุน)</span></div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
@@ -8215,6 +8215,11 @@ function renderOvStockWarn(){
 // ── ปฏิทินจับกุ้ง / เตือนพาเชียล ──────────────────────────────────────────
 // เกณฑ์: ผลผลิตในบ่อถึง 4,000 กก./ไร่ = บ่อเริ่มแน่น ควรทยอยจับออก (พาเชียล) เป็นการเตือนครั้งแรก
 const PARTIAL_YIELD_TARGET=4000; // กก./ไร่ — ค่าเริ่มต้น/ค่ามาตรฐานของฟาร์ม
+// ── เพดานจริงของฟาร์ม (พี่ยืนยัน entry #254): 4,000 = "เริ่มหาราคา เตรียมตัว" ไม่ใช่ "ต้องจับเดี๋ยวนี้"
+//    บางรอบลากไปถึง 5,000 หรือรอจังหวะราคา — แต่เกิน 5,000 คือบ่อแน่นเกินมาตรฐาน ต้องเห็นชัดว่าคนละสถานการณ์
+//    เดิมบ่อ 4,050 กับบ่อ 5,800 หน้าตาเหมือนกันเป๊ะ (แถบแดงเต็ม 100% ป้ายเดียวกัน) ต่างแค่ตัวเลขเล็กๆ
+//    ⚠️ เท่ากันทุกบ่อ ไม่ขึ้นกับขนาดบ่อ/ฤดู/จำนวนเครื่องตีน้ำ — จึงเป็นค่าคงที่ ไม่ต้องมีช่องกรอกรายบ่อ
+const PARTIAL_YIELD_CEILING=5000;
 const PARTIAL_CAL_DAYS=60;       // ช่วงที่ปฏิทินมองไปข้างหน้า
 // ── เกณฑ์ที่ใช้คำนวณจริง ณ ตอนนี้ — ปรับด้วยลูกศร ◀ ▶ ได้เพื่อ "ลองดู" ว่าถ้าจับที่เกณฑ์อื่นจะได้ไซส์ไหน/อีกกี่วัน
 //    ตั้งใจเก็บเป็นตัวแปรใน memory เท่านั้น ไม่บันทึกลง D/Firebase — ปิดแอปหรือรีเฟรชแล้วกลับเป็น 4,000 เสมอ
@@ -8233,8 +8238,27 @@ function partialHarvestInfo(p){
   const yr=bio/p.size;
   const pct=Math.min(100,yr/_phTarget*100);
   const s=sortedSamples(p),lat=s[s.length-1];
-  if(yr>=_phTarget)return{ready:true,yr,pct:100,bio,abw:lat?lat.abw:null};
-  const pdg=parseFloat(getPDG(s));
+  const pdgReady=parseFloat(getPDG(s));
+  if(yr>=_phTarget){
+    const overCeil=yr>=PARTIAL_YIELD_CEILING;
+    // ── เกินเพดานมากี่วันแล้ว (ประมาณ) — ย้อนจากอัตราโต เหมือนสูตรคาดการณ์ข้างล่างแต่กลับทาง
+    //    คิดได้เฉพาะตอนมีผลสุ่ม ≥ 2 ครั้ง (รู้ PDG) ถ้าไม่รู้ก็โชว์แค่ "เกินมาเท่าไร" ──
+    let daysOver=null;
+    if(overCeil&&lat&&lat.abw>0&&pdgReady>0){
+      const abwCeil=lat.abw*(PARTIAL_YIELD_CEILING*p.size)/bio;
+      const sinceS=lat.date?Math.max(0,dDiff(lat.date,today())):0;
+      const abwNow2=lat.abw+pdgReady*sinceS;
+      const d=Math.floor((abwNow2-abwCeil)/pdgReady);
+      // ⚠️ อัตราโตต่ำๆ ทำให้ตัวหารเล็ก แล้วผลลัพธ์ระเบิด (เจอ 138 วันตอนทดสอบ)
+      //    เกินเพดานนานกว่าอายุกุ้งเป็นไปไม่ได้ — ถ้าเกิน แปลว่า PDG เชื่อไม่ได้ ไม่ต้องโชว์เลย
+      //    โชว์แค่ "เกินมากี่ กก./ไร่" ซึ่งวัดจากข้อมูลจริง ไม่ได้ประมาณ
+      const maxD=(docAge(p.startDate,today())||0)-1;
+      if(isFinite(d)&&d>0&&maxD>0&&d<=maxD)daysOver=d;
+    }
+    return{ready:true,overCeil,overBy:yr-PARTIAL_YIELD_CEILING,daysOver,
+           yr,pct:Math.min(100,yr/PARTIAL_YIELD_CEILING*100),bio,abw:lat?lat.abw:null};
+  }
+  const pdg=pdgReady;
   // ── ต้องสุ่มอย่างน้อย 2 ครั้งถึงจะรู้อัตราโต (PDG) — ไม่งั้นคาดการณ์วันไม่ได้ ──
   if(!lat||!lat.abw||!pdg||pdg<=0)return{ready:false,yr,pct,bio,abw:lat?lat.abw:null,noProj:true};
   // ── Biomass โตตามสัดส่วน ABW (สมมติอัตรารอดคงที่) → หา ABW ที่ทำให้ yield แตะเกณฑ์ ──
@@ -8271,13 +8295,22 @@ function renderOvPartialHarvest(){
 
   // ── 1) บ่อที่ถึงเกณฑ์แล้ว ──
   const ready=rows.filter(r=>r.info.ready).sort((a,b)=>b.info.yr-a.info.yr);
-  readyEl.innerHTML=ready.map(({p,info})=>`
-    <div class="ph-row ready">
-      <div class="ph-top"><span class="ph-nm" onclick="openPondDetail('${p.id}')">บ่อ ${p.name} ›</span><span class="badge b-danger">🚨 พาเชียลได้แล้ว</span></div>
-      <div class="ph-bar"><span style="width:100%;background:var(--d)"></span></div>
-      <div class="ph-meta"><span><b style="color:var(--d)">${fmtYr(info.yr)}</b> กก./ไร่</span><span>เกณฑ์ ${_phTarget.toLocaleString()}</span></div>
+  // ── 2 ระดับ: ถึงเกณฑ์ (เหลือง — เริ่มหาราคา) · เกินเพดาน (แดง — บ่อแน่นแล้ว) — entry #254
+  readyEl.innerHTML=ready.map(({p,info})=>{
+    const hot=info.overCeil;
+    const clr=hot?'var(--d)':'var(--w)';
+    const badge=hot
+      ?'<span class="badge b-danger">🚨 เกินเพดาน — บ่อแน่นแล้ว</span>'
+      :'<span class="badge b-warn">🔔 ถึงเกณฑ์ — เริ่มหาราคา</span>';
+    const overTxt=hot
+      ?`เกินเพดาน ${PARTIAL_YIELD_CEILING.toLocaleString()} อยู่ <b style="color:var(--d)">${fmtYr(info.overBy)}</b> กก./ไร่${info.daysOver?` · ~${info.daysOver} วันแล้ว`:''}`
+      :`เกณฑ์ ${_phTarget.toLocaleString()} · เพดาน ${PARTIAL_YIELD_CEILING.toLocaleString()}`;
+    return`<div class="ph-row ready">
+      <div class="ph-top"><span class="ph-nm" onclick="openPondDetail('${p.id}')">บ่อ ${p.name} ›</span>${badge}</div>
+      <div class="ph-bar"><span style="width:${info.pct.toFixed(0)}%;background:${clr}"></span></div>
+      <div class="ph-meta"><span><b style="color:${clr}">${fmtYr(info.yr)}</b> กก./ไร่</span><span>${overTxt}</span></div>
       <div class="ph-sub">บ่อ ${p.size} ไร่ · Biomass ${fmtYr(info.bio)} กก.${info.abw?' · ไซส์ตอนนี้ '+fmtShrimpSize(info.abw):''}</div>
-    </div>`).join('');
+    </div>`;}).join('');
 
   // ── 2) บ่อที่ยังไม่ถึง เรียงตามความใกล้ (บ่อที่คาดการณ์ไม่ได้ไว้ท้ายสุด) ──
   const pend=rows.filter(r=>!r.info.ready).sort((a,b)=>{
@@ -14059,6 +14092,8 @@ function caretakerRateBySize(size){
   return 3;                // ≤24 ตัว/กก. (24-20 และ 19 ลงไป เท่ากัน)
 }
 // ── ค่าจับกุ้ง: 1.5 บาท/กก. ปกติ แต่ถ้าจับได้ไม่ถึง 4 ตัน (4,000 กก.) คิดเหมาแทนที่ 6,000 บาท ──
+// ── ค่าจับกุ้ง: จ่ายให้ "ทีมชุดจับ" คนละก้อนกับแพ (ไม่ได้หักจากยอดที่แพโอน จึงไม่นับซ้ำ — พี่ยืนยัน entry #254)
+//    weightKg ต้องเป็นน้ำหนักวันปิดบ่อ "รวมเกรดพิเศษ" เสมอ
 function catchCostByWeight(weightKg){
   if(!weightKg)return 0;
   if(weightKg<4000)return 6000;
@@ -14156,7 +14191,10 @@ function calcCropEcon(){
     :(!mgrRows.length?`ยังไม่มีใครตั้งส่วนแบ่งของโซน ${zoneNow} — ตั้งได้ที่หน้า "ค่าแรง"`:`โซน ${zoneNow} · ผลผลิตรวมทั้งรอบ ${Math.round(totalKg).toLocaleString()} กก.`));
   const catchEl=document.getElementById('cm-cost-catch');
   if(catchEl){
-    const catchSuggest=catchCostByWeight(w);
+    // ⚠️ ใช้ closeKg (น้ำหนักปิดบ่อ + เกรดพิเศษ) ไม่ใช่ w — ทีมจับยกกุ้งขึ้นวันเดียวกันทั้งหมด ไม่ได้แยกเกรด
+    //    เกณฑ์ 4 ตันก็ต้องนับรวมเกรดด้วย บ่อที่จับ 3,900 + เกรด 200 = 4,100 ต้องคิด ×1.5 ไม่ใช่เหมา 6,000 (พี่ยืนยัน entry #254)
+    //    ไม่รวมพาเชียล — ค่าจับคิดทีเดียวตอนปิดบ่อ พาเชียลไม่มีค่าจับแยก
+    const catchSuggest=catchCostByWeight(closeKg);
     catchEl.placeholder=catchSuggest?`แนะนำ ${catchSuggest.toLocaleString()}`:'กรอกเอง';
   }
   // ── ต้นทุนตรงทั้งหมด รวม "% คนเลี้ยง" กับ "ส่วนแบ่งผู้จัดการ" ที่ตอนนี้เป็นยอดเงินกรอกเองล้วน ไม่มีสูตร % แล้วทั้งคู่ ──
