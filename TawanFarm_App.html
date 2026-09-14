@@ -2900,6 +2900,14 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <div class="hint" style="margin-top:10px">* <b>✏️ แก้ไข</b> = เขียนทับแถวเดิม ใช้ตอน<b>เติมข้อมูลที่ยังไม่ได้กรอก</b> (เช่นส่วนแบ่ง) หรือแก้ที่พิมพ์ผิด<br>
         * <b>ปรับเงินเดือน/ส่วนแบ่งจริง</b> ให้<b>เพิ่มแถวใหม่</b>พร้อมวันที่มีผล อย่าแก้แถวเดิม — ระบบใช้ค่าล่าสุด ณ วันนั้นๆ รอบที่ปิดไปแล้วจะได้ไม่ขยับ</div>
     </div>
+    <!-- ── ตรวจย้อนหลัง: ส่วนแบ่งคนเลี้ยงรอบที่ปิดไปแล้ว (อ่านอย่างเดียว ไม่แก้ข้อมูล) — entry #255 ── -->
+    <div class="card">
+      <div class="card-t pd-col-head" onclick="pdToggleCard('carechk')" style="cursor:pointer">
+        <span class="pd-col-ttl">🔍 ตรวจย้อนหลัง — ส่วนแบ่งคนเลี้ยง <span class="pd-admin-tag">ADMIN</span></span>
+        <span class="ceo-cat-caret" id="pdc-caret-carechk">▾</span>
+      </div>
+      <div class="pd-col-body" id="pdc-body-carechk"><div id="care-check"></div></div>
+    </div>
   </div>
 
   <!-- SUB-PANE: พนักงานรายวัน (รายสัปดาห์) -->
@@ -7071,6 +7079,7 @@ function initLabor(){
   populateAll();
   document.getElementById('st-start').value=today();
   renderStaffTable();
+  renderCareCheck();
   normalizeDailyLaborWeeks();
   renderDailyWeekTable();
   renderLaborKPI();
@@ -7079,6 +7088,71 @@ function initLabor(){
   renderLaborCropSummary();
 }
 // ── ช่องกรอกส่วนแบ่ง 1 ช่องต่อ 1 โซนที่มีในระบบ ──
+// ══════ ตรวจย้อนหลัง: ส่วนแบ่งคนเลี้ยงของรอบที่ปิดไปแล้ว (entry #255) ══════
+// entry #251 เปลี่ยนวิธีคิดเป็น "ทีละรอบจับ" แต่ไม่ได้ย้อนแก้ข้อมูลเก่า (ตั้งใจ — ประวัติต้องเก็บยอดที่จ่ายจริง)
+// การ์ดนี้คำนวณใหม่ให้ดูเฉยๆ ว่าถ้าใช้กฎใหม่ แต่ละรอบจะได้เท่าไร ต่างจากที่บันทึกไว้เท่าไร
+// ⚠️ อ่านอย่างเดียว 100% — ไม่เขียนอะไรลง D/Firebase ทั้งสิ้น
+function careCheckRows(){
+  const out=[];
+  (D.ponds||[]).forEach(p=>{
+    (p.cropHistory||[]).forEach(c=>{
+      const hr=c&&c.harvestResult;if(!hr)return;
+      const recorded=parseFloat(hr.amtCaretaker);
+      const closeKg=(parseFloat(hr.totalWeight)||0)+gradeKg(hr);
+      // ⚠️ ส่ง c (ตัวรอบ) ไม่ใช่ p — partialHarvests ของรอบนั้นถูก archive ไว้ใน c แล้ว
+      //    ถ้าส่ง p จะได้พาเชียลของรอบ "ปัจจุบัน" ซึ่งเป็นคนละรอบกัน
+      const rows=caretakerShareRows(c,hr.size,closeKg);
+      const calc=rows.reduce((a,r)=>a+r.amt,0);
+      const noSize=rows.some(r=>r.noSize&&r.kg>0);
+      out.push({pond:p.name,cropNum:c.cropNum||1,cropYear:c.cropYear||c.year,
+        closeDate:c.closeDate||'',recorded:isNaN(recorded)?null:recorded,calc,
+        diff:isNaN(recorded)?null:calc-recorded,noSize,rows,
+        phCount:rows.filter(r=>r.label!=='ปิดบ่อ').length});
+    });
+  });
+  return out.sort((a,b)=>String(b.closeDate||'').localeCompare(String(a.closeDate||'')));
+}
+function renderCareCheck(){
+  const el=document.getElementById('care-check');if(!el)return;
+  if(APP_ROLE!=='admin'){el.innerHTML='';return;}
+  const rows=careCheckRows();
+  if(!rows.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:18px;font-style:italic;font-size:calc(12.5px * var(--ui-scale))">ยังไม่มีรอบที่ปิดแล้วในระบบ</p>';return;}
+  const withRec=rows.filter(r=>r.recorded!=null);
+  const sumRec=withRec.reduce((a,r)=>a+r.recorded,0);
+  const sumCalc=withRec.reduce((a,r)=>a+r.calc,0);
+  const sumDiff=sumCalc-sumRec;
+  const noRec=rows.length-withRec.length;
+  const badSize=rows.filter(r=>r.noSize).length;
+  const money=v=>'฿'+Math.round(v).toLocaleString();
+  const dCol=v=>v>0.5?'var(--ok)':v<-0.5?'var(--d)':'var(--tx3)';
+  const dTxt=v=>(v>0.5?'+':'')+Math.round(v).toLocaleString();
+  // เรียงตามส่วนต่างมาก→น้อย ให้รอบที่คลาดเยอะสุดอยู่บน
+  const shown=rows.slice().sort((a,b)=>Math.abs(b.diff||0)-Math.abs(a.diff||0));
+  el.innerHTML=`
+  <div style="font-size:calc(12.5px * var(--ui-scale));color:var(--tx2);line-height:1.7;margin-bottom:11px">
+    เทียบ <b>ยอดที่บันทึกไว้ตอนปิดรอบ</b> กับ <b>ยอดที่คำนวณด้วยกฎใหม่</b> (คิดทีละรอบจับ ไซส์ของครั้งไหนใช้อัตราของครั้งนั้น — entry #251)<br>
+    <span style="color:var(--w);font-weight:700">⚠️ ดูอย่างเดียว ไม่ได้แก้ข้อมูลรอบเก่า</span> — ประวัติยังเก็บยอดที่จ่ายจริงไว้ตามเดิม
+  </div>
+  <div class="g4" style="margin-bottom:12px">
+    <div class="kpi-card"><div class="kpi-lbl">รอบที่เทียบได้</div><div class="kpi-val">${withRec.length}<span class="kpi-unit"> รอบ</span></div>${noRec?`<div class="kpi-sub">อีก ${noRec} รอบไม่ได้บันทึกยอดไว้</div>`:''}</div>
+    <div class="kpi-card"><div class="kpi-lbl">ที่บันทึกไว้รวม</div><div class="kpi-val">${money(sumRec)}</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">กฎใหม่รวม</div><div class="kpi-val">${money(sumCalc)}</div></div>
+    <div class="kpi-card" style="border-top:3px solid ${dCol(sumDiff)}"><div class="kpi-lbl">ส่วนต่างรวม</div><div class="kpi-val" style="color:${dCol(sumDiff)}">${dTxt(sumDiff)}<span class="kpi-unit"> บาท</span></div><div class="kpi-sub">${sumDiff>0?'กฎใหม่ได้มากกว่า = ที่ผ่านมาจ่ายขาด':sumDiff<0?'กฎใหม่ได้น้อยกว่า = ที่ผ่านมาจ่ายเกิน':'ตรงกันพอดี'}</div></div>
+  </div>
+  ${badSize?`<div style="background:var(--wb);border:1px solid #fde68a;border-radius:9px;padding:10px 13px;font-size:calc(12px * var(--ui-scale));color:#7c4a06;margin-bottom:11px">⚠️ มี <b>${badSize} รอบ</b> ที่มีรายการจับไม่ได้กรอกไซส์ — คิดอัตราไม่ได้ ยอด "กฎใหม่" ของรอบนั้นจึงต่ำกว่าความจริง (แถวขึ้นสีเหลือง)</div>`:''}
+  <div style="overflow-x:auto"><table class="tbl"><thead><tr>
+    <th>บ่อ</th><th>รอบ</th><th>ปิดเมื่อ</th><th style="text-align:right">พาเชียล</th>
+    <th style="text-align:right">บันทึกไว้</th><th style="text-align:right">กฎใหม่</th><th style="text-align:right">ส่วนต่าง</th>
+  </tr></thead><tbody>${shown.map(r=>`<tr${r.noSize?' style="background:var(--wb)"':''}>
+    <td>${r.pond}</td><td>${r.cropNum}/${yearBE(r.cropYear)||'-'}</td><td>${r.closeDate?fD(r.closeDate):'-'}</td>
+    <td style="text-align:right">${r.phCount?r.phCount+' ครั้ง':'<span style="color:var(--tx3)">—</span>'}</td>
+    <td style="text-align:right;font-variant-numeric:tabular-nums">${r.recorded!=null?money(r.recorded):'<span style="color:var(--tx3)">ไม่ได้บันทึก</span>'}</td>
+    <td style="text-align:right;font-variant-numeric:tabular-nums">${money(r.calc)}${r.noSize?' <span style="color:var(--w)" title="มีรายการจับที่ไม่ได้กรอกไซส์">⚠️</span>':''}</td>
+    <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:${r.diff!=null?dCol(r.diff):'var(--tx3)'}">${r.diff!=null?dTxt(r.diff):'-'}</td>
+  </tr>`).join('')}</tbody></table></div>
+  <div class="hint" style="margin-top:10px">* ส่วนต่างเป็น <b style="color:var(--ok)">บวก</b> = กฎใหม่คิดได้มากกว่าที่บันทึกไว้ (ส่วนใหญ่เพราะรอบนั้นมีพาเชียลที่กฎเดิมไม่ได้นับ)<br>
+    * รอบที่ไม่มีพาเชียลเลย ส่วนต่างควรเป็น 0 — ถ้าไม่ 0 แปลว่าตอนนั้นกรอกยอดเองไม่ตรงสูตร ซึ่งทำได้ ไม่ผิด</div>`;
+}
 function renderStaffShareFields(vals){
   const el=document.getElementById('st-share-fields');if(!el)return;
   const zones=allZones();
@@ -7160,7 +7234,7 @@ function deleteStaff(id){
   if(!confirm('ลบรายการนี้?'))return;
   D.staff=(D.staff||[]).filter(x=>x.id!==id);
   D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
-  save();renderStaffTable();renderLaborKPI();
+  save();renderStaffTable();renderLaborKPI();renderCareCheck();
 }
 function renderStaffTable(){
   const el=document.getElementById('st-table');if(!el)return;
