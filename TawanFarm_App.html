@@ -7284,7 +7284,23 @@ function deleteStaff(id){
 }
 function renderStaffTable(){
   const el=document.getElementById('st-table');if(!el)return;
-  const list=(D.staff||[]).slice().sort((a,b)=>new Date(b.startDate)-new Date(a.startDate));
+  // ── เรียงเงินเดือนมาก→น้อย (พี่ขอ entry #259)
+  //    ⚠️ ห้ามเรียงด้วยเงินเดือนตรงๆ — คนเดียวมีได้หลายแถว (ขึ้นเงินเดือน = เพิ่มแถวใหม่)
+  //       ถ้าเรียงดิบๆ แถวเก่าของคนหนึ่งจะไปแทรกกลางคนอื่น เช่น เดี่ยว 40,000 · โป๊ะ 38,000 · เดี่ยว 35,000
+  //    จึงจัดกลุ่มตามชื่อก่อน → เรียงกลุ่มด้วย "เงินเดือนปัจจุบัน" (แถวล่าสุดของคนนั้น) → ในกลุ่มเรียงใหม่→เก่า
+  //    ใช้นิยาม "แถวล่าสุด" เดียวกับ staffAsOf()/dailyFixedStaffRate() ที่คิดเงินอยู่แล้ว
+  const _byName={};
+  (D.staff||[]).forEach(r=>{if(!r)return;const k=r.name||'';( _byName[k]=_byName[k]||[]).push(r);});
+  Object.values(_byName).forEach(g=>g.sort((a,b)=>String(b.startDate||'').localeCompare(String(a.startDate||''))));
+  const list=Object.values(_byName)
+    .sort((ga,gb)=>{
+      const d=(parseFloat(gb[0].salary)||0)-(parseFloat(ga[0].salary)||0);
+      return d||String(ga[0].name||'').localeCompare(String(gb[0].name||''),'th');   // เงินเดือนเท่ากัน เรียงชื่อ กันสลับไปมาทุกครั้งที่ render
+    })
+    .flat();
+  // ── แถวล่าสุดของแต่ละคน = แถวที่ระบบใช้คิดเงินจริง · แถวอื่นคือประวัติ
+  //    ต้องทำเครื่องหมาย เพราะพอเรียงด้วยเงินเดือนแล้ว แถวประวัติจะมาอยู่ติดกับแถวปัจจุบัน อ่านแล้วสับสนว่าทำไมชื่อซ้ำ ──
+  const _curIds=new Set(Object.values(_byName).map(g=>g[0]&&g[0].id));
   // ⚠️ ต้องสร้างช่องส่วนแบ่งก่อน return เสมอ — ตอนยังไม่มีพนักงานสักคน ฟังก์ชันนี้ return ตั้งแต่บรรทัดล่าง
   //    ทำให้ช่องส่วนแบ่งไม่เคยถูกสร้างเลย → กรอกส่วนแบ่งให้พนักงาน "คนแรก" ไม่ได้ (entry #253)
   renderStaffShareFields();
@@ -7297,7 +7313,7 @@ function renderStaffTable(){
         return`<td style="text-align:right;font-variant-numeric:tabular-nums">${v>0?v:'<span style="color:var(--tx3)">—</span>'}</td>`;}).join('');
       const salTxt=(r.salary>0)?r.salary.toLocaleString()
         :'<span style="color:var(--tx3)">0<br><span style="font-size:var(--fs10)">ฟาร์มไม่ได้จ่าย</span></span>';
-      return`<tr><td>${r.name}</td><td><span class="pr-size-tag">${r.position||'-'}</span></td><td style="text-align:right">${salTxt}</td>${zCells}<td>${fD(r.startDate)}</td><td style="white-space:nowrap"><div class="tbl-act"><button class="btn btn-s" style="padding:4px 10px;font-size:calc(12px * var(--ui-scale))" onclick="editStaff('${r.id}')" title="แก้ไขแถวนี้">✏️</button><button class="btn btn-s" style="padding:4px 10px;font-size:calc(12px * var(--ui-scale))" onclick="deleteStaff('${r.id}')" title="ลบแถวนี้">🗑️</button></div></td></tr>`;
+      return`<tr><td>${r.name}</td><td><span class="pr-size-tag">${r.position||'-'}</span></td><td style="text-align:right">${salTxt}</td>${zCells}<td style="white-space:nowrap">${fD(r.startDate)}${_curIds.has(r.id)?'':'<br><span style="font-size:var(--fs10);color:var(--tx3)">ประวัติ</span>'}</td><td style="white-space:nowrap"><div class="tbl-act"><button class="btn btn-s" style="padding:4px 10px;font-size:calc(12px * var(--ui-scale))" onclick="editStaff('${r.id}')" title="แก้ไขแถวนี้">✏️</button><button class="btn btn-s" style="padding:4px 10px;font-size:calc(12px * var(--ui-scale))" onclick="deleteStaff('${r.id}')" title="ลบแถวนี้">🗑️</button></div></td></tr>`;
     }).join('')
   }</tbody></table></div>`;
   renderStaffShareFields();   // ไม่ส่ง arg = คงค่าที่กรอกค้างไว้ กันล้างฟอร์มที่กำลังแก้อยู่
