@@ -2491,8 +2491,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
         </div>
         <div style="font-weight:700;font-size:calc(12px * var(--ui-scale));color:var(--p);margin:14px 0 8px;padding-top:10px;border-top:1px dashed var(--bd)">🤝 ส่วนแบ่งกำไร <span style="font-weight:400;color:var(--tx3)">(หักออกเป็นต้นทุน)</span></div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl" for="cm-pct-caretaker">% คนเลี้ยง (บาท) <span style="font-weight:400;color:var(--tx3)">(คำนวณจากไซส์กุ้ง+น้ำหนักจับ — ตัวเลขในช่องเป็นแค่คำแนะนำ กรอกยืนยันเอง)</span></label><input type="number" class="fi" id="cm-pct-caretaker" step="1" placeholder="กรอกเอง"></div>
-          <div class="fg" style="grid-column:1/-1"><label class="fl" for="cm-pct-manager">ส่วนแบ่งผู้จัดการ (บาท) <span style="font-weight:400;color:var(--tx3)">(กรอกเอง — ยังไม่ผูกสูตร ต้องดึงข้อมูลจากไฟล์อื่น)</span></label><input type="number" class="fi" id="cm-pct-manager" step="1" placeholder="กรอกเอง"></div>
+          <div class="fg" style="grid-column:1/-1"><label class="fl" for="cm-pct-caretaker">ส่วนแบ่งคนเลี้ยง (บาท) <span style="font-weight:400;color:var(--tx3)">(คิดแยกทีละรอบจับ ไซส์ของครั้งไหนใช้อัตราของครั้งนั้น — ตัวเลขในช่องเป็นแค่คำแนะนำ กรอกยืนยันเอง)</span></label><input type="number" class="fi" id="cm-pct-caretaker" step="1" placeholder="กรอกเอง"><div id="cm-care-brk"></div></div>
+          <div class="fg" style="grid-column:1/-1"><label class="fl" for="cm-pct-manager">ส่วนแบ่งพนักงานประจำ (บาท) <span style="font-weight:400;color:var(--tx3)">(รวมเฉพาะคนที่คุมโซนของบ่อนี้ — ตัวเลขในช่องเป็นแค่คำแนะนำ กรอกยืนยันเอง)</span></label><input type="number" class="fi" id="cm-pct-manager" step="1" placeholder="กรอกเอง"><div id="cm-mgr-brk"></div></div>
         </div>
         <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--bd)">
           <div class="fg"><label class="fl" style="color:var(--ok);font-weight:700" for="cm-profit">กำไรสุทธิ (บาท)</label><input type="number" class="fi" id="cm-profit" step="1" placeholder="คำนวณอัตโนมัติ" readonly style="background:var(--ob);font-weight:700"></div>
@@ -2871,15 +2871,21 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <div class="fgrid">
         <div class="fg"><label class="fl" for="st-name">ชื่อ</label><input type="text" class="fi" id="st-name" placeholder="เช่น สมชาย ใจดี"></div>
         <div class="fg"><label class="fl" for="st-position">ตำแหน่ง</label>
-          <select class="fi" id="st-position">
-            <option value="ผู้จัดการฟาร์ม">ผู้จัดการฟาร์ม</option>
-            <option value="หัวหน้าบ่อ">หัวหน้าบ่อ</option>
-            <option value="พนักงานประจำ">พนักงานประจำ</option>
-            <option value="อื่นๆ">อื่นๆ</option>
-          </select>
+          <!-- ⚠️ เดิมเป็น select 4 ตัวเลือกตายตัว ตำแหน่งจริงที่ไม่อยู่ในลิสต์ (ธุรการ/ช่างไฟ) ต้องเลือก "อื่นๆ" แล้วข้อมูลหาย
+               เปลี่ยนเป็นพิมพ์เองได้ + มีตัวเลือกเดิมขึ้นมาให้เลือก (พี่สั่ง entry #251) -->
+          <input type="text" class="fi" id="st-position" placeholder="เช่น ผู้จัดการฟาร์ม" list="st-position-list">
+          <datalist id="st-position-list">
+            <option value="ผู้จัดการฟาร์ม"><option value="หัวหน้าบ่อ"><option value="พนักงานประจำ">
+            <option value="ธุรการ"><option value="ช่างไฟ"><option value="คนเลี้ยง">
+          </datalist>
         </div>
         <div class="fg"><label class="fl" for="st-salary">เงินเดือน (บาท/เดือน)</label><input type="number" class="fi" id="st-salary" placeholder="เช่น 25000" inputmode="decimal"></div>
         <div class="fg"><label class="fl" for="st-start">มีผลตั้งแต่</label><input type="date" class="fi" id="st-start"></div>
+      </div>
+      <!-- ── ส่วนแบ่งรายโซน (บ./กก.) — คอลัมน์งอกเองตามโซนที่มีในระบบ ไม่ฝัง A/B ตายตัว (entry #251) ── -->
+      <div style="margin-top:6px">
+        <label class="fl">ส่วนแบ่งจากผลผลิต (บาท/กก.) <span style="font-weight:400;color:var(--tx3)">— เว้นว่าง = ไม่ได้ส่วนแบ่งโซนนั้น</span></label>
+        <div class="fgrid" id="st-share-fields" style="margin-top:4px"></div>
       </div>
       <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn btn-p" onclick="saveStaff()">💾 บันทึก</button>
@@ -3331,6 +3337,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <div class="fg"><label class="fl" for="mdl-stockbonus">ยอดแถม (ตัว)</label><input type="number" class="fi" id="mdl-stockbonus" placeholder="0" oninput="syncMdlTotal()"></div>
       <div class="fg"><label class="fl" for="mdl-total">ยอดปล่อยจริง (ตัว)</label><input type="text" class="fi" id="mdl-total" readonly style="background:var(--sf2);color:var(--p);font-weight:700"><span class="lbl-std">ใช้คำนวณ Biomass/FCR/อัตรารอด/ความหนาแน่นทั้งระบบ</span></div>
       <div class="fg"><label class="fl" for="mdl-size">ขนาดบ่อ (ไร่) *</label><input type="number" class="fi" id="mdl-size" step="0.1" placeholder="4.0"></div>
+      <div class="fg"><label class="fl" for="mdl-zone">โซน</label><input type="text" class="fi" id="mdl-zone" placeholder="A" list="zone-list"><datalist id="zone-list"></datalist><span class="lbl-std">ใช้แบ่งส่วนแบ่งพนักงานประจำ — คนที่คุมโซนนี้เท่านั้นจึงได้ส่วนแบ่งจากบ่อนี้ (entry #251)</span></div>
       <div class="fg"><label class="fl" for="mdl-start">วันที่ปล่อยกุ้ง</label><input type="date" class="fi" id="mdl-start"><span class="lbl-std">ล้างช่องนี้ = ยกเลิกการลงกุ้ง / ยังไม่มีแผน (บ่อจะกลายเป็น "บ่อว่าง")</span></div>
       <div class="fg"><label class="fl" for="mdl-hatchery">โรงเพาะ / บริษัทลูกกุ้ง</label><input type="text" class="fi" id="mdl-hatchery" placeholder="ซีพี, ซายอควา, ไทยแปซิฟิก..." list="hatchery-list"><datalist id="hatchery-list"><option value="ซีพี"><option value="ซายอควา"><option value="ไทยแปซิฟิก"><option value="เจริญโภคภัณฑ์"><option value="SIS"></datalist></div>
       <div class="fg"><label class="fl" for="mdl-plType">ระยะลูกกุ้งตอนปล่อย</label><select class="fi" id="mdl-plType"><option value="">-- เลือกระยะ --</option><option value="PL10">PL10</option><option value="PL12">PL12</option><option value="PL15">PL15</option><option value="PL17">PL17</option><option value="SuperPL">SuperPL</option><option value="ชำนอก">ชำนอก</option></select></div>
@@ -4849,6 +4856,36 @@ function classifyOv(key,v){
   }
 }
 function worstOv(a,b){const o={ok:0,warn:1,danger:2};return(o[b]||0)>(o[a]||0)?b:a}
+// ══════ โซนของบ่อ — ใช้แบ่งส่วนแบ่งพนักงานประจำ (พี่สั่ง entry #251) ══════
+// Zone A : A.7–A.23, A.26 = 18 บ่อ · Zone B : A.1–A.6, A.24–A.25, A.27 = 9 บ่อ · รวม 27 บ่อ
+// ⚠️ ตารางนี้ใช้ "ตั้งค่าเริ่มต้นครั้งเดียว" เท่านั้น หลังจากนั้นโซนอยู่ที่ p.zone แก้ได้ในหน้าจัดการบ่อ
+//    ห้ามเอาไปใช้ตัดสินโซนตอนคำนวณ ไม่งั้นย้ายโซน/เพิ่มบ่อใหม่จะต้องมาแก้โค้ดทุกครั้ง
+const ZONE_SEED={A:[7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,26],B:[1,2,3,4,5,6,24,25,27]};
+function seedPondZones(){
+  let changed=false;
+  (D.ponds||[]).forEach(p=>{
+    if(p.zone)return;                                  // ตั้งไว้แล้ว ห้ามทับ
+    const m=String(p.name||'').match(/(\d+)\s*$/);      // "A.14" → 14
+    if(!m)return;
+    const num=parseInt(m[1]);
+    const z=ZONE_SEED.A.includes(num)?'A':ZONE_SEED.B.includes(num)?'B':'';
+    if(z){p.zone=z;changed=true;}
+  });
+  return changed;
+}
+function pondZone(p){return(p&&p.zone||'').trim();}
+// ── รายชื่อโซนที่มีจริงในระบบ — ดึงจากบ่อ ไม่ได้ฝังไว้ในโค้ด
+//    เปิดโซนใหม่ = ตั้งโซนให้บ่อสักบ่อ แล้วคอลัมน์ในหน้าค่าแรงจะโผล่เอง ──
+function allZones(){
+  const set=new Set();
+  (D.ponds||[]).forEach(p=>{const z=pondZone(p);if(z)set.add(z);});
+  (D.staff||[]).forEach(s=>Object.keys(s.shareRates||{}).forEach(z=>{if(z)set.add(z);}));
+  return[...set].sort();
+}
+function refreshZoneDatalist(){
+  const dl=document.getElementById('zone-list');if(!dl)return;
+  dl.innerHTML=allZones().map(z=>'<option value="'+z+'">').join('');
+}
 function pondStatusOv(p){
   if(!Array.isArray(p.records))p.records=[];
   const last=p.records[p.records.length-1];
@@ -5116,6 +5153,9 @@ function projHarvest(p,target=22){
   return{days,age:(docAge(p.startDate,lat.date)||0)+days,date:hDate.toISOString().split('T')[0]};
 }
 function populateAll(){
+  // ตั้งโซนเริ่มต้นให้บ่อที่ยังไม่มี — ทำงานจริงครั้งเดียว รอบถัดไปข้ามทุกบ่อ (entry #251)
+  if(seedPondZones())save();
+  refreshZoneDatalist();
   const simple={
     'sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all','mt-pond':'','cash-pond':'',
   };
@@ -6266,7 +6306,12 @@ function renderPondDetail(id){
 
   // ===== ต้นทุนสะสม (admin เท่านั้น) — ใช้สูตร/building block เดียวกับ ceoTotalCost/ceoMoney (Overview KPI bar) ไม่สร้างคำนวณคู่ขนาน =====
   let costCardHtml='';
-  if(APP_ROLE==='admin'&&!clsNoShrimp(cls)){
+  // ── บ่อสถานะ "เตรียมบ่อ" ยังไม่มี startDate การ์ดต้นทุนสะสมเดิมซ่อนทั้งใบ
+  //    แต่ช่วงนี้คือช่วงที่เบิกปูน/คลอรีน/ของซ่อมแซมจริง เงินไหลออกแต่หน้าจอว่างเปล่า (พี่สั่ง entry #250)
+  //    โชว์เป็นการ์ดแยก ตัดแถวที่ยังไม่มีความหมายออกหมด (ลูกกุ้ง/อาหาร/ค่าแรง/ค่าไฟ/ต้นทุนต่อ กก.)
+  if(APP_ROLE==='admin'&&cls==='prep'){
+    costCardHtml=pdPrepCostCard(p);
+  }else if(APP_ROLE==='admin'&&!clsNoShrimp(cls)){
     const pdCostFrom=pondCostStartDate(p);
     const pdStockItems=getStockItemsForPond(p.id,pdCostFrom,today());
     const pdFeedCost=pondFeedCost(p);
@@ -6454,6 +6499,71 @@ function pdToggleCostDetail(){
 // ── การ์ดพับเก็บได้ในหน้ารายละเอียดบ่อ — ปิดทุกใบตอนเปิดหน้า ผู้ใช้กดกางเฉพาะหัวข้อที่อยากดู
 //    จำสถานะกาง/ยุบไว้ใน _pdOpenCards เพื่อไม่ให้ยุบกลับเองเวลาหน้าถูก re-render (เช่น กดแก้/ลบในตารางประวัติ) ──
 const _pdOpenCards=new Set();
+// ══════ ต้นทุนเตรียมบ่อ (บ่อที่ยังไม่ลงกุ้ง) — entry #250 ══════
+// ⚠️ นับเฉพาะของที่เบิกเข้าบ่อนี้โดยตรง (ผูก pondId) เท่านั้น
+//    ห้ามรวมของแชร์ (อุปกรณ์นอก/น้ำมัน) เด็ดขาด — บ่อที่ยังไม่ลงกุ้งไม่อยู่ในตัวหาร activePondCountOnDate()
+//    ถ้าเอามาโชว์ = แจกเงินให้บ่อที่ไม่ได้อยู่ในสมการ ซึ่งเป็นบั๊กที่เพิ่งแก้ไปใน entry #248
+// ── ยอดเตรียมบ่อของรอบก่อน ใช้เทียบว่ารอบนี้เตรียมแพงกว่าปกติไหม
+//    ช่วงของรอบก่อน = (วันปิดรอบก่อนหน้านั้น + 1) ถึง (วันก่อนลงกุ้งของรอบก่อน) — นิยามเดียวกับรอบปัจจุบัน
+function pondPrevPrepCost(p){
+  const hist=(p.cropHistory||[]).filter(c=>c.startDate).slice()
+    .sort((a,b)=>String(a.startDate).localeCompare(String(b.startDate)));
+  if(!hist.length)return null;
+  const last=hist[hist.length-1],prev=hist[hist.length-2];
+  let from;
+  if(prev){
+    const pc=prev.costEndDate||prev.closeDate;
+    if(!pc)return null;
+    from=ymdLocal(addDaysLocal(new Date(pc+'T00:00:00'),1));
+    if(from>last.startDate)from=last.startDate;
+  }else from=ymdLocal(addDaysLocal(new Date(last.startDate+'T00:00:00'),-POND_PREP_LOOKBACK_DAYS));
+  const to=ymdLocal(addDaysLocal(new Date(last.startDate+'T00:00:00'),-1));   // ถึงวันก่อนลงกุ้ง
+  if(to<from)return 0;
+  return getStockItemsForPond(p.id,from,to).reduce((s,i)=>s+(i.qty||0)*(i.unitPrice||0),0);
+}
+function pdPrepCostCard(p){
+  if(!p)return '';
+  const from=pondCostStartDate(p,today());
+  if(!from)return '';
+  const items=getStockItemsForPond(p.id,from,today());
+  const sums={},byCat={};
+  items.forEach(it=>{
+    const cat=STOCK_CATEGORIES.some(c=>c.key===it.category)?it.category:'other';
+    sums[cat]=(sums[cat]||0)+(it.qty||0)*(it.unitPrice||0);
+    if(!byCat[cat])byCat[cat]={};
+    const key=it.name+'|'+it.unit;
+    if(!byCat[cat][key])byCat[cat][key]={name:it.name,unit:it.unit,qty:0,total:0};
+    byCat[cat][key].qty+=(it.qty||0);
+    byCat[cat][key].total+=(it.qty||0)*(it.unitPrice||0);
+  });
+  const total=Object.values(sums).reduce((a,b)=>a+b,0);
+  const order=['chemOral','chemWater','probioOral','probioWater','lime','equip','fuel','other'];
+  const rows=order.filter(k=>sums[k]>0).map(k=>{
+    const list=Object.values(byCat[k]||{});
+    return`<div class="ceo-item-row ceo-cat-row" onclick="pdToggleCatItems('prep-${k}')">
+      <span class="ceo-cat-dot" style="background:${CEO_CAT_DOT[k]||'var(--tx3)'}"></span>
+      <div class="ceo-item-main"><div class="ceo-item-name">${k==='other'?'อื่นๆ':STOCK_CAT_LABEL[k]||k} <span class="ceo-cat-caret" id="pd-cat-caret-prep-${k}">▾</span></div></div>
+      <span class="ceo-item-val">${ceoMoney(sums[k])}</span>
+    </div><div class="ceo-cat-items" id="pd-cat-items-prep-${k}">${list.map(it=>
+      `<div class="ceo-cat-item-row"><span>${it.name}</span><span>${it.qty} ${it.unit} · ${ceoMoney(it.total)}</span></div>`
+    ).join('')}</div>`;
+  }).join('');
+  // ⚠️ ซ่อนบรรทัดเทียบเมื่อได้ 0 หรือ null — "฿0" แยกไม่ออกว่าคือ "รอบก่อนไม่ได้เบิกอะไรเลย" หรือ "คำนวณไม่ได้"
+  //    ปล่อยให้โชว์จะอ่านผิดว่ารอบนี้แพงขึ้นจากศูนย์
+  const prev=pondPrevPrepCost(p);
+  const body=total>0
+    ?`${rows}
+      <div class="ceo-cost-total-row"><span class="lbl">รวมต้นทุนเตรียมบ่อ</span><span class="val">${ceoMoney(total)}</span></div>
+      ${prev?`<div class="pd-water-row" style="border-top:1px dashed var(--bd)"><span style="color:var(--tx2)">รอบก่อนเตรียมไป</span><span style="font-weight:700">${ceoMoney(prev)}</span></div>`:''}
+      <div style="font-size:var(--fs10);color:var(--tx3);border-top:1px dashed var(--bd);margin-top:8px;padding-top:8px;line-height:1.7">
+        นับตั้งแต่ <b>${fD(from)}</b> (วันถัดจากวันปิดรอบก่อน) ถึงวันนี้<br>
+        ยอดนี้จะกลายเป็นต้นทุนของรอบใหม่ทันทีที่กดลงกุ้ง — ไม่ได้คิดซ้ำ
+      </div>`
+    :`<p style="color:var(--tx3);text-align:center;padding:16px 10px;font-style:italic;font-size:calc(12.5px * var(--ui-scale))">ยังไม่มีการเบิกของเข้าบ่อนี้ตั้งแต่ ${fD(from)}</p>`;
+  return pdCard('prepcost',
+    `🧰 ต้นทุนเตรียมบ่อ <span style="color:var(--p);font-weight:800">${ceoMoney(total)}</span> <span class="pd-admin-tag">ADMIN</span>`,
+    body);
+}
 function pdCard(key,title,bodyHtml,extraCls){
   const open=_pdOpenCards.has(key);
   return`<div class="card${extraCls?' '+extraCls:''}" style="margin-top:12px">
@@ -6966,9 +7076,27 @@ function initLabor(){
   renderLaborMonthChart();
   renderLaborCropSummary();
 }
+// ── ช่องกรอกส่วนแบ่ง 1 ช่องต่อ 1 โซนที่มีในระบบ ──
+function renderStaffShareFields(vals){
+  const el=document.getElementById('st-share-fields');if(!el)return;
+  const zones=allZones();
+  if(!zones.length){el.innerHTML='<div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);padding:4px 0">ยังไม่มีโซน — ตั้งโซนให้บ่อก่อนที่หน้า "จัดการบ่อ" แล้วช่องส่วนแบ่งจะขึ้นมาเอง</div>';return;}
+  el.innerHTML=zones.map(z=>
+    `<div class="fg"><label class="fl" for="st-share-${z}">โซน ${z} (บ./กก.)</label>`+
+    `<input type="number" class="fi" id="st-share-${z}" step="0.01" placeholder="0" value="${vals&&vals[z]!=null?vals[z]:''}"></div>`).join('');
+}
+function readStaffShareFields(){
+  const out={};
+  allZones().forEach(z=>{
+    const e=document.getElementById('st-share-'+z);
+    const v=e?parseFloat(e.value):NaN;
+    if(!isNaN(v)&&v>0)out[z]=v;      // 0 หรือว่าง = ไม่ได้ส่วนแบ่งโซนนั้น ไม่ต้องเก็บ
+  });
+  return out;
+}
 function saveStaff(){
   const name=document.getElementById('st-name').value.trim();
-  const position=document.getElementById('st-position').value;
+  const position=document.getElementById('st-position').value.trim();
   const salary=parseFloat(document.getElementById('st-salary').value);
   const startDate=document.getElementById('st-start').value;
   const msg=document.getElementById('st-msg');
@@ -6976,7 +7104,7 @@ function saveStaff(){
   if(!salary||salary<=0){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุเงินเดือน</span>';return;}
   if(!startDate){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุวันที่มีผล</span>';return;}
   if(!D.staff)D.staff=[];
-  D.staff.push({id:'st_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),name,position,salary,startDate});
+  D.staff.push({id:'st_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),name,position,salary,startDate,shareRates:readStaffShareFields()});
   save();
   msg.innerHTML='<span style="color:var(--ok)">✅ บันทึกเรียบร้อย</span>';
   clearStaff(true);
@@ -6987,6 +7115,7 @@ function clearStaff(keepMsg){
   document.getElementById('st-name').value='';
   document.getElementById('st-salary').value='';
   document.getElementById('st-start').value=today();
+  renderStaffShareFields(null);
   if(!keepMsg)document.getElementById('st-msg').innerHTML='';
 }
 function deleteStaff(id){
@@ -6999,9 +7128,16 @@ function renderStaffTable(){
   const el=document.getElementById('st-table');if(!el)return;
   const list=(D.staff||[]).slice().sort((a,b)=>new Date(b.startDate)-new Date(a.startDate));
   if(!list.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลพนักงานประจำ — เพิ่มได้จากฟอร์มด้านบน</p>';return;}
-  el.innerHTML=`<table class="tbl"><thead><tr><th>ชื่อ</th><th>ตำแหน่ง</th><th>เงินเดือน (บาท)</th><th>มีผลตั้งแต่</th><th></th></tr></thead><tbody>${
-    list.map(r=>`<tr><td>${r.name}</td><td><span class="pr-size-tag">${r.position}</span></td><td>${r.salary.toLocaleString()}</td><td>${fD(r.startDate)}</td><td><button class="btn btn-s" style="padding:4px 10px;font-size:calc(12px * var(--ui-scale))" onclick="deleteStaff('${r.id}')">🗑️</button></td></tr>`).join('')
-  }</tbody></table>`;
+  const zones=allZones();
+  const zHead=zones.map(z=>`<th style="text-align:right">ส่วนแบ่ง โซน ${z}<br><span style="font-weight:400;text-transform:none">บ./กก.</span></th>`).join('');
+  el.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>ชื่อ</th><th>ตำแหน่ง</th><th style="text-align:right">เงินเดือน (บาท)</th>${zHead}<th>มีผลตั้งแต่</th><th></th></tr></thead><tbody>${
+    list.map(r=>{
+      const zCells=zones.map(z=>{const v=(r.shareRates||{})[z];
+        return`<td style="text-align:right;font-variant-numeric:tabular-nums">${v>0?v:'<span style="color:var(--tx3)">—</span>'}</td>`;}).join('');
+      return`<tr><td>${r.name}</td><td><span class="pr-size-tag">${r.position||'-'}</span></td><td style="text-align:right">${r.salary.toLocaleString()}</td>${zCells}<td>${fD(r.startDate)}</td><td><div class="tbl-act"><button class="btn btn-s" style="padding:4px 10px;font-size:calc(12px * var(--ui-scale))" onclick="deleteStaff('${r.id}')">🗑️</button></div></td></tr>`;
+    }).join('')
+  }</tbody></table></div>`;
+  renderStaffShareFields(null);
 }
 // ── หาวันพุธที่ใกล้ที่สุดกับวันที่กำหนด (ใช้ validate ช่องกรอกวันตัดรอบ — หาทั้งเดินหน้า/ถอยหลังแล้วเลือกที่ใกล้กว่า) ──
 function mostRecentWednesdayOf(dateStr){
@@ -12888,6 +13024,8 @@ function syncMdlTotal(){
 function openAddPond(){
   document.getElementById('mdl-title').textContent='➕ เพิ่มบ่อใหม่';
   ['mdl-id','mdl-name','mdl-stock','mdl-stockbonus','mdl-size','mdl-hatchery','mdl-plWeight'].forEach(id=>document.getElementById(id).value='');
+  {const e=document.getElementById('mdl-zone');if(e)e.value='';}
+  refreshZoneDatalist();
   document.getElementById('mdl-plType').value='';
   document.getElementById('mdl-start').value=today();
   {const e=document.getElementById('mdl-note');if(e)e.value='';}
@@ -12907,6 +13045,8 @@ function editPond(id){
   document.getElementById('mdl-costfry').value=p.costFry||'';
   {const e=document.getElementById('mdl-costtransport');if(e)e.value=p.costTransport||'';}
   {const e=document.getElementById('mdl-note');if(e)e.value=p.cropNote||'';}
+  {const e=document.getElementById('mdl-zone');if(e)e.value=p.zone||'';}
+  refreshZoneDatalist();
   document.getElementById('pondModal').classList.add('on');
   syncDateHint(document.getElementById('mdl-start'));
   syncMdlTotal();
@@ -12920,6 +13060,7 @@ function savePond(){
   const costFry=document.getElementById('mdl-costfry').value?parseFloat(document.getElementById('mdl-costfry').value):null;
   const costTransport=(document.getElementById('mdl-costtransport')&&document.getElementById('mdl-costtransport').value)?parseFloat(document.getElementById('mdl-costtransport').value):null;
   const cropNote=((document.getElementById('mdl-note')||{}).value||'').trim();
+  const zone=(((document.getElementById('mdl-zone')||{}).value||'').trim().toUpperCase());   // โซนใช้ตัวพิมพ์ใหญ่เสมอ กัน a/A เป็นคนละโซน
   // ── ⚠️ วันลงกุ้ง/ยอดสั่งซื้อ ไม่บังคับแล้ว — บ่อที่ยกเลิกการลงกุ้งและยังไม่มีแผน ต้องล้างวันที่ออกได้
   //    (เดิมบังคับ startDate ทำให้บ่อที่ยกเลิกแล้วยังค้างวันลงกุ้งเก่า โผล่เป็น "กำลังเลี้ยง" ทั้งที่ไม่มีกุ้ง) ──
   if(!name||!size){alert('กรุณากรอกชื่อบ่อ และขนาดบ่อ (ไร่)');return}
@@ -12957,7 +13098,7 @@ function savePond(){
   if(id){
     const p=pond(id);
     const wasIdle=!p.startDate; // ลงลูกกุ้งรอบใหม่ (เดิมว่างจากการปิดรอบ) — ไม่ใช่แค่แก้ไขข้อมูลรอบเดิม
-    Object.assign(p,{name,stock:stock||0,stockBonus,size,startDate,hatchery,plType,plWeight,costFry,costTransport,cropNote});
+    Object.assign(p,{name,stock:stock||0,stockBonus,size,startDate,hatchery,plType,plWeight,costFry,costTransport,cropNote,zone});
     if(wasIdle&&startDate){   // ⚠️ ต้องมีวันลงกุ้งจริงถึงจะนับเป็นรอบใหม่ — ล้างวันที่ทิ้งไม่ใช่การเริ่มรอบ
       const nxt=computeNextCrop(p,startDate);
       p.cropNum=nxt.cropNum;p.cropYear=nxt.cropYear;
@@ -12969,7 +13110,7 @@ function savePond(){
     }
   }
   else{
-    const np={id:'P'+Date.now(),name,stock:stock||0,stockBonus,size,startDate,hatchery,plType,plWeight,costFry,costTransport,cropNote,records:[],feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[]};
+    const np={id:'P'+Date.now(),name,stock:stock||0,stockBonus,size,startDate,hatchery,plType,plWeight,costFry,costTransport,cropNote,zone,records:[],feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[]};
     if(startDate){const nxt=computeNextCrop(np,startDate);np.cropNum=nxt.cropNum;np.cropYear=nxt.cropYear;}
     else{np.cropNum=1;np.cropYear=new Date().getFullYear();}
     D.ponds.push(np);
@@ -13813,6 +13954,55 @@ function finalizePendingCrop(pid){
   return !p.harvestDate;
 }
 // ── ส่วนแบ่งคนเลี้ยง: อัตราคงที่ตามไซส์กุ้งที่จับ (บาท/กก.) — ไม่ใช่ % ของกำไรอีกต่อไป (ยืนยันจากพี่: 91-99 ตัว/กก. นับเท่าช่วง 90-70, ช่วง 24-20 กับ 19 ลงไป อัตราเท่ากันจริง 3 บ./กก.) ──
+// ══════ ส่วนแบ่งคนเลี้ยง — คิดแยกทีละรอบจับ (พี่สั่ง entry #251) ══════
+// ⚠️ ห้ามคิดเป็น "อัตราของไซส์ตอนปิดบ่อ × ผลผลิตรวม" เด็ดขาด
+//    พาเชียลแต่ละครั้งไซส์ไม่เท่ากัน จึงได้คนละอัตรา — ไซส์ของครั้งไหน ใช้อัตราของครั้งนั้น
+//    (ของเดิมคิดจาก อัตราไซส์ปิดบ่อ × น้ำหนักปิดบ่อ = ตกพาเชียลทั้งหมด + ใช้อัตราผิดถ้าเหมารวม)
+// closeSize/closeKg = ไซส์และน้ำหนักของการจับปิดบ่อครั้งนี้ (closeKg รวมเกรดพิเศษแล้ว)
+function caretakerShareRows(p,closeSize,closeKg){
+  const rows=[];
+  ((p&&p.partialHarvests)||[]).slice()
+    .sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')))
+    .forEach(r=>{
+      const kg=harvestRowKg(r);if(!(kg>0))return;
+      const sz=parseFloat(r.size)||0;
+      const rate=caretakerRateBySize(sz);
+      rows.push({label:'พาเชียล '+fD(r.date),size:sz,kg,rate,amt:rate*kg,noSize:!(sz>0)});
+    });
+  if(closeKg>0)rows.push({label:'ปิดบ่อ',size:closeSize||0,kg:closeKg,
+    rate:caretakerRateBySize(closeSize||0),amt:caretakerRateBySize(closeSize||0)*closeKg,noSize:!(closeSize>0)});
+  return rows;
+}
+function caretakerShareTotal(p,closeSize,closeKg){
+  return caretakerShareRows(p,closeSize,closeKg).reduce((a,r)=>a+r.amt,0);
+}
+// ══════ ส่วนแบ่งพนักงานประจำ ("ส่วนแบ่งผู้จัดการ") — ตามโซนของบ่อ (entry #251) ══════
+// อัตราเป็น บ./กก. คงที่ ไม่ขึ้นกับไซส์ → คูณผลผลิตรวมทีเดียวได้ ไม่ต้องแยกรายครั้งเหมือนคนเลี้ยง
+// ⚠️ ใช้อัตรา "ณ วันปิดบ่อ" ไม่ใช่อัตราล่าสุด — ขึ้นอัตราให้ใครวันนี้ รอบที่ปิดไปแล้วต้องไม่ขยับ
+//    (กลไกเดียวกับเงินเดือน: พนักงานคนเดิมมีได้หลายแถว แยกด้วย startDate เลือกแถวล่าสุดที่ยังไม่เลยวันนั้น)
+function staffAsOf(dateStr){
+  const d=dateStr||today();
+  const byName={};
+  (D.staff||[]).forEach(s=>{
+    if(!s||!s.name)return;
+    if(s.startDate&&s.startDate>d)return;                       // ยังไม่มีผล ณ วันนั้น
+    const cur=byName[s.name];
+    if(!cur||String(s.startDate||'')>String(cur.startDate||''))byName[s.name]=s;
+  });
+  return Object.values(byName);
+}
+function managerShareRows(p,totalKg,asOfDate){
+  const z=pondZone(p);
+  if(!z||!(totalKg>0))return[];
+  return staffAsOf(asOfDate)
+    .map(s=>({name:s.name,position:s.position||'',rate:parseFloat((s.shareRates||{})[z])||0}))
+    .filter(x=>x.rate>0)
+    .sort((a,b)=>b.rate-a.rate)
+    .map(x=>({...x,amt:x.rate*totalKg}));
+}
+function managerShareTotal(p,totalKg,asOfDate){
+  return managerShareRows(p,totalKg,asOfDate).reduce((a,r)=>a+r.amt,0);
+}
 function caretakerRateBySize(size){
   if(!size||size>=100)return 0;
   if(size>=70)return 1;    // 70-99 ตัว/กก.
@@ -13826,6 +14016,17 @@ function catchCostByWeight(weightKg){
   if(!weightKg)return 0;
   if(weightKg<4000)return 6000;
   return Math.round(weightKg*1.5);
+}
+// ── กล่องแจกแจงใต้ช่องส่วนแบ่ง — โชว์อย่างเดียว ไม่เติมค่าให้ช่อง ──
+function cmRenderBrk(id,rows,total,footNote){
+  const el=document.getElementById(id);if(!el)return;
+  if(!rows.length&&!footNote){el.innerHTML='';return;}
+  const warn=footNote&&footNote.startsWith('⚠️');
+  el.innerHTML=`<div style="background:${warn?'var(--wb)':'var(--sf2)'};border:1px solid ${warn?'#fde68a':'var(--bd)'};border-radius:8px;padding:8px 11px;margin-top:6px;font-size:calc(12px * var(--ui-scale));line-height:1.7">`
+    +rows.map(r=>`<div style="display:flex;justify-content:space-between;gap:10px"><span>${r.l}</span><span style="white-space:nowrap;font-variant-numeric:tabular-nums">${r.v}</span></div>`).join('')
+    +(rows.length?`<div style="display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--bd);margin-top:4px;padding-top:5px;font-weight:700"><span>รวม</span><span style="font-variant-numeric:tabular-nums">฿${Math.round(total).toLocaleString()}</span></div>`:'')
+    +(footNote?`<div style="color:${warn?'#7c4a06':'var(--tx3)'};margin-top:${rows.length?'5px':'0'}">${footNote}</div>`:'')
+  +`</div>`;
 }
 function calcCropEcon(){
   const pid=document.getElementById('cm-pond-id').value;
@@ -13884,12 +14085,28 @@ function calcCropEcon(){
     }else phBox.style.display='none';
   }
   // ── ตัวเลขแนะนำ (เงา) สำหรับ "% คนเลี้ยง" กับ "ค่าจับกุ้ง" — โชว์เป็น placeholder เฉยๆ ไม่เติมค่าให้อัตโนมัติ ต้องพิมพ์ยืนยันเอง (อาจปัดเศษ) ──
+  // ── ส่วนแบ่งคนเลี้ยง: คิดแยกทีละรอบจับ (entry #251) — เดิมใช้ อัตราไซส์ปิดบ่อ × น้ำหนักปิดบ่อ ตกพาเชียลทั้งหมด ──
   const careEl=document.getElementById('cm-pct-caretaker');
-  if(careEl){
-    const careRate=caretakerRateBySize(sz);
-    const careSuggest=w?Math.round(careRate*w):0;
-    careEl.placeholder=careSuggest?`แนะนำ ${careSuggest.toLocaleString()} (${careRate} บ./กก.)`:'กรอกเอง';
-  }
+  const careRows=caretakerShareRows(p,sz,closeKg);
+  const careTotal=careRows.reduce((a,r)=>a+r.amt,0);
+  if(careEl)careEl.placeholder=careTotal?`แนะนำ ${Math.round(careTotal).toLocaleString()}`:'กรอกเอง';
+  cmRenderBrk('cm-care-brk',careRows.map(r=>({
+    l:`${r.label} · ${r.noSize?'<span style="color:var(--w);font-weight:700">ไม่ได้กรอกไซส์</span>':'ไซส์ '+r.size} · ${Math.round(r.kg).toLocaleString()} กก.`,
+    v:r.noSize?'—':`× ${r.rate} = ฿${Math.round(r.amt).toLocaleString()}`
+  })),careTotal,careRows.some(r=>r.noSize)?'⚠️ รอบจับที่ไม่ได้กรอกไซส์ คิดอัตราไม่ได้ ยอดนี้จึงขาดไป — กลับไปเติมไซส์ที่หน้าจับกุ้งก่อน':'');
+  // ── ส่วนแบ่งพนักงานประจำ: ตามโซนของบ่อ ใช้อัตรา ณ วันปิดบ่อ (entry #251) ──
+  const mgrEl=document.getElementById('cm-pct-manager');
+  const cmCloseDate=(document.getElementById('cm-close-date')||{}).value||today();
+  const mgrRows=managerShareRows(p,totalKg,cmCloseDate);
+  const mgrTotal=mgrRows.reduce((a,r)=>a+r.amt,0);
+  if(mgrEl)mgrEl.placeholder=mgrTotal?`แนะนำ ${Math.round(mgrTotal).toLocaleString()}`:'กรอกเอง';
+  const zoneNow=pondZone(p);
+  cmRenderBrk('cm-mgr-brk',mgrRows.map(r=>({
+    l:`${r.name}${r.position?' <span style="color:var(--tx3)">('+r.position+')</span>':''} · ${r.rate} บ./กก.`,
+    v:`฿${Math.round(r.amt).toLocaleString()}`
+  })),mgrTotal,
+    !zoneNow?'⚠️ บ่อนี้ยังไม่ได้ตั้งโซน — คิดส่วนแบ่งพนักงานประจำให้ไม่ได้ ตั้งโซนที่หน้า "จัดการบ่อ" ก่อน'
+    :(!mgrRows.length?`ยังไม่มีใครตั้งส่วนแบ่งของโซน ${zoneNow} — ตั้งได้ที่หน้า "ค่าแรง"`:`โซน ${zoneNow} · ผลผลิตรวมทั้งรอบ ${Math.round(totalKg).toLocaleString()} กก.`));
   const catchEl=document.getElementById('cm-cost-catch');
   if(catchEl){
     const catchSuggest=catchCostByWeight(w);
@@ -13975,6 +14192,21 @@ function confirmCloseCrop(){
 ถ้าปิดตอนนี้ รอบนี้จะไม่มีกำไรสุทธิให้ดู${sug}
 
 ยืนยันปิดบ่อโดยไม่กรอกรายได้?`))return;
+    }
+  }
+  // ── กันลืมกรอกช่องที่ "ลืมได้เงียบๆ แล้วกำไรสูงเกินจริง" (พี่สั่ง entry #251)
+  //    เดิมมีตัวกันแค่ช่องรายได้ — ส่วนแบ่ง/ค่าจับ ลืมแล้วกลายเป็น 0 ไม่มีอะไรบอก ──
+  {
+    const blanks=[];
+    const chk=(id,lbl)=>{const e=document.getElementById(id);
+      if(e&&!(e.value||'').trim())blanks.push({lbl,sug:(e.placeholder||'').replace(/^แนะนำ\s*/,'')});};
+    chk('cm-cost-catch','ค่าจับกุ้ง');
+    chk('cm-pct-caretaker','ส่วนแบ่งคนเลี้ยง');
+    chk('cm-pct-manager','ส่วนแบ่งพนักงานประจำ');
+    if(blanks.length){
+      const lines=blanks.map(b=>'• '+b.lbl+(b.sug&&b.sug!=='กรอกเอง'?'  (ระบบแนะนำ '+b.sug+')':'')).join('\n');
+      if(!confirm('⚠️ ยังไม่ได้กรอก '+blanks.length+' ช่อง\n\n'+lines
+        +'\n\nถ้าปิดตอนนี้ ช่องเหล่านี้จะเป็น 0 และกำไรของรอบนี้จะสูงกว่าความจริง\n\nยืนยันปิดบ่อทั้งที่ยังไม่กรอก?'))return;
     }
   }
   // collect harvest result
@@ -14503,21 +14735,36 @@ const CEO_CAT_DOT={seed:'#9D174D',chem:'#1D4ED8',feed:'#92400E',chemOral:'#1D4ED
 //    ⚠️ กันนับซ้อนรอบก่อน: ไม่ย้อนเลยวันปิดรอบก่อนหน้าของบ่อเดียวกัน ไม่งั้นต้นทุนปลายรอบเก่าจะถูกดึงมานับซ้ำในรอบใหม่
 //    ⚠️ ใช้เฉพาะต้นทุนสต็อก/เวชภัณฑ์/อุปกรณ์นอกเท่านั้น — ค่าแรง/ค่าไฟยังนับจาก p.startDate เหมือนเดิม
 //       เพราะสูตรหารต่อบ่อ (activePondCountOnDate) นับเฉพาะบ่อที่ลงกุ้งแล้ว ถ้าขยายช่วงย้อนหลังจะทำให้บ่ออื่นที่เลี้ยงอยู่ได้ส่วนแบ่งลดลงตามไปด้วย ──
+// ⚠️ ใช้เฉพาะกรณีไม่มีรอบก่อนหน้าในระบบเท่านั้น (บ่อใหม่/รอบแรกที่บันทึกในแอป) — ไม่มีจุดอ้างอิงอื่น
 const POND_PREP_LOOKBACK_DAYS=60;
-function pondCostStartDate(p){
-  if(!p||!p.startDate)return null;
-  const back=ymdLocal(addDaysLocal(new Date(p.startDate+'T00:00:00'),-POND_PREP_LOOKBACK_DAYS));
+// ── วันเริ่มนับต้นทุน "ของที่เบิกเข้าบ่อ" ของรอบปัจจุบัน = วันกดปิดรอบก่อนหน้า + 1 (พี่สั่ง entry #250)
+//    เส้นแบ่งคือปุ่ม "ปิดรอบ": ก่อนกด = ล้างบ่อ → ต้นทุนรอบเก่า (entry #236) · หลังกด = ตากบ่อ/ซ่อมแซม/เตรียมบ่อ → ต้นทุนรอบใหม่
+//    ⚠️ เดิมมีเพดาน "ย้อนไม่เกิน 60 วัน" ครอบอยู่ ทำให้บ่อที่พักเกิน 60 วัน ของที่เบิกช่วงต้นของการพัก
+//       ตกไปอยู่นอกทั้งสองรอบ = เงินหายจากบัญชีต้นทุนโดยไม่มีอะไรเตือน (พี่ยืนยันว่าพักบ่อ 30–60 วันแล้วแต่ช่วง)
+//       ตอนนี้ไม่มีเพดานแล้ว พักยาวแค่ไหนก็นับครบ ทุกบาทตกลงรอบใดรอบหนึ่งเสมอ
+// refDate: จุดอ้างอิงปลายทาง — ปกติคือวันลงกุ้ง · บ่อที่ยังไม่ลงกุ้ง (สถานะเตรียมบ่อ) ส่งวันนี้เข้ามาแทน
+// (โซน: ดู seedPondZones / pondZone / allZones ด้านบน)
+function pondCostStartDate(p,refDate){
+  if(!p)return null;
+  const ref=refDate||p.startDate;
+  if(!ref)return null;
   // ⚠️ ใช้ costEndDate (วันที่กดปิดรอบจริง หลังล้างบ่อเสร็จ) ก่อน closeDate (วันจับกุ้ง)
   //    ไม่งั้นปูนร้อน/ยาฆ่าเชื้อที่เบิกไปล้างบ่อจะถูกนับซ้ำทั้งรอบเก่าและรอบใหม่
-  const prevClose=(p.cropHistory||[]).map(c=>c.costEndDate||c.closeDate).filter(d=>d&&d<=p.startDate).sort().pop();
+  // ⚠️ กรองด้วย "รอบที่ลงกุ้งก่อน ref" ไม่ใช่ "วันปิดรอบก่อน ref"
+  //    ถ้ากรองด้วยวันปิด รอบก่อนที่กดปิดช้ากว่าวันลงกุ้งรอบใหม่จะหลุดตะแกรงไปทั้งใบ
+  //    → ร่วงไปใช้เพดาน 60 วัน แล้วย้อนคร่อมช่วงที่รอบเก่ายังถือครองอยู่ = นับต้นทุนล้างบ่อซ้ำ 2 รอบ
+  const prevClose=(p.cropHistory||[])
+    .filter(c=>c&&(c.costEndDate||c.closeDate)&&(!c.startDate||c.startDate<ref))
+    .map(c=>c.costEndDate||c.closeDate).sort().pop();
   if(prevClose){
     let dayAfter=ymdLocal(addDaysLocal(new Date(prevClose+'T00:00:00'),1));
     // ⚠️ ปิดรอบเก่าวันเดียวกับ (หรือหลัง) วันลงกุ้งรอบใหม่ — เกิดตอนกดลงกุ้งทั้งที่ยังค้างสถานะล้างบ่อ
-    //    ถ้าปล่อยให้ dayAfter เลยวันลงกุ้งไป รอบใหม่จะไม่นับต้นทุนวันแรกของตัวเอง จึงตรึงไว้ที่วันลงกุ้ง
-    if(dayAfter>p.startDate)dayAfter=p.startDate;
-    return back<dayAfter?dayAfter:back;
+    //    ถ้าปล่อยให้ dayAfter เลย ref ไป รอบใหม่จะไม่นับต้นทุนวันแรกของตัวเอง จึงตรึงไว้ที่ ref
+    if(dayAfter>ref)dayAfter=ref;
+    return dayAfter;
   }
-  return back;
+  // ไม่มีรอบก่อนหน้าเลย — ไม่มีจุดอ้างอิง ใช้เพดาน 60 วันเป็นทางหนีทีไล่เฉพาะเคสนี้
+  return ymdLocal(addDaysLocal(new Date(ref+'T00:00:00'),-POND_PREP_LOOKBACK_DAYS));
 }
 function getStockItemsForPond(pondId,startDate,endDate){
   if(!pondId||!startDate)return[];
