@@ -2888,7 +2888,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
         <div class="fgrid" id="st-share-fields" style="margin-top:4px"></div>
       </div>
       <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn btn-p" onclick="saveStaff()">💾 บันทึก</button>
+        <button class="btn btn-p" id="st-save-btn" onclick="saveStaff()">💾 บันทึก</button>
+        <button class="btn btn-s" id="st-cancel-edit" style="display:none" onclick="cancelEditStaff()">✕ ยกเลิกแก้ไข</button>
         <button class="btn btn-s" onclick="clearStaff()">🗑️ ล้างฟอร์ม</button>
       </div>
       <div id="st-msg" style="margin-top:10px"></div>
@@ -2896,7 +2897,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <div class="card">
       <div class="card-t">📋 รายชื่อพนักงานประจำ (ปัจจุบัน)</div>
       <div id="st-table"></div>
-      <div class="hint" style="margin-top:10px">* ถ้าปรับเงินเดือน ให้เพิ่มแถวใหม่พร้อมวันที่มีผล ระบบจะใช้ค่าล่าสุด ณ วันนั้นๆ ในการคำนวณ ไม่ต้องลบของเก่า</div>
+      <div class="hint" style="margin-top:10px">* <b>✏️ แก้ไข</b> = เขียนทับแถวเดิม ใช้ตอน<b>เติมข้อมูลที่ยังไม่ได้กรอก</b> (เช่นส่วนแบ่ง) หรือแก้ที่พิมพ์ผิด<br>
+        * <b>ปรับเงินเดือน/ส่วนแบ่งจริง</b> ให้<b>เพิ่มแถวใหม่</b>พร้อมวันที่มีผล อย่าแก้แถวเดิม — ระบบใช้ค่าล่าสุด ณ วันนั้นๆ รอบที่ปิดไปแล้วจะได้ไม่ขยับ</div>
     </div>
   </div>
 
@@ -7080,6 +7082,11 @@ function initLabor(){
 function renderStaffShareFields(vals){
   const el=document.getElementById('st-share-fields');if(!el)return;
   const zones=allZones();
+  // ⚠️ ไม่ส่ง vals มา = คงค่าที่กรอกค้างอยู่ในฟอร์ม — renderStaffTable() เรียกฟังก์ชันนี้ทุกครั้ง
+  //    ถ้าล้างทิ้งทุกรอบ ค่าที่กำลังแก้อยู่จะหายกลางคัน (entry #252)
+  if(vals===undefined){
+    vals={};zones.forEach(z=>{const e=document.getElementById('st-share-'+z);if(e&&e.value!=='')vals[z]=e.value;});
+  }
   if(!zones.length){el.innerHTML='<div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);padding:4px 0">ยังไม่มีโซน — ตั้งโซนให้บ่อก่อนที่หน้า "จัดการบ่อ" แล้วช่องส่วนแบ่งจะขึ้นมาเอง</div>';return;}
   el.innerHTML=zones.map(z=>
     `<div class="fg"><label class="fl" for="st-share-${z}">โซน ${z} (บ./กก.)</label>`+
@@ -7104,18 +7111,43 @@ function saveStaff(){
   if(!salary||salary<=0){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุเงินเดือน</span>';return;}
   if(!startDate){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุวันที่มีผล</span>';return;}
   if(!D.staff)D.staff=[];
-  D.staff.push({id:'st_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),name,position,salary,startDate,shareRates:readStaffShareFields()});
+  const shareRates=readStaffShareFields();
+  const wasEdit=!!_staffEditId;
+  if(wasEdit){
+    const old=(D.staff||[]).find(x=>x.id===_staffEditId);
+    if(!old){msg.innerHTML='<span style="color:var(--d)">ไม่พบแถวที่กำลังแก้ไข (อาจถูกลบไปแล้ว)</span>';_staffEditId=null;return;}
+    Object.assign(old,{name,position,salary,startDate,shareRates});
+  }else D.staff.push({id:'st_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),name,position,salary,startDate,shareRates});
   save();
-  msg.innerHTML='<span style="color:var(--ok)">✅ บันทึกเรียบร้อย</span>';
+  msg.innerHTML='<span style="color:var(--ok)">✅ '+(wasEdit?'อัปเดตแถวเรียบร้อย':'บันทึกเรียบร้อย')+'</span>';
   clearStaff(true);
   renderStaffTable();
   renderLaborKPI();
 }
+// ── แก้ไขแถวพนักงาน — เดิมมีแค่ปุ่มลบ ถ้าจะเติมส่วนแบ่งต้องลบทิ้งแล้วพิมพ์ใหม่ทั้งแถว (พี่สั่ง entry #252)
+//    โหลดค่าเดิมขึ้นฟอร์มด้านบน แล้วจำ id ไว้ให้ saveStaff() เขียนทับแถวเดิม (รูปแบบเดียวกับ editPartialHarvest)
+let _staffEditId=null;
+function editStaff(id){
+  if(APP_ROLE!=='admin')return;
+  const r=(D.staff||[]).find(x=>x.id===id);if(!r){alert('ไม่พบแถวนี้');return;}
+  const set=(i,v)=>{const e=document.getElementById(i);if(e)e.value=v==null?'':v;};
+  set('st-name',r.name);set('st-position',r.position);set('st-salary',r.salary);set('st-start',r.startDate);
+  renderStaffShareFields(r.shareRates||{});
+  _staffEditId=id;
+  {const b=document.getElementById('st-save-btn');if(b)b.textContent='💾 อัปเดตแถวนี้';}
+  {const c=document.getElementById('st-cancel-edit');if(c)c.style.display='';}
+  {const m=document.getElementById('st-msg');if(m)m.innerHTML='<span style="color:var(--p)">✏️ กำลังแก้ไข <b>'+r.name+'</b> (มีผล '+fD(r.startDate)+') — กด "อัปเดตแถวนี้" เพื่อเขียนทับ</span>';}
+  const f=document.getElementById('st-name');if(f){f.scrollIntoView({block:'center',behavior:'smooth'});f.focus();}
+}
+function cancelEditStaff(){clearStaff();}
 function clearStaff(keepMsg){
   document.getElementById('st-name').value='';
   document.getElementById('st-salary').value='';
   document.getElementById('st-start').value=today();
   renderStaffShareFields(null);
+  _staffEditId=null;
+  {const b=document.getElementById('st-save-btn');if(b)b.textContent='💾 บันทึก';}
+  {const c=document.getElementById('st-cancel-edit');if(c)c.style.display='none';}
   if(!keepMsg)document.getElementById('st-msg').innerHTML='';
 }
 function deleteStaff(id){
@@ -7134,10 +7166,10 @@ function renderStaffTable(){
     list.map(r=>{
       const zCells=zones.map(z=>{const v=(r.shareRates||{})[z];
         return`<td style="text-align:right;font-variant-numeric:tabular-nums">${v>0?v:'<span style="color:var(--tx3)">—</span>'}</td>`;}).join('');
-      return`<tr><td>${r.name}</td><td><span class="pr-size-tag">${r.position||'-'}</span></td><td style="text-align:right">${r.salary.toLocaleString()}</td>${zCells}<td>${fD(r.startDate)}</td><td><div class="tbl-act"><button class="btn btn-s" style="padding:4px 10px;font-size:calc(12px * var(--ui-scale))" onclick="deleteStaff('${r.id}')">🗑️</button></div></td></tr>`;
+      return`<tr><td>${r.name}</td><td><span class="pr-size-tag">${r.position||'-'}</span></td><td style="text-align:right">${r.salary.toLocaleString()}</td>${zCells}<td>${fD(r.startDate)}</td><td style="white-space:nowrap"><div class="tbl-act"><button class="btn btn-s" style="padding:4px 10px;font-size:calc(12px * var(--ui-scale))" onclick="editStaff('${r.id}')" title="แก้ไขแถวนี้">✏️</button><button class="btn btn-s" style="padding:4px 10px;font-size:calc(12px * var(--ui-scale))" onclick="deleteStaff('${r.id}')" title="ลบแถวนี้">🗑️</button></div></td></tr>`;
     }).join('')
   }</tbody></table></div>`;
-  renderStaffShareFields(null);
+  renderStaffShareFields();   // ไม่ส่ง arg = คงค่าที่กรอกค้างไว้ กันล้างฟอร์มที่กำลังแก้อยู่
 }
 // ── หาวันพุธที่ใกล้ที่สุดกับวันที่กำหนด (ใช้ validate ช่องกรอกวันตัดรอบ — หาทั้งเดินหน้า/ถอยหลังแล้วเลือกที่ใกล้กว่า) ──
 function mostRecentWednesdayOf(dateStr){
