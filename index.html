@@ -2487,7 +2487,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
           <div class="fg"><label class="fl" for="cm-cost-fuel">ต้นทุนน้ำมัน (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากโหมด "แชร์ทุกบ่อ" ในสต็อกอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-fuel" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="cm-cost-equip">อุปกรณ์ (บาท) <span style="font-weight:400;color:var(--tx3)">(ในสต็อก ดึงอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-equip" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="cm-cost-equip-out">อุปกรณ์นอก (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากโหมด "แชร์ทุกบ่อ" ในสต็อกอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-equip-out" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl" for="cm-cost-catch">ค่าจับกุ้ง (บาท) <span style="font-weight:400;color:var(--tx3)">(1.5 บ./กก. ถ้าจับไม่ถึง 4 ตันคิด 6,000 บ. · นับน้ำหนักปิดบ่อรวมเกรดพิเศษ ไม่รวมพาเชียล — ตัวเลขในช่องเป็นแค่คำแนะนำ กรอกยืนยันเอง)</span></label><input type="number" class="fi" id="cm-cost-catch" step="1" placeholder="กรอกเอง"></div>
+          <div class="fg"><label class="fl" for="cm-cost-catch">ค่าจับกุ้ง (บาท) <span style="font-weight:400;color:var(--tx3)">(1.5 บ./กก. ถ้าจับไม่ถึง 4 ตันคิด 6,000 บ. · นับน้ำหนักปิดบ่อรวมเกรดพิเศษ ไม่รวมพาเชียล — ตัวเลขในช่องเป็นแค่คำแนะนำ กรอกยืนยันเอง)</span></label><input type="number" class="fi" id="cm-cost-catch" step="1" placeholder="กรอกเอง"><div id="cm-catch-brk"></div></div>
         </div>
         <div style="font-weight:700;font-size:calc(12px * var(--ui-scale));color:var(--p);margin:14px 0 8px;padding-top:10px;border-top:1px dashed var(--bd)">🤝 ส่วนแบ่งกำไร <span style="font-weight:400;color:var(--tx3)">(หักออกเป็นต้นทุน)</span></div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
@@ -14214,10 +14214,12 @@ function caretakerRateBySize(size){
 // ── ค่าจับกุ้ง: 1.5 บาท/กก. ปกติ แต่ถ้าจับได้ไม่ถึง 4 ตัน (4,000 กก.) คิดเหมาแทนที่ 6,000 บาท ──
 // ── ค่าจับกุ้ง: จ่ายให้ "ทีมชุดจับ" คนละก้อนกับแพ (ไม่ได้หักจากยอดที่แพโอน จึงไม่นับซ้ำ — พี่ยืนยัน entry #254)
 //    weightKg ต้องเป็นน้ำหนักวันปิดบ่อ "รวมเกรดพิเศษ" เสมอ
+// ⚠️ เรตอยู่ที่นี่ที่เดียว — กล่องแจกแจงใต้ช่องกรอกอ้างอิงค่าเดียวกัน ไม่ได้พิมพ์เลขซ้ำ (entry #257)
+const CATCH_RATE=1.5, CATCH_FLAT_LIMIT=4000, CATCH_FLAT=6000;
 function catchCostByWeight(weightKg){
   if(!weightKg)return 0;
-  if(weightKg<4000)return 6000;
-  return Math.round(weightKg*1.5);
+  if(weightKg<CATCH_FLAT_LIMIT)return CATCH_FLAT;
+  return Math.round(weightKg*CATCH_RATE);
 }
 // ── กล่องแจกแจงใต้ช่องส่วนแบ่ง — โชว์อย่างเดียว ไม่เติมค่าให้ช่อง ──
 function cmRenderBrk(id,rows,total,footNote){
@@ -14316,6 +14318,18 @@ function calcCropEcon(){
     //    ไม่รวมพาเชียล — ค่าจับคิดทีเดียวตอนปิดบ่อ พาเชียลไม่มีค่าจับแยก
     const catchSuggest=catchCostByWeight(closeKg);
     catchEl.placeholder=catchSuggest?`แนะนำ ${catchSuggest.toLocaleString()}`:'กรอกเอง';
+    // ── กล่องแจกแจงให้เหมือน 2 ช่องส่วนแบ่ง (พี่ขอ entry #257)
+    //    placeholder อย่างเดียวจางและหายทันทีที่พิมพ์ — เห็นที่มาของเลขไม่ได้ ตรวจทานไม่ได้ ──
+    const underCap=closeKg>0&&closeKg<CATCH_FLAT_LIMIT;
+    cmRenderBrk('cm-catch-brk',
+      closeKg>0?[{
+        l:underCap
+          ?`น้ำหนักที่จับ ${Math.round(closeKg).toLocaleString()} กก. — ไม่ถึง ${(CATCH_FLAT_LIMIT/1000)} ตัน`
+          :`น้ำหนักที่จับ ${Math.round(closeKg).toLocaleString()} กก.${cmGrKg>0?` <span style="color:var(--tx3)">(ปิดบ่อ ${Math.round(w).toLocaleString()} + เกรดพิเศษ ${Math.round(cmGrKg).toLocaleString()})</span>`:''}`,
+        v:underCap?`คิดเหมา`:`× ${CATCH_RATE} บ./กก.`
+      }]:[],
+      catchSuggest,
+      closeKg>0?'ไม่รวมพาเชียล — ค่าจับคิดทีเดียวตอนปิดบ่อ':'');
   }
   // ── ต้นทุนตรงทั้งหมด รวม "% คนเลี้ยง" กับ "ส่วนแบ่งผู้จัดการ" ที่ตอนนี้เป็นยอดเงินกรอกเองล้วน ไม่มีสูตร % แล้วทั้งคู่ ──
   const totalCostDirect=gv('cm-cost-fry')+gv('cm-cost-transport')+gv('cm-cost-feed')+gv('cm-cost-med')+gv('cm-cost-lime')+gv('cm-cost-labor')+gv('cm-cost-elec')+gv('cm-cost-fuel')+gv('cm-cost-equip')+gv('cm-cost-equip-out')+gv('cm-cost-catch')+gv('cm-pct-caretaker')+gv('cm-pct-manager');
