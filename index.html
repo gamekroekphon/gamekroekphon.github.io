@@ -2879,7 +2879,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
             <option value="ธุรการ"><option value="ช่างไฟ"><option value="คนเลี้ยง">
           </datalist>
         </div>
-        <div class="fg"><label class="fl" for="st-salary">เงินเดือน (บาท/เดือน)</label><input type="number" class="fi" id="st-salary" placeholder="เช่น 25000" inputmode="decimal"></div>
+        <div class="fg"><label class="fl" for="st-salary">เงินเดือน (บาท/เดือน)</label><input type="number" class="fi" id="st-salary" placeholder="เช่น 25000" inputmode="decimal"><span class="lbl-std">ใส่ <b>0</b> ถ้าฟาร์มไม่ได้จ่ายเงินเดือน แต่ได้ส่วนแบ่ง — เช่น นักวิชาการจาก CP (entry #253)</span></div>
         <div class="fg"><label class="fl" for="st-start">มีผลตั้งแต่</label><input type="date" class="fi" id="st-start"></div>
       </div>
       <!-- ── ส่วนแบ่งรายโซน (บ./กก.) — คอลัมน์งอกเองตามโซนที่มีในระบบ ไม่ฝัง A/B ตายตัว (entry #251) ── -->
@@ -7108,10 +7108,16 @@ function saveStaff(){
   const startDate=document.getElementById('st-start').value;
   const msg=document.getElementById('st-msg');
   if(!name){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุชื่อ</span>';return;}
-  if(!salary||salary<=0){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุเงินเดือน</span>';return;}
+  // ⚠️ ยอมรับเงินเดือน 0 — มีคนที่ฟาร์มไม่ได้จ่ายเงินเดือนแต่ได้ส่วนแบ่ง (นักวิชาการ CP รับเงินเดือนจาก CP) พี่แจ้ง entry #253
+  //    เดิม `!salary||salary<=0` บล็อก 0 ทิ้ง เพราะตอนเขียนสมมติว่าพนักงานประจำต้องมีเงินเดือนเสมอ
+  if(isNaN(salary)||salary<0){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุเงินเดือน (ใส่ 0 ได้ถ้าฟาร์มไม่ได้จ่าย)</span>';return;}
   if(!startDate){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุวันที่มีผล</span>';return;}
   if(!D.staff)D.staff=[];
   const shareRates=readStaffShareFields();
+  // ── เงินเดือน 0 และไม่มีส่วนแบ่งเลย = แถวนี้ไม่มีผลกับอะไรทั้งนั้น กันกรอกค้างไว้แล้วลืม ──
+  if(salary===0&&!Object.keys(shareRates).length){
+    msg.innerHTML='<span style="color:var(--d)">เงินเดือน 0 ต้องกรอกส่วนแบ่งอย่างน้อย 1 โซน — ไม่งั้นแถวนี้จะไม่มีผลกับการคำนวณใดๆ</span>';return;
+  }
   const wasEdit=!!_staffEditId;
   if(wasEdit){
     const old=(D.staff||[]).find(x=>x.id===_staffEditId);
@@ -7159,6 +7165,9 @@ function deleteStaff(id){
 function renderStaffTable(){
   const el=document.getElementById('st-table');if(!el)return;
   const list=(D.staff||[]).slice().sort((a,b)=>new Date(b.startDate)-new Date(a.startDate));
+  // ⚠️ ต้องสร้างช่องส่วนแบ่งก่อน return เสมอ — ตอนยังไม่มีพนักงานสักคน ฟังก์ชันนี้ return ตั้งแต่บรรทัดล่าง
+  //    ทำให้ช่องส่วนแบ่งไม่เคยถูกสร้างเลย → กรอกส่วนแบ่งให้พนักงาน "คนแรก" ไม่ได้ (entry #253)
+  renderStaffShareFields();
   if(!list.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลพนักงานประจำ — เพิ่มได้จากฟอร์มด้านบน</p>';return;}
   const zones=allZones();
   const zHead=zones.map(z=>`<th style="text-align:right">ส่วนแบ่ง โซน ${z}<br><span style="font-weight:400;text-transform:none">บ./กก.</span></th>`).join('');
@@ -7166,7 +7175,9 @@ function renderStaffTable(){
     list.map(r=>{
       const zCells=zones.map(z=>{const v=(r.shareRates||{})[z];
         return`<td style="text-align:right;font-variant-numeric:tabular-nums">${v>0?v:'<span style="color:var(--tx3)">—</span>'}</td>`;}).join('');
-      return`<tr><td>${r.name}</td><td><span class="pr-size-tag">${r.position||'-'}</span></td><td style="text-align:right">${r.salary.toLocaleString()}</td>${zCells}<td>${fD(r.startDate)}</td><td style="white-space:nowrap"><div class="tbl-act"><button class="btn btn-s" style="padding:4px 10px;font-size:calc(12px * var(--ui-scale))" onclick="editStaff('${r.id}')" title="แก้ไขแถวนี้">✏️</button><button class="btn btn-s" style="padding:4px 10px;font-size:calc(12px * var(--ui-scale))" onclick="deleteStaff('${r.id}')" title="ลบแถวนี้">🗑️</button></div></td></tr>`;
+      const salTxt=(r.salary>0)?r.salary.toLocaleString()
+        :'<span style="color:var(--tx3)">0<br><span style="font-size:var(--fs10)">ฟาร์มไม่ได้จ่าย</span></span>';
+      return`<tr><td>${r.name}</td><td><span class="pr-size-tag">${r.position||'-'}</span></td><td style="text-align:right">${salTxt}</td>${zCells}<td>${fD(r.startDate)}</td><td style="white-space:nowrap"><div class="tbl-act"><button class="btn btn-s" style="padding:4px 10px;font-size:calc(12px * var(--ui-scale))" onclick="editStaff('${r.id}')" title="แก้ไขแถวนี้">✏️</button><button class="btn btn-s" style="padding:4px 10px;font-size:calc(12px * var(--ui-scale))" onclick="deleteStaff('${r.id}')" title="ลบแถวนี้">🗑️</button></div></td></tr>`;
     }).join('')
   }</tbody></table></div>`;
   renderStaffShareFields();   // ไม่ส่ง arg = คงค่าที่กรอกค้างไว้ กันล้างฟอร์มที่กำลังแก้อยู่
@@ -7400,8 +7411,12 @@ function renderLaborKPI(){
   const el=document.getElementById('lb-kpi');if(!el)return;
   const staffMap={};
   (D.staff||[]).forEach(s=>{if(!staffMap[s.name]||s.startDate>staffMap[s.name].startDate)staffMap[s.name]=s;});
-  const monthlyStaff=Object.values(staffMap).reduce((s,x)=>s+x.salary,0);
-  const staffCount=Object.keys(staffMap).length;
+  const monthlyStaff=Object.values(staffMap).reduce((s,x)=>s+(x.salary||0),0);
+  // ⚠️ การ์ดนี้พูดเรื่อง "เงินเดือน" — นับหัวเฉพาะคนที่ฟาร์มจ่ายจริง
+  //    ถ้านับคนที่เงินเดือน 0 (นักวิชาการ CP) รวมไปด้วย เอายอดหารหัวจะได้ค่าเฉลี่ยต่ำกว่าจริง (entry #253)
+  const paidStaff=Object.values(staffMap).filter(x=>(x.salary||0)>0);
+  const staffCount=paidStaff.length;
+  const unpaidCount=Object.keys(staffMap).length-staffCount;
   const wk=weekOfDate(today());
   const monthlyDailyEquiv=wk?wk.amount*365/12/7:0; // แปลงยอดรายสัปดาห์ล่าสุดกลับเป็น "เทียบเท่ารายเดือน" ไว้โชว่คู่กับเงินเดือนประจำ
   // ค่าแรง/กก. จากรอบที่ปิดแล้ว — เฉพาะรอบที่ปิดตั้งแต่วันที่มีข้อมูลรายสัปดาห์จริงเป็นต้นมา (กันรอบเก่าที่ไม่มีข้อมูลจริงมาฉุดค่าเฉลี่ยลง)
@@ -7434,7 +7449,7 @@ function renderLaborKPI(){
   const ytd=ytdFrom<=ytdTo?laborSpendRange(ytdFrom,ytdTo):0;
   const ytdDays=ytdFrom<=ytdTo?dDiff(ytdFrom,ytdTo)+1:0;
   el.innerHTML=`
-    <div class="kpi-card"><div class="kpi-label">เงินเดือนประจำ/เดือน</div><div class="kpi-val">${monthlyStaff.toLocaleString()} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">${staffCount} คน</div></div>
+    <div class="kpi-card"><div class="kpi-label">เงินเดือนประจำ/เดือน</div><div class="kpi-val">${monthlyStaff.toLocaleString()} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">${staffCount} คน${unpaidCount?` · +${unpaidCount} คนไม่รับเงินเดือนจากฟาร์ม`:''}</div></div>
     <div class="kpi-card"><div class="kpi-label">พนักงานรายวัน (เทียบเท่า/เดือน)</div><div class="kpi-val">${Math.round(monthlyDailyEquiv).toLocaleString()} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">จากยอดสัปดาห์ล่าสุดที่บันทึก</div></div>
     <div class="kpi-card"><div class="kpi-label">รวมค่าแรงทั้งหมด (เทียบเท่า/เดือน)</div><div class="kpi-val">${Math.round(monthlyStaff+monthlyDailyEquiv).toLocaleString()} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">เงินเดือน + รายวัน</div></div>
     <div class="kpi-card" style="border-top:3px solid var(--w)"><div class="kpi-label">ค่าแรงรวมปี ${curYearBE}</div><div class="kpi-val">${ytd>0?Math.round(ytd).toLocaleString():'-'} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">${ytd>0?ytdDays+' วัน ('+fD(ytdFrom)+' – วันนี้)':'ยังไม่มีข้อมูลปีนี้'}${ytdClipped?' · เริ่มนับจากวันแรกที่มีข้อมูล':''}</div></div>
