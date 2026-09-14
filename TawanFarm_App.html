@@ -5131,6 +5131,42 @@ function pondFeedBaseOnDate(p,d){
   return Math.max(0,release-ph);
 }
 // ── FCR ประเมิน = อาหารสะสม ÷ (กุ้งที่ยังอยู่ในบ่อ + ที่พาเชียลไปแล้ว) — อาหารถูกกินโดยกุ้งทั้ง 2 ส่วน ──
+// ══════ เกณฑ์ FCR ของฟาร์ม — ไต่ตามอายุกุ้ง (พี่อธิบาย entry #256) ══════
+// วันที่ 1 → ก่อนสุ่มครั้งแรก = 1.0
+// สุ่มครั้งแรก (~วัน 30 หรือกุ้งหลุดไซส์ 100 ตัว/กก.) = 1.1
+// จากนั้น +0.1 ทุก 2 สัปดาห์ (จันทร์เว้นจันทร์) — ไม่มีเพดาน เพราะเพดานอาหารต่อวันคุมอยู่แล้ว
+// ⚠️ เดินตามปฏิทิน ไม่ต้องรอว่าสุ่มจริงหรือเปล่า — กุ้งโตต่อไม่ว่าจะสุ่มหรือไม่
+//    ถ้าเลย 40 วันแล้วยังไม่ได้สุ่มเลย ให้ถือว่าเริ่มไต่ที่วัน 40 (พี่บอก "เกิน 40 วันยังไม่ได้สุ่ม ให้ปรับเองได้เลย")
+//    จึงใช้ min(วันสุ่มครั้งแรก, 40) เป็นจุดตั้งต้น — สุ่มช้ากว่า 40 ก็ไม่ทำให้เกณฑ์ค้างต่ำเกินจริง
+const FCR_BASE=1.0, FCR_FIRST=1.1, FCR_STEP=0.1, FCR_STEP_DAYS=14, FCR_ANCHOR_MAX=40;
+function fcrAnchorDay(p){
+  const ss=(p&&p.samples||[]).filter(x=>x&&x.date).slice()
+    .sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  const firstDay=(ss.length&&p.startDate)?docAge(p.startDate,ss[0].date):null;
+  return(firstDay!=null&&firstDay>0)?Math.min(firstDay,FCR_ANCHOR_MAX):FCR_ANCHOR_MAX;
+}
+// เกณฑ์ FCR ที่ "ควรจะเป็น" ของบ่อนี้ ณ อายุที่กำหนด (ไม่ใส่ = วันนี้)
+function fcrTargetFor(p,ageOverride){
+  if(!p||!p.startDate)return null;
+  const age=ageOverride!=null?ageOverride:pondCurAge(p);
+  if(!(age>0))return null;
+  const anchor=fcrAnchorDay(p);
+  if(age<anchor)return FCR_BASE;
+  const steps=Math.floor((age-anchor)/FCR_STEP_DAYS);
+  return +(FCR_FIRST+FCR_STEP*steps).toFixed(2);
+}
+// ── FCR เกินเกณฑ์ = อาหารที่ใช้เกิน แปลงเป็นเงินด้วยราคาอาหารจริงของบ่อนี้ ──
+//    ⚠️ ราคาต่อ กก. คิดจาก ต้นทุนอาหารจริง ÷ อาหารที่ให้จริง — ไม่ได้ตั้งราคาตายตัวไว้ในโค้ด
+function fcrGapMoney(p){
+  const t=fcrTargetFor(p);const fcrStr=getFCR(p);
+  if(t==null||fcrStr==null)return null;
+  const fcr=parseFloat(fcrStr);
+  const feedKg=getCumFeed(p);if(!(feedKg>0))return null;
+  const produced=feedKg/fcr;                    // = biomass + พาเชียล (ตัวหารเดียวกับ getFCR)
+  const costPerKg=pondFeedCost(p)/feedKg;
+  const overKg=(fcr-t)*produced;
+  return{fcr,target:t,produced,costPerKg,overKg,baht:overKg*costPerKg};
+}
 function getFCR(p){
   const f=getCumFeed(p);const b=getLatestBiomass(p);
   if(b==null||f<=0)return null;
@@ -6149,10 +6185,18 @@ function pondRiskFeed(p,last){
 function pondRiskEconomic(p){
   const cands=[];
   const fcr=getFCR(p);
+  // ⚠️ เทียบกับ "เกณฑ์ตามอายุกุ้ง" ไม่ใช่เลขคงที่ 1.6/2.0 (entry #256)
+  //    FCR สะสมสูงขึ้นตามอายุโดยธรรมชาติ เกณฑ์คงที่ทำให้บ่ออายุน้อยที่แย่จริงไม่เตือน
+  //    ส่วนบ่ออายุมากที่ปกติดีกลับโดนเตือน = เตือนแทบจะเฉพาะตอนใกล้จบรอบ ซึ่งแก้ไม่ทันแล้ว
   if(fcr!=null){
-    const f=parseFloat(fcr);
-    if(f>2.0)cands.push({level:'danger',reason:`FCR สะสม ${fcr} สูงมาก — ต้นทุนอาหารบานปลาย`});
-    else if(f>1.6)cands.push({level:'warn',reason:`FCR สะสม ${fcr} เริ่มสูง — ควรทบทวนการให้อาหาร`});
+    const f=parseFloat(fcr),t=fcrTargetFor(p);
+    if(t!=null){
+      const over=f-t;
+      const g=fcrGapMoney(p);
+      const money=(g&&g.baht>1000)?` ≈ อาหารเกิน ${ceoMoney(g.baht)}`:'';
+      if(over>=0.3)cands.push({level:'danger',reason:`FCR สะสม ${fcr} สูงกว่าเกณฑ์วันนี้ (${t.toFixed(1)}) อยู่ ${over.toFixed(2)}${money}`});
+      else if(over>=0.15)cands.push({level:'warn',reason:`FCR สะสม ${fcr} เริ่มสูงกว่าเกณฑ์วันนี้ (${t.toFixed(1)})${money}`});
+    }else if(f>2.0)cands.push({level:'danger',reason:`FCR สะสม ${fcr} สูงมาก — ต้นทุนอาหารบานปลาย`});
   }
   return _fcPick(cands,'ต้นทุนอยู่ในแผน');
 }
@@ -6213,6 +6257,8 @@ function renderPondDetail(id){
   const lat=samples.length?samples[samples.length-1]:null;
   const latPrev=samples.length>1?samples[samples.length-2]:null;
   const fcr=getFCR(p);
+  const pdFcrT=fcrTargetFor(p);          // เกณฑ์ FCR ของฟาร์ม ณ อายุวันนี้ (entry #256)
+  const pdFcrGap=fcrGapMoney(p);
   const pdSC=pondShrimpCount(p);   // จำนวนกุ้งรอดสะสม / จับพาเชียลไปแล้ว / คงเหลือในบ่อ — ใช้ร่วมทั้งหน้า
   // กก./ไร่ — สูตรเดียวกับ partialHarvestInfo() (biomass ในบ่อ ÷ ขนาดบ่อ) จะได้ตรงกับการ์ดพาเชียลเสมอ
   const pdYr=(p.size>0&&pdSC)?pdSC.biomass/p.size:null;
@@ -6300,7 +6346,7 @@ function renderPondDetail(id){
     <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px" title="ประเมินจากอาหารสะสม ÷ biomass ประเมิน — ไม่ใช่ FCR สุดท้ายตอนปิดรอบ">
       <div style="font-size:var(--fs10);color:#16a34a;margin-bottom:4px">FCR ประเมิน</div>
       <div style="font-size:calc(22px * var(--ui-scale));font-weight:500;color:${fcrValColor};line-height:1">${fcr??'—'}</div>
-      <div style="font-size:var(--fs10);color:#16a34a;margin-top:3px">เป้า &lt; 1.5</div>
+      <div style="font-size:var(--fs10);color:#16a34a;margin-top:3px">${pdFcrT!=null?'เกณฑ์วันนี้ '+pdFcrT.toFixed(1):'เป้าตามอายุกุ้ง'}</div>
     </div>
     <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px" title="${pdSC&&pdSC.hasPartial?'อัตรารอดสะสม — นับกุ้งที่จับพาเชียลไปแล้วเป็นตัวที่รอดด้วย (ไม่ได้ตาย แค่ขายออกไป) · บรรทัดล่างคือที่ยังอยู่ในบ่อจริง':'จากสุ่มตัวอย่างล่าสุด — กรอกเอง'}">
       <div style="font-size:var(--fs10);color:#16a34a;margin-bottom:4px">อัตรารอด${pdSC&&pdSC.hasPartial?' (สะสม)':''}</div>
