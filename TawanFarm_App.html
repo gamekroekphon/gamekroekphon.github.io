@@ -2336,12 +2336,32 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 </div>
 <div id="sec-hatchery" class="sec">
   <div class="sec-hdr"><div class="sec-title">🦐 เปรียบเทียบโรงเพาะฟัก</div></div>
-  <div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-bottom:14px">วิเคราะห์จากรอบเลี้ยงที่ปิดแล้วเท่านั้น (มีผลผลิต/อัตรารอดบันทึกครบ)</div>
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-t">📊 อัตรารอดเฉลี่ยตามโรงเพาะฟัก</div>
-    <div style="position:relative;height:220px"><canvas id="hatchery-chart"></canvas></div>
+  <div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-bottom:10px">วิเคราะห์จากรอบเลี้ยงที่ปิดแล้วเท่านั้น (มีผลผลิต/อัตรารอดบันทึกครบ) · ปีของรอบยึดตาม<b>วันที่จับ</b> เหมือนหน้าประวัติรอบเลี้ยง</div>
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+    <label class="fl" for="hat-year">ปี:</label>
+    <select class="fi" id="hat-year" onchange="initHatchery()" style="width:120px"></select>
+    <span id="hat-badge" style="font-size:calc(12px * var(--ui-scale));color:var(--tx3)"></span>
   </div>
-  <div class="card"><div class="card-t">📋 สรุปตามโรงเพาะฟัก</div><div id="hatchery-table"></div></div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-t" id="hatchery-chart-t">📊 อัตรารอดเฉลี่ยตามโรงเพาะฟัก</div>
+    <p id="hatchery-chart-empty" style="display:none;color:var(--tx3);text-align:center;padding:24px">ยังไม่มีรอบเลี้ยงที่ปิดแล้วพอสำหรับวิเคราะห์</p>
+    <div id="hatchery-chart-wrap" style="position:relative;height:220px"><canvas id="hatchery-chart"></canvas></div>
+  </div>
+  <div class="card"><div class="card-t" id="hatchery-table-t">📋 สรุปตามโรงเพาะฟัก</div><div id="hatchery-table"></div></div>
+  <div class="card" id="hatchery-hist-card">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:4px">
+      <div class="card-t" style="margin:0">📅 ประวัติรายปี — ทีละโรง</div>
+      <select class="fi" id="hat-hist-metric" onchange="renderHatcheryHistory()" style="width:auto;margin-left:auto;font-size:calc(12px * var(--ui-scale));padding:4px 8px">
+        <option value="surv">อัตรารอด (รวมแถม)</option>
+        <option value="survOrder">อัตรารอด (ยอดสั่งซื้อ)</option>
+        <option value="fcr">FCR</option>
+        <option value="adg">ADG</option>
+        <option value="bonus">% ยอดแถม</option>
+      </select>
+    </div>
+    <div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-bottom:10px">แต่ละปีของแต่ละโรงคิดแยกกัน — ไม่ได้เอาทุกปีมาถัวรวมกัน · ตัวหนาเขียว = ดีที่สุดของปีนั้น</div>
+    <div id="hatchery-hist-tbl"></div>
+  </div>
   <div class="card" id="hatchery-merge-card" style="display:none">
     <div class="card-t">🔧 รวมชื่อโรงเพาะฟักที่สะกดต่างกัน</div>
     <div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-bottom:10px">เลือกชื่อที่หมายถึงโรงเพาะฟักเดียวกัน (เช่น "cp ชุมพร1" กับ "ซีพี") อย่างน้อย 2 ชื่อ แล้วกรอกชื่อที่ต้องการใช้จริง — ระบบจะแก้ทุกบ่อ/ทุกรอบเลี้ยงที่เกี่ยวข้องให้อัตโนมัติ (Admin เท่านั้น)</div>
@@ -4503,12 +4523,15 @@ function renderWqFeedChart(){
     _wqfeedFeedChart=new Chart(fEl,{type:'bar',data:{labels:ff.map(r=>fD(r.date)),datasets:[{label:'อาหาร กก./วัน',data:ff.map(r=>parseFloat(r.totalFeed)||0),backgroundColor:'#3f6212',borderRadius:4}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8}}},y:{ticks:{font:{size:9}}}}}});
   }else if(fEl)fEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:calc(12px * var(--ui-scale));text-align:center;padding:20px">ยังไม่มีข้อมูลอาหารพอสำหรับกราฟนี้ — บันทึกเพิ่มได้ที่หน้า "อาหาร & FCR"</p>';
 }
-function hatcheryStats(){
+// yrBE: ปี พ.ศ. ที่ต้องการ (ไม่ระบุ/ว่าง = ทุกปี) — ปีของรอบใช้ histRecYear() ตัวเดียวกับหน้าประวัติรอบเลี้ยง
+// ⚠️ ห้ามอ่าน c.cropYear ตรงๆ เพื่อแบ่งปี — ข้อมูลจริงมีทั้ง พ.ศ. (seed เก่า) และ ค.ศ. (รอบที่ปิดผ่านแอป) ปนกันอยู่
+function hatcheryStats(yrBE){
   const groups={};
   D.ponds.forEach(p=>{
     (p.cropHistory||[]).forEach(c=>{
       // ── ทุก record ใน cropHistory คือรอบที่ปิดแล้วอยู่แล้ว (ไม่ต้องพึ่ง c.closed ที่ confirmCloseCrop() ไม่เคยตั้งค่าให้) ──
       if(!c.harvestResult)return;
+      if(yrBE&&String(histRecYear(c))!==String(yrBE))return;
       const name=(c.hatchery||'').trim()||'ไม่ระบุ';
       if(!groups[name])groups[name]={name,rounds:0,survSum:0,survN:0,fcrSum:0,fcrN:0,adgSum:0,adgN:0,
         bonusSum:0,bonusN:0,ordSum:0,ordN:0,stockSum:0,bonusQtySum:0,
@@ -4556,14 +4579,50 @@ function hatcheryStats(){
     adgAvg:g.adgN?+(g.adgSum/g.adgN).toFixed(3):null
   })).sort((a,b)=>(b.survAvg||0)-(a.survAvg||0));
 }
+// ปี พ.ศ. ทั้งหมดที่มีรอบปิดแล้ว (ใหม่→เก่า)
+function hatcheryYears(){
+  const ys=new Set();
+  D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{
+    if(!c.harvestResult)return;
+    const y=histRecYear(c);if(y)ys.add(String(y));
+  }));
+  return[...ys].sort().reverse();
+}
+// หน่วยวัดในตารางประวัติรายปี — better บอกว่า "มากดีกว่า" หรือ "น้อยดีกว่า" (FCR ยิ่งต่ำยิ่งดี)
+const HAT_METRICS={
+  surv:{key:'survAvg',label:'อัตรารอด (รวมแถม)',suffix:'%',dec:1,hiGood:true},
+  survOrder:{key:'survOrderAvg',label:'อัตรารอด (ยอดสั่งซื้อ)',suffix:'%',dec:1,hiGood:true},
+  fcr:{key:'fcrAvg',label:'FCR',suffix:'',dec:2,hiGood:false},
+  adg:{key:'adgAvg',label:'ADG (ก./วัน)',suffix:'',dec:3,hiGood:true},
+  bonus:{key:'bonusAvg',label:'% ยอดแถม',suffix:'%',dec:1,hiGood:true}
+};
 let _hatcheryChart=null;
 function initHatchery(){
-  const stats=hatcheryStats();
+  // ── เติมตัวเลือกปี (เก็บค่าที่เลือกไว้ถ้ายังมีอยู่) ──
+  const ySel=document.getElementById('hat-year');
+  const years=hatcheryYears();
+  let yr='';
+  if(ySel){
+    const cur=ySel.value;
+    yr=(cur&&(cur===''||years.includes(cur)))?cur:'';
+    ySel.innerHTML='<option value="">ทุกปี</option>'+years.map(y=>`<option value="${y}"${y===yr?' selected':''}>${y}</option>`).join('');
+    ySel.value=yr;
+  }
+  const stats=hatcheryStats(yr);
+  const badge=document.getElementById('hat-badge');
+  if(badge)badge.textContent=stats.length?(stats.length+' โรง · '+stats.reduce((a,x)=>a+x.rounds,0)+' รอบ'):'ไม่มีรอบปิดในปีนี้';
+  const tEl=document.getElementById('hatchery-chart-t');
+  if(tEl)tEl.textContent='📊 อัตรารอดเฉลี่ยตามโรงเพาะฟัก'+(yr?' — ปี '+yr:' — ทุกปีรวมกัน');
+  const t2El=document.getElementById('hatchery-table-t');
+  if(t2El)t2El.textContent='📋 สรุปตามโรงเพาะฟัก'+(yr?' — ปี '+yr:' — ทุกปีรวมกัน');
   const chEl=document.getElementById('hatchery-chart');
+  const chEmpty=document.getElementById('hatchery-chart-empty');
+  const chWrap=document.getElementById('hatchery-chart-wrap');
   if(_hatcheryChart){_hatcheryChart.destroy();_hatcheryChart=null;}
-  if(!stats.length){
-    if(chEl)chEl.parentElement.innerHTML='<div class="card-t">📊 อัตรารอดเฉลี่ยตามโรงเพาะฟัก</div><p style="color:var(--tx3);text-align:center;padding:24px">ยังไม่มีรอบเลี้ยงที่ปิดแล้วพอสำหรับวิเคราะห์</p>';
-  }else if(chEl&&typeof Chart!=='undefined'){
+  // ⚠️ ห้าม innerHTML ทับการ์ดนี้ — canvas จะหายถาวร แล้วพอสลับปีกลับมากราฟจะไม่ขึ้นอีกเลย
+  if(chEmpty)chEmpty.style.display=stats.length?'none':'';
+  if(chWrap)chWrap.style.display=stats.length?'':'none';
+  if(stats.length&&chEl&&typeof Chart!=='undefined'){
     _hatcheryChart=new Chart(chEl,{type:'bar',data:{labels:stats.map(s=>s.name+' ('+s.rounds+' รอบ)'),datasets:[{data:stats.map(s=>s.survAvg||0),backgroundColor:'#3f6212',borderRadius:4}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+'% รอด'}}},scales:{x:{max:100,ticks:{font:{size:10},callback:v=>v+'%'}},y:{ticks:{font:{size:11}}}}}});
   }
   const tbl=document.getElementById('hatchery-table');
@@ -4598,6 +4657,64 @@ function initHatchery(){
     mergeCard.style.display=APP_ROLE==='admin'?'':'none';
     if(APP_ROLE==='admin')renderHatcheryMergeTool();
   }
+  renderHatcheryHistory();
+}
+// ══════ ประวัติรายปีของแต่ละโรงเพาะฟัก (พี่สั่ง — แต่ละปี performance ไม่เหมือนกัน) ══════
+// ⚠️ ทุกช่องในตารางนี้มาจาก hatcheryStats(ปี) ตัวเดียวกับกราฟ/ตารางข้างบน — ไม่มีสูตรเส้นที่สอง
+//    ค่าเฉลี่ยของแต่ละปีคิด "ถ่วงน้ำหนักภายในปีนั้น" เอง ไม่ใช่เอาค่าเฉลี่ยรายปีมาเฉลี่ยซ้ำ (จะเพี้ยนเพราะแต่ละปีจำนวนรอบไม่เท่ากัน)
+function renderHatcheryHistory(){
+  const el=document.getElementById('hatchery-hist-tbl');if(!el)return;
+  const mKey=(document.getElementById('hat-hist-metric')||{}).value||'surv';
+  const M=HAT_METRICS[mKey]||HAT_METRICS.surv;
+  const years=hatcheryYears().slice().reverse();   // เก่า→ใหม่ อ่านเป็นไทม์ไลน์จากซ้ายไปขวา
+  if(!years.length){
+    el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:14px">ยังไม่มีรอบเลี้ยงที่ปิดแล้ว</p>';return;
+  }
+  const byYear={};years.forEach(y=>{byYear[y]={};hatcheryStats(y).forEach(st=>{byYear[y][st.name]=st;});});
+  const all=hatcheryStats();   // ทุกปีรวมกัน — ใช้เรียงแถวและเป็นคอลัมน์สุดท้าย
+  if(!all.length){
+    el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:14px">ยังไม่มีรอบเลี้ยงที่ปิดแล้ว</p>';return;
+  }
+  const names=all.slice().sort((a,b)=>b.rounds-a.rounds).map(x=>x.name);
+  // ตัวที่ดีที่สุดของแต่ละปี (คอลัมน์ละตัว) — FCR ยิ่งต่ำยิ่งดี จึงต้องดู M.hiGood
+  const best={};
+  years.forEach(y=>{
+    let b=null;
+    names.forEach(n=>{
+      const v=byYear[y][n]?byYear[y][n][M.key]:null;
+      if(v==null||isNaN(v))return;
+      if(b==null||(M.hiGood?v>b:v<b))b=v;
+    });
+    best[y]=b;
+  });
+  const fmt=v=>(v==null||isNaN(v))?null:(+v).toFixed(M.dec)+M.suffix;
+  const cell=(st,isBest)=>{
+    if(!st)return'<td style="text-align:right;color:var(--tx3)">-</td>';
+    const v=st[M.key];
+    const txt=fmt(v);
+    if(txt==null)return'<td style="text-align:right;color:var(--tx3)">-<div style="font-size:var(--fs10)">'+st.rounds+' รอบ</div></td>';
+    return'<td style="text-align:right;'+(isBest?'color:var(--ok);font-weight:700':'')+'">'+txt
+      +'<div style="font-size:var(--fs10);color:var(--tx3);font-weight:400">'+st.rounds+' รอบ</div></td>';
+  };
+  const head='<th>โรงเพาะฟัก</th>'+years.map(y=>'<th style="text-align:right">'+y+'</th>').join('')
+    +'<th style="text-align:right;border-left:2px solid var(--bd)">ทุกปีรวมกัน</th>';
+  const body=names.map(n=>{
+    const allSt=all.find(x=>x.name===n);
+    return'<tr><td>'+mpEsc(n)+'</td>'
+      +years.map(y=>{
+        const st=byYear[y][n];
+        const v=st?st[M.key]:null;
+        return cell(st,v!=null&&best[y]!=null&&+v===+best[y]);
+      }).join('')
+      +'<td style="text-align:right;border-left:2px solid var(--bd);color:var(--tx2)">'+(fmt(allSt?allSt[M.key]:null)||'-')
+      +'<div style="font-size:var(--fs10);color:var(--tx3)">'+(allSt?allSt.rounds:0)+' รอบ</div></td></tr>';
+  }).join('');
+  el.innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>'
+    +'<div style="font-size:var(--fs11);color:var(--tx3);margin-top:9px;line-height:1.75">'
+    +'กำลังดู <b>'+M.label+'</b> · ปีที่โรงไหนไม่ได้ส่งลูกกุ้งจะขึ้น "-"<br>'
+    +'💡 <b>วิธีอ่าน</b>: ดูแนวนอนทีละโรง — โรงที่เคยดีแล้วปีหลังตก หรือโรงที่ค่อยๆ ดีขึ้น จะเห็นทันที '
+    +'ค่าเฉลี่ย "ทุกปีรวมกัน" กลบเรื่องนี้ไว้หมด<br>'
+    +'⚠️ ปีที่มีรอบน้อย (1-2 รอบ) ตัวเลขเหวี่ยงง่าย ดูจำนวนรอบใต้ตัวเลขประกอบเสมอ</div>';
 }
 // ── รวมชื่อโรงเพาะฟักที่สะกดต่างกันแต่หมายถึงที่เดียวกัน (แก้ทั้ง pond.hatchery ปัจจุบัน + cropHistory ทุกรอบ) ──
 let _hatcheryMergeSel=new Set();
