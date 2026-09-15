@@ -709,6 +709,11 @@ html[data-uisize="xl"]{--ui-scale:1.25}
 .cr-r-ar{color:var(--tx3);text-align:center}
 .cr-r-dy{font-weight:700;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
 .cr-r-none{grid-column:1/-1;color:var(--tx3);font-style:italic}
+/* บรรทัดรอบที่กดดูรายละเอียดได้ — ไฮไลต์ทั้งแถวตอน hover ผ่านตัวห่อ display:contents ไม่ได้ จึงทำทีละช่อง */
+.cr-r-tap{cursor:pointer}
+div:hover>.cr-r-tap{background:var(--pl)}
+.cr-r-go{opacity:.45;font-size:calc(10px * var(--ui-scale))}
+div:hover>.cr-r-dy>.cr-r-go{opacity:1}
 .cr-cost{font-size:var(--fs105);color:var(--pd);margin-top:5px;cursor:help;line-height:1.35}
 .cr-cost .k{color:var(--tx3);font-size:var(--fs10);font-weight:600;white-space:nowrap}
 .cr-cost .v{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -2379,22 +2384,21 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <div class="sec-title">🌾 รอบเลี้ยง (Crop Cycles)</div>
     <span style="font-size:calc(12px * var(--ui-scale));color:var(--tx3)">แสดงทุกรอบที่เลี้ยงในปีนั้น (บางบ่อทำได้ 3 รอบ/ปี) · ระยะเลี้ยงปกติ 90–120 วัน</span>
   </div>
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+    <label class="fl" for="cr-year" style="margin:0">ปี:</label>
+    <select class="fi" id="cr-year" onchange="renderCrops()" style="width:auto;min-width:130px;font-size:calc(12px * var(--ui-scale));padding:4px 8px"></select>
+    <button class="btn" style="margin-left:auto;font-size:calc(12px * var(--ui-scale));padding:5px 10px;white-space:nowrap" onclick="goStatForCropYear()">📊 สถิติ →</button>
+  </div>
   <div class="g5" id="cr-metrics" style="margin-bottom:20px"></div>
   <div class="card">
-    <div class="card-t" style="justify-content:space-between">
-      <span>📋 สรุปรอบเลี้ยงปีนี้</span>
-      <div style="display:flex;gap:6px;align-items:center">
-        <select class="fi" id="cr-year" onchange="renderCrops()" style="width:120px;font-size:calc(12px * var(--ui-scale));padding:4px 8px"></select>
-        <button class="btn" style="font-size:calc(12px * var(--ui-scale));padding:5px 10px;white-space:nowrap" onclick="goStatForCropYear()">📊 สถิติ →</button>
-      </div>
-    </div>
+    <div class="card-t" id="cr-sum-t">📋 สรุปรอบเลี้ยง</div>
     <div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:4px;text-align:right;display:none" id="cr-scroll-hint">← เลื่อนซ้าย-ขวาเพื่อดูสถานะ/ปุ่มปิดรอบ →</div>
     <div style="overflow-x:auto">
       <table class="cr-tbl">
         <thead>
           <tr>
             <th class="cr-th-l">บ่อ</th>
-            <th class="cr-th-l">รอบเลี้ยงในปีนี้ (ทุกรอบ)</th>
+            <th class="cr-th-l" id="cr-th-rounds">รอบเลี้ยงในปีนี้ (ทุกรอบ)</th>
             <th class="cr-th-c">ปิดแล้ว</th>
             <th class="cr-th-c">สถานะ</th>
             <th class="cr-th-c"></th>
@@ -2406,11 +2410,10 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   </div>
   <div class="card" style="margin-top:16px">
     <div class="card-t" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <span style="white-space:nowrap">📚 ประวัติรอบเลี้ยง (ปิดแล้ว)</span>
+      <span style="white-space:nowrap" id="cr-hist-t">📚 ประวัติรอบเลี้ยง (ปิดแล้ว)</span>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-left:auto">
         <button class="btn btn-s admin-only" style="font-size:var(--fs11);padding:4px 10px;white-space:nowrap" onclick="openAddCropModal()" title="ใส่ข้อมูลรอบเลี้ยงเก่าของบ่อที่ตกหล่นไป (กรอกย้อนหลังเอง)">➕ เพิ่มข้อมูล</button>
         <select class="fi" id="cr-hist-pond" onchange="renderCrops()" style="width:auto;min-width:110px;max-width:160px;font-size:calc(12px * var(--ui-scale));padding:4px 8px"></select>
-        <select class="fi" id="cr-hist-year" onchange="renderCrops()" style="width:auto;min-width:130px;max-width:185px;font-size:calc(12px * var(--ui-scale));padding:4px 8px"></select>
       </div>
     </div>
     <div id="cr-history"></div>
@@ -5727,7 +5730,13 @@ function goCropsForYear(shortYr){
   setTimeout(()=>{const s=document.getElementById('cr-year');if(s){s.value=fullYr;renderCrops();}},80);
 }
 function goStatForCropYear(){
-  const fullYr=parseInt(document.getElementById('cr-year')?.value)||0;
+  // โหมด "ทุกปี" ไม่มีปีเดียวให้ส่งต่อ — ใช้ปีล่าสุดที่มีรอบปิดแทน
+  const raw=document.getElementById('cr-year')?.value;
+  let fullYr=parseInt(raw)||0;
+  if(raw==='all'){
+    const ys=[];D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{const y=histRecYear(c);if(y)ys.push(y);}));
+    fullYr=ys.length?Math.max.apply(null,ys):0;
+  }
   const shortYr=fullYr-2500;
   if(shortYr<60||shortYr>99)return;
   _hsYr=shortYr;
@@ -13582,22 +13591,33 @@ function pondNameById(pondId){
 function renderCrops(){
   // หมายเหตุ: ตัวเลือกในดรอปดาวน์ปีเป็น พ.ศ. (BE) เสมอ ต้อง normalize ผ่าน yearBE() ทุกจุดที่เทียบปี กันปีเดียวกันแยกเป็น 2 ตัวเลือก (ข้อมูลเก่าบางรายการเก็บเป็น ค.ศ. บางรายการเป็น พ.ศ. ปนกัน)
   const curY=new Date().getFullYear();
-  const selYear=parseInt(document.getElementById('cr-year')?.value)||yearBE(curY);
+  // selYear เป็น number (ปี พ.ศ.) หรือสตริง 'all' — ช่องเดียวคุมทั้งหน้า (การ์ดสรุป + การ์ดประวัติ)
+  const _yRaw=document.getElementById('cr-year')?.value;
+  const selYear=(_yRaw==='all')?'all':(parseInt(_yRaw)||yearBE(curY));
+  const inYear=c=>selYear==='all'||histRecYear(c)===selYear;
   // fill year dropdown
-  const years=new Set();
-  [curY-1,curY,curY+1].forEach(y=>years.add(yearBE(y)));
-  // ⚠️ ปีของรอบ = ปีที่จับ (histRecYear) เหมือนการ์ดประวัติ/หน้าสถิติ — ห้ามอ่าน c.cropYear ตรงๆ (entry #266)
+  // ⚠️ ปีของรอบ = ปีที่จับ (histRecYear) เหมือนหน้าสถิติ/โรงเพาะฟัก — ห้ามอ่าน c.cropYear ตรงๆ (entry #266)
   //    รอบที่ยังไม่ปิด ยังไม่มีวันจับ จึงนับเข้า "ปีปัจจุบัน" เสมอ (มันกำลังเกิดขึ้นตอนนี้)
-  D.ponds.forEach(p=>{(p.cropHistory||[]).forEach(c=>{const y=histRecYear(c);if(y)years.add(y);});});
+  const yrCounts={};let allClosedN=0;
+  D.ponds.forEach(p=>{(p.cropHistory||[]).forEach(c=>{const y=histRecYear(c);if(y){yrCounts[y]=(yrCounts[y]||0)+1;allClosedN++;}});});
+  const years=new Set(Object.keys(yrCounts).map(Number));
+  years.add(yearBE(curY));   // ปีปัจจุบันต้องเลือกได้เสมอ ถึงยังไม่มีรอบปิดในปีนี้
   const yrEl=document.getElementById('cr-year');
-  if(yrEl){const cv=yrEl.value||yearBE(curY);yrEl.innerHTML=[...years].sort((a,b)=>b-a).map(y=>`<option value="${y}"${y==cv?' selected':''}>${y} พ.ศ.</option>`).join('');}
+  if(yrEl){
+    const sorted=[...years].sort((a,b)=>b-a);
+    let cv=yrEl.value||String(yearBE(curY));
+    if(cv!=='all'&&!sorted.some(y=>String(y)===String(cv)))cv=String(yearBE(curY));
+    yrEl.innerHTML=sorted.map(y=>`<option value="${y}"${String(y)===String(cv)?' selected':''}>${y} พ.ศ.${yrCounts[y]?' ('+yrCounts[y]+' รอบ)':''}</option>`).join('')
+      +`<option value="all"${cv==='all'?' selected':''}>ทุกปี (${allClosedN} รอบ)</option>`;
+    yrEl.value=cv;
+  }
   // ── metrics ──
   // ⚠️ ไม่ยึด "2 ครอป/ปี" อีกต่อไป (บางบ่อเลี้ยงได้ 3 ครอป/ปี) — เลิกใช้คำว่า "ทันเป้า/ล่าช้า/เป้ารวม"
   //    เปลี่ยนเป็นรายงานความจริง: ปิดไปกี่รอบ · กำลังเลี้ยงกี่บ่อ · บ่อว่างกี่บ่อ · เฉลี่ยรอบ/บ่อ
   let totalClosed=0,activeNow=0,prepNow=0,idleNow=0,waitSumNow=0;
   const closedPerPond=[];
   D.ponds.forEach(p=>{
-    const closed=(p.cropHistory||[]).filter(c=>histRecYear(c)===selYear).length;
+    const closed=(p.cropHistory||[]).filter(inYear).length;
     totalClosed+=closed;closedPerPond.push(closed);
     const age=docAge(p.startDate,today());
     // จับกุ้งไปแล้วแต่ยังไม่ได้กดปิดรอบ — ไม่ใช่ "กำลังเลี้ยง" แล้ว (entry #237)
@@ -13610,22 +13630,30 @@ function renderCrops(){
   const maxPerPond=closedPerPond.length?Math.max(...closedPerPond):0;
   document.getElementById('cr-metrics').innerHTML=`
     <div class="metric-card metric-card-accent"><div class="mv">${D.ponds.length}</div><div class="ml">บ่อทั้งหมด</div></div>
-    <div class="metric-card metric-card-accent"><div class="mv">${totalClosed}</div><div class="ml">รอบที่ปิดแล้ว (${selYear})</div></div>
+    <div class="metric-card metric-card-accent"><div class="mv">${totalClosed}</div><div class="ml">รอบที่ปิดแล้ว (${selYear==='all'?'ทุกปี':selYear})</div></div>
     <div class="metric-card metric-card-accent"><div class="mv" style="color:var(--in)">${activeNow}</div><div class="ml">กำลังเลี้ยง</div></div>
     ${waitSumNow?`<div class="metric-card metric-card-accent"><div class="mv" style="color:var(--w)">${waitSumNow}</div><div class="ml">รอทำสรุป</div></div>`:''}
     <div class="metric-card metric-card-accent"><div class="mv" style="color:var(--w)">${prepNow+idleNow}</div><div class="ml">เตรียมบ่อ / บ่อว่าง</div></div>
     <div class="metric-card metric-card-accent"><div class="mv">${avgPerPond.toFixed(1)}</div><div class="ml">เฉลี่ยรอบ/บ่อ${maxPerPond?' (สูงสุด '+maxPerPond+')':''}</div></div>`;
-  // table body
+  // หัวการ์ดบอกชัดว่ากำลังดูปีไหน — ช่องเลือกปีอยู่บนสุดของหน้า ไม่ได้อยู่ในการ์ด
+  {const t1=document.getElementById('cr-sum-t');
+   if(t1)t1.textContent='📋 สรุปรอบเลี้ยง — '+(selYear==='all'?'ทุกปี':'ปี '+selYear);
+   const th=document.getElementById('cr-th-rounds');
+   if(th)th.textContent=selYear==='all'?'รอบเลี้ยงทั้งหมด (ทุกปี)':('รอบเลี้ยงในปี '+selYear+' (ทุกรอบ)');
+   const t2=document.getElementById('cr-hist-t');
+   if(t2)t2.textContent='📚 ประวัติรอบเลี้ยง (ปิดแล้ว) — '+(selYear==='all'?'ทุกปี':'ปี '+selYear);}
   const tbody=document.getElementById('cr-tbody');if(!tbody)return;
   // ⚠️ เรียงบ่อแบบธรรมชาติ A.1 → A.2 → ... → A.27 (sortedPonds แยกตัวอักษร/ตัวเลข) ไม่ใช่ลำดับดิบใน D.ponds
   tbody.innerHTML=sortedPonds().map(p=>{
     // ⚠️ เรียงตาม "วันที่" ไม่ใช่ cropNum — ข้อมูลจริงมีหลายรอบที่ cropNum เป็น 1 ซ้ำกัน
     //    (รอบที่กรอกย้อนหลังเอง / รอบที่เปลี่ยนวันลงกุ้งโดยไม่ผ่านการปิดรอบ ทำให้ savePond ไม่ได้คำนวณเลขรอบใหม่)
     //    ถ้าเรียงด้วย cropNum ที่ซ้ำกัน ลำดับจะมั่วและป้ายขึ้น "รอบ 1" ทั้งคู่
-    const history=(p.cropHistory||[]).filter(c=>histRecYear(c)===selYear)
-      .sort((a,b)=>String(a.startDate||a.closeDate||'').localeCompare(String(b.startDate||b.closeDate||'')));
-    // รอบที่ยังไม่ปิดไม่มีวันจับให้ยึด — โผล่เฉพาะตอนดูปีปัจจุบัน (เดิมยึดปีที่ลงกุ้ง ทำให้รอบที่ลงปลายปีหายไปจากปีที่จับจริง)
-    const isCurYear=selYear===yearBE(curY);
+    // ⚠️ ต้องพก index จริงใน p.cropHistory ติดไปด้วย — ปุ่มกดดูรายละเอียดส่งค่านี้ให้ goCropDetail()
+    //    ห้ามส่งลำดับที่เรียงใหม่ไปแทน (กฎเดียวกับ ch-cycle — entry #267)
+    const history=(p.cropHistory||[]).map((c,i)=>({c,i})).filter(({c})=>inYear(c))
+      .sort((a,b)=>String(a.c.startDate||a.c.closeDate||'').localeCompare(String(b.c.startDate||b.c.closeDate||'')));
+    // รอบที่ยังไม่ปิดไม่มีวันจับให้ยึด — โผล่เฉพาะตอนดูปีปัจจุบัน (หรือโหมดทุกปี)
+    const isCurYear=selYear==='all'||selYear===yearBE(curY);
     const curAge=docAge(p.startDate,today())||0;
     const hasStarted=!!p.startDate&&curAge>=1;
     // ── จับกุ้งปิดบ่อไปแล้ว แต่ยังไม่ได้กดปิดรอบ = "รอทำสรุป"
@@ -13640,33 +13668,48 @@ function renderCrops(){
     // ── ⚠️ เดิมตารางมีแค่ 2 ช่อง = โชว์ได้สูงสุด 2 รอบ/บ่อ/ปี บ่อที่เลี้ยง 3 ครอป/ปี จะมีรอบหายไปจากตาราง
     //    เปลี่ยนเป็นลิสต์รอบทั้งหมดในช่องเดียว รองรับกี่รอบก็ได้ (รอบที่กำลังเลี้ยง/เตรียมบ่อ ต่อท้ายเสมอ) ──
     const hasCurrentRound=isCurYear&&(onTrackNow||isPrepNow||isWaitSum);
-    // แต่ละรอบคืน 5 ช่องของ grid ตรงๆ (ไม่ห่อ div) เพื่อให้คอลัมน์ตรงกันทุกรอบในบ่อเดียวกัน
-    const roundLine=(label,d1,d2,days,color,extra)=>
-      '<span class="cr-r-lbl">'+label+'</span>'+
-      '<span class="cr-r-d1">'+d1+'</span>'+
-      '<span class="cr-r-ar">→</span>'+
-      '<span class="cr-r-d2">'+d2+'</span>'+
-      '<span class="cr-r-dy" style="color:'+color+'">'+days+(extra||'')+'</span>';
+    // แต่ละรอบคืน 5 ช่องของ grid ตรงๆ — ถ้ากดได้ ห่อด้วย display:contents
+    // ⚠️ ห้ามห่อด้วย div ธรรมดา คอลัมน์ของทุกรอบในบ่อเดียวกันจะไม่ตรงกัน · display:contents ไม่สร้างกล่อง แต่ event ยัง bubble ขึ้นมาได้
+    const roundLine=(label,d1,d2,days,color,extra,onclick)=>{
+      const cls=onclick?' cr-r-tap':'';
+      const body='<span class="cr-r-lbl'+cls+'">'+label+'</span>'+
+        '<span class="cr-r-d1'+cls+'">'+d1+'</span>'+
+        '<span class="cr-r-ar'+cls+'">→</span>'+
+        '<span class="cr-r-d2'+cls+'">'+d2+'</span>'+
+        '<span class="cr-r-dy'+cls+'" style="color:'+color+'">'+days+(extra||'')+(onclick?' <span class="cr-r-go">🔍</span>':'')+'</span>';
+      return onclick?('<div style="display:contents" onclick="'+onclick+'" title="ดูรายละเอียดรอบนี้ — กราฟ/ข้อมูลดิบ">'+body+'</div>'):body;
+    };
     // ⚠️ ป้าย "รอบ N" นับจากลำดับจริงในปีนั้น (i+1) ไม่ใช่ c.cropNum ที่ข้อมูลจริงซ้ำกันได้
     //    ถ้า cropNum ที่บันทึกไว้ไม่ตรงกับลำดับ โชว์ต่อท้ายให้เห็นด้วย จะได้รู้ว่าต้องไปแก้ที่ปุ่ม ✏️
-    const lines=history.map((c,i)=>{
+    // ⚠️ ลำดับรอบนับ "ภายในปีของมันเอง" ไม่ใช่ลำดับในลิสต์ — โหมดทุกปีจะได้ไม่กลายเป็น รอบ 1..8 รวด
+    //    และไม่ใช้ c.cropNum ที่ข้อมูลจริงซ้ำกันได้ (ถ้าไม่ตรง โชว์ต่อท้ายให้เห็น จะได้ไปแก้ที่ปุ่ม ✏️)
+    const _seqByYear={};
+    const lines=history.map(({c,i})=>{
+      const cy=histRecYear(c);
+      _seqByYear[cy]=(_seqByYear[cy]||0)+1;
+      const no=_seqByYear[cy];
       const days=c.closeDate?docAge(c.startDate,c.closeDate):null;
       const dClr=days!=null?(days>=90&&days<=120?'var(--ok)':days>120?'var(--w)':'var(--d)'):'var(--tx3)';
-      const mismatch=(c.cropNum!=null&&+c.cropNum!==i+1)
+      const mismatch=(c.cropNum!=null&&+c.cropNum!==no)
         ?'<span style="font-size:var(--fs10);color:var(--w)" title="เลขรอบที่บันทึกไว้ไม่ตรงกับลำดับจริง — แก้ได้ที่ปุ่ม ✏️ ในตารางประวัติด้านล่าง">(บันทึกไว้ว่ารอบ '+c.cropNum+')</span>'
         :'';
-      return roundLine('รอบ '+(i+1),fD(c.startDate||'')||'-',fD(c.closeDate||'')||'-',days!=null?days+' วัน':'-',dClr,mismatch);
+      const lbl='รอบ '+no+(selYear==='all'?'/'+cy:'');
+      return roundLine(lbl,fD(c.startDate||'')||'-',fD(c.closeDate||'')||'-',days!=null?days+' วัน':'-',dClr,mismatch,
+        "goCropDetail('"+p.id+"',"+i+")");
     });
     if(hasCurrentRound){
-      const curNo=history.length+1;
+      // เลขรอบของรอบที่กำลังเลี้ยง นับจาก "รอบที่ปิดแล้วในปีปัจจุบัน" เสมอ ไม่ใช่ history.length (โหมดทุกปีจะเพี้ยน)
+      const _cyNow=yearBE(curY);
+      const curNo=(p.cropHistory||[]).filter(c=>histRecYear(c)===_cyNow).length+1+(selYear==='all'?0:0);
+      const _curSfx=selYear==='all'?'/'+_cyNow:'';
       lines.push(isWaitSum
-        ? roundLine('รอบ '+curNo,fD(p.startDate),'<span style="color:var(--w)">จับ '+fD(p.harvestDate)+'</span>',(docAge(p.startDate,p.harvestDate)||0)+' วัน','var(--p)',
+        ? roundLine('รอบ '+curNo+_curSfx,fD(p.startDate),'<span style="color:var(--w)">จับ '+fD(p.harvestDate)+'</span>',(docAge(p.startDate,p.harvestDate)||0)+' วัน','var(--p)',
             '<span style="font-size:var(--fs10);color:var(--w);font-weight:700;white-space:nowrap">· 📋 รอทำสรุป</span>')
         : onTrackNow
-        ? roundLine('รอบ '+curNo,fD(p.startDate),'<span style="color:var(--in)">กำลังเลี้ยง</span>',curAge+' วัน','var(--p)')
-        : roundLine('รอบ '+curNo,fD(p.startDate),'<span style="color:var(--w)">เตรียมบ่อ</span>','เหลือ '+(1-curAge)+' วัน','var(--tx3)'));   /* นับแบบเดียวกับหน้าจัดการบ่อ — วันลงกุ้งคือวันที่ 1 (entry #234) */
+        ? roundLine('รอบ '+curNo+_curSfx,fD(p.startDate),'<span style="color:var(--in)">กำลังเลี้ยง</span>',curAge+' วัน','var(--p)')
+        : roundLine('รอบ '+curNo+_curSfx,fD(p.startDate),'<span style="color:var(--w)">เตรียมบ่อ</span>','เหลือ '+(1-curAge)+' วัน','var(--tx3)'));   /* นับแบบเดียวกับหน้าจัดการบ่อ — วันลงกุ้งคือวันที่ 1 (entry #234) */
     }
-    if(!lines.length)lines.push('<span class="cr-r-none">— ยังไม่มีรอบในปีนี้ —</span>');
+    if(!lines.length)lines.push('<span class="cr-r-none">— '+(selYear==='all'?'ยังไม่มีรอบเลย':'ยังไม่มีรอบในปีนี้')+' —</span>');
     return`<tr style="${isCurYear?'background:var(--pl)':''}">
       <td class="cr-td-name">บ่อ ${p.name}</td>
       <td class="cr-td-l"><div class="cr-rounds">${lines.join('')}</div></td>
@@ -13693,26 +13736,7 @@ function renderCrops(){
   const allHistory=[];D.ponds.forEach(p=>(p.cropHistory||[]).forEach((c,_idx)=>allHistory.push({...c,pondName:p.name,_pondId:p.id,_idx})));
   allHistory.sort((a,b)=>(b.closeDate||'').localeCompare(a.closeDate||''));
   if(allHistory.length===0){histEl.innerHTML='<p style="color:var(--tx3);padding:10px">ยังไม่มีประวัติรอบเลี้ยง — จะแสดงที่นี่หลังกด "ปิดรอบ" ครั้งแรก</p>';return;}
-  // ── dropdown ปี สำหรับการ์ดประวัติ (แยกจาก dropdown ปีของการ์ดสรุปด้านบน) ──
-  // ยึดปีตาม "วันที่จับ" (closeDate) เป็นหลัก เช่น ลงกุ้ง ธ.ค.68 จับ ก.พ.69 → นับเป็นรอบของปี 2569 (ดู histRecYear())
-  const curYBE=yearBE(curY);
-  const histYearCounts={};
-  allHistory.forEach(c=>{const y=histRecYear(c);histYearCounts[y]=(histYearCounts[y]||0)+1;});
-  const histYearEl=document.getElementById('cr-hist-year');
-  let histYearFilter='all';
-  if(histYearEl){
-    const sortedYears=Object.keys(histYearCounts).map(Number).sort((a,b)=>b-a);
-    let cv=histYearEl.value;
-    if(!histYearEl.dataset.init){
-      // ค่าเริ่มต้นครั้งแรก: ปีปัจจุบันถ้ามีข้อมูล ไม่งั้นใช้ปีล่าสุดที่มีข้อมูล
-      cv=sortedYears.includes(curYBE)?String(curYBE):(sortedYears.length?String(sortedYears[0]):'all');
-      histYearEl.dataset.init='1';
-    }
-    if(!sortedYears.some(y=>String(y)===cv))cv='all';
-    histYearEl.innerHTML=sortedYears.map(y=>`<option value="${y}"${String(y)===cv?' selected':''}>ปี ${y} (${histYearCounts[y]} รอบ)</option>`).join('')
-      +`<option value="all"${cv==='all'?' selected':''}>ทั้งหมดทุกปี (${allHistory.length} รอบ)</option>`;
-    histYearFilter=cv;
-  }
+  // ── ปีของการ์ดนี้มาจากช่องเลือกปีบนสุดของหน้า (ช่องเดียวคุมทั้งหน้า) — ไม่มี dropdown ปีของตัวเองแล้ว ──
   // ── ช่องเลือกบ่อของการ์ดประวัติ — เรียง A.1 → A.27 ด้วย sortedPonds() ไม่ใช่ลำดับดิบที่ซิงค์มา (entry #247) ──
   const histPondEl=document.getElementById('cr-hist-pond');
   let histPondFilter='all';
@@ -13727,7 +13751,7 @@ function renderCrops(){
     histPondFilter=pv;
   }
   const filteredHistory=allHistory
-    .filter(c=>histYearFilter==='all'||String(histRecYear(c))===histYearFilter)
+    .filter(inYear)
     .filter(c=>histPondFilter==='all'||c._pondId===histPondFilter);
   const isAdminHist=APP_ROLE==='admin';
   histEl.innerHTML=`<div style="overflow-x:auto"><table class="cr-hist-tbl">
@@ -15785,8 +15809,13 @@ function renderPLTable(rows){
 // ⚠️ เดิมรับ pondId มาแล้วไม่ได้ใช้ — กดจากหน้าบ่อ A.7 แล้วไปโผล่ที่ตารางรวมทุกบ่อ ต้องไล่หาเองใหม่ (ข้อ 4)
 function goCropHistoryFor(pondId,yBE){
   goTabByName('crops');
-  const sel=document.getElementById('cr-hist-year');
-  if(sel){sel.dataset.init='1';sel.value=String(yBE);if(sel.value!==String(yBE))sel.value='all';}
+  // ช่องเลือกปีอยู่บนสุดของหน้าแล้ว (ช่องเดียวคุมทั้งหน้า)
+  const sel=document.getElementById('cr-year');
+  if(sel){
+    const want=String(yBE);
+    if(![...sel.options].some(o=>o.value===want))sel.add(new Option(want,want));
+    sel.value=want;
+  }
   const pSel=document.getElementById('cr-hist-pond');
   if(pSel&&pondId){
     // ตัวเลือกบ่อถูกสร้างใน renderCrops() — ยัดค่าไว้ก่อน เดี๋ยว renderCrops จะเก็บค่าที่ตั้งไว้เอง
