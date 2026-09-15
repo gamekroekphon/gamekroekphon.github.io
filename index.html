@@ -2405,11 +2405,12 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     </div>
   </div>
   <div class="card" style="margin-top:16px">
-    <div class="card-t" style="justify-content:space-between">
-      <span>📚 ประวัติรอบเลี้ยง (ปิดแล้ว)</span>
-      <div style="display:flex;gap:6px;align-items:center">
+    <div class="card-t" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span style="white-space:nowrap">📚 ประวัติรอบเลี้ยง (ปิดแล้ว)</span>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-left:auto">
         <button class="btn btn-s admin-only" style="font-size:var(--fs11);padding:4px 10px;white-space:nowrap" onclick="openAddCropModal()" title="ใส่ข้อมูลรอบเลี้ยงเก่าของบ่อที่ตกหล่นไป (กรอกย้อนหลังเอง)">➕ เพิ่มข้อมูล</button>
-        <select class="fi" id="cr-hist-year" onchange="renderCrops()" style="width:170px;font-size:calc(12px * var(--ui-scale));padding:4px 8px"></select>
+        <select class="fi" id="cr-hist-pond" onchange="renderCrops()" style="width:auto;min-width:110px;max-width:160px;font-size:calc(12px * var(--ui-scale));padding:4px 8px"></select>
+        <select class="fi" id="cr-hist-year" onchange="renderCrops()" style="width:auto;min-width:130px;max-width:185px;font-size:calc(12px * var(--ui-scale));padding:4px 8px"></select>
       </div>
     </div>
     <div id="cr-history"></div>
@@ -2562,7 +2563,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
         <div style="font-weight:700;font-size:calc(13px * var(--ui-scale));color:#d97706;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bd)">🔢 รอบที่ / ปี</div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
           <div class="fg"><label class="fl" for="ecm-new-cropnum">รอบที่ *</label><input type="number" class="fi" id="ecm-new-cropnum" step="1" placeholder="1"></div>
-          <div class="fg"><label class="fl" for="ecm-new-cropyear">ปี (พ.ศ.) *</label><input type="number" class="fi" id="ecm-new-cropyear" step="1" placeholder="2568"></div>
+          <div class="fg"><label class="fl" for="ecm-new-cropyear">ปี (พ.ศ.) *</label><input type="number" class="fi" id="ecm-new-cropyear" step="1" placeholder="2568"><div style="font-size:var(--fs10);color:var(--tx3);margin-top:3px">ปีที่ลงกุ้ง — ใช้อ้างอิงภายในเท่านั้น · ปีที่โชว์ในตาราง/สถิติ คิดจาก<b>วันที่ปิดบ่อ</b></div></div>
         </div>
       </div>
       <!-- ข้อมูลลูกกุ้ง (กรอกย้อนหลังได้) -->
@@ -7321,7 +7322,7 @@ function renderCareCheck(){
     <th>บ่อ</th><th>รอบ</th><th>ปิดเมื่อ</th><th style="text-align:right">พาเชียล</th>
     <th style="text-align:right">บันทึกไว้</th><th style="text-align:right">กฎใหม่</th><th style="text-align:right">ส่วนต่าง</th>
   </tr></thead><tbody>${shown.map(r=>`<tr${r.noSize?' style="background:var(--wb)"':''}>
-    <td>${r.pond}</td><td>${r.cropNum}/${yearBE(r.cropYear)||'-'}</td><td>${r.closeDate?fD(r.closeDate):'-'}</td>
+    <td>${r.pond}</td><td>${r.cropNum}/${histRecYear(r)||'-'}</td><td>${r.closeDate?fD(r.closeDate):'-'}</td>
     <td style="text-align:right">${r.phCount?r.phCount+' ครั้ง':'<span style="color:var(--tx3)">—</span>'}</td>
     <td style="text-align:right;font-variant-numeric:tabular-nums">${r.recorded!=null?money(r.recorded):'<span style="color:var(--tx3)">ไม่ได้บันทึก</span>'}</td>
     <td style="text-align:right;font-variant-numeric:tabular-nums">${money(r.calc)}${r.noSize?' <span style="color:var(--w)" title="มีรายการจับที่ไม่ได้กรอกไซส์">⚠️</span>':''}</td>
@@ -11211,7 +11212,7 @@ function renderPdCropHistCard(p){
       const kg=hr.totalWeightAll||hr.totalWeight;
       const days=c.closeDate?docAge(c.startDate,c.closeDate):null;
       const prof=hr.netProfit;
-      return '<tr><td>รอบ '+(c.cropNum||'-')+'/'+(c.cropYear?yearBE(c.cropYear):'-')+(days!=null?'<div style="font-size:var(--fs10);color:var(--tx3)">'+days+' วัน</div>':'')+'</td>'+
+      return '<tr><td>รอบ '+(c.cropNum||'-')+'/'+(histRecYear(c)||'-')+(days!=null?'<div style="font-size:var(--fs10);color:var(--tx3)">'+days+' วัน</div>':'')+'</td>'+
         '<td>'+(c.closeDate?fD(c.closeDate):'-')+'</td>'+
         '<td>'+(c.hatchery?mpEsc(c.hatchery):'<span style="color:var(--tx3)">-</span>')+(c.plType?'<div style="font-size:var(--fs10);color:var(--tx3)">'+mpEsc(c.plType)+'</div>':'')+'</td>'+
         '<td style="text-align:right;font-weight:700">'+n(kg)+(hr._phAdj?'<div style="font-size:var(--fs10);color:var(--tx3)">รวมพาเชียล</div>':'')+'</td>'+
@@ -12840,7 +12841,7 @@ function onExPondChange(){
   }
   if(cropWrap)cropWrap.style.display='';
   if(cropSel){
-    cropSel.innerHTML=visIdx.map(({c,i})=>`<option value="${i}">รอบที่ ${c.cropNum}/${yearBE(c.cropYear)} (ปิด ${c.closeDate?fD(c.closeDate):'-'})</option>`).join('');
+    cropSel.innerHTML=visIdx.map(({c,i})=>`<option value="${i}">รอบที่ ${c.cropNum}/${histRecYear(c)} (ปิด ${c.closeDate?fD(c.closeDate):'-'})</option>`).join('');
     cropSel.value=String(visIdx[visIdx.length-1].i);
   }
   renderExPreview();
@@ -13006,7 +13007,7 @@ function renderExChart(p){
   const hist=(p.cropHistory||[]).filter(c=>c.harvestResult);
   if(hist.length<1){wrap.style.display='none';return;}
   wrap.style.display='';
-  const labels=hist.map(c=>`รอบ ${c.cropNum}/${yearBE(c.cropYear)}`);
+  const labels=hist.map(c=>`รอบ ${c.cropNum}/${histRecYear(c)}`);
   const fcrData=hist.map(c=>{const h=cropHarvestResult(c);return h&&h.fcr!=null?h.fcr:null;});
   const survData=hist.map(c=>{const h=cropHarvestResult(c);return h&&h.survivalRate!=null?h.survivalRate:null;});
   const yieldData=hist.map(c=>{
@@ -13101,7 +13102,7 @@ function getCloseSummary(p,cropIdx){
   const netProfit=(harvestResult&&harvestResult.netProfit!=null)?harvestResult.netProfit:((revenue!=null&&totalCost!=null)?revenue-totalCost:null);
   const marginPct=(revenue&&netProfit!=null)?+((netProfit/revenue)*100).toFixed(1):null;
   const costPerKg=(totalWeight&&totalCost!=null)?+(totalCost/totalWeight).toFixed(1):null;
-  return{_crop:lastCrop,pondName:p.name,cropLabel:lastCrop?`รอบที่ ${lastCrop.cropNum}/${yearBE(lastCrop.cropYear)}`:'(รอบปัจจุบัน ยังไม่ปิด)',hatchery,stock,buyer,price,totalWeight,totalBaht,partialCount,ageDays,totalFeed,fcr,closeSize,adg,survivalRate,survivalRateOrder,yieldPerRai,notesAll,closeDate,startDate,rows,feedLog,samples,
+  return{_crop:lastCrop,pondName:p.name,cropLabel:lastCrop?`รอบที่ ${lastCrop.cropNum}/${histRecYear(lastCrop)}`:'(รอบปัจจุบัน ยังไม่ปิด)',hatchery,stock,buyer,price,totalWeight,totalBaht,partialCount,ageDays,totalFeed,fcr,closeSize,adg,survivalRate,survivalRateOrder,yieldPerRai,notesAll,closeDate,startDate,rows,feedLog,samples,
     costFry,costTransport,costFeed,costMed,costLime,costLabor,costElec,costFuel,costEquip,costEquipOut,costCatch,pctCaretaker,pctManager,amtCaretaker,amtManager,costChemLegacy,costOtherLegacy,hasCostData,totalCost,revenue,netProfit,marginPct,costPerKg};
 }
 // ===== PDF หน้าเดียว (ใช้เมื่อเลือกบ่อเดียว) — 4 KPI + ข้อมูลย่อ 3 คอลัมน์ + 2 กราฟผู้บริหาร + ต้นทุนต่อกิโล =====
@@ -13325,7 +13326,7 @@ async function genPDF(){
             scales:{y:{title:{display:true,text:'กก.'}}}}
         }));
       }else if(job.kind==='profit'){
-        const labels=job.hist.map(c=>`รอบ ${c.cropNum}/${yearBE(c.cropYear)}`);
+        const labels=job.hist.map(c=>`รอบ ${c.cropNum}/${histRecYear(c)}`);
         const revData=job.hist.map(c=>cropHarvestResult(c)?.revenue??null);
         const costData=job.hist.map(c=>{
           const hr=c.harvestResult;if(!hr)return null;
@@ -13345,7 +13346,7 @@ async function genPDF(){
             scales:{y:{ticks:{font:{size:9}}},x:{ticks:{font:{size:9}}}}}
         }));
       }else if(job.kind==='compare'){
-        const labels=job.hist.map(c=>`รอบ ${c.cropNum}/${yearBE(c.cropYear)}`);
+        const labels=job.hist.map(c=>`รอบ ${c.cropNum}/${histRecYear(c)}`);
         const fcrData=job.hist.map(c=>cropHarvestResult(c)?.fcr??null);
         const survData=job.hist.map(c=>cropHarvestResult(c)?.survivalRate??null);
         pdfCharts.push(new Chart(cv.getContext('2d'),{
@@ -13585,7 +13586,9 @@ function renderCrops(){
   // fill year dropdown
   const years=new Set();
   [curY-1,curY,curY+1].forEach(y=>years.add(yearBE(y)));
-  D.ponds.forEach(p=>{(p.cropHistory||[]).forEach(c=>{years.add(yearBE(c.cropYear||c.year||curY));});years.add(yearBE(p.cropYear||curY));});
+  // ⚠️ ปีของรอบ = ปีที่จับ (histRecYear) เหมือนการ์ดประวัติ/หน้าสถิติ — ห้ามอ่าน c.cropYear ตรงๆ (entry #266)
+  //    รอบที่ยังไม่ปิด ยังไม่มีวันจับ จึงนับเข้า "ปีปัจจุบัน" เสมอ (มันกำลังเกิดขึ้นตอนนี้)
+  D.ponds.forEach(p=>{(p.cropHistory||[]).forEach(c=>{const y=histRecYear(c);if(y)years.add(y);});});
   const yrEl=document.getElementById('cr-year');
   if(yrEl){const cv=yrEl.value||yearBE(curY);yrEl.innerHTML=[...years].sort((a,b)=>b-a).map(y=>`<option value="${y}"${y==cv?' selected':''}>${y} พ.ศ.</option>`).join('');}
   // ── metrics ──
@@ -13594,7 +13597,7 @@ function renderCrops(){
   let totalClosed=0,activeNow=0,prepNow=0,idleNow=0,waitSumNow=0;
   const closedPerPond=[];
   D.ponds.forEach(p=>{
-    const closed=(p.cropHistory||[]).filter(c=>yearBE(c.cropYear||c.year||curY)===selYear).length;
+    const closed=(p.cropHistory||[]).filter(c=>histRecYear(c)===selYear).length;
     totalClosed+=closed;closedPerPond.push(closed);
     const age=docAge(p.startDate,today());
     // จับกุ้งไปแล้วแต่ยังไม่ได้กดปิดรอบ — ไม่ใช่ "กำลังเลี้ยง" แล้ว (entry #237)
@@ -13619,9 +13622,10 @@ function renderCrops(){
     // ⚠️ เรียงตาม "วันที่" ไม่ใช่ cropNum — ข้อมูลจริงมีหลายรอบที่ cropNum เป็น 1 ซ้ำกัน
     //    (รอบที่กรอกย้อนหลังเอง / รอบที่เปลี่ยนวันลงกุ้งโดยไม่ผ่านการปิดรอบ ทำให้ savePond ไม่ได้คำนวณเลขรอบใหม่)
     //    ถ้าเรียงด้วย cropNum ที่ซ้ำกัน ลำดับจะมั่วและป้ายขึ้น "รอบ 1" ทั้งคู่
-    const history=(p.cropHistory||[]).filter(c=>yearBE(c.cropYear||c.year||curY)===selYear)
+    const history=(p.cropHistory||[]).filter(c=>histRecYear(c)===selYear)
       .sort((a,b)=>String(a.startDate||a.closeDate||'').localeCompare(String(b.startDate||b.closeDate||'')));
-    const isCurYear=yearBE(p.cropYear||curY)===selYear;
+    // รอบที่ยังไม่ปิดไม่มีวันจับให้ยึด — โผล่เฉพาะตอนดูปีปัจจุบัน (เดิมยึดปีที่ลงกุ้ง ทำให้รอบที่ลงปลายปีหายไปจากปีที่จับจริง)
+    const isCurYear=selYear===yearBE(curY);
     const curAge=docAge(p.startDate,today())||0;
     const hasStarted=!!p.startDate&&curAge>=1;
     // ── จับกุ้งปิดบ่อไปแล้ว แต่ยังไม่ได้กดปิดรอบ = "รอทำสรุป"
@@ -13709,7 +13713,22 @@ function renderCrops(){
       +`<option value="all"${cv==='all'?' selected':''}>ทั้งหมดทุกปี (${allHistory.length} รอบ)</option>`;
     histYearFilter=cv;
   }
-  const filteredHistory=histYearFilter==='all'?allHistory:allHistory.filter(c=>String(histRecYear(c))===histYearFilter);
+  // ── ช่องเลือกบ่อของการ์ดประวัติ — เรียง A.1 → A.27 ด้วย sortedPonds() ไม่ใช่ลำดับดิบที่ซิงค์มา (entry #247) ──
+  const histPondEl=document.getElementById('cr-hist-pond');
+  let histPondFilter='all';
+  if(histPondEl){
+    const cntByPond={};allHistory.forEach(c=>{cntByPond[c._pondId]=(cntByPond[c._pondId]||0)+1;});
+    const withHist=sortedPonds().filter(p=>cntByPond[p.id]);
+    let pv=histPondEl.value||'all';
+    if(pv!=='all'&&!withHist.some(p=>p.id===pv))pv='all';
+    histPondEl.innerHTML=`<option value="all"${pv==='all'?' selected':''}>ทุกบ่อ (${allHistory.length} รอบ)</option>`
+      +withHist.map(p=>`<option value="${p.id}"${p.id===pv?' selected':''}>บ่อ ${p.name} (${cntByPond[p.id]} รอบ)</option>`).join('');
+    histPondEl.value=pv;
+    histPondFilter=pv;
+  }
+  const filteredHistory=allHistory
+    .filter(c=>histYearFilter==='all'||String(histRecYear(c))===histYearFilter)
+    .filter(c=>histPondFilter==='all'||c._pondId===histPondFilter);
   const isAdminHist=APP_ROLE==='admin';
   histEl.innerHTML=`<div style="overflow-x:auto"><table class="cr-hist-tbl">
     <thead><tr style="background:var(--sf2);border-bottom:2px solid var(--bd)">
@@ -13751,6 +13770,7 @@ function renderCrops(){
           <div style="display:flex;gap:4px;align-items:center;min-width:180px">
             <input type="text" id="cnote-${c._pondId}-${c.id||c._idx}" value="${c.notes?String(c.notes).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'):''}" placeholder="เช่น โรคตัวแดง, ท่อแตก..." style="flex:1;border:1px solid var(--bd);border-radius:6px;padding:4px 6px;font-size:calc(12px * var(--ui-scale))">
             <button onclick="editCycleNote('${c._pondId}','${c.id||''}',${c._idx})" style="background:var(--p);color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:var(--fs11);cursor:pointer;white-space:nowrap" title="บันทึกสาเหตุปิดบ่อ/หมายเหตุ">💾 บันทึก</button>
+            <button onclick="goCropDetail('${c._pondId}',${c._idx})" style="background:var(--pl);color:var(--p);border:1px solid #e8d9a8;border-radius:6px;padding:4px 8px;font-size:var(--fs11);cursor:pointer;white-space:nowrap" title="ดูรายละเอียดรอบนี้ (กราฟ/ข้อมูลดิบ) — เลือกบ่อและรอบให้เลย ไม่ต้องเลือกซ้ำ">🔍</button>
             <button onclick="goPdfForCrop('${c._pondId}',${c._idx})" style="background:var(--ib);color:var(--in);border:1px solid #b9d5ef;border-radius:6px;padding:4px 8px;font-size:var(--fs11);cursor:pointer;white-space:nowrap" title="ไปหน้า PDF ปิดบ่อ พร้อมเลือกบ่อ+รอบนี้ให้เลย">📄 PDF</button>
             ${APP_ROLE==='admin'?`<button onclick="openEditCropModal('${c._pondId}','${c.id||''}',${c._idx})" style="background:#fffbeb;color:#d97706;border:1px solid #fde68a;border-radius:6px;padding:4px 8px;font-size:var(--fs11);cursor:pointer;white-space:nowrap" title="แก้ไขข้อมูลรอบนี้ (Admin)">✏️</button>`:''}
             ${APP_ROLE==='admin'?`<button onclick="deleteCropRecord('${c._pondId}','${c.id||''}',${c._idx})" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;padding:4px 8px;font-size:var(--fs11);cursor:pointer;white-space:nowrap" title="ลบรายการปิดบ่อนี้ (Admin)">🗑️</button>`:''}
@@ -13971,7 +13991,7 @@ let _chCompareSel=[]; // [{pondId, idx}]
 function populateChPondSelect(){
   const sel=document.getElementById('clh-pond');if(!sel)return;
   const cur=sel.value;
-  const withHist=D.ponds.filter(p=>(p.cropHistory||[]).length>0);
+  const withHist=sortedPonds().filter(p=>(p.cropHistory||[]).length>0);   // ⚠️ ต้อง sortedPonds() — D.ponds เป็นลำดับที่ merge มาจาก Firebase ไม่ใช่ A.1→A.27 (entry #247)
   sel.innerHTML='<option value="">-- เลือกบ่อ --</option>'+withHist.map(p=>`<option value="${p.id}">บ่อ ${p.name} (${(p.cropHistory||[]).length} รอบ)</option>`).join('');
   if(withHist.some(p=>p.id===cur))sel.value=cur;
 }
@@ -13984,8 +14004,12 @@ function onChPondChange(){
     renderClosedDetail();
     return;
   }
-  cycleSel.innerHTML=p.cropHistory.map((c,i)=>`<option value="${i}">รอบที่ ${c.cropNum||i+1}/${yearBE(c.cropYear||c.year)||''} (ปิด ${c.closeDate?fD(c.closeDate):'-'})</option>`).join('');
-  cycleSel.value=String(p.cropHistory.length-1);
+  // ⚠️ เรียงตามวันที่จับ ใหม่→เก่า แต่ value ต้องเป็น index จริงใน p.cropHistory เสมอ (getCloseSummary อ้างอิง index นี้ตรงๆ)
+  //    เดิมใช้ลำดับดิบ และ default เป็น "ตัวสุดท้ายในอาเรย์" ซึ่งไม่ใช่รอบล่าสุดจริง
+  const ordered=p.cropHistory.map((c,i)=>({c,i}))
+    .sort((a,b)=>String(b.c.closeDate||b.c.startDate||'').localeCompare(String(a.c.closeDate||a.c.startDate||'')));
+  cycleSel.innerHTML=ordered.map(({c,i})=>`<option value="${i}">รอบที่ ${c.cropNum||i+1}/${histRecYear(c)||''} (ปิด ${c.closeDate?fD(c.closeDate):'-'})</option>`).join('');
+  cycleSel.value=String(ordered[0].i);
   onChCycleChange();
 }
 function onChCycleChange(){renderClosedDetail();}
@@ -15757,12 +15781,34 @@ function renderPLTable(rows){
     </tr>`;}).join('')}</tbody></table>`;
 }
 // ── เจาะจาก P&L ไปประวัติรอบเลี้ยงปีนั้นๆ — เห็นรอบขาดทุนแล้วกดเดียวไปดูสาเหตุ (หมายเหตุ/FCR/พาเชียล) ──
+// ── ไปที่การ์ดประวัติรอบเลี้ยง พร้อมตั้ง "ปี" และ "บ่อ" ให้เลย ──
+// ⚠️ เดิมรับ pondId มาแล้วไม่ได้ใช้ — กดจากหน้าบ่อ A.7 แล้วไปโผล่ที่ตารางรวมทุกบ่อ ต้องไล่หาเองใหม่ (ข้อ 4)
 function goCropHistoryFor(pondId,yBE){
   goTabByName('crops');
   const sel=document.getElementById('cr-hist-year');
-  if(sel){sel.dataset.init='1';sel.value=String(yBE);if(sel.value!==String(yBE))sel.value='all';renderCrops();}
+  if(sel){sel.dataset.init='1';sel.value=String(yBE);if(sel.value!==String(yBE))sel.value='all';}
+  const pSel=document.getElementById('cr-hist-pond');
+  if(pSel&&pondId){
+    // ตัวเลือกบ่อถูกสร้างใน renderCrops() — ยัดค่าไว้ก่อน เดี๋ยว renderCrops จะเก็บค่าที่ตั้งไว้เอง
+    if(![...pSel.options].some(o=>o.value===pondId))pSel.add(new Option('',pondId));
+    pSel.value=pondId;
+  }
+  renderCrops();
   const histEl=document.getElementById('cr-history');
   if(histEl)histEl.scrollIntoView({behavior:'smooth',block:'start'});
+}
+// ── จากแถวประวัติ → การ์ด 🔍 ดูข้อมูลย้อนหลัง พร้อมเลือกบ่อ+รอบให้เสร็จ (ข้อ 3) ──
+//    idx = index จริงใน p.cropHistory (ค่าเดียวกับที่ ch-cycle ใช้) ห้ามส่งลำดับที่เรียงใหม่มา
+function goCropDetail(pondId,idx){
+  const pSel=document.getElementById('clh-pond');
+  if(!pSel)return;
+  populateChPondSelect();
+  pSel.value=pondId;
+  onChPondChange();
+  const cSel=document.getElementById('ch-cycle');
+  if(cSel&&[...cSel.options].some(o=>o.value===String(idx))){cSel.value=String(idx);onChCycleChange();}
+  const el=document.getElementById('ch-detail');
+  if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
 }
 // ══════ แยก "เวชภัณฑ์" ออกเป็น 4 หมวดย่อยในตาราง ต้นทุน/กก. (พี่สั่ง entry #263) ══════
 // ⚠️ `harvestResult.costMed` เก็บเป็น "ก้อนเดียว" ตั้งแต่ตอนปิดรอบ — ไม่มีรายละเอียดหมวดย่อยเก็บไว้เลย
