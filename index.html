@@ -15511,7 +15511,8 @@ function renderPL(){
     (p.cropHistory||[]).forEach(c=>{
       if(!c.harvestResult||!c.closeDate)return;
       if(yr&&!c.closeDate.startsWith(yr))return;
-      rows.push({...cropHarvestResult(c),pondName:p.name,pondId:p.id,cropNum:c.cropNum,cropYear:c.cropYear,startDate:c.startDate,closeDate:c.closeDate,stock:c.stock});
+      // _pond/_crop แนบไว้ให้ renderPLCostChart ย้อนไปอ่านรายการเบิกจริงของรอบนั้น (entry #263)
+      rows.push({...cropHarvestResult(c),pondName:p.name,pondId:p.id,cropNum:c.cropNum,cropYear:c.cropYear,startDate:c.startDate,closeDate:c.closeDate,stock:c.stock,_pond:p,_crop:c});
     });
   });
   rows.sort((a,b)=>(b.closeDate||'').localeCompare(a.closeDate||''));
@@ -15589,6 +15590,122 @@ function goCropHistoryFor(pondId,yBE){
   const histEl=document.getElementById('cr-history');
   if(histEl)histEl.scrollIntoView({behavior:'smooth',block:'start'});
 }
+// ══════ แยก "เวชภัณฑ์" ออกเป็น 4 หมวดย่อยในตาราง ต้นทุน/กก. (พี่สั่ง entry #263) ══════
+// ⚠️ `harvestResult.costMed` เก็บเป็น "ก้อนเดียว" ตั้งแต่ตอนปิดรอบ — ไม่มีรายละเอียดหมวดย่อยเก็บไว้เลย
+//    จึงต้องย้อนไปคำนวณใหม่จาก D.inventoryLog (ข้อมูลดิบยังอยู่ครบ) ไม่ได้แก้ข้อมูลเก่าที่บันทึกไว้
+// ⚠️ ช่องเวชภัณฑ์ตอนปิดรอบ "แก้ด้วยมือได้" — ผลรวมหมวดย่อยจึงอาจไม่เท่า costMed ที่บันทึกไว้
+//    ส่วนต่างเอาไปลงแถว "เวชภัณฑ์ (ปรับมือ/ไม่ระบุหมวด)" เพื่อให้ยอดรวมยังตรงกับที่บันทึกเป๊ะเสมอ
+//    ห้ามหารเฉลี่ยกลบส่วนต่าง — จะกลายเป็นตัวเลขที่ไม่มีใครตรวจสอบได้
+const MED_SUBCATS=[
+  {key:'chemOral',   label:'ยากิน',            color:'#7c3aed'},
+  {key:'chemWater',  label:'ยาลงน้ำ',          color:'#0369A1'},
+  {key:'probioOral', label:'จุลินทรีย์กิน',     color:'#4338CA'},
+  {key:'probioWater',label:'จุลินทรีย์ลงน้ำ',   color:'#A21CAF'}
+];
+// ช่วงต้นทุนของรอบที่ปิดไปแล้ว — ต้นทาง = วันปิดรอบก่อนหน้า + 1 (กฎเดียวกับ pondCostStartDate เพื่อไม่ให้คร่อมรอบ)
+function closedCropCostWindow(p,c){
+  if(!p||!c||!c.startDate)return null;
+  const to=c.costEndDate||c.closeDate;if(!to)return null;
+  const prev=(p.cropHistory||[])
+    .filter(x=>x&&x!==c&&x.startDate&&x.startDate<c.startDate&&(x.costEndDate||x.closeDate))
+    .sort((a,b)=>String(a.startDate).localeCompare(String(b.startDate))).pop();
+  let from;
+  if(prev){
+    from=ymdLocal(addDaysLocal(new Date((prev.costEndDate||prev.closeDate)+'T00:00:00'),1));
+    if(from>c.startDate)from=c.startDate;
+  }else from=ymdLocal(addDaysLocal(new Date(c.startDate+'T00:00:00'),-POND_PREP_LOOKBACK_DAYS));
+  return{from,to};
+}
+// รวมเวชภัณฑ์แยกหมวดย่อยของทุกรอบที่อยู่ในตาราง P&L
+function plMedSubtotals(rows){
+  const out={chemOral:0,chemWater:0,probioOral:0,probioWater:0};
+  let matched=0;
+  rows.forEach(r=>{
+    if(!r||!r._pond||!r._crop)return;
+    const w=closedCropCostWindow(r._pond,r._crop);if(!w)return;
+    const bd=getStockCostBreakdownForPond(r._pond.id,w.from,w.to);
+    MED_SUBCATS.forEach(sc=>{const v=bd.byCat[sc.key]||0;out[sc.key]+=v;matched+=v;});
+  });
+  return{out,matched};
+}
+// ══════ กดดูรายการสินค้าย่อยในแต่ละหมวดต้นทุน (พี่สั่งต่อจาก entry #263) ══════
+// ⚠️ ของแชร์ทุกบ่อ (น้ำมัน/อุปกรณ์นอก) เริ่มนับจาก "วันลงกุ้ง" ไม่ใช่ย้อนไปช่วงเตรียมบ่อ (entry #248)
+//    จึงต้องใช้คนละช่วงกับของที่เบิกเข้าบ่อโดยตรง ถ้าใช้ช่วงเดียวกันรายการย่อยจะไม่ตรงกับตัวเลขที่ปิดรอบ
+function closedCropSharedWindow(p,c){
+  if(!c||!c.startDate)return null;
+  const to=c.costEndDate||c.closeDate;if(!to)return null;
+  return{from:c.startDate,to};
+}
+// ── รวมรายการสินค้าที่ "เบิกเข้าบ่อ" ของหมวดหนึ่ง จากทุกรอบที่อยู่ในตาราง P&L ──
+//    รวมสินค้าชื่อเดียวกันเป็นแถวเดียว (หลายรอบ/หลายบ่อ) เพราะคำถามคือ "หมวดนี้เงินไปลงที่ตัวไหน"
+function plCatItems(rows,cat){
+  const m=new Map();
+  rows.forEach(r=>{
+    if(!r||!r._pond||!r._crop)return;
+    const w=closedCropCostWindow(r._pond,r._crop);if(!w)return;
+    getStockItemsForPond(r._pond.id,w.from,w.to).forEach(i=>{
+      if(i.category!==cat)return;
+      const k=i.name+'|'+(i.unit||'');
+      const o=m.get(k)||{name:i.name,unit:i.unit||'',qty:0,amt:0,times:0,last:''};
+      o.qty+=i.qty;o.amt+=i.qty*i.unitPrice;o.times++;
+      if((i.date||'')>o.last)o.last=i.date||'';
+      m.set(k,o);
+    });
+  });
+  return[...m.values()].sort((a,b)=>b.amt-a.amt);
+}
+// ── รวมรายการ "ของแชร์ทุกบ่อ" — นับเฉพาะส่วนแบ่งของบ่อนั้น (÷ จำนวนบ่อ active วันนั้น) ──
+//    ต้องหารด้วย activePondCountOnDate เหมือน getSharedCostForPond เป๊ะ ไม่งั้นรายการย่อยจะบวกได้เกินตัวเลขในตาราง
+function plSharedItems(rows,fuelOnly){
+  const m=new Map();
+  rows.forEach(r=>{
+    if(!r||!r._pond||!r._crop)return;
+    const w=closedCropSharedWindow(r._pond,r._crop);if(!w)return;
+    getSharedItemsInRange(w.from,w.to).forEach(l=>{
+      const isFuel=(l.category==='fuel');
+      if(fuelOnly?!isFuel:isFuel)return;
+      const n=activePondCountOnDate(l.date)||1;
+      const nm=l.itemName||'-';
+      const k=nm+'|'+(l.unit||'');
+      const o=m.get(k)||{name:nm,unit:l.unit||'',qty:0,amt:0,times:0,last:''};
+      o.qty+=(l.qty||0)/n;o.amt+=((l.qty||0)*(l.unitCost||0))/n;o.times++;
+      if((l.date||'')>o.last)o.last=l.date||'';
+      m.set(k,o);
+    });
+  });
+  return[...m.values()].sort((a,b)=>b.amt-a.amt);
+}
+const _plNum=v=>(Math.round(v*100)/100).toLocaleString(undefined,{maximumFractionDigits:2});
+// ── กล่องรายการย่อยที่กางออกมา ──
+// ⚠️ shown = ตัวเลขที่โชว์ในตาราง (ของที่บันทึกไว้ตอนปิดรอบ ซึ่งแก้ด้วยมือได้)
+//    ถ้าผลรวมรายการเบิกไม่เท่า shown ต้องบอกส่วนต่างตรงๆ ห้ามปรับรายการย่อยให้บวกได้พอดี
+function plDetailHTML(items,shown){
+  const pad='padding:9px 12px';
+  if(!items.length)return`<div style="${pad};color:var(--tx3);font-size:var(--fs115)">ไม่พบรายการเบิกในช่วงของรอบเหล่านี้ — ตัวเลขนี้มาจากการกรอกด้วยมือตอนปิดรอบ</div>`;
+  const sum=items.reduce((s,i)=>s+i.amt,0);
+  const diff=Math.round(shown)-Math.round(sum);
+  const th='text-align:right;font-weight:600;font-size:var(--fs10);color:var(--tx3);padding:4px 6px';
+  const td='text-align:right;padding:4px 6px;font-size:var(--fs115)';
+  const body=items.map(i=>`<tr><td style="padding:4px 6px;font-size:var(--fs115)">${i.name}</td>`
+    +`<td style="${td}">${_plNum(i.qty)} ${i.unit||''}</td>`
+    +`<td style="${td}">${i.qty>0?_plNum(i.amt/i.qty):'-'}</td>`
+    +`<td style="${td};font-weight:600">${Math.round(i.amt).toLocaleString()}</td>`
+    +`<td style="${td};color:var(--tx3)">${i.times} ครั้ง · ${fD(i.last)}</td></tr>`).join('');
+  const foot=diff!==0?`<div style="${pad};font-size:var(--fs10);color:var(--w);border-top:1px dashed var(--bd)">`
+    +`ผลรวมรายการเบิก ${Math.round(sum).toLocaleString()} · ที่บันทึกตอนปิดรอบ ${Math.round(shown).toLocaleString()} · `
+    +`ส่วนต่าง ${diff>0?'+':''}${diff.toLocaleString()} (กรอก/แก้ด้วยมือ ไม่ได้เกลี่ยลงรายการย่อย)</div>`:'';
+  return`<div style="${pad};padding-bottom:0"><table style="width:100%;border-collapse:collapse">`
+    +`<thead><tr><th style="text-align:left;font-weight:600;font-size:var(--fs10);color:var(--tx3);padding:4px 6px">สินค้า</th>`
+    +`<th style="${th}">จำนวน</th><th style="${th}">฿/หน่วย</th><th style="${th}">รวม (฿)</th><th style="${th}">เบิกล่าสุด</th></tr></thead>`
+    +`<tbody>${body}<tr style="border-top:1px solid var(--bd)"><td style="padding:4px 6px;font-size:var(--fs115);font-weight:700">รวม ${items.length} รายการ</td>`
+    +`<td></td><td></td><td style="${td};font-weight:700">${Math.round(sum).toLocaleString()}</td><td></td></tr></tbody></table></div>${foot}`;
+}
+function togglePLCostDetail(i){
+  const r=document.getElementById('plc-det-'+i);if(!r)return;
+  const open=r.style.display==='none';
+  r.style.display=open?'':'none';
+  const c=document.getElementById('plc-car-'+i);if(c)c.textContent=open?'▾':'▸';
+}
 function renderPLCostChart(rows){
   if(!rows.length){
     const c=document.getElementById('pl-donut');if(c&&_plDonutChart){_plDonutChart.destroy();_plDonutChart=null;}
@@ -15611,11 +15728,32 @@ function renderPLCostChart(rows){
   const totAmtMgr=rows.reduce((s,r)=>s+(r.amtManager||0),0);
   const totChem=rows.reduce((s,r)=>s+(r.costChem||0),0);
   const totOther=rows.reduce((s,r)=>s+(r.costOther||0),0);
+  // ⚠️ ยอดรวมยังคิดจาก totMed ก้อนเดิมเสมอ ไม่ใช่ผลบวกหมวดย่อย — หมวดย่อยเป็นแค่การแจกแจง
   const total=totFry+totTransport+totFeed+totMed+totLime+totLabor+totElec+totFuel+totEquip+totEquipOut+totCatch+totAmtCare+totAmtMgr+totChem+totOther;
   const totWeight=rows.reduce((s,r)=>s+((r.totalWeightAll!=null?r.totalWeightAll:r.totalWeight)||0),0);   // ต้องตรงกับช่อง ฿/กก. รายแถวที่ใช้ totalWeightAll
-  const labels=['ลูกกุ้ง','ค่าขนส่งลูกกุ้ง','อาหารกุ้ง','เวชภัณฑ์','ปูน','ค่าแรง','ค่าไฟฟ้า','น้ำมัน','อุปกรณ์','อุปกรณ์นอก','ค่าจับกุ้ง','ส่วนแบ่งคนเลี้ยง','ส่วนแบ่งผู้จัดการ','สารเคมี(เดิม)','อื่นๆ(เดิม)'];
-  const vals=[totFry,totTransport,totFeed,totMed,totLime,totLabor,totElec,totFuel,totEquip,totEquipOut,totCatch,totAmtCare,totAmtMgr,totChem,totOther];
-  const colors=['#9A6A04','#C08A2E','#3b82f6','#7c3aed','#a3a3a3','#0f6e56','#0ea5e9','#dc2626','#16a34a','#65a30d','#c026d3','#f59e0b','#ea580c','#94a3b8','#cbd5e1'];
+  // ── แยก "เวชภัณฑ์" เป็น 4 หมวดย่อย โดยย้อนอ่านรายการเบิกจริงของแต่ละรอบ (entry #263)
+  //    ส่วนที่ผลรวมหมวดย่อยไม่ถึง costMed ที่บันทึกไว้ = ที่แก้ด้วยมือตอนปิดรอบ / หมวดที่ไม่เข้าพวก → ลงแถวแยก
+  //    ทำแบบนี้ยอดรวมทั้งตารางยังเท่ากับที่บันทึกไว้เป๊ะเสมอ ไม่มีเงินหายหรืองอกจากการแยกหมวด
+  const _med=plMedSubtotals(rows);
+  const medRest=Math.max(0,totMed-_med.matched);
+  const medLabels=MED_SUBCATS.map(sc=>sc.label).concat(medRest>0?['เวชภัณฑ์ (ปรับมือ/ไม่ระบุหมวด)']:[]);
+  const medVals=MED_SUBCATS.map(sc=>_med.out[sc.key]||0).concat(medRest>0?[medRest]:[]);
+  const medColors=MED_SUBCATS.map(sc=>sc.color).concat(medRest>0?['#9ca3af']:[]);
+  const labels=['ลูกกุ้ง','ค่าขนส่งลูกกุ้ง','อาหารกุ้ง',...medLabels,'ปูน','ค่าแรง','ค่าไฟฟ้า','น้ำมัน','อุปกรณ์','อุปกรณ์นอก','ค่าจับกุ้ง','ส่วนแบ่งคนเลี้ยง','ส่วนแบ่งผู้จัดการ','สารเคมี(เดิม)','อื่นๆ(เดิม)'];
+  const vals=[totFry,totTransport,totFeed,...medVals,totLime,totLabor,totElec,totFuel,totEquip,totEquipOut,totCatch,totAmtCare,totAmtMgr,totChem,totOther];
+  const colors=['#9A6A04','#C08A2E','#3b82f6',...medColors,'#a3a3a3','#0f6e56','#0ea5e9','#dc2626','#16a34a','#65a30d','#c026d3','#f59e0b','#ea580c','#94a3b8','#cbd5e1'];
+  // ── รายการสินค้าย่อยของแต่ละแถว (กดกางดูได้) — ต้องเรียงให้ตรงกับ labels เป๊ะ ──
+  //    แถวที่ไม่มีรายการสินค้าให้ย้อนดู (ลูกกุ้ง/อาหาร/ค่าแรง/ค่าไฟ/ค่าจับ/ส่วนแบ่ง) = null → กดไม่ได้ ไม่ต้องหลอกให้กด
+  const medDetails=MED_SUBCATS.map(sc=>plDetailHTML(plCatItems(rows,sc.key),_med.out[sc.key]||0))
+    .concat(medRest>0?[null]:[]);
+  const details=[null,null,null,...medDetails,
+    plDetailHTML(plCatItems(rows,'lime'),totLime),          // ปูน
+    null,null,                                              // ค่าแรง · ค่าไฟฟ้า
+    plDetailHTML(plSharedItems(rows,true),totFuel),         // น้ำมัน (ของแชร์)
+    plDetailHTML(plCatItems(rows,'equip'),totEquip),        // อุปกรณ์
+    plDetailHTML(plSharedItems(rows,false),totEquipOut),    // อุปกรณ์นอก (ของแชร์)
+    null,null,null,null,null];                              // ค่าจับ · คนเลี้ยง · ผู้จัดการ · สารเคมี(เดิม) · อื่นๆ(เดิม)
+  if(details.length!==labels.length)console.warn('[PL] details ไม่ตรงกับ labels',details.length,labels.length);
   const canvas=document.getElementById('pl-donut');
   if(canvas){
     if(_plDonutChart){_plDonutChart.destroy();_plDonutChart=null;}
@@ -15625,15 +15763,22 @@ function renderPLCostChart(rows){
   if(leg)leg.innerHTML=labels.map((l,i)=>vals[i]>0?`<div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};flex-shrink:0"></span><span style="font-size:var(--fs115);color:var(--tx2);flex:1">${l}</span><span style="font-size:calc(12px * var(--ui-scale));font-weight:500;color:var(--tx)">${total?Math.round(vals[i]/total*100)+'%':'-'}</span></div>`:'').join('');
   const tbl=document.getElementById('pl-cost-tbl');
   if(tbl){
-    if(totWeight>0){
-      tbl.innerHTML=`<table class="tbl"><thead><tr><th>รายการ</th><th style="text-align:right">รวม (฿)</th><th style="text-align:right">฿/กก.</th><th style="text-align:right">%</th></tr></thead><tbody>${
-        labels.map((l,i)=>vals[i]>0?`<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${colors[i]};margin-right:5px"></span>${l}</td><td style="text-align:right">${Math.round(vals[i]).toLocaleString()}</td><td style="text-align:right">${(vals[i]/totWeight).toFixed(1)}</td><td style="text-align:right">${total?Math.round(vals[i]/total*100)+'%':'-'}</td></tr>`:'').join('')
-      }<tr style="border-top:2px solid var(--bd);font-weight:700"><td>รวม</td><td style="text-align:right">${Math.round(total).toLocaleString()}</td><td style="text-align:right">${(total/totWeight).toFixed(1)}</td><td style="text-align:right">100%</td></tr></tbody></table>`;
-    } else {
-      tbl.innerHTML=`<table class="tbl"><thead><tr><th>รายการ</th><th style="text-align:right">รวม (฿)</th><th style="text-align:right">%</th></tr></thead><tbody>${
-        labels.map((l,i)=>vals[i]>0?`<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${colors[i]};margin-right:5px"></span>${l}</td><td style="text-align:right">${Math.round(vals[i]).toLocaleString()}</td><td style="text-align:right">${total?Math.round(vals[i]/total*100)+'%':'-'}</td></tr>`:'').join('')
-      }<tr style="border-top:2px solid var(--bd);font-weight:700"><td>รวม</td><td style="text-align:right">${Math.round(total).toLocaleString()}</td><td style="text-align:right">100%</td></tr></tbody></table>`;
-    }
+    const hasKg=totWeight>0, ncol=hasKg?4:3;
+    const body=labels.map((l,i)=>{
+      if(!(vals[i]>0))return'';
+      const dot=`<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${colors[i]};margin-right:5px"></span>`;
+      const cells=`<td style="text-align:right">${Math.round(vals[i]).toLocaleString()}</td>`
+        +(hasKg?`<td style="text-align:right">${(vals[i]/totWeight).toFixed(1)}</td>`:'')
+        +`<td style="text-align:right">${total?Math.round(vals[i]/total*100)+'%':'-'}</td>`;
+      const d=details[i];
+      if(!d)return`<tr><td style="padding-left:18px">${dot}${l}</td>${cells}</tr>`;
+      return`<tr onclick="togglePLCostDetail(${i})" style="cursor:pointer"><td><span id="plc-car-${i}" style="display:inline-block;width:13px;color:var(--tx3)">▸</span>${dot}${l}</td>${cells}</tr>`
+        +`<tr id="plc-det-${i}" style="display:none"><td colspan="${ncol}" style="padding:0;background:var(--sf2)">${d}</td></tr>`;
+    }).join('');
+    tbl.innerHTML=`<table class="tbl"><thead><tr><th>รายการ</th><th style="text-align:right">รวม (฿)</th>${hasKg?'<th style="text-align:right">฿/กก.</th>':''}<th style="text-align:right">%</th></tr></thead><tbody>${body}`
+      +`<tr style="border-top:2px solid var(--bd);font-weight:700"><td style="padding-left:18px">รวม</td><td style="text-align:right">${Math.round(total).toLocaleString()}</td>`
+      +`${hasKg?`<td style="text-align:right">${(total/totWeight).toFixed(1)}</td>`:''}<td style="text-align:right">100%</td></tr></tbody></table>`
+      +`<p style="font-size:var(--fs105);color:var(--tx3);margin:6px 2px 0">กดแถวที่มี ▸ เพื่อดูรายการสินค้าย่อย</p>`;
   }
 }
 function exportPLCSV(){
