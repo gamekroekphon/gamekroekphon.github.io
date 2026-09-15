@@ -12767,6 +12767,49 @@ function renderExPreview(){
   if(exInfo)exInfo.innerHTML=closeSummaryHtml(p,s,{compact:true});
   renderExChart(p);
 }
+// ══════ กางดูรายการสินค้าย่อยในการ์ดสรุปปิดบ่อ (พี่สั่งต่อจาก entry #264) ══════
+// ⚠️ ใช้เฉพาะ preview บนหน้าจอ (compact:true) — ตัว PDF จริงไม่มีปุ่มให้กด จึงไม่แตะ HTML ฝั่ง PDF เลย
+//    รายการย่อยมาจากกลไกเดียวกับหน้ากำไร-ขาดทุน (plCatItems/plSharedItems) ต่างแค่ส่งรอบเดียวเข้าไป
+let _csDetailSeq=0;
+function toggleCSDetail(id){
+  const d=document.getElementById(id);if(!d)return;
+  const open=d.style.display==='none';
+  d.style.display=open?'':'none';
+  const c=document.getElementById(id+'-car');if(c)c.textContent=open?'▾':'▸';
+}
+function csItemLine(i){
+  return`<div style="display:flex;justify-content:space-between;gap:10px;padding:2px 0;font-size:var(--fs10);color:var(--tx2)">`
+    +`<span>${i.name} <span style="color:var(--tx3)">· ${_plNum(i.qty)} ${i.unit||''} × ${i.qty>0?_plNum(i.amt/i.qty):'-'}</span></span>`
+    +`<span style="font-variant-numeric:tabular-nums;white-space:nowrap">${Math.round(i.amt).toLocaleString()}</span></div>`;
+}
+// ⚠️ shown = ตัวเลขที่บันทึกตอนปิดรอบ (แก้ด้วยมือได้) — ถ้าไม่เท่าผลรวมรายการเบิก ต้องบอกส่วนต่างตรงๆ ห้ามเกลี่ยกลบ
+function csDiffLine(sum,shown){
+  const diff=Math.round(shown)-Math.round(sum);
+  if(!diff)return'';
+  return`<div style="margin-top:5px;font-size:var(--fs10);color:var(--w)">ผลรวมรายการเบิก ${Math.round(sum).toLocaleString()} · `
+    +`ที่บันทึกตอนปิดรอบ ${Math.round(shown).toLocaleString()} · ส่วนต่าง ${diff>0?'+':''}${diff.toLocaleString()} (กรอก/แก้ด้วยมือ)</div>`;
+}
+const CS_EMPTY_MSG=`<div style="font-size:var(--fs10);color:var(--tx3)">ไม่พบรายการเบิกในช่วงของรอบนี้ — ตัวเลขนี้มาจากการกรอกด้วยมือตอนปิดรอบ</div>`;
+function csItemsHTML(items,shown){
+  if(!items.length)return CS_EMPTY_MSG;
+  const sum=items.reduce((a,i)=>a+i.amt,0);
+  return items.map(csItemLine).join('')+csDiffLine(sum,shown);
+}
+// เวชภัณฑ์กางทีเดียวเห็นครบ 4 หมวด — ในการ์ดสรุปปิดบ่อมีรอบเดียว ไม่ต้องกดซ้อนสองชั้น
+function csMedGroupHTML(rows,shown){
+  let sum=0;
+  const blocks=MED_SUBCATS.map(sc=>{
+    const items=plCatItems(rows,sc.key);
+    if(!items.length)return'';
+    const st=items.reduce((a,i)=>a+i.amt,0);sum+=st;
+    return`<div style="margin-top:5px"><div style="font-size:var(--fs10);font-weight:700;color:${sc.color}">`
+      +`<span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${sc.color};margin-right:5px"></span>`
+      +`${sc.label} · ${Math.round(st).toLocaleString()}</div>`
+      +`<div style="padding-left:12px">${items.map(csItemLine).join('')}</div></div>`;
+  }).join('');
+  if(!blocks)return CS_EMPTY_MSG;
+  return blocks+csDiffLine(sum,shown);
+}
 // ── HTML สรุปปิดบ่อ ใช้ร่วมกันทั้ง preview บนหน้าจอ และตัว PDF จริง (จัดกลุ่ม ผลผลิต/การเงิน/เวลา แทน list เดียวแบบเดิม) ──
 function closeSummaryHtml(p,s,opt){
   opt=opt||{};
@@ -12782,6 +12825,20 @@ function closeSummaryHtml(p,s,opt){
   const okCol=compact?'var(--ok)':'#15803d',dCol=compact?'var(--d)':'#b91c1c';
   const money=v=>v!=null?Math.round(v).toLocaleString():null;
   const grid2=compact?'':'display:grid;grid-template-columns:1fr 1fr';
+  // ── แถวที่กางดูรายการสินค้าย่อยได้ — เฉพาะ preview บนหน้าจอ (PDF กดไม่ได้ จึงคงรูปเดิมทุกจุด) ──
+  const detRows=(compact&&s._crop&&s.hasCostData)?[{_pond:p,_crop:s._crop}]:null;
+  const rowX=(label,val,kind)=>{
+    if(!detRows)return row(label,val);
+    const html=kind==='med'?csMedGroupHTML(detRows,s.costMed||0)
+      :kind==='lime'?csItemsHTML(plCatItems(detRows,'lime'),s.costLime||0)
+      :kind==='equip'?csItemsHTML(plCatItems(detRows,'equip'),s.costEquip||0)
+      :kind==='fuel'?csItemsHTML(plSharedItems(detRows,true),s.costFuel||0)
+      :kind==='equipOut'?csItemsHTML(plSharedItems(detRows,false),s.costEquipOut||0):'';
+    if(!html)return row(label,val);
+    const id='csd'+(++_csDetailSeq);
+    return`<div style="${rowStyle};cursor:pointer" onclick="toggleCSDetail(&quot;${id}&quot;)"><span style="${lblCol}"><span id="${id}-car" style="display:inline-block;width:12px;color:var(--tx3)">▸</span>${label}</span><span style="font-weight:700;${valCol}">${val!=null&&val!==''?val:'-'}</span></div>`
+      +`<div id="${id}" style="display:none;padding:6px 8px 8px 18px;background:var(--sf2);border-bottom:1px solid var(--bd)">${html}</div>`;
+  };
   let html=`${sectionHdr('🦐 ผลผลิต')}<div style="${grid2}">
     ${row('ลูกกุ้งจากที่ไหน',s.hatchery)}
     ${row('จำนวนปล่อย (ตัว)',s.stock?s.stock.toLocaleString():null)}
@@ -12798,13 +12855,13 @@ function closeSummaryHtml(p,s,opt){
     ${row('ต้นทุนอาหารกุ้ง (บาท)',s.hasCostData?money(s.costFeed)||'0':null)}
     ${row('ต้นทุนลูกกุ้ง (บาท)',s.hasCostData?money(s.costFry)||'0':null)}
     ${row('ค่าขนส่งลูกกุ้ง (บาท)',s.hasCostData?money(s.costTransport)||'0':null)}
-    ${row('ต้นทุนเวชภัณฑ์ (บาท)',s.hasCostData?money(s.costMed)||'0':null)}
-    ${row('ต้นทุนปูน (บาท)',s.hasCostData?money(s.costLime)||'0':null)}
+    ${rowX('ต้นทุนเวชภัณฑ์ (บาท)',s.hasCostData?money(s.costMed)||'0':null,'med')}
+    ${rowX('ต้นทุนปูน (บาท)',s.hasCostData?money(s.costLime)||'0':null,'lime')}
     ${row('ต้นทุนค่าแรง (บาท)',s.hasCostData?money(s.costLabor)||'0':null)}
     ${row('ต้นทุนค่าไฟฟ้า (บาท)',s.hasCostData?money(s.costElec)||'0':null)}
-    ${row('ต้นทุนน้ำมัน (บาท)',s.hasCostData?money(s.costFuel)||'0':null)}
-    ${row('อุปกรณ์ (บาท)',s.hasCostData?money(s.costEquip)||'0':null)}
-    ${row('อุปกรณ์นอก (บาท)',s.hasCostData?money(s.costEquipOut)||'0':null)}
+    ${rowX('ต้นทุนน้ำมัน (บาท)',s.hasCostData?money(s.costFuel)||'0':null,'fuel')}
+    ${rowX('อุปกรณ์ (บาท)',s.hasCostData?money(s.costEquip)||'0':null,'equip')}
+    ${rowX('อุปกรณ์นอก (บาท)',s.hasCostData?money(s.costEquipOut)||'0':null,'equipOut')}
     ${row('ค่าจับกุ้ง (บาท)',s.hasCostData?money(s.costCatch)||'0':null)}
     ${s.costChemLegacy!=null?row('สารเคมี (เดิม, บาท)',money(s.costChemLegacy)):''}
     ${s.costOtherLegacy!=null?row('อื่นๆ (เดิม, บาท)',money(s.costOtherLegacy)):''}
@@ -12927,7 +12984,7 @@ function getCloseSummary(p,cropIdx){
   const netProfit=(harvestResult&&harvestResult.netProfit!=null)?harvestResult.netProfit:((revenue!=null&&totalCost!=null)?revenue-totalCost:null);
   const marginPct=(revenue&&netProfit!=null)?+((netProfit/revenue)*100).toFixed(1):null;
   const costPerKg=(totalWeight&&totalCost!=null)?+(totalCost/totalWeight).toFixed(1):null;
-  return{pondName:p.name,cropLabel:lastCrop?`รอบที่ ${lastCrop.cropNum}/${yearBE(lastCrop.cropYear)}`:'(รอบปัจจุบัน ยังไม่ปิด)',hatchery,stock,buyer,price,totalWeight,totalBaht,partialCount,ageDays,totalFeed,fcr,closeSize,adg,survivalRate,survivalRateOrder,yieldPerRai,notesAll,closeDate,startDate,rows,feedLog,samples,
+  return{_crop:lastCrop,pondName:p.name,cropLabel:lastCrop?`รอบที่ ${lastCrop.cropNum}/${yearBE(lastCrop.cropYear)}`:'(รอบปัจจุบัน ยังไม่ปิด)',hatchery,stock,buyer,price,totalWeight,totalBaht,partialCount,ageDays,totalFeed,fcr,closeSize,adg,survivalRate,survivalRateOrder,yieldPerRai,notesAll,closeDate,startDate,rows,feedLog,samples,
     costFry,costTransport,costFeed,costMed,costLime,costLabor,costElec,costFuel,costEquip,costEquipOut,costCatch,pctCaretaker,pctManager,amtCaretaker,amtManager,costChemLegacy,costOtherLegacy,hasCostData,totalCost,revenue,netProfit,marginPct,costPerKg};
 }
 // ===== PDF หน้าเดียว (ใช้เมื่อเลือกบ่อเดียว) — 4 KPI + ข้อมูลย่อ 3 คอลัมน์ + 2 กราฟผู้บริหาร + ต้นทุนต่อกิโล =====
