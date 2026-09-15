@@ -11389,7 +11389,12 @@ function feedGridRow(p,d,feedItems){
   const rid=p.id;
   const rateTxt=(bio&&suggestedTotal)?((suggestedTotal/bio)*100).toFixed(1)+'%':'-';
   // ── โชว์เฉพาะสินค้าที่ยังมีสต็อกเหลือ (qty>0) ยกเว้นตัวที่เคยเลือกไว้แล้วให้โชว์ต่อแม้สต็อกจะหมดแล้วก็ตาม ──
-  const opts=feedItems.filter(i=>i.qty>0||i.id===suggestedStock);
+  // ── ⚠️ โชว์อาหารทุกเบอร์ ไม่กรองด้วยยอดคงเหลือ (พี่สั่ง entry #262)
+  //    เดิมกรอง i.qty>0 — พอลืมกรอกรับเข้าโกดัง เบอร์ที่ต้องใช้จะหายไปจากดรอปดาวน์
+  //    พนักงานเลยบันทึกแบบ "ไม่ตัดสต็อก" แทน → ต้นทุนอาหารวันนั้นตกไปใช้ "ราคาเฉลี่ยทุกเบอร์"
+  //    ซึ่งคลาดได้ถึง 20% (เบอร์ 3 ฿40/กก. · เบอร์ 4 ฿56/กก. · เฉลี่ย ฿48/กก.) โดยไม่มีอะไรเตือน
+  //    ยอมให้สต็อกติดลบดีกว่า — ยอดคงเหลือแก้ได้ด้วยการกรอกรับเข้าย้อนหลัง แต่ราคาที่คิดผิดไปแล้วไม่มีใครรู้
+  const opts=feedItems;
   const suggestedItem=suggestedStock?feedItems.find(i=>i.id===suggestedStock):null;
   return`<tr data-pond="${rid}">
     <td><b>${p.name}</b>${existing?' <span class="badge b-ok" style="font-size:var(--fs9)">บันทึกแล้ว</span>':''}</td>
@@ -11398,7 +11403,12 @@ function feedGridRow(p,d,feedItems){
     <td style="text-align:right;color:var(--tx3)">${prev&&prev.totalFeed!=null?prev.totalFeed.toFixed(1):'-'}</td>
     <td style="text-align:right"><input type="number" step="0.1" class="fi" style="width:90px;text-align:right" id="fdg-${rid}-total" value="${suggestedTotal!=null?suggestedTotal:''}" placeholder="0.0" oninput="fdGridCalcRate('${rid}')"></td>
     <td style="text-align:right" id="fdg-${rid}-rate">${rateTxt}</td>
-    <td><select class="fi" style="width:220px" id="fdg-${rid}-stock"><option value="">-- ไม่ตัดสต็อก --</option>${opts.map(i=>`<option value="${i.id}"${i.id===suggestedStock?' selected':''}>${i.name} — คงเหลือ ${i.qty} ${i.unit||'กระสอบ'}</option>`).join('')}</select></td>
+    <td><select class="fi" style="width:220px" id="fdg-${rid}-stock"><option value="">-- ไม่ตัดสต็อก --</option>${opts.map(i=>{
+      const q=parseFloat(i.qty)||0;
+      // บอกสถานะของให้เห็นในตัวเลือกเลย จะได้รู้ว่าต้องไปกรอกรับเข้า ไม่ใช่ห้ามเลือก
+      const tag=q<0?' ⚠️ ค้างกรอกรับเข้า':q===0?' ⚠️ ของหมด':'';
+      return`<option value="${i.id}"${i.id===suggestedStock?' selected':''}>${i.name} — คงเหลือ ${q} ${i.unit||'กระสอบ'}${tag}</option>`;
+    }).join('')}</select></td>
     ${APP_ROLE==='admin'?`<td style="text-align:right;color:var(--pd);font-weight:600">${pondFeedCost(p)?Math.round(pondFeedCost(p)).toLocaleString()+' บ.':'-'}</td>`:''}
     <td><input type="text" class="fi" style="width:120px" id="fdg-${rid}-notes" value="${existing?.notes||''}" placeholder="-"></td>
   </tr>`;
