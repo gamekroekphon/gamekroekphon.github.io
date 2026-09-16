@@ -1792,7 +1792,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <div class="ov-side">
       <div class="card" id="ov-stockwarn-card" style="margin-bottom:14px;display:none">
         <div class="card-t" style="display:flex;justify-content:space-between;align-items:center">
-          <span>📦 สต็อกใกล้หมด</span>
+          <span id="ov-stockwarn-t">📦 สต็อกใกล้หมด</span>
           <span style="font-size:var(--fs115);color:var(--p);font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-style:dashed;text-underline-offset:3px" onclick="document.getElementById('tab-stock')?.click()">ดูทั้งหมด ›</span>
         </div>
         <div id="ov-stockwarn-list"></div>
@@ -8467,15 +8467,27 @@ function renderStockKPI(){
     '<span>📤 เบิกออกเดือนนี้ <b>'+txOut+'</b></span>';
 }
 
+// ── ของที่ติดลบ = ตัดออกไปแล้วแต่ยังไม่ได้กรอกรับเข้าโกดัง ──
+// ⚠️ ต้องจับโดยไม่สนใจ minQty — ฟาร์มไม่ได้ตั้ง minQty ไว้เลย ถ้าพึ่ง minQty ของติดลบจะเงียบตลอดไป (entry #262)
+//    หน้าสต็อกตัดของด้วย Math.max(0,...) แต่การตัดอัตโนมัติจากบันทึกอาหารไม่มีพื้น ติดลบได้จากทางนั้นทางเดียว
+function negStockItems(){
+  return(D.inventoryItems||[]).filter(i=>i&&(parseFloat(i.qty)||0)<0)
+    .sort((a,b)=>(parseFloat(a.qty)||0)-(parseFloat(b.qty)||0));
+}
 function renderStockWarn(){
   const warnEl=document.getElementById('sk-warn');
   const txtEl=document.getElementById('sk-warn-txt');
   if(!warnEl||!txtEl)return;
   const items=D.inventoryItems||[];
-  const low=items.filter(i=>i.minQty>0&&i.qty<=i.minQty);
-  if(!low.length){warnEl.style.display='none';return;}
+  const neg=negStockItems();
+  const low=items.filter(i=>i.minQty>0&&i.qty<=i.minQty&&(parseFloat(i.qty)||0)>=0);
+  if(!neg.length&&!low.length){warnEl.style.display='none';return;}
   warnEl.style.display='flex';
-  txtEl.textContent=low.map(i=>`${i.name} เหลือ ${i.qty} ${i.unit}`).join(' · ');
+  const parts=[];
+  if(neg.length)parts.push('<b style="color:var(--d)">ค้างกรอกรับเข้า '+neg.length+' รายการ</b> — '
+    +neg.map(i=>mpEsc(i.name)+' <b style="color:var(--d)">'+i.qty+' '+(i.unit||'')+'</b>').join(' · '));
+  if(low.length)parts.push('ใกล้หมด — '+low.map(i=>mpEsc(i.name)+' เหลือ '+i.qty+' '+(i.unit||'')).join(' · '));
+  txtEl.innerHTML=parts.join('<br>');
 }
 // ── เตือนสต็อกใกล้หมดในหน้าภาพรวม — ใช้เงื่อนไขเดียวกับ renderStockWarn() (i.qty<=i.minQty) แค่ดึงมาโชว์ซ้ำ ไม่มีเงื่อนไขใหม่ ซ่อนการ์ดทั้งใบถ้าไม่มีของใกล้หมด ──
 function renderOvStockWarn(){
@@ -8483,10 +8495,14 @@ function renderOvStockWarn(){
   const listEl=document.getElementById('ov-stockwarn-list');
   if(!card||!listEl)return;
   const items=D.inventoryItems||[];
-  const low=items.filter(i=>i.minQty>0&&i.qty<=i.minQty);
-  if(!low.length){card.style.display='none';return;}
+  const neg=negStockItems();
+  const low=items.filter(i=>i.minQty>0&&i.qty<=i.minQty&&(parseFloat(i.qty)||0)>=0);
+  if(!neg.length&&!low.length){card.style.display='none';return;}
   card.style.display='';
-  listEl.innerHTML=low.map(i=>`<div class="ov-stockwarn-item"><span class="nm">${i.name}</span><span class="qty">เหลือ ${i.qty} <small>/ ขั้นต่ำ ${i.minQty} ${i.unit||''}</small></span></div>`).join('');
+  {const t=document.getElementById('ov-stockwarn-t');
+   if(t)t.textContent=neg.length?(low.length?'📦 สต็อกค้างกรอกรับเข้า / ใกล้หมด':'📦 สต็อกค้างกรอกรับเข้า'):'📦 สต็อกใกล้หมด';}
+  listEl.innerHTML=neg.map(i=>`<div class="ov-stockwarn-item"><span class="nm">⚠️ ${mpEsc(i.name)}</span><span class="qty" style="color:var(--d);font-weight:700">${i.qty} ${i.unit||''} <small style="font-weight:400">/ ค้างกรอกรับเข้า</small></span></div>`).join('')
+    +low.map(i=>`<div class="ov-stockwarn-item"><span class="nm">${mpEsc(i.name)}</span><span class="qty">เหลือ ${i.qty} <small>/ ขั้นต่ำ ${i.minQty} ${i.unit||''}</small></span></div>`).join('');
 }
 
 // ── ปฏิทินจับกุ้ง / เตือนพาเชียล ──────────────────────────────────────────
@@ -11567,6 +11583,7 @@ function saveFeedGridAll(){
   const d=document.getElementById('fd-date')?.value||today();
   const ponds=wqfeedActivePonds();
   let saved=0,deleted=0;
+  const noStockPonds=[];
   ponds.forEach(p=>{
     const totalEl=document.getElementById(`fdg-${p.id}-total`);if(!totalEl)return;
     if(!p.feedLog)p.feedLog=[];
@@ -11590,6 +11607,9 @@ function saveFeedGridAll(){
       feedBrand:brand,feedGrade:oldRec?.feedGrade||'',
       totalFeed:total,feedRate:null,notes};
     if(stockItemId)applyFeedStockDeduction(rec,p.id,d,stockItemId,newSacks);
+    // ⚠️ ไม่เลือกเบอร์ = ต้นทุนวันนั้นตกไปใช้ "ราคาเฉลี่ยทุกเบอร์" คลาดได้ถึง 20% (entry #262/#269)
+    //    ไม่บล็อกการบันทึก — แค่บอกทันทีว่าตัวเลขกำลังจะเพี้ยน จะได้กลับมาแก้ตอนยังจำได้
+    else if(total>0)noStockPonds.push(p.name);
     const idx=p.feedLog.findIndex(r=>r.id===rec.id||r.date===d);
     if(idx>=0)p.feedLog[idx]=rec;else p.feedLog.push(rec);
     p.feedLog.sort((a,b)=>new Date(a.date)-new Date(b.date));
@@ -11597,7 +11617,17 @@ function saveFeedGridAll(){
   });
   save();
   const parts=[];if(saved)parts.push(`บันทึกอาหาร ${saved} บ่อ`);if(deleted)parts.push(`ลบ ${deleted} บ่อ`);
-  showMsg('fd-grid-msg','ok',parts.length?`✅ ${parts.join(' · ')} วันที่ ${fD(d)}`:'ไม่มีการเปลี่ยนแปลง');
+  // ── เตือนหลังบันทึก (ไม่บล็อก) — ของติดลบ + บ่อที่ไม่ได้เลือกเบอร์ ──
+  const neg=negStockItems();
+  const warns=[];
+  if(neg.length)warns.push('⚠️ <b>ค้างกรอกรับเข้าโกดัง</b> — '
+    +neg.map(i=>mpEsc(i.name)+' <b>'+i.qty+' '+(i.unit||'')+'</b>').join(' · ')
+    +' · ต้นทุนยังคิดถูกอยู่ แต่ยอดคงเหลือจะตรงก็ต่อเมื่อไปกรอกรับเข้าย้อนหลัง');
+  if(noStockPonds.length)warns.push('⚠️ <b>ไม่ได้เลือกเบอร์อาหาร</b> — บ่อ '+noStockPonds.join(' · ')
+    +' · ต้นทุนวันนี้จะคิดด้วย<b>ราคาเฉลี่ยทุกเบอร์</b> ไม่ใช่ราคาจริง (คลาดได้ถึง 20%)');
+  const okTxt=parts.length?`✅ ${parts.join(' · ')} วันที่ ${fD(d)}`:'ไม่มีการเปลี่ยนแปลง';
+  if(warns.length)showMsg('fd-grid-msg','warn',okTxt+'<div style="margin-top:6px;line-height:1.7">'+warns.join('<br>')+'</div>');
+  else showMsg('fd-grid-msg','ok',okTxt);
   renderFeedGrid();renderOv();renderStockKPI();renderStockWarn();renderStockItems();
   if(saved)ponds.forEach((p,i)=>{const totalEl=document.getElementById(`fdg-${p.id}-total`);if(!totalEl||totalEl.value==='')return;setTimeout(()=>flashRow(document.querySelector(`tr[data-pond="${p.id}"]`)),i*80);});
 }
