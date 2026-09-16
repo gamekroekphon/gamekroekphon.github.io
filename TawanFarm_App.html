@@ -1476,9 +1476,14 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   </div>
 </div>
 <div id="sec-kan" class="sec">
-  <div class="sec-hdr"><div class="sec-title">👤 กัน — นำเข้าข้อมูลจากชีต</div></div>
+  <div class="sec-hdr"><div class="sec-title">👤 กัน — กรอกข้อมูลจากชีต</div></div>
+  <div style="background:var(--ib);border:1px solid #c7d7fb;border-radius:9px;padding:11px 14px;font-size:calc(13px * var(--ui-scale));margin-bottom:14px">
+    📥 <b>หน้านี้เป็นที่พักข้อมูล แยกจากแอปหลัก</b> — กรอกได้เต็มที่ ตัวเลขในหน้าอื่น (รอบเลี้ยง · โรงเพาะฟัก · กำไร-ขาดทุน) <b>ไม่เปลี่ยนตาม</b><br>
+    <span style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">พอข้อมูลครบและตรวจแล้วพอใจ ค่อยบอกให้ย้ายเข้าแอปหลักทีหลัง</span>
+  </div>
   <div class="card">
-    <div class="card-sub" style="margin-bottom:12px">คัดลอกแถวจากชีต "แผนลงลูกกุ้ง" มาวางได้เลย ไม่ต้องจัดรูปแบบก่อน · เอาหัวตารางมาด้วยก็ได้ ระบบข้ามให้เอง</div>
+    <div class="card-t">📋 วางแถวจากชีต</div>
+    <div class="card-sub" style="margin-bottom:12px">คัดลอกจาก "แผนลงลูกกุ้ง" มาวางได้เลย ไม่ต้องจัดรูปแบบก่อน · เอาหัวบล็อก หัวตาราง แถวกลุ่มโรงเพาะฟัก มาด้วยได้หมด</div>
     <textarea class="fi" id="kan-in" rows="9" placeholder="วางแถวจากชีตตรงนี้…&#10;&#10;A19[4.2]	26/2/69	504,000	555,030	411,348	3,486	118" style="font-family:ui-monospace,Menlo,monospace;font-size:calc(11.5px * var(--ui-scale));line-height:1.7;white-space:pre;overflow-x:auto"></textarea>
     <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:11px">
       <label class="fl" for="kan-year" style="margin:0">รอบของปี:</label>
@@ -1491,13 +1496,21 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   </div>
   <div class="card" id="kan-prev-card" style="display:none">
     <div class="card-t" id="kan-prev-t">🔎 ตรวจก่อนบันทึก</div>
-    <div class="card-sub" style="margin-bottom:10px">ยังไม่ได้เขียนอะไรลงฐานข้อมูล · แถวที่ซ้ำจะไม่ติ๊กให้ ถ้าจะเขียนทับต้องติ๊กเอง</div>
+    <div class="card-sub" style="margin-bottom:10px">ตรวจให้ครบก่อนเก็บ · แถวที่แอปหลักมีอยู่แล้วจะไม่ติ๊กให้ (เก็บซ้ำก็ได้ ไม่กระทบอะไร)</div>
     <div id="kan-prev"></div>
     <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:12px">
-      <button class="btn btn-p" type="button" onclick="kanImport()" id="kan-save-btn">💾 บันทึกแถวที่ติ๊กไว้</button>
+      <button class="btn btn-p" type="button" onclick="kanImport()" id="kan-save-btn">💾 เก็บแถวที่ติ๊กไว้</button>
       <button class="btn" type="button" onclick="kanCancelPreview()">ยกเลิก</button>
     </div>
     <div id="kan-save-msg" style="margin-top:10px"></div>
+  </div>
+  <div class="card" id="kan-draft-card">
+    <div class="card-t" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span style="white-space:nowrap" id="kan-draft-t">📦 ข้อมูลที่เก็บไว้ในหน้านี้</span>
+      <button class="btn btn-s" type="button" onclick="kanDraftClear()" style="margin-left:auto;font-size:var(--fs11);padding:4px 10px">🗑️ ล้างทั้งหมด</button>
+    </div>
+    <div class="card-sub" style="margin-bottom:10px">อยู่ในหน้านี้เท่านั้น · หน้าอื่นในแอปยังไม่เห็นข้อมูลชุดนี้</div>
+    <div id="kan-draft"></div>
   </div>
 </div>
 <!-- MED PROTOCOL — หน้าต่างขยายเต็มจอ อ่าน/พิมพ์ข้อความยาวๆ ได้สบายตาบนมือถือ -->
@@ -4273,6 +4286,7 @@ function loadData(){
     const d=JSON.parse(s);
     const _cy=new Date().getFullYear();
     d.ponds.forEach(p=>{['feedLog','samples','waterLog','chemLog','labResults','records','partialHarvests'].forEach(k=>{if(!p[k])p[k]=[]});if(!p.cropHistory)p.cropHistory=[];if(!p.cropNum)p.cropNum=1;if(!p.cropYear)p.cropYear=_cy;if(p.prepChecklist===undefined)p.prepChecklist=null;});
+    if(!Array.isArray(d.kanDraft))d.kanDraft=[];   // ที่พักข้อมูลของกัน — แยกจากแอปหลัก ไม่มีหน้าไหนอ่านนอกจากหน้ากัน
     if(!d.categories)d.categories=[...DEFAULT_CATS];
     if(!d.settings)d.settings={};
     if(!d.settings.cropsPerYear)d.settings.cropsPerYear=2;
@@ -4360,6 +4374,8 @@ function mergeRemote(local, remote) {
   merged.electricityBills = mergeByMonth(merged.electricityBills||[], remote.electricityBills||[], dead);
   merged.inventoryItems = dropDead(mergeArr(merged.inventoryItems||[], remote.inventoryItems||[]));
   merged.inventoryLog = dropDead(mergeArr(merged.inventoryLog||[], remote.inventoryLog||[]));
+  // ⚠️ ต้อง merge ด้วย ไม่งั้นที่กันกรอกจากอีกเครื่องจะหายตอนซิงค์ (id เป็น kan_<บ่อ>_<วันลง> คงที่ข้ามเครื่อง)
+  merged.kanDraft = dropDead(mergeArr(merged.kanDraft||[], remote.kanDraft||[]));
   return merged;
 }
 function mergeByMonth(localArr, remoteArr, dead) {
@@ -11402,6 +11418,7 @@ function initKan(){
     const ys=[];for(let y=cur+1;y>=cur-8;y--)ys.push(y);
     sel.innerHTML=ys.map(y=>`<option value="${y}"${y===cur?' selected':''}>${y} พ.ศ.</option>`).join('');
   }
+  renderKanDraft();
 }
 function kanPreview(){
   if(APP_ROLE!=='admin')return;
@@ -11469,55 +11486,102 @@ function kanSetHat(i,v){
 function kanSyncSaveBtn(){
   const b=document.getElementById('kan-save-btn');if(!b)return;
   const n=_kanRows.filter(r=>r.pick).length;
-  b.textContent=n?('💾 บันทึก '+n+' แถวที่ติ๊กไว้'):'💾 ยังไม่ได้ติ๊กแถวไหน';
+  b.textContent=n?('💾 เก็บ '+n+' แถวที่ติ๊กไว้'):'💾 ยังไม่ได้ติ๊กแถวไหน';
   b.disabled=!n;
   b.style.opacity=n?'':'0.55';
 }
+// ⚠️ เก็บลง D.kanDraft เท่านั้น — **ห้ามเขียน p.cropHistory จากหน้านี้**
+//    พี่สั่งให้แยกที่พักข้อมูลของกันออกจากแอปหลักก่อน จะได้กรอกได้อิสระโดยไม่กระทบตัวเลขที่ใช้งานจริง
+//    เดิมเขียนทับ cropHistory ทั้งก้อน ซึ่งลบต้นทุน/วันปิดบ่อ/บันทึกอาหาร/ผลแล็บของรอบนั้นทิ้งหมด
 async function kanImport(){
   if(APP_ROLE!=='admin')return;
   const picked=_kanRows.filter(r=>r.pick&&r.pond&&r.start);
   if(!picked.length){showMsg('kan-save-msg','warn','ยังไม่ได้ติ๊กแถวไหนเลย');return;}
   const yBE=kanYearBE();
-  if(!confirm('บันทึก '+picked.length+' รอบเข้าแอป?'+String.fromCharCode(10)+'เขียนลงฐานข้อมูลจริง ย้อนกลับด้วยปุ่มเดียวไม่ได้'))return;
-  let added=0,replaced=0;
+  if(!confirm('เก็บ '+picked.length+' รอบไว้ในหน้ากัน?'+String.fromCharCode(10)+'ยังไม่เข้าแอปหลัก ตัวเลขในหน้าอื่นไม่เปลี่ยน'))return;
+  if(!Array.isArray(D.kanDraft))D.kanDraft=[];
+  let added=0,updated=0;
   picked.forEach(r=>{
-    const p=r.pond;
-    if(!Array.isArray(p.cropHistory))p.cropHistory=[];
-    // ⚠️ ปีของรอบ: ถ้ามีวันจับใช้ปีวันจับ ไม่มีก็ใช้ปีที่เลือกในหน้านี้ — histRecYear() อ่านต่อได้ทั้งสองทาง
     const cyBE=r.close?yearBE(parseInt(r.close.slice(0,4))):(yBE||yearBE(parseInt(r.start.slice(0,4))));
-    const sameYear=(p.cropHistory||[]).filter(c=>histRecYear(c)===cyBE).length;
-    const hr={};
-    if(r.kg!=null)hr.totalWeight=r.kg;
-    if(r.size!=null)hr.size=r.size;
-    if(r.caught!=null)hr.caught=r.caught;
     const rel=(r.order||0)+Math.max(0,(r.count||0)-(r.order||0));
-    if(r.caught!=null&&rel>0)hr.survivalRate=+(r.caught/rel*100).toFixed(1);
-    if(r.caught!=null&&r.order)hr.survivalRateOrder=+(r.caught/r.order*100).toFixed(1);
     const rec={
-      id:'kan_'+p.id+'_'+r.start,
-      cropNum:sameYear+1,cropYear:cyBE-543,year:cyBE-543,
-      startDate:r.start,closeDate:r.close||null,
-      hatchery:(r.hat||'').trim(),plType:'',plWeight:null,
-      stock:r.order||null,stockBonus:Math.max(0,(r.count||0)-(r.order||0))||0,
-      records:[],feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[],prepChecklist:{},
-      notes:'นำเข้าจากชีตแผนลงลูกกุ้ง',
-      harvestResult:hr
+      id:'kan_'+r.pond.id+'_'+r.start,   // คงที่ข้ามเครื่อง — mergeArr ใช้ id เป็นกุญแจ
+      pondId:r.pond.id,pondName:r.pond.name,
+      startDate:r.start,closeDate:r.close||null,cropYearBE:cyBE,
+      hatchery:(r.hat||'').trim(),
+      order:r.order||null,count:r.count||null,bonus:Math.max(0,(r.count||0)-(r.order||0))||0,
+      caught:r.caught!=null?r.caught:null,kg:r.kg!=null?r.kg:null,size:r.size!=null?r.size:null,
+      survOrder:(r.caught!=null&&r.order)?+(r.caught/r.order*100).toFixed(1):null,
+      survRelease:(r.caught!=null&&rel>0)?+(r.caught/rel*100).toFixed(1):null,
+      savedAt:today(),by:curUserLabel()
     };
-    const old=(p.cropHistory||[]).findIndex(c=>c&&c.startDate===r.start);
-    if(old>=0){p.cropHistory[old]=rec;replaced++;}
-    else{p.cropHistory.push(rec);added++;}
-    p.cropHistory.sort((a,b)=>String(a.startDate||'').localeCompare(String(b.startDate||'')));
+    const i=D.kanDraft.findIndex(x=>x&&x.id===rec.id);
+    if(i>=0){D.kanDraft[i]=rec;updated++;}else{D.kanDraft.push(rec);added++;}
   });
   try{
     await save();
-    // ⚠️ ข้อความสำเร็จต้องไปอยู่การ์ดบน — การ์ดพรีวิวถูกซ่อนหลังบันทึก ถ้าโชว์ในนั้นจะไม่มีใครเห็น
     kanCancelPreview();
-    showMsg('kan-msg','ok','✅ บันทึกแล้ว — เพิ่มใหม่ '+added+' รอบ'+(replaced?(' · เขียนทับ '+replaced+' รอบ'):'')+' · ดูได้ที่หน้ารอบเลี้ยง และหน้าโรงเพาะฟัก');
-    showToast('นำเข้าสำเร็จ',added+' รอบใหม่'+(replaced?' · ทับ '+replaced:''));
-    populateAll();renderOv();
+    showMsg('kan-msg','ok','✅ เก็บไว้แล้ว — ใหม่ '+added+' รอบ'+(updated?(' · อัปเดต '+updated+' รอบ'):'')+' · ยังไม่เข้าแอปหลัก');
+    showToast('เก็บไว้ในหน้ากันแล้ว',added+' รอบใหม่'+(updated?' · อัปเดต '+updated:''));
+    renderKanDraft();
   }catch(e){
     showMsg('kan-msg','danger','บันทึกไม่สำเร็จ: '+(e&&e.message||e));
   }
+}
+// ── รายการที่เก็บไว้ (ยังไม่เข้าแอปหลัก) ──
+function kanDraftRows(){
+  // ⚠️ Firebase merge ไม่รับประกันลำดับ — ต้องเรียงที่นี่เสมอ (entry #247)
+  return(D.kanDraft||[]).slice().sort((a,b)=>String(b.startDate||'').localeCompare(String(a.startDate||'')));
+}
+function renderKanDraft(){
+  const el=document.getElementById('kan-draft');
+  const card=document.getElementById('kan-draft-card');
+  if(!el||!card)return;
+  const rows=kanDraftRows();
+  const t=document.getElementById('kan-draft-t');
+  if(t)t.textContent='📦 ข้อมูลที่เก็บไว้ในหน้านี้'+(rows.length?(' — '+rows.length+' รอบ'):'');
+  if(!rows.length){
+    el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:18px;font-style:italic">ยังไม่มีข้อมูลที่เก็บไว้ — วางแถวจากชีตด้านบนแล้วกดตรวจ</p>';
+    return;
+  }
+  const n=v=>v==null?'-':Math.round(v).toLocaleString();
+  el.innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr>'+
+    '<th>บ่อ</th><th>วันลง</th><th style="text-align:center">ปี</th><th style="text-align:right">ยอดสั่ง</th>'+
+    '<th style="text-align:right">แถม</th><th style="text-align:right">ผลผลิต</th><th style="text-align:right">ไซส์</th>'+
+    '<th style="text-align:right">รอด</th><th>โรงเพาะฟัก</th><th></th></tr></thead><tbody>'+
+    rows.map(r=>{
+      const inApp=(()=>{const p=pond(r.pondId);return p&&(p.cropHistory||[]).some(c=>c&&c.startDate===r.startDate);})();
+      return '<tr><td><b>บ่อ '+mpEsc(r.pondName||'')+'</b>'+
+        (inApp?'<div style="font-size:var(--fs10);color:var(--tx3)">แอปหลักมีรอบนี้แล้ว</div>':'')+'</td>'+
+        '<td style="white-space:nowrap">'+fD(r.startDate)+
+          (r.closeDate?'<div style="font-size:var(--fs10);color:var(--tx3)">จับ '+fD(r.closeDate)+'</div>':'')+'</td>'+
+        '<td style="text-align:center">'+(r.cropYearBE||'-')+'</td>'+
+        '<td style="text-align:right">'+n(r.order)+'</td>'+
+        '<td style="text-align:right">'+(r.order&&r.bonus?('+'+(r.bonus/r.order*100).toFixed(1)+'%'):'-')+'</td>'+
+        '<td style="text-align:right">'+n(r.kg)+'</td>'+
+        '<td style="text-align:right">'+(r.size!=null?r.size:'-')+'</td>'+
+        '<td style="text-align:right">'+(r.survOrder!=null?r.survOrder+'%':'-')+'</td>'+
+        '<td>'+mpEsc(r.hatchery||'-')+'</td>'+
+        '<td style="text-align:right"><button onclick="kanDraftDel('+String.fromCharCode(39)+r.id+String.fromCharCode(39)+')" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;padding:3px 8px;font-size:var(--fs11);cursor:pointer">🗑️</button></td></tr>';
+    }).join('')+'</tbody></table></div>';
+}
+async function kanDraftDel(id){
+  if(APP_ROLE!=='admin')return;
+  const r=(D.kanDraft||[]).find(x=>x&&x.id===id);if(!r)return;
+  if(!confirm('ลบ บ่อ '+(r.pondName||'')+' ลง '+fD(r.startDate)+' ออกจากรายการที่เก็บไว้?'))return;
+  D.kanDraft=(D.kanDraft||[]).filter(x=>x&&x.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);   // กันของเด้งกลับตอนซิงค์จากอีกเครื่อง
+  await save();renderKanDraft();
+}
+async function kanDraftClear(){
+  if(APP_ROLE!=='admin')return;
+  const rows=(D.kanDraft||[]);
+  if(!rows.length)return;
+  if(!confirm('ล้างรายการที่เก็บไว้ทั้งหมด '+rows.length+' รอบ?'))return;
+  D.deletedIds=D.deletedIds||[];rows.forEach(r=>{if(r&&r.id)D.deletedIds.push(r.id);});
+  D.kanDraft=[];
+  await save();renderKanDraft();
+  showMsg('kan-msg','warn','ล้างรายการที่เก็บไว้แล้ว');
 }
 function initMedProto(){_mpDirty=false;mpRender();}
 function mpRender(){
