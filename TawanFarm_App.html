@@ -15924,13 +15924,45 @@ function plSharedItems(rows,fuelOnly){
   });
   return[...m.values()].sort((a,b)=>b.amt-a.amt);
 }
+// ── แยก "อาหารกุ้ง" ตามเบอร์ จากบันทึกให้อาหารรายวันของรอบนั้น ──
+// ⚠️ อาหารไม่ได้มาจาก D.inventoryLog เหมือนหมวดอื่น — ต้นทุนอาหารคิดจาก feedLog ของรอบ (กก. ÷ 25 × ราคา/กระสอบ)
+//    ต้องเดินสูตรให้ตรงกับ pondFeedCost() ทุกกิ่ง ไม่งั้นผลรวมรายเบอร์จะไม่เท่าตัวเลขในตาราง
+//    แถวที่ไม่ได้ผูกสินค้า (หรือผูกไว้แต่สินค้าถูกลบ) ตกไปใช้ "ราคาเฉลี่ยทุกเบอร์" — คลาดได้ถึง 20% (entry #262)
+//    จึงแยกออกมาเป็นแถวของตัวเอง ให้เห็นชัดว่ามีอาหารกี่ กก. ที่คิดด้วยราคาเดา ไม่ใช่ราคาจริง
+function plFeedItems(rows){
+  const m=new Map();
+  const feedItems=(D.inventoryItems||[]).filter(i=>i.category==='feed'&&i.unitPrice);
+  const avgPerKg=feedItems.length?feedItems.reduce((s,i)=>s+i.unitPrice,0)/feedItems.length/25:0;
+  rows.forEach(r=>{
+    const log=(r&&r._crop&&r._crop.feedLog)||[];
+    log.forEach(f=>{
+      const kg=parseFloat(f&&f.totalFeed)||0;
+      if(!kg)return;
+      let name='⚠️ ไม่ได้ผูกสินค้า — ใช้ราคาเฉลี่ยทุกเบอร์',amt=kg*avgPerKg;
+      if(f.stockItemId){
+        const it=(D.inventoryItems||[]).find(i=>i.id===f.stockItemId);
+        if(it){name=it.name||'-';amt=(kg/25)*(it.unitPrice||0);}
+      }
+      const o=m.get(name)||{name,unit:'กก.',qty:0,amt:0,times:0,last:''};
+      o.qty+=kg;o.amt+=amt;o.times++;
+      if((f.date||'')>o.last)o.last=f.date||'';
+      m.set(name,o);
+    });
+  });
+  return[...m.values()].sort((a,b)=>b.amt-a.amt);
+}
 const _plNum=v=>(Math.round(v*100)/100).toLocaleString(undefined,{maximumFractionDigits:2});
 // ── กล่องรายการย่อยที่กางออกมา ──
 // ⚠️ shown = ตัวเลขที่โชว์ในตาราง (ของที่บันทึกไว้ตอนปิดรอบ ซึ่งแก้ด้วยมือได้)
 //    ถ้าผลรวมรายการเบิกไม่เท่า shown ต้องบอกส่วนต่างตรงๆ ห้ามปรับรายการย่อยให้บวกได้พอดี
-function plDetailHTML(items,shown){
+// opt: เปลี่ยนคำเรียกให้ตรงกับที่มาของข้อมูล (ค่าเริ่มต้น = รายการเบิกจากสต็อก)
+//   อาหารมาจากบันทึกให้อาหารรายวัน ไม่ใช่การเบิกของ — ถ้าใช้คำว่า "เบิก" พี่จะหาไม่เจอว่าต้องไปแก้ที่หน้าไหน
+function plDetailHTML(items,shown,opt){
+  opt=opt||{};
+  const L={last:opt.last||'เบิกล่าสุด',sumWord:opt.sumWord||'ผลรวมรายการเบิก',times:opt.times||'ครั้ง',
+    empty:opt.empty||'ไม่พบรายการเบิกในช่วงของรอบเหล่านี้ — ตัวเลขนี้มาจากการกรอกด้วยมือตอนปิดรอบ'};
   const pad='padding:9px 12px';
-  if(!items.length)return`<div style="${pad};color:var(--tx3);font-size:var(--fs115)">ไม่พบรายการเบิกในช่วงของรอบเหล่านี้ — ตัวเลขนี้มาจากการกรอกด้วยมือตอนปิดรอบ</div>`;
+  if(!items.length)return`<div style="${pad};color:var(--tx3);font-size:var(--fs115)">${L.empty}</div>`;
   const sum=items.reduce((s,i)=>s+i.amt,0);
   const diff=Math.round(shown)-Math.round(sum);
   const th='text-align:right;font-weight:600;font-size:var(--fs10);color:var(--tx3);padding:4px 6px';
@@ -15939,13 +15971,13 @@ function plDetailHTML(items,shown){
     +`<td style="${td}">${_plNum(i.qty)} ${i.unit||''}</td>`
     +`<td style="${td}">${i.qty>0?_plNum(i.amt/i.qty):'-'}</td>`
     +`<td style="${td};font-weight:600">${Math.round(i.amt).toLocaleString()}</td>`
-    +`<td style="${td};color:var(--tx3)">${i.times} ครั้ง · ${fD(i.last)}</td></tr>`).join('');
+    +`<td style="${td};color:var(--tx3)">${i.times} ${L.times} · ${fD(i.last)}</td></tr>`).join('');
   const foot=diff!==0?`<div style="${pad};font-size:var(--fs10);color:var(--w);border-top:1px dashed var(--bd)">`
-    +`ผลรวมรายการเบิก ${Math.round(sum).toLocaleString()} · ที่บันทึกตอนปิดรอบ ${Math.round(shown).toLocaleString()} · `
+    +`${L.sumWord} ${Math.round(sum).toLocaleString()} · ที่บันทึกตอนปิดรอบ ${Math.round(shown).toLocaleString()} · `
     +`ส่วนต่าง ${diff>0?'+':''}${diff.toLocaleString()} (กรอก/แก้ด้วยมือ ไม่ได้เกลี่ยลงรายการย่อย)</div>`:'';
   return`<div style="${pad};padding-bottom:0"><table style="width:100%;border-collapse:collapse">`
     +`<thead><tr><th style="text-align:left;font-weight:600;font-size:var(--fs10);color:var(--tx3);padding:4px 6px">สินค้า</th>`
-    +`<th style="${th}">จำนวน</th><th style="${th}">฿/หน่วย</th><th style="${th}">รวม (฿)</th><th style="${th}">เบิกล่าสุด</th></tr></thead>`
+    +`<th style="${th}">จำนวน</th><th style="${th}">฿/หน่วย</th><th style="${th}">รวม (฿)</th><th style="${th}">${L.last}</th></tr></thead>`
     +`<tbody>${body}<tr style="border-top:1px solid var(--bd)"><td style="padding:4px 6px;font-size:var(--fs115);font-weight:700">รวม ${items.length} รายการ</td>`
     +`<td></td><td></td><td style="${td};font-weight:700">${Math.round(sum).toLocaleString()}</td><td></td></tr></tbody></table></div>${foot}`;
 }
@@ -15995,7 +16027,10 @@ function renderPLCostChart(rows){
   //    แถวที่ไม่มีรายการสินค้าให้ย้อนดู (ลูกกุ้ง/อาหาร/ค่าแรง/ค่าไฟ/ค่าจับ/ส่วนแบ่ง) = null → กดไม่ได้ ไม่ต้องหลอกให้กด
   const medDetails=MED_SUBCATS.map(sc=>plDetailHTML(plCatItems(rows,sc.key),_med.out[sc.key]||0))
     .concat(medRest>0?[null]:[]);
-  const details=[null,null,null,...medDetails,
+  const details=[null,null,
+    plDetailHTML(plFeedItems(rows),totFeed,{last:'ให้ล่าสุด',times:'วัน',sumWord:'ผลรวมจากบันทึกให้อาหาร',
+      empty:'ไม่พบบันทึกให้อาหารของรอบเหล่านี้ — ตัวเลขนี้มาจากการกรอกด้วยมือตอนปิดรอบ'}),   // อาหารกุ้ง — แยกตามเบอร์
+    ...medDetails,
     plDetailHTML(plCatItems(rows,'lime'),totLime),          // ปูน
     null,null,                                              // ค่าแรง · ค่าไฟฟ้า
     plDetailHTML(plSharedItems(rows,true),totFuel),         // น้ำมัน (ของแชร์)
