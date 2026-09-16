@@ -709,6 +709,35 @@ html[data-uisize="xl"]{--ui-scale:1.25}
 .cr-r-ar{color:var(--tx3);text-align:center}
 .cr-r-dy{font-weight:700;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
 .cr-r-none{grid-column:1/-1;color:var(--tx3);font-style:italic}
+/* ── ตารางที่พักข้อมูลของกัน — หน้าตาเหมือนชีต · ใช้บนคอมกับ iPad ── */
+.kan-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #c9cfd6;border-radius:8px;background:#fff}
+.kan-tbl{border-collapse:separate;border-spacing:0;font-size:calc(11.5px * var(--ui-scale))}
+.kan-tbl td{border-right:1px solid #d6dbe1;border-bottom:1px solid #d6dbe1;padding:0;white-space:nowrap;background:#fff}
+.kan-c{border:none;background:transparent;font:inherit;color:inherit;padding:6px 7px;width:104px;min-width:104px;border-radius:0}
+/* ⚠️ iPad: ช่องกรอกต้องสูงพอให้แตะติด และ font >=16px กัน Safari ซูมหน้าจอเองตอนโฟกัส */
+@media (pointer:coarse){.kan-c{padding:9px 7px;font-size:16px}}
+.kan-c:focus{outline:2px solid var(--p);outline-offset:-2px;background:var(--pl)}
+.kan-tbl td.n .kan-c{text-align:right;font-variant-numeric:tabular-nums;width:88px;min-width:88px}
+.kan-blk td{background:#f2d7e3;font-weight:700;text-align:center}
+.kan-blk-in{width:auto;min-width:240px;text-align:center;font-weight:700}
+.kan-hdr td{background:#dff0dc;font-weight:600;text-align:center;color:#2c4a2c;
+  font-size:calc(10px * var(--ui-scale));padding:5px 7px}
+.kan-grp td{background:#fafafa;font-weight:700}
+.kan-grp .kan-c{font-weight:700}
+.kan-sum{font-size:calc(9.5px * var(--ui-scale));color:var(--w);padding:0 7px 4px;text-align:right}
+/* ล็อกคอลัมน์บ่อไว้ซ้ายสุด — เลื่อนตารางแล้วยังรู้ว่าอยู่แถวไหน */
+.kan-tbl tr>td:first-child{position:sticky;left:0;z-index:2;border-right:2px solid #c9cfd6}
+.kan-blk td:first-child{background:#f2d7e3}
+.kan-hdr td:first-child{background:#dff0dc}
+.kan-grp td:first-child{background:#fafafa}
+.kan-row td:first-child{background:#fff}
+.kan-add td{background:var(--sf2);padding:5px 8px}
+.kan-add td:first-child{background:var(--sf2)}
+.kan-addbtn{color:var(--p);font-weight:600;cursor:pointer;font-size:calc(11.5px * var(--ui-scale))}
+.kan-addbtn:hover{text-decoration:underline}
+.kan-act{text-align:center}
+.kan-x{cursor:pointer;opacity:.5;padding:0 6px;font-size:calc(12px * var(--ui-scale))}
+.kan-x:hover{opacity:1}
 /* บรรทัดรอบที่กดดูรายละเอียดได้ — ไฮไลต์ทั้งแถวตอน hover ผ่านตัวห่อ display:contents ไม่ได้ จึงทำทีละช่อง */
 .cr-r-tap{cursor:pointer}
 div:hover>.cr-r-tap{background:var(--pl)}
@@ -1504,13 +1533,13 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     </div>
     <div id="kan-save-msg" style="margin-top:10px"></div>
   </div>
-  <div class="card" id="kan-draft-card">
+  <div class="card" id="kan-sheet-card">
     <div class="card-t" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <span style="white-space:nowrap" id="kan-draft-t">📦 ข้อมูลที่เก็บไว้ในหน้านี้</span>
-      <button class="btn btn-s" type="button" onclick="kanDraftClear()" style="margin-left:auto;font-size:var(--fs11);padding:4px 10px">🗑️ ล้างทั้งหมด</button>
+      <span style="white-space:nowrap" id="kan-sheet-t">📋 ตารางข้อมูล</span>
+      <button class="btn btn-p" type="button" onclick="kanAddBlock()" style="margin-left:auto;font-size:var(--fs11);padding:4px 10px;white-space:nowrap">+ เพิ่มบล็อกใหม่</button>
     </div>
-    <div class="card-sub" style="margin-bottom:10px">อยู่ในหน้านี้เท่านั้น · หน้าอื่นในแอปยังไม่เห็นข้อมูลชุดนี้</div>
-    <div id="kan-draft"></div>
+    <div class="card-sub" style="margin-bottom:10px">แตะช่องไหนก็แก้ได้เลย บันทึกให้อัตโนมัติ · อยู่ในหน้านี้เท่านั้น หน้าอื่นยังไม่เห็น</div>
+    <div id="kan-sheet"></div>
   </div>
 </div>
 <!-- MED PROTOCOL — หน้าต่างขยายเต็มจอ อ่าน/พิมพ์ข้อความยาวๆ ได้สบายตาบนมือถือ -->
@@ -11311,6 +11340,7 @@ function mpDirty(){_mpDirty=true;}
 //    histRecYear() จะ fallback ไปใช้ cropYear เอง (entry #266/#267) และ renderPL กรองรอบที่ไม่มี closeDate ออก
 //    ผลคือข้อมูลเข้าหน้าโรงเพาะฟัก/ประวัติ แต่ไม่ไปกวนตัวเลขเงิน ซึ่งถูกแล้วเพราะชีตไม่มีต้นทุน
 let _kanRows=[];
+let _kanBlockLabel='';   // ชื่อบล็อกที่อ่านได้จากหัวที่วางมา เช่น "แผนลงกุ้งปี 69/1"
 // ── ชื่อบ่อในชีตเขียนได้หลายแบบ: A19[4.2] · A19.[4.2] · A 23[4.2] · A.9[4.0] → ตัดเหลือตัวอักษร+เลข ──
 function kanPondKey(raw){
   const m=String(raw||'').match(/^\s*([A-Za-zก-๙]+)\s*\.?\s*(\d+)/);
@@ -11349,13 +11379,22 @@ function kanSplit(line){
 function kanParse(){
   const txt=(document.getElementById('kan-in')?.value)||'';
   const lines=txt.split(/\r?\n/);
-  let yearFromText='',curHat='';
+  let yearFromText='',curHat='',blockLabel='',curGrp=null;
   const out=[];
   lines.forEach((line,i)=>{
     if(!line.trim())return;
     // หัวบล็อก "แผนลงกุ้งปี 69/1" → อ่านปีให้เอง
     const hb=line.match(/แผนลงกุ้งปี\s*(\d{2,4})/);
-    if(hb){let y=parseInt(hb[1]);if(y<100)y+=2500;yearFromText=String(y);return;}
+    if(hb){let y=parseInt(hb[1]);if(y<100)y+=2500;yearFromText=String(y);
+      // อ่านชื่อบล็อกเต็มเอง ไม่ใช้ regex — เก็บเฉพาะเลข / และช่องว่าง ต่อจากคำว่า "แผนลงกุ้งปี"
+      {const KEY="แผนลงกุ้งปี";const ix=line.indexOf(KEY);
+       if(ix>=0){let t="";
+         for(let k=ix+KEY.length;k<line.length;k++){
+           const ch=line[k];
+           if(ch===" "||ch==="/"||(ch>="0"&&ch<="9"))t+=ch;else break;
+         }
+         blockLabel=(KEY+t).trim();}}
+      return;}
     const c=kanSplit(line);
     if(!c.length)return;
     const pondRaw=(c[0]||'').trim();
@@ -11369,8 +11408,10 @@ function kanParse(){
     if(!kanPondKey(pondRaw)&&!start){
       // ⚠️ แถวหัวกลุ่มถือชื่อโรงเพาะฟักของบ่อที่อยู่ใต้มัน (ช่อง "กุ้งมาจาก") — เก็บไว้ก่อนข้าม
       //    ถ้าข้ามเฉยๆ บ่อทั้งกลุ่มจะกลายเป็น "ไม่ระบุ" เพราะแถวบ่อใส่ชื่อบ่อซ้ำในช่องนั้น
-      const gh=(c[10]||'').trim()||pondRaw;
+      // แถวหัวกลุ่มถือทั้งชื่อ PL (ช่องแรก) · ชื่อโรงเพาะฟัก (ช่อง "กุ้งมาจาก") · ยอดสั่ง/ยอดนับ รวมของกลุ่ม
+      const gh=(c[10]||'').trim();
       if(gh&&!kanPondKey(gh))curHat=gh;
+      if(pondRaw||gh)curGrp={label:pondRaw||gh,hat:curHat,order:kanNum(c[2]),count:kanNum(c[3])};
       return;
     }
     const order=kanNum(c[2]),count=kanNum(c[3]),caught=kanNum(c[4]),kg=kanNum(c[5]),size=kanNum(c[6]);
@@ -11385,10 +11426,10 @@ function kanParse(){
     if(!pond)errs.push('ไม่พบบ่อ "'+pondRaw+'" ในแอป');
     if(!start)errs.push('อ่านวันลงกุ้งไม่ได้');
     if(!order)errs.push('ไม่มียอดสั่ง');
-    out.push({line:i+1,pondRaw,pond,start,close,order,count,caught,kg,size,hat,errs,
+    out.push({line:i+1,pondRaw,pond,start,close,order,count,caught,kg,size,hat,errs,grp:curGrp,
       raw:c.slice(0,12)});
   });
-  return{rows:out,yearFromText};
+  return{rows:out,yearFromText,blockLabel};
 }
 function kanYearBE(){
   const v=document.getElementById('kan-year')?.value;
@@ -11418,11 +11459,12 @@ function initKan(){
     const ys=[];for(let y=cur+1;y>=cur-8;y--)ys.push(y);
     sel.innerHTML=ys.map(y=>`<option value="${y}"${y===cur?' selected':''}>${y} พ.ศ.</option>`).join('');
   }
-  renderKanDraft();
+  renderKanSheet();
 }
 function kanPreview(){
   if(APP_ROLE!=='admin')return;
-  const{rows,yearFromText}=kanParse();
+  const{rows,yearFromText,blockLabel}=kanParse();
+  _kanBlockLabel=blockLabel||'';
   const sel=document.getElementById('kan-year');
   if(yearFromText&&sel){const want=String(parseInt(yearFromText));
     if([...sel.options].some(o=>o.value===want))sel.value=want;}
@@ -11493,95 +11535,213 @@ function kanSyncSaveBtn(){
 // ⚠️ เก็บลง D.kanDraft เท่านั้น — **ห้ามเขียน p.cropHistory จากหน้านี้**
 //    พี่สั่งให้แยกที่พักข้อมูลของกันออกจากแอปหลักก่อน จะได้กรอกได้อิสระโดยไม่กระทบตัวเลขที่ใช้งานจริง
 //    เดิมเขียนทับ cropHistory ทั้งก้อน ซึ่งลบต้นทุน/วันปิดบ่อ/บันทึกอาหาร/ผลแล็บของรอบนั้นทิ้งหมด
+// ══════════════ ที่พักข้อมูลของกัน — โครงเดียวกับชีต: บล็อก → กลุ่ม → บ่อ ══════════════
+// ⚠️ เก็บลง D.kanDraft เท่านั้น ห้ามเขียน p.cropHistory จากหน้านี้ (entry #272)
+// ⚠️ ของเดิม (#271/#272) เก็บเป็นรายการแบนๆ — ต้อง migrate เข้าบล็อกแรกให้ ไม่งั้นของที่กรอกไว้หาย
+const KAN_COLS=["บ่อ","ลงบ่อเลี้ยง","ยอดสั่ง","ยอดนับ","ยอดจับ","น.น.กุ้ง","ไซร์กุ้ง 1","ไซร์กุ้ง 2","ไซร์กุ้ง 3","ไซร์กุ้ง 4","กุ้งมาจาก","รอด"];
+function kanUid(pfx){return pfx+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function kanBlocks(){
+  if(!Array.isArray(D.kanDraft))D.kanDraft=[];
+  // migrate: รายการแบนๆ ของเดิม → ยัดเข้าบล็อกเดียว
+  const flat=D.kanDraft.filter(x=>x&&!x.groups&&x.pondName);
+  if(flat.length){
+    const blk={id:kanUid("kb_"),label:"นำเข้าก่อนหน้า",groups:[{id:kanUid("kg_"),label:"",hatchery:"",order:null,count:null,
+      rows:flat.map(r=>({id:r.id||kanUid("kr_"),pond:r.pondName||"",date:r.startDate||"",order:r.order,count:r.count,
+        caught:r.caught,kg:r.kg,sizes:[r.size,null,null,null],from:r.pondName||"",
+        surv:r.survOrder!=null?(r.survOrder+"%"):"",partials:[]}))}]};
+    D.kanDraft=D.kanDraft.filter(x=>x&&x.groups).concat([blk]);
+  }
+  return D.kanDraft.filter(x=>x&&Array.isArray(x.groups));
+}
+function kanFindRow(rid){
+  for(const b of kanBlocks())for(const g of b.groups){const r=(g.rows||[]).find(x=>x&&x.id===rid);if(r)return{b,g,r};}
+  return null;
+}
+function kanFindGroup(gid){
+  for(const b of kanBlocks()){const g=(b.groups||[]).find(x=>x&&x.id===gid);if(g)return{b,g};}
+  return null;
+}
+let _kanSaveT=null;
+function kanTouch(){clearTimeout(_kanSaveT);_kanSaveT=setTimeout(()=>{save();},700);}
+// ⚠️ แก้ค่าในโมเดลอย่างเดียว ห้าม re-render ทั้งตาราง — โฟกัสจะเด้งออกจากช่องที่กำลังพิมพ์
+function kanEdit(kind,id,field,val,idx){
+  if(APP_ROLE!=='admin')return;
+  const v=(val==null?'':String(val)).trim();
+  if(kind==='blk'){const b=kanBlocks().find(x=>x.id===id);if(b)b.label=v;}
+  else if(kind==='grp'){const f=kanFindGroup(id);if(!f)return;
+    if(field==='order'||field==='count')f.g[field]=kanNum(v);else f.g[field]=v;}
+  else{const f=kanFindRow(id);if(!f)return;
+    if(field==='size'){f.r.sizes=f.r.sizes||[];f.r.sizes[idx]=kanNum(v);}
+    else if(field==='partial'){f.r.partials=f.r.partials||[];f.r.partials[idx]=kanNum(v);}
+    else if(['order','count','caught','kg'].includes(field))f.r[field]=kanNum(v);
+    else f.r[field]=v;}
+  kanTouch();
+  kanSyncGroupSums();
+}
+// โชว์ผลรวมจริงของบ่อในกลุ่ม ข้างช่องที่กันพิมพ์เอง — ไม่ไปแก้ค่าให้ (ในชีตจริงไม่สม่ำเสมอ บางกลุ่มไม่ใช่ผลรวม)
+function kanSyncGroupSums(){
+  kanBlocks().forEach(b=>(b.groups||[]).forEach(g=>{
+    ['order','count'].forEach(f=>{
+      const el=document.getElementById('kgs-'+g.id+'-'+f);if(!el)return;
+      const sum=(g.rows||[]).reduce((a,r)=>a+(parseFloat(r&&r[f])||0),0);
+      const typed=parseFloat(g[f])||0;
+      if(!sum||Math.round(sum)===Math.round(typed)){el.textContent='';return;}
+      el.textContent='รวมบ่อ '+Math.round(sum).toLocaleString();
+    });
+  }));
+}
+async function kanAddBlock(){
+  if(APP_ROLE!=='admin')return;
+  const yBE=yearBE(new Date().getFullYear());
+  const name=prompt('ชื่อบล็อกใหม่ (เช่น แผนลงกุ้งปี '+String(yBE).slice(-2)+'/3)','แผนลงกุ้งปี '+String(yBE).slice(-2)+'/');
+  if(name===null)return;
+  if(!Array.isArray(D.kanDraft))D.kanDraft=[];
+  D.kanDraft.push({id:kanUid('kb_'),label:(name||'').trim()||'บล็อกใหม่',
+    groups:[{id:kanUid('kg_'),label:'',hatchery:'',order:null,count:null,rows:[]}]});
+  await save();renderKanSheet();
+}
+async function kanAddGroup(bid){
+  if(APP_ROLE!=='admin')return;
+  const b=kanBlocks().find(x=>x.id===bid);if(!b)return;
+  if(!Array.isArray(b.groups))b.groups=[];
+  b.groups.push({id:kanUid('kg_'),label:'',hatchery:'',order:null,count:null,rows:[]});
+  await save();renderKanSheet();
+}
+async function kanAddRow(gid){
+  if(APP_ROLE!=='admin')return;
+  const f=kanFindGroup(gid);if(!f)return;
+  if(!Array.isArray(f.g.rows))f.g.rows=[];
+  f.g.rows.push({id:kanUid('kr_'),pond:'',date:'',order:null,count:null,caught:null,kg:null,
+    sizes:[null,null,null,null],from:'',surv:'',partials:[]});
+  await save();renderKanSheet();
+}
+async function kanDelBlock(bid){
+  if(APP_ROLE!=='admin')return;
+  const b=kanBlocks().find(x=>x.id===bid);if(!b)return;
+  const n=(b.groups||[]).reduce((a,g)=>a+((g.rows||[]).length),0);
+  if(!confirm('ลบบล็อก "'+(b.label||'')+'" ทั้งหมด?'+String.fromCharCode(10)+'มีบ่ออยู่ '+n+' แถว'))return;
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(b.id);
+  D.kanDraft=(D.kanDraft||[]).filter(x=>x&&x.id!==bid);
+  await save();renderKanSheet();
+}
+async function kanDelGroup(gid){
+  if(APP_ROLE!=='admin')return;
+  const f=kanFindGroup(gid);if(!f)return;
+  if((f.g.rows||[]).length&&!confirm('ลบกลุ่มนี้พร้อมบ่อ '+(f.g.rows||[]).length+' แถว?'))return;
+  f.b.groups=(f.b.groups||[]).filter(x=>x&&x.id!==gid);
+  await save();renderKanSheet();
+}
+async function kanDelRow(rid){
+  if(APP_ROLE!=='admin')return;
+  const f=kanFindRow(rid);if(!f)return;
+  if(!confirm('ลบแถว '+(f.r.pond||'(ยังไม่ได้ใส่ชื่อบ่อ)')+'?'))return;
+  f.g.rows=(f.g.rows||[]).filter(x=>x&&x.id!==rid);
+  await save();renderKanSheet();
+}
+// ── วาดตาราง ──
+function kanCell(kind,id,field,val,opt){
+  const Q=String.fromCharCode(39);   // ' — สร้างสตริง onclick โดยไม่ต้องหนี quote ซ้อนชั้น
+  opt=opt||{};
+  const num=!!opt.num,idx=opt.idx==null?'':opt.idx;
+  const v=(val==null?'':val);
+  const disp=num&&v!==''&&!isNaN(v)?Number(v).toLocaleString():v;
+  const w=opt.w?(' style="width:'+opt.w+'px;min-width:'+opt.w+'px"'):'';
+  return '<input class="kan-c'+(num?' n':'')+'"'+w+' value="'+mpEsc(String(disp))+'"'+
+    (num?' inputmode="decimal"':'')+
+    ' onchange="kanEdit('+Q+kind+Q+','+Q+id+Q+','+Q+field+Q+',this.value'+(idx===''?'':(','+idx))+')">';
+}
+function renderKanSheet(){
+  const Q=String.fromCharCode(39);   // ' — สร้างสตริง onclick โดยไม่ต้องหนี quote ซ้อนชั้น
+  const el=document.getElementById('kan-sheet');if(!el)return;
+  const blocks=kanBlocks();
+  const t=document.getElementById('kan-sheet-t');
+  const nRows=blocks.reduce((a,b)=>a+(b.groups||[]).reduce((x,g)=>x+((g.rows||[]).length),0),0);
+  if(t)t.textContent='📋 ตารางข้อมูล'+(nRows?(' — '+nRows+' แถว'):'');
+  if(!blocks.length){
+    el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล — กด "+ เพิ่มบล็อกใหม่" หรือวางแถวจากชีตด้านบน</p>';
+    return;
+  }
+  // จำนวนช่องพาเชียลของแต่ละกลุ่ม = มากสุดที่ใช้จริง แต่ไม่ต่ำกว่า 4 (บางบ่อพาเชียลเกิน 4 ครั้ง)
+  const html=blocks.map(b=>{
+    const gs=(b.groups||[]);
+    const maxP=Math.max(4,...gs.map(g=>Math.max(0,...(g.rows||[]).map(r=>(r.partials||[]).length))));
+    const ncol=13+maxP;
+    let out='<tr class="kan-blk"><td colspan="'+ncol+'">'+
+      '<input class="kan-c kan-blk-in" value="'+mpEsc(b.label||'')+'" onchange="kanEdit('+Q+'blk'+Q+','+Q+b.id+Q+','+Q+'label'+Q+',this.value)">'+
+      '<span class="kan-x" onclick="kanDelBlock('+Q+b.id+Q+')" title="ลบบล็อกนี้">🗑️</span></td></tr>';
+    gs.forEach(g=>{
+      out+='<tr class="kan-hdr">'+KAN_COLS.map(c=>'<td>'+c+'</td>').join('')+
+        Array.from({length:maxP},(_,i)=>'<td>พาเชียน'+(i+1)+'/kg</td>').join('')+'<td></td></tr>';
+      out+='<tr class="kan-grp">'+
+        '<td>'+kanCell('grp',g.id,'label',g.label)+'</td>'+
+        '<td></td>'+
+        '<td class="n">'+kanCell('grp',g.id,'order',g.order,{num:true,w:80})+'<div class="kan-sum" id="kgs-'+g.id+'-order"></div></td>'+
+        '<td class="n">'+kanCell('grp',g.id,'count',g.count,{num:true,w:80})+'<div class="kan-sum" id="kgs-'+g.id+'-count"></div></td>'+
+        '<td colspan="6"></td>'+
+        '<td>'+kanCell('grp',g.id,'hatchery',g.hatchery,{w:92})+'</td>'+
+        '<td colspan="'+(1+maxP)+'"></td>'+
+        '<td class="kan-act"><span class="kan-x" onclick="kanDelGroup('+Q+g.id+Q+')" title="ลบกลุ่มนี้">🗑️</span></td></tr>';
+      (g.rows||[]).forEach(r=>{
+        out+='<tr class="kan-row">'+
+          '<td>'+kanCell('row',r.id,'pond',r.pond)+'</td>'+
+          '<td>'+kanCell('row',r.id,'date',r.date,{w:84})+'</td>'+
+          '<td class="n">'+kanCell('row',r.id,'order',r.order,{num:true,w:80})+'</td>'+
+          '<td class="n">'+kanCell('row',r.id,'count',r.count,{num:true,w:80})+'</td>'+
+          '<td class="n">'+kanCell('row',r.id,'caught',r.caught,{num:true,w:80})+'</td>'+
+          '<td class="n">'+kanCell('row',r.id,'kg',r.kg,{num:true,w:72})+'</td>'+
+          [0,1,2,3].map(i=>'<td class="n">'+kanCell('row',r.id,'size',(r.sizes||[])[i],{num:true,idx:i,w:52})+'</td>').join('')+
+          '<td>'+kanCell('row',r.id,'from',r.from,{w:92})+'</td>'+
+          '<td class="n">'+kanCell('row',r.id,'surv',r.surv,{w:52})+'</td>'+
+          Array.from({length:maxP},(_,i)=>'<td class="n">'+kanCell('row',r.id,'partial',(r.partials||[])[i],{num:true,idx:i,w:74})+'</td>').join('')+
+          '<td class="kan-act"><span class="kan-x" onclick="kanDelRow('+Q+r.id+Q+')" title="ลบแถวนี้">🗑️</span></td></tr>';
+      });
+      out+='<tr class="kan-add"><td colspan="'+ncol+'">'+
+        '<span class="kan-addbtn" onclick="kanAddRow('+Q+g.id+Q+')">+ เพิ่มบ่อในกลุ่มนี้</span></td></tr>';
+    });
+    out+='<tr class="kan-add"><td colspan="'+ncol+'">'+
+      '<span class="kan-addbtn" onclick="kanAddGroup('+Q+b.id+Q+')">+ เพิ่มกลุ่มใหม่ในบล็อกนี้</span></td></tr>';
+    return out;
+  }).join('');
+  el.innerHTML='<div class="kan-wrap"><table class="kan-tbl"><tbody>'+html+'</tbody></table></div>';
+  kanSyncGroupSums();
+}
+// ── เก็บผลจากกล่อง "วางจากชีต" เข้าตาราง ──
+// ⚠️ ยังไม่แตะ p.cropHistory — เข้าที่พักอย่างเดียว
 async function kanImport(){
   if(APP_ROLE!=='admin')return;
-  const picked=_kanRows.filter(r=>r.pick&&r.pond&&r.start);
+  const picked=_kanRows.filter(r=>r.pick&&r.start);
   if(!picked.length){showMsg('kan-save-msg','warn','ยังไม่ได้ติ๊กแถวไหนเลย');return;}
   const yBE=kanYearBE();
-  if(!confirm('เก็บ '+picked.length+' รอบไว้ในหน้ากัน?'+String.fromCharCode(10)+'ยังไม่เข้าแอปหลัก ตัวเลขในหน้าอื่นไม่เปลี่ยน'))return;
+  if(!confirm('เก็บ '+picked.length+' แถวเข้าตาราง?'+String.fromCharCode(10)+'ยังไม่เข้าแอปหลัก ตัวเลขในหน้าอื่นไม่เปลี่ยน'))return;
   if(!Array.isArray(D.kanDraft))D.kanDraft=[];
-  let added=0,updated=0;
+  const label=_kanBlockLabel||('แผนลงกุ้งปี '+String(yBE||yearBE(new Date().getFullYear())).slice(-2));
+  let blk=kanBlocks().find(b=>b.label===label);
+  if(!blk){blk={id:kanUid('kb_'),label,groups:[]};D.kanDraft.push(blk);}
+  let n=0;
   picked.forEach(r=>{
-    const cyBE=r.close?yearBE(parseInt(r.close.slice(0,4))):(yBE||yearBE(parseInt(r.start.slice(0,4))));
-    const rel=(r.order||0)+Math.max(0,(r.count||0)-(r.order||0));
-    const rec={
-      id:'kan_'+r.pond.id+'_'+r.start,   // คงที่ข้ามเครื่อง — mergeArr ใช้ id เป็นกุญแจ
-      pondId:r.pond.id,pondName:r.pond.name,
-      startDate:r.start,closeDate:r.close||null,cropYearBE:cyBE,
-      hatchery:(r.hat||'').trim(),
-      order:r.order||null,count:r.count||null,bonus:Math.max(0,(r.count||0)-(r.order||0))||0,
-      caught:r.caught!=null?r.caught:null,kg:r.kg!=null?r.kg:null,size:r.size!=null?r.size:null,
-      survOrder:(r.caught!=null&&r.order)?+(r.caught/r.order*100).toFixed(1):null,
-      survRelease:(r.caught!=null&&rel>0)?+(r.caught/rel*100).toFixed(1):null,
-      savedAt:today(),by:curUserLabel()
-    };
-    const i=D.kanDraft.findIndex(x=>x&&x.id===rec.id);
-    if(i>=0){D.kanDraft[i]=rec;updated++;}else{D.kanDraft.push(rec);added++;}
+    const hat=(r.hat||'').trim();
+    const gi=r.grp||null;
+    let g=(blk.groups||[]).find(x=>x&&(x.hatchery||'')===hat);
+    if(!g){g={id:kanUid('kg_'),label:(gi&&gi.label)||hat,hatchery:hat,
+      order:gi?gi.order:null,count:gi?gi.count:null,rows:[]};blk.groups=blk.groups||[];blk.groups.push(g);}
+    else if(gi){if(g.order==null)g.order=gi.order;if(g.count==null)g.count=gi.count;if(!g.label)g.label=gi.label;}
+    g.rows=g.rows||[];
+    const rec={id:kanUid("kr_"),pond:r.pondRaw||"",date:(r.raw&&r.raw[1])||"",
+      order:r.order,count:r.count,caught:r.caught,kg:r.kg,
+      sizes:[r.size,kanNum((r.raw||[])[7]),kanNum((r.raw||[])[8]),kanNum((r.raw||[])[9])],
+      from:(r.raw&&r.raw[10])||"",surv:(r.raw&&r.raw[11])||"",partials:[]};
+    const dup=g.rows.findIndex(x=>x&&x.pond===rec.pond&&x.date===rec.date);
+    if(dup>=0)g.rows[dup]=Object.assign(g.rows[dup],rec,{id:g.rows[dup].id});else{g.rows.push(rec);n++;}
   });
   try{
     await save();
     kanCancelPreview();
-    showMsg('kan-msg','ok','✅ เก็บไว้แล้ว — ใหม่ '+added+' รอบ'+(updated?(' · อัปเดต '+updated+' รอบ'):'')+' · ยังไม่เข้าแอปหลัก');
-    showToast('เก็บไว้ในหน้ากันแล้ว',added+' รอบใหม่'+(updated?' · อัปเดต '+updated:''));
-    renderKanDraft();
+    showMsg('kan-msg','ok','✅ เก็บเข้าตารางแล้ว '+n+' แถว · ยังไม่เข้าแอปหลัก');
+    showToast('เก็บเข้าตารางแล้ว',n+' แถว');
+    renderKanSheet();
   }catch(e){
     showMsg('kan-msg','danger','บันทึกไม่สำเร็จ: '+(e&&e.message||e));
   }
-}
-// ── รายการที่เก็บไว้ (ยังไม่เข้าแอปหลัก) ──
-function kanDraftRows(){
-  // ⚠️ Firebase merge ไม่รับประกันลำดับ — ต้องเรียงที่นี่เสมอ (entry #247)
-  return(D.kanDraft||[]).slice().sort((a,b)=>String(b.startDate||'').localeCompare(String(a.startDate||'')));
-}
-function renderKanDraft(){
-  const el=document.getElementById('kan-draft');
-  const card=document.getElementById('kan-draft-card');
-  if(!el||!card)return;
-  const rows=kanDraftRows();
-  const t=document.getElementById('kan-draft-t');
-  if(t)t.textContent='📦 ข้อมูลที่เก็บไว้ในหน้านี้'+(rows.length?(' — '+rows.length+' รอบ'):'');
-  if(!rows.length){
-    el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:18px;font-style:italic">ยังไม่มีข้อมูลที่เก็บไว้ — วางแถวจากชีตด้านบนแล้วกดตรวจ</p>';
-    return;
-  }
-  const n=v=>v==null?'-':Math.round(v).toLocaleString();
-  el.innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr>'+
-    '<th>บ่อ</th><th>วันลง</th><th style="text-align:center">ปี</th><th style="text-align:right">ยอดสั่ง</th>'+
-    '<th style="text-align:right">แถม</th><th style="text-align:right">ผลผลิต</th><th style="text-align:right">ไซส์</th>'+
-    '<th style="text-align:right">รอด</th><th>โรงเพาะฟัก</th><th></th></tr></thead><tbody>'+
-    rows.map(r=>{
-      const inApp=(()=>{const p=pond(r.pondId);return p&&(p.cropHistory||[]).some(c=>c&&c.startDate===r.startDate);})();
-      return '<tr><td><b>บ่อ '+mpEsc(r.pondName||'')+'</b>'+
-        (inApp?'<div style="font-size:var(--fs10);color:var(--tx3)">แอปหลักมีรอบนี้แล้ว</div>':'')+'</td>'+
-        '<td style="white-space:nowrap">'+fD(r.startDate)+
-          (r.closeDate?'<div style="font-size:var(--fs10);color:var(--tx3)">จับ '+fD(r.closeDate)+'</div>':'')+'</td>'+
-        '<td style="text-align:center">'+(r.cropYearBE||'-')+'</td>'+
-        '<td style="text-align:right">'+n(r.order)+'</td>'+
-        '<td style="text-align:right">'+(r.order&&r.bonus?('+'+(r.bonus/r.order*100).toFixed(1)+'%'):'-')+'</td>'+
-        '<td style="text-align:right">'+n(r.kg)+'</td>'+
-        '<td style="text-align:right">'+(r.size!=null?r.size:'-')+'</td>'+
-        '<td style="text-align:right">'+(r.survOrder!=null?r.survOrder+'%':'-')+'</td>'+
-        '<td>'+mpEsc(r.hatchery||'-')+'</td>'+
-        '<td style="text-align:right"><button onclick="kanDraftDel('+String.fromCharCode(39)+r.id+String.fromCharCode(39)+')" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;padding:3px 8px;font-size:var(--fs11);cursor:pointer">🗑️</button></td></tr>';
-    }).join('')+'</tbody></table></div>';
-}
-async function kanDraftDel(id){
-  if(APP_ROLE!=='admin')return;
-  const r=(D.kanDraft||[]).find(x=>x&&x.id===id);if(!r)return;
-  if(!confirm('ลบ บ่อ '+(r.pondName||'')+' ลง '+fD(r.startDate)+' ออกจากรายการที่เก็บไว้?'))return;
-  D.kanDraft=(D.kanDraft||[]).filter(x=>x&&x.id!==id);
-  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);   // กันของเด้งกลับตอนซิงค์จากอีกเครื่อง
-  await save();renderKanDraft();
-}
-async function kanDraftClear(){
-  if(APP_ROLE!=='admin')return;
-  const rows=(D.kanDraft||[]);
-  if(!rows.length)return;
-  if(!confirm('ล้างรายการที่เก็บไว้ทั้งหมด '+rows.length+' รอบ?'))return;
-  D.deletedIds=D.deletedIds||[];rows.forEach(r=>{if(r&&r.id)D.deletedIds.push(r.id);});
-  D.kanDraft=[];
-  await save();renderKanDraft();
-  showMsg('kan-msg','warn','ล้างรายการที่เก็บไว้แล้ว');
 }
 function initMedProto(){_mpDirty=false;mpRender();}
 function mpRender(){
