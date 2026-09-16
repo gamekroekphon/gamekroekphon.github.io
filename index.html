@@ -739,6 +739,20 @@ html[data-uisize="xl"]{--ui-scale:1.25}
   width:96px;min-width:96px;border-radius:0}
 .kan-in:focus{outline:2px solid var(--p);outline-offset:-2px}
 .kan-g td.kan-sel{box-shadow:inset 0 0 0 2px var(--p)}
+/* แถบแท็บชีต — วางไว้ใต้ตารางเหมือนใน Google Sheets ที่กันใช้อยู่ */
+.kan-tabs{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:7px;
+  border-top:1px solid var(--bd);padding-top:7px}
+.kan-tab{border:1px solid var(--bd);border-bottom-color:transparent;background:var(--sf2);
+  border-radius:8px 8px 0 0;padding:6px 13px;font-size:calc(12.5px * var(--ui-scale));
+  cursor:pointer;user-select:none;white-space:nowrap;color:var(--tx2)}
+.kan-tab:hover{border-color:var(--p);color:var(--p)}
+.kan-tab.on{background:#fff;color:var(--p);font-weight:700;border-color:#c9cfd6;
+  box-shadow:inset 0 3px 0 var(--p)}
+.kan-tcar{margin-left:7px;opacity:.75;font-size:11px}
+.kan-tadd{background:transparent;border-style:dashed;border-bottom-style:dashed}
+.kan-smenu{display:flex;gap:7px;align-items:center;flex-wrap:wrap;background:var(--sf2);
+  border:1px solid var(--bd);border-radius:9px;padding:7px 9px;margin-top:7px}
+@media (pointer:coarse){.kan-tab{padding:9px 15px}}
 .kan-x:hover{opacity:1}
 /* บรรทัดรอบที่กดดูรายละเอียดได้ — ไฮไลต์ทั้งแถวตอน hover ผ่านตัวห่อ display:contents ไม่ได้ จึงทำทีละช่อง */
 .cr-r-tap{cursor:pointer}
@@ -1545,14 +1559,15 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <span class="kan-tlbl" id="kan-selinfo" style="margin-left:auto"></span>
     </div>
     <div style="font-size:var(--fs105);color:var(--tx3);margin:2px 0 10px">
-      แตะช่องเพื่อเลือก · แตะเลข <b>1 2 3</b> เลือกทั้งแถว · แตะ <b>A B C</b> เลือกทั้งคอลัมน์ · กด Shift แล้วแตะอีกช่อง = เลือกเป็นช่วง
+      แตะช่องเพื่อเลือก · แตะเลข <b>1 2 3</b> เลือกทั้งแถว · แตะ <b>A B C</b> เลือกทั้งคอลัมน์ · กด Shift แล้วแตะอีกช่อง = เลือกเป็นช่วง<br>แท็บชีตอยู่ใต้ตาราง · แตะ <b>+ เพิ่มชีต</b> เพื่อสร้างหน้าใหม่ · แตะ <b>▾</b> บนแท็บที่เปิดอยู่เพื่อเปลี่ยนชื่อ/ลบ
     </div>
     <div id="kan-grid"></div>
+    <div id="kan-tabs"></div>
     <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:11px">
       <button class="btn btn-s" type="button" onclick="kanAddRows(10)">+ เพิ่ม 10 แถว</button>
       <button class="btn btn-s" type="button" onclick="kanAddCols(4)">+ เพิ่ม 4 คอลัมน์</button>
       <span class="kan-tlbl" id="kan-size"></span>
-      <button class="btn btn-s" type="button" onclick="kanClearAll()" style="margin-left:auto;color:var(--d)">🗑️ ล้างตาราง</button>
+      <button class="btn btn-s" type="button" onclick="kanClearAll()" style="margin-left:auto;color:var(--d)">🗑️ ล้างชีตนี้</button>
     </div>
     <div id="kan-msg" style="margin-top:10px"></div>
   </div>
@@ -11356,22 +11371,42 @@ function mpDirty(){_mpDirty=true;}
 // ⚠️ เก็บเป็น "อาเรย์ของช่อง" ไม่ใช่ออบเจ็กต์ก้อนเดียว — mergeArr() ใช้ id เป็นกุญแจ
 //    ถ้าเก็บเป็นออบเจ็กต์ remote จะไม่ถูก merge เลย (mergeArr คืน local ทันทีเมื่อ remote ไม่ใช่อาเรย์)
 //    แล้วที่กันกรอกบน iPad จะทับของบนคอมหายทั้งก้อน
-const KAN_GRID_ID="kgrid";
-const KAN_DEF_ROWS=25,KAN_DEF_COLS=16,KAN_MAX_ROWS=300,KAN_MAX_COLS=40;
+const KAN_GRID_ID="kgrid";   // ชีตแรก — คง id เดิมไว้ ของที่กรอกไปแล้วจะไม่หายตอนเพิ่มระบบแท็บ
+const KAN_DEF_ROWS=25,KAN_DEF_COLS=16,KAN_MAX_ROWS=300,KAN_MAX_COLS=40,KAN_MAX_SHEETS=20;
 const KAN_BG=["","#f2d7e3","#dff0dc","#fff3cd","#dbeafe","#fde2e1","#e9e3f7","#e5e7eb"];
 const KAN_FG=["#1F2937","#B91C1C","#15803D","#1D4ED8","#B45309","#5F6670"];
 const KAN_FS_MIN=9,KAN_FS_MAX=24,KAN_FS_DEF=12;
 let _kanSel=null;   // {r1,c1,r2,c2} ช่วงที่เลือกอยู่
+// แท็บที่เปิดอยู่เป็นเรื่องของเครื่องนี้เครื่องเดียว ไม่ sync ขึ้น Firebase
+// กันบน iPad กับพี่บนคอม เปิดคนละชีตพร้อมกันได้ ไม่แย่งกัน
+let _kanCur=null, _kanMenu=false;
 function kanArr(){if(!Array.isArray(D.kanDraft))D.kanDraft=[];return D.kanDraft;}
+function kanIsSheet(x){return !!x&&(x.id===KAN_GRID_ID||String(x.id).indexOf('ks_')===0);}
+// ⚠️ Firebase สลับลำดับอาเรย์ได้ ต้องเรียงตอนแสดงผลเสมอ (entry #247)
+function kanSheets(){
+  const a=kanArr().filter(kanIsSheet);
+  if(!a.length){
+    const g={id:KAN_GRID_ID,name:'ชีต 1',ord:0,rows:KAN_DEF_ROWS,cols:KAN_DEF_COLS};
+    kanArr().push(g);a.push(g);
+  }
+  a.forEach((g,i)=>{
+    if(!(g.ord>=0))g.ord=i;
+    if(!(g.rows>0))g.rows=KAN_DEF_ROWS;
+    if(!(g.cols>0))g.cols=KAN_DEF_COLS;
+    if(!g.name)g.name='ชีต '+(i+1);
+  });
+  return a.sort((x,y)=>(x.ord-y.ord)||String(x.id).localeCompare(String(y.id)));
+}
 function kanGrid(){
-  const a=kanArr();
-  let g=a.find(x=>x&&x.id===KAN_GRID_ID);
-  if(!g){g={id:KAN_GRID_ID,rows:KAN_DEF_ROWS,cols:KAN_DEF_COLS};a.push(g);}
-  if(!(g.rows>0))g.rows=KAN_DEF_ROWS;
-  if(!(g.cols>0))g.cols=KAN_DEF_COLS;
+  const a=kanSheets();
+  let g=a.find(x=>x.id===_kanCur);
+  if(!g){g=a[0];_kanCur=g.id;}
   return g;
 }
-function kanCellId(r,c){return "kc_"+r+"_"+c;}
+// ช่องของแต่ละชีตใช้คำนำหน้าคนละแบบ — ชีตแรก kc_2_3 · ชีต ks_2 เป็น kc2_2_3
+// ไม่ชนกัน เพราะชีตแรกมีตัวเลขสองชุด ส่วนชีตอื่นมีเลขชีตติดอยู่ในคำนำหน้า
+function kanPfx(g){return g.id===KAN_GRID_ID?'kc_':('kc'+String(g.id).slice(3)+'_');}
+function kanCellId(r,c){return kanPfx(kanGrid())+r+"_"+c;}
 function kanGet(r,c){return kanArr().find(x=>x&&x.id===kanCellId(r,c))||null;}
 function kanGetOrMake(r,c){
   let x=kanGet(r,c);
@@ -11485,20 +11520,101 @@ async function kanAddCols(n){
   const g=kanGrid();g.cols=Math.min(KAN_MAX_COLS,g.cols+n);
   await save();renderKanGrid();
 }
+// ═══ แท็บชีต — เพิ่ม / สลับ / เปลี่ยนชื่อ / ลบ ═══
+// id ชีตใหม่ต้องไม่ชนทั้ง id เดิม และคำนำหน้าช่องที่อาจยังค้างอยู่
+function kanNewSheetId(){
+  const ids=kanArr().map(x=>(x&&x.id)||'');
+  let n=2;
+  while(ids.indexOf('ks_'+n)>=0||ids.some(i=>String(i).indexOf('kc'+n+'_')===0))n++;
+  return 'ks_'+n;
+}
+function kanRememberTab(){try{localStorage.setItem('kanCurSheet',_kanCur||'');}catch(e){}}
+function kanGoSheet(id){
+  const g=kanSheets().find(x=>x.id===id);if(!g)return;
+  _kanCur=g.id;_kanSel=null;_kanMenu=false;
+  kanRememberTab();
+  renderKanGrid();
+}
+function kanToggleMenu(){_kanMenu=!_kanMenu;renderKanTabs();}
+async function kanAddSheet(){
+  if(APP_ROLE!=='admin')return;
+  const a=kanSheets();
+  if(a.length>=KAN_MAX_SHEETS){showMsg('kan-msg','warn','มีชีตครบ '+KAN_MAX_SHEETS+' ชีตแล้ว');return;}
+  const nm=(prompt('ชื่อชีตใหม่','ชีต '+(a.length+1))||'').trim();
+  if(!nm)return;
+  const g={id:kanNewSheetId(),name:nm,ord:((a[a.length-1].ord)||0)+1,rows:KAN_DEF_ROWS,cols:KAN_DEF_COLS};
+  kanArr().push(g);
+  _kanCur=g.id;_kanSel=null;_kanMenu=false;kanRememberTab();
+  await save();renderKanGrid();
+  showMsg('kan-msg','ok','เพิ่มชีต '+nm+' แล้ว — ตารางเปล่า '+g.rows+'×'+g.cols);
+}
+async function kanRenameSheet(){
+  if(APP_ROLE!=='admin')return;
+  const g=kanGrid();
+  const nm=(prompt('เปลี่ยนชื่อชีต',g.name)||'').trim();
+  _kanMenu=false;
+  if(!nm||nm===g.name){renderKanTabs();return;}
+  g.name=nm;
+  await save();renderKanGrid();
+}
+async function kanDelSheet(){
+  if(APP_ROLE!=='admin')return;
+  const a=kanSheets();
+  if(a.length<2){showMsg('kan-msg','warn','เหลือชีตเดียว ลบไม่ได้ — ใช้ปุ่ม ล้างชีตนี้ แทน');_kanMenu=false;renderKanTabs();return;}
+  const g=kanGrid(),p=kanPfx(g);
+  const n=kanArr().filter(x=>x&&!kanIsSheet(x)&&String(x.id).indexOf(p)===0).length;
+  if(!confirm('ลบชีต '+g.name+' พร้อมข้อมูล '+n+' ช่อง?'+String.fromCharCode(10)+'ย้อนกลับไม่ได้'))return;
+  D.deletedIds=D.deletedIds||[];
+  const keep=[];
+  kanArr().forEach(x=>{
+    if(!x)return;
+    if(x.id===g.id||(!kanIsSheet(x)&&String(x.id).indexOf(p)===0)){D.deletedIds.push(x.id);return;}
+    keep.push(x);
+  });
+  D.kanDraft=keep;
+  _kanCur=null;_kanSel=null;_kanMenu=false;kanGrid();kanRememberTab();
+  await save();renderKanGrid();
+  showMsg('kan-msg','warn','ลบชีต '+g.name+' แล้ว');
+}
 async function kanClearAll(){
   if(APP_ROLE!=='admin')return;
-  if(!confirm('ล้างข้อมูลในตารางทั้งหมด?'+String.fromCharCode(10)+'ย้อนกลับไม่ได้'))return;
-  const g=kanGrid();
-  kanArr().filter(x=>x&&x.id!==KAN_GRID_ID).forEach(x=>{D.deletedIds=D.deletedIds||[];D.deletedIds.push(x.id);});
-  D.kanDraft=[{id:KAN_GRID_ID,rows:g.rows,cols:g.cols}];
+  const g=kanGrid(),p=kanPfx(g);
+  if(!confirm('ล้างข้อมูลในชีต '+g.name+' ทั้งหมด?'+String.fromCharCode(10)+'ย้อนกลับไม่ได้ (ชีตอื่นไม่กระทบ)'))return;
+  D.deletedIds=D.deletedIds||[];
+  const keep=[];
+  kanArr().forEach(x=>{
+    if(!x)return;
+    if(!kanIsSheet(x)&&String(x.id).indexOf(p)===0){D.deletedIds.push(x.id);return;}
+    keep.push(x);
+  });
+  D.kanDraft=keep;
   _kanSel=null;
   await save();renderKanGrid();
-  showMsg('kan-msg','warn','ล้างตารางแล้ว');
+  showMsg('kan-msg','warn','ล้างชีต '+g.name+' แล้ว');
+}
+function renderKanTabs(){
+  const el=document.getElementById('kan-tabs');if(!el)return;
+  const cur=kanGrid();
+  const Q=String.fromCharCode(39);
+  let h='<div class="kan-tabs">';
+  kanSheets().forEach(g=>{
+    const on=g.id===cur.id;
+    h+='<span class="'+(on?'kan-tab on':'kan-tab')+'" onclick="kanGoSheet('+Q+g.id+Q+')">'+mpEsc(g.name)+
+       (on?'<span class="kan-tcar" title="ตัวเลือกของชีตนี้" onclick="event.stopPropagation();kanToggleMenu()">▾</span>':'')+
+       '</span>';
+  });
+  h+='<span class="kan-tab kan-tadd" title="เพิ่มชีตใหม่" onclick="kanAddSheet()">+ เพิ่มชีต</span></div>';
+  if(_kanMenu)h+='<div class="kan-smenu">'+
+    '<span class="kan-tlbl">📄 '+mpEsc(cur.name)+'</span>'+
+    '<button class="btn btn-s" type="button" onclick="kanRenameSheet()">✏️ เปลี่ยนชื่อ</button>'+
+    '<button class="btn btn-s" type="button" onclick="kanDelSheet()" style="color:var(--d)">🗑️ ลบชีตนี้</button>'+
+    '<button class="btn btn-s" type="button" onclick="kanToggleMenu()">ปิด</button></div>';
+  el.innerHTML=h;
 }
 function renderKanGrid(){
+  renderKanTabs();
   const el=document.getElementById('kan-grid');if(!el)return;
   const g=kanGrid();
-  const Q=String.fromCharCode(39);
   let h='<table class="kan-g"><thead><tr><th class="kan-corner"></th>';
   for(let c=0;c<g.cols;c++)h+='<th class="kan-ch" onclick="kanSelect(0,'+c+','+(g.rows-1)+','+c+')">'+kanColName(c)+'</th>';
   h+='</tr></thead><tbody>';
@@ -11526,7 +11642,7 @@ function renderKanGrid(){
   el.innerHTML='<div class="kan-gwrap">'+h+'</div>';
   kanPaintSel();kanSyncToolbar();
   const inf=document.getElementById('kan-size');
-  if(inf)inf.textContent=g.rows+' แถว × '+g.cols+' คอลัมน์';
+  if(inf)inf.textContent=g.name+' — '+g.rows+' แถว × '+g.cols+' คอลัมน์';
 }
 function kanExtend(r,c){
   if(!_kanSel){kanSelect(r,c);return;}
@@ -11534,6 +11650,9 @@ function kanExtend(r,c){
 }
 function initKan(){
   if(APP_ROLE!=='admin')return;   // หน้านี้เขียนข้อมูลได้ — กันที่ฟังก์ชันด้วย ไม่ใช่ซ่อนปุ่มอย่างเดียว
+  // กลับมาที่แท็บเดิมที่ค้างไว้บนเครื่องนี้ — ถ้าชีตนั้นถูกลบไปแล้ว kanGrid() จะเด้งไปชีตแรกเอง
+  if(!_kanCur){try{_kanCur=localStorage.getItem('kanCurSheet')||null;}catch(e){}}
+  _kanMenu=false;
   renderKanGrid();
 }
 function initMedProto(){_mpDirty=false;mpRender();}
