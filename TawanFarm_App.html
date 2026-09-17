@@ -1573,7 +1573,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       </select>
     </div>
     <div style="font-size:var(--fs105);color:var(--tx3);margin:2px 0 10px">
-      แตะช่องเพื่อเลือก · แตะเลข <b>1 2 3</b> เลือกทั้งแถว · แตะ <b>A B C</b> เลือกทั้งคอลัมน์ · กด Shift แล้วแตะอีกช่อง = เลือกเป็นช่วง<br>แท็บชีตอยู่ใต้ตาราง · แตะ <b>+ เพิ่มชีต</b> เพื่อสร้างหน้าใหม่ · แตะ <b>▾</b> บนแท็บที่เปิดอยู่เพื่อเปลี่ยนชื่อ/ลบ<br>ช่อง <b>🔍 ซูม</b> ย่อตารางให้เห็นหลายแถวพร้อมกัน — ย่อแล้วยังพิมพ์/ทาสีได้ตามปกติ
+      แตะช่องเพื่อเลือก · แตะเลข <b>1 2 3</b> เลือกทั้งแถว · แตะ <b>A B C</b> เลือกทั้งคอลัมน์ · กด <b>Shift</b> แล้วคลิกอีกจุด = เลือกเป็นช่วง · กด <b>Ctrl</b> (Mac ใช้ <b>⌘</b>) แล้วคลิก = เลือกเพิ่มทีละช่อง/แถว/คอลัมน์ ไม่ต้องติดกัน<br>แท็บชีตอยู่ใต้ตาราง · แตะ <b>+ เพิ่มชีต</b> เพื่อสร้างหน้าใหม่ · แตะ <b>▾</b> บนแท็บที่เปิดอยู่เพื่อเปลี่ยนชื่อ/ลบ<br>ช่อง <b>🔍 ซูม</b> ย่อตารางให้เห็นหลายแถวพร้อมกัน — ย่อแล้วยังพิมพ์/ทาสีได้ตามปกติ
     </div>
     <div id="kan-grid"></div>
     <div id="kan-tabs"></div>
@@ -11390,7 +11390,9 @@ const KAN_DEF_ROWS=25,KAN_DEF_COLS=16,KAN_MAX_ROWS=300,KAN_MAX_COLS=40,KAN_MAX_S
 const KAN_BG=["","#f2d7e3","#dff0dc","#fff3cd","#dbeafe","#fde2e1","#e9e3f7","#e5e7eb"];
 const KAN_FG=["#1F2937","#B91C1C","#15803D","#1D4ED8","#B45309","#5F6670"];
 const KAN_FS_MIN=9,KAN_FS_MAX=24,KAN_FS_DEF=12;
-let _kanSel=null;   // {r1,c1,r2,c2} ช่วงที่เลือกอยู่
+// เลือกได้หลายก้อน — Ctrl/Cmd เพิ่มก้อนใหม่ · Shift ขยายก้อนล่าสุด · คลิกเปล่าเริ่มใหม่
+let _kanSels=[];    // [{r1,c1,r2,c2}, …] ก้อนสุดท้ายคือก้อนที่ Shift จะขยาย
+let _kanMod="";     // ปุ่มที่กดค้างตอนคลิกล่าสุด: "" | "shift" | "ctrl"
 // แท็บที่เปิดอยู่เป็นเรื่องของเครื่องนี้เครื่องเดียว ไม่ sync ขึ้น Firebase
 // กันบน iPad กับพี่บนคอม เปิดคนละชีตพร้อมกันได้ ไม่แย่งกัน
 let _kanCur=null, _kanMenu=false;
@@ -11440,18 +11442,55 @@ function kanSetVal(r,c,v){
   kanGetOrMake(r,c).v=(v==null?"":String(v));
   kanTouch();
 }
+// รวมทุกก้อนเป็นรายการช่อง — ช่องที่ทับกันนับครั้งเดียว ไม่งั้นทาสีซ้ำและนับเกินจริง
 function kanSelRange(){
-  if(!_kanSel)return[];
-  const out=[];
-  const r1=Math.min(_kanSel.r1,_kanSel.r2),r2=Math.max(_kanSel.r1,_kanSel.r2);
-  const c1=Math.min(_kanSel.c1,_kanSel.c2),c2=Math.max(_kanSel.c1,_kanSel.c2);
-  for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)out.push([r,c]);
+  const seen={},out=[];
+  _kanSels.forEach(k=>{
+    const r1=Math.min(k.r1,k.r2),r2=Math.max(k.r1,k.r2);
+    const c1=Math.min(k.c1,k.c2),c2=Math.max(k.c1,k.c2);
+    for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++){
+      const key=r+"_"+c;
+      if(!seen[key]){seen[key]=1;out.push([r,c]);}
+    }
+  });
   return out;
 }
+// เลือกตามโปรแกรม (ไม่ได้มาจากเมาส์) — แทนที่ของเดิมเสมอ
 function kanSelect(r1,c1,r2,c2){
-  _kanSel={r1,c1,r2:(r2==null?r1:r2),c2:(c2==null?c1:c2)};
-  kanPaintSel();
+  _kanSels=[{r1,c1,r2:(r2==null?r1:r2),c2:(c2==null?c1:c2)}];
+  kanPaintSel();kanSyncToolbar();
 }
+// เพิ่ม/ขยาย/แทนที่ ตามปุ่มที่กดค้าง — ใช้ร่วมกันทั้งช่อง หัวแถว หัวคอลัมน์
+// Shift ยึด "มุมเริ่ม" (r1,c1) ของก้อนล่าสุดไว้ แล้วลากอีกมุมไปที่จุดใหม่ — ไม่ใช่รวมสองก้อนเข้าด้วยกัน
+// axis บอกว่าคลิกอะไร: "cell" ลากได้ทั้งสองแกน · "row" ล็อกเต็มแนวนอน · "col" ล็อกเต็มแนวตั้ง
+function kanApplyPick(rect,mod,axis){
+  const last=_kanSels[_kanSels.length-1];
+  if(mod==="shift"&&last){
+    if(axis==="row"){last.c1=0;last.c2=kanGrid().cols-1;last.r2=rect.r1;}
+    else if(axis==="col"){last.r1=0;last.r2=kanGrid().rows-1;last.c2=rect.c1;}
+    else{last.r2=rect.r1;last.c2=rect.c1;}
+  }
+  else if(mod==="ctrl")_kanSels.push(rect);
+  else _kanSels=[rect];
+  kanPaintSel();kanSyncToolbar();
+}
+function kanModOf(e){return (e&&e.shiftKey)?"shift":((e&&(e.ctrlKey||e.metaKey))?"ctrl":"");}
+// ⚠️ ต้องดักที่ mousedown ไม่ใช่ click — โฟกัสของ <input> เกิดก่อน click เสมอ
+//    ถ้ารอ click ช่วงที่เลือกจะถูก onfocus รีเซ็ตเป็นช่องเดียวไปแล้ว (Shift จึงไม่เคยทำงาน)
+function kanCellDown(e,r,c){
+  _kanMod=kanModOf(e);
+  if(_kanMod){
+    // เขียนค่าที่พิมพ์ค้างอยู่ลงก่อน (blur ทำให้ onchange ทำงาน) แล้วค่อยกันโฟกัส/การลากเลือกตัวหนังสือ
+    const a=document.activeElement;
+    if(a&&a.classList&&a.classList.contains("kan-in"))a.blur();
+    e.preventDefault();
+  }
+  kanApplyPick({r1:r,c1:c,r2:r,c2:c},_kanMod,"cell");
+}
+// เข้าช่องด้วยแป้น Tab หรือคลิกเปล่า — เลือกช่องเดียว
+function kanFocusSel(r,c){_kanMod="";kanApplyPick({r1:r,c1:c,r2:r,c2:c},"","cell");}
+function kanSelRow(e,r){kanApplyPick({r1:r,c1:0,r2:r,c2:kanGrid().cols-1},kanModOf(e),"row");}
+function kanSelCol(e,c){kanApplyPick({r1:0,c1:c,r2:kanGrid().rows-1,c2:c},kanModOf(e),"col");}
 function kanPaintSel(){
   document.querySelectorAll('#kan-grid td.kan-sel').forEach(td=>td.classList.remove('kan-sel'));
   kanSelRange().forEach(([r,c])=>{
@@ -11460,9 +11499,10 @@ function kanPaintSel(){
   });
   const lab=document.getElementById('kan-selinfo');
   if(lab){
-    if(!_kanSel){lab.textContent='';return;}
-    const n=kanSelRange().length;
-    lab.textContent=n>1?('เลือก '+n+' ช่อง'):('ช่อง '+kanColName(_kanSel.c1)+(_kanSel.r1+1));
+    const cells=kanSelRange(),n=cells.length;
+    if(!n){lab.textContent='';return;}
+    if(n===1){lab.textContent='ช่อง '+kanColName(cells[0][1])+(cells[0][0]+1);return;}
+    lab.textContent=(_kanSels.length>1?('เลือก '+_kanSels.length+' ช่วง · '):'เลือก ')+n+' ช่อง';
   }
 }
 // ── ใส่รูปแบบให้ช่องที่เลือก ──
@@ -11470,9 +11510,13 @@ function kanFmt(prop,val){
   if(APP_ROLE!=='admin')return;
   const cells=kanSelRange();
   if(!cells.length){showMsg('kan-msg','warn','แตะเลือกช่องก่อน แล้วค่อยกดปุ่มปรับแต่ง');return;}
+  // ⚠️ ตัวหนาต้องตัดสินครั้งเดียวจากทั้งช่วง ไม่ใช่สลับทีละช่อง
+  // เลือกหลายก้อนแล้วมีช่องหนาอยู่ก่อนแค่ช่องเดียว ถ้าสลับทีละช่องมันจะกลับทางเฉพาะช่องนั้น
+  // (ใช้เกณฑ์เดียวกับไฟบนปุ่ม B ใน kanSyncToolbar)
+  const wantBold=prop==='b'?!cells.every(([r,c])=>(kanGet(r,c)||{}).b):false;
   cells.forEach(([r,c])=>{
     const x=kanGetOrMake(r,c);
-    if(prop==='b')x.b=!x.b;
+    if(prop==='b')x.b=wantBold;
     else if(prop==='fsStep'){
       const cur=parseFloat(x.fs)||KAN_FS_DEF;
       x.fs=Math.min(KAN_FS_MAX,Math.max(KAN_FS_MIN,cur+val));
@@ -11561,7 +11605,7 @@ function kanSetZoom(v){
 function kanRememberTab(){try{localStorage.setItem('kanCurSheet',_kanCur||'');}catch(e){}}
 function kanGoSheet(id){
   const g=kanSheets().find(x=>x.id===id);if(!g)return;
-  _kanCur=g.id;_kanSel=null;_kanMenu=false;
+  _kanCur=g.id;_kanSels=[];_kanMenu=false;
   kanRememberTab();
   renderKanGrid();
 }
@@ -11574,7 +11618,7 @@ async function kanAddSheet(){
   if(!nm)return;
   const g={id:kanNewSheetId(),name:nm,ord:((a[a.length-1].ord)||0)+1,rows:KAN_DEF_ROWS,cols:KAN_DEF_COLS};
   kanArr().push(g);
-  _kanCur=g.id;_kanSel=null;_kanMenu=false;kanRememberTab();
+  _kanCur=g.id;_kanSels=[];_kanMenu=false;kanRememberTab();
   await save();renderKanGrid();
   showMsg('kan-msg','ok','เพิ่มชีต '+nm+' แล้ว — ตารางเปล่า '+g.rows+'×'+g.cols);
 }
@@ -11602,7 +11646,7 @@ async function kanDelSheet(){
     keep.push(x);
   });
   D.kanDraft=keep;
-  _kanCur=null;_kanSel=null;_kanMenu=false;kanGrid();kanRememberTab();
+  _kanCur=null;_kanSels=[];_kanMenu=false;kanGrid();kanRememberTab();
   await save();renderKanGrid();
   showMsg('kan-msg','warn','ลบชีต '+g.name+' แล้ว');
 }
@@ -11618,7 +11662,7 @@ async function kanClearAll(){
     keep.push(x);
   });
   D.kanDraft=keep;
-  _kanSel=null;
+  _kanSels=[];
   await save();renderKanGrid();
   showMsg('kan-msg','warn','ล้างชีต '+g.name+' แล้ว');
 }
@@ -11646,10 +11690,10 @@ function renderKanGrid(){
   const el=document.getElementById('kan-grid');if(!el)return;
   const g=kanGrid();
   let h='<table class="kan-g"><thead><tr><th class="kan-corner"></th>';
-  for(let c=0;c<g.cols;c++)h+='<th class="kan-ch" onclick="kanSelect(0,'+c+','+(g.rows-1)+','+c+')">'+kanColName(c)+'</th>';
+  for(let c=0;c<g.cols;c++)h+='<th class="kan-ch" onclick="kanSelCol(event,'+c+')">'+kanColName(c)+'</th>';
   h+='</tr></thead><tbody>';
   for(let r=0;r<g.rows;r++){
-    h+='<tr><th class="kan-rh" onclick="kanSelect('+r+',0,'+r+','+(g.cols-1)+')">'+(r+1)+'</th>';
+    h+='<tr><th class="kan-rh" onclick="kanSelRow(event,'+r+')">'+(r+1)+'</th>';
     for(let c=0;c<g.cols;c++){
       const x=kanGet(r,c)||{};
       const st=[];
@@ -11658,11 +11702,10 @@ function renderKanGrid(){
       if(x.b)st.push('font-weight:700');
       if(x.a)st.push('text-align:'+x.a);
       if(x.fs)st.push('font-size:calc('+x.fs+'px * var(--kz))');
-      h+='<td id="ktd-'+r+'-'+c+'">'+
+      h+='<td id="ktd-'+r+'-'+c+'" onmousedown="kanCellDown(event,'+r+','+c+')">'+
         '<input id="kin-'+r+'-'+c+'" class="kan-in" value="'+mpEsc(x.v||'')+'"'+
         (st.length?(' style="'+st.join(';')+'"'):'')+
-        ' onfocus="kanSelect('+r+','+c+')"'+
-        ' onclick="event.shiftKey&&kanExtend('+r+','+c+')"'+
+        ' onfocus="kanFocusSel('+r+','+c+')"'+
         ' onchange="kanSetVal('+r+','+c+',this.value)"'+
         ' onpaste="kanPaste(event,'+r+','+c+')"></td>';
     }
@@ -11673,10 +11716,6 @@ function renderKanGrid(){
   kanPaintSel();kanSyncToolbar();kanApplyZoom();
   const inf=document.getElementById('kan-size');
   if(inf)inf.textContent=g.name+' — '+g.rows+' แถว × '+g.cols+' คอลัมน์';
-}
-function kanExtend(r,c){
-  if(!_kanSel){kanSelect(r,c);return;}
-  _kanSel.r2=r;_kanSel.c2=c;kanPaintSel();
 }
 function initKan(){
   if(APP_ROLE!=='admin')return;   // หน้านี้เขียนข้อมูลได้ — กันที่ฟังก์ชันด้วย ไม่ใช่ซ่อนปุ่มอย่างเดียว
