@@ -734,6 +734,10 @@ html[data-uisize="xl"]{--ui-scale:1.25}
 /* --kz = ระดับซูมของตาราง (0.5–2) คูณทับ --ui-scale เดิม ไม่ใช่แทนที่ */
 #kan-grid{--kz:1}
 .kan-g{border-collapse:separate;border-spacing:0;font-size:calc(12px * var(--ui-scale) * var(--kz))}
+/* ⚠️ entry #281: กฎมือถือ @media(max-width:768px){.card table{display:block;overflow-x:auto}} โดนตารางนี้ด้วย
+   ตารางกลายเป็นกรอบเลื่อนซ้อนอยู่ในกรอบ .kan-gwrap อีกชั้น → หัวคอลัมน์ที่ตรึงไว้หลุดตอนเลื่อนลง
+   และลูกศรเลื่อนจอตามไม่ได้ — 768px คือ iPad แนวตั้งพอดี · ตารางนี้มีกรอบเลื่อนของตัวเองแล้ว ห้ามโดนกฎนั้น */
+.card table.kan-g{display:table;width:auto;overflow:visible}
 .kan-g th,.kan-g td{border-right:1px solid #d6dbe1;border-bottom:1px solid #d6dbe1;padding:0}
 .kan-ch,.kan-rh{background:#eef1f4;color:var(--tx3);font-weight:600;text-align:center;cursor:pointer;
   font-size:calc(10.5px * var(--ui-scale) * var(--kz));
@@ -1583,7 +1587,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       </select>
     </div>
     <div style="font-size:var(--fs105);color:var(--tx3);margin:2px 0 10px">
-      แตะช่องเพื่อเลือก · แตะเลข <b>1 2 3</b> เลือกทั้งแถว · แตะ <b>A B C</b> เลือกทั้งคอลัมน์ · กด <b>Shift</b> แล้วคลิกอีกจุด = เลือกเป็นช่วง · กด <b>Ctrl</b> (Mac ใช้ <b>⌘</b>) แล้วคลิก = เลือกเพิ่มทีละช่อง/แถว/คอลัมน์ ไม่ต้องติดกัน<br>แท็บชีตอยู่ใต้ตาราง · แตะ <b>+ เพิ่มชีต</b> เพื่อสร้างหน้าใหม่ · แตะ <b>▾</b> บนแท็บที่เปิดอยู่เพื่อเปลี่ยนชื่อ/ลบ<br>ช่อง <b>🔍 ซูม</b> ย่อตารางให้เห็นหลายแถวพร้อมกัน — ย่อแล้วยังพิมพ์/ทาสีได้ตามปกติ<br><b>Ctrl+C</b> คัดลอก · <b>Ctrl+X</b> ตัด · <b>Ctrl+V</b> วาง · <b>Delete</b> ลบค่า (สีไม่หาย) · <b>Ctrl+A</b> เลือกทั้งตาราง · <b>ลูกศร</b> ย้ายช่อง (กด Shift ค้าง = ขยายช่วง) · <b>Enter</b> ลงบรรทัดถัดไป (Shift+Enter ขึ้นบน) · <b>Tab</b> ไปช่องขวา · <b>Esc</b> ออกจากช่อง<br>บน iPad ที่ต่อคีย์บอร์ด ใช้ <b>⌘C / ⌘V</b> ได้เหมือนกัน<br><b>สูตร</b> — พิมพ์ <b>=</b> นำหน้า เช่น <b>=SUM(D3:D7)</b> · <b>=AVERAGE · COUNT · COUNTA · MIN · MAX · ROUND · ABS</b> · บวกลบคูณหารและวงเล็บได้ · ช่องสูตรขึ้นเป็นสีน้ำเงิน แตะเข้าไปเห็นสูตรจริง ออกมาเห็นผลลัพธ์
+      แตะช่องเพื่อเลือก · แตะเลข <b>1 2 3</b> เลือกทั้งแถว · แตะ <b>A B C</b> เลือกทั้งคอลัมน์ · กด <b>Shift</b> แล้วคลิกอีกจุด = เลือกเป็นช่วง · กด <b>Ctrl</b> (Mac ใช้ <b>⌘</b>) แล้วคลิก = เลือกเพิ่มทีละช่อง/แถว/คอลัมน์ ไม่ต้องติดกัน<br>แท็บชีตอยู่ใต้ตาราง · แตะ <b>+ เพิ่มชีต</b> เพื่อสร้างหน้าใหม่ · แตะ <b>▾</b> บนแท็บที่เปิดอยู่เพื่อเปลี่ยนชื่อ/ลบ<br>ช่อง <b>🔍 ซูม</b> ย่อตารางให้เห็นหลายแถวพร้อมกัน — ย่อแล้วยังพิมพ์/ทาสีได้ตามปกติ<br><b>Ctrl+C</b> คัดลอก · <b>Ctrl+X</b> ตัด · <b>Ctrl+V</b> วาง · <b>Delete</b> ลบค่า (สีไม่หาย) · <b>Ctrl+A</b> เลือกทั้งตาราง · <b>ลูกศร</b> ย้ายช่อง (ใช้ได้ทั้งตอนคลิกอยู่ในช่อง · กด Shift ค้าง = ขยายช่วง · เริ่มพิมพ์แล้วซ้าย/ขวาเลื่อนเคอร์เซอร์ก่อน · <b>F2</b> เข้าแก้ข้อความ) · <b>Enter</b> ลงบรรทัดถัดไป (Shift+Enter ขึ้นบน) · <b>Tab</b> ไปช่องขวา · <b>Esc</b> ออกจากช่อง<br>บน iPad ที่ต่อคีย์บอร์ด ใช้ <b>⌘C / ⌘V</b> ได้เหมือนกัน<br><b>สูตร</b> — พิมพ์ <b>=</b> นำหน้า เช่น <b>=SUM(D3:D7)</b> · <b>=AVERAGE · COUNT · COUNTA · MIN · MAX · ROUND · ABS</b> · บวกลบคูณหารและวงเล็บได้ · ช่องสูตรขึ้นเป็นสีน้ำเงิน แตะเข้าไปเห็นสูตรจริง ออกมาเห็นผลลัพธ์
     </div>
     <div id="kan-grid"></div>
     <div class="kan-stat" id="kan-stat"></div>
@@ -11962,6 +11966,7 @@ function kanRecalc(){
 }
 // แตะเข้าช่อง → เห็นสูตรจริง · ออกจากช่อง → เห็นผลลัพธ์
 function kanEdit(r,c,el){
+  _kanEditing=false;
   if(el){el.value=kanRaw(r,c);el.classList.remove('kan-f','kan-e');}
   kanFocusSel(r,c);
 }
@@ -12013,6 +12018,46 @@ async function kanInsertSum(){
   await save();renderKanGrid();
   showMsg('kan-msg','ok','ใส่สูตรผลรวมที่แถว '+(box.r2+2)+' แล้ว '+(box.c2-box.c1+1)+' คอลัมน์');
 }
+// ═══ ย้ายช่องด้วยคีย์บอร์ด ═══
+let _kanEditing=false;   // true = กำลังแก้ข้อความในช่อง (พิมพ์แล้ว / ดับเบิลคลิก / F2) — ซ้าย/ขวาเลื่อนเคอร์เซอร์แทนย้ายช่อง
+function kanCellOf(inp){
+  // ⚠️ อ่านพิกัดด้วย split ไม่ใช้ regex — แบ็กสแลชหายระหว่างทางตอนแก้ไฟล์ด้วยสคริปต์ (entry #274)
+  const m=String(inp&&inp.id||'').split('-');
+  if(m.length!==3||m[0]!=='kin')return null;
+  const r=parseInt(m[1],10),c=parseInt(m[2],10);
+  return(r>=0&&c>=0)?{r:r,c:c}:null;
+}
+// เลื่อนกรอบตารางให้เห็นช่อง — เผื่อหัวคอลัมน์/หัวแถวที่ตรึงไว้ ไม่งั้นช่องจะไปซ่อนอยู่ใต้หัวตาราง
+// (scrollIntoView ธรรมดาไม่รู้จัก sticky เลื่อนไปชิดขอบพอดีแล้วโดนหัวทับ)
+function kanScrollTo(r,c){
+  const td=document.getElementById('ktd-'+r+'-'+c);
+  const w=document.querySelector('#kan-grid .kan-gwrap');
+  if(!td||!w)return;
+  const th=w.querySelector('thead th'),rh=w.querySelector('.kan-rh');
+  const topPad=th?th.offsetHeight:0,leftPad=rh?rh.offsetWidth:0;
+  const tr=td.getBoundingClientRect(),wr=w.getBoundingClientRect();
+  const top=wr.top+w.clientTop+topPad,bottom=wr.top+w.clientTop+w.clientHeight;
+  const left=wr.left+w.clientLeft+leftPad,right=wr.left+w.clientLeft+w.clientWidth;
+  if(tr.top<top)w.scrollTop-=(top-tr.top);
+  else if(tr.bottom>bottom)w.scrollTop+=(tr.bottom-bottom);
+  if(tr.left<left)w.scrollLeft-=(left-tr.left);
+  else if(tr.right>right)w.scrollLeft+=(tr.right-right);
+  // กรอบตารางเองหลุดจอ (จอเล็ก/ซูมใหญ่) ก็เลื่อนหน้าตาม
+  const t2=td.getBoundingClientRect();
+  if(t2.top<0)window.scrollBy(0,t2.top-8);
+  else if(t2.bottom>window.innerHeight)window.scrollBy(0,t2.bottom-window.innerHeight+8);
+}
+// ย้ายไปช่อง (r,c) แล้วโฟกัสพร้อมพิมพ์ทับ — blur ช่องเดิมก่อนเสมอ ให้ onchange บันทึกค่าที่พิมพ์ค้าง
+function kanMoveCell(r,c){
+  const g=kanGrid();
+  r=Math.min(g.rows-1,Math.max(0,r));c=Math.min(g.cols-1,Math.max(0,c));
+  const cur=kanInCell();if(cur)cur.blur();
+  kanSelect(r,c);
+  const nx=document.getElementById('kin-'+r+'-'+c);
+  if(nx){nx.focus({preventScroll:true});nx.select();}
+  _kanEditing=false;
+  kanScrollTo(r,c);
+}
 function kanKeyEvt(e){
   // เจอปุ่มที่มาจากคีย์บอร์ดจริงครั้งแรก → เปิดบัฟเฟอร์แล้วส่งโฟกัสไปเลย
   // ทำในจังหวะเดียวกับที่กด Ctrl+C ครั้งแรก จึงคัดลอกได้ตั้งแต่ครั้งแรก ไม่ต้องกดสองรอบ
@@ -12046,14 +12091,53 @@ function kanKeyEvt(e){
     if(APP_ROLE==='admin'&&dr>0&&r+1>gg.rows-1&&gg.rows<KAN_MAX_ROWS){gg.rows++;save();renderKanGrid();}
     const nr=Math.min(kanGrid().rows-1,Math.max(0,r+dr));
     kanSelect(nr,c);
-    const nx=document.getElementById('kin-'+nr+'-'+c);
-    if(nx){nx.focus();nx.select();}else kanFocusGrid();
-    const td=document.getElementById('ktd-'+nr+'-'+c);
-    if(td&&td.scrollIntoView)td.scrollIntoView({block:'nearest',inline:'nearest'});
+    kanMoveCell(nr,c);
+    return;
+  }
+  // ── ลูกศรตอนอยู่ในช่อง — เหมือนชีต ──
+  // เข้าช่องด้วยคลิก/ลูกศร/Enter = โหมดเลื่อน: ลูกศรทุกทิศย้ายช่อง
+  // เริ่มพิมพ์ (หรือดับเบิลคลิก / F2) = โหมดแก้: ขึ้น/ลง ยังย้ายช่อง · ซ้าย/ขวา เลื่อนเคอร์เซอร์จนชนขอบถึงค่อยย้าย
+  if(inp&&e.key==='F2'){
+    e.preventDefault();_kanEditing=true;
+    const n=inp.value.length;inp.setSelectionRange(n,n);
+    return;
+  }
+  if(inp&&e.key.slice(0,5)==='Arrow'&&!ctrl&&!e.altKey){
+    const pos=kanCellOf(inp);if(!pos)return;
+    const vert=(e.key==='ArrowUp'||e.key==='ArrowDown');
+    if(!vert&&_kanEditing){
+      if(e.shiftKey)return;                         // Shift+ซ้าย/ขวา ตอนแก้ = เลือกตัวหนังสือ
+      const s0=inp.selectionStart,s1=inp.selectionEnd,len=inp.value.length;
+      if(s0!==s1)return;
+      if(e.key==='ArrowLeft'&&s0>0)return;
+      if(e.key==='ArrowRight'&&s1<len)return;
+    }
+    e.preventDefault();
+    const dr=e.key==='ArrowUp'?-1:(e.key==='ArrowDown'?1:0);
+    const dc=e.key==='ArrowLeft'?-1:(e.key==='ArrowRight'?1:0);
+    if(e.shiftKey){
+      // Shift+ลูกศรจากในช่อง → ออกจากช่อง (บันทึกค่า) แล้วเริ่มขยายช่วงจากช่องนี้
+      const gg=kanGrid(),cl=(v,mx)=>Math.min(mx,Math.max(0,v));
+      inp.blur();
+      kanSelect(pos.r,pos.c);
+      const k=_kanSels[0];
+      k.r2=cl(k.r2+dr,gg.rows-1);k.c2=cl(k.c2+dc,gg.cols-1);
+      kanPaintSel();kanSyncToolbar();kanFocusGrid();
+      kanScrollTo(k.r2,k.c2);
+      return;
+    }
+    kanMoveCell(pos.r+dr,pos.c+dc);
     return;
   }
   if(inp)return;                      // กำลังพิมพ์ในช่อง ปล่อยให้เป็นการแก้ข้อความตามปกติ
   const g=kanGrid();
+  if(e.key==='F2'){
+    const bx=kanBox();if(!bx)return;
+    e.preventDefault();
+    kanMoveCell(bx.r1,bx.c1);
+    const i=kanInCell();if(i){_kanEditing=true;const n=i.value.length;i.setSelectionRange(n,n);}
+    return;
+  }
   if(e.key==='Delete'||e.key==='Backspace'){
     if(APP_ROLE!=='admin')return;
     const cells=kanSelRange();if(!cells.length)return;
@@ -12095,8 +12179,7 @@ function kanKeyEvt(e){
       _kanSels=[k];tr=k.r2;tc=k.c2;
       kanPaintSel();kanSyncToolbar();kanSyncBuf();
     }else{tr=cl(k.r1+dr,g.rows-1);tc=cl(k.c1+dc,g.cols-1);kanSelect(tr,tc);kanSyncBuf();}
-    const td=document.getElementById('ktd-'+tr+'-'+tc);
-    if(td&&td.scrollIntoView)td.scrollIntoView({block:'nearest',inline:'nearest'});
+    kanScrollTo(tr,tc);
     return;
   }
   // พิมพ์ตัวอักษรทับช่องที่เลือกได้เลย เหมือนชีต — เด้งเข้าช่องแล้วปล่อยให้ตัวอักษรตกลงไปเอง
@@ -12113,6 +12196,10 @@ function kanBindKeys(){
   document.addEventListener('cut',kanCutEvt);
   document.addEventListener('paste',kanPasteEvt);
   document.addEventListener('keydown',kanKeyEvt);
+  // พิมพ์หรือดับเบิลคลิกในช่อง = เริ่มแก้ข้อความ ลูกศรซ้าย/ขวาจะเลื่อนเคอร์เซอร์แทนย้ายช่อง
+  const markEdit=ev=>{const t=ev.target;if(t&&t.classList&&t.classList.contains('kan-in'))_kanEditing=true;};
+  document.addEventListener('input',markEdit);
+  document.addEventListener('dblclick',markEdit);
   // ออกจากหน้าต่างไปแล้ว = อาจไปคัดลอกของจากที่อื่นมา ของที่เราถือไว้ถือว่าหมดอายุ
   window.addEventListener('blur',()=>{_kanClipStale=true;});
 }
