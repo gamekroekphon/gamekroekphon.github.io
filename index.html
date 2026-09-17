@@ -727,6 +727,8 @@ html[data-uisize="xl"]{--ui-scale:1.25}
 /* ⚠️ iPad: ปุ่มต้องแตะติด และช่องกรอกต้อง font >=16px กัน Safari ซูมหน้าจอเองตอนโฟกัส (entry #273) */
 @media (pointer:coarse){.kan-tb{padding:8px 12px}.kan-sw{width:30px;height:30px}
   .kan-in{font-size:calc(16px * var(--kz))}}
+/* บัฟเฟอร์ซ่อนสำหรับ Ctrl+C/X/V — ต้องอยู่ในหน้าจอเชิงเทคนิค (ไม่ใช่ display:none) ถึงจะโฟกัสได้ */
+.kan-buf{position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;padding:0;border:0}
 .kan-gwrap{overflow:auto;max-height:70vh;border:1px solid #c9cfd6;border-radius:8px;background:#fff;
   -webkit-overflow-scrolling:touch}
 /* --kz = ระดับซูมของตาราง (0.5–2) คูณทับ --ui-scale เดิม ไม่ใช่แทนที่ */
@@ -1573,7 +1575,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       </select>
     </div>
     <div style="font-size:var(--fs105);color:var(--tx3);margin:2px 0 10px">
-      แตะช่องเพื่อเลือก · แตะเลข <b>1 2 3</b> เลือกทั้งแถว · แตะ <b>A B C</b> เลือกทั้งคอลัมน์ · กด <b>Shift</b> แล้วคลิกอีกจุด = เลือกเป็นช่วง · กด <b>Ctrl</b> (Mac ใช้ <b>⌘</b>) แล้วคลิก = เลือกเพิ่มทีละช่อง/แถว/คอลัมน์ ไม่ต้องติดกัน<br>แท็บชีตอยู่ใต้ตาราง · แตะ <b>+ เพิ่มชีต</b> เพื่อสร้างหน้าใหม่ · แตะ <b>▾</b> บนแท็บที่เปิดอยู่เพื่อเปลี่ยนชื่อ/ลบ<br>ช่อง <b>🔍 ซูม</b> ย่อตารางให้เห็นหลายแถวพร้อมกัน — ย่อแล้วยังพิมพ์/ทาสีได้ตามปกติ
+      แตะช่องเพื่อเลือก · แตะเลข <b>1 2 3</b> เลือกทั้งแถว · แตะ <b>A B C</b> เลือกทั้งคอลัมน์ · กด <b>Shift</b> แล้วคลิกอีกจุด = เลือกเป็นช่วง · กด <b>Ctrl</b> (Mac ใช้ <b>⌘</b>) แล้วคลิก = เลือกเพิ่มทีละช่อง/แถว/คอลัมน์ ไม่ต้องติดกัน<br>แท็บชีตอยู่ใต้ตาราง · แตะ <b>+ เพิ่มชีต</b> เพื่อสร้างหน้าใหม่ · แตะ <b>▾</b> บนแท็บที่เปิดอยู่เพื่อเปลี่ยนชื่อ/ลบ<br>ช่อง <b>🔍 ซูม</b> ย่อตารางให้เห็นหลายแถวพร้อมกัน — ย่อแล้วยังพิมพ์/ทาสีได้ตามปกติ<br><b>Ctrl+C</b> คัดลอก · <b>Ctrl+X</b> ตัด · <b>Ctrl+V</b> วาง · <b>Delete</b> ลบค่า (สีไม่หาย) · <b>Ctrl+A</b> เลือกทั้งตาราง · <b>ลูกศร</b> ย้ายช่อง (กด Shift ค้าง = ขยายช่วง) · <b>Enter</b> ลงบรรทัดถัดไป (Shift+Enter ขึ้นบน) · <b>Tab</b> ไปช่องขวา · <b>Esc</b> ออกจากช่อง
     </div>
     <div id="kan-grid"></div>
     <div id="kan-tabs"></div>
@@ -11458,7 +11460,7 @@ function kanSelRange(){
 // เลือกตามโปรแกรม (ไม่ได้มาจากเมาส์) — แทนที่ของเดิมเสมอ
 function kanSelect(r1,c1,r2,c2){
   _kanSels=[{r1,c1,r2:(r2==null?r1:r2),c2:(c2==null?c1:c2)}];
-  kanPaintSel();kanSyncToolbar();
+  kanPaintSel();kanSyncToolbar();kanSyncBuf();
 }
 // เพิ่ม/ขยาย/แทนที่ ตามปุ่มที่กดค้าง — ใช้ร่วมกันทั้งช่อง หัวแถว หัวคอลัมน์
 // Shift ยึด "มุมเริ่ม" (r1,c1) ของก้อนล่าสุดไว้ แล้วลากอีกมุมไปที่จุดใหม่ — ไม่ใช่รวมสองก้อนเข้าด้วยกัน
@@ -11472,7 +11474,7 @@ function kanApplyPick(rect,mod,axis){
   }
   else if(mod==="ctrl")_kanSels.push(rect);
   else _kanSels=[rect];
-  kanPaintSel();kanSyncToolbar();
+  kanPaintSel();kanSyncToolbar();kanSyncBuf();
 }
 function kanModOf(e){return (e&&e.shiftKey)?"shift":((e&&(e.ctrlKey||e.metaKey))?"ctrl":"");}
 // ⚠️ ต้องดักที่ mousedown ไม่ใช่ click — โฟกัสของ <input> เกิดก่อน click เสมอ
@@ -11486,11 +11488,12 @@ function kanCellDown(e,r,c){
     e.preventDefault();
   }
   kanApplyPick({r1:r,c1:c,r2:r,c2:c},_kanMod,"cell");
+  if(_kanMod)kanFocusGrid();   // ให้คีย์ลัดคัดลอก/วาง ทำงานต่อได้ทันที
 }
 // เข้าช่องด้วยแป้น Tab หรือคลิกเปล่า — เลือกช่องเดียว
 function kanFocusSel(r,c){_kanMod="";kanApplyPick({r1:r,c1:c,r2:r,c2:c},"","cell");}
-function kanSelRow(e,r){kanApplyPick({r1:r,c1:0,r2:r,c2:kanGrid().cols-1},kanModOf(e),"row");}
-function kanSelCol(e,c){kanApplyPick({r1:0,c1:c,r2:kanGrid().rows-1,c2:c},kanModOf(e),"col");}
+function kanSelRow(e,r){kanHandOff();kanApplyPick({r1:r,c1:0,r2:r,c2:kanGrid().cols-1},kanModOf(e),"row");kanFocusGrid();}
+function kanSelCol(e,c){kanHandOff();kanApplyPick({r1:0,c1:c,r2:kanGrid().rows-1,c2:c},kanModOf(e),"col");kanFocusGrid();}
 function kanPaintSel(){
   document.querySelectorAll('#kan-grid td.kan-sel').forEach(td=>td.classList.remove('kan-sel'));
   kanSelRange().forEach(([r,c])=>{
@@ -11546,27 +11549,15 @@ function kanSyncToolbar(){
   b.classList.toggle('on',!!allBold);
 }
 // ── วางจากชีต: กระจายค่าลงช่องตรงๆ ไม่ตีความอะไรทั้งนั้น ──
+// วางลงช่องที่กำลังโฟกัสอยู่ — เนื้อในใช้ kanPasteText() ตัวเดียวกับการวางตอนเลือกช่วง
 function kanPaste(e,r,c){
   if(APP_ROLE!=='admin')return;
   const txt=(e.clipboardData||window.clipboardData).getData('text')||'';
-  const TAB=String.fromCharCode(9);
-  if(txt.indexOf(TAB)<0&&txt.indexOf(String.fromCharCode(10))<0)return;   // ค่าเดียว ปล่อยให้วางปกติ
+  if(txt.indexOf(KAN_TAB)<0&&txt.indexOf(KAN_NL)<0)return;   // ค่าเดียว ปล่อยให้วางปกติ
   e.preventDefault();
-  const lines=txt.replace(/\r/g,"").split(String.fromCharCode(10));
-  const g=kanGrid();
-  let needRows=r+lines.length,needCols=c;
-  lines.forEach(l=>{needCols=Math.max(needCols,c+l.split(TAB).length);});
-  if(needRows>g.rows)g.rows=Math.min(KAN_MAX_ROWS,needRows);
-  if(needCols>g.cols)g.cols=Math.min(KAN_MAX_COLS,needCols);
-  lines.forEach((line,i)=>{
-    line.split(TAB).forEach((cell,j)=>{
-      const rr=r+i,cc=c+j;
-      if(rr>=g.rows||cc>=g.cols)return;
-      kanGetOrMake(rr,cc).v=cell;
-    });
-  });
+  const n=kanPasteText(txt,r,c);
   save();renderKanGrid();
-  showMsg('kan-msg','ok','วางแล้ว '+lines.length+' แถว — ค่าลงตามช่องตรงๆ ไม่ได้แปลงอะไร');
+  showMsg('kan-msg','ok','วางแล้ว '+n+' แถว — ค่าลงตามช่องตรงๆ ไม่ได้แปลงอะไร');
 }
 async function kanAddRows(n){
   if(APP_ROLE!=='admin')return;
@@ -11577,6 +11568,258 @@ async function kanAddCols(n){
   if(APP_ROLE!=='admin')return;
   const g=kanGrid();g.cols=Math.min(KAN_MAX_COLS,g.cols+n);
   await save();renderKanGrid();
+}
+// ═══ คีย์ลัดแบบชีต — คัดลอก / ตัด / วาง / ลบ / เลือกทั้งหมด / ลูกศร ═══
+// ⚠️ เหตุการณ์ copy/cut/paste **ไม่ยิง** ถ้าไม่มีข้อความถูกเลือกอยู่จริง
+//    ทดลองแล้ว: โฟกัส <div tabindex="0"> ไว้เฉยๆ กด Ctrl+C → keydown ยิง แต่ copy ไม่ยิงเลย
+//    จึงต้องมี textarea ซ่อนไว้ ใส่ข้อความของช่วงที่เลือกแล้ว select() ค้างไว้
+//    Ctrl+C/Ctrl+X ของเบราว์เซอร์ก็ทำงานตามปกติ เราแค่ดักไว้บันทึกรูปแบบกับขึ้นข้อความบอก
+// ⚠️ บน iPad ห้ามโฟกัส textarea — คีย์บอร์ดจะเด้งขึ้นทุกครั้งที่แตะหัวแถว
+//    (ไม่เสียอะไร เพราะ iPad ไม่มีปุ่ม Ctrl/Shift อยู่แล้ว)
+let _kanClip=null;      // {text, cells:[[{v,bg,fg,b,a,fs}]]} — เก็บรูปแบบด้วย ไม่ใช่แค่ข้อความ
+let _kanKeysOn=false;
+const KAN_TAB=String.fromCharCode(9), KAN_NL=String.fromCharCode(10);
+function kanOnPage(){const s=document.getElementById('sec-kan');return !!s&&s.classList.contains('on');}
+function kanInCell(){const a=document.activeElement;return(a&&a.classList&&a.classList.contains('kan-in'))?a:null;}
+function kanTouchDev(){try{return matchMedia('(pointer:coarse)').matches;}catch(e){return false;}}
+function kanBufEl(){return document.getElementById('kan-buf');}
+function kanBuf(){
+  if(kanTouchDev())return null;
+  let t=kanBufEl();
+  if(!t){
+    t=document.createElement('textarea');
+    t.id='kan-buf';t.className='kan-buf';t.tabIndex=-1;
+    t.setAttribute('aria-hidden','true');
+    document.body.appendChild(t);
+  }
+  return t;
+}
+// กรอบของช่วงที่เลือก — คืน null ถ้าเลือกไว้หลายช่วง (คัดลอก/วาง ทำได้ทีละช่วง เหมือนชีต)
+function kanBox(){
+  if(_kanSels.length!==1)return null;
+  const k=_kanSels[0];
+  return{r1:Math.min(k.r1,k.r2),r2:Math.max(k.r1,k.r2),c1:Math.min(k.c1,k.c2),c2:Math.max(k.c1,k.c2)};
+}
+function kanGrabBox(box){
+  const rows=[],lines=[];
+  for(let r=box.r1;r<=box.r2;r++){
+    const row=[],txt=[];
+    for(let c=box.c1;c<=box.c2;c++){
+      const x=kanGet(r,c)||{};
+      row.push({v:x.v||'',bg:x.bg,fg:x.fg,b:x.b,a:x.a,fs:x.fs});
+      txt.push(x.v||'');
+    }
+    rows.push(row);lines.push(txt.join(KAN_TAB));
+  }
+  return{text:lines.join(KAN_NL),cells:rows};
+}
+// เติมข้อความของช่วงที่เลือกลงบัฟเฟอร์ แล้ว select ค้างไว้ให้ Ctrl+C หยิบไปได้เลย
+function kanSyncBuf(){
+  const t=kanBufEl();if(!t)return;
+  const box=kanBox();
+  t.value=box?kanGrabBox(box).text:'';
+  if(document.activeElement===t)t.select();
+}
+function kanFocusGrid(){
+  const t=kanBuf();if(!t)return;
+  const box=kanBox();
+  t.value=box?kanGrabBox(box).text:'';
+  t.focus({preventScroll:true});t.select();
+}
+// ปล่อยโฟกัสจากช่องที่พิมพ์ค้าง (blur ทำให้ onchange ยิง ค่าไม่หาย) แล้วย้ายไปบัฟเฟอร์
+function kanHandOff(){
+  const a=document.activeElement;
+  if(a&&a.classList&&a.classList.contains('kan-in'))a.blur();
+  kanFocusGrid();
+}
+function kanAtBuf(){const t=kanBufEl();return !!t&&document.activeElement===t;}
+// เหตุการณ์ copy ไม่ได้ยิงทุกกรณี จึงมีทางที่สองผ่าน keydown → execCommand ในบัฟเฟอร์
+// execCommand คืน true เมื่อคัดลอกสำเร็จจริง ใช้ตัดสินว่าจะ preventDefault ทับของเบราว์เซอร์ไหม
+function kanDoCopy(cut){
+  const box=kanBox();
+  if(!box){
+    if(_kanSels.length>1)showMsg('kan-msg','warn','คัดลอกได้ทีละช่วงเดียว — เลือกใหม่โดยไม่กด Ctrl');
+    return false;
+  }
+  if(cut&&APP_ROLE!=='admin')return false;
+  const grab=kanGrabBox(box);
+  let ok=false;
+  const t=kanBuf();
+  if(t){
+    t.value=grab.text;t.focus({preventScroll:true});t.select();
+    try{ok=document.execCommand('copy');}catch(err){}
+  }
+  // ทางสำรอง: เขียนผ่าน Clipboard API ด้วย แต่ไม่ถือว่าสำเร็จ (เป็น promise รู้ผลทีหลัง)
+  // ถ้า execCommand ไม่ผ่าน ก็ไม่ preventDefault ปล่อยให้เบราว์เซอร์คัดลอกข้อความในบัฟเฟอร์เองอีกทาง
+  if(!ok&&navigator.clipboard&&navigator.clipboard.writeText){
+    try{navigator.clipboard.writeText(grab.text).catch(()=>{});}catch(err){}
+  }
+  _kanClip=grab;
+  const sz=(box.r2-box.r1+1)+' แถว × '+(box.c2-box.c1+1)+' คอลัมน์';
+  if(cut){
+    let n=0;
+    for(let r=box.r1;r<=box.r2;r++)for(let c=box.c1;c<=box.c2;c++){
+      const x=kanGet(r,c);if(!x||!x.v)continue;
+      x.v='';n++;const i=document.getElementById('kin-'+r+'-'+c);if(i)i.value='';
+    }
+    kanTouch();kanSyncBuf();
+    showMsg('kan-msg','ok','ตัดแล้ว '+sz+' ('+n+' ช่องที่มีข้อมูล) — วางต่อได้เลย');
+  }else showMsg('kan-msg','ok','คัดลอกแล้ว '+sz);
+  return ok;
+}
+function kanCopyEvt(e){
+  if(!kanOnPage()||!kanAtBuf())return;   // ไม่ได้อยู่ที่บัฟเฟอร์ = กำลังคัดลอกข้อความในช่อง ปล่อยไป
+  const box=kanBox();if(!box)return;
+  _kanClip=kanGrabBox(box);
+  showMsg('kan-msg','ok','คัดลอกแล้ว '+(box.r2-box.r1+1)+' แถว × '+(box.c2-box.c1+1)+' คอลัมน์');
+  // ไม่ preventDefault — ให้เบราว์เซอร์คัดลอกข้อความในบัฟเฟอร์ตามปกติ
+}
+function kanCutEvt(e){
+  if(!kanOnPage()||!kanAtBuf())return;
+  if(APP_ROLE!=='admin'){e.preventDefault();return;}
+  const box=kanBox();if(!box)return;
+  _kanClip=kanGrabBox(box);
+  let n=0;
+  for(let r=box.r1;r<=box.r2;r++)for(let c=box.c1;c<=box.c2;c++){
+    const x=kanGet(r,c);if(!x||!x.v)continue;
+    x.v='';n++;const i=document.getElementById('kin-'+r+'-'+c);if(i)i.value='';
+  }
+  kanTouch();
+  showMsg('kan-msg','ok','ตัดแล้ว '+n+' ช่องที่มีข้อมูล — วางต่อได้เลย');
+}
+// วางข้อความ TSV ลงช่อง — ใช้ร่วมกันทั้งวางในช่องและวางตอนเลือกช่วงไว้
+function kanPasteText(txt,r,c){
+  if(APP_ROLE!=='admin')return 0;
+  const clean=String(txt).replace(/\r/g,'');
+  const lines=clean.split(KAN_NL);
+  if(lines.length>1&&lines[lines.length-1]==='')lines.pop();
+  const g=kanGrid();
+  let needRows=r+lines.length,needCols=c;
+  lines.forEach(l=>{needCols=Math.max(needCols,c+l.split(KAN_TAB).length);});
+  if(needRows>g.rows)g.rows=Math.min(KAN_MAX_ROWS,needRows);
+  if(needCols>g.cols)g.cols=Math.min(KAN_MAX_COLS,needCols);
+  // ของที่คัดลอกจากตารางนี้เอง เอารูปแบบไปด้วย (เหมือนชีต) — ของจากที่อื่นได้แค่ข้อความ
+  const mine=(_kanClip&&_kanClip.text===clean)?_kanClip.cells:null;
+  lines.forEach((line,i)=>{
+    line.split(KAN_TAB).forEach((cell,j)=>{
+      const rr=r+i,cc=c+j;
+      if(rr>=g.rows||cc>=g.cols)return;
+      const x=kanGetOrMake(rr,cc);
+      x.v=cell;
+      const src=mine&&mine[i]&&mine[i][j];
+      if(src)['bg','fg','b','a','fs'].forEach(k=>{if(src[k]==null)delete x[k];else x[k]=src[k];});
+    });
+  });
+  return lines.length;
+}
+function kanPasteEvt(e){
+  if(!kanOnPage()||!kanAtBuf())return;   // อยู่ในช่อง → onpaste ของช่องจัดการเอง
+  if(APP_ROLE!=='admin'){e.preventDefault();return;}
+  const box=kanBox();if(!box)return;
+  const txt=(e.clipboardData||window.clipboardData).getData('text')||'';
+  if(!txt)return;
+  e.preventDefault();
+  const n=kanPasteText(txt,box.r1,box.c1);
+  save();renderKanGrid();kanFocusGrid();
+  showMsg('kan-msg','ok','วางแล้ว '+n+' แถว ที่ '+kanColName(box.c1)+(box.r1+1)+' — ค่าลงตามช่องตรงๆ ไม่ได้แปลงอะไร');
+}
+function kanKeyEvt(e){
+  if(!kanOnPage()){
+    // ออกจากหน้ากันไปแล้วแต่บัฟเฟอร์ยังถือโฟกัสอยู่ — ปล่อยทิ้ง ไม่งั้นพิมพ์ในหน้าอื่นจะตกลงช่องที่มองไม่เห็น
+    if(kanAtBuf())kanBufEl().blur();
+    return;
+  }
+  const inp=kanInCell(),ctrl=e.ctrlKey||e.metaKey;
+  if(e.key==='Escape'&&inp){inp.blur();kanFocusGrid();return;}
+  // Enter = ลงบรรทัดถัดไป (Shift+Enter = ขึ้นบน) — ทำงานทั้งตอนพิมพ์อยู่ในช่องและตอนเลือกเฉยๆ
+  // blur ก่อนย้ายเสมอ เพื่อให้ onchange ยิงและค่าที่พิมพ์ถูกบันทึก
+  if(e.key==='Enter'){
+    const gg=kanGrid();
+    let r,c;
+    if(inp){
+      // ⚠️ อ่านพิกัดด้วย split ไม่ใช้ regex — แบ็กสแลชหายระหว่างทางตอนแก้ไฟล์ด้วยสคริปต์ (entry #274)
+      const m=inp.id.split('-');
+      if(m.length!==3)return;
+      r=parseInt(m[1],10);c=parseInt(m[2],10);
+      if(!(r>=0)||!(c>=0))return;
+      inp.blur();
+    }else{
+      const bx=kanBox();if(!bx)return;
+      r=bx.r1;c=bx.c1;
+    }
+    e.preventDefault();
+    const dr=e.shiftKey?-1:1;
+    // ถึงแถวสุดท้ายแล้วยังกดลง → ต่อแถวให้เอง จะได้กรอกรวดเดียวไม่ต้องหยุดไปกดปุ่มเพิ่มแถว
+    if(APP_ROLE==='admin'&&dr>0&&r+1>gg.rows-1&&gg.rows<KAN_MAX_ROWS){gg.rows++;save();renderKanGrid();}
+    const nr=Math.min(kanGrid().rows-1,Math.max(0,r+dr));
+    kanSelect(nr,c);
+    const nx=document.getElementById('kin-'+nr+'-'+c);
+    if(nx){nx.focus();nx.select();}else kanFocusGrid();
+    const td=document.getElementById('ktd-'+nr+'-'+c);
+    if(td&&td.scrollIntoView)td.scrollIntoView({block:'nearest',inline:'nearest'});
+    return;
+  }
+  if(inp)return;                      // กำลังพิมพ์ในช่อง ปล่อยให้เป็นการแก้ข้อความตามปกติ
+  const g=kanGrid();
+  if(e.key==='Delete'||e.key==='Backspace'){
+    if(APP_ROLE!=='admin')return;
+    const cells=kanSelRange();if(!cells.length)return;
+    e.preventDefault();
+    let n=0;
+    cells.forEach(([r,c])=>{
+      const x=kanGet(r,c);if(!x||!x.v)return;
+      x.v='';n++;const i=document.getElementById('kin-'+r+'-'+c);if(i)i.value='';
+    });
+    kanTouch();kanSyncBuf();
+    showMsg('kan-msg','warn','ลบค่าใน '+n+' ช่อง — สีและรูปแบบยังอยู่');
+    return;
+  }
+  // ⚠️ ใช้ e.code ไม่ใช่ e.key — ถ้าสลับแป้นเป็นภาษาไทย e.key จะเป็น 'แ' 'ป' 'ฟ' คีย์ลัดจะไม่ทำงาน
+  const code=e.code||'';
+  if(ctrl&&(code==='KeyC'||e.key==='c'||e.key==='C')){
+    if(kanDoCopy(false))e.preventDefault();
+    return;
+  }
+  if(ctrl&&(code==='KeyX'||e.key==='x'||e.key==='X')){
+    if(kanDoCopy(true))e.preventDefault();
+    return;
+  }
+  if(ctrl&&(code==='KeyA'||e.key==='a'||e.key==='A')){
+    e.preventDefault();
+    kanSelect(0,0,g.rows-1,g.cols-1);kanFocusGrid();
+    return;
+  }
+  if(e.key.slice(0,5)==='Arrow'&&_kanSels.length){
+    const k=_kanSels[_kanSels.length-1];
+    const dr=e.key==='ArrowUp'?-1:(e.key==='ArrowDown'?1:0);
+    const dc=e.key==='ArrowLeft'?-1:(e.key==='ArrowRight'?1:0);
+    if(!dr&&!dc)return;
+    e.preventDefault();
+    const cl=(v,mx)=>Math.min(mx,Math.max(0,v));
+    let tr,tc;
+    if(e.shiftKey){
+      k.r2=cl(k.r2+dr,g.rows-1);k.c2=cl(k.c2+dc,g.cols-1);
+      _kanSels=[k];tr=k.r2;tc=k.c2;
+      kanPaintSel();kanSyncToolbar();kanSyncBuf();
+    }else{tr=cl(k.r1+dr,g.rows-1);tc=cl(k.c1+dc,g.cols-1);kanSelect(tr,tc);kanSyncBuf();}
+    const td=document.getElementById('ktd-'+tr+'-'+tc);
+    if(td&&td.scrollIntoView)td.scrollIntoView({block:'nearest',inline:'nearest'});
+    return;
+  }
+  // พิมพ์ตัวอักษรทับช่องที่เลือกได้เลย เหมือนชีต — เด้งเข้าช่องแล้วปล่อยให้ตัวอักษรตกลงไปเอง
+  if(!ctrl&&!e.altKey&&e.key.length===1&&APP_ROLE==='admin'){
+    const box=kanBox();if(!box)return;
+    const i=document.getElementById('kin-'+box.r1+'-'+box.c1);
+    if(i){i.focus();i.value='';}
+  }
+}
+function kanBindKeys(){
+  if(_kanKeysOn)return;
+  _kanKeysOn=true;
+  document.addEventListener('copy',kanCopyEvt);
+  document.addEventListener('cut',kanCutEvt);
+  document.addEventListener('paste',kanPasteEvt);
+  document.addEventListener('keydown',kanKeyEvt);
 }
 // ═══ แท็บชีต — เพิ่ม / สลับ / เปลี่ยนชื่อ / ลบ ═══
 // id ชีตใหม่ต้องไม่ชนทั้ง id เดิม และคำนำหน้าช่องที่อาจยังค้างอยู่
@@ -11723,6 +11966,7 @@ function initKan(){
   if(!_kanCur){try{_kanCur=localStorage.getItem('kanCurSheet')||null;}catch(e){}}
   try{const z=parseFloat(localStorage.getItem('kanZoom'));if(z>0)_kanZoom=Math.min(2,Math.max(0.5,z));}catch(e){}
   _kanMenu=false;
+  kanBindKeys();
   renderKanGrid();
 }
 function initMedProto(){_mpDirty=false;mpRender();}
