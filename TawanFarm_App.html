@@ -661,8 +661,11 @@ html[data-uisize="xl"]{--ui-scale:1.25}
 .bill-entry .tx b{display:block;font-size:calc(15px * var(--ui-scale))}
 .bill-entry .tx small{display:block;color:var(--tx2);font-size:calc(12px * var(--ui-scale))}
 .bill-entry .go{color:var(--tx3);font-size:calc(20px * var(--ui-scale))}
+.bill-entries{display:flex;flex-wrap:wrap;gap:0 10px}
+.bill-entries .bill-entry{flex:1 1 260px}
 .sk-bill{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}
-.sk-bill .bill-entry{flex:1 1 320px;margin-bottom:4px}
+.sk-bill .bill-entry{margin-bottom:4px}
+.sk-bill .bill-entries{flex:1 1 100%}
 .sk-bill .bill-sec{margin-bottom:4px}
 .sk-bill:empty{display:none}
 .bill-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;margin-left:5px;
@@ -8950,7 +8953,11 @@ async function submitBillCapture(){
   billRefreshUI();
   document.getElementById('billCapModal').classList.remove('on');
   _billCap=null;
-  billToast('✅ ส่งบิลให้ออฟฟิศตรวจแล้ว');
+  if(APP_ROLE==='admin'){
+    // admin ไม่ต้องรอใครตรวจ — เปิดบิลที่เพิ่งส่งให้ใส่ราคาแล้วอนุมัติต่อเลย (บิลยังผ่านหน้าตรวจเหมือนเดิม ไม่ข้ามขั้น)
+    billToast('✅ บันทึกบิลแล้ว — ใส่ราคาแล้วกดอนุมัติ');
+    openBillReview(id);
+  }else billToast('✅ ส่งบิลให้ออฟฟิศตรวจแล้ว');
 }
 
 // ════════ admin: ตรวจบิล ════════
@@ -9154,21 +9161,24 @@ function billRefreshUI(){
     s.title=APP_ROLE==='admin'?'บิลรอตรวจ':'บิลถูกตีกลับ';
   });
   const Q=String.fromCharCode(39);
+  // admin ถ่ายบิลเองได้ด้วย (พี่สั่ง entry #283) — ปุ่มถ่ายบิลใหญ่เหมือน staff + ปุ่มบิลรอตรวจคู่กันเมื่อมีบิลค้าง
   const entry=(where)=>{
     if(APP_ROLE==='admin'){
-      if(!n)return'';
-      return '<button type="button" class="bill-entry wait" onclick="openBillReview()"><span class="ic">📥</span>'+
-        '<span class="tx"><b>บิลรอตรวจ '+n+' ใบ</b><small>staff ถ่ายบิลรับของส่งมา — เปิดรูปเทียบ ใส่ราคา แล้วกดอนุมัติ</small></span><span class="go">›</span></button>';
+      const cap='<button type="button" class="bill-entry" onclick="openBillCapture()"><span class="ic">📷</span>'+
+        '<span class="tx"><b>ถ่ายบิลรับของ</b><small>ถ่ายเองแล้วใส่ราคา อนุมัติต่อได้ทันที</small></span><span class="go">›</span></button>';
+      const wait=n?'<button type="button" class="bill-entry wait" onclick="openBillReview()"><span class="ic">📥</span>'+
+        '<span class="tx"><b>บิลรอตรวจ '+n+' ใบ</b><small>เปิดรูปเทียบ ใส่ราคา แล้วกดอนุมัติ</small></span><span class="go">›</span></button>':'';
+      return '<div class="bill-entries">'+wait+cap+'</div>';
     }
     return '<button type="button" class="bill-entry" onclick="openBillCapture()"><span class="ic">📷</span>'+
       '<span class="tx"><b>ถ่ายบิลรับของ</b><small>'+(backMine?'<span class="bill-bad">↩️ มีบิลถูกตีกลับ '+backMine+' ใบ — แตะเพื่อแก้</span>':'ของมาส่งที่ฟาร์ม ถ่ายบิลส่งให้ออฟฟิศตรวจ ไม่ต้องส่งไลน์')+'</small></span><span class="go">›</span></button>';
   };
-  const ov=document.getElementById('ov-bill');if(ov)ov.innerHTML=entry('ov');
+  // admin ไม่มีปุ่มบิลที่หน้าภาพรวม ใช้ในหน้าสต็อกอย่างเดียว (พี่สั่ง entry #283) — บิลค้างยังรู้ได้จากป้ายแดงที่เมนูสต็อก
+  const ov=document.getElementById('ov-bill');if(ov)ov.innerHTML=APP_ROLE==='admin'?'':entry('ov');
   const sk=document.getElementById('sk-bill');
   if(sk){
     sk.innerHTML=entry('stock')+(APP_ROLE==='admin'
-      ?'<button type="button" class="btn btn-s bill-sec" onclick="openBillCapture()">📷 ถ่ายบิลเอง</button>'+
-       (billArr().length?'<button type="button" class="btn btn-s bill-sec" onclick="openBillReview()">🧾 บิลทั้งหมด</button>':'')
+      ?(billArr().length?'<button type="button" class="btn btn-s bill-sec" onclick="openBillReview()">🧾 บิลทั้งหมด</button>':'')
       :'');
   }
   if(_billCap&&document.getElementById('billCapModal').classList.contains('on'))renderBillMineList();
