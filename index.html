@@ -748,6 +748,12 @@ html[data-uisize="xl"]{--ui-scale:1.25}
   width:calc(96px * var(--kz));min-width:calc(96px * var(--kz));border-radius:0}
 .kan-in:focus{outline:2px solid var(--p);outline-offset:-2px}
 .kan-g td.kan-sel{box-shadow:inset 0 0 0 2px var(--p)}
+/* ช่องที่เป็นสูตรให้เห็นต่างจากช่องที่พิมพ์เอง จะได้รู้ว่าแก้แล้วกระทบอะไร */
+.kan-in.kan-f{color:#1D4ED8}
+.kan-in.kan-e{color:var(--d);font-weight:700}
+.kan-stat{display:flex;gap:14px;flex-wrap:wrap;background:var(--sf2);border:1px solid var(--bd);
+  border-radius:9px;padding:7px 11px;margin-top:8px;font-size:calc(12px * var(--ui-scale))}
+.kan-stat b{color:var(--pd)}
 /* แถบแท็บชีต — วางไว้ใต้ตารางเหมือนใน Google Sheets ที่กันใช้อยู่ */
 .kan-tabs{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:7px;
   border-top:1px solid var(--bd);padding-top:7px}
@@ -1565,6 +1571,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <span class="kan-tb" title="ชิดขวา" onclick="kanFmt('a','right')">➡</span>
       <span class="kan-tsep"></span>
       <span class="kan-tb" title="ล้างรูปแบบของช่องที่เลือก" onclick="kanFmt('clear')">🧹 ล้างรูปแบบ</span>
+      <span class="kan-tsep"></span>
+      <span class="kan-tb" title="ใส่สูตรผลรวมไว้แถวถัดจากช่วงที่เลือก" onclick="kanInsertSum()">Σ ผลรวม</span>
       <span class="kan-tlbl" id="kan-selinfo" style="margin-left:auto"></span>
       <span class="kan-tsep"></span>
       <span class="kan-tlbl">🔍 ซูม</span>
@@ -1575,9 +1583,10 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       </select>
     </div>
     <div style="font-size:var(--fs105);color:var(--tx3);margin:2px 0 10px">
-      แตะช่องเพื่อเลือก · แตะเลข <b>1 2 3</b> เลือกทั้งแถว · แตะ <b>A B C</b> เลือกทั้งคอลัมน์ · กด <b>Shift</b> แล้วคลิกอีกจุด = เลือกเป็นช่วง · กด <b>Ctrl</b> (Mac ใช้ <b>⌘</b>) แล้วคลิก = เลือกเพิ่มทีละช่อง/แถว/คอลัมน์ ไม่ต้องติดกัน<br>แท็บชีตอยู่ใต้ตาราง · แตะ <b>+ เพิ่มชีต</b> เพื่อสร้างหน้าใหม่ · แตะ <b>▾</b> บนแท็บที่เปิดอยู่เพื่อเปลี่ยนชื่อ/ลบ<br>ช่อง <b>🔍 ซูม</b> ย่อตารางให้เห็นหลายแถวพร้อมกัน — ย่อแล้วยังพิมพ์/ทาสีได้ตามปกติ<br><b>Ctrl+C</b> คัดลอก · <b>Ctrl+X</b> ตัด · <b>Ctrl+V</b> วาง · <b>Delete</b> ลบค่า (สีไม่หาย) · <b>Ctrl+A</b> เลือกทั้งตาราง · <b>ลูกศร</b> ย้ายช่อง (กด Shift ค้าง = ขยายช่วง) · <b>Enter</b> ลงบรรทัดถัดไป (Shift+Enter ขึ้นบน) · <b>Tab</b> ไปช่องขวา · <b>Esc</b> ออกจากช่อง
+      แตะช่องเพื่อเลือก · แตะเลข <b>1 2 3</b> เลือกทั้งแถว · แตะ <b>A B C</b> เลือกทั้งคอลัมน์ · กด <b>Shift</b> แล้วคลิกอีกจุด = เลือกเป็นช่วง · กด <b>Ctrl</b> (Mac ใช้ <b>⌘</b>) แล้วคลิก = เลือกเพิ่มทีละช่อง/แถว/คอลัมน์ ไม่ต้องติดกัน<br>แท็บชีตอยู่ใต้ตาราง · แตะ <b>+ เพิ่มชีต</b> เพื่อสร้างหน้าใหม่ · แตะ <b>▾</b> บนแท็บที่เปิดอยู่เพื่อเปลี่ยนชื่อ/ลบ<br>ช่อง <b>🔍 ซูม</b> ย่อตารางให้เห็นหลายแถวพร้อมกัน — ย่อแล้วยังพิมพ์/ทาสีได้ตามปกติ<br><b>Ctrl+C</b> คัดลอก · <b>Ctrl+X</b> ตัด · <b>Ctrl+V</b> วาง · <b>Delete</b> ลบค่า (สีไม่หาย) · <b>Ctrl+A</b> เลือกทั้งตาราง · <b>ลูกศร</b> ย้ายช่อง (กด Shift ค้าง = ขยายช่วง) · <b>Enter</b> ลงบรรทัดถัดไป (Shift+Enter ขึ้นบน) · <b>Tab</b> ไปช่องขวา · <b>Esc</b> ออกจากช่อง<br>บน iPad ที่ต่อคีย์บอร์ด ใช้ <b>⌘C / ⌘V</b> ได้เหมือนกัน<br><b>สูตร</b> — พิมพ์ <b>=</b> นำหน้า เช่น <b>=SUM(D3:D7)</b> · <b>=AVERAGE · COUNT · COUNTA · MIN · MAX · ROUND · ABS</b> · บวกลบคูณหารและวงเล็บได้ · ช่องสูตรขึ้นเป็นสีน้ำเงิน แตะเข้าไปเห็นสูตรจริง ออกมาเห็นผลลัพธ์
     </div>
     <div id="kan-grid"></div>
+    <div class="kan-stat" id="kan-stat"></div>
     <div id="kan-tabs"></div>
     <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:11px">
       <button class="btn btn-s" type="button" onclick="kanAddRows(10)">+ เพิ่ม 10 แถว</button>
@@ -11443,6 +11452,7 @@ function kanSetVal(r,c,v){
   if(APP_ROLE!=='admin')return;
   kanGetOrMake(r,c).v=(v==null?"":String(v));
   kanTouch();
+  kanRecalc();   // ช่องสูตรที่อ้างถึงช่องนี้ต้องขยับตามทันที
 }
 // รวมทุกก้อนเป็นรายการช่อง — ช่องที่ทับกันนับครั้งเดียว ไม่งั้นทาสีซ้ำและนับเกินจริง
 function kanSelRange(){
@@ -11507,6 +11517,7 @@ function kanPaintSel(){
     if(n===1){lab.textContent='ช่อง '+kanColName(cells[0][1])+(cells[0][0]+1);return;}
     lab.textContent=(_kanSels.length>1?('เลือก '+_kanSels.length+' ช่วง · '):'เลือก ')+n+' ช่อง';
   }
+  kanStatBar();
 }
 // ── ใส่รูปแบบให้ช่องที่เลือก ──
 function kanFmt(prop,val){
@@ -11576,15 +11587,30 @@ async function kanAddCols(n){
 //    Ctrl+C/Ctrl+X ของเบราว์เซอร์ก็ทำงานตามปกติ เราแค่ดักไว้บันทึกรูปแบบกับขึ้นข้อความบอก
 // ⚠️ บน iPad ห้ามโฟกัส textarea — คีย์บอร์ดจะเด้งขึ้นทุกครั้งที่แตะหัวแถว
 //    (ไม่เสียอะไร เพราะ iPad ไม่มีปุ่ม Ctrl/Shift อยู่แล้ว)
-let _kanClip=null;      // {text, cells:[[{v,bg,fg,b,a,fs}]]} — เก็บรูปแบบด้วย ไม่ใช่แค่ข้อความ
+let _kanClip=null;      // {text, cells:[[{v,bg,fg,b,a,fs}]]} — เก็บรูปแบบและสูตรดิบ ไม่ใช่แค่ข้อความ
+// ⚠️ เทียบว่า "ของที่วางคือของที่เราคัดลอกเอง" ด้วยข้อความอย่างเดียวไม่พอ
+//    ถ้าไปก๊อป 1,632,000 มาจาก Sheets แล้วบังเอิญตรงกับที่เพิ่งคัดลอกในตาราง จะได้สูตรกลับมาแทนตัวเลข
+//    การจะไปก๊อปจากที่อื่นต้องออกจากหน้าต่างนี้ก่อนเสมอ จึงถือว่าพอออกไปแล้ว ของในมือเราหมดอายุ
+let _kanClipStale=false;
 let _kanKeysOn=false;
 const KAN_TAB=String.fromCharCode(9), KAN_NL=String.fromCharCode(10);
 function kanOnPage(){const s=document.getElementById('sec-kan');return !!s&&s.classList.contains('on');}
 function kanInCell(){const a=document.activeElement;return(a&&a.classList&&a.classList.contains('kan-in'))?a:null;}
 function kanTouchDev(){try{return matchMedia('(pointer:coarse)').matches;}catch(e){return false;}}
+// iPad ที่ต่อคีย์บอร์ดอยู่ ไม่เด้งคีย์บอร์ดบนจอตอนโฟกัส textarea — เปิดบัฟเฟอร์ให้ใช้คีย์ลัดได้
+// ไม่มี API บอกว่ามีคีย์บอร์ดจริงไหม จึงดูจากปุ่มที่คีย์บอร์ดบนจอ "ส่งไม่ได้": Ctrl/Cmd · ลูกศร · Esc · Tab
+// ไม่เก็บลง localStorage ตั้งใจ — ถอดคีย์บอร์ดออกแล้วโหลดใหม่ ต้องกลับไปเป็นโหมดจอสัมผัสเอง
+let _kanHwKb=false;
+function kanHwKeySignal(e){
+  if(_kanHwKb)return false;
+  const k=e.key||'';
+  if(!(e.ctrlKey||e.metaKey||k.slice(0,5)==='Arrow'||k==='Escape'||k==='Tab'))return false;
+  _kanHwKb=true;
+  return true;
+}
 function kanBufEl(){return document.getElementById('kan-buf');}
 function kanBuf(){
-  if(kanTouchDev())return null;
+  if(kanTouchDev()&&!_kanHwKb)return null;
   let t=kanBufEl();
   if(!t){
     t=document.createElement('textarea');
@@ -11606,8 +11632,9 @@ function kanGrabBox(box){
     const row=[],txt=[];
     for(let c=box.c1;c<=box.c2;c++){
       const x=kanGet(r,c)||{};
+      // เก็บสูตรดิบไว้ (วางในตารางเดิมได้สูตร) แต่ส่งค่าที่เห็นออกคลิปบอร์ด (วางใน Sheets ได้ตัวเลข)
       row.push({v:x.v||'',bg:x.bg,fg:x.fg,b:x.b,a:x.a,fs:x.fs});
-      txt.push(x.v||'');
+      txt.push(kanTextAt(r,c));
     }
     rows.push(row);lines.push(txt.join(KAN_TAB));
   }
@@ -11654,7 +11681,7 @@ function kanDoCopy(cut){
   if(!ok&&navigator.clipboard&&navigator.clipboard.writeText){
     try{navigator.clipboard.writeText(grab.text).catch(()=>{});}catch(err){}
   }
-  _kanClip=grab;
+  _kanClip=grab;_kanClipStale=false;
   const sz=(box.r2-box.r1+1)+' แถว × '+(box.c2-box.c1+1)+' คอลัมน์';
   if(cut){
     let n=0;
@@ -11662,7 +11689,7 @@ function kanDoCopy(cut){
       const x=kanGet(r,c);if(!x||!x.v)continue;
       x.v='';n++;const i=document.getElementById('kin-'+r+'-'+c);if(i)i.value='';
     }
-    kanTouch();kanSyncBuf();
+    kanTouch();kanSyncBuf();kanRecalc();
     showMsg('kan-msg','ok','ตัดแล้ว '+sz+' ('+n+' ช่องที่มีข้อมูล) — วางต่อได้เลย');
   }else showMsg('kan-msg','ok','คัดลอกแล้ว '+sz);
   return ok;
@@ -11699,7 +11726,7 @@ function kanPasteText(txt,r,c){
   if(needRows>g.rows)g.rows=Math.min(KAN_MAX_ROWS,needRows);
   if(needCols>g.cols)g.cols=Math.min(KAN_MAX_COLS,needCols);
   // ของที่คัดลอกจากตารางนี้เอง เอารูปแบบไปด้วย (เหมือนชีต) — ของจากที่อื่นได้แค่ข้อความ
-  const mine=(_kanClip&&_kanClip.text===clean)?_kanClip.cells:null;
+  const mine=(_kanClip&&!_kanClipStale&&_kanClip.text===clean)?_kanClip.cells:null;
   lines.forEach((line,i)=>{
     line.split(KAN_TAB).forEach((cell,j)=>{
       const rr=r+i,cc=c+j;
@@ -11707,7 +11734,11 @@ function kanPasteText(txt,r,c){
       const x=kanGetOrMake(rr,cc);
       x.v=cell;
       const src=mine&&mine[i]&&mine[i][j];
-      if(src)['bg','fg','b','a','fs'].forEach(k=>{if(src[k]==null)delete x[k];else x[k]=src[k];});
+      if(src){
+        // ⚠️ สูตรไม่ขยับตามตำแหน่ง — ก๊อป =SUM(D3:D7) ไปคอลัมน์อื่นยังเป็น D3:D7 เหมือนเดิม (ตกลงกันไว้)
+        x.v=src.v;
+        ['bg','fg','b','a','fs'].forEach(k=>{if(src[k]==null)delete x[k];else x[k]=src[k];});
+      }
     });
   });
   return lines.length;
@@ -11723,7 +11754,252 @@ function kanPasteEvt(e){
   save();renderKanGrid();kanFocusGrid();
   showMsg('kan-msg','ok','วางแล้ว '+n+' แถว ที่ '+kanColName(box.c1)+(box.r1+1)+' — ค่าลงตามช่องตรงๆ ไม่ได้แปลงอะไร');
 }
+// ═══ สูตร — ช่องที่ขึ้นต้นด้วย = เท่านั้น นอกนั้นเก็บตามที่พิมพ์ทุกตัวอักษรเหมือนเดิม ═══
+// ⚠️ ไม่ขัดกับกฎ "หน้ากันไม่ตีความข้อมูล" (entry #274) เพราะผู้ใช้พิมพ์ = เองเท่านั้น
+//    ห้ามเดาว่าอะไรเป็นสูตรจากหน้าตาข้อมูลเด็ดขาด
+// ⚠️ ไม่ใช้ eval() — eval รันอะไรก็ได้ที่พิมพ์ลงช่อง และบอกไม่ได้ว่าสูตรพังตรงไหน
+const KAN_FN={
+  SUM:a=>a.reduce((s,v)=>s+(v==null?0:v),0),
+  AVERAGE:a=>{const n=a.filter(v=>v!=null);return n.length?n.reduce((s,v)=>s+v,0)/n.length:0;},
+  COUNT:a=>a.filter(v=>v!=null).length,
+  COUNTA:a=>a.filter(v=>v!=null).length,
+  MIN:a=>{const n=a.filter(v=>v!=null);return n.length?Math.min.apply(null,n):0;},
+  MAX:a=>{const n=a.filter(v=>v!=null);return n.length?Math.max.apply(null,n):0;},
+  ROUND:a=>{const p=Math.pow(10,(a.length>1&&a[1]!=null)?a[1]:0);return Math.round((a[0]||0)*p)/p;},
+  ABS:a=>Math.abs(a[0]||0)
+};
+KAN_FN.AVG=KAN_FN.AVERAGE;
+let _kanMap=null;      // ดัชนี id→ช่อง ของชีตที่เปิดอยู่ ใช้ตอนคิดสูตรรอบหนึ่ง
+let _kanBusy={};       // กันสูตรอ้างวนกลับมาหาตัวเอง
+function kanColIdx(s){let n=0;for(let i=0;i<s.length;i++)n=n*26+(s.charCodeAt(i)-64);return n-1;}
+function kanRaw(r,c){
+  if(_kanMap){const x=_kanMap[kanPfx(kanGrid())+r+'_'+c];return(x&&x.v!=null)?String(x.v):'';}
+  const x=kanGet(r,c);return(x&&x.v!=null)?String(x.v):'';
+}
+function kanIsF(r,c){return kanRaw(r,c).charAt(0)==='=';}
+// ตัดจุลภาคกับช่องว่างทิ้งแล้วแปลงเป็นตัวเลข — อย่างอื่น (102% · A19[4.2]) ถือว่าไม่ใช่ตัวเลข
+// ตั้งใจให้เป็นแบบนี้ จะได้ไม่เดาแทนผู้ใช้
+function kanNumOf(s){
+  if(s==null)return null;
+  const t=String(s).split(',').join('').trim();
+  if(t==='')return null;
+  const n=Number(t);
+  return isFinite(n)?n:null;
+}
+function kanTokenize(src){
+  const t=[];let i=0;
+  const isD=ch=>ch>='0'&&ch<='9';
+  const isA=ch=>(ch>='A'&&ch<='Z')||(ch>='a'&&ch<='z')||ch==='_';
+  while(i<src.length){
+    const ch=src.charAt(i);
+    if(ch===' '){i++;continue;}
+    if('+-*/()'.indexOf(ch)>=0){t.push({k:ch});i++;continue;}
+    if(ch===','||ch===';'){t.push({k:','});i++;continue;}
+    if(ch===':'){t.push({k:':'});i++;continue;}
+    if(isD(ch)||ch==='.'){
+      // ⚠️ ไม่กลืนจุลภาคเข้ามาในตัวเลข เพราะในสูตรจุลภาคคือตัวคั่นอาร์กิวเมนต์
+      let j=i;while(j<src.length&&(isD(src.charAt(j))||src.charAt(j)==='.'))j++;
+      t.push({k:'num',v:parseFloat(src.slice(i,j))});i=j;continue;
+    }
+    if(isA(ch)){
+      let j=i;while(j<src.length&&(isA(src.charAt(j))||isD(src.charAt(j))))j++;
+      const w=src.slice(i,j);i=j;
+      let p=0;while(p<w.length&&isA(w.charAt(p)))p++;
+      const letters=w.slice(0,p),digits=w.slice(p);
+      let allDigits=digits.length>0;
+      for(let q=0;q<digits.length;q++)if(!isD(digits.charAt(q)))allDigits=false;
+      if(letters&&allDigits)t.push({k:'ref',c:kanColIdx(letters.toUpperCase()),r:parseInt(digits,10)-1});
+      else t.push({k:'name',v:w.toUpperCase()});
+      continue;
+    }
+    throw new Error('BAD');
+  }
+  return t;
+}
+function kanNumAt(r,c){
+  const key=r+'_'+c;
+  if(_kanBusy[key])throw new Error('CIRC');
+  if(!kanIsF(r,c))return kanNumOf(kanRaw(r,c));
+  _kanBusy[key]=1;
+  try{
+    const v=kanEval(kanRaw(r,c).slice(1));
+    return(typeof v==='number'&&isFinite(v))?v:null;
+  }finally{delete _kanBusy[key];}
+}
+function kanTextAt(r,c){
+  if(!kanIsF(r,c))return kanRaw(r,c);
+  return kanShown(r,c).txt;
+}
+function kanEval(src){
+  const t=kanTokenize(src);let p=0;
+  const peek=()=>t[p];
+  const eat=k=>{if(!t[p]||t[p].k!==k)throw new Error('BAD');return t[p++];};
+  function spread(node){
+    if(node&&node.range){
+      const out=[];
+      const r1=Math.min(node.a.r,node.b.r),r2=Math.max(node.a.r,node.b.r);
+      const c1=Math.min(node.a.c,node.b.c),c2=Math.max(node.a.c,node.b.c);
+      for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)out.push(kanNumAt(r,c));
+      return out;
+    }
+    return[node];
+  }
+  // COUNTA นับ "ช่องที่ไม่ว่าง" จึงต้องดูตัวหนังสือ ไม่ใช่ตัวเลข
+  function spreadText(node){
+    if(node&&node.range){
+      const out=[];
+      const r1=Math.min(node.a.r,node.b.r),r2=Math.max(node.a.r,node.b.r);
+      const c1=Math.min(node.a.c,node.b.c),c2=Math.max(node.a.c,node.b.c);
+      for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)out.push(kanTextAt(r,c)===''?null:1);
+      return out;
+    }
+    return[(node==null||node==='')?null:1];
+  }
+  function primary(){
+    const tk=peek();
+    if(!tk)throw new Error('BAD');
+    if(tk.k==='num'){p++;return tk.v;}
+    if(tk.k==='('){p++;const v=expr();eat(')');return v;}
+    if(tk.k==='-'){p++;const v=primary();return -(v==null?0:v);}
+    if(tk.k==='+'){p++;return primary();}
+    if(tk.k==='ref'){
+      p++;
+      if(peek()&&peek().k===':'){p++;const b=eat('ref');return{range:1,a:tk,b:b};}
+      return kanNumAt(tk.r,tk.c);
+    }
+    if(tk.k==='name'){
+      p++;
+      const fn=KAN_FN[tk.v];
+      if(!fn)throw new Error('BAD');
+      eat('(');
+      const wantText=(tk.v==='COUNTA');
+      let args=[];
+      if(peek()&&peek().k!==')'){
+        for(;;){
+          const node=expr();
+          args=args.concat(wantText?spreadText(node):spread(node));
+          if(peek()&&peek().k===','){p++;continue;}
+          break;
+        }
+      }
+      eat(')');
+      return fn(args.map(v=>(v&&v.range)?null:v));
+    }
+    throw new Error('BAD');
+  }
+  function term(){
+    let v=primary();
+    while(peek()&&(peek().k==='*'||peek().k==='/')){
+      const op=t[p++].k,r=primary();
+      const a=(v==null?0:v),b=(r==null?0:r);
+      if(op==='/'&&!b)throw new Error('DIV0');
+      v=(op==='*')?a*b:a/b;
+    }
+    return v;
+  }
+  function expr(){
+    let v=term();
+    while(peek()&&(peek().k==='+'||peek().k==='-')){
+      const op=t[p++].k,r=term();
+      v=(op==='+')?(v==null?0:v)+(r==null?0:r):(v==null?0:v)-(r==null?0:r);
+    }
+    return v;
+  }
+  const out=expr();
+  if(p<t.length)throw new Error('BAD');
+  return(out&&out.range)?null:out;
+}
+function kanShown(r,c){
+  if(!kanIsF(r,c))return{txt:kanRaw(r,c),err:false};
+  try{
+    const v=kanEval(kanRaw(r,c).slice(1));
+    if(v==null||!isFinite(v))return{txt:'#ค่าว่าง!',err:true};
+    return{txt:(Math.round(v*1e6)/1e6).toLocaleString('en-US'),err:false};
+  }catch(e){
+    const m=(e&&e.message)==='CIRC'?'#วนซ้ำ!':((e&&e.message)==='DIV0'?'#หารศูนย์!':'#สูตรผิด!');
+    return{txt:m,err:true};
+  }
+}
+// สร้างดัชนีรอบเดียวแล้วคิดสูตรทั้งชีต — ถ้าปล่อยให้ kanGet() วิ่ง find() ทีละช่อง
+// SUM ช่วงยาวๆ จะช้าเป็นวินาที เพราะ D.kanDraft มีเป็นพันรายการ
+function kanRecalc(){
+  const el=document.getElementById('kan-grid');if(!el)return;
+  const g=kanGrid(),pfx=kanPfx(g);
+  _kanMap={};
+  kanArr().forEach(x=>{if(x&&!kanIsSheet(x)&&String(x.id).indexOf(pfx)===0)_kanMap[x.id]=x;});
+  try{
+    for(let r=0;r<g.rows;r++)for(let c=0;c<g.cols;c++){
+      if(!kanIsF(r,c))continue;
+      const i=document.getElementById('kin-'+r+'-'+c);
+      if(!i||document.activeElement===i)continue;   // ช่องที่กำลังพิมพ์ ปล่อยให้เห็นสูตรจริง
+      const s=kanShown(r,c);
+      i.value=s.txt;
+      i.classList.toggle('kan-f',!s.err);
+      i.classList.toggle('kan-e',s.err);
+    }
+  }finally{_kanMap=null;_kanBusy={};}
+  kanStatBar();
+}
+// แตะเข้าช่อง → เห็นสูตรจริง · ออกจากช่อง → เห็นผลลัพธ์
+function kanEdit(r,c,el){
+  if(el){el.value=kanRaw(r,c);el.classList.remove('kan-f','kan-e');}
+  kanFocusSel(r,c);
+}
+// ⚠️ ห้ามเขียน el.value กลับลงโมเดลตรงนี้เด็ดขาด
+//    ตอนไม่ได้แก้ ช่องสูตรโชว์ "ผลลัพธ์" อยู่ ถ้าเขียนกลับ สูตรจะถูกทับด้วยตัวเลขที่มันคำนวณได้เอง
+//    การบันทึกค่าที่แก้จริงเป็นหน้าที่ของ onchange ซึ่งยิงเฉพาะตอนผู้ใช้แก้ข้อความ
+function kanBlurCell(r,c,el){
+  kanRecalc();
+}
+// แถบสรุปใต้ตาราง — เลือกช่วงไหนก็บอกผลรวม/เฉลี่ย/นับ โดยไม่ต้องเขียนสูตร
+function kanStatBar(){
+  const el=document.getElementById('kan-stat');if(!el)return;
+  const rg=kanSelRange();
+  if(!rg.length){el.innerHTML='<span class="kan-tlbl">เลือกช่วงในตารางเพื่อดูผลรวม</span>';return;}
+  const g=kanGrid(),pfx=kanPfx(g);
+  const own=!_kanMap;
+  if(own){_kanMap={};kanArr().forEach(x=>{if(x&&!kanIsSheet(x)&&String(x.id).indexOf(pfx)===0)_kanMap[x.id]=x;});}
+  const nums=[];let filled=0;
+  try{
+    rg.forEach(([r,c])=>{
+      if(kanIsF(r,c)){
+        let v=null;try{v=kanNumAt(r,c);}catch(e){}
+        if(v!=null){nums.push(v);filled++;}
+        else if(kanRaw(r,c)!=='')filled++;
+      }else{
+        const t=kanRaw(r,c);
+        if(t!=='')filled++;
+        const n=kanNumOf(t);if(n!=null)nums.push(n);
+      }
+    });
+  }finally{if(own){_kanMap=null;_kanBusy={};}}
+  const sum=nums.reduce((s,v)=>s+v,0);
+  const avg=nums.length?sum/nums.length:0;
+  el.innerHTML='<span>เลือก <b>'+rg.length+'</b> ช่อง</span>'+
+    '<span>มีข้อมูล <b>'+filled+'</b></span>'+
+    '<span>เป็นตัวเลข <b>'+nums.length+'</b></span>'+
+    '<span>ผลรวม <b>'+(Math.round(sum*1e6)/1e6).toLocaleString('en-US')+'</b></span>'+
+    '<span>เฉลี่ย <b>'+(nums.length?(Math.round(avg*100)/100).toLocaleString('en-US'):'-')+'</b></span>';
+}
+// ปุ่ม Σ — ใส่สูตรผลรวมไว้แถวถัดจากช่วงที่เลือก คอลัมน์ละสูตร
+async function kanInsertSum(){
+  if(APP_ROLE!=='admin')return;
+  const box=kanBox();
+  if(!box){showMsg('kan-msg','warn','เลือกช่วงเดียวก่อน (ไม่ต้องกด Ctrl)');return;}
+  const g=kanGrid();
+  if(box.r2+1>=g.rows){
+    if(g.rows>=KAN_MAX_ROWS){showMsg('kan-msg','warn','ไม่มีแถวว่างใต้ช่วงที่เลือก');return;}
+    g.rows++;
+  }
+  for(let c=box.c1;c<=box.c2;c++)
+    kanGetOrMake(box.r2+1,c).v='=SUM('+kanColName(c)+(box.r1+1)+':'+kanColName(c)+(box.r2+1)+')';
+  await save();renderKanGrid();
+  showMsg('kan-msg','ok','ใส่สูตรผลรวมที่แถว '+(box.r2+2)+' แล้ว '+(box.c2-box.c1+1)+' คอลัมน์');
+}
 function kanKeyEvt(e){
+  // เจอปุ่มที่มาจากคีย์บอร์ดจริงครั้งแรก → เปิดบัฟเฟอร์แล้วส่งโฟกัสไปเลย
+  // ทำในจังหวะเดียวกับที่กด Ctrl+C ครั้งแรก จึงคัดลอกได้ตั้งแต่ครั้งแรก ไม่ต้องกดสองรอบ
+  if(kanOnPage()&&kanHwKeySignal(e)&&!kanInCell())kanFocusGrid();
   if(!kanOnPage()){
     // ออกจากหน้ากันไปแล้วแต่บัฟเฟอร์ยังถือโฟกัสอยู่ — ปล่อยทิ้ง ไม่งั้นพิมพ์ในหน้าอื่นจะตกลงช่องที่มองไม่เห็น
     if(kanAtBuf())kanBufEl().blur();
@@ -11770,7 +12046,7 @@ function kanKeyEvt(e){
       const x=kanGet(r,c);if(!x||!x.v)return;
       x.v='';n++;const i=document.getElementById('kin-'+r+'-'+c);if(i)i.value='';
     });
-    kanTouch();kanSyncBuf();
+    kanTouch();kanSyncBuf();kanRecalc();
     showMsg('kan-msg','warn','ลบค่าใน '+n+' ช่อง — สีและรูปแบบยังอยู่');
     return;
   }
@@ -11820,6 +12096,8 @@ function kanBindKeys(){
   document.addEventListener('cut',kanCutEvt);
   document.addEventListener('paste',kanPasteEvt);
   document.addEventListener('keydown',kanKeyEvt);
+  // ออกจากหน้าต่างไปแล้ว = อาจไปคัดลอกของจากที่อื่นมา ของที่เราถือไว้ถือว่าหมดอายุ
+  window.addEventListener('blur',()=>{_kanClipStale=true;});
 }
 // ═══ แท็บชีต — เพิ่ม / สลับ / เปลี่ยนชื่อ / ลบ ═══
 // id ชีตใหม่ต้องไม่ชนทั้ง id เดิม และคำนำหน้าช่องที่อาจยังค้างอยู่
@@ -11930,6 +12208,10 @@ function renderKanTabs(){
 }
 function renderKanGrid(){
   renderKanTabs();
+  // ดัชนีชั่วคราวสำหรับคิดสูตรตอนวาด — ไม่งั้นทุกช่องวิ่ง find() ใน D.kanDraft ทีละครั้ง
+  const _g=kanGrid(),_p=kanPfx(_g);
+  _kanMap={};kanArr().forEach(x=>{if(x&&!kanIsSheet(x)&&String(x.id).indexOf(_p)===0)_kanMap[x.id]=x;});
+  try{
   const el=document.getElementById('kan-grid');if(!el)return;
   const g=kanGrid();
   let h='<table class="kan-g"><thead><tr><th class="kan-corner"></th>';
@@ -11939,6 +12221,7 @@ function renderKanGrid(){
     h+='<tr><th class="kan-rh" onclick="kanSelRow(event,'+r+')">'+(r+1)+'</th>';
     for(let c=0;c<g.cols;c++){
       const x=kanGet(r,c)||{};
+      const sh=kanShown(r,c);
       const st=[];
       if(x.bg)st.push('background:'+x.bg);
       if(x.fg)st.push('color:'+x.fg);
@@ -11946,9 +12229,10 @@ function renderKanGrid(){
       if(x.a)st.push('text-align:'+x.a);
       if(x.fs)st.push('font-size:calc('+x.fs+'px * var(--kz))');
       h+='<td id="ktd-'+r+'-'+c+'" onmousedown="kanCellDown(event,'+r+','+c+')">'+
-        '<input id="kin-'+r+'-'+c+'" class="kan-in" value="'+mpEsc(x.v||'')+'"'+
+        '<input id="kin-'+r+'-'+c+'" class="kan-in'+(sh.err?' kan-e':(kanIsF(r,c)?' kan-f':''))+'" value="'+mpEsc(sh.txt)+'"'+
         (st.length?(' style="'+st.join(';')+'"'):'')+
-        ' onfocus="kanFocusSel('+r+','+c+')"'+
+        ' onfocus="kanEdit('+r+','+c+',this)"'+
+        ' onblur="kanBlurCell('+r+','+c+',this)"'+
         ' onchange="kanSetVal('+r+','+c+',this.value)"'+
         ' onpaste="kanPaste(event,'+r+','+c+')"></td>';
     }
@@ -11956,9 +12240,10 @@ function renderKanGrid(){
   }
   h+='</tbody></table>';
   el.innerHTML='<div class="kan-gwrap">'+h+'</div>';
+  }finally{_kanMap=null;_kanBusy={};}
   kanPaintSel();kanSyncToolbar();kanApplyZoom();
   const inf=document.getElementById('kan-size');
-  if(inf)inf.textContent=g.name+' — '+g.rows+' แถว × '+g.cols+' คอลัมน์';
+  if(inf)inf.textContent=_g.name+' — '+_g.rows+' แถว × '+_g.cols+' คอลัมน์';
 }
 function initKan(){
   if(APP_ROLE!=='admin')return;   // หน้านี้เขียนข้อมูลได้ — กันที่ฟังก์ชันด้วย ไม่ใช่ซ่อนปุ่มอย่างเดียว
