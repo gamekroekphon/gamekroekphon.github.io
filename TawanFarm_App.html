@@ -719,24 +719,31 @@ html[data-uisize="xl"]{--ui-scale:1.25}
 .kan-tb:hover{border-color:var(--p)}
 .kan-tb.on{background:var(--p);color:#fff;border-color:var(--p)}
 .kan-sw{width:24px;height:24px;border-radius:5px;border:1px solid #b9bfc7;cursor:pointer;display:inline-block}
+.kan-zsel{border:1px solid var(--bd);background:#fff;border-radius:7px;padding:5px 6px;
+  font-size:calc(12.5px * var(--ui-scale));cursor:pointer}
 .kan-sw:hover{outline:2px solid var(--p);outline-offset:1px}
 .kan-sw-none{background:#fff;position:relative}
 .kan-sw-none::after{content:"";position:absolute;left:2px;right:2px;top:10px;height:2px;background:var(--d);transform:rotate(-45deg)}
 /* ⚠️ iPad: ปุ่มต้องแตะติด และช่องกรอกต้อง font >=16px กัน Safari ซูมหน้าจอเองตอนโฟกัส (entry #273) */
-@media (pointer:coarse){.kan-tb{padding:8px 12px}.kan-sw{width:30px;height:30px}.kan-in{font-size:16px}}
+@media (pointer:coarse){.kan-tb{padding:8px 12px}.kan-sw{width:30px;height:30px}
+  .kan-in{font-size:calc(16px * var(--kz))}}
 .kan-gwrap{overflow:auto;max-height:70vh;border:1px solid #c9cfd6;border-radius:8px;background:#fff;
   -webkit-overflow-scrolling:touch}
-.kan-g{border-collapse:separate;border-spacing:0;font-size:calc(12px * var(--ui-scale))}
+/* --kz = ระดับซูมของตาราง (0.5–2) คูณทับ --ui-scale เดิม ไม่ใช่แทนที่ */
+#kan-grid{--kz:1}
+.kan-g{border-collapse:separate;border-spacing:0;font-size:calc(12px * var(--ui-scale) * var(--kz))}
 .kan-g th,.kan-g td{border-right:1px solid #d6dbe1;border-bottom:1px solid #d6dbe1;padding:0}
 .kan-ch,.kan-rh{background:#eef1f4;color:var(--tx3);font-weight:600;text-align:center;cursor:pointer;
-  font-size:calc(10.5px * var(--ui-scale));padding:4px 6px;user-select:none}
+  font-size:calc(10.5px * var(--ui-scale) * var(--kz));
+  padding:calc(4px * var(--kz)) calc(6px * var(--kz));user-select:none}
 .kan-ch:hover,.kan-rh:hover{background:var(--pl);color:var(--p)}
-.kan-rh{min-width:34px;position:sticky;left:0;z-index:2}
+.kan-rh{min-width:calc(34px * var(--kz));position:sticky;left:0;z-index:2}
 /* ตรึงหัวคอลัมน์ไว้บน และหัวแถวไว้ซ้าย — ตารางยาวๆ จะได้ไม่หลงแถว */
 .kan-g thead th{position:sticky;top:0;z-index:3}
 .kan-corner{position:sticky;left:0;top:0;z-index:4;background:#e4e8ec}
-.kan-in{border:none;background:transparent;font:inherit;color:inherit;padding:6px 7px;
-  width:96px;min-width:96px;border-radius:0}
+.kan-in{border:none;background:transparent;font:inherit;color:inherit;
+  padding:calc(6px * var(--kz)) calc(7px * var(--kz));
+  width:calc(96px * var(--kz));min-width:calc(96px * var(--kz));border-radius:0}
 .kan-in:focus{outline:2px solid var(--p);outline-offset:-2px}
 .kan-g td.kan-sel{box-shadow:inset 0 0 0 2px var(--p)}
 /* แถบแท็บชีต — วางไว้ใต้ตารางเหมือนใน Google Sheets ที่กันใช้อยู่ */
@@ -1557,9 +1564,16 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <span class="kan-tsep"></span>
       <span class="kan-tb" title="ล้างรูปแบบของช่องที่เลือก" onclick="kanFmt('clear')">🧹 ล้างรูปแบบ</span>
       <span class="kan-tlbl" id="kan-selinfo" style="margin-left:auto"></span>
+      <span class="kan-tsep"></span>
+      <span class="kan-tlbl">🔍 ซูม</span>
+      <select id="kan-zoom" class="kan-zsel" onchange="kanSetZoom(this.value)" title="ย่อเพื่อดูหลายแถวพร้อมกัน">
+        <option value="0.5">50%</option><option value="0.6">60%</option><option value="0.7">70%</option>
+        <option value="0.8">80%</option><option value="0.9">90%</option><option value="1" selected>100%</option>
+        <option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option>
+      </select>
     </div>
     <div style="font-size:var(--fs105);color:var(--tx3);margin:2px 0 10px">
-      แตะช่องเพื่อเลือก · แตะเลข <b>1 2 3</b> เลือกทั้งแถว · แตะ <b>A B C</b> เลือกทั้งคอลัมน์ · กด Shift แล้วแตะอีกช่อง = เลือกเป็นช่วง<br>แท็บชีตอยู่ใต้ตาราง · แตะ <b>+ เพิ่มชีต</b> เพื่อสร้างหน้าใหม่ · แตะ <b>▾</b> บนแท็บที่เปิดอยู่เพื่อเปลี่ยนชื่อ/ลบ
+      แตะช่องเพื่อเลือก · แตะเลข <b>1 2 3</b> เลือกทั้งแถว · แตะ <b>A B C</b> เลือกทั้งคอลัมน์ · กด Shift แล้วแตะอีกช่อง = เลือกเป็นช่วง<br>แท็บชีตอยู่ใต้ตาราง · แตะ <b>+ เพิ่มชีต</b> เพื่อสร้างหน้าใหม่ · แตะ <b>▾</b> บนแท็บที่เปิดอยู่เพื่อเปลี่ยนชื่อ/ลบ<br>ช่อง <b>🔍 ซูม</b> ย่อตารางให้เห็นหลายแถวพร้อมกัน — ย่อแล้วยังพิมพ์/ทาสีได้ตามปกติ
     </div>
     <div id="kan-grid"></div>
     <div id="kan-tabs"></div>
@@ -11478,7 +11492,7 @@ function kanApplyStyle(r,c){
   inp.style.color=x.fg||'';
   inp.style.fontWeight=x.b?'700':'';
   inp.style.textAlign=x.a||'';
-  inp.style.fontSize=x.fs?(x.fs+'px'):'';
+  inp.style.fontSize=x.fs?('calc('+x.fs+'px * var(--kz))'):'';
 }
 function kanSyncToolbar(){
   const b=document.getElementById('kan-b');
@@ -11527,6 +11541,22 @@ function kanNewSheetId(){
   let n=2;
   while(ids.indexOf('ks_'+n)>=0||ids.some(i=>String(i).indexOf('kc'+n+'_')===0))n++;
   return 'ks_'+n;
+}
+// ── ซูมตาราง — เป็นการตั้งค่าการมองของแต่ละเครื่อง ไม่ใช่ข้อมูล จึงเก็บที่ localStorage ไม่ sync ──
+const KAN_ZOOMS=[0.5,0.6,0.7,0.8,0.9,1,1.25,1.5,2];
+let _kanZoom=1;
+function kanApplyZoom(){
+  const el=document.getElementById('kan-grid');
+  if(el)el.style.setProperty('--kz',String(_kanZoom));
+  const sel=document.getElementById('kan-zoom');
+  if(sel)sel.value=String(_kanZoom);
+}
+function kanSetZoom(v){
+  const z=parseFloat(v);
+  if(!(z>0))return;
+  _kanZoom=Math.min(2,Math.max(0.5,z));
+  try{localStorage.setItem('kanZoom',String(_kanZoom));}catch(e){}
+  kanApplyZoom();
 }
 function kanRememberTab(){try{localStorage.setItem('kanCurSheet',_kanCur||'');}catch(e){}}
 function kanGoSheet(id){
@@ -11627,7 +11657,7 @@ function renderKanGrid(){
       if(x.fg)st.push('color:'+x.fg);
       if(x.b)st.push('font-weight:700');
       if(x.a)st.push('text-align:'+x.a);
-      if(x.fs)st.push('font-size:'+x.fs+'px');
+      if(x.fs)st.push('font-size:calc('+x.fs+'px * var(--kz))');
       h+='<td id="ktd-'+r+'-'+c+'">'+
         '<input id="kin-'+r+'-'+c+'" class="kan-in" value="'+mpEsc(x.v||'')+'"'+
         (st.length?(' style="'+st.join(';')+'"'):'')+
@@ -11640,7 +11670,7 @@ function renderKanGrid(){
   }
   h+='</tbody></table>';
   el.innerHTML='<div class="kan-gwrap">'+h+'</div>';
-  kanPaintSel();kanSyncToolbar();
+  kanPaintSel();kanSyncToolbar();kanApplyZoom();
   const inf=document.getElementById('kan-size');
   if(inf)inf.textContent=g.name+' — '+g.rows+' แถว × '+g.cols+' คอลัมน์';
 }
@@ -11652,6 +11682,7 @@ function initKan(){
   if(APP_ROLE!=='admin')return;   // หน้านี้เขียนข้อมูลได้ — กันที่ฟังก์ชันด้วย ไม่ใช่ซ่อนปุ่มอย่างเดียว
   // กลับมาที่แท็บเดิมที่ค้างไว้บนเครื่องนี้ — ถ้าชีตนั้นถูกลบไปแล้ว kanGrid() จะเด้งไปชีตแรกเอง
   if(!_kanCur){try{_kanCur=localStorage.getItem('kanCurSheet')||null;}catch(e){}}
+  try{const z=parseFloat(localStorage.getItem('kanZoom'));if(z>0)_kanZoom=Math.min(2,Math.max(0.5,z));}catch(e){}
   _kanMenu=false;
   renderKanGrid();
 }
