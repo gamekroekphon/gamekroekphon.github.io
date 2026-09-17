@@ -11409,24 +11409,42 @@ let _kanMod="";     // ปุ่มที่กดค้างตอนคลิ
 let _kanCur=null, _kanMenu=false;
 function kanArr(){if(!Array.isArray(D.kanDraft))D.kanDraft=[];return D.kanDraft;}
 function kanIsSheet(x){return !!x&&(x.id===KAN_GRID_ID||String(x.id).indexOf('ks_')===0);}
-// ⚠️ Firebase สลับลำดับอาเรย์ได้ ต้องเรียงตอนแสดงผลเสมอ (entry #247)
-function kanSheets(){
-  const a=kanArr().filter(kanIsSheet);
-  if(!a.length){
-    const g={id:KAN_GRID_ID,name:'ชีต 1',ord:0,rows:KAN_DEF_ROWS,cols:KAN_DEF_COLS};
-    kanArr().push(g);a.push(g);
+// ═══ ดัชนีของหน้ากัน — id→ช่อง และรายชื่อชีตที่เรียงแล้ว ═══
+// ⚠️ entry #280: เดิม kanGet() วิ่ง find() ทั้งอาเรย์ แถมเรียก kanCellId() "ข้างใน" find
+//    ทำให้ kanSheets() (filter+sort ทั้งอาเรย์) ถูกเรียกซ้ำทุกรายการ = O(N²) ต่อการอ่านช่องเดียว
+//    วัดจริงที่ 1,617 รายการ: อ่านช่องเดียว 97 ms · อ่าน 200 ช่อง 12.9 วินาที → เข้าหน้า/สลับแท็บ/คัดลอก/วาง ค้างหมด
+//    ตอนนี้สร้างดัชนีครั้งเดียว ใช้ซ้ำจนกว่าอาเรย์จะเปลี่ยน (เปลี่ยนตัวอาเรย์ หรือความยาวเปลี่ยน)
+// ⚠️ ใครสร้างช่องใหม่ต้องผ่าน kanGetOrMake() เท่านั้น — มันอัปเดตดัชนีทีละตัว ไม่งั้นวางทีละพันช่องจะสร้างดัชนีใหม่พันรอบ
+let _kanIdx=null;
+function kanIdx(){
+  const a=kanArr();
+  if(_kanIdx&&_kanIdx.arr===a&&_kanIdx.len===a.length)return _kanIdx;
+  const byId=new Map(),sh=[];
+  for(let i=0;i<a.length;i++){
+    const x=a[i];if(!x)continue;
+    byId.set(x.id,x);
+    if(kanIsSheet(x))sh.push(x);
   }
-  a.forEach((g,i)=>{
+  if(!sh.length){
+    const g={id:KAN_GRID_ID,name:'ชีต 1',ord:0,rows:KAN_DEF_ROWS,cols:KAN_DEF_COLS};
+    a.push(g);byId.set(g.id,g);sh.push(g);
+  }
+  sh.forEach((g,i)=>{
     if(!(g.ord>=0))g.ord=i;
     if(!(g.rows>0))g.rows=KAN_DEF_ROWS;
     if(!(g.cols>0))g.cols=KAN_DEF_COLS;
     if(!g.name)g.name='ชีต '+(i+1);
   });
-  return a.sort((x,y)=>(x.ord-y.ord)||String(x.id).localeCompare(String(y.id)));
+  // ⚠️ Firebase สลับลำดับอาเรย์ได้ ต้องเรียงตอนแสดงผลเสมอ (entry #247)
+  sh.sort((x,y)=>(x.ord-y.ord)||String(x.id).localeCompare(String(y.id)));
+  _kanIdx={arr:a,len:a.length,byId:byId,sheets:sh};
+  return _kanIdx;
 }
+function kanSheets(){return kanIdx().sheets.slice();}
 function kanGrid(){
-  const a=kanSheets();
-  let g=a.find(x=>x.id===_kanCur);
+  const a=kanIdx().sheets;
+  let g=null;
+  for(let i=0;i<a.length;i++)if(a[i].id===_kanCur){g=a[i];break;}
   if(!g){g=a[0];_kanCur=g.id;}
   return g;
 }
@@ -11434,10 +11452,15 @@ function kanGrid(){
 // ไม่ชนกัน เพราะชีตแรกมีตัวเลขสองชุด ส่วนชีตอื่นมีเลขชีตติดอยู่ในคำนำหน้า
 function kanPfx(g){return g.id===KAN_GRID_ID?'kc_':('kc'+String(g.id).slice(3)+'_');}
 function kanCellId(r,c){return kanPfx(kanGrid())+r+"_"+c;}
-function kanGet(r,c){return kanArr().find(x=>x&&x.id===kanCellId(r,c))||null;}
+function kanGet(r,c){return kanIdx().byId.get(kanCellId(r,c))||null;}
 function kanGetOrMake(r,c){
   let x=kanGet(r,c);
-  if(!x){x={id:kanCellId(r,c),r,c,v:""};kanArr().push(x);}
+  if(!x){
+    x={id:kanCellId(r,c),r,c,v:""};
+    const a=kanArr();a.push(x);
+    // เติมดัชนีทีละตัว ไม่ต้องสร้างใหม่ทั้งก้อน
+    if(_kanIdx&&_kanIdx.arr===a){_kanIdx.byId.set(x.id,x);_kanIdx.len=a.length;}
+  }
   return x;
 }
 let _kanSaveT=null;
@@ -11641,17 +11664,13 @@ function kanGrabBox(box){
   return{text:lines.join(KAN_NL),cells:rows};
 }
 // เติมข้อความของช่วงที่เลือกลงบัฟเฟอร์ แล้ว select ค้างไว้ให้ Ctrl+C หยิบไปได้เลย
-function kanSyncBuf(){
-  const t=kanBufEl();if(!t)return;
-  const box=kanBox();
-  t.value=box?kanGrabBox(box).text:'';
-  if(document.activeElement===t)t.select();
-}
+// ⚠️ entry #280: เดิมเติมข้อความทั้งช่วงลงบัฟเฟอร์ทุกครั้งที่ช่วงที่เลือกขยับ (ลูกศร · Shift · คลิก)
+//    เลือกทั้งตาราง 3,000 ช่องแล้วกดลูกศร = สร้างข้อความ 3,000 ช่องทุกครั้งที่กด
+//    kanDoCopy() เติมเองตอนกด Ctrl+C อยู่แล้ว จึงไม่ต้องเติมล่วงหน้า — แค่ถือโฟกัสไว้ให้เหตุการณ์ paste ยิงได้
+function kanSyncBuf(){}
 function kanFocusGrid(){
   const t=kanBuf();if(!t)return;
-  const box=kanBox();
-  t.value=box?kanGrabBox(box).text:'';
-  t.focus({preventScroll:true});t.select();
+  if(document.activeElement!==t){t.focus({preventScroll:true});}
 }
 // ปล่อยโฟกัสจากช่องที่พิมพ์ค้าง (blur ทำให้ onchange ยิง ค่าไม่หาย) แล้วย้ายไปบัฟเฟอร์
 function kanHandOff(){
@@ -11731,9 +11750,12 @@ function kanPasteText(txt,r,c){
     line.split(KAN_TAB).forEach((cell,j)=>{
       const rr=r+i,cc=c+j;
       if(rr>=g.rows||cc>=g.cols)return;
+      const src=mine&&mine[i]&&mine[i][j];
+      // ⚠️ entry #280: ชีตจริงมีช่องว่างเยอะ เดิมวางแล้วสร้างรายการเปล่าทุกช่อง
+      //    ข้อมูลบวมเป็นเท่าตัว ทุกการบันทึก/ซิงก์ต้องแบกไปด้วย — ช่องว่างที่ไม่เคยมีอยู่ ข้ามไปเลย
+      if(cell===''&&!src&&!kanGet(rr,cc))return;
       const x=kanGetOrMake(rr,cc);
       x.v=cell;
-      const src=mine&&mine[i]&&mine[i][j];
       if(src){
         // ⚠️ สูตรไม่ขยับตามตำแหน่ง — ก๊อป =SUM(D3:D7) ไปคอลัมน์อื่นยังเป็น D3:D7 เหมือนเดิม (ตกลงกันไว้)
         x.v=src.v;
@@ -11769,11 +11791,9 @@ const KAN_FN={
   ABS:a=>Math.abs(a[0]||0)
 };
 KAN_FN.AVG=KAN_FN.AVERAGE;
-let _kanMap=null;      // ดัชนี id→ช่อง ของชีตที่เปิดอยู่ ใช้ตอนคิดสูตรรอบหนึ่ง
 let _kanBusy={};       // กันสูตรอ้างวนกลับมาหาตัวเอง
 function kanColIdx(s){let n=0;for(let i=0;i<s.length;i++)n=n*26+(s.charCodeAt(i)-64);return n-1;}
 function kanRaw(r,c){
-  if(_kanMap){const x=_kanMap[kanPfx(kanGrid())+r+'_'+c];return(x&&x.v!=null)?String(x.v):'';}
   const x=kanGet(r,c);return(x&&x.v!=null)?String(x.v):'';
 }
 function kanIsF(r,c){return kanRaw(r,c).charAt(0)==='=';}
@@ -11922,22 +11942,22 @@ function kanShown(r,c){
 }
 // สร้างดัชนีรอบเดียวแล้วคิดสูตรทั้งชีต — ถ้าปล่อยให้ kanGet() วิ่ง find() ทีละช่อง
 // SUM ช่วงยาวๆ จะช้าเป็นวินาที เพราะ D.kanDraft มีเป็นพันรายการ
+// ไล่เฉพาะช่องที่เป็นสูตรของชีตที่เปิดอยู่ — เดิมวนทุกแถว×ทุกคอลัมน์ทุกครั้งที่แก้ช่องเดียว
 function kanRecalc(){
   const el=document.getElementById('kan-grid');if(!el)return;
-  const g=kanGrid(),pfx=kanPfx(g);
-  _kanMap={};
-  kanArr().forEach(x=>{if(x&&!kanIsSheet(x)&&String(x.id).indexOf(pfx)===0)_kanMap[x.id]=x;});
+  const pfx=kanPfx(kanGrid());
   try{
-    for(let r=0;r<g.rows;r++)for(let c=0;c<g.cols;c++){
-      if(!kanIsF(r,c))continue;
-      const i=document.getElementById('kin-'+r+'-'+c);
-      if(!i||document.activeElement===i)continue;   // ช่องที่กำลังพิมพ์ ปล่อยให้เห็นสูตรจริง
-      const s=kanShown(r,c);
-      i.value=s.txt;
-      i.classList.toggle('kan-f',!s.err);
-      i.classList.toggle('kan-e',s.err);
-    }
-  }finally{_kanMap=null;_kanBusy={};}
+    kanIdx().byId.forEach((x,id)=>{
+      if(kanIsSheet(x)||String(id).indexOf(pfx)!==0)return;
+      if(String(x.v==null?'':x.v).charAt(0)!=='=')return;
+      const i=document.getElementById('kin-'+x.r+'-'+x.c);
+      if(!i||document.activeElement===i)return;   // ช่องที่กำลังพิมพ์ ปล่อยให้เห็นสูตรจริง
+      const sh=kanShown(x.r,x.c);
+      i.value=sh.txt;
+      i.classList.toggle('kan-f',!sh.err);
+      i.classList.toggle('kan-e',sh.err);
+    });
+  }finally{_kanBusy={};}
   kanStatBar();
 }
 // แตะเข้าช่อง → เห็นสูตรจริง · ออกจากช่อง → เห็นผลลัพธ์
@@ -11956,9 +11976,6 @@ function kanStatBar(){
   const el=document.getElementById('kan-stat');if(!el)return;
   const rg=kanSelRange();
   if(!rg.length){el.innerHTML='<span class="kan-tlbl">เลือกช่วงในตารางเพื่อดูผลรวม</span>';return;}
-  const g=kanGrid(),pfx=kanPfx(g);
-  const own=!_kanMap;
-  if(own){_kanMap={};kanArr().forEach(x=>{if(x&&!kanIsSheet(x)&&String(x.id).indexOf(pfx)===0)_kanMap[x.id]=x;});}
   const nums=[];let filled=0;
   try{
     rg.forEach(([r,c])=>{
@@ -11972,7 +11989,7 @@ function kanStatBar(){
         const n=kanNumOf(t);if(n!=null)nums.push(n);
       }
     });
-  }finally{if(own){_kanMap=null;_kanBusy={};}}
+  }finally{_kanBusy={};}
   const sum=nums.reduce((s,v)=>s+v,0);
   const avg=nums.length?sum/nums.length:0;
   el.innerHTML='<span>เลือก <b>'+rg.length+'</b> ช่อง</span>'+
@@ -12208,9 +12225,7 @@ function renderKanTabs(){
 }
 function renderKanGrid(){
   renderKanTabs();
-  // ดัชนีชั่วคราวสำหรับคิดสูตรตอนวาด — ไม่งั้นทุกช่องวิ่ง find() ใน D.kanDraft ทีละครั้ง
-  const _g=kanGrid(),_p=kanPfx(_g);
-  _kanMap={};kanArr().forEach(x=>{if(x&&!kanIsSheet(x)&&String(x.id).indexOf(_p)===0)_kanMap[x.id]=x;});
+  const _g=kanGrid();
   try{
   const el=document.getElementById('kan-grid');if(!el)return;
   const g=kanGrid();
@@ -12240,7 +12255,7 @@ function renderKanGrid(){
   }
   h+='</tbody></table>';
   el.innerHTML='<div class="kan-gwrap">'+h+'</div>';
-  }finally{_kanMap=null;_kanBusy={};}
+  }finally{_kanBusy={};}
   kanPaintSel();kanSyncToolbar();kanApplyZoom();
   const inf=document.getElementById('kan-size');
   if(inf)inf.textContent=_g.name+' — '+_g.rows+' แถว × '+_g.cols+' คอลัมน์';
