@@ -651,6 +651,105 @@ html[data-uisize="xl"]{--ui-scale:1.25}
 .sn-uisize .uisize-seg button[aria-pressed="true"]{background:var(--sn-lime);color:#163a28}
 .mob-uisize{padding:11px 16px 13px;border-bottom:1px solid var(--bd)}
 /* ══ ปุ่ม “ต้นทุนทุกบ่อ” หน้าภาพรวม + หน้าต่างสรุปต้นทุน ══ */
+/* ── 📷 ถ่ายบิลรับของ (entry #282) ── */
+.bill-entry{width:100%;display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:12px 14px;border-radius:var(--r);
+  border:1px solid var(--bd);background:var(--sf);cursor:pointer;text-align:left;font:inherit;color:var(--tx)}
+.bill-entry:hover{background:var(--sf2)}
+.bill-entry.wait{background:var(--wb);border-color:#F5D08A}
+.bill-entry .ic{font-size:calc(25px * var(--ui-scale));line-height:1;flex:0 0 auto}
+.bill-entry .tx{flex:1;min-width:0}
+.bill-entry .tx b{display:block;font-size:calc(15px * var(--ui-scale))}
+.bill-entry .tx small{display:block;color:var(--tx2);font-size:calc(12px * var(--ui-scale))}
+.bill-entry .go{color:var(--tx3);font-size:calc(20px * var(--ui-scale))}
+.sk-bill{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}
+.sk-bill .bill-entry{flex:1 1 320px;margin-bottom:4px}
+.sk-bill .bill-sec{margin-bottom:4px}
+.sk-bill:empty{display:none}
+.bill-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;margin-left:5px;
+  border-radius:99px;background:var(--d);color:#fff;font-size:11px;font-weight:700;line-height:1;vertical-align:middle}
+.bill-chip{display:inline-block;padding:2px 8px;border-radius:99px;font-size:calc(11.5px * var(--ui-scale));font-weight:700;white-space:nowrap}
+.bill-chip.wait{background:var(--wb);color:var(--w-tx)}
+.bill-chip.ok{background:var(--ob);color:var(--ok-tx)}
+.bill-chip.back{background:var(--db);color:var(--d)}
+.bill-chip.new{background:var(--ib);color:var(--in)}
+.bill-modal{width:min(96vw,560px);max-height:92vh;display:flex;flex-direction:column;padding:0;overflow:hidden}
+.bill-rev{width:min(98vw,1180px)}
+.bill-mh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:14px 16px;border-bottom:1px solid var(--bd)}
+.bill-mh b{font-size:calc(16px * var(--ui-scale))}
+.bill-mh small{display:block;color:var(--tx2);font-size:calc(12px * var(--ui-scale))}
+.bill-x{border:0;background:var(--sf2);width:34px;height:34px;border-radius:99px;cursor:pointer;font-size:16px;flex:0 0 auto}
+.bill-mb{padding:14px 16px 18px;overflow:auto;display:flex;flex-direction:column;gap:14px}
+.bill-lbl{display:block;font-size:calc(12.5px * var(--ui-scale));font-weight:700;color:var(--tx2);margin-bottom:6px}
+.bill-hint{font-size:calc(12px * var(--ui-scale));color:var(--tx3)}
+.bill-good{color:var(--ok);font-weight:700}.bill-bad{color:var(--d);font-weight:700}
+.bill-msg{padding:9px 11px;border-radius:8px;background:var(--ib);color:var(--in);font-size:calc(13px * var(--ui-scale))}
+.bill-msg.err{background:var(--db);color:var(--d)}.bill-msg.warn{background:var(--wb);color:var(--w-tx)}
+.bill-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:420px){.bill-2col{grid-template-columns:1fr}}
+.bill-shots{display:flex;gap:8px;flex-wrap:wrap}
+.bill-shot{width:96px;height:126px;border-radius:8px;border:1px solid var(--bd);background:#eee center/cover;position:relative}
+/* พื้นที่แตะ 44px ตามกฎจอสัมผัสของแอป แต่วงกลมที่มองเห็นเล็ก ไม่บังรูปบิล */
+.bill-shot button{position:absolute;top:0;right:0;width:44px;height:44px;border:0;padding:3px;background:transparent;cursor:pointer;display:flex;align-items:flex-start;justify-content:flex-end}
+.bill-shot button span{width:24px;height:24px;border-radius:99px;background:rgba(0,0,0,.62);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1}
+.bill-cam{width:96px;height:126px;border-radius:8px;border:2px dashed var(--bd);background:var(--sf2);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:4px;color:var(--tx2);font-size:calc(12px * var(--ui-scale));cursor:pointer;text-align:center}
+.bill-cam span{font-size:26px}
+.bill-srch{position:relative}
+.bill-sugg{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--sf);border:1px solid var(--bd);border-radius:8px;
+  box-shadow:0 8px 20px rgba(16,24,40,.12);z-index:5;max-height:260px;overflow:auto}
+.bill-sugg button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--sf2);background:transparent;padding:10px 12px;font:inherit;cursor:pointer}
+.bill-sugg button:hover{background:var(--pl)}
+.bill-sugg small{color:var(--tx3)}
+.bill-sugg .free{color:var(--in);font-weight:600}
+.bill-items{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.bill-it{display:flex;align-items:center;gap:8px;border:1px solid var(--bd);border-radius:10px;padding:8px 10px}
+.bill-it .nm{flex:1;min-width:0;font-weight:600}
+.bill-it .nm small{display:block;font-weight:400;color:var(--tx3)}
+.bill-step{display:flex;align-items:center;border:1px solid var(--bd);border-radius:8px;overflow:hidden;flex:0 0 auto}
+.bill-step button{border:0;background:var(--sf2);width:36px;height:38px;font-size:18px;cursor:pointer}
+.bill-step input{width:62px;border:0;text-align:center;padding:6px 2px;font:inherit}
+.bill-rm{border:0;background:transparent;font-size:18px;cursor:pointer;color:var(--tx3)}
+.bill-send{width:100%;padding:12px;font-size:calc(15px * var(--ui-scale))}
+.bill-send[disabled]{opacity:.45;cursor:not-allowed}
+.bill-minebox{border-top:1px solid var(--bd);padding-top:12px}
+.bill-mine{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px dashed var(--bd);font-size:calc(13px * var(--ui-scale))}
+.bill-mine.edit{cursor:pointer}.bill-mine.edit:hover{background:var(--sf2)}
+.bill-revgrid{display:grid;grid-template-columns:270px 1fr;gap:14px;align-items:start}
+@media(max-width:860px){.bill-revgrid{grid-template-columns:1fr}}
+.bill-queue{display:flex;flex-direction:column;gap:4px;max-height:72vh;overflow:auto}
+@media(max-width:860px){.bill-queue{max-height:190px}}
+.bill-q{display:flex;flex-direction:column;gap:2px;text-align:left;padding:9px 10px;border-radius:8px;border:1px solid transparent;background:transparent;font:inherit;cursor:pointer;color:var(--tx)}
+.bill-q:hover{background:var(--sf2)}
+.bill-q.on{background:var(--pl);border-color:#F5D08A}
+.bill-q .t{display:flex;justify-content:space-between;gap:6px;font-weight:700}
+.bill-q small{color:var(--tx3);font-size:calc(11.5px * var(--ui-scale))}
+.bill-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.bill-det{display:grid;grid-template-columns:minmax(220px,330px) 1fr;gap:14px;align-items:start}
+@media(max-width:1000px){.bill-det{grid-template-columns:1fr}}
+.bill-photo img{display:block;width:100%;border-radius:8px;border:1px solid var(--bd);cursor:zoom-in}
+.bill-pages{display:flex;gap:6px;margin:6px 0}
+.bill-pages img{width:50px;height:64px;object-fit:cover;border:2px solid transparent;cursor:pointer}
+.bill-pages img.on{border-color:var(--p)}
+.bill-photo-err{padding:20px;background:var(--db);color:var(--d);border-radius:8px;font-size:calc(13px * var(--ui-scale))}
+.bill-tbl td,.bill-tbl th{vertical-align:middle}
+.bill-tbl .num{text-align:right;font-variant-numeric:tabular-nums}
+.bill-tbl select{margin-top:4px;min-width:180px}
+.bill-in-q{width:80px;text-align:right}.bill-in-p{width:100px;text-align:right}
+.bill-diff{display:block;color:var(--w-tx);font-size:calc(11px * var(--ui-scale))}
+.bill-tot{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-top:10px;padding:10px;background:var(--sf2);border-radius:8px;font-variant-numeric:tabular-nums}
+.bill-warn{display:flex;gap:8px;align-items:flex-start;margin-top:10px;padding:10px 12px;background:var(--wb);border:1px solid #F5D08A;border-radius:8px;
+  font-size:calc(12.5px * var(--ui-scale));cursor:pointer}
+.bill-warn input{margin-top:3px}
+.bill-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.bill-actions .btn[disabled]{opacity:.45;cursor:not-allowed}
+.bill-done{margin-top:12px;padding:10px 12px;background:var(--ob);border:1px solid #BBE5C8;border-radius:8px;font-size:calc(13px * var(--ui-scale))}
+.bill-zoom{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:14px;cursor:zoom-out}
+.bill-zoom img{max-width:100%;max-height:100%}
+/* ⚠️ แอปนี้ไม่มีกฎ [hidden]{display:none} ส่วนกลาง — class ไหนตั้ง display เอง แอตทริบิวต์ hidden จะไม่มีผล
+   .bill-zoom เคยคลุมจอดำตลอดเวลาเพราะเหตุนี้ (entry #282) */
+.bill-zoom[hidden],.bill-sugg[hidden],.bill-msg[hidden],.bill-hint[hidden]{display:none!important}
+/* ⚠️ iPad: ช่องกรอกต้อง 16px ไม่งั้น Safari ซูมเองตอนแตะ (entry #273) */
+@media (pointer:coarse){.bill-modal .fi,.bill-step input{font-size:16px}.bill-step button{width:42px;height:42px}}
 .ov-cost-btn{width:100%;display:flex;align-items:center;gap:12px;margin-bottom:14px;
   background:var(--sf);border:1.5px solid var(--p);border-radius:14px;padding:14px 16px;
   cursor:pointer;font-family:inherit;text-align:left;min-height:66px;transition:background .15s}
@@ -1603,6 +1702,44 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 </div>
 <!-- MED PROTOCOL — หน้าต่างขยายเต็มจอ อ่าน/พิมพ์ข้อความยาวๆ ได้สบายตาบนมือถือ -->
 <!-- ══ ต้นทุนทุกบ่อในหน้าเดียว (admin เท่านั้น) ══ -->
+<!-- 📷 ถ่ายบิลรับของ (staff) — entry #282 -->
+<div class="modal-bg" id="billCapModal">
+  <div class="modal bill-modal bill-cap">
+    <div class="bill-mh"><div><b>📷 ถ่ายบิลรับของ</b><small>ส่งให้ออฟฟิศตรวจ · สต็อกเปลี่ยนเมื่อออฟฟิศอนุมัติ</small></div>
+      <button type="button" class="bill-x" aria-label="ปิด" onclick="closeBillCapture()">✕</button></div>
+    <div class="bill-mb">
+      <div class="bill-msg warn" id="bc-back" hidden></div>
+      <div><div class="bill-lbl">1) รูปบิล <span class="bill-hint">ถ่ายได้สูงสุด 4 หน้า</span></div>
+        <div class="bill-shots" id="bc-shots"></div>
+        <div class="bill-hint" id="bc-old" hidden></div></div>
+      <div class="bill-2col">
+        <div><label class="bill-lbl" for="bc-date">วันที่รับของ</label><input class="fi" type="date" id="bc-date"></div>
+        <div><label class="bill-lbl" for="bc-shop">ร้าน / คนส่ง <span class="bill-hint">ไม่บังคับ</span></label><input class="fi" id="bc-shop" placeholder="เช่น ร้านเกษตรภัณฑ์"></div>
+      </div>
+      <div><label class="bill-lbl" for="bc-q">2) ของที่มาส่ง</label>
+        <div class="bill-srch"><input class="fi" id="bc-q" placeholder="🔍 พิมพ์ชื่อ เช่น อาหาร 3, ปูน" autocomplete="off" oninput="billSugg()" onfocus="billSugg()">
+          <div class="bill-sugg" id="bc-sugg" hidden></div></div>
+        <div class="bill-items" id="bc-items"></div>
+        <div class="bill-hint" id="bc-noitem">ยังไม่มีรายการ — พิมพ์ชื่อแล้วแตะเลือก</div></div>
+      <div class="bill-msg" id="bc-msg" hidden></div>
+      <button type="button" class="btn btn-p bill-send" id="bc-send" onclick="submitBillCapture()">ส่งให้ออฟฟิศตรวจ</button>
+      <div class="bill-hint" id="bc-why"></div>
+      <div class="bill-minebox"><div class="bill-lbl">บิลที่ส่งแล้ว</div><div id="bc-mine"></div></div>
+    </div>
+  </div>
+</div>
+<!-- 📥 ตรวจบิลรับของ (admin) — entry #282 -->
+<div class="modal-bg" id="billRevModal">
+  <div class="modal bill-modal bill-rev">
+    <div class="bill-mh"><div><b>📥 ตรวจบิลรับของ</b><small>เปิดรูปเทียบ · ใส่ราคา · กดอนุมัติแล้วสต็อกเพิ่มทันที</small></div>
+      <button type="button" class="bill-x" aria-label="ปิด" onclick="closeBillReview()">✕</button></div>
+    <div class="bill-mb bill-revgrid">
+      <div class="bill-queue" id="br-queue"></div>
+      <div id="br-detail"></div>
+    </div>
+  </div>
+</div>
+<div class="bill-zoom" id="billZoom" hidden onclick="this.hidden=true"><img id="billZoomImg" alt="รูปบิลขยาย"></div>
 <div class="modal-bg" id="costSumModal">
   <div class="modal cost-sum-modal">
     <div class="cost-sum-hdr">
@@ -1884,6 +2021,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <div class="mhd-search" onclick="document.getElementById('bnav-more')?.click()">🔍 ค้นหาบ่อ / ข้อมูล...</div>
   </div>
   <div class="ov-kpi-bar" id="ov-kpi-bar"></div>
+  <div id="ov-bill"></div>
   <button class="ov-cost-btn admin-only" type="button" onclick="openCostSummary()">
     <span class="ic">💰</span>
     <span class="tx"><b>ต้นทุนทุกบ่อ ในหน้าเดียว</b><small id="ov-cost-btn-sub">ดูต้นทุนสะสม · ต้นทุน/กก. · ต้นทุน/วัน ทุกบ่อพร้อมกัน</small></span>
@@ -3194,6 +3332,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   <div class="sec-hdr"><div class="sec-title">📦 สต็อกพัสดุ</div></div>
   <div class="g4" id="sk-kpi"></div>
   <div id="sk-warn" style="display:none" class="stock-warn">⚠️ <span id="sk-warn-txt"></span></div>
+  <div id="sk-bill" class="sk-bill"></div>
   <div class="stock-sub">
     <button class="stock-sub-btn on" id="skb-items" onclick="stockTab('items',this)">รายการพัสดุ</button>
     <button class="stock-sub-btn" id="skb-tx" onclick="stockTab('tx',this)">บันทึกรับ-เบิก</button>
@@ -4375,6 +4514,7 @@ function loadData(){
     const _cy=new Date().getFullYear();
     d.ponds.forEach(p=>{['feedLog','samples','waterLog','chemLog','labResults','records','partialHarvests'].forEach(k=>{if(!p[k])p[k]=[]});if(!p.cropHistory)p.cropHistory=[];if(!p.cropNum)p.cropNum=1;if(!p.cropYear)p.cropYear=_cy;if(p.prepChecklist===undefined)p.prepChecklist=null;});
     if(!Array.isArray(d.kanDraft))d.kanDraft=[];   // ที่พักข้อมูลของกัน — แยกจากแอปหลัก ไม่มีหน้าไหนอ่านนอกจากหน้ากัน
+    if(!Array.isArray(d.stockBills))d.stockBills=[]; // บิลรับของที่ staff ถ่ายส่งมา (รูปเก็บแยกที่ tawan_bill_photos ไม่อยู่ใน D)
     if(!d.categories)d.categories=[...DEFAULT_CATS];
     if(!d.settings)d.settings={};
     if(!d.settings.cropsPerYear)d.settings.cropsPerYear=2;
@@ -4464,6 +4604,7 @@ function mergeRemote(local, remote) {
   merged.inventoryLog = dropDead(mergeArr(merged.inventoryLog||[], remote.inventoryLog||[]));
   // ⚠️ ต้อง merge ด้วย ไม่งั้นที่กันกรอกจากอีกเครื่องจะหายตอนซิงค์ (id เป็น kan_<บ่อ>_<วันลง> คงที่ข้ามเครื่อง)
   merged.kanDraft = dropDead(mergeArr(merged.kanDraft||[], remote.kanDraft||[]));
+  merged.stockBills = dropDead(mergeArr(merged.stockBills||[], remote.stockBills||[]));
   return merged;
 }
 function mergeByMonth(localArr, remoteArr, dead) {
@@ -7212,6 +7353,7 @@ function homeToggleGroup(id){
 }
 // ── การ์ด "เตรียมบ่อ" — เดิมชื่อ pondCard() รองรับทั้งบ่อกำลังเลี้ยง/เตรียมบ่อ แต่ตอนนี้สถานะ/ไซส์/Biomass/อาหาร/ค่าผิดปกติของบ่อที่กำลังเลี้ยงย้ายไปรวมในตาราง "สถานะบ่อทั้งหมด" หมดแล้ว เหลือเรียกใช้แค่กรณีเตรียมบ่อจุดเดียว เปลี่ยนชื่อ+ตัดกิ่งที่ตายแล้วออกให้ตรงกับการใช้งานจริง ──
 function renderOv(){
+  try{billRefreshUI();}catch(e){}
   const meta=D.ponds.map(p=>{
     if(!Array.isArray(p.records))p.records=[];
     const last=p.records[p.records.length-1];
@@ -8564,7 +8706,482 @@ function pickStockJob(mode){
   setStockMode(mode);
 }
 
+// ═══════════════════════════════════════════════════════
+// 📷 ถ่ายบิลรับของ (entry #282)
+// staff ถ่ายบิล + เลือกของ/จำนวน (ไม่เห็นราคา) → เข้าคิว "รอตรวจ" สต็อกยังไม่เปลี่ยน
+// → admin เปิดรูปเทียบ ใส่ราคา กดอนุมัติ → สร้างรายการ "รับเข้า" + สต็อกเพิ่ม
+// ⚠️ รูปบิลเก็บแยกที่ BILL_PHOTO_PATH ห้ามเก็บใน D — ทั้งแอปเซฟเป็น JSON ก้อนเดียว
+//    ถ้ารูปอยู่ใน D ทุกการกดบันทึกอะไรก็ตามจะส่งรูปทุกใบขึ้นเน็ตซ้ำ แอปช้าลงเรื่อยๆ
+// ⚠️ ข้อมูลบิล (D.stockBills) ต้องอ่านจาก D ใหม่ทุกครั้งด้วย id — ห้ามถือ object ค้างไว้
+//    ข้อมูลจากอีกเครื่องเข้ามาเมื่อไหร่ D ถูกแทนทั้งก้อน object เก่าจะหลุดจากของจริง
+// ═══════════════════════════════════════════════════════
+const BILL_PHOTO_PATH='tawan_bill_photos';
+const BILL_MAX_PAGES=4, BILL_IMG_MAX=1600, BILL_IMG_Q=0.72;
+let _billCap=null;   // ร่างของ staff ที่กำลังกรอก {id|null, pages:[dataURL], items:[], date, shop, replacePhotos}
+let _billRev=null;   // ร่างของ admin ที่กำลังตรวจ {id, items:[], billTotal, updCat, page}
+function billToast(t){showToast(t,'');}
+function billArr(){if(!Array.isArray(D.stockBills))D.stockBills=[];return D.stockBills;}
+function billById(id){return billArr().find(b=>b&&b.id===id)||null;}
+function billUid(){const u=firebase.auth&&firebase.auth().currentUser;return u?u.uid:'';}
+function billEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function billWaiting(){return billArr().filter(b=>b&&b.status==='wait');}
+function billMine(){
+  const uid=billUid();
+  return billArr().filter(b=>b&&(APP_ROLE==='admin'||!uid||b.byUid===uid))
+    .slice().sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+}
+function billItem(id){return(D.inventoryItems||[]).find(i=>i.id===id)||null;}
+function billFmt(n){return(Math.round((+n||0)*100)/100).toLocaleString('en-US');}
+function billStatusChip(b){
+  if(b.status==='ok')return'<span class="bill-chip ok">อนุมัติแล้ว</span>';
+  if(b.status==='back')return'<span class="bill-chip back">ตีกลับ</span>';
+  return'<span class="bill-chip wait">รอตรวจ</span>';
+}
+function billWhen(iso){
+  if(!iso)return'';
+  const d=iso.slice(0,10),t=iso.slice(11,16);
+  return(d===today()?'วันนี้':fD(d))+(t?' '+t:'');
+}
+
+// ── ย่อรูปก่อนส่ง: ด้านยาวสุด 1600px · JPEG 72% (~150-300 KB) ──
+function billReadFile(file){
+  return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(file);});
+}
+function billLoadImg(src){
+  return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('เปิดรูปไม่ได้'));i.src=src;});
+}
+async function billCompress(file){
+  const img=await billLoadImg(await billReadFile(file));
+  const w0=img.naturalWidth||img.width,h0=img.naturalHeight||img.height;
+  const k=Math.min(1,BILL_IMG_MAX/Math.max(w0,h0));
+  const c=document.createElement('canvas');
+  c.width=Math.max(1,Math.round(w0*k));c.height=Math.max(1,Math.round(h0*k));
+  const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);
+  g.drawImage(img,0,0,c.width,c.height);
+  return c.toDataURL('image/jpeg',BILL_IMG_Q);
+}
+function billTimeout(p,ms,msg){
+  return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error(msg)),ms))]);
+}
+async function billUploadPhotos(id,pages){
+  const data={n:pages.length,at:new Date().toISOString()};
+  pages.forEach((p,i)=>{data['p'+i]=p;});
+  await billTimeout(firebase.database().ref(BILL_PHOTO_PATH+'/'+id).set(data),60000,'หมดเวลาส่งรูป (สัญญาณอ่อน)');
+}
+const _billPhotoCache={};
+async function billFetchPhotos(id){
+  if(_billPhotoCache[id])return _billPhotoCache[id];
+  const snap=await billTimeout(firebase.database().ref(BILL_PHOTO_PATH+'/'+id).once('value'),30000,'หมดเวลาโหลดรูป');
+  const v=snap.val()||{};
+  const out=[];for(let i=0;i<(v.n||0);i++)if(v['p'+i])out.push(v['p'+i]);
+  _billPhotoCache[id]=out;
+  return out;
+}
+function billUploadErr(e){
+  const m=String(e&&e.message||e||'');
+  if(/permission/i.test(m))return'ส่งรูปไม่ได้: ยังไม่ได้เปิดสิทธิ์ที่เก็บรูปบิลใน Firebase — แจ้ง admin';
+  return'ส่งรูปไม่ได้: '+m+' — ลองกดส่งอีกครั้ง (ข้อมูลที่กรอกยังอยู่)';
+}
+
+// ════════ staff: ถ่ายบิล ════════
+function openBillCapture(editId){
+  let b=editId?billById(editId):null;
+  if(b&&(b.status==='ok'||(APP_ROLE!=='admin'&&b.byUid&&b.byUid!==billUid())))b=null;
+  _billCap=b
+    ?{id:b.id,pages:[],items:(b.items||[]).map(x=>({itemId:x.itemId||null,name:x.name,unit:x.unit||'',qty:x.qty})),
+      date:b.date||today(),shop:b.shop||'',oldPages:b.pages||0,reason:b.status==='back'?(b.reason||''):''}
+    :{id:null,pages:[],items:[],date:today(),shop:'',oldPages:0,reason:''};
+  document.getElementById('billCapModal').classList.add('on');
+  const d=document.getElementById('bc-date');if(d)d.value=_billCap.date;
+  const s=document.getElementById('bc-shop');if(s)s.value=_billCap.shop;
+  const q=document.getElementById('bc-q');if(q)q.value='';
+  billCapMsg('');
+  renderBillCap();
+}
+function closeBillCapture(){
+  if(_billCap&&(_billCap.pages.length||_billCap.items.length)&&!_billCap.sent){
+    if(!confirm('ปิดโดยไม่ส่ง? รูปและรายการที่กรอกไว้จะหาย'))return;
+  }
+  document.getElementById('billCapModal').classList.remove('on');
+  _billCap=null;
+}
+function billCapMsg(t,type){
+  const el=document.getElementById('bc-msg');if(!el)return;
+  el.className='bill-msg'+(type?' '+type:'');el.textContent=t||'';el.hidden=!t;
+}
+async function billAddShot(inp){
+  const files=[...(inp.files||[])];inp.value='';
+  if(!_billCap||!files.length)return;
+  for(const f of files){
+    if(_billCap.pages.length>=BILL_MAX_PAGES){billCapMsg('ถ่ายได้สูงสุด '+BILL_MAX_PAGES+' หน้าต่อบิล','warn');break;}
+    try{_billCap.pages.push(await billCompress(f));}
+    catch(e){billCapMsg('เปิดรูปไม่ได้ ลองถ่ายใหม่','err');}
+  }
+  renderBillCap();
+}
+function billDelShot(i){if(!_billCap)return;_billCap.pages.splice(i,1);renderBillCap();}
+function billSugg(){
+  const box=document.getElementById('bc-sugg'),inp=document.getElementById('bc-q');if(!box||!inp)return;
+  const raw=inp.value.trim();
+  if(!raw){box.hidden=true;return;}
+  // ค้นทีละคำ — พิมพ์ "อาหาร 3" ต้องเจอ "อาหาร 3# CP" หรือ "อาหารกุ้ง เบอร์ 3"
+  const words=raw.toLowerCase().split(' ').filter(Boolean);
+  const hits=(D.inventoryItems||[]).filter(i=>{const n=String(i.name||'').toLowerCase();return words.every(w=>n.indexOf(w)>=0);})
+    .slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),'th')).slice(0,8);
+  const Q=String.fromCharCode(39);
+  box.innerHTML=hits.map(i=>'<button type="button" onclick="billPick('+Q+i.id+Q+')">'+billEsc(i.name)+' <small>· '+billEsc(i.unit||'')+'</small></button>').join('')+
+    '<button type="button" class="free" onclick="billPickFree()">＋ ไม่มีในรายการ — ใช้ชื่อ "'+billEsc(raw)+'" (ออฟฟิศจับคู่ให้)</button>';
+  box.hidden=false;
+}
+function billPick(id){
+  if(!_billCap)return;
+  const it=billItem(id);if(!it)return;
+  const ex=_billCap.items.find(x=>x.itemId===id);
+  if(ex)ex.qty=(+ex.qty||0)+1;else _billCap.items.push({itemId:id,name:it.name,unit:it.unit||'',qty:1});
+  billCloseSugg();
+}
+function billPickFree(){
+  if(!_billCap)return;
+  const n=(document.getElementById('bc-q')||{}).value||'';if(!n.trim())return;
+  _billCap.items.push({itemId:null,name:n.trim(),unit:'',qty:1});
+  billCloseSugg();
+}
+function billCloseSugg(){
+  const q=document.getElementById('bc-q');if(q)q.value='';
+  const b=document.getElementById('bc-sugg');if(b)b.hidden=true;
+  renderBillCap();
+}
+function billQty(i,delta,val){
+  if(!_billCap||!_billCap.items[i])return;
+  const x=_billCap.items[i];
+  if(val!=null){const n=parseFloat(val);x.qty=isFinite(n)?Math.max(0,n):0;}
+  else x.qty=Math.max(0,Math.round(((+x.qty||0)+delta)*100)/100);
+  renderBillCap();
+}
+function billDelItem(i){if(!_billCap)return;_billCap.items.splice(i,1);renderBillCap();}
+function renderBillCap(){
+  if(!_billCap)return;
+  const Q=String.fromCharCode(39);
+  const shots=document.getElementById('bc-shots');
+  if(shots){
+    shots.innerHTML=_billCap.pages.map((p,i)=>
+      '<div class="bill-shot" style="background-image:url('+p+')"><button type="button" aria-label="ลบรูป" onclick="billDelShot('+i+')"><span>×</span></button></div>').join('')+
+      (_billCap.pages.length<BILL_MAX_PAGES
+        ?'<label class="bill-cam"><span>📷</span>'+(_billCap.pages.length?'เพิ่มหน้า':'แตะเพื่อถ่าย')+
+          '<input type="file" accept="image/*" capture="environment" hidden onchange="billAddShot(this)"></label>'
+        :'');
+  }
+  const old=document.getElementById('bc-old');
+  if(old){
+    old.hidden=!(_billCap.id&&_billCap.oldPages&&!_billCap.pages.length);
+    old.textContent='ใช้รูปเดิม '+(_billCap.oldPages||0)+' หน้า — ถ่ายใหม่เมื่อไหร่ รูปเดิมจะถูกแทนทั้งหมด';
+  }
+  const back=document.getElementById('bc-back');
+  if(back){back.hidden=!_billCap.reason;back.textContent='↩️ ออฟฟิศตีกลับ: '+_billCap.reason;}
+  const list=document.getElementById('bc-items');
+  if(list){
+    list.innerHTML=_billCap.items.map((x,i)=>
+      '<div class="bill-it"><div class="nm">'+billEsc(x.name)+
+        (x.itemId?'<small>'+billEsc(x.unit)+'</small>':'<small><span class="bill-chip new">สินค้าใหม่ — ออฟฟิศจับคู่ให้</span></small>')+'</div>'+
+      '<div class="bill-step"><button type="button" aria-label="ลด" onclick="billQty('+i+',-1)">−</button>'+
+        '<input type="number" inputmode="decimal" min="0" step="any" value="'+(x.qty||0)+'" onchange="billQty('+i+',0,this.value)" aria-label="จำนวน">'+
+        '<button type="button" aria-label="เพิ่ม" onclick="billQty('+i+',1)">+</button></div>'+
+      '<button type="button" class="bill-rm" aria-label="ลบรายการ" onclick="billDelItem('+i+')">🗑</button></div>').join('');
+  }
+  const none=document.getElementById('bc-noitem');if(none)none.hidden=_billCap.items.length>0;
+  const hasPhoto=_billCap.pages.length>0||(_billCap.id&&_billCap.oldPages>0);
+  const ok=hasPhoto&&_billCap.items.length>0&&_billCap.items.every(x=>x.qty>0);
+  const btn=document.getElementById('bc-send');
+  if(btn){btn.disabled=!ok||!!_billCap.sending;btn.textContent=_billCap.sending?'กำลังส่ง…':(_billCap.id?'ส่งให้ออฟฟิศตรวจอีกครั้ง':'ส่งให้ออฟฟิศตรวจ');}
+  const why=document.getElementById('bc-why');
+  if(why)why.textContent=ok?'สต็อกยังไม่เปลี่ยนจนกว่าออฟฟิศจะอนุมัติ':
+    (!hasPhoto?'ถ่ายรูปบิลอย่างน้อย 1 รูป':!_billCap.items.length?'เลือกของที่มาส่งอย่างน้อย 1 รายการ':'จำนวนต้องมากกว่า 0 ทุกรายการ');
+  renderBillMineList();
+}
+function renderBillMineList(){
+  const el=document.getElementById('bc-mine');if(!el)return;
+  const Q=String.fromCharCode(39);
+  const rows=billMine().slice(0,12);
+  if(!rows.length){el.innerHTML='<div class="bill-hint">ยังไม่มีบิลที่ส่ง</div>';return;}
+  el.innerHTML=rows.map(b=>{
+    const names=(b.items||[]).map(x=>x.name).join(', ');
+    const canEdit=b.status!=='ok';
+    return '<div class="bill-mine'+(canEdit?' edit':'')+'"'+(canEdit?' role="button" tabindex="0" onclick="openBillCapture('+Q+b.id+Q+')"':'')+'>'+
+      '<span><b>'+billEsc(billWhen(b.createdAt))+'</b> · '+billEsc(names.length>60?names.slice(0,60)+'…':names)+
+      (b.status==='back'&&b.reason?'<br><small class="bill-bad">↩️ '+billEsc(b.reason)+'</small>':'')+'</span>'+billStatusChip(b)+'</div>';
+  }).join('')+'<div class="bill-hint">บิลที่ "รอตรวจ" หรือ "ตีกลับ" แตะเพื่อแก้ได้ · อนุมัติแล้วแก้ไม่ได้</div>';
+}
+async function submitBillCapture(){
+  if(!_billCap||_billCap.sending)return;
+  _billCap.date=(document.getElementById('bc-date')||{}).value||today();
+  _billCap.shop=((document.getElementById('bc-shop')||{}).value||'').trim();
+  const hasPhoto=_billCap.pages.length>0||(_billCap.id&&_billCap.oldPages>0);
+  if(!hasPhoto||!_billCap.items.length||!_billCap.items.every(x=>x.qty>0)){renderBillCap();return;}
+  // แก้บิลเดิม: ต้องยังไม่อนุมัติ (อีกเครื่องอาจเพิ่งอนุมัติไป)
+  if(_billCap.id){
+    const cur=billById(_billCap.id);
+    if(!cur||cur.status==='ok'){billCapMsg('บิลนี้ถูกอนุมัติ/ลบไปแล้ว แก้ไม่ได้','err');return;}
+  }
+  _billCap.sending=true;renderBillCap();billCapMsg('กำลังส่งรูป…','');
+  // ⚠️ กดส่งซ้ำหลังส่งรูปไม่ผ่านต้องใช้ id เดิม — Firebase ยังเก็บคำสั่งส่งรูปที่ค้างไว้ส่งทีหลัง
+  //    ถ้าสร้าง id ใหม่ทุกครั้ง รูปที่ค้างส่งจะกลายเป็นขยะไม่มีบิลไหนอ้างถึง
+  if(!_billCap.id&&!_billCap.newId)_billCap.newId='bill'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  const id=_billCap.id||_billCap.newId;
+  try{
+    // ส่งรูปก่อน — ถ้ารูปไม่ถึง ห้ามสร้างรายการในคิว ไม่งั้นออฟฟิศเจอบิลที่ไม่มีรูปให้เทียบ
+    if(_billCap.pages.length){await billUploadPhotos(id,_billCap.pages);_billPhotoCache[id]=_billCap.pages.slice();}
+  }catch(e){
+    _billCap.sending=false;renderBillCap();billCapMsg(billUploadErr(e),'err');return;
+  }
+  const items=_billCap.items.map(x=>({itemId:x.itemId||null,name:x.name,unit:x.unit||'',qty:x.qty,price:null}));
+  let b=_billCap.id?billById(_billCap.id):null;
+  if(b){
+    b.items=items;b.date=_billCap.date;b.shop=_billCap.shop;b.status='wait';b.reason='';
+    if(_billCap.pages.length)b.pages=_billCap.pages.length;
+    b.editedAt=new Date().toISOString();
+  }else{
+    b={id,status:'wait',date:_billCap.date,shop:_billCap.shop,by:curUserLabel(),byUid:billUid(),
+      createdAt:new Date().toISOString(),pages:_billCap.pages.length,items,billTotal:null,reason:'',updCat:false,logIds:[]};
+    billArr().push(b);
+  }
+  _billCap.sent=true;
+  // ⚠️ ห้าม await save() — สัญญาณอ่อนแล้ว staff จะค้างที่ "กำลังส่ง…" · save() เขียนลงเครื่องก่อนเสมอ แล้วค่อยซิงก์เบื้องหลัง
+  save();
+  billRefreshUI();
+  document.getElementById('billCapModal').classList.remove('on');
+  _billCap=null;
+  billToast('✅ ส่งบิลให้ออฟฟิศตรวจแล้ว');
+}
+
+// ════════ admin: ตรวจบิล ════════
+function openBillReview(id){
+  if(APP_ROLE!=='admin')return;
+  const list=billQueueOrder();
+  const pick=id?billById(id):(list[0]||null);
+  document.getElementById('billRevModal').classList.add('on');
+  billLoadRev(pick?pick.id:null);
+}
+function closeBillReview(){document.getElementById('billRevModal').classList.remove('on');_billRev=null;}
+function billQueueOrder(){
+  const rank={wait:0,back:1,ok:2};
+  return billArr().filter(b=>b).slice().sort((a,b)=>
+    (rank[a.status]-rank[b.status])||String(b.createdAt||'').localeCompare(String(a.createdAt||''))).slice(0,40);
+}
+function billLoadRev(id){
+  const b=id?billById(id):null;
+  // ร่างของ admin แยกจากข้อมูลจริง — แก้ในหน้าจอยังไม่เขียนลง D จนกว่าจะกดอนุมัติ/ตีกลับ
+  _billRev=b?{id:b.id,page:0,billTotal:b.billTotal==null?null:b.billTotal,updCat:!!b.updCat,
+    items:(b.items||[]).map(x=>{const it=x.itemId?billItem(x.itemId):null;
+      return{itemId:x.itemId||null,name:x.name,unit:x.unit||(it?it.unit:''),qty:x.qty,
+        price:(x.price!=null&&x.price!=='')?x.price:(it?(+it.unitPrice||0):0)};})}:null;
+  renderBillRev();
+  if(b&&b.pages)billFetchPhotos(b.id).then(()=>{if(_billRev&&_billRev.id===b.id)renderBillRevPhoto();})
+    .catch(e=>{const el=document.getElementById('br-photo');if(el)el.innerHTML='<div class="bill-photo-err">'+billEsc(billUploadErr(e).replace('ส่งรูป','โหลดรูป'))+'</div>';});
+}
+function renderBillRevPhoto(){
+  const el=document.getElementById('br-photo');if(!el||!_billRev)return;
+  const pages=_billPhotoCache[_billRev.id];
+  if(!pages){el.innerHTML='<div class="bill-hint" style="padding:30px;text-align:center">กำลังโหลดรูปบิล…</div>';return;}
+  if(!pages.length){el.innerHTML='<div class="bill-hint" style="padding:30px;text-align:center">ไม่มีรูปบิล</div>';return;}
+  const p=Math.min(_billRev.page,pages.length-1);
+  el.innerHTML='<img src="'+pages[p]+'" alt="รูปบิล หน้า '+(p+1)+'" onclick="billZoom()">'+
+    (pages.length>1?'<div class="bill-pages">'+pages.map((s,i)=>'<img src="'+s+'" class="'+(i===p?'on':'')+'" alt="หน้า '+(i+1)+'" onclick="_billRev.page='+i+';renderBillRevPhoto()">').join('')+'</div>':'')+
+    '<div class="bill-hint">แตะรูปเพื่อขยาย</div>';
+}
+function billZoom(){
+  if(!_billRev)return;const pages=_billPhotoCache[_billRev.id]||[];
+  const src=pages[Math.min(_billRev.page,pages.length-1)];if(!src)return;
+  const z=document.getElementById('billZoom');const im=document.getElementById('billZoomImg');
+  if(z&&im){im.src=src;z.hidden=false;}
+}
+function renderBillRev(){
+  const Q=String.fromCharCode(39);
+  const qEl=document.getElementById('br-queue');
+  if(qEl){
+    const list=billQueueOrder();
+    qEl.innerHTML=list.length?list.map(b=>
+      '<button type="button" class="bill-q'+(_billRev&&_billRev.id===b.id?' on':'')+'" onclick="billLoadRev('+Q+b.id+Q+')">'+
+        '<span class="t"><span>'+billEsc((b.items||[]).length+' รายการ · '+(b.by||'-'))+'</span>'+billStatusChip(b)+'</span>'+
+        '<small>'+billEsc(billWhen(b.createdAt))+(b.shop?' · '+billEsc(b.shop):'')+'</small>'+
+        '<small>'+billEsc((b.items||[]).map(x=>x.name).join(', '))+'</small></button>').join('')
+      :'<div class="bill-hint">ยังไม่มีบิล</div>';
+  }
+  const det=document.getElementById('br-detail');if(!det)return;
+  const b=_billRev?billById(_billRev.id):null;
+  if(!b||!_billRev){det.innerHTML='<div class="bill-hint" style="padding:30px;text-align:center">ไม่มีบิลรอตรวจ 🎉</div>';return;}
+  const lock=b.status==='ok';
+  const cats=(D.inventoryItems||[]).slice().sort((a,c)=>String(a.name).localeCompare(String(c.name),'th'));
+  const rows=_billRev.items.map((x,i)=>{
+    const it=x.itemId?billItem(x.itemId):null;
+    const name=it?billEsc(it.name):
+      '<span class="bill-chip new">staff พิมพ์: '+billEsc(x.name)+'</span>'+
+      '<select class="fi" '+(lock?'disabled':'')+' onchange="billMap('+i+',this.value)" aria-label="จับคู่กับสินค้าในระบบ"><option value="">— เลือกสินค้าในระบบ —</option>'+
+        cats.map(c=>'<option value="'+c.id+'">'+billEsc(c.name)+'</option>').join('')+'</select>';
+    const catPrice=it?(+it.unitPrice||0):null;
+    const diff=(it&&x.price>0&&Math.abs(x.price-catPrice)>0.0001)?'<small class="bill-diff">ราคาในระบบ '+billFmt(catPrice)+'</small>':'';
+    return '<tr><td>'+name+'</td>'+
+      '<td class="num"><input class="fi bill-in-q" type="number" inputmode="decimal" step="any" min="0" value="'+(x.qty||0)+'" '+(lock?'disabled':'')+' onchange="billRevSet('+i+','+Q+'qty'+Q+',this.value)" aria-label="จำนวน"></td>'+
+      '<td>'+billEsc(it?it.unit:x.unit)+'</td>'+
+      '<td class="num"><input class="fi bill-in-p" type="number" inputmode="decimal" step="any" min="0" value="'+(x.price||'')+'" placeholder="0" '+(lock?'disabled':'')+' onchange="billRevSet('+i+','+Q+'price'+Q+',this.value)" aria-label="ราคาต่อหน่วย">'+diff+'</td>'+
+      '<td class="num">'+billFmt((x.qty||0)*(x.price||0))+'</td></tr>';
+  }).join('');
+  const sum=_billRev.items.reduce((s,x)=>s+(x.qty||0)*(x.price||0),0);
+  const cmp=_billRev.billTotal==null?'<span class="bill-hint">กรอกยอดท้ายบิลเพื่อเทียบ</span>':
+    (Math.abs(_billRev.billTotal-sum)<0.5?'<span class="bill-good">✓ ตรงกับบิล</span>':'<span class="bill-bad">ต่างจากบิล '+billFmt(sum-_billRev.billTotal)+' บาท</span>');
+  const unmapped=_billRev.items.some(x=>!x.itemId||!billItem(x.itemId));
+  const noPrice=_billRev.items.some(x=>!(x.price>0));
+  const noQty=_billRev.items.some(x=>!(x.qty>0));
+  const changed=_billRev.items.filter(x=>{const it=x.itemId&&billItem(x.itemId);return it&&x.price>0&&Math.abs(x.price-(+it.unitPrice||0))>0.0001;});
+  let foot='';
+  if(lock){
+    const logs=(b.logIds||[]).map(id=>(D.inventoryLog||[]).find(l=>l.id===id)).filter(Boolean);
+    foot='<div class="bill-done"><b>✅ อนุมัติแล้ว</b> โดย '+billEsc(b.reviewedBy||'-')+' · '+billEsc(billWhen(b.reviewedAt))+
+      '<br>รับเข้าสต็อกแล้ว '+logs.length+' รายการ'+((b.logIds||[]).length>logs.length?' <span class="bill-bad">(ถูกลบที่ประวัติรับเข้า '+((b.logIds||[]).length-logs.length)+' รายการ)</span>':'')+
+      ' · ราคาในระบบ'+(b.updCat?'อัปเดตตามบิลนี้แล้ว':'<b>ไม่</b>เปลี่ยน')+'</div>';
+  }else{
+    foot=(changed.length?'<label class="bill-warn"><input type="checkbox" '+(_billRev.updCat?'checked':'')+' onchange="_billRev.updCat=this.checked">'+
+        '<span><b>อัปเดตราคาในระบบเป็นราคาจากบิลนี้</b> ('+changed.map(x=>billEsc(billItem(x.itemId).name)).join(', ')+')<br>'+
+        '⚠️ ต้นทุนเข้าบ่อคิดจากราคาปัจจุบันในระบบ — ติ๊กแล้ว<b>ต้นทุนของทุกครั้งที่เคยเบิกสินค้านี้เข้าบ่อจะเปลี่ยนย้อนหลังด้วย</b> · ไม่ติ๊ก = บิลนี้จำราคาของมันไว้ ราคาในระบบไม่เปลี่ยน</span></label>':'')+
+      '<div class="bill-actions">'+
+        '<button type="button" class="btn btn-p" '+(unmapped||noPrice||noQty?'disabled':'')+' onclick="approveBill()">✅ อนุมัติ รับเข้าสต็อก</button>'+
+        '<button type="button" class="btn btn-s" onclick="sendBackBill()">↩️ ตีกลับให้ staff แก้</button>'+
+        '<button type="button" class="btn btn-s" style="color:var(--d)" onclick="deleteBill()">🗑️ ลบบิล</button></div>'+
+      (unmapped?'<div class="bill-hint">จับคู่ "สินค้าใหม่" กับสินค้าในระบบก่อนอนุมัติ — ถ้ายังไม่มี เพิ่มที่ สต็อก › รายการพัสดุ แล้วกลับมาเลือก</div>':
+       noQty?'<div class="bill-hint">จำนวนต้องมากกว่า 0 ทุกรายการ</div>':
+       noPrice?'<div class="bill-hint">ใส่ราคาต่อหน่วยให้ครบทุกรายการก่อนอนุมัติ</div>':'');
+  }
+  det.innerHTML=
+    '<div class="bill-head"><div><b>บิลจาก '+billEsc(b.by||'-')+'</b> <span class="bill-hint">· ส่งเมื่อ '+billEsc(billWhen(b.createdAt))+
+      ' · รับของวันที่ '+billEsc(fD(b.date))+(b.shop?' · '+billEsc(b.shop):'')+'</span></div>'+billStatusChip(b)+'</div>'+
+    (b.status==='back'&&b.reason?'<div class="bill-hint bill-bad">↩️ ตีกลับไปแล้ว: '+billEsc(b.reason)+' — รอ staff แก้</div>':'')+
+    '<div class="bill-det"><div class="bill-photo" id="br-photo"></div><div>'+
+      '<div style="overflow-x:auto"><table class="tbl bill-tbl"><thead><tr><th>สินค้า</th><th class="num">จำนวน</th><th>หน่วย</th><th class="num">ราคา/หน่วย</th><th class="num">รวม</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+      '<div class="bill-tot"><span>รวมที่คำนวณ <b>'+billFmt(sum)+'</b> บาท</span>'+
+        '<span>ยอดท้ายบิล <input class="fi" type="number" inputmode="decimal" step="any" style="width:120px;display:inline-block" value="'+(_billRev.billTotal==null?'':_billRev.billTotal)+'" '+(lock?'disabled':'')+
+        ' onchange="_billRev.billTotal=this.value===\'\'?null:(parseFloat(this.value)||0);renderBillRev()" aria-label="ยอดท้ายบิล"></span>'+cmp+'</div>'+
+      foot+'</div></div>';
+  renderBillRevPhoto();
+}
+function billRevSet(i,k,v){
+  if(!_billRev||!_billRev.items[i])return;
+  const n=parseFloat(v);_billRev.items[i][k]=isFinite(n)?Math.max(0,n):0;
+  renderBillRev();
+}
+function billMap(i,itemId){
+  if(!_billRev||!_billRev.items[i])return;
+  const it=billItem(itemId);if(!it)return;
+  const x=_billRev.items[i];x.itemId=it.id;x.unit=it.unit||'';
+  if(!(x.price>0))x.price=+it.unitPrice||0;
+  renderBillRev();
+}
+async function approveBill(){
+  if(APP_ROLE!=='admin'||!_billRev)return;
+  const b=billById(_billRev.id);
+  // อีกเครื่องอาจเพิ่งอนุมัติ/ลบไป — กันรับเข้าสต็อกซ้ำ
+  if(!b){billToast('บิลนี้ถูกลบไปแล้ว');renderBillRev();return;}
+  if(b.status==='ok'){billToast('บิลนี้อนุมัติไปแล้ว');renderBillRev();return;}
+  const rows=_billRev.items;
+  if(rows.some(x=>!x.itemId||!billItem(x.itemId)||!(x.qty>0)||!(x.price>0))){renderBillRev();return;}
+  if(!confirm('อนุมัติบิลนี้? สต็อกจะเพิ่ม '+rows.length+' รายการ'))return;
+  if(!D.inventoryLog)D.inventoryLog=[];
+  const logIds=[],by=curUserLabel();
+  rows.forEach(x=>{
+    const it=billItem(x.itemId);
+    it.qty=Math.round(((+it.qty||0)+x.qty)*100)/100;
+    if(_billRev.updCat&&Math.abs(x.price-(+it.unitPrice||0))>0.0001)it.unitPrice=x.price;
+    const id='sl'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    // ⚠️ unitCost = ราคาจากบิล (เก็บดิบไว้เป็นหลักฐาน) — ต้นทุนเข้าบ่อยังคิดจาก item.unitPrice ตามเดิม
+    D.inventoryLog.push({id,itemId:it.id,itemName:it.name,type:'in',qty:x.qty,date:b.date||today(),
+      note:'จากบิลรับของ'+(b.shop?' · '+b.shop:''),pondId:'',balanceAfter:it.qty,unit:it.unit||'',by,
+      unitCost:x.price,billId:b.id});
+    logIds.push(id);
+  });
+  b.items=rows.map(x=>{const it=billItem(x.itemId);return{itemId:it.id,name:it.name,unit:it.unit||'',qty:x.qty,price:x.price};});
+  b.billTotal=_billRev.billTotal;b.updCat=!!_billRev.updCat;
+  b.status='ok';b.reason='';b.logIds=logIds;b.reviewedBy=by;b.reviewedAt=new Date().toISOString();
+  save();
+  billToast('✅ อนุมัติแล้ว รับเข้าสต็อก '+rows.length+' รายการ');
+  billRefreshUI();
+  const next=billWaiting()[0];
+  billLoadRev(next?next.id:b.id);
+  if(document.getElementById('sec-stock')&&document.getElementById('sec-stock').classList.contains('on')){
+    renderStockKPI();renderStockWarn();renderStockItems();
+  }
+}
+async function sendBackBill(){
+  if(APP_ROLE!=='admin'||!_billRev)return;
+  const b=billById(_billRev.id);if(!b||b.status==='ok'){renderBillRev();return;}
+  const r=prompt('เหตุผลที่ตีกลับ (staff จะเห็นข้อความนี้)','จำนวนไม่ตรงกับบิล');
+  if(r==null)return;
+  b.status='back';b.reason=r.trim()||'ให้ตรวจสอบอีกครั้ง';b.reviewedBy=curUserLabel();b.reviewedAt=new Date().toISOString();
+  save();
+  billToast('↩️ ตีกลับให้ staff แล้ว');
+  billRefreshUI();
+  const next=billWaiting()[0];
+  billLoadRev(next?next.id:b.id);
+}
+async function deleteBill(){
+  if(APP_ROLE!=='admin'||!_billRev)return;
+  const b=billById(_billRev.id);if(!b)return;
+  if(b.status==='ok'){billToast('บิลที่อนุมัติแล้วลบไม่ได้ — ถ้ารับเข้าผิด ให้ลบที่ประวัติรับเข้า');return;}
+  if(!confirm('ลบบิลนี้และรูปบิล? ย้อนกลับไม่ได้'))return;
+  D.stockBills=billArr().filter(x=>x&&x.id!==b.id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(b.id);
+  try{await firebase.database().ref(BILL_PHOTO_PATH+'/'+b.id).remove();}catch(e){}
+  delete _billPhotoCache[b.id];
+  save();
+  billRefreshUI();
+  const next=billWaiting()[0];
+  billLoadRev(next?next.id:null);
+}
+// ดูรูปบิลจากประวัติรับเข้า (ใช้หน้าตรวจของ admin แบบอ่านอย่างเดียว)
+function openBillFromLog(billId){
+  if(APP_ROLE!=='admin')return;
+  if(!billById(billId)){billToast('ไม่พบบิลนี้ (อาจถูกลบไปแล้ว)');return;}
+  openBillReview(billId);
+}
+
+// ════════ ป้ายแจ้งเตือน + ทางเข้า ════════
+function billRefreshUI(){
+  const n=billWaiting().length;
+  const backMine=APP_ROLE==='admin'?0:billMine().filter(b=>b.status==='back').length;
+  const badgeN=APP_ROLE==='admin'?n:backMine;
+  document.querySelectorAll('#tab-stock,#bnav-stock,.sn-link[onclick*="goTab(\'stock\'"]').forEach(btn=>{
+    let s=btn.querySelector('.bill-badge');
+    if(!badgeN){if(s)s.remove();return;}
+    if(!s){s=document.createElement('span');s.className='bill-badge';btn.appendChild(s);}
+    s.textContent=badgeN;
+    s.title=APP_ROLE==='admin'?'บิลรอตรวจ':'บิลถูกตีกลับ';
+  });
+  const Q=String.fromCharCode(39);
+  const entry=(where)=>{
+    if(APP_ROLE==='admin'){
+      if(!n)return'';
+      return '<button type="button" class="bill-entry wait" onclick="openBillReview()"><span class="ic">📥</span>'+
+        '<span class="tx"><b>บิลรอตรวจ '+n+' ใบ</b><small>staff ถ่ายบิลรับของส่งมา — เปิดรูปเทียบ ใส่ราคา แล้วกดอนุมัติ</small></span><span class="go">›</span></button>';
+    }
+    return '<button type="button" class="bill-entry" onclick="openBillCapture()"><span class="ic">📷</span>'+
+      '<span class="tx"><b>ถ่ายบิลรับของ</b><small>'+(backMine?'<span class="bill-bad">↩️ มีบิลถูกตีกลับ '+backMine+' ใบ — แตะเพื่อแก้</span>':'ของมาส่งที่ฟาร์ม ถ่ายบิลส่งให้ออฟฟิศตรวจ ไม่ต้องส่งไลน์')+'</small></span><span class="go">›</span></button>';
+  };
+  const ov=document.getElementById('ov-bill');if(ov)ov.innerHTML=entry('ov');
+  const sk=document.getElementById('sk-bill');
+  if(sk){
+    sk.innerHTML=entry('stock')+(APP_ROLE==='admin'
+      ?'<button type="button" class="btn btn-s bill-sec" onclick="openBillCapture()">📷 ถ่ายบิลเอง</button>'+
+       (billArr().length?'<button type="button" class="btn btn-s bill-sec" onclick="openBillReview()">🧾 บิลทั้งหมด</button>':'')
+      :'');
+  }
+  if(_billCap&&document.getElementById('billCapModal').classList.contains('on'))renderBillMineList();
+  // หน้าตรวจบิลเป็นของ admin เท่านั้น — บทบาทเปลี่ยน (ล็อกอินใหม่) ต้องปิดทิ้ง ไม่ให้ค้างหน้าจอ
+  if(APP_ROLE!=='admin'&&document.getElementById('billRevModal').classList.contains('on'))closeBillReview();
+  if(_billRev&&document.getElementById('billRevModal').classList.contains('on')){
+    // ข้อมูลจากอีกเครื่องเข้ามา: บิลที่เปิดอยู่อาจถูกอนุมัติ/ลบไปแล้ว — วาดใหม่จาก D ปัจจุบัน
+    if(!isEditingField())renderBillRev();
+  }
+}
+
 function initStock(){
+  billRefreshUI();
   populateAll();
   if(document.getElementById('sk-tx-date'))document.getElementById('sk-tx-date').value=today();
   renderStockKPI();
@@ -9157,7 +9774,7 @@ function renderStockInLog(){
         <td style="color:var(--tx2)">${l.unit||''}</td>
         <td style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">${l.note||''}</td>
         <td style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">${l.by||'-'}</td>
-        <td><button class="btn-sm btn-del" onclick="deleteStockLog('${l.id}');renderStockInLog()">🗑️</button></td>
+        <td style="white-space:nowrap">${l.billId&&APP_ROLE==='admin'?`<button class="btn-sm" title="ดูรูปบิล" onclick="openBillFromLog('${l.billId}')">🧾</button> `:''}<button class="btn-sm btn-del" onclick="deleteStockLog('${l.id}');renderStockInLog()">🗑️</button></td>
       </tr>`)
     ).join('')+
   '</tbody></table></div>';
@@ -12015,7 +12632,7 @@ async function kanInsertSum(){
   }
   for(let c=box.c1;c<=box.c2;c++)
     kanGetOrMake(box.r2+1,c).v='=SUM('+kanColName(c)+(box.r1+1)+':'+kanColName(c)+(box.r2+1)+')';
-  await save();renderKanGrid();
+  save();renderKanGrid();
   showMsg('kan-msg','ok','ใส่สูตรผลรวมที่แถว '+(box.r2+2)+' แล้ว '+(box.c2-box.c1+1)+' คอลัมน์');
 }
 // ═══ ย้ายช่องด้วยคีย์บอร์ด ═══
