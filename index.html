@@ -870,6 +870,8 @@ button.pr-it:hover,button.pr-it:active{background:var(--sf2)}
 .pr-l{min-width:0;display:flex;flex-direction:column;gap:1px}
 .pr-n{font-weight:600;font-size:calc(15px * var(--ui-scale));line-height:1.3}
 .pr-u{font-size:calc(12.5px * var(--ui-scale));color:var(--tx3)}
+.pr-pp{font-size:calc(12.5px * var(--ui-scale));color:var(--tx2);margin-top:2px;line-height:1.4;white-space:normal}
+.pr-pp b{color:var(--in);font-weight:600}
 .pr-c{font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-top:2px}
 .pr-mg{color:var(--ok);font-weight:600}
 .pr-mg.neg{color:var(--d)}
@@ -1858,6 +1860,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
         <div class="pr-hint">ช่องเดียวกับราคา/หน่วยในหน้าสต็อก — แก้แล้วต้นทุนบ่อเปลี่ยนตาม</div></div>
       <div class="pr-g2"><div class="fg"><label class="fl" for="pri-co">บริษัท</label><select class="fi" id="pri-co"></select></div>
         <div class="fg"><label class="fl" for="pri-unit">หน่วย</label><input class="fi" id="pri-unit" placeholder="ถัง, ถุง, กระสอบ"></div></div>
+      <div class="fg"><label class="fl" for="pri-props">สรรพคุณ <span class="pr-hint">(staff เห็นด้วย · ช่องเดียวกับในหน้าสต็อก)</span></label><textarea class="fi" id="pri-props" rows="2" placeholder="เช่น ฆ่าเชื้อในน้ำ ก่อนลงลูกกุ้ง · บำรุงตับ"></textarea></div>
+      <div class="fg"><label class="fl" for="pri-potency">ความเข้มข้น <span class="pr-hint">(จุลินทรีย์/ยา — ไม่มีเว้นว่าง)</span></label><input class="fi" id="pri-potency" placeholder="เช่น 10^9 CFU/g · 90%"></div>
       <div class="fg"><label class="fl" for="pri-note">หมายเหตุ <span class="pr-hint">(staff เห็นด้วย)</span></label><input class="fi" id="pri-note" placeholder="เช่น ซื้อ 5 ลัง แถม 2 ลัง"></div>
       <div id="pri-msg"></div>
     </div>
@@ -6017,7 +6021,7 @@ function renderPrice(){
   const cb=document.getElementById('pr-cust');if(cb){cb.classList.toggle('on',_prCust);cb.setAttribute('aria-pressed',_prCust);}
   document.getElementById('pr-sub').textContent=admin&&_prCust?'🧾 โหมดโชว์ลูกค้า — ซ่อนต้นทุนและกำไร':'';
   const q=_prQ.trim().toLowerCase();
-  const hit=i=>!q||[i.name,prCoName(i.companyId),i.shopNote,i.unit].some(x=>String(x||'').toLowerCase().includes(q));
+  const hit=i=>!q||[i.name,prCoName(i.companyId),i.shopNote,i.unit,i.props,i.potency].some(x=>String(x||'').toLowerCase().includes(q));
   let list=(_prCo==='off'?g.off:g.live).filter(hit);
   if(_prCo&&_prCo!=='off')list=list.filter(i=>g.coOf(i)===_prCo);
   const groups=[...g.cos.map(c=>({id:c.id,name:c.name})),{id:'none',name:'ยังไม่ระบุบริษัท'}];
@@ -6031,7 +6035,7 @@ function renderPrice(){
       const costLine=cust?'':'<span class="pr-c">ทุน '+(cost?prB(cost):'—')
         +(sell&&cost?' · <span class="pr-mg'+(sell<cost?' neg':'')+'">'+(sell>=cost?'+':'−')+prB(Math.abs(sell-cost))+' ('+Math.round((sell-cost)/cost*100)+'%)</span>':'')+'</span>';
       const left='<span class="pr-l"><span class="pr-n">'+billEsc(i.name)+'</span>'
-        +'<span class="pr-u">'+billEsc(i.unit||'')+'</span>'+costLine
+        +'<span class="pr-u">'+billEsc(i.unit||'')+'</span>'+(itemPropsLine(i)?'<span class="pr-pp">'+itemPropsLine(i)+'</span>':'')+costLine
         +(i.shopNote?'<span class="pr-nt">'+billEsc(i.shopNote)+'</span>':'')+'</span>';
       const right='<span class="pr-r">'+(sell?'<span class="pr-sp">฿'+prB(sell)+'</span>':'<span class="pr-none">'+(cust?'สอบถาม':'ยังไม่ตั้งราคา')+'</span>')
         +(bulk?'<span class="pr-bk">ยกลัง ฿'+prB(bulk)+'</span>':'')+'</span>';
@@ -6069,7 +6073,7 @@ function openPrItem(id){
   document.getElementById('pri-new-row').style.display=it?'none':'';
   v('pri-co',it?it.companyId||'':(_prCo&&_prCo!=='none'&&_prCo!=='off'?_prCo:''));
   v('pri-unit',it?it.unit:'');v('pri-name','');v('pri-cat','equip');
-  v('pri-cost',it?it.unitPrice:'');v('pri-sell',it?it.shopPrice:'');v('pri-bulk',it?it.shopBulk:'');v('pri-note',it?it.shopNote:'');
+  v('pri-props',it?it.props:'');v('pri-potency',it?it.potency:'');v('pri-cost',it?it.unitPrice:'');v('pri-sell',it?it.shopPrice:'');v('pri-bulk',it?it.shopBulk:'');v('pri-note',it?it.shopNote:'');
   const off=document.getElementById('pri-off');off.style.display=it?'':'none';
   if(it)off.textContent=it.shopOff?'↩️ กลับมาขาย':'เลิกขาย';
   document.getElementById('pri-msg').innerHTML='';
@@ -6104,6 +6108,7 @@ function savePrItem(){
   it.unit=g('pri-unit')||it.unit||'';
   if(cost!=null)it.unitPrice=cost;
   const set=(k,x)=>{if(x==null||x===''||x===0)delete it[k];else it[k]=x;};
+  it.props=g('pri-props');it.potency=g('pri-potency');   // ฟอร์มสต็อกเก็บเป็นสตริงว่างได้ — ทำแบบเดียวกัน
   set('companyId',g('pri-co'));set('shopPrice',sell);set('shopBulk',bulk);set('shopNote',g('pri-note'));
   save();
   closePrItem();
@@ -9800,7 +9805,9 @@ function saveStockItem(){
   };
   if(!D.inventoryItems)D.inventoryItems=[];
   const idx=D.inventoryItems.findIndex(i=>i.id===id);
-  if(idx>=0)D.inventoryItems[idx]=item;else D.inventoryItems.push(item);
+  // ── ⚠️ ต้องคงช่องที่ฟอร์มนี้ไม่มี (บริษัท/ราคาขาย/ยกลัง/หมายเหตุขาย/เลิกขาย ของหน้าราคาสินค้า) — เดิมแทนทั้งก้อน
+  //    แก้สรรพคุณในหน้าสต็อกแล้วราคาขายหาย 3 ตัว (entry #293) · ช่องที่ฟอร์มนี้มี ยังเขียนทับตามฟอร์มเหมือนเดิม ──
+  if(idx>=0)D.inventoryItems[idx]={...D.inventoryItems[idx],...item};else D.inventoryItems.push(item);
   save();
   showStockMsg('item','✅ บันทึกแล้ว','ok');
   clearStockItem();
