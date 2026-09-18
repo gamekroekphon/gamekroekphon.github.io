@@ -840,6 +840,46 @@ html[data-uisize="xl"]{--ui-scale:1.25}
    ตารางกลายเป็นกรอบเลื่อนซ้อนอยู่ในกรอบ .kan-gwrap อีกชั้น → หัวคอลัมน์ที่ตรึงไว้หลุดตอนเลื่อนลง
    และลูกศรเลื่อนจอตามไม่ได้ — 768px คือ iPad แนวตั้งพอดี · ตารางนี้มีกรอบเลื่อนของตัวเองแล้ว ห้ามโดนกฎนั้น */
 .card table.kan-g{display:table;width:auto;overflow:visible}
+/* ── ราคาสินค้า (entry #291) ── */
+.pr-hbtn{display:flex;gap:8px;flex-wrap:wrap}
+body:not(.role-admin) .pr-hbtn,body:not(.role-admin) .pr-toggle{display:none!important}
+.pr-sub{font-size:calc(12.5px * var(--ui-scale));color:var(--tx3);margin:-4px 0 10px}
+.pr-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.pr-search{flex:1;min-width:220px}
+.pr-toggle{display:inline-flex;border:1px solid var(--bd);border-radius:8px;overflow:hidden}
+.pr-toggle button{border:0;background:var(--sf);padding:8px 12px;font:inherit;font-size:calc(12.5px * var(--ui-scale));color:var(--tx2);cursor:pointer}
+.pr-toggle button.on{background:var(--tx);color:#fff;font-weight:700}
+.pr-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.pr-chip{border:1px solid var(--bd);background:var(--sf);border-radius:99px;padding:5px 11px;font:inherit;font-size:calc(12.5px * var(--ui-scale));color:var(--tx2);cursor:pointer}
+.pr-chip span{color:var(--tx3);font-size:.9em}
+.pr-chip.on{background:var(--p);border-color:var(--p);color:#fff;font-weight:700}
+.pr-chip.on span{color:#fff}
+.pr-toggle button:focus-visible,.pr-chip:focus-visible{outline:2px solid var(--in);outline-offset:2px}
+.pr-tw{overflow-x:auto}
+.card table.pr-t{display:table;border-collapse:collapse;width:100%;font-size:calc(13px * var(--ui-scale));overflow:visible;color:var(--tx)}  /* ตั้งสีเอง — .role-admin (ป้ายหัวเว็บ) ติดที่ body ด้วย ทำให้ข้อความที่ไม่ตั้งสีของ admin เป็นสีทอง */
+.pr-t th{font-size:calc(11.5px * var(--ui-scale));color:var(--tx3);text-align:left;font-weight:600;padding:7px 8px;border-bottom:1px solid var(--bd);background:var(--sf2);white-space:nowrap}
+.pr-t td{padding:7px 8px;border-bottom:1px solid var(--bd);white-space:nowrap}
+.pr-t .num{text-align:right;font-variant-numeric:tabular-nums}
+.pr-t tr.pr-co td{background:var(--pl);font-weight:700;color:var(--pd)}
+.pr-t tr.pr-co td span{font-weight:400;color:var(--tx3);font-size:.9em}
+.pr-cost{color:var(--tx2)}
+.pr-sell{font-weight:700}
+.pr-mg{color:var(--ok);font-size:calc(12px * var(--ui-scale))}
+.pr-mg.neg{color:var(--d)}
+.pr-dim{color:var(--tx3);font-style:italic;font-size:.95em}
+.pr-note{font-size:calc(12px * var(--ui-scale));color:var(--tx2);white-space:normal!important;min-width:140px}
+.pr-empty{color:var(--tx3);text-align:center;padding:24px 12px;margin:0}
+.modal.pr-modal{padding:0;width:520px;display:flex;flex-direction:column;height:auto}
+.pr-mb{padding:14px 16px;overflow-y:auto}
+.pr-g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pr-hint{font-size:calc(11.5px * var(--ui-scale));color:var(--tx3);margin-top:3px}
+.pr-err{background:var(--db);color:var(--d);border-radius:8px;padding:8px 10px;font-size:calc(13px * var(--ui-scale))}
+.pr-f{border-top:1px solid var(--bd)}
+.pr-colist{padding:6px 16px;overflow-y:auto;max-height:55vh}
+.pr-corow{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--bd)}
+.pr-corow .fi{flex:1;min-width:0}
+.pr-coadd{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--bd)}
+.pr-coadd .fi{flex:1}
 /* ── ที่มาของเงินซื้อกองทุนปาล์ม (entry #289) ── */
 .fbs-seg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
 .fbs-btn{border:1px solid var(--bd);background:var(--sf);border-radius:99px;padding:6px 12px;font:inherit;font-size:calc(13px * var(--ui-scale));color:var(--tx2);cursor:pointer}
@@ -1427,6 +1467,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <button class="sn-link tab-item" onclick="goTab('entry',this)">💧 คุณภาพน้ำ</button>
       <button class="sn-link tab-item" onclick="goTab('feed',this)">🍖 อาหาร &amp; FCR</button>
       <button class="sn-link tab-item" onclick="goTab('stock',this)">📦 สต็อก</button>
+      <button class="sn-link tab-item" onclick="goTab('price',this)">💲 ราคาสินค้า</button>
       <button class="sn-link tab-item" onclick="goTab('sample',this)">⚖️ สุ่มตัวอย่าง</button>
       <button class="sn-link tab-item" onclick="goTab('watlog',this)">💦 จัดการน้ำ</button>
       <button class="sn-link tab-item" onclick="goTab('mortality',this)">🦐 กุ้งตาย</button>
@@ -1511,6 +1552,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <button class="tab-item" id="tab-entry" onclick="goTab('entry',this)">💧 คุณภาพน้ำ</button>
       <button class="tab-item" id="tab-feed" onclick="goTab('feed',this)">🍖 อาหาร &amp; FCR <span style="font-size:var(--fs10);opacity:.7">(อัตราแลกเนื้อ)</span></button>
       <button class="tab-item" id="tab-stock" onclick="goTab('stock',this)">📦 สต็อก</button>
+      <button class="tab-item" id="tab-price" onclick="goTab('price',this)">💲 ราคาสินค้า</button>
       <button class="tab-item" id="tab-sample" onclick="goTab('sample',this)">⚖️ สุ่มตัวอย่าง</button>
       <button class="tab-item" id="tab-watlog" onclick="goTab('watlog',this)">💦 จัดการน้ำ</button>
       <button class="tab-item" id="tab-mortality" onclick="goTab('mortality',this)">🦐 กุ้งตาย</button>
@@ -1579,6 +1621,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <button class="mob-sheet-item" data-t="entry" onclick="mobMenuGo(this)"><span class="ic">💧</span>คุณภาพน้ำ</button>
     <button class="mob-sheet-item" data-t="feed" onclick="mobMenuGo(this)"><span class="ic">🍖</span>อาหาร &amp; FCR</button>
     <button class="mob-sheet-item" data-t="stock" onclick="mobMenuGo(this)"><span class="ic">📦</span>สต็อก</button>
+    <button class="mob-sheet-item" data-t="price" onclick="mobMenuGo(this)"><span class="ic">💲</span>ราคาสินค้า</button>
     <button class="mob-sheet-item" data-t="sample" onclick="mobMenuGo(this)"><span class="ic">⚖️</span>สุ่มตัวอย่าง</button>
     <button class="mob-sheet-item" data-t="watlog" onclick="mobMenuGo(this)"><span class="ic">💦</span>จัดการน้ำ</button>
     <button class="mob-sheet-item" data-t="mortality" onclick="mobMenuGo(this)"><span class="ic">🦐</span>กุ้งตาย</button>
@@ -1782,6 +1825,33 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 <!-- MED PROTOCOL — หน้าต่างขยายเต็มจอ อ่าน/พิมพ์ข้อความยาวๆ ได้สบายตาบนมือถือ -->
 <!-- ══ ต้นทุนทุกบ่อในหน้าเดียว (admin เท่านั้น) ══ -->
 <!-- 📷 ถ่ายบิลรับของ (staff) — entry #282 -->
+<div class="modal-bg" id="prItemModal" onclick="if(event.target===this)closePrItem()">
+  <div class="modal pr-modal" role="dialog" aria-labelledby="pri-title">
+    <div class="fsl-h"><div><b id="pri-title"></b><small id="pri-sub"></small></div><button type="button" class="bill-x" aria-label="ปิด" onclick="closePrItem()">✕</button></div>
+    <div class="pr-mb">
+      <div class="pr-g2"><div class="fg"><label class="fl" for="pri-co">บริษัท</label><select class="fi" id="pri-co"></select></div>
+        <div class="fg"><label class="fl" for="pri-unit">หน่วย</label><input class="fi" id="pri-unit" placeholder="ถัง, ถุง, กระสอบ"></div></div>
+      <div id="pri-new-row" class="pr-g2"><div class="fg"><label class="fl" for="pri-name">ชื่อสินค้า</label><input class="fi" id="pri-name" placeholder="เช่น คลอรีนโลตัส"></div>
+        <div class="fg"><label class="fl" for="pri-cat">หมวดในสต็อก</label><select class="fi" id="pri-cat">
+          <option value="feed">🍚 อาหารกุ้ง</option><option value="chemOral">💊 ยากิน</option><option value="chemWater">🧪 ยาลงน้ำ</option>
+          <option value="probioOral">🦠 จุลินทรีย์กิน</option><option value="probioWater">🧫 จุลินทรีย์ลงน้ำ</option><option value="lime">🪨 ปูน</option><option value="equip">🔧 อุปกรณ์</option></select></div></div>
+      <div class="fg"><label class="fl" for="pri-cost">ต้นทุน (ราคาที่ฟาร์มใช้ · รวมค่าขนส่ง)</label><input class="fi" id="pri-cost" type="number" min="0" step="any" inputmode="decimal">
+        <div class="pr-hint">ช่องเดียวกับ "ราคา/หน่วย" ในหน้าสต็อก — แก้ที่นี่ หน้าสต็อกและต้นทุนบ่อเปลี่ยนตาม</div></div>
+      <div class="pr-g2"><div class="fg"><label class="fl" for="pri-sell">ราคาขาย เงินสด</label><input class="fi" id="pri-sell" type="number" min="0" step="any" inputmode="decimal"></div>
+        <div class="fg"><label class="fl" for="pri-bulk">ราคาพิเศษ/ยกลัง</label><input class="fi" id="pri-bulk" type="number" min="0" step="any" inputmode="decimal" placeholder="ไม่มีก็เว้นว่าง"></div></div>
+      <div class="fg"><label class="fl" for="pri-note">หมายเหตุ</label><input class="fi" id="pri-note" placeholder="เช่น ซื้อ 5 ลัง แถม 2 ลัง"></div>
+      <div id="pri-msg"></div>
+    </div>
+    <div class="fsl-f pr-f"><button type="button" class="btn" id="pri-off" onclick="togglePrOff()"></button><span style="flex:1"></span><button type="button" class="btn" onclick="closePrItem()">ยกเลิก</button><button type="button" class="btn btn-p" onclick="savePrItem()">💾 บันทึก</button></div>
+  </div>
+</div>
+<div class="modal-bg" id="prCoModal" onclick="if(event.target===this)closePrCo()">
+  <div class="modal pr-modal" role="dialog" aria-labelledby="prc-title">
+    <div class="fsl-h"><div><b id="prc-title">🏢 บริษัท / กลุ่มสินค้า</b><small>แก้ชื่อได้ในช่อง · ลบได้เมื่อไม่มีสินค้าเหลือในบริษัทนั้น</small></div><button type="button" class="bill-x" aria-label="ปิด" onclick="closePrCo()">✕</button></div>
+    <div class="pr-colist" id="prc-list"></div>
+    <div class="pr-coadd"><input class="fi" id="prc-new" placeholder="ชื่อบริษัทใหม่" onkeydown="if(event.key==='Enter')addPrCo()"><button type="button" class="btn btn-p" onclick="addPrCo()">+ เพิ่ม</button></div>
+  </div>
+</div>
 <div class="modal-bg" id="fundSellLinkModal" onclick="if(event.target===this)closeFundSellLink()">
   <div class="modal fsl-modal" role="dialog" aria-labelledby="fsl-title">
     <div class="fsl-h"><div><b id="fsl-title"></b><small>ติ๊กรายจ่ายสวนที่จ่ายด้วยเงินก้อนนี้ · โชว์รายจ่ายช่วง 1 เดือนก่อน–หลังวันขาย</small></div>
@@ -3408,6 +3478,17 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     </div>
   </div>
 </div>
+<div id="sec-price" class="sec">
+  <div class="sec-hdr"><div class="sec-title">💲 ราคาสินค้า</div>
+    <div class="pr-hbtn admin-only"><button type="button" class="btn" onclick="openPrCo()">🏢 จัดการบริษัท</button><button type="button" class="btn btn-p" onclick="openPrItem('')">+ เพิ่มสินค้า</button></div></div>
+  <div class="pr-sub" id="pr-sub"></div>
+  <div class="pr-tools">
+    <input class="fi pr-search" id="pr-q" type="search" placeholder="🔍 ค้นหาสินค้า เช่น คลอรีน, 7701, ปูน" oninput="_prQ=this.value;renderPrice()">
+    <div class="pr-toggle admin-only" role="group" aria-label="มุมมอง"><button type="button" id="pr-v-all" onclick="setPrCust(false)">👁 ราคาทั้งหมด</button><button type="button" id="pr-v-cust" onclick="setPrCust(true)">🧾 โชว์ลูกค้า (ซ่อนทุน)</button></div>
+  </div>
+  <div class="pr-chips" id="pr-chips"></div>
+  <div class="card"><div class="pr-tw" id="pr-table"></div></div>
+</div>
 <div id="sec-stock" class="sec">
   <div class="sec-hdr"><div class="sec-title">📦 สต็อกพัสดุ</div></div>
   <div class="g4" id="sk-kpi"></div>
@@ -4685,6 +4766,8 @@ function mergeRemote(local, remote) {
   // ⚠️ ต้อง merge ด้วย ไม่งั้นที่กันกรอกจากอีกเครื่องจะหายตอนซิงค์ (id เป็น kan_<บ่อ>_<วันลง> คงที่ข้ามเครื่อง)
   merged.kanDraft = dropDead(mergeArr(merged.kanDraft||[], remote.kanDraft||[]));
   merged.stockBills = dropDead(mergeArr(merged.stockBills||[], remote.stockBills||[]));
+  // ── บริษัทในหน้าราคาสินค้า (entry #291) — id ถาวร co_<เวลา> ลบแล้ว push เข้า deletedIds ──
+  merged.shopCompanies = dropDead(mergeArr(merged.shopCompanies||[], remote.shopCompanies||[]));
   // ── ตะวันปาล์ม + กองทุน — เคยตกหล่นจากรายการนี้ (entry #289): local ชนะทั้งก้อน รายการที่อีกเครื่องเพิ่งเพิ่มหายเงียบๆ
   //    ทุกรายการมี id ถาวร (pp/pm/pf/fb/fn/fs + เวลา) และทุกฟังก์ชันลบ push เข้า deletedIds แล้ว
   //    ปุ๋ยที่มีค่าใช้จ่ายสร้างแถวคู่ใน palmMoney (linkedMoneyId/linkedFertId) — deletePalmFert tombstone ทั้งสองตัว
@@ -5834,6 +5917,170 @@ function updateAlertBadge(n){
     if(sb){sb.textContent='';sb.classList.remove('show');}
   }
 }
+// ══════ ราคาสินค้า (หน้าร้าน) — entry #291 ══════
+//    ⚠️ ใช้สินค้าชุดเดียวกับสต็อก (D.inventoryItems) — ต้นทุน = item.unitPrice ตัวเดียวกับที่คิดเป็นต้นทุนบ่อ ห้ามเก็บราคาทุนแยกอีกชุด
+//    ช่องของหน้านี้: item.companyId · item.shopPrice (เงินสด) · item.shopBulk (พิเศษ/ยกลัง) · item.shopNote · item.shopOff (เลิกขายหน้าร้าน)
+//    บริษัท = D.shopCompanies [{id,name,order}] (merge ข้ามเครื่องแล้ว) · สินค้าไม่มีบริษัท = กลุ่ม "ยังไม่ระบุบริษัท"
+//    สิทธิ์ (พี่เลือก ข): staff เห็นเฉพาะราคาขาย+หมายเหตุ ไม่เห็นต้นทุน/กำไร แก้ไม่ได้ · "เลิกขายหน้าร้าน" = ซ่อนจากหน้านี้ ไม่ลบจากสต็อก ──
+let _prQ='',_prCo='',_prCust=false,_prEditId=null;
+function prCompanies(){return (D.shopCompanies||[]).slice().sort((a,b)=>(a.order||0)-(b.order||0)||String(a.name).localeCompare(String(b.name),'th'));}
+function prCoName(id){const c=(D.shopCompanies||[]).find(x=>x.id===id);return c?c.name:'';}
+function prIsAdmin(){return APP_ROLE==='admin';}
+function prCustView(){return !prIsAdmin()||_prCust;}
+function prB(v){const n=parseFloat(v);return n>0?n.toLocaleString('en-US',{maximumFractionDigits:2}):'';}
+function initPrice(){
+  const q=document.getElementById('pr-q');if(q&&q.value!==_prQ)q.value=_prQ;
+  renderPrice();
+}
+function setPrCust(v){_prCust=!!v;renderPrice();}
+function setPrCo(id){_prCo=id;renderPrice();}
+function renderPrice(){
+  const tbl=document.getElementById('pr-table');if(!tbl)return;
+  const admin=prIsAdmin(),cust=prCustView();
+  ['pr-v-all','pr-v-cust'].forEach((id,i)=>{const b=document.getElementById(id);if(b){const on=i?_prCust:!_prCust;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);}});
+  document.getElementById('pr-sub').textContent=cust
+    ?'ราคาขายหน้าร้าน · เงินสด / พิเศษ-ยกลัง'
+    :'ต้นทุน = ราคาที่ฟาร์มใช้ (ตัวเดียวกับหน้าสต็อก) · เงินสด / พิเศษ-ยกลัง = ราคาขายลูกค้านอก';
+  const cos=prCompanies(),coIds=new Set(cos.map(c=>c.id));
+  const all=(D.inventoryItems||[]).filter(i=>admin||!i.shopOff);
+  const q=_prQ.trim().toLowerCase();
+  const hit=i=>!q||[i.name,prCoName(i.companyId),i.shopNote,i.unit].some(x=>String(x||'').toLowerCase().includes(q));
+  const coOf=i=>coIds.has(i.companyId)?i.companyId:'none';
+  const live=all.filter(i=>!i.shopOff),off=all.filter(i=>i.shopOff);
+  const cnt={};live.forEach(i=>{const k=coOf(i);cnt[k]=(cnt[k]||0)+1;});
+  const chip=(id,label,n)=>'<button type="button" class="pr-chip'+(_prCo===id?' on':'')+'" data-co="'+billEsc(id)+'" onclick="setPrCo(this.dataset.co)">'+billEsc(label)+' <span>'+n+'</span></button>';
+  document.getElementById('pr-chips').innerHTML=chip('','ทั้งหมด',live.length)
+    +cos.filter(c=>cnt[c.id]).map(c=>chip(c.id,c.name,cnt[c.id])).join('')
+    +(cnt.none?chip('none','ยังไม่ระบุบริษัท',cnt.none):'')
+    +(admin&&off.length?chip('off','เลิกขายแล้ว',off.length):'');
+  let list=(_prCo==='off'?off:live).filter(hit);
+  if(_prCo&&_prCo!=='off')list=list.filter(i=>coOf(i)===_prCo);
+  const groups=[...cos.map(c=>({id:c.id,name:c.name})),{id:'none',name:'ยังไม่ระบุบริษัท'}];
+  const cols=cust?5:8;
+  let h='<table class="pr-t"><thead><tr><th>สินค้า</th><th>หน่วย</th>'+(cust?'':'<th class="num">ต้นทุน</th>')
+    +'<th class="num">เงินสด</th><th class="num">พิเศษ/ยกลัง</th>'+(cust?'':'<th class="num">กำไร/หน่วย</th>')+'<th>หมายเหตุ</th>'+(cust?'':'<th></th>')+'</tr></thead><tbody>';
+  let any=false;
+  groups.forEach(g=>{
+    const rs=list.filter(i=>(_prCo==='off'?true:coOf(i)===g.id)&&(_prCo!=='off'||coOf(i)===g.id)).sort((a,b)=>String(a.name).localeCompare(String(b.name),'th',{numeric:true}));
+    if(!rs.length)return;any=true;
+    h+='<tr class="pr-co"><td colspan="'+cols+'">'+billEsc(g.name)+' <span>· '+rs.length+' รายการ</span></td></tr>';
+    rs.forEach(i=>{
+      const cost=parseFloat(i.unitPrice)||0,sell=parseFloat(i.shopPrice)||0;
+      const mg=sell>0&&cost>0?'<span class="pr-mg'+(sell<cost?' neg':'')+'">'+(sell>=cost?'+':'')+prB(sell-cost)+' ('+Math.round((sell-cost)/cost*100)+'%)</span>':'<span class="pr-dim">—</span>';
+      h+='<tr><td>'+billEsc(i.name)+'</td><td>'+billEsc(i.unit||'')+'</td>'
+        +(cust?'':'<td class="num pr-cost">'+(cost?prB(cost):'—')+'</td>')
+        +'<td class="num pr-sell">'+(sell?prB(sell):'<span class="pr-dim">'+(cust?'สอบถาม':'ยังไม่ตั้ง')+'</span>')+'</td>'
+        +'<td class="num">'+(prB(i.shopBulk)||'<span class="pr-dim">—</span>')+'</td>'
+        +(cust?'':'<td class="num">'+mg+'</td>')
+        +'<td class="pr-note">'+billEsc(i.shopNote||'')+'</td>'
+        +(cust?'':'<td><button type="button" class="btn-sm" data-id="'+billEsc(i.id)+'" onclick="openPrItem(this.dataset.id)" aria-label="แก้ราคา '+billEsc(i.name)+'">✏️</button></td>')+'</tr>';
+    });
+  });
+  h+='</tbody></table>';
+  tbl.innerHTML=any?h:'<p class="pr-empty">'+(q?'ไม่พบสินค้าที่ตรงกับ "'+billEsc(_prQ)+'"':'ยังไม่มีสินค้าในกลุ่มนี้')+'</p>';
+}
+// ── หน้าต่างแก้สินค้า ──
+function openPrItem(id){
+  if(!prIsAdmin())return;
+  const it=id?(D.inventoryItems||[]).find(i=>i.id===id):null;
+  if(id&&!it)return;
+  _prEditId=id||'';
+  const v=(k,x)=>{const e=document.getElementById(k);if(e)e.value=x==null?'':x;};
+  document.getElementById('pri-co').innerHTML='<option value="">— ยังไม่ระบุบริษัท —</option>'+prCompanies().map(c=>'<option value="'+billEsc(c.id)+'">'+billEsc(c.name)+'</option>').join('');
+  document.getElementById('pri-title').textContent=it?'✏️ '+it.name:'+ เพิ่มสินค้า';
+  document.getElementById('pri-sub').textContent=it?'คงเหลือในสต็อก '+(it.qty||0)+' '+(it.unit||''):'สินค้าใหม่จะขึ้นในหน้าสต็อกด้วย (จำนวนเริ่ม 0)';
+  document.getElementById('pri-new-row').style.display=it?'none':'';
+  v('pri-co',it?it.companyId||'':(_prCo&&_prCo!=='none'&&_prCo!=='off'?_prCo:''));
+  v('pri-unit',it?it.unit:'');v('pri-name','');v('pri-cat','equip');
+  v('pri-cost',it?it.unitPrice:'');v('pri-sell',it?it.shopPrice:'');v('pri-bulk',it?it.shopBulk:'');v('pri-note',it?it.shopNote:'');
+  const off=document.getElementById('pri-off');off.style.display=it?'':'none';
+  if(it)off.textContent=it.shopOff?'↩️ กลับมาขายหน้าร้าน':'เลิกขายหน้าร้าน';
+  document.getElementById('pri-msg').innerHTML='';
+  document.getElementById('prItemModal').classList.add('on');
+}
+function closePrItem(){_prEditId=null;document.getElementById('prItemModal').classList.remove('on');}
+function prMsg(t){document.getElementById('pri-msg').innerHTML='<div class="pr-err">'+billEsc(t)+'</div>';}
+function savePrItem(){
+  if(!prIsAdmin()||_prEditId==null)return;
+  const g=k=>(document.getElementById(k).value||'').trim();
+  const n=k=>{const x=g(k);return x===''?null:parseFloat(x);};
+  const cost=n('pri-cost'),sell=n('pri-sell'),bulk=n('pri-bulk');
+  if([cost,sell,bulk].some(x=>x!=null&&(isNaN(x)||x<0))){prMsg('ราคาต้องเป็นตัวเลขตั้งแต่ 0 ขึ้นไป');return;}
+  let it;
+  if(_prEditId){
+    it=(D.inventoryItems||[]).find(i=>i.id===_prEditId);   // หาใหม่จาก D — อาจถูกแทนทั้งก้อนจากอีกเครื่องระหว่างเปิดหน้าต่าง
+    if(!it){alert('ไม่พบสินค้านี้แล้ว (อาจถูกลบจากอีกเครื่อง)');closePrItem();return;}
+    // ── แก้ต้นทุน = ต้นทุนบ่อที่เคยเบิกไปแล้วเปลี่ยนย้อนหลัง → บอกยอดที่เปลี่ยนก่อนบันทึก ──
+    const old=parseFloat(it.unitPrice)||0;
+    if(cost!=null&&Math.abs(cost-old)>=0.005){
+      const q=(D.inventoryLog||[]).filter(l=>l.itemId===it.id&&l.type==='out').reduce((t,l)=>t+(parseFloat(l.qty)||0),0);
+      if(q>0&&!confirm('แก้ต้นทุน '+it.name+' '+prB(old)+' → '+prB(cost)+' บาท\n\nเคยเบิกเข้าบ่อไปแล้ว '+prB(q)+' '+(it.unit||'')+'\nต้นทุนบ่อจะเปลี่ยนย้อนหลัง '+(cost>old?'+':'−')+prB(Math.abs(q*(cost-old)))+' บาท\n\nยืนยัน?'))return;
+    }
+  }else{
+    const name=g('pri-name');
+    if(!name){prMsg('กรุณากรอกชื่อสินค้า');return;}
+    if((D.inventoryItems||[]).some(i=>String(i.name).trim()===name)){prMsg('มีสินค้าชื่อ "'+name+'" อยู่แล้ว — ค้นหาแล้วกด ✏️ ที่ตัวเดิมแทน');return;}
+    it={id:'sk'+Date.now()+'_'+Math.random().toString(36).slice(2,6),name,category:g('pri-cat')||'equip',unit:'',unitPrice:0,qty:0,minQty:0,note:''};
+    if(!D.inventoryItems)D.inventoryItems=[];
+    D.inventoryItems.push(it);
+  }
+  it.unit=g('pri-unit')||it.unit||'';
+  if(cost!=null)it.unitPrice=cost;
+  const set=(k,x)=>{if(x==null||x===''||x===0)delete it[k];else it[k]=x;};
+  set('companyId',g('pri-co'));set('shopPrice',sell);set('shopBulk',bulk);set('shopNote',g('pri-note'));
+  save();
+  closePrItem();
+  renderPrice();
+}
+function togglePrOff(){
+  if(!prIsAdmin()||!_prEditId)return;
+  const it=(D.inventoryItems||[]).find(i=>i.id===_prEditId);if(!it)return;
+  if(it.shopOff)delete it.shopOff;else it.shopOff=true;
+  save();closePrItem();renderPrice();
+}
+// ── บริษัท ──
+function openPrCo(){if(!prIsAdmin())return;renderPrCo();document.getElementById('prCoModal').classList.add('on');}
+function closePrCo(){document.getElementById('prCoModal').classList.remove('on');renderPrice();}
+function renderPrCo(){
+  const cos=prCompanies();
+  const cnt={};(D.inventoryItems||[]).forEach(i=>{if(i.companyId)cnt[i.companyId]=(cnt[i.companyId]||0)+1;});
+  document.getElementById('prc-list').innerHTML=cos.length?cos.map((c,ix)=>
+    '<div class="pr-corow"><input class="fi" value="'+billEsc(c.name)+'" data-id="'+billEsc(c.id)+'" aria-label="ชื่อบริษัท" onchange="renamePrCo(this.dataset.id,this.value)">'
+    +'<span class="pr-dim">'+(cnt[c.id]||0)+'</span>'
+    +'<button type="button" class="btn-sm" data-id="'+billEsc(c.id)+'" onclick="movePrCo(this.dataset.id,-1)"'+(ix?'':' disabled')+' aria-label="เลื่อนขึ้น">↑</button>'
+    +'<button type="button" class="btn-sm" data-id="'+billEsc(c.id)+'" onclick="movePrCo(this.dataset.id,1)"'+(ix<cos.length-1?'':' disabled')+' aria-label="เลื่อนลง">↓</button>'
+    +'<button type="button" class="btn-sm btn-del" data-id="'+billEsc(c.id)+'" onclick="delPrCo(this.dataset.id)"'+(cnt[c.id]?' disabled title="ยังมีสินค้าในบริษัทนี้"':'')+' aria-label="ลบบริษัท">🗑️</button></div>').join('')
+    :'<p class="pr-empty">ยังไม่มีบริษัท</p>';
+}
+function addPrCo(){
+  if(!prIsAdmin())return;
+  const el=document.getElementById('prc-new');const name=(el.value||'').trim();if(!name)return;
+  if((D.shopCompanies||[]).some(c=>c.name.trim()===name)){alert('มีบริษัท "'+name+'" อยู่แล้ว');return;}
+  if(!D.shopCompanies)D.shopCompanies=[];
+  const max=(D.shopCompanies||[]).reduce((m,c)=>Math.max(m,c.order||0),0);
+  D.shopCompanies.push({id:'co_'+Date.now()+'_'+Math.random().toString(36).slice(2,5),name,order:max+1});
+  el.value='';save();renderPrCo();
+}
+function renamePrCo(id,name){
+  if(!prIsAdmin())return;name=(name||'').trim();const c=(D.shopCompanies||[]).find(x=>x.id===id);if(!c)return;
+  if(!name){renderPrCo();return;}
+  c.name=name;save();renderPrCo();
+}
+function movePrCo(id,dir){
+  if(!prIsAdmin())return;
+  const cos=prCompanies();const i=cos.findIndex(c=>c.id===id),j=i+dir;if(i<0||j<0||j>=cos.length)return;
+  cos.forEach((c,k)=>{c.order=k+1;});const t=cos[i].order;cos[i].order=cos[j].order;cos[j].order=t;
+  save();renderPrCo();
+}
+function delPrCo(id){
+  if(!prIsAdmin())return;
+  if((D.inventoryItems||[]).some(i=>i.companyId===id)){alert('ยังมีสินค้าในบริษัทนี้ — ย้ายสินค้าไปบริษัทอื่นก่อน');return;}
+  const c=(D.shopCompanies||[]).find(x=>x.id===id);if(!c||!confirm('ลบบริษัท "'+c.name+'"?'))return;
+  D.shopCompanies=D.shopCompanies.filter(x=>x.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
+  if(_prCo===id)_prCo='';
+  save();renderPrCo();
+}
 // ===== HARVEST STATISTICS — สถิติจับกุ้งรายปี (entry #286) =====
 // ── ⚠️ ทุกตัวเลขในหน้านี้คำนวณสดจากรายการจับที่บันทึกในแอป (พาเชียล + ปิดบ่อ) จัดเข้าปี/เดือนตาม "วันที่จับ"
 //    เดิมหน้านี้ดึงจาก Google Apps Script + ตัวเลข hardcode รายเดือน — ยกเลิกแล้ว (พี่สั่ง 18 ก.ย. 69)
@@ -6069,6 +6316,7 @@ function goTab(t,btn){
   if(t==='harvest')initHarvest();
   if(t==='crops')renderCrops();
   if(t==='harveststat')initHarvestStat();
+  if(t==='price')initPrice();
   // ── sync bottom nav (ข้อ 6) ──
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
   const bnavMap={overview:'bnav-overview',entry:'bnav-entry',feed:'bnav-feed',stock:'bnav-stock'};
@@ -9607,7 +9855,8 @@ function filterStockSearch(){
 function addStockToCart(itemId){
   const item=(D.inventoryItems||[]).find(i=>i.id===itemId);if(!item)return;
   if(!_stockCart.some(c=>c.itemId===itemId)){
-    _stockCart.push({cartId:itemId,itemId,itemName:item.name,unit:item.unit,qty:1,currentQty:item.qty,sellPrice:null,unitCost:item.unitPrice||0,category:item.category||''});
+    // ── ราคาขายเริ่มต้น = ราคาเงินสดจากหน้าราคาสินค้า (entry #291) — ช่องยังแก้ได้ เผื่อให้ราคายกลัง/ราคาพิเศษ ──
+    _stockCart.push({cartId:itemId,itemId,itemName:item.name,unit:item.unit,qty:1,currentQty:item.qty,sellPrice:(parseFloat(item.shopPrice)>0?parseFloat(item.shopPrice):null),unitCost:item.unitPrice||0,category:item.category||''});
   }
   const srch=document.getElementById('sk-tx-search');if(srch)srch.value='';
   hideStockDrop();
