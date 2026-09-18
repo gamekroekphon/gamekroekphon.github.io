@@ -840,6 +840,28 @@ html[data-uisize="xl"]{--ui-scale:1.25}
    ตารางกลายเป็นกรอบเลื่อนซ้อนอยู่ในกรอบ .kan-gwrap อีกชั้น → หัวคอลัมน์ที่ตรึงไว้หลุดตอนเลื่อนลง
    และลูกศรเลื่อนจอตามไม่ได้ — 768px คือ iPad แนวตั้งพอดี · ตารางนี้มีกรอบเลื่อนของตัวเองแล้ว ห้ามโดนกฎนั้น */
 .card table.kan-g{display:table;width:auto;overflow:visible}
+/* ── ผูกเงินขายกองทุนปาล์มกับรายจ่ายสวน (entry #288) ── */
+.fsl-cell{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.fsl-chip{display:inline-block;padding:1px 8px;border-radius:99px;font-size:calc(11.5px * var(--ui-scale));font-weight:600;background:var(--sf2);border:1px solid var(--bd);color:var(--tx);white-space:nowrap}
+.fsl-chip.ok{background:var(--ob);border-color:transparent;color:var(--ok)}
+.fsl-chip.left{background:var(--wb);border-color:transparent;color:var(--w)}
+.fsl-chip.fund{background:#EAF5EC;border-color:#BFE0C5;color:#2F7A3E}
+.modal.fsl-modal{padding:0;width:520px;display:flex;flex-direction:column;height:auto}  /* กฎมือถือตั้ง .modal{height:100%} ไว้ — หน้าต่างนี้สั้น ให้สูงตามเนื้อหา */
+.fsl-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid var(--bd)}
+.fsl-h b{display:block;font-size:calc(15px * var(--ui-scale))}
+.fsl-h small{display:block;font-size:calc(12px * var(--ui-scale));color:var(--tx2);margin-top:2px}
+.fsl-list{overflow-y:auto;max-height:55vh}
+.fsl-pick{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--bd);font-size:calc(13.5px * var(--ui-scale));cursor:pointer;min-height:44px}
+.fsl-pick input{width:20px;height:20px;flex-shrink:0;accent-color:#2F7A3E}
+.fsl-pick.dis{opacity:.5;cursor:default}
+.fsl-d{color:var(--tx3);font-size:calc(12px * var(--ui-scale));width:74px;flex-shrink:0}
+.fsl-n{flex:1;min-width:0}
+.fsl-plot,.fsl-other{color:var(--tx3);font-size:calc(11.5px * var(--ui-scale))}
+.fsl-amt{font-variant-numeric:tabular-nums;white-space:nowrap}
+.fsl-sum{display:flex;justify-content:space-between;gap:10px;padding:12px 16px;font-weight:700;background:var(--sf2)}
+.fsl-sum.ok{background:var(--ob);color:var(--ok)}
+.fsl-sum.left,.fsl-sum.over{background:var(--wb);color:var(--w)}
+.fsl-f{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px}
 /* ── สถิติจับกุ้งรายปี (entry #286) ── */
 .hsy-sub{font-size:calc(12.5px * var(--ui-scale));color:var(--tx3);margin:-4px 0 12px}
 .hsy-yrs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
@@ -1745,6 +1767,15 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 <!-- MED PROTOCOL — หน้าต่างขยายเต็มจอ อ่าน/พิมพ์ข้อความยาวๆ ได้สบายตาบนมือถือ -->
 <!-- ══ ต้นทุนทุกบ่อในหน้าเดียว (admin เท่านั้น) ══ -->
 <!-- 📷 ถ่ายบิลรับของ (staff) — entry #282 -->
+<div class="modal-bg" id="fundSellLinkModal" onclick="if(event.target===this)closeFundSellLink()">
+  <div class="modal fsl-modal" role="dialog" aria-labelledby="fsl-title">
+    <div class="fsl-h"><div><b id="fsl-title"></b><small>ติ๊กรายจ่ายสวนที่จ่ายด้วยเงินก้อนนี้ · โชว์รายจ่ายช่วง 1 เดือนก่อน–หลังวันขาย</small></div>
+      <button type="button" class="bill-x" aria-label="ปิด" onclick="closeFundSellLink()">✕</button></div>
+    <div id="fsl-list" class="fsl-list"></div>
+    <div id="fsl-sum" class="fsl-sum"></div>
+    <div class="fsl-f"><button type="button" class="btn" onclick="closeFundSellLink()">ยกเลิก</button><button type="button" class="btn btn-p" onclick="saveFundSellLink()">💾 บันทึก</button></div>
+  </div>
+</div>
 <div class="modal-bg" id="billCapModal">
   <div class="modal bill-modal bill-cap">
     <div class="bill-mh"><div><b>📷 ถ่ายบิลรับของ</b><small>ส่งให้ออฟฟิศตรวจ · สต็อกเปลี่ยนเมื่อออฟฟิศอนุมัติ</small></div>
@@ -4636,6 +4667,13 @@ function mergeRemote(local, remote) {
   // ⚠️ ต้อง merge ด้วย ไม่งั้นที่กันกรอกจากอีกเครื่องจะหายตอนซิงค์ (id เป็น kan_<บ่อ>_<วันลง> คงที่ข้ามเครื่อง)
   merged.kanDraft = dropDead(mergeArr(merged.kanDraft||[], remote.kanDraft||[]));
   merged.stockBills = dropDead(mergeArr(merged.stockBills||[], remote.stockBills||[]));
+  // ── ตะวันปาล์ม + กองทุน — เคยตกหล่นจากรายการนี้ (entry #289): local ชนะทั้งก้อน รายการที่อีกเครื่องเพิ่งเพิ่มหายเงียบๆ
+  //    ทุกรายการมี id ถาวร (pp/pm/pf/fb/fn/fs + เวลา) และทุกฟังก์ชันลบ push เข้า deletedIds แล้ว
+  //    ปุ๋ยที่มีค่าใช้จ่ายสร้างแถวคู่ใน palmMoney (linkedMoneyId/linkedFertId) — deletePalmFert tombstone ทั้งสองตัว
+  //    fundSells[].expenseIds เป็นอาเรย์ในรายการ → ชนะทั้งรายการตามฝั่ง local (ไม่ merge ระดับช่อง)
+  ['palmPlots','palmMoney','palmFertilizer','fundBuys','fundSells','fundNav'].forEach(k => {
+    merged[k] = dropDead(mergeArr(merged[k]||[], remote[k]||[]));
+  });
   return merged;
 }
 function mergeByMonth(localArr, remoteArr, dead) {
@@ -11054,15 +11092,17 @@ function renderPalmMoney(){
   });
   const totalIn=periodList.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
   const totalOut=periodList.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
+  const fundMap=palmExpFundMap();
+  const outByFund=periodList.filter(r=>r.type==='expense'&&fundMap[r.id]).reduce((s,r)=>s+r.amount,0);
   const kpiEl=document.getElementById('pm-kpi');
   if(kpiEl)kpiEl.innerHTML=`<div class="kpi-card"><div class="kpi-lbl">รายรับสะสม (${periodLbl})</div><div class="kpi-val" style="color:var(--ok)">฿${Math.round(totalIn).toLocaleString()}</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">รายจ่ายสะสม (${periodLbl})</div><div class="kpi-val" style="color:var(--d)">฿${Math.round(totalOut).toLocaleString()}</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">กำไรสุทธิ (${periodLbl})</div><div class="kpi-val">฿${Math.round(totalIn-totalOut).toLocaleString()}</div></div>`;
+    <div class="kpi-card"><div class="kpi-lbl">รายจ่ายสะสม (${periodLbl})</div><div class="kpi-val" style="color:var(--d)">฿${Math.round(totalOut).toLocaleString()}</div>${outByFund>0?'<div class="kpi-sub" style="color:var(--palm-g,#2F7A3E);font-weight:700">ในนี้จ่ายด้วยเงินขายกองทุน ฿'+Math.round(outByFund).toLocaleString()+'</div>':''}</div>
+    <div class="kpi-card"><div class="kpi-lbl">กำไรสุทธิ (${periodLbl})</div><div class="kpi-val">฿${Math.round(totalIn-totalOut).toLocaleString()}</div>${outByFund>0?'<div class="kpi-sub">ไม่นับเงินขายกองทุนเป็นรายรับ</div>':''}</div>`;
   if(!list.length){tbl.innerHTML=`<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติ${_palmMoneyViewType==='income'?'รายรับ':'รายจ่าย'} — บันทึกได้จากฟอร์มด้านบน</p>`;return;}
   tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>แปลง</th><th>รายละเอียด</th><th style="text-align:right">น้ำหนัก</th><th style="text-align:right">จำนวนเงิน</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
     list.map(r=>{
       const weightTxt=r.weightKg?r.weightKg.toLocaleString()+' กก.':'—';
-      return `<tr><td>${fD(r.date)}</td><td>${palmPlotName(r.plotId)}</td><td>${r.note||'-'}</td><td style="text-align:right">${weightTxt}</td><td style="text-align:right;color:${r.type==='income'?'var(--ok)':'var(--d)'}">${r.type==='income'?'+':'-'}฿${Math.round(r.amount).toLocaleString()}</td><td style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">${r.by||'-'}</td><td>${r.linkedFertId?'':'<button class="btn-sm btn-del" onclick="deletePalmMoney(\''+r.id+'\')">🗑️</button>'}</td></tr>`;
+      return `<tr><td>${fD(r.date)}</td><td>${palmPlotName(r.plotId)}</td><td>${r.note||'-'}${fundMap[r.id]?' <span class="fsl-chip fund" title="จ่ายด้วยเงินที่ขายกองทุนปาล์มวันที่ '+fD(fundMap[r.id].date)+'">💰 เงินกองทุน '+fD(fundMap[r.id].date)+'</span>':''}</td><td style="text-align:right">${weightTxt}</td><td style="text-align:right;color:${r.type==='income'?'var(--ok)':'var(--d)'}">${r.type==='income'?'+':'-'}฿${Math.round(r.amount).toLocaleString()}</td><td style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">${r.by||'-'}</td><td>${r.linkedFertId?'':'<button class="btn-sm btn-del" onclick="deletePalmMoney(\''+r.id+'\')">🗑️</button>'}</td></tr>`;
     }).join('')
   }</tbody></table></div>`;
 }
@@ -11341,15 +11381,91 @@ function deleteFundSell(id){
   save();
   renderFundPane();
 }
+// ══ เงินขายกองทุนปาล์ม → รายจ่ายสวนที่จ่ายด้วยเงินก้อนนั้น (entry #288) ══
+//    ลิงก์เก็บที่ฝั่ง "การขาย" ที่เดียว (s.expenseIds = id ของ D.palmMoney) — ป้ายในหน้ารายจ่ายคิดย้อนจากตรงนี้ ห้ามเก็บซ้ำที่ฝั่งรายจ่าย
+//    ⚠️ เงินขายกองทุน **ไม่นับเป็นรายรับของสวน** (พี่สั่ง) — เป็นเงินเก็บของเราเองที่ดึงออกมา นับเป็นรายรับกำไรสวนจะเกินจริง
+//    รายจ่ายยังนับเป็นรายจ่ายตามปกติ แค่บอกว่าจ่ายด้วยเงินก้อนไหน · รายจ่ายที่ถูกลบ → id ค้างถูกกรองทิ้งตอนแสดงผลเอง ──
+function fundSellLinkedExp(s){
+  const ids=new Set((s&&s.expenseIds)||[]);
+  return palmMoneyList().filter(r=>r.type==='expense'&&ids.has(r.id)).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+}
+function palmExpFundMap(){
+  const m={};
+  fundSells('palm').forEach(s=>(s.expenseIds||[]).forEach(id=>{if(!m[id])m[id]=s;}));
+  return m;
+}
+function fundSellLinkState(s){
+  const used=fundSellLinkedExp(s).reduce((t,r)=>t+(r.amount||0),0);
+  return{used,left:(s.amount||0)-used};
+}
+let _fslDraft=null;   // {saleId, ids:Set} — ร่างในหน้าต่าง แยกจาก D (ข้อมูลอีกเครื่องเข้ามา D ถูกแทนทั้งก้อน)
+function openFundSellLink(saleId){
+  if(APP_ROLE!=='admin')return;
+  const s=(D.fundSells||[]).find(r=>r.id===saleId);if(!s)return;
+  _fslDraft={saleId,ids:new Set(fundSellLinkedExp(s).map(r=>r.id))};
+  renderFundSellLink();
+  document.getElementById('fundSellLinkModal').classList.add('on');
+}
+function closeFundSellLink(){_fslDraft=null;document.getElementById('fundSellLinkModal').classList.remove('on');}
+function renderFundSellLink(){
+  if(!_fslDraft)return;
+  const s=(D.fundSells||[]).find(r=>r.id===_fslDraft.saleId);if(!s){closeFundSellLink();return;}
+  const B=v=>'฿'+Math.round(v).toLocaleString();
+  const d0=new Date(s.date+'T00:00:00');
+  const lo=ymdLocal(new Date(d0.getTime()-31*86400000)),hi=ymdLocal(new Date(d0.getTime()+31*86400000));
+  const taken=palmExpFundMap();
+  const list=palmMoneyList().filter(r=>r.type==='expense'&&((r.date>=lo&&r.date<=hi)||_fslDraft.ids.has(r.id)))
+    .sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  document.getElementById('fsl-title').textContent='เงินขายกองทุน '+fD(s.date)+' · '+B(s.amount);
+  document.getElementById('fsl-list').innerHTML=list.length?list.map(r=>{
+    const other=taken[r.id]&&taken[r.id].id!==s.id?taken[r.id]:null;
+    const on=_fslDraft.ids.has(r.id);
+    return '<label class="fsl-pick'+(other?' dis':'')+'"><input type="checkbox"'+(on?' checked':'')+(other?' disabled':'')+' onchange="fslToggle(\''+r.id+'\',this.checked)">'
+      +'<span class="fsl-d">'+fD(r.date)+'</span>'
+      +'<span class="fsl-n">'+billEsc(r.note||'-')+' <span class="fsl-plot">· '+billEsc(palmPlotName(r.plotId))+'</span>'+(other?'<br><span class="fsl-other">ผูกกับเงินขาย '+fD(other.date)+' แล้ว</span>':'')+'</span>'
+      +'<span class="fsl-amt">'+B(r.amount||0)+'</span></label>';
+  }).join(''):'<p style="color:var(--tx3);padding:16px;text-align:center">ไม่มีรายจ่ายสวนช่วง 1 เดือนก่อน–หลังวันขาย</p>';
+  const sum=list.filter(r=>_fslDraft.ids.has(r.id)).reduce((t,r)=>t+(r.amount||0),0);
+  const left=(s.amount||0)-sum;
+  const el=document.getElementById('fsl-sum');
+  el.className='fsl-sum'+(Math.abs(left)<1?' ok':left>0?' left':' over');
+  el.innerHTML='<span>รวมที่ติ๊ก '+B(sum)+' จาก '+B(s.amount)+'</span><span>'
+    +(Math.abs(left)<1?'✓ พอดี':left>0?'เหลือ '+B(left):'เกิน '+B(-left))+'</span>';
+}
+function fslToggle(id,on){if(!_fslDraft)return;if(on)_fslDraft.ids.add(id);else _fslDraft.ids.delete(id);renderFundSellLink();}
+function saveFundSellLink(){
+  if(APP_ROLE!=='admin'||!_fslDraft)return;
+  const s=(D.fundSells||[]).find(r=>r.id===_fslDraft.saleId);   // หาใหม่จาก D ด้วย id — อย่าใช้ object ที่ถือไว้ตอนเปิดหน้าต่าง
+  if(!s){alert('ไม่พบรายการขายนี้แล้ว (อาจถูกลบจากอีกเครื่อง)');closeFundSellLink();return;}
+  // กันผูกซ้ำ: รายจ่ายที่อีกเครื่องเพิ่งผูกกับการขายอื่นไปแล้ว ไม่เอามา
+  const taken=palmExpFundMap();
+  s.expenseIds=[..._fslDraft.ids].filter(id=>!taken[id]||taken[id].id===s.id);
+  save();
+  closeFundSellLink();
+  renderFundPane();
+}
 function fundUnitsAsOf(buys,sells,date){return buys.filter(b=>b.date<=date).reduce((s,b)=>s+b.units,0)-sells.filter(s=>s.date<=date).reduce((s,r)=>s+r.units,0);}
 function fundNetInvestedAsOf(buys,sells,date){return buys.filter(b=>b.date<=date).reduce((s,b)=>s+b.amount,0)-sells.filter(s=>s.date<=date).reduce((s,r)=>s+r.amount,0);}
+function fundSellLinkCell(s){
+  const B=v=>'฿'+Math.round(v).toLocaleString();
+  const ex=fundSellLinkedExp(s),st=fundSellLinkState(s);
+  const chips=ex.map(r=>'<span class="fsl-chip">'+billEsc(r.note||'รายจ่าย')+' '+B(r.amount||0)+'</span>').join('');
+  const status=!ex.length?'<span class="fsl-chip left">ยังไม่ได้ผูก</span>'
+    :Math.abs(st.left)<1?'<span class="fsl-chip ok">✓ ใช้ครบ</span>'
+    :st.left>0?'<span class="fsl-chip left">เหลือ '+B(st.left)+' ยังไม่ได้ผูก</span>'
+    :'<span class="fsl-chip left">รายจ่ายเกินเงินที่ขาย '+B(-st.left)+'</span>';
+  return '<td style="min-width:200px"><div class="fsl-cell">'+chips+status
+    +'<button type="button" class="btn-sm" onclick="openFundSellLink(\''+s.id+'\')">'+(ex.length?'✏️ แก้':'เลือกรายจ่าย')+'</button></div></td>';
+}
 function renderFundPane(){
   const meta=FUND_META[_fundSel];
   const noteEl=document.getElementById('fund-note');if(!noteEl)return;
   noteEl.className='note'+(meta.noteCls?' '+meta.noteCls:'');
   noteEl.innerHTML=meta.note;
   document.getElementById('fund-buy-sub').textContent=meta.buySub;
-  document.getElementById('fund-sell-sub').textContent='บันทึกไว้ดูเฉยๆ ไม่ผูกกับข้อมูลการเงินส่วนอื่นใดเลย';
+  document.getElementById('fund-sell-sub').textContent=_fundSel==='palm'
+    ?'ขายแล้วกด "เลือกรายจ่าย" ในประวัติการขาย เพื่อบอกว่าเงินก้อนนี้จ่ายค่าอะไรในสวน · ไม่นับเป็นรายรับของสวน'
+    :'บันทึกไว้ดูเฉยๆ ไม่ผูกกับข้อมูลการเงินส่วนอื่นใดเลย';
   document.getElementById('fund-buy-btn').className='btn btn-p'+(_fundSel==='shrimp'?' shr':'');
   document.getElementById('fund-nav-btn').className='btn btn-p'+(_fundSel==='shrimp'?' shr':'');
   document.getElementById('fund-sell-btn').className='btn btn-p'+(_fundSel==='shrimp'?' shr':'');
@@ -11371,7 +11487,11 @@ function renderFundPane(){
     <div class="kpi-card"><div class="kpi-lbl">หน่วยที่ถืออยู่ตอนนี้</div><div class="kpi-val">${netUnits.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div><div class="kpi-sub">หน่วย</div></div>
     <div class="kpi-card"><div class="kpi-lbl">เงินลงทุนสุทธิ</div><div class="kpi-val">฿${Math.round(netInvested).toLocaleString()}</div><div class="kpi-sub">ซื้อ ${buys.length} ครั้ง · ขาย ${sells.length} ครั้ง</div></div>
     <div class="kpi-card"><div class="kpi-lbl">มูลค่าปัจจุบัน</div><div class="kpi-val">฿${Math.round(curValue).toLocaleString()}</div><div class="kpi-sub">${latest?'NAV ล่าสุด '+latest.nav.toFixed(4)+' ('+fD(latest.date)+')':'ยังไม่มีบันทึก NAV'}</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">กำไร/ขาดทุนสะสม</div><div class="kpi-val" ${plCls}>${plSign}฿${Math.round(totalPL).toLocaleString()}</div><div class="kpi-sub" ${plCls}>${plSign}${totalPLPct.toFixed(2)}%</div></div>`;
+    <div class="kpi-card"><div class="kpi-lbl">กำไร/ขาดทุนสะสม</div><div class="kpi-val" ${plCls}>${plSign}฿${Math.round(totalPL).toLocaleString()}</div><div class="kpi-sub" ${plCls}>${plSign}${totalPLPct.toFixed(2)}%</div></div>`
+    +(_fundSel==='palm'&&sells.length?(()=>{
+      const left=sells.reduce((t,s)=>t+Math.max(0,fundSellLinkState(s).left),0);
+      return `<div class="kpi-card"><div class="kpi-lbl">ขายไปจ่ายค่าสวนแล้ว</div><div class="kpi-val">฿${Math.round(totalSellProceeds).toLocaleString()}</div><div class="kpi-sub"${left>=1?' style="color:var(--w)"':''}>${sells.length} ครั้ง · ${left>=1?'ยังไม่ได้ผูกรายจ่าย ฿'+Math.round(left).toLocaleString():'ผูกรายจ่ายครบทุกบาท'}</div></div>`;
+    })():'');
 
   const buyTbl=document.getElementById('fund-buy-table');
   if(!buys.length){buyTbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติการซื้อ — บันทึกได้ที่ฟอร์ม "บันทึกการซื้อกองทุน" ด้านบน</p>';}
@@ -11384,8 +11504,8 @@ function renderFundPane(){
   const sellTbl=document.getElementById('fund-sell-table');
   if(!sells.length){sellTbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติการขาย — บันทึกได้ที่ฟอร์ม "บันทึกการขายกองทุน" ด้านบน</p>';}
   else{
-    sellTbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th style="text-align:right">หน่วยที่ขาย</th><th style="text-align:right">NAV ตอนขาย</th><th style="text-align:right">เงินที่ได้</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
-      sells.slice().reverse().map(s=>`<tr><td>${fD(s.date)}</td><td style="text-align:right">${s.units.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td style="text-align:right">${s.nav.toFixed(4)}</td><td style="text-align:right;color:var(--ok)">+฿${Math.round(s.amount).toLocaleString()}</td><td style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">${s.note||'-'}</td><td style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">${s.by||'-'}</td><td><button class="btn-sm btn-del" onclick="deleteFundSell('${s.id}')">🗑️</button></td></tr>`).join('')
+    sellTbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th style="text-align:right">หน่วยที่ขาย</th><th style="text-align:right">NAV ตอนขาย</th><th style="text-align:right">เงินที่ได้</th><th>หมายเหตุ</th>${_fundSel==='palm'?'<th>นำไปจ่าย</th>':''}<th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
+      sells.slice().reverse().map(s=>`<tr><td>${fD(s.date)}</td><td style="text-align:right">${s.units.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td style="text-align:right">${s.nav.toFixed(4)}</td><td style="text-align:right;color:var(--ok)">+฿${Math.round(s.amount).toLocaleString()}</td><td style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">${s.note||'-'}</td>${_fundSel==='palm'?fundSellLinkCell(s):''}<td style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">${s.by||'-'}</td><td><button class="btn-sm btn-del" onclick="deleteFundSell('${s.id}')">🗑️</button></td></tr>`).join('')
     }</tbody></table></div>`;
   }
 
