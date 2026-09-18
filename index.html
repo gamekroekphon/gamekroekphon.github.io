@@ -8719,6 +8719,24 @@ function pickStockJob(mode){
 //    ข้อมูลจากอีกเครื่องเข้ามาเมื่อไหร่ D ถูกแทนทั้งก้อน object เก่าจะหลุดจากของจริง
 // ═══════════════════════════════════════════════════════
 const BILL_PHOTO_PATH='tawan_bill_photos';
+// แจ้งเตือนเข้ากลุ่มไลน์ (entry #284) — ส่งแค่ "เกิดอะไรกับบิลใบไหน" ไม่ส่งข้อความ
+// ⚠️ ห้ามส่งข้อความสำเร็จรูปจากตรงนี้ — ฝั่งเซิร์ฟเวอร์ต้องอ่านบิลจริงแล้วประกอบเอง
+//    ไม่งั้นใครที่ล็อกอินแอปได้ ก็ยิงข้อความอะไรก็ได้เข้ากลุ่มไลน์ของฟาร์ม
+const BILL_EVENT_PATH='tawan_events';
+function billEmit(type,billId){
+  try{
+    const uid=billUid();if(!uid||!billId)return;
+    const id='ev'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    firebase.database().ref(BILL_EVENT_PATH+'/'+id)
+      .set({type,billId,actorUid:uid,at:Date.now()})
+      .catch(e=>console.warn('แจ้งเตือนไลน์ไม่ออก',e&&e.message));
+  }catch(e){}
+}
+// ต้องรอ save() ให้ข้อมูลถึงเซิร์ฟเวอร์ก่อนค่อยส่งเหตุการณ์ ไม่งั้นเซิร์ฟเวอร์หาบิลไม่เจอ
+// แต่ไม่บล็อกหน้าจอ — ถ้าเซฟไม่สำเร็จก็แค่ไม่มีแจ้งเตือน ข้อมูลยังอยู่ในเครื่อง
+function billSaveThenEmit(type,billId){
+  Promise.resolve(save()).then(()=>billEmit(type,billId)).catch(()=>{});
+}
 const BILL_MAX_PAGES=4, BILL_IMG_MAX=1600, BILL_IMG_Q=0.72;
 let _billCap=null;   // ร่างของ staff ที่กำลังกรอก {id|null, pages:[dataURL], items:[], date, shop, replacePhotos}
 let _billRev=null;   // ร่างของ admin ที่กำลังตรวจ {id, items:[], billTotal, updCat, page}
@@ -8949,7 +8967,7 @@ async function submitBillCapture(){
   }
   _billCap.sent=true;
   // ⚠️ ห้าม await save() — สัญญาณอ่อนแล้ว staff จะค้างที่ "กำลังส่ง…" · save() เขียนลงเครื่องก่อนเสมอ แล้วค่อยซิงก์เบื้องหลัง
-  save();
+  if(APP_ROLE==='admin')save();else billSaveThenEmit('bill_wait',id);
   billRefreshUI();
   document.getElementById('billCapModal').classList.remove('on');
   _billCap=null;
@@ -9106,7 +9124,8 @@ async function approveBill(){
   b.items=rows.map(x=>{const it=billItem(x.itemId);return{itemId:it.id,name:it.name,unit:it.unit||'',qty:x.qty,price:x.price};});
   b.billTotal=_billRev.billTotal;b.updCat=!!_billRev.updCat;
   b.status='ok';b.reason='';b.logIds=logIds;b.reviewedBy=by;b.reviewedAt=new Date().toISOString();
-  save();
+  // บิลที่ admin ถ่ายเอง ไม่ต้องเด้งเข้ากลุ่ม
+  if(b.byUid&&b.byUid!==billUid())billSaveThenEmit('bill_ok',b.id);else save();
   billToast('✅ อนุมัติแล้ว รับเข้าสต็อก '+rows.length+' รายการ');
   billRefreshUI();
   const next=billWaiting()[0];
@@ -9121,7 +9140,7 @@ async function sendBackBill(){
   const r=prompt('เหตุผลที่ตีกลับ (staff จะเห็นข้อความนี้)','จำนวนไม่ตรงกับบิล');
   if(r==null)return;
   b.status='back';b.reason=r.trim()||'ให้ตรวจสอบอีกครั้ง';b.reviewedBy=curUserLabel();b.reviewedAt=new Date().toISOString();
-  save();
+  billSaveThenEmit('bill_back',b.id);
   billToast('↩️ ตีกลับให้ staff แล้ว');
   billRefreshUI();
   const next=billWaiting()[0];

@@ -24,6 +24,16 @@
     "tawan_app": {
       ".read": "auth != null && root.child('users').child(auth.uid).exists()",
       ".write": "auth != null && root.child('users').child(auth.uid).exists()"
+    },
+    "tawan_bill_photos": {
+      ".read": "auth != null && root.child('users').child(auth.uid).exists()",
+      ".write": "auth != null && root.child('users').child(auth.uid).exists()"
+    },
+    "tawan_events": {
+      "$eventId": {
+        ".write": "auth != null && root.child('users').child(auth.uid).exists() && !data.exists() && newData.child('actorUid').val() === auth.uid",
+        ".validate": "newData.hasChildren(['type','billId','actorUid','at'])"
+      }
     }
   }
 }

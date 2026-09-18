@@ -1,7 +1,7 @@
 /**
  * Cloud Functions: ตะวันฟาร์ม LINE Bot
  * - lineWebhook  : ตอบคำถามพนักงานผ่าน LINE (อ่านข้อมูลจริงจาก Firebase RTDB)
- * - dailySummary : ส่งสรุปงานวันนี้ + อากาศ + สถานะบ่อ เข้ากลุ่มไลน์ทุกวัน 10:00 (Asia/Bangkok)
+ * - billNotify   : แจ้งเตือนบิลรับของเข้ากลุ่มไลน์ (staff ส่งบิล / ตีกลับ / อนุมัติเข้าสต็อก)
  *
  * ตรรกะการคำนวณสถานะบ่อ/วันเตรียมบ่อ/ความเสี่ยงอากาศ ถูก "พอร์ต" มาจาก index.html
  * ของแอปจริง (classifyOv, worstOv, pondStatusOv, PREP_STEPS, renderWx) ไม่ใช่ค่าที่เดาขึ้นมาเอง
@@ -11,7 +11,8 @@
  */
 
 const {onRequest} = require("firebase-functions/v2/https");
-const {onSchedule} = require("firebase-functions/v2/scheduler");
+const {onValueCreated} = require("firebase-functions/v2/database");
+const {billEventText} = require("./billNotify");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
@@ -323,6 +324,7 @@ async function lineApi(path, body) {
     const t = await r.text();
     logger.error("LINE API error", r.status, t);
   }
+  return r.ok;
 }
 
 function verifySignature(rawBody, signature) {
@@ -547,77 +549,56 @@ exports.lineWebhook = onRequest({region: "asia-southeast1"}, async (req, res) =>
 // Cloud Scheduler — สรุปทุกเช้า 10:00 เวลาไทย ส่งเข้ากลุ่มพนักงาน (ตกลงเลื่อนเป็น 10:00 เมื่อ 20 มิ.ย. 2026)
 // ---------------------------------------------------------------------------
 
-exports.dailySummary = onSchedule(
-    {schedule: "0 10 * * *", timeZone: "Asia/Bangkok", region: "asia-southeast1"},
-    async () => {
+// ── สรุปทุกเช้า 10:00 ถูกยกเลิกแล้ว (พี่สั่ง entry #284) ──
+// เดิม exports.dailySummary ส่งสรุปงาน/อากาศ/สถานะบ่อ เข้ากลุ่มไลน์ทุกวัน
+// เปลี่ยนเป็นส่งเฉพาะแจ้งเตือนบิลรับของแทน (ดูข้างล่าง) เพื่อลดข้อความและประหยัดโควตา LINE
+// ฟังก์ชันช่วยคำนวณด้านบน (pondLine, statusCounts, fetchWeather ฯลฯ) ยังใช้อยู่กับ lineWebhook ห้ามลบ
+// ถ้าจะเอาสรุปเช้ากลับมา: กู้โค้ดจาก git (commit ก่อน entry #284) แล้ว deploy ใหม่
+// ---------------------------------------------------------------------------
+// แจ้งเตือนบิลรับของเข้ากลุ่มไลน์ (entry #284)
+// แอปเขียน /tawan_events/<id> = {type, billId, actorUid, at} — ไม่มีข้อความมาด้วย
+// ฟังก์ชันนี้อ่านบิลจริงจาก tawan_app แล้วประกอบข้อความเอง (ดูเหตุผลใน billNotify.js)
+// ---------------------------------------------------------------------------
+async function loadBill(billId) {
+  const snap = await admin.database().ref(`${RTDB_PATH}/json`).get();
+  const json = snap.val();
+  if (!json) return null;
+  const data = JSON.parse(json);
+  const bills = Array.isArray(data.stockBills) ? data.stockBills : [];
+  return bills.find((b) => b && b.id === billId) || null;
+}
+
+exports.billNotify = onValueCreated(
+    {ref: "/tawan_events/{eventId}", region: "asia-southeast1"},
+    async (event) => {
+      const ev = event.data.val() || {};
+      if (ev.sentAt || ev.skippedAt) return;           // กันส่งซ้ำตอน retry
       if (!LINE_GROUP_ID) {
         logger.error("LINE_GROUP_ID not set in functions/.env — skip push");
         return;
       }
-
-      const ponds = await loadPonds();
-      const c = statusCounts(ponds);
-      const tasks = todaysTasks(ponds);
-      const active = activePonds(ponds);
-
-      let tideStr = null;
-      try {
-        const tides = await loadTides();
-        tideStr = tideLine(tides, today());
-      } catch (e) {
-        logger.error("tide load failed", e);
+      if (!ev.type || !ev.billId) {
+        await event.data.ref.update({skippedAt: Date.now(), why: "bad event"});
+        return;
       }
-
-      let weatherLine = "";
-      let riskLines = [];
-      try {
-        const d = await fetchWeather();
-        const w = weatherSummary(d);
-        weatherLine = w.line;
-        riskLines = w.risk;
-      } catch (e) {
-        logger.error("weather fetch failed", e);
-        weatherLine = "โหลดข้อมูลสภาพอากาศไม่ได้";
+      // แอปเรียก save() แล้วค่อยเขียนเหตุการณ์ แต่ข้อมูลอาจยังมาไม่ถึงเซิร์ฟเวอร์ — รอแล้วลองใหม่
+      let bill = null;
+      for (let i = 0; i < 3 && !bill; i++) {
+        if (i) await new Promise((r) => setTimeout(r, 4000));
+        bill = await loadBill(ev.billId);
       }
-
-      const dateLabel = new Date().toLocaleDateString("th-TH", {
-        day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Bangkok",
-      });
-
-      const lines = [];
-      lines.push(`📋 สรุปประจำวัน — ${dateLabel}`);
-      lines.push("");
-      lines.push("🗓️ งานที่ต้องทำวันนี้:");
-      lines.push(tasks.length ?
-        tasks.map((t) => `- ${t}`).join("\n") : "- ไม่มีงานเตรียมบ่อครบกำหนดวันนี้");
-      lines.push("");
-      lines.push(`🌊 น้ำขึ้น/ลง (เกาะมัดโพน): ${tideStr || "— ยังไม่มีข้อมูลของวันนี้"}`);
-      lines.push("");
-      lines.push(`☁️ สภาพอากาศ: ${weatherLine}`);
-      if (riskLines.length) lines.push(riskLines.join("\n"));
-      lines.push("");
-      lines.push(
-          `🦐 สถานะบ่อ (${ponds.length} บ่อ): ✅ ปกติ ${c.ok} · ⚠️ ต้องดู ${c.warn} · ` +
-        `🔴 เฝ้าระวัง ${c.danger} · 🧹 กำลังเตรียม ${c.prep}`,
-      );
-      lines.push("");
-      lines.push(`🐟 บ่อที่เลี้ยงอยู่ (${active.length} บ่อ):`);
-      if (active.length) {
-        active
-            .sort((a, b) => {
-              const ord = {danger: 0, warn: 1, ok: 2};
-              return (ord[pondStatusOv(a)] ?? 3) - (ord[pondStatusOv(b)] ?? 3);
-            })
-            .forEach((p) => lines.push(pondLine(p)));
-      } else {
-        lines.push("- ยังไม่มีบ่อที่เลี้ยงอยู่");
+      const text = billEventText(ev.type, bill);
+      if (!text) {
+        // สถานะเปลี่ยนไปแล้ว (เช่นอนุมัติก่อนที่แจ้งเตือนจะออก) — ไม่ต้องส่ง
+        await event.data.ref.update({skippedAt: Date.now(), why: bill ? "state changed" : "bill not found"});
+        logger.info("bill event skipped", ev.type, ev.billId);
+        return;
       }
-
-      await lineApi("message/push", {
+      const ok = await lineApi("message/push", {
         to: LINE_GROUP_ID,
-        messages: [{type: "text", text: lines.join("\n")}],
+        messages: [{type: "text", text}],
       });
-
-      logger.info("daily summary pushed to group");
+      await event.data.ref.update(ok ? {sentAt: Date.now()} : {failedAt: Date.now()});
+      logger.info("bill event", ev.type, ev.billId, ok ? "sent" : "failed");
     },
 );
