@@ -840,6 +840,41 @@ html[data-uisize="xl"]{--ui-scale:1.25}
    ตารางกลายเป็นกรอบเลื่อนซ้อนอยู่ในกรอบ .kan-gwrap อีกชั้น → หัวคอลัมน์ที่ตรึงไว้หลุดตอนเลื่อนลง
    และลูกศรเลื่อนจอตามไม่ได้ — 768px คือ iPad แนวตั้งพอดี · ตารางนี้มีกรอบเลื่อนของตัวเองแล้ว ห้ามโดนกฎนั้น */
 .card table.kan-g{display:table;width:auto;overflow:visible}
+/* ── สถิติจับกุ้งรายปี (entry #286) ── */
+.hsy-sub{font-size:calc(12.5px * var(--ui-scale));color:var(--tx3);margin:-4px 0 12px}
+.hsy-yrs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.hsy-yr{border:1px solid var(--bd);background:var(--sf);border-radius:99px;padding:7px 18px;font:inherit;font-size:calc(13.5px * var(--ui-scale));cursor:pointer;color:var(--tx2);min-height:36px}
+.hsy-yr.on{background:var(--p);border-color:var(--p);color:#fff;font-weight:700}
+.hsy-yr:focus-visible,#sec-harveststat tr.hsy-r:focus-visible{outline:2px solid var(--in);outline-offset:2px}
+.hsy-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.hsy-kpi{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:11px 13px;box-shadow:var(--sh)}
+.hsy-kpi small{display:block;color:var(--tx3);font-size:calc(12px * var(--ui-scale));margin-bottom:3px}
+.hsy-kpi b{font-size:calc(20px * var(--ui-scale));font-variant-numeric:tabular-nums}
+.hsy-kpi span{display:block;color:var(--tx2);font-size:calc(12px * var(--ui-scale));margin-top:2px}
+.hsy-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start}
+.hsy-side{display:flex;flex-direction:column;gap:14px}
+.hsy-tw{overflow-x:auto}
+.card table.hsy-t{display:table;border-collapse:collapse;width:100%;font-size:calc(13px * var(--ui-scale));overflow:visible}
+.hsy-t th{font-size:calc(11.5px * var(--ui-scale));color:var(--tx3);text-align:left;font-weight:600;padding:7px 8px;border-bottom:1px solid var(--bd);white-space:nowrap;background:var(--sf2)}
+.hsy-t td{padding:7px 8px;border-bottom:1px solid var(--bd);white-space:nowrap}
+.hsy-t .num{text-align:right;font-variant-numeric:tabular-nums}
+.hsy-t tr.mh td{background:var(--pl);font-weight:700;color:var(--pd)}
+.hsy-t tr.ms td{background:var(--sf2);font-weight:700}
+.hsy-t tr.none td{color:var(--tx3);font-style:italic}
+.hsy-t tr.yt td{background:var(--p);color:#fff;font-weight:700;font-size:calc(14px * var(--ui-scale))}
+.hsy-t tr.hsy-r{cursor:pointer}
+.hsy-t tr.hsy-r:hover td{background:var(--pl)}
+.hsy-t.sm td,.hsy-t.sm th{padding:6px}
+.hsy-chip{display:inline-block;padding:1px 8px;border-radius:99px;font-size:calc(11.5px * var(--ui-scale));font-weight:700}
+.hsy-chip.c-close{background:var(--ob);color:var(--ok)}
+.hsy-chip.c-part{background:var(--ib);color:var(--in)}
+.hsy-miss{color:var(--tx3);font-style:italic}
+.hsy-bar{height:6px;border-radius:3px;background:var(--p);opacity:.75;margin-top:3px}
+.hsy-bar.sz{background:var(--in)}
+.hsy-empty{color:var(--tx3);font-size:calc(13px * var(--ui-scale));padding:16px 0}
+.hsy-note{font-size:calc(11.5px * var(--ui-scale));color:var(--tx3);margin-top:6px}
+@media(max-width:980px){.hsy-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:760px){.hsy-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .kan-g th,.kan-g td{border-right:1px solid #d6dbe1;border-bottom:1px solid #d6dbe1;padding:0}
 .kan-ch,.kan-rh{background:#eef1f4;color:var(--tx3);font-weight:600;text-align:center;cursor:pointer;
   font-size:calc(10.5px * var(--ui-scale) * var(--kz));
@@ -1301,7 +1336,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .tbl-wrap,[style*="overflow-x:auto"],[style*="overflow-x: auto"]{-webkit-overflow-scrolling:touch}
 /* 3. ตารางที่ยังไม่มี wrapper: ปัดซ้าย-ขวาได้บนมือถือ */
 @media(max-width:768px){
-  .card table,.sec>table,#hs-monthly table,#hs-buyers table,#pl-tbl table,#abw-tbl table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .card table,.sec>table,#pl-tbl table,#abw-tbl table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .hdr-logout-btn{display:none!important}
   .mobile-logout-block{display:block!important}
 }
@@ -2981,31 +3016,20 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 <!-- HARVEST STAT -->
 <div id="sec-harveststat" class="sec">
   <div class="sec-hdr"><div class="sec-title">📊 สถิติจับกุ้ง</div></div>
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-t">⚙️ ซิงค์ Google Sheets</div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <input type="url" id="hs-url-input" class="fi" placeholder="วาง Google Apps Script URL ที่นี่..." style="flex:1;min-width:200px">
-      <button class="btn btn-p" onclick="hsSaveUrl()" style="white-space:nowrap">💾 บันทึก URL</button>
-      <button class="btn" onclick="initHarvestStat()" style="white-space:nowrap">🔄 รีเฟรช</button>
+  <div class="hsy-sub">รวมทุกครั้งที่จับ (พาเชียล + ปิดบ่อ) ตามวันที่จับ — ดึงจากที่บันทึกตอนจับกุ้ง ไม่ต้องกรอกซ้ำ · แตะแถวเพื่อเปิดหน้าบ่อ</div>
+  <div class="hsy-yrs" id="hs-yr-btns"></div>
+  <div class="hsy-kpis" id="hs-kpi"></div>
+  <div class="hsy-grid">
+    <div class="card hsy-main"><div class="hsy-tw" id="hs-table"></div></div>
+    <div class="hsy-side">
+      <div class="card"><div class="card-t">🏪 แพ / ห้องเย็น</div><div class="hsy-tw" id="hs-buyers"></div></div>
+      <div class="card"><div class="card-t">📏 ตามไซส์ (ตัว/กก.)</div><div class="hsy-tw" id="hs-sizes"></div></div>
     </div>
-    <div id="hs-sync-status" style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-top:6px"></div>
   </div>
-  <div class="g4" style="margin-bottom:16px" id="hs-kpi"></div>
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-t">📈 ยอดรวมรายปี (ล้านบาท) — คลิกปีเพื่อดูรายละเอียด</div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-t">📈 ยอดรวมรายปี (ล้านบาท) — แตะแท่งเพื่อดูปีนั้น</div>
     <div style="position:relative;height:220px"><canvas id="hs-chart-annual"></canvas></div>
-  </div>
-  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px" id="hs-yr-btns"></div>
-  <div id="hs-crop-summary" style="margin-bottom:16px"></div>
-  <div class="g2" style="margin-bottom:0">
-    <div class="card">
-      <div class="card-t" id="hs-monthly-title">📅 รายเดือน</div>
-      <div style="overflow-x:auto" id="hs-monthly"></div>
-    </div>
-    <div class="card" id="hs-buyers-card">
-      <div class="card-t">🏪 แพ / ห้องเย็น</div>
-      <div id="hs-buyers"><div style="color:var(--tx3);font-size:calc(13px * var(--ui-scale));padding:20px 0">ไม่มีข้อมูลแพสำหรับปีนี้</div></div>
-    </div>
+    <div class="hsy-note">แท่งสีเทา (ปี 60–67) เป็นยอดรวมจากชีตเดิม — ในแอปไม่มีรายการจับของปีเหล่านั้น</div>
   </div>
 </div>
 <!-- EXPORT -->
@@ -5750,254 +5774,134 @@ function updateAlertBadge(n){
     if(sb){sb.textContent='';sb.classList.remove('show');}
   }
 }
-// ===== HARVEST STATISTICS (ปี 60-69) =====
-const HV_YRS=[60,61,62,63,64,65,66,67,68,69];
-let HV_REV=[76840999,48397512,72485208,89978053,108885590,165677268,180339825,136409243,133239758,18472602];
-let HV_KG=[357685,271471,324064,455929,487083,615142,742600,617719,598928,127014];
-const HV_MREV={
-  60:[5128125,5390135,7034585,0,6259586,5966774,6787583,4386590,9220457,14427381,6700643,5539140],
-  61:[8593960,1938582,0,3447524,9433463,616409,7586912,0,3731850,4755443,7320726,972643],
-  62:[5121169,1329870,2506597,2195141,3761131,15378646,13268681,9921863,4745545,4130843,6531081,3594641],
-  63:[8392630,6890401,6115963,0,2523502,17505727,5728558,9206526,2288279,5200446,4926456,21199565],
-  64:[0,6597727,5841553,3068808,21466402,25822087,6067209,8854210,2188260,8025214,2913713,20228667],
-  65:[19221080,12860549,6893082,4321980,11470636,0,7964515,34721237,21128283,12580359,30661095,3854452],
-  66:[32312769,4627671,14496906,38362317,23706306,9129258,6821216,3995947,9664057,0,20919969,16303409],
-  67:[0,15325074,46008807,0,0,0,1159280,33331883,21224890,0,0,19359309],
-  68:[2715517,7283976,25303599,3454208,22898820,6483245,3923343,23891836,22451280,10713963,1948164,2171807],
-  69:[8929652,2845827,0,1213603,0,3101133,2382387,0,0,0,0,0]
-};
-const HV_MKG={
-  60:[22175,20987,30589,0,28220,31494,33358,21177,43920,71302,31729,22734],
-  61:[41760,15393,0,19447,57481,4156,39532,0,20997,25529,41854,5322],
-  62:[26219,8740,14311,11774,20144,60121,48375,46645,22148,22235,27532,15820],
-  63:[34299,34976,35652,0,15041,82343,30339,48567,31555,27603,29768,85786],
-  64:[0,30268,25919,14558,101018,103189,28188,48602,14253,36050,10413,74625],
-  65:[74660,52220,30402,23812,53597,0,30305,105166,93321,47953,84716,18990],
-  66:[113227,16166,65387,133469,87434,45472,26877,15054,53116,0,97789,88609],
-  67:[0,68073,218146,0,0,0,5222,149731,91071,0,0,85476],
-  68:[8068,29368,103408,20924,108414,29253,15155,84370,110678,58816,16695,13779],
-  69:[61694,24424,0,11708,0,18766,10422,0,0,0,0,0]
-};
-// ── "แพ/ห้องเย็น" เดิมดึงจาก Google Sheets ภายนอก (ต้องมีชีท "ยอดรายแพ" ที่ไม่มีจริง) หรือไม่งั้น fallback เป็นตัวเลข hardcode นิ่งค้างจากตอนสร้างฟีเจอร์ — ไม่ตรงกับข้อมูลจริงเลย เปลี่ยนมารวมจากข้อมูลที่บันทึกจริงในแอปแทน (ดู hsBuyersFromApp) ──
-// ── รวมยอด "แพ/ห้องเย็น" จากข้อมูลจริงที่บันทึกในแอป (ไม่พึ่ง Google Sheets/ตัวเลข hardcode อีกต่อไป) — รวมทั้งพาเชียลของรอบที่กำลังเลี้ยงอยู่ + พาเชียล/ปิดรอบของรอบที่ปิดแล้วในประวัติ (cropHistory) ──
-function hsBuyersFromApp(shortYr){
-  const byName={};
-  const add=(dateStr,buyer,weight,revenue)=>{
-    if(!dateStr||!buyer||!weight)return;
-    const y=parseInt(String(dateStr).slice(0,4));if(isNaN(y))return;
-    if(yearBE(y)-2500!==shortYr)return;
-    const name=String(buyer).trim();if(!name)return;
-    if(!byName[name])byName[name]={rev:0,kg:0};
-    byName[name].rev+=revenue||0;
-    byName[name].kg+=weight;
+// ===== HARVEST STATISTICS — สถิติจับกุ้งรายปี (entry #286) =====
+// ── ⚠️ ทุกตัวเลขในหน้านี้คำนวณสดจากรายการจับที่บันทึกในแอป (พาเชียล + ปิดบ่อ) จัดเข้าปี/เดือนตาม "วันที่จับ"
+//    เดิมหน้านี้ดึงจาก Google Apps Script + ตัวเลข hardcode รายเดือน — ยกเลิกแล้ว (พี่สั่ง 18 ก.ย. 69)
+//    ห้ามกลับไปเก็บยอดรายปี/รายเดือนแยกไว้อีกชุด ไม่งั้นแก้รายการจับแล้วหน้านี้ไม่ตาม ──
+// ── ปี 60–67 ไม่มีรายการจับในแอปเลย (เริ่มบันทึกปี 68) เก็บ "ยอดรวมทั้งปี" ที่เคยมาจากชีตไว้ให้กราฟดูย้อนหลังเท่านั้น
+//    ปีไหนมีรายการในแอปแล้ว ใช้ของแอปเสมอ ค่าข้างล่างจะไม่ถูกอ่าน ──
+const HV_OLD={60:[76840999,357685],61:[48397512,271471],62:[72485208,324064],63:[89978053,455929],
+  64:[108885590,487083],65:[165677268,615142],66:[180339825,742600],67:[136409243,617719]};
+const HV_MONTHS_S=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const HV_MONTHS_L=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+// ── ช่วงไซส์ (ตัว/กก.) ตามที่พี่ใช้ในชีต — ช่องสุดท้ายคือ 150++ ──
+const HV_SIZE_B=[[15,19],[20,24],[25,29],[30,34],[35,39],[40,44],[45,49],[50,54],[55,59],[60,70],[71,80],[81,100],[101,150],[151,9999]];
+let _hsYr=null;          // ปีแบบย่อ (69) — null = ปีล่าสุดที่มีการจับ
+let _hsChartAnnual=null;
+// ── รายการจับทุกครั้งในแอป 1 แถว = จับ 1 ครั้ง
+//    ⚠️ แถว "ปิดบ่อ" ต้องเหลือเฉพาะยอดวันปิดล้วนๆ: harvestResult.revenue ของรอบที่ปิดผ่านฟอร์มคือยอดทั้งรอบ (รวมพาเชียลแล้ว)
+//    จึงหักพาเชียลออกผ่าน cropHarvestResult() ที่ normalize เป็น "ทั้งรอบ" เสมอ — ถ้าบวกตรงๆ ยอดจะเกินเท่าพาเชียล ──
+function hsHarvestRows(){
+  const rows=[];
+  const add=(p,start,date,type,r,kg,baht)=>{
+    if(!date||!(kg>0))return;
+    const y=parseInt(String(date).slice(0,4));if(isNaN(y))return;
+    rows.push({pondId:p.id,pond:p.name||'',date:String(date).slice(0,10),y:yearBE(y)-2500,m:parseInt(String(date).slice(5,7))||0,type,
+      age:start?docAge(start,date):null,size:parseFloat(r.size)||0,price:parseFloat(r.price)||0,
+      buyer:String(r.buyer||'').trim(),kg,baht:baht||0});
   };
   (D.ponds||[]).forEach(p=>{
-    (p.partialHarvests||[]).forEach(r=>add(r.date,r.buyer,harvestRowKg(r),harvestRowBaht(r)));
+    (p.partialHarvests||[]).forEach(r=>add(p,p.startDate,r.date,'พาเชียล',r,harvestRowKg(r),harvestRowBaht(r)));
     (p.cropHistory||[]).forEach(c=>{
-      (c.partialHarvests||[]).forEach(r=>add(r.date,r.buyer,harvestRowKg(r),harvestRowBaht(r)));
-      // ⚠️ แถวพาเชียลถูกบวกไปข้างบนแล้ว แถว "ปิดบ่อ" จึงต้องเหลือเฉพาะยอดวันปิดบ่อล้วนๆ
-      //    แต่ harvestResult.revenue คือ "ยอดรวมทั้งรอบ" (รวมพาเชียลมาแล้วตั้งแต่ในฟอร์ม) — ถ้าเอามาบวกตรงๆ
-      //    ยอดของแพจะเกินจริงเท่ายอดพาเชียลพอดี (เจอตอนตรวจ flow ปิดบ่อ A.19)
-      //    หักผ่าน cropHarvestResult() ที่ normalize รายได้เป็น "ทั้งรอบ" เสมอ — ไม่ทำตรรกะเดาซ้ำสองที่
+      (c.partialHarvests||[]).forEach(r=>add(p,c.startDate,r.date,'พาเชียล',r,harvestRowKg(r),harvestRowBaht(r)));
       const hr=c.harvestResult||{};
       const hrAll=cropHarvestResult(c)||{};
       const ptc=partialTotals(c.partialHarvests);
-      const closeKgRow=(parseFloat(hr.totalWeight)||0)+gradeKg(hr);
+      const closeKg=(parseFloat(hr.totalWeight)||0)+gradeKg(hr);
       const revAll=hrAll.revenue!=null?(parseFloat(hrAll.revenue)||0):0;
-      const rev=revAll?Math.max(0,revAll-ptc.baht):(closeKgRow*(parseFloat(hr.price)||0)+gradeBaht(hr));
-      add(c.closeDate,hr.buyer,closeKgRow,rev);
+      const rev=revAll?Math.max(0,revAll-ptc.baht):(closeKg*(parseFloat(hr.price)||0)+gradeBaht(hr));
+      add(p,c.startDate,c.closeDate,'ปิดบ่อ',hr,closeKg,rev);
     });
   });
-  return Object.entries(byName).map(([name,v])=>[name,Math.round(v.rev),Math.round(v.kg)]).sort((a,b)=>b[1]-a[1]);
+  return rows.sort((a,b)=>a.date.localeCompare(b.date)||String(a.pond).localeCompare(String(b.pond),'th',{numeric:true}));
 }
-const HV_MONTHS_S=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-let _hsYr=69;
-let _hsChartAnnual=null;
-function hsFmt(n){return n?n.toLocaleString():'-';}
-function hsFmtM(n){return n?(n/1e6).toFixed(2)+'M':'-';}
-function initHarvestStat(){
-  // แสดง URL ปัจจุบันใน input
-  const urlInput=document.getElementById('hs-url-input');
-  const statusEl=document.getElementById('hs-sync-status');
-  const savedUrl=(localStorage.getItem('hs_sheet_url')||'').trim();
-  if(urlInput)urlInput.value=savedUrl;
-  if(savedUrl){
-    if(statusEl)statusEl.textContent='⏳ กำลังโหลดข้อมูลจาก Google Sheets...';
-    const kpiEl=document.getElementById('hs-kpi');
-    if(kpiEl)kpiEl.innerHTML='<div style="color:var(--tx3);font-size:calc(13px * var(--ui-scale));padding:8px 0">⏳ กำลังโหลด...</div>';
-    fetch(savedUrl)
-      .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-      .then(data=>{
-        // อัปเดตข้อมูลรายเดือน
-        if(Array.isArray(data.monthly)){
-          data.monthly.forEach(row=>{
-            const yr=+row.yr,m=+row.m;
-            if(!yr||!m||m<1||m>12)return;
-            if(!HV_MREV[yr])HV_MREV[yr]=new Array(12).fill(0);
-            if(!HV_MKG[yr])HV_MKG[yr]=new Array(12).fill(0);
-            HV_MREV[yr][m-1]=+row.rev||0;
-            HV_MKG[yr][m-1]=+row.kg||0;
-          });
-          // คำนวณยอดรวมรายปีใหม่
-          HV_YRS.forEach((yr,i)=>{
-            HV_REV[i]=(HV_MREV[yr]||[]).reduce((a,b)=>a+b,0);
-            HV_KG[i]=(HV_MKG[yr]||[]).reduce((a,b)=>a+b,0);
-          });
-          // เพิ่มปีที่ยังไม่มีใน HV_YRS (ถ้ามีปีใหม่)
-          if(Array.isArray(data.years)){
-            data.years.forEach(y=>{if(!HV_YRS.includes(+y))HV_YRS.push(+y);});
-            HV_YRS.sort((a,b)=>a-b);
-          }
-        }
-        const ts=new Date().toLocaleTimeString('th-TH');
-        if(statusEl)statusEl.innerHTML=`✅ ซิงค์สำเร็จ เวลา ${ts}`;
-        _hsRenderAll();
-      })
-      .catch(err=>{
-        console.error('HarvestStat fetch error:',err);
-        if(statusEl)statusEl.innerHTML=`⚠️ โหลดไม่ได้ (${err.message}) — แสดงข้อมูลเดิมแทน`;
-        _hsRenderAll();
-      });
-  } else {
-    if(statusEl)statusEl.textContent='💡 ยังไม่ได้ตั้งค่า URL — แสดงข้อมูล hardcode';
-    _hsRenderAll();
-  }
+// ── แพ/ห้องเย็นรายปี — คงไว้เพราะที่อื่นอาจเรียก ใช้แถวชุดเดียวกับตารางเสมอ ──
+function hsBuyersFromApp(shortYr){
+  const by={};
+  hsHarvestRows().filter(r=>r.y===shortYr&&r.buyer).forEach(r=>{by[r.buyer]=by[r.buyer]||{rev:0,kg:0};by[r.buyer].rev+=r.baht;by[r.buyer].kg+=r.kg;});
+  return Object.entries(by).map(([n,v])=>[n,Math.round(v.rev),Math.round(v.kg)]).sort((a,b)=>b[1]-a[1]);
 }
-function hsSaveUrl(){
-  const url=(document.getElementById('hs-url-input')?.value||'').trim();
-  const statusEl=document.getElementById('hs-sync-status');
-  if(url){
-    localStorage.setItem('hs_sheet_url',url);
-    initHarvestStat();
-  } else {
-    localStorage.removeItem('hs_sheet_url');
-    if(statusEl)statusEl.textContent='ลบ URL แล้ว — ใช้ข้อมูล hardcode';
-    _hsRenderAll();
-  }
-}
-function _hsRenderAll(){
-  const totalRev=HV_REV.reduce((a,b)=>a+b,0);
-  const totalKg=HV_KG.reduce((a,b)=>a+b,0);
-  const avgPrice=totalKg>0?Math.round(totalRev/totalKg):0;
-  const bestYrIdx=HV_REV.indexOf(Math.max(...HV_REV));
-  const el=document.getElementById('hs-kpi');
-  if(el)el.innerHTML=`
-    <div class="metric-card metric-card-accent"><div class="mv" style="font-size:calc(20px * var(--ui-scale))">฿${hsFmtM(totalRev)}</div><div class="ml">ยอดรวมทั้งหมด</div></div>
-    <div class="metric-card"><div class="mv" style="font-size:calc(20px * var(--ui-scale))">${Math.round(totalKg/1000).toLocaleString()}K กก.</div><div class="ml">น้ำหนักรวม</div></div>
-    <div class="metric-card"><div class="mv" style="font-size:calc(20px * var(--ui-scale))">฿${avgPrice.toLocaleString()}</div><div class="ml">ราคาเฉลี่ย/กก.</div></div>
-    <div class="metric-card"><div class="mv" style="font-size:calc(20px * var(--ui-scale))">ปี ${HV_YRS[bestYrIdx]}</div><div class="ml">ปีที่ยอดสูงสุด</div></div>`;
-  // Year buttons
-  const btnsEl=document.getElementById('hs-yr-btns');
-  if(btnsEl)btnsEl.innerHTML=HV_YRS.map(y=>`<button class="btn ${y===_hsYr?'btn-p':''}" style="min-width:54px;padding:7px 10px" onclick="hsSetYr(${y})">ปี ${y}</button>`).join('');
-  // Annual chart
-  const canvas=document.getElementById('hs-chart-annual');
-  if(canvas){
-    if(_hsChartAnnual){_hsChartAnnual.destroy();_hsChartAnnual=null;}
-    const ctx=canvas.getContext('2d');
-    _hsChartAnnual=new Chart(ctx,{
-      type:'bar',
-      data:{
-        labels:HV_YRS.map(y=>'ปี '+y),
-        datasets:[{
-          label:'ยอดเงิน (ล้านบาท)',
-          data:HV_REV.map(v=>+(v/1e6).toFixed(2)),
-          backgroundColor:HV_YRS.map(y=>y===_hsYr?'rgba(224,161,6,.95)':'rgba(224,161,6,.3)'),
-          borderColor:HV_YRS.map(y=>y===_hsYr?'rgba(154,106,4,1)':'rgba(224,161,6,.5)'),
-          borderWidth:1,borderRadius:4
-        }]
-      },
-      options:{
-        responsive:true,maintainAspectRatio:false,animation:false,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`฿${ctx.parsed.y}M`}}},
-        scales:{y:{ticks:{callback:v=>v+'M'},grid:{color:'rgba(0,0,0,.05)'}},x:{grid:{display:false}}},
-        onClick:(e,els)=>{if(els.length){const i=els[0].index;hsSetYr(HV_YRS[i]);}}
-      }
-    });
-  }
-  hsRenderYear();
-  hsRenderCropSummary(_hsYr);
-}
+function hsFmt(n){return Math.round(n||0).toLocaleString('en-US');}
+function hsEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function hsFd(d){const[y,m,dd]=d.split('-');return (+dd)+'/'+(+m)+'/'+String((+y+543)%100).padStart(2,'0');}
+function initHarvestStat(){_hsRenderAll();}
 function hsSetYr(yr){_hsYr=yr;_hsRenderAll();}
-function hsRenderYear(){
+function _hsRenderAll(){
+  const all=hsHarvestRows();
+  const appYrs=[...new Set(all.map(r=>r.y))].sort((a,b)=>b-a);
+  if(_hsYr==null||!appYrs.includes(_hsYr))_hsYr=appYrs.length?appYrs[0]:null;
   const yr=_hsYr;
-  const mrev=HV_MREV[yr]||new Array(12).fill(0);
-  const mkg=HV_MKG[yr]||new Array(12).fill(0);
-  const titleEl=document.getElementById('hs-monthly-title');
-  if(titleEl)titleEl.textContent=`📅 รายเดือน — ปี ${yr}`;
-  let rows='';let totRev=0,totKg=0;
-  for(let i=0;i<12;i++){
-    const r=mrev[i]||0,k=mkg[i]||0;
-    totRev+=r;totKg+=k;
-    const avg=k>0?Math.round(r/k):0;
-    rows+=`<tr style="border-bottom:1px solid var(--bd)${r===0?';color:var(--tx3)':''}">
-      <td style="padding:7px 10px;font-weight:600">${HV_MONTHS_S[i]}</td>
-      <td style="padding:7px 10px;text-align:right">${r?'฿'+r.toLocaleString():'-'}</td>
-      <td style="padding:7px 10px;text-align:right">${k?k.toLocaleString()+' กก.':'-'}</td>
-      <td style="padding:7px 10px;text-align:right">${avg?'฿'+avg:'-'}</td>
-    </tr>`;
-  }
-  const totAvg=totKg>0?Math.round(totRev/totKg):0;
-  rows+=`<tr style="background:var(--pl);font-weight:700;border-top:2px solid var(--bd)">
-    <td style="padding:8px 10px">รวมปี ${yr}</td>
-    <td style="padding:8px 10px;text-align:right;color:var(--p)">฿${totRev.toLocaleString()}</td>
-    <td style="padding:8px 10px;text-align:right">${totKg.toLocaleString()} กก.</td>
-    <td style="padding:8px 10px;text-align:right">฿${totAvg}</td>
-  </tr>`;
-  const mEl=document.getElementById('hs-monthly');
-  if(mEl)mEl.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:calc(13px * var(--ui-scale))">
-    <thead><tr style="background:var(--sf2);border-bottom:2px solid var(--bd)">
-      <th style="padding:8px 10px;text-align:left;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">เดือน</th>
-      <th style="padding:8px 10px;text-align:right;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">ยอดเงิน</th>
-      <th style="padding:8px 10px;text-align:right;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">น้ำหนัก</th>
-      <th style="padding:8px 10px;text-align:right;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">ราคา/กก.</th>
-    </thead><tbody>${rows}</tbody></table>`;
-  // Buyers
-  const buyers=hsBuyersFromApp(yr);
-  const bCard=document.getElementById('hs-buyers-card');
-  const bEl=document.getElementById('hs-buyers');
-  if(!buyers||!buyers.length){if(bEl)bEl.innerHTML='<div style="color:var(--tx3);font-size:calc(13px * var(--ui-scale));padding:16px 0">ไม่มีข้อมูลสรุปแพสำหรับปีนี้</div>';return;}
-  let brows=buyers.map(([name,rev,kg])=>`<tr style="border-bottom:1px solid var(--bd)">
-    <td style="padding:7px 10px;font-weight:500">${name}</td>
-    <td style="padding:7px 10px;text-align:right">฿${rev.toLocaleString()}</td>
-    <td style="padding:7px 10px;text-align:right">${kg.toLocaleString()} กก.</td>
-    <td style="padding:7px 10px;text-align:right">฿${Math.round(rev/kg)}</td>
-  </tr>`).join('');
-  if(bEl)bEl.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:calc(13px * var(--ui-scale))">
-    <thead><tr style="background:var(--sf2);border-bottom:2px solid var(--bd)">
-      <th style="padding:8px 10px;text-align:left;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">แพ / ห้องเย็น</th>
-      <th style="padding:8px 10px;text-align:right;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">ยอดเงิน</th>
-      <th style="padding:8px 10px;text-align:right;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">น้ำหนัก</th>
-      <th style="padding:8px 10px;text-align:right;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">ราคา/กก.</th>
-    </thead><tbody>${brows}</tbody></table>`;
+  const btns=document.getElementById('hs-yr-btns');
+  if(btns)btns.innerHTML=appYrs.map(y=>`<button class="hsy-yr${y===yr?' on':''}" aria-pressed="${y===yr}" onclick="hsSetYr(${y})">ปี ${y}</button>`).join('');
+  const rs=all.filter(r=>r.y===yr);
+  hsRenderKpi(rs);
+  hsRenderTable(rs,yr);
+  hsRenderSide(rs);
+  hsRenderAnnual(all,yr);
 }
-function hsCropStats(shortYr){
-  if(!D||!D.ponds)return{totalKg:0,closedCount:0};
-  let totalKg=0,closedCount=0;
-  D.ponds.forEach(p=>{
-    (p.cropHistory||[]).forEach(c=>{
-      // ── ทุก record ใน cropHistory คือรอบที่ปิดแล้วอยู่แล้ว (ไม่ต้องพึ่ง c.closed ที่ confirmCloseCrop() ไม่เคยตั้งค่าให้) ──
-      // เทียบปีผ่าน histRecYear() — cropYear ในข้อมูลจริงมีทั้ง พ.ศ. (seed เก่า) และ ค.ศ. (รอบที่ปิดผ่านแอป) ถ้าลบ 2500 ตรงๆ รอบที่เป็น ค.ศ. จะหายจากสถิติทั้งหมด
-      if(histRecYear(c)-2500!==shortYr)return;
-      totalKg+=cropTotalKg(c);   // รวมพาเชียล+เกรดพิเศษ ไม่งั้นจะต่ำกว่าตารางจับกุ้ง
-      closedCount++;
+function hsRenderKpi(rs){
+  const el=document.getElementById('hs-kpi');if(!el)return;
+  const kg=rs.reduce((s,r)=>s+r.kg,0),bt=rs.reduce((s,r)=>s+r.baht,0);
+  const nClose=rs.filter(r=>r.type==='ปิดบ่อ').length;
+  el.innerHTML=`
+    <div class="hsy-kpi"><small>ยอดขายรวม</small><b>฿${hsFmt(bt)}</b><span>${(bt/1e6).toFixed(2)} ล้านบาท</span></div>
+    <div class="hsy-kpi"><small>น้ำหนักรวม</small><b>${hsFmt(kg)} กก.</b><span>${(kg/1000).toFixed(1)} ตัน</span></div>
+    <div class="hsy-kpi"><small>ราคาเฉลี่ย</small><b>฿${kg?(bt/kg).toFixed(2):'-'}</b><span>บาท/กก. (ถ่วงตามน้ำหนัก)</span></div>
+    <div class="hsy-kpi"><small>จับทั้งหมด</small><b>${rs.length} ครั้ง</b><span>ปิดบ่อ ${nClose} · พาเชียล ${rs.length-nClose}</span></div>`;
+}
+function hsRenderTable(rs,yr){
+  const el=document.getElementById('hs-table');if(!el)return;
+  if(!rs.length){el.innerHTML='<div class="hsy-empty">ยังไม่มีรายการจับกุ้งในแอป</div>';return;}
+  let h='<table class="hsy-t"><thead><tr><th>บ่อ</th><th>วัน</th><th>จับ</th><th class="num">อายุ</th><th class="num">ไซส์</th><th class="num">ราคา</th><th>แพ</th><th class="num">จำนวนเงิน</th><th class="num">กก.</th></tr></thead><tbody>';
+  const lastM=Math.max(...rs.map(r=>r.m));
+  for(let m=1;m<=lastM;m++){
+    const mr=rs.filter(r=>r.m===m);
+    h+=`<tr class="mh"><td colspan="9">${HV_MONTHS_L[m-1]}</td></tr>`;
+    if(!mr.length){h+='<tr class="none"><td colspan="9">ไม่มีการจับ</td></tr>';continue;}
+    mr.forEach(r=>{
+      h+=`<tr class="hsy-r" tabindex="0" title="เปิดหน้าบ่อ ${hsEsc(r.pond)}" onclick="openPondDetail('${hsEsc(r.pondId)}')" onkeydown="if(event.key==='Enter')openPondDetail('${hsEsc(r.pondId)}')">`
+        +`<td><b>${hsEsc(r.pond)}</b></td><td>${hsFd(r.date)}</td>`
+        +`<td><span class="hsy-chip ${r.type==='ปิดบ่อ'?'c-close':'c-part'}">${r.type}</span></td>`
+        +`<td class="num">${r.age!=null?r.age+' วัน':'-'}</td><td class="num">${r.size?r.size+' ตัว':'-'}</td>`
+        +`<td class="num">${r.price?hsFmt(r.price):'-'}</td><td>${r.buyer?hsEsc(r.buyer):'<span class="hsy-miss">ไม่ระบุ</span>'}</td>`
+        +`<td class="num">${hsFmt(r.baht)}</td><td class="num">${hsFmt(r.kg)}</td></tr>`;
     });
-  });
-  return{totalKg,closedCount};
+    const mk=mr.reduce((s,r)=>s+r.kg,0),mb=mr.reduce((s,r)=>s+r.baht,0);
+    h+=`<tr class="ms"><td colspan="7">รวม${HV_MONTHS_L[m-1]} ปี ${yr}${mk?' · เฉลี่ย ฿'+(mb/mk).toFixed(2)+'/กก.':''}</td><td class="num">฿${hsFmt(mb)}</td><td class="num">${hsFmt(mk)}</td></tr>`;
+  }
+  const kg=rs.reduce((s,r)=>s+r.kg,0),bt=rs.reduce((s,r)=>s+r.baht,0);
+  h+=`<tr class="yt"><td colspan="7">ยอดรวมปี ${yr}</td><td class="num">฿${hsFmt(bt)}</td><td class="num">${hsFmt(kg)}</td></tr></tbody></table>`;
+  el.innerHTML=h;
 }
-function hsRenderCropSummary(shortYr){
-  const el=document.getElementById('hs-crop-summary');
-  if(!el)return;
-  const{totalKg,closedCount}=hsCropStats(shortYr);
-  if(!closedCount){el.innerHTML='';return;}
-  const avg=Math.round(totalKg/closedCount);
-  el.innerHTML=`<div class="card" style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-    <div>
-      <div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:2px">🌾 จากประวัติเลี้ยง ปี ${shortYr}</div>
-      <div style="font-size:calc(15px * var(--ui-scale));font-weight:700">${totalKg.toLocaleString()} กก. · ${closedCount} รอบ</div>
-      <div style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">เฉลี่ย ${avg.toLocaleString()} กก./รอบ</div>
-    </div>
-    <button class="btn" style="font-size:calc(12px * var(--ui-scale));padding:6px 12px;white-space:nowrap" onclick="goCropsForYear(${shortYr})">🌾 ดูรายรอบ →</button>
-  </div>`;
+function hsRenderSide(rs){
+  const bEl=document.getElementById('hs-buyers'),sEl=document.getElementById('hs-sizes');
+  const by={};rs.forEach(r=>{const k=r.buyer||'(ไม่ระบุ)';by[k]=by[k]||{b:0,k:0};by[k].b+=r.baht;by[k].k+=r.kg;});
+  const bl=Object.entries(by).sort((a,b)=>b[1].b-a[1].b),bmax=bl.length?bl[0][1].b||1:1;
+  if(bEl)bEl.innerHTML=bl.length?'<table class="hsy-t sm"><thead><tr><th>แพ</th><th class="num">เงิน</th><th class="num">กก.</th></tr></thead><tbody>'
+    +bl.map(([n,v])=>`<tr><td>${hsEsc(n)}<div class="hsy-bar" style="width:${(v.b/bmax*100).toFixed(0)}%"></div></td><td class="num">${hsFmt(v.b)}</td><td class="num">${hsFmt(v.k)}</td></tr>`).join('')+'</tbody></table>'
+    :'<div class="hsy-empty">ไม่มีข้อมูล</div>';
+  const sb=HV_SIZE_B.map(([a,b])=>({l:b>999?(a-1)+'++':a+'-'+b,kg:rs.filter(r=>r.size>=a&&r.size<=b).reduce((s,r)=>s+r.kg,0)})).filter(x=>x.kg>0);
+  const smax=Math.max(...sb.map(x=>x.kg),1);
+  if(sEl)sEl.innerHTML=sb.length?'<table class="hsy-t sm"><thead><tr><th>ไซส์</th><th class="num">กก.</th></tr></thead><tbody>'
+    +sb.map(x=>`<tr><td>${x.l}<div class="hsy-bar sz" style="width:${(x.kg/smax*100).toFixed(0)}%"></div></td><td class="num">${hsFmt(x.kg)}</td></tr>`).join('')+'</tbody></table>'
+    :'<div class="hsy-empty">ไม่มีข้อมูลไซส์</div>';
+}
+// ── กราฟยอดรายปี: ปีที่มีรายการในแอป = ยอดจากแอป (แตะเพื่อดูปีนั้น) · ปี 60–67 = ยอดจากชีตเดิม (สีจาง แตะไม่ได้) ──
+function hsRenderAnnual(all,yr){
+  const canvas=document.getElementById('hs-chart-annual');if(!canvas||typeof Chart==='undefined')return;
+  const app={};all.forEach(r=>{app[r.y]=(app[r.y]||0)+r.baht;});
+  const yrs=[...new Set([...Object.keys(HV_OLD),...Object.keys(app)].map(Number))].sort((a,b)=>a-b);
+  const val=y=>app[y]!=null?app[y]:(HV_OLD[y]?HV_OLD[y][0]:0);
+  const col=y=>app[y]==null?'rgba(120,120,120,.28)':(y===yr?'rgba(224,161,6,.95)':'rgba(224,161,6,.45)');
+  if(_hsChartAnnual){_hsChartAnnual.destroy();_hsChartAnnual=null;}
+  _hsChartAnnual=new Chart(canvas.getContext('2d'),{
+    type:'bar',
+    data:{labels:yrs.map(y=>'ปี '+y),datasets:[{data:yrs.map(y=>+(val(y)/1e6).toFixed(2)),backgroundColor:yrs.map(col),borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`฿${c.parsed.y}M${app[yrs[c.dataIndex]]==null?' (จากชีตเดิม)':''}`}}},
+      scales:{y:{ticks:{callback:v=>v+'M'},grid:{color:'rgba(0,0,0,.05)'}},x:{grid:{display:false}}},
+      onClick:(e,els)=>{if(els.length){const y=yrs[els[0].index];if(app[y]!=null)hsSetYr(y);}}}
+  });
 }
 function goCropsForYear(shortYr){
   const fullYr=shortYr+2500;
