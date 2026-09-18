@@ -4775,6 +4775,22 @@ function mergeRemote(local, remote) {
   ['palmPlots','palmMoney','palmFertilizer','fundBuys','fundSells','fundNav'].forEach(k => {
     merged[k] = dropDead(mergeArr(merged[k]||[], remote[k]||[]));
   });
+  // ── ค่าแรงรายวัน / เงินสดเสมียน / ทดลองเวชภัณฑ์ — ตกหล่นเหมือนกัน (entry #290) ทุกตัวมี id ถาวรตั้งแต่ commit แรก
+  //    (dw_<วันตัดรอบ>_เวลา / cc<เวลา>_สุ่ม / trial_เวลา) และฟังก์ชันลบ push เข้า deletedIds แล้ว
+  //    ลบเงินสดเสมียนรายการเก่าที่มี linkedLogId → tombstone แถว inventoryLog ที่ผูกไว้ด้วย (inventoryLog merge อยู่ข้างบนแล้ว)
+  //    medTrials[].journal เป็นอาเรย์ในรายการ → ชนะทั้งรายการตามฝั่ง local (ไม่ merge ระดับบันทึก)
+  //    ⚠️ D.medProtoGroups ไม่ต้อง merge: มีแค่ 2 กลุ่มคงที่ (feed/water) seed เหมือนกันทุกเครื่อง ไม่มีหน้าไหนแก้ได้ และไม่มี id
+  //       (ถ้าวันหน้ามีปุ่มเปลี่ยนชื่อกลุ่ม ต้อง merge ด้วย key ห้ามใช้ mergeArr — ไม่มี id จะกลายเป็นกลุ่มซ้ำ)
+  ['clerkCash','medTrials'].forEach(k => {
+    merged[k] = dropDead(mergeArr(merged[k]||[], remote[k]||[]));
+  });
+  // ── ค่าแรงรายวัน: 1 สัปดาห์ (weekEnd) ต้องมีรายการเดียว — saveDailyWeek() เขียนทับตาม weekEnd อยู่แล้ว
+  //    แต่ถ้าสองเครื่องกรอกสัปดาห์เดียวกันพร้อมกัน จะได้ id ต่างกัน → merge แล้วนับค่าแรงซ้ำ 2 เท่าแบบไม่มีอะไรเตือน
+  //    → สัปดาห์ที่ฝั่ง local มีอยู่ (และยังไม่ถูกลบ) ให้ local ชนะ ทิ้งของ remote ที่ weekEnd ซ้ำ (เหมือน mergeByMonth ของบิลไฟ)
+  const lw = dropDead(merged.dailyLaborWeeks||[]);
+  const lwIds = new Set(lw.map(r => r && r.id)), lwWeeks = new Set(lw.map(r => r && r.weekEnd).filter(Boolean));
+  merged.dailyLaborWeeks = dropDead(mergeArr(lw, remote.dailyLaborWeeks||[]))
+    .filter(r => !r || lwIds.has(r.id) || !lwWeeks.has(r.weekEnd));
   return merged;
 }
 function mergeByMonth(localArr, remoteArr, dead) {
@@ -14351,11 +14367,12 @@ function populateTrialSelect(){
   const selEl=document.getElementById('trial-select');if(!selEl)return;
   const q=(_trialListFilter.q||'').trim().toLowerCase();
   const st=_trialListFilter.status||'';
+  // ── เรียงตาม id (trial_<เวลาสร้าง>) = ลำดับที่สร้าง เหมือนที่เคยเห็น — ลำดับอาเรย์หลัง merge ไม่แน่นอน (entry #290) ──
   const list=(D.medTrials||[]).filter(t=>{
     if(st&&(t.status||'ongoing')!==st)return false;
     if(q&&!(t.name||'').toLowerCase().includes(q))return false;
     return true;
-  });
+  }).sort((a,b)=>String(a.id||'').localeCompare(String(b.id||'')));
   selEl.innerHTML='<option value="">— สร้างการทดลองใหม่ —</option>'+list.map(t=>`<option value="${t.id}">${TRIAL_STATUS_ICON[t.status||'ongoing']} ${t.name}</option>`).join('');
   if(list.some(t=>t.id===_trialDraft.id))selEl.value=_trialDraft.id;
 }
