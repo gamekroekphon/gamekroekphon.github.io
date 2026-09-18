@@ -840,6 +840,21 @@ html[data-uisize="xl"]{--ui-scale:1.25}
    ตารางกลายเป็นกรอบเลื่อนซ้อนอยู่ในกรอบ .kan-gwrap อีกชั้น → หัวคอลัมน์ที่ตรึงไว้หลุดตอนเลื่อนลง
    และลูกศรเลื่อนจอตามไม่ได้ — 768px คือ iPad แนวตั้งพอดี · ตารางนี้มีกรอบเลื่อนของตัวเองแล้ว ห้ามโดนกฎนั้น */
 .card table.kan-g{display:table;width:auto;overflow:visible}
+/* ── ที่มาของเงินซื้อกองทุนปาล์ม (entry #289) ── */
+.fbs-seg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.fbs-btn{border:1px solid var(--bd);background:var(--sf);border-radius:99px;padding:6px 12px;font:inherit;font-size:calc(13px * var(--ui-scale));color:var(--tx2);cursor:pointer}
+.fbs-btn.on{background:#2F7D4F;border-color:#2F7D4F;color:#fff;font-weight:700}
+.fbs-btn:focus-visible{outline:2px solid var(--in);outline-offset:2px}
+.fbs-chip{display:inline-block;padding:1px 9px;border-radius:99px;font-size:calc(11.5px * var(--ui-scale));font-weight:700;white-space:nowrap}
+.fbs-bar{display:flex;height:20px;border-radius:6px;overflow:hidden;margin:4px 0 12px;background:var(--sf2)}
+.fbs-bar span{display:block;height:100%}
+.fbs-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.fbs-lg{border:1px solid var(--bd);border-radius:10px;padding:10px 12px}
+.fbs-lg small{display:flex;align-items:center;gap:6px;color:var(--tx3);font-size:calc(12px * var(--ui-scale))}
+.fbs-lg small i{width:10px;height:10px;border-radius:3px;display:inline-block;flex-shrink:0}
+.fbs-lg b{display:block;font-size:calc(18px * var(--ui-scale));font-variant-numeric:tabular-nums}
+.fbs-lg span{font-size:calc(12px * var(--ui-scale));color:var(--tx2)}
+.fbs-note{font-size:calc(11.5px * var(--ui-scale));color:var(--tx3);margin-top:8px}
 /* ── ผูกเงินขายกองทุนปาล์มกับรายจ่ายสวน (entry #288) ── */
 .fsl-cell{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
 .fsl-chip{display:inline-block;padding:1px 8px;border-radius:99px;font-size:calc(11.5px * var(--ui-scale));font-weight:600;background:var(--sf2);border:1px solid var(--bd);color:var(--tx);white-space:nowrap}
@@ -2024,7 +2039,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <div class="fundsel" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       <button class="fundbtn on-palm" id="fund-btn-palm" onclick="selectFund('palm')">
         <div class="fb-name">🌴 K-USXNDQ-A</div>
-        <div class="fb-src">เงินจากรายได้ขายปาล์ม</div>
+        <div class="fb-src">เงินจากขายปาล์ม ขายขยะ ฯลฯ</div>
       </button>
       <button class="fundbtn" id="fund-btn-shrimp" onclick="selectFund('shrimp')">
         <div class="fb-name">🦐 K WORLDX</div>
@@ -2033,6 +2048,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     </div>
     <div class="note" id="fund-note"></div>
     <div class="g4" id="fund-kpi" style="margin-bottom:16px"></div>
+    <div class="card" id="fund-src-card" style="margin-bottom:12px;display:none"></div>
     <div class="card" style="margin-bottom:12px">
       <div class="card-t">📊 มูลค่าพอร์ตเทียบกับเงินลงทุน</div>
       <div class="card-sub">เส้นทึบ = มูลค่าปัจจุบันตาม NAV แต่ละช่วง · เส้นประ = เงินต้นสะสม</div>
@@ -2043,6 +2059,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
         <div class="card-t">💰 บันทึกการซื้อกองทุน</div>
         <div class="card-sub" id="fund-buy-sub"></div>
         <div class="fg"><label class="fl" for="fb-date">วันที่ซื้อ</label><input type="date" class="fi" id="fb-date"></div>
+        <div class="fg" id="fb-src-wrap"><span class="fl" id="fb-src-lbl">เงินมาจาก</span><div class="fbs-seg" id="fb-src-seg" role="group" aria-labelledby="fb-src-lbl"></div>
+          <input class="fi" id="fb-src-other" placeholder="พิมพ์ที่มาของเงิน เช่น ขายเศษเหล็ก" style="margin-top:6px" hidden></div>
         <div class="fg"><label class="fl" for="fb-amt">จำนวนเงิน (บาท)</label><input class="fi" id="fb-amt" inputmode="decimal" placeholder="เช่น 45,000" oninput="fundBuyPreview()"></div>
         <div class="fg"><label class="fl" for="fb-nav">NAV ต่อหน่วย (ตอนซื้อ)</label><input class="fi" id="fb-nav" inputmode="decimal" placeholder="เช่น 10.4522" oninput="fundBuyPreview()"></div>
         <div class="fg"><label class="fl" for="fb-units-preview">หน่วยที่ได้ (คำนวณอัตโนมัติ)</label><input class="fi" id="fb-units-preview" style="background:var(--sf2)" readonly></div>
@@ -11291,8 +11309,8 @@ function renderPalmHarvestTable(){
 /* ── ตะวันปาล์ม: กองทุน (D.fundBuys/D.fundNav — บันทึกแยก 2 กองทุน ผูก field เดียวกันแต่กรองด้วย fund:'palm'|'shrimp', ไม่แตะ D.palmMoney/D.inventoryLog เลย) ── */
 const FUND_META={
   palm:{icon:'🌴',color:'#2F7D4F',
-    note:'💡 <b>บัญชีนี้แยกอิสระอีกชั้น</b> — เงินที่นำไปซื้อกองทุนถือเป็นการ "ย้ายสินทรัพย์" จากเงินสดปาล์ม ไปเป็นหน่วยลงทุน <b>ไม่ใช่รายจ่าย</b> จึงไม่ไปหักลบกับ "กำไรสุทธิ" ในหน้ารายรับ-รายจ่ายปาล์ม',
-    noteCls:'',buySub:'กรอกทุกครั้งที่โอนเงินจากรายได้ขายปาล์มไปซื้อหน่วยลงทุน'},
+    note:'💡 <b>บัญชีนี้แยกอิสระอีกชั้น</b> — เงินที่นำไปซื้อกองทุนถือเป็นการ "ย้ายสินทรัพย์" จากเงินสดของสวน (ขายปาล์ม ขายขยะ ขายกุ้งเสีย ฯลฯ) ไปเป็นหน่วยลงทุน <b>ไม่ใช่รายจ่าย</b> จึงไม่ไปหักลบกับ "กำไรสุทธิ" ในหน้ารายรับ-รายจ่ายปาล์ม',
+    noteCls:'',buySub:'กรอกทุกครั้งที่ซื้อหน่วยลงทุน — เลือกด้วยว่าเงินก้อนนี้มาจากไหน'},
   shrimp:{icon:'🦐',color:'#1D6FA5',
     note:'💡 <b>เก็บข้อมูลแยกไว้เฉยๆ ไม่เกี่ยวกับต้นทุนตะวันฟาร์ม</b> — เงินจากการขายใบลูกกุ้งที่นำมาซื้อกองทุนนี้ <b>ไม่ถูกนำไปคำนวณรวมกับต้นทุน/กำไรของฟาร์มกุ้งเลย</b> เป็นแค่บันทึกส่วนตัวติดตามผลตอบแทนของเงินก้อนนี้เท่านั้น',
     noteCls:'shr',buySub:'กรอกทุกครั้งที่โอนเงินจากรายได้ขายใบลูกกุ้งไปซื้อหน่วยลงทุน'}
@@ -11312,16 +11330,67 @@ function fundBuyPreview(){
   const nav=parseFloat(document.getElementById('fb-nav').value)||0;
   document.getElementById('fb-units-preview').value=(amt&&nav)?(amt/nav).toFixed(2)+' หน่วย':'';
 }
+// ══ ที่มาของเงินที่ซื้อกองทุนปาล์ม (entry #289) ══
+//    เก็บที่ b.source ('palm'|'scrap'|'badshrimp'|'other' + b.sourceNote) · รายการที่ไม่มี source = ขายปาล์ม (ก่อนมีช่องนี้)
+//    ⚠️ เป็นแค่ป้ายบอกที่มา — เงินขายขยะ/กุ้งเสีย **ไม่นับเป็นรายรับของสวนปาล์ม** และไม่กระทบกำไรกองทุน (พี่ยืนยัน 18 ก.ย. 69)
+//    กองทุนกุ้ง (shrimp) ไม่มีช่องนี้ เงินมาจากขายใบลูกกุ้งอย่างเดียว ──
+const FUND_SRC=[
+  {v:'palm',ic:'🌴',t:'ขายปาล์ม',c:'#2F7A3E',bg:'#EAF5EC'},
+  {v:'scrap',ic:'♻️',t:'ขายขยะ',c:'#6B5B95',bg:'#F0EDF7'},
+  {v:'badshrimp',ic:'🦐',t:'ขายกุ้งเสีย',c:'#1D6FA5',bg:'#E6F1FB'},
+  {v:'other',ic:'✏️',t:'อื่นๆ',c:'#8A5A00',bg:'#FEF6E0'}
+];
+let _fbSrc='palm';
+function fundSrcOf(b){return FUND_SRC.find(x=>x.v===(b&&b.source))||FUND_SRC[0];}
+function fundSrcLabel(b){const m=fundSrcOf(b);return m.v==='other'?((b.sourceNote||'').trim()||'อื่นๆ'):m.t;}
+function fundSrcChip(b){const m=fundSrcOf(b);return '<span class="fbs-chip" style="background:'+m.bg+';color:'+m.c+'">'+m.ic+' '+billEsc(fundSrcLabel(b))+'</span>';}
+function renderFbSrc(){
+  const wrap=document.getElementById('fb-src-wrap');if(!wrap)return;
+  wrap.style.display=_fundSel==='palm'?'':'none';
+  document.getElementById('fb-src-seg').innerHTML=FUND_SRC.map(m=>
+    '<button type="button" class="fbs-btn'+(_fbSrc===m.v?' on':'')+'" aria-pressed="'+(_fbSrc===m.v)+'" data-v="'+m.v+'" onclick="setFbSrc(this.dataset.v)">'+m.ic+' '+m.t+'</button>').join('');
+  document.getElementById('fb-src-other').hidden=_fbSrc!=='other';
+}
+function setFbSrc(v){_fbSrc=v;renderFbSrc();if(v==='other'){const o=document.getElementById('fb-src-other');if(o)o.focus();}}
+// ── การ์ด "เงินที่ซื้อกองทุนมาจากไหน" — รวมตามที่มา (อื่นๆ แยกตามข้อความที่พิมพ์) ──
+function renderFundSrcCard(buys){
+  const el=document.getElementById('fund-src-card');if(!el)return;
+  if(_fundSel!=='palm'||!buys.length){el.style.display='none';return;}
+  const g={};
+  buys.forEach(b=>{const k=fundSrcOf(b).v==='other'?'o:'+fundSrcLabel(b):fundSrcOf(b).v;
+    if(!g[k])g[k]={b,amt:0,n:0,d0:b.date,d1:b.date};
+    g[k].amt+=b.amount||0;g[k].n++;if(b.date<g[k].d0)g[k].d0=b.date;if(b.date>g[k].d1)g[k].d1=b.date;});
+  const tot=buys.reduce((t,b)=>t+(b.amount||0),0)||1;
+  const rows=Object.values(g).sort((a,b)=>b.amt-a.amt);
+  el.style.display='';
+  el.innerHTML='<div class="card-t">💵 เงินที่ซื้อกองทุนมาจากไหน</div>'
+    +'<div class="fbs-bar">'+rows.map(r=>'<span style="width:'+(r.amt/tot*100).toFixed(2)+'%;background:'+fundSrcOf(r.b).c+'" title="'+billEsc(fundSrcLabel(r.b))+'"></span>').join('')+'</div>'
+    +'<div class="fbs-legend">'+rows.map(r=>{const m=fundSrcOf(r.b);
+      return '<div class="fbs-lg"><small><i style="background:'+m.c+'"></i>'+m.ic+' '+billEsc(fundSrcLabel(r.b))+'</small>'
+        +'<b>฿'+Math.round(r.amt).toLocaleString()+'</b>'
+        +'<span>'+r.n+' ครั้ง · '+Math.round(r.amt/tot*100)+'% · '+(r.d0===r.d1?fD(r.d0):fD(r.d0)+' – '+fD(r.d1))+'</span></div>';}).join('')+'</div>'
+    +'<div class="fbs-note">รวม ฿'+Math.round(tot).toLocaleString()+' · เป็นแค่ที่มาของเงิน — เงินขายขยะ/กุ้งเสียไม่นับเป็นรายรับของสวนปาล์ม</div>';
+}
 function saveFundBuy(){
   const date=document.getElementById('fb-date').value||today();
   const amt=parseFloat(document.getElementById('fb-amt').value)||0;
   const nav=parseFloat(document.getElementById('fb-nav').value)||0;
   if(!(amt>0)||!(nav>0)){showStockMsg('fundbuy','กรุณากรอกจำนวนเงินและ NAV ให้ถูกต้อง','err');return;}
   if(!D.fundBuys)D.fundBuys=[];
-  D.fundBuys.push({id:'fb'+Date.now()+'_'+Math.random().toString(36).slice(2,6),fund:_fundSel,date,amount:amt,nav,units:amt/nav,by:curUserLabel()});
+  const rec={id:'fb'+Date.now()+'_'+Math.random().toString(36).slice(2,6),fund:_fundSel,date,amount:amt,nav,units:amt/nav,by:curUserLabel()};
+  if(_fundSel==='palm'){
+    rec.source=_fbSrc;
+    if(_fbSrc==='other'){
+      const t=(document.getElementById('fb-src-other').value||'').trim();
+      if(!t){showStockMsg('fundbuy','เลือก "อื่นๆ" แล้ว กรุณาพิมพ์ว่าเงินมาจากไหน','err');return;}
+      rec.sourceNote=t;
+    }
+  }
+  D.fundBuys.push(rec);
   save();
   showStockMsg('fundbuy','✅ บันทึกการซื้อเรียบร้อย','ok');
-  ['fb-amt','fb-nav','fb-units-preview'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fb-amt','fb-nav','fb-units-preview','fb-src-other'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  _fbSrc='palm';   // ส่วนใหญ่มาจากขายปาล์ม — กลับเป็นค่าเริ่มต้นทุกครั้ง กันลืมแล้วติดที่มาเดิมไปรายการถัดไป
   renderFundPane();
   flashSaveBtn(document.getElementById('fund-buy-btn'));
 }
@@ -11493,11 +11562,13 @@ function renderFundPane(){
       return `<div class="kpi-card"><div class="kpi-lbl">ขายไปจ่ายค่าสวนแล้ว</div><div class="kpi-val">฿${Math.round(totalSellProceeds).toLocaleString()}</div><div class="kpi-sub"${left>=1?' style="color:var(--w)"':''}>${sells.length} ครั้ง · ${left>=1?'ยังไม่ได้ผูกรายจ่าย ฿'+Math.round(left).toLocaleString():'ผูกรายจ่ายครบทุกบาท'}</div></div>`;
     })():'');
 
+  renderFundSrcCard(buys);
+  renderFbSrc();
   const buyTbl=document.getElementById('fund-buy-table');
   if(!buys.length){buyTbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติการซื้อ — บันทึกได้ที่ฟอร์ม "บันทึกการซื้อกองทุน" ด้านบน</p>';}
   else{
-    buyTbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th style="text-align:right">จำนวนเงิน</th><th style="text-align:right">NAV ตอนซื้อ</th><th style="text-align:right">หน่วยที่ได้</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
-      buys.slice().reverse().map(b=>`<tr><td>${fD(b.date)}</td><td style="text-align:right">฿${Math.round(b.amount).toLocaleString()}</td><td style="text-align:right">${b.nav.toFixed(4)}</td><td style="text-align:right">${b.units.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">${b.by||'-'}</td><td><button class="btn-sm btn-del" onclick="deleteFundBuy('${b.id}')">🗑️</button></td></tr>`).join('')
+    buyTbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th>${_fundSel==='palm'?'<th>เงินมาจาก</th>':''}<th style="text-align:right">จำนวนเงิน</th><th style="text-align:right">NAV ตอนซื้อ</th><th style="text-align:right">หน่วยที่ได้</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
+      buys.slice().reverse().map(b=>`<tr><td>${fD(b.date)}</td>${_fundSel==='palm'?'<td>'+fundSrcChip(b)+'</td>':''}<td style="text-align:right">฿${Math.round(b.amount).toLocaleString()}</td><td style="text-align:right">${b.nav.toFixed(4)}</td><td style="text-align:right">${b.units.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">${b.by||'-'}</td><td><button class="btn-sm btn-del" onclick="deleteFundBuy('${b.id}')">🗑️</button></td></tr>`).join('')
     }</tbody></table></div>`;
   }
 
