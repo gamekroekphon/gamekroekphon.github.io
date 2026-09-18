@@ -494,6 +494,50 @@ function parseTrigger(text) {
 }
 
 // ---------------------------------------------------------------------------
+// กลุ่มที่รับแจ้งเตือน (entry #285)
+// เก็บใน RTDB /tawan_line_config แทน LINE_GROUP_ID ใน .env — เปลี่ยนกลุ่มได้โดยไม่ต้อง deploy ใหม่
+// ⚠️ ตั้งได้ด้วยคำสั่ง "สวัสดีตะวัน ตั้งกลุ่มแจ้งเตือน" ที่พิมพ์ในกลุ่มเท่านั้น
+//    ห้ามตั้งอัตโนมัติตอนบอทถูกเชิญ — ใครเชิญบอทเข้ากลุ่มอื่นจะดึงแจ้งเตือนบิลของฟาร์มไปได้ทันที
+// ⚠️ node นี้ไม่มีสิทธิ์ให้แอปฝั่งหน้าเว็บอ่าน/เขียน (ไม่ได้อยู่ใน firebase_rules.json) — เข้าถึงผ่าน admin เท่านั้น
+// ---------------------------------------------------------------------------
+const LINE_CFG_PATH = "tawan_line_config";
+
+async function getNotifyGroupId() {
+  try {
+    const snap = await admin.database().ref(`${LINE_CFG_PATH}/groupId`).get();
+    if (snap.val()) return snap.val();
+  } catch (e) {
+    logger.error("read notify group failed", e);
+  }
+  return LINE_GROUP_ID;   // ค่าเดิมจาก .env ใช้สำรองเมื่อยังไม่เคยตั้งกลุ่ม
+}
+
+async function lineGroupName(groupId) {
+  try {
+    const r = await fetch(`https://api.line.me/v2/bot/group/${groupId}/summary`, {
+      headers: {"Authorization": `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`},
+    });
+    if (r.ok) return (await r.json()).groupName || "";
+  } catch (e) {
+    logger.error("group summary failed", e);
+  }
+  return "";
+}
+
+async function setNotifyGroup(groupId, byUserId) {
+  const groupName = await lineGroupName(groupId);
+  await admin.database().ref(LINE_CFG_PATH).set({
+    groupId, groupName, setAt: Date.now(), setByLineUser: byUserId || "",
+  });
+  logger.info("notify group set", groupName);
+  return groupName;
+}
+
+function isSetGroupCommand(query) {
+  return /ตั้งกลุ่ม/.test(String(query || ""));
+}
+
+// ---------------------------------------------------------------------------
 // HTTPS webhook — LINE ส่ง event เข้ามาที่นี่
 // ---------------------------------------------------------------------------
 
@@ -510,9 +554,35 @@ exports.lineWebhook = onRequest({region: "asia-southeast1"}, async (req, res) =>
   const events = (req.body && req.body.events) || [];
   for (const event of events) {
     try {
+      // ถูกเชิญเข้ากลุ่ม: บอกวิธีตั้งกลุ่มแจ้งเตือน (ไม่ตั้งให้เอง — ดูเหตุผลที่ setNotifyGroup)
+      if (event.type === "join" && event.replyToken) {
+        await lineApi("message/reply", {
+          replyToken: event.replyToken,
+          messages: [{type: "text", text:
+            "สวัสดีครับ 🦐 ถ้าต้องการให้กลุ่มนี้รับแจ้งเตือนบิลรับของ พิมพ์\n" +
+            "สวัสดีตะวัน ตั้งกลุ่มแจ้งเตือน"}],
+        });
+        continue;
+      }
       if (event.type === "message" && event.message && event.message.type === "text") {
         const srcType = (event.source && event.source.type) || "user";
         const parsed = parseTrigger(event.message.text);
+
+        if (parsed.triggered && isSetGroupCommand(parsed.query)) {
+          let msg;
+          if (srcType === "group" && event.source.groupId) {
+            const name = await setNotifyGroup(event.source.groupId, event.source.userId);
+            msg = `✅ ตั้งกลุ่ม "${name || "นี้"}" เป็นกลุ่มรับแจ้งเตือนบิลรับของแล้ว\n` +
+              "บิลที่ staff ส่ง / ตีกลับ / อนุมัติ จะเด้งเข้ากลุ่มนี้";
+          } else {
+            msg = "คำสั่งนี้ต้องพิมพ์ในกลุ่มที่ต้องการรับแจ้งเตือนครับ";
+          }
+          await lineApi("message/reply", {
+            replyToken: event.replyToken,
+            messages: [{type: "text", text: msg}],
+          });
+          continue;
+        }
 
         // ในกลุ่ม/ห้อง: ตอบเฉพาะข้อความที่ขึ้นต้นด้วย "สวัสดีตะวัน" เท่านั้น
         if ((srcType === "group" || srcType === "room") && !parsed.triggered) {
@@ -573,8 +643,9 @@ exports.billNotify = onValueCreated(
     async (event) => {
       const ev = event.data.val() || {};
       if (ev.sentAt || ev.skippedAt) return;           // กันส่งซ้ำตอน retry
-      if (!LINE_GROUP_ID) {
-        logger.error("LINE_GROUP_ID not set in functions/.env — skip push");
+      const groupId = await getNotifyGroupId();
+      if (!groupId) {
+        logger.error("ยังไม่ได้ตั้งกลุ่มแจ้งเตือน — พิมพ์ \"สวัสดีตะวัน ตั้งกลุ่มแจ้งเตือน\" ในกลุ่ม");
         return;
       }
       if (!ev.type || !ev.billId) {
@@ -595,7 +666,7 @@ exports.billNotify = onValueCreated(
         return;
       }
       const ok = await lineApi("message/push", {
-        to: LINE_GROUP_ID,
+        to: groupId,
         messages: [{type: "text", text}],
       });
       await event.data.ref.update(ok ? {sentAt: Date.now()} : {failedAt: Date.now()});
