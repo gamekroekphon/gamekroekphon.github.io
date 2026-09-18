@@ -6007,7 +6007,10 @@ function prSort(a,b){
 }
 // ── แถบค้นหาติดบนสุดต้องอยู่ใต้หัวเว็บที่ sticky อยู่ (ความสูงต่างกันมือถือ/คอม) — วัดจริงทุกครั้งที่วาด ──
 function prStickyTop(){
-  let t=0;['.hdr','.tabs-wrap'].forEach(q=>{const e=document.querySelector(q);if(e&&getComputedStyle(e).position==='sticky'&&e.offsetHeight)t=Math.max(t,e.offsetTop+e.offsetHeight);});
+  // ⚠️ ห้ามใช้ offsetTop ของ element ที่ sticky — ตอนติดอยู่มันรายงานตำแหน่งที่เลื่อนตามจอ (= scrollY)
+  //    มือถือเลื่อนแล้วแถบ URL หด → ยิง resize → วัดใหม่ได้ 1,500px → แถบค้นหาไปค้างกลางรายการ บังสินค้า (entry #294)
+  //    ใช้ค่า top ใน CSS + ความสูง ซึ่งไม่ขึ้นกับการเลื่อน ──
+  let t=0;['.hdr','.tabs-wrap'].forEach(q=>{const e=document.querySelector(q);if(!e||!e.offsetHeight)return;const cs=getComputedStyle(e);if(cs.position!=='sticky'&&cs.position!=='fixed')return;t=Math.max(t,(parseFloat(cs.top)||0)+e.offsetHeight);});
   const sec=document.getElementById('sec-price');if(!sec)return;
   sec.style.setProperty('--pr-top',t+'px');
   const top=document.getElementById('pr-top');if(top)sec.style.setProperty('--pr-gtop',(t+top.offsetHeight)+'px');
@@ -6029,7 +6032,8 @@ function renderPrice(){
   groups.forEach(gr=>{
     const rs=list.filter(i=>g.coOf(i)===gr.id).sort(prSort);
     if(!rs.length)return;
-    h+='<div class="pr-grp">'+billEsc(gr.name)+' <span>· '+rs.length+' รายการ</span></div><div class="pr-items">';
+    // ── ห่อแต่ละบริษัทเป็น section ของตัวเอง — หัวกลุ่ม sticky อยู่ในกรอบบริษัทนั้น พอรายการหมดก็เลื่อนออก ไม่ค้างซ้อนกันใต้แถบค้นหา ──
+    h+='<section class="pr-sec"><div class="pr-grp">'+billEsc(gr.name)+' <span>· '+rs.length+' รายการ</span></div><div class="pr-items">';
     rs.forEach(i=>{
       const cost=parseFloat(i.unitPrice)||0,sell=parseFloat(i.shopPrice)||0,bulk=parseFloat(i.shopBulk)||0;
       const costLine=cust?'':'<span class="pr-c">ทุน '+(cost?prB(cost):'—')
@@ -6043,7 +6047,7 @@ function renderPrice(){
         ?'<button type="button" class="pr-it" data-id="'+billEsc(i.id)+'" onclick="openPrItem(this.dataset.id)" aria-label="แก้ราคา '+billEsc(i.name)+'">'+left+right+'</button>'
         :'<div class="pr-it">'+left+right+'</div>';
     });
-    h+='</div>';
+    h+='</div></section>';
   });
   el.innerHTML=h||'<p class="pr-empty">'+(q?'ไม่พบสินค้าที่ตรงกับ "'+billEsc(_prQ)+'"':'ยังไม่มีสินค้าในกลุ่มนี้')+'</p>';
   prStickyTop();
