@@ -840,46 +840,65 @@ html[data-uisize="xl"]{--ui-scale:1.25}
    ตารางกลายเป็นกรอบเลื่อนซ้อนอยู่ในกรอบ .kan-gwrap อีกชั้น → หัวคอลัมน์ที่ตรึงไว้หลุดตอนเลื่อนลง
    และลูกศรเลื่อนจอตามไม่ได้ — 768px คือ iPad แนวตั้งพอดี · ตารางนี้มีกรอบเลื่อนของตัวเองแล้ว ห้ามโดนกฎนั้น */
 .card table.kan-g{display:table;width:auto;overflow:visible}
-/* ── ราคาสินค้า (entry #291) ── */
-.pr-hbtn{display:flex;gap:8px;flex-wrap:wrap}
-body:not(.role-admin) .pr-hbtn,body:not(.role-admin) .pr-toggle{display:none!important}
-.pr-sub{font-size:calc(12.5px * var(--ui-scale));color:var(--tx3);margin:-4px 0 10px}
-.pr-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
-.pr-search{flex:1;min-width:220px}
-.pr-toggle{display:inline-flex;border:1px solid var(--bd);border-radius:8px;overflow:hidden}
-.pr-toggle button{border:0;background:var(--sf);padding:8px 12px;font:inherit;font-size:calc(12.5px * var(--ui-scale));color:var(--tx2);cursor:pointer}
-.pr-toggle button.on{background:var(--tx);color:#fff;font-weight:700}
-.pr-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.pr-chip{border:1px solid var(--bd);background:var(--sf);border-radius:99px;padding:5px 11px;font:inherit;font-size:calc(12.5px * var(--ui-scale));color:var(--tx2);cursor:pointer}
-.pr-chip span{color:var(--tx3);font-size:.9em}
-.pr-chip.on{background:var(--p);border-color:var(--p);color:#fff;font-weight:700}
-.pr-chip.on span{color:#fff}
-.pr-toggle button:focus-visible,.pr-chip:focus-visible{outline:2px solid var(--in);outline-offset:2px}
-.pr-tw{overflow-x:auto}
-.card table.pr-t{display:table;border-collapse:collapse;width:100%;font-size:calc(13px * var(--ui-scale));overflow:visible;color:var(--tx)}  /* ตั้งสีเอง — .role-admin (ป้ายหัวเว็บ) ติดที่ body ด้วย ทำให้ข้อความที่ไม่ตั้งสีของ admin เป็นสีทอง */
-.pr-t th{font-size:calc(11.5px * var(--ui-scale));color:var(--tx3);text-align:left;font-weight:600;padding:7px 8px;border-bottom:1px solid var(--bd);background:var(--sf2);white-space:nowrap}
-.pr-t td{padding:7px 8px;border-bottom:1px solid var(--bd);white-space:nowrap}
-.pr-t .num{text-align:right;font-variant-numeric:tabular-nums}
-.pr-t tr.pr-co td{background:var(--pl);font-weight:700;color:var(--pd)}
-.pr-t tr.pr-co td span{font-weight:400;color:var(--tx3);font-size:.9em}
-.pr-cost{color:var(--tx2)}
-.pr-sell{font-weight:700}
-.pr-mg{color:var(--ok);font-size:calc(12px * var(--ui-scale))}
+/* ── ราคาสินค้า (entry #291 · ออกแบบใหม่สำหรับมือถือ #292) ── */
+#sec-price{color:var(--tx)}   /* .role-admin (ป้ายหัวเว็บ) ติดที่ body ทำให้ข้อความของ admin เป็นสีทอง — ตั้งสีเองทั้งหน้า */
+.pr-wrap{max-width:760px;margin:0 auto}
+.pr-top{position:sticky;top:var(--pr-top,0px);z-index:20;background:var(--bg);padding:4px 0 10px}
+.pr-trow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.pr-trow .sec-title{margin:0}
+.pr-add{background:var(--p);color:#fff;border:0;border-radius:10px;padding:9px 14px;font:inherit;font-weight:700;font-size:calc(14px * var(--ui-scale));min-height:44px;cursor:pointer}
+.pr-add-long{margin-left:4px}
+.pr-search{display:block;width:100%;border:1px solid var(--bd);background:var(--sf);border-radius:10px;padding:10px 12px;font:inherit;font-size:16px;min-height:44px;margin-bottom:8px;color:var(--tx)}
+.pr-frow{display:flex;gap:8px}
+.pr-sel{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--bd);border-radius:10px;padding:9px 12px;background:var(--sf);font:inherit;font-size:calc(14.5px * var(--ui-scale));font-weight:600;min-height:44px;color:var(--tx);cursor:pointer;text-align:left}
+.pr-sel>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr-cnt{color:var(--tx3);font-weight:400;font-size:.9em}
+.pr-ibtn{width:44px;height:44px;flex-shrink:0;border:1px solid var(--bd);border-radius:10px;background:var(--sf);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.pr-ibtn.on{background:var(--tx);border-color:var(--tx)}
+body.role-admin .pr-ibtn.admin-only{display:flex!important}
+body:not(.role-admin) .pr-add,body:not(.role-admin) .pr-ibtn{display:none!important}
+.pr-add:focus-visible,.pr-sel:focus-visible,.pr-ibtn:focus-visible,.pr-it:focus-visible,.pr-opt:focus-visible{outline:2px solid var(--in);outline-offset:2px}
+.pr-hint2{font-size:calc(12.5px * var(--ui-scale));color:var(--tx3);margin:-2px 2px 6px}
+.pr-hint2:empty{display:none}
+.pr-grp{position:sticky;top:var(--pr-gtop,0px);z-index:10;background:var(--bg);padding:12px 4px 6px;font-size:calc(12.5px * var(--ui-scale));font-weight:700;color:var(--pd)}
+.pr-grp span{color:var(--tx3);font-weight:400}
+.pr-items{background:var(--sf);border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+.pr-it{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:11px 14px;min-height:56px;border:0;border-bottom:1px solid var(--bd);background:none;font:inherit;color:var(--tx);text-align:left}
+.pr-items>.pr-it:last-child{border-bottom:0}
+button.pr-it{cursor:pointer}
+button.pr-it:hover,button.pr-it:active{background:var(--sf2)}
+.pr-l{min-width:0;display:flex;flex-direction:column;gap:1px}
+.pr-n{font-weight:600;font-size:calc(15px * var(--ui-scale));line-height:1.3}
+.pr-u{font-size:calc(12.5px * var(--ui-scale));color:var(--tx3)}
+.pr-c{font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-top:2px}
+.pr-mg{color:var(--ok);font-weight:600}
 .pr-mg.neg{color:var(--d)}
-.pr-dim{color:var(--tx3);font-style:italic;font-size:.95em}
-.pr-note{font-size:calc(12px * var(--ui-scale));color:var(--tx2);white-space:normal!important;min-width:140px}
-.pr-empty{color:var(--tx3);text-align:center;padding:24px 12px;margin:0}
+.pr-nt{align-self:flex-start;background:var(--wb);color:var(--w);border-radius:6px;padding:0 6px;font-size:calc(11.5px * var(--ui-scale));margin-top:3px}
+.pr-r{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+.pr-sp{font-size:calc(17px * var(--ui-scale));font-weight:700;font-variant-numeric:tabular-nums}
+.pr-bk{font-size:calc(12px * var(--ui-scale));color:var(--in);font-weight:600;font-variant-numeric:tabular-nums}
+.pr-none{font-size:calc(12.5px * var(--ui-scale));color:var(--tx3);font-style:italic}
+.pr-empty{color:var(--tx3);text-align:center;padding:28px 12px;margin:0}
 .modal.pr-modal{padding:0;width:520px;display:flex;flex-direction:column;height:auto}
-.pr-mb{padding:14px 16px;overflow-y:auto}
+.pr-mb{padding:14px 16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.pr-mb .fg,.pr-mb .pr-g2 .fg{margin:0}
 .pr-g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.pr-hint{font-size:calc(11.5px * var(--ui-scale));color:var(--tx3);margin-top:3px}
+.pr-hint{font-size:calc(11.5px * var(--ui-scale));color:var(--tx3);margin-top:3px;font-weight:400}
+.pr-big{font-weight:700}
 .pr-err{background:var(--db);color:var(--d);border-radius:8px;padding:8px 10px;font-size:calc(13px * var(--ui-scale))}
 .pr-f{border-top:1px solid var(--bd)}
+.pr-off{color:var(--tx3);border-color:transparent;background:none;white-space:nowrap;padding-left:6px;padding-right:6px}
+.pr-picklist{overflow-y:auto;max-height:65vh}
+.pr-opt{display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px 16px;min-height:48px;border:0;border-bottom:1px solid var(--bd);background:none;font:inherit;font-size:calc(15px * var(--ui-scale));color:var(--tx);text-align:left;cursor:pointer}
+.pr-opt:hover{background:var(--sf2)}
+.pr-opt.on{background:var(--pl);color:var(--pd);font-weight:700}
+.pr-opt.sub{color:var(--tx3)}
 .pr-colist{padding:6px 16px;overflow-y:auto;max-height:55vh}
 .pr-corow{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--bd)}
 .pr-corow .fi{flex:1;min-width:0}
 .pr-coadd{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--bd)}
 .pr-coadd .fi{flex:1}
+@media(max-width:480px){.pr-add-long{display:none}}
 /* ── ที่มาของเงินซื้อกองทุนปาล์ม (entry #289) ── */
 .fbs-seg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
 .fbs-btn{border:1px solid var(--bd);background:var(--sf);border-radius:99px;padding:6px 12px;font:inherit;font-size:calc(13px * var(--ui-scale));color:var(--tx2);cursor:pointer}
@@ -1829,20 +1848,26 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   <div class="modal pr-modal" role="dialog" aria-labelledby="pri-title">
     <div class="fsl-h"><div><b id="pri-title"></b><small id="pri-sub"></small></div><button type="button" class="bill-x" aria-label="ปิด" onclick="closePrItem()">✕</button></div>
     <div class="pr-mb">
-      <div class="pr-g2"><div class="fg"><label class="fl" for="pri-co">บริษัท</label><select class="fi" id="pri-co"></select></div>
-        <div class="fg"><label class="fl" for="pri-unit">หน่วย</label><input class="fi" id="pri-unit" placeholder="ถัง, ถุง, กระสอบ"></div></div>
       <div id="pri-new-row" class="pr-g2"><div class="fg"><label class="fl" for="pri-name">ชื่อสินค้า</label><input class="fi" id="pri-name" placeholder="เช่น คลอรีนโลตัส"></div>
         <div class="fg"><label class="fl" for="pri-cat">หมวดในสต็อก</label><select class="fi" id="pri-cat">
           <option value="feed">🍚 อาหารกุ้ง</option><option value="chemOral">💊 ยากิน</option><option value="chemWater">🧪 ยาลงน้ำ</option>
           <option value="probioOral">🦠 จุลินทรีย์กิน</option><option value="probioWater">🧫 จุลินทรีย์ลงน้ำ</option><option value="lime">🪨 ปูน</option><option value="equip">🔧 อุปกรณ์</option></select></div></div>
-      <div class="fg"><label class="fl" for="pri-cost">ต้นทุน (ราคาที่ฟาร์มใช้ · รวมค่าขนส่ง)</label><input class="fi" id="pri-cost" type="number" min="0" step="any" inputmode="decimal">
-        <div class="pr-hint">ช่องเดียวกับ "ราคา/หน่วย" ในหน้าสต็อก — แก้ที่นี่ หน้าสต็อกและต้นทุนบ่อเปลี่ยนตาม</div></div>
-      <div class="pr-g2"><div class="fg"><label class="fl" for="pri-sell">ราคาขาย เงินสด</label><input class="fi" id="pri-sell" type="number" min="0" step="any" inputmode="decimal"></div>
-        <div class="fg"><label class="fl" for="pri-bulk">ราคาพิเศษ/ยกลัง</label><input class="fi" id="pri-bulk" type="number" min="0" step="any" inputmode="decimal" placeholder="ไม่มีก็เว้นว่าง"></div></div>
-      <div class="fg"><label class="fl" for="pri-note">หมายเหตุ</label><input class="fi" id="pri-note" placeholder="เช่น ซื้อ 5 ลัง แถม 2 ลัง"></div>
+      <div class="pr-g2"><div class="fg"><label class="fl" for="pri-sell">ราคาขาย เงินสด</label><input class="fi pr-big" id="pri-sell" type="number" min="0" step="any" inputmode="decimal"></div>
+        <div class="fg"><label class="fl" for="pri-bulk">พิเศษ/ยกลัง</label><input class="fi" id="pri-bulk" type="number" min="0" step="any" inputmode="decimal" placeholder="ไม่มีเว้นว่าง"></div></div>
+      <div class="fg"><label class="fl" for="pri-cost">ต้นทุน (ฟาร์มใช้ · รวมค่าขนส่ง)</label><input class="fi" id="pri-cost" type="number" min="0" step="any" inputmode="decimal">
+        <div class="pr-hint">ช่องเดียวกับราคา/หน่วยในหน้าสต็อก — แก้แล้วต้นทุนบ่อเปลี่ยนตาม</div></div>
+      <div class="pr-g2"><div class="fg"><label class="fl" for="pri-co">บริษัท</label><select class="fi" id="pri-co"></select></div>
+        <div class="fg"><label class="fl" for="pri-unit">หน่วย</label><input class="fi" id="pri-unit" placeholder="ถัง, ถุง, กระสอบ"></div></div>
+      <div class="fg"><label class="fl" for="pri-note">หมายเหตุ <span class="pr-hint">(staff เห็นด้วย)</span></label><input class="fi" id="pri-note" placeholder="เช่น ซื้อ 5 ลัง แถม 2 ลัง"></div>
       <div id="pri-msg"></div>
     </div>
-    <div class="fsl-f pr-f"><button type="button" class="btn" id="pri-off" onclick="togglePrOff()"></button><span style="flex:1"></span><button type="button" class="btn" onclick="closePrItem()">ยกเลิก</button><button type="button" class="btn btn-p" onclick="savePrItem()">💾 บันทึก</button></div>
+    <div class="fsl-f pr-f"><button type="button" class="btn pr-off" id="pri-off" onclick="togglePrOff()"></button><span style="flex:1"></span><button type="button" class="btn" onclick="closePrItem()">ยกเลิก</button><button type="button" class="btn btn-p" onclick="savePrItem()">💾 บันทึก</button></div>
+  </div>
+</div>
+<div class="modal-bg" id="prPickModal" onclick="if(event.target===this)closePrPick()">
+  <div class="modal pr-modal" role="dialog" aria-labelledby="prp-title">
+    <div class="fsl-h"><div><b id="prp-title">เลือกบริษัท</b></div><button type="button" class="bill-x" aria-label="ปิด" onclick="closePrPick()">✕</button></div>
+    <div class="pr-picklist" id="prp-list"></div>
   </div>
 </div>
 <div class="modal-bg" id="prCoModal" onclick="if(event.target===this)closePrCo()">
@@ -3479,15 +3504,19 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   </div>
 </div>
 <div id="sec-price" class="sec">
-  <div class="sec-hdr"><div class="sec-title">💲 ราคาสินค้า</div>
-    <div class="pr-hbtn admin-only"><button type="button" class="btn" onclick="openPrCo()">🏢 จัดการบริษัท</button><button type="button" class="btn btn-p" onclick="openPrItem('')">+ เพิ่มสินค้า</button></div></div>
-  <div class="pr-sub" id="pr-sub"></div>
-  <div class="pr-tools">
-    <input class="fi pr-search" id="pr-q" type="search" placeholder="🔍 ค้นหาสินค้า เช่น คลอรีน, 7701, ปูน" oninput="_prQ=this.value;renderPrice()">
-    <div class="pr-toggle admin-only" role="group" aria-label="มุมมอง"><button type="button" id="pr-v-all" onclick="setPrCust(false)">👁 ราคาทั้งหมด</button><button type="button" id="pr-v-cust" onclick="setPrCust(true)">🧾 โชว์ลูกค้า (ซ่อนทุน)</button></div>
+  <div class="pr-wrap">
+    <div class="pr-top" id="pr-top">
+      <div class="pr-trow"><div class="sec-title">💲 ราคาสินค้า</div><button type="button" class="pr-add admin-only" onclick="openPrItem('')">+ เพิ่ม<span class="pr-add-long">สินค้า</span></button></div>
+      <input class="pr-search" id="pr-q" type="search" placeholder="🔍 ค้นหาสินค้า" aria-label="ค้นหาสินค้า" oninput="_prQ=this.value;renderPrice()">
+      <div class="pr-frow">
+        <button type="button" class="pr-sel" id="pr-sel" onclick="openPrPick()" aria-haspopup="dialog"></button>
+        <button type="button" class="pr-ibtn admin-only" id="pr-cust" onclick="setPrCust(!_prCust)" title="โชว์ลูกค้า (ซ่อนทุน)" aria-label="โชว์ลูกค้า ซ่อนทุน">🧾</button>
+        <button type="button" class="pr-ibtn admin-only" onclick="openPrCo()" title="จัดการบริษัท" aria-label="จัดการบริษัท">⚙️</button>
+      </div>
+    </div>
+    <div class="pr-hint2" id="pr-sub"></div>
+    <div id="pr-list"></div>
   </div>
-  <div class="pr-chips" id="pr-chips"></div>
-  <div class="card"><div class="pr-tw" id="pr-table"></div></div>
 </div>
 <div id="sec-stock" class="sec">
   <div class="sec-hdr"><div class="sec-title">📦 สต็อกพัสดุ</div></div>
@@ -5947,54 +5976,86 @@ function prB(v){const n=parseFloat(v);return n>0?n.toLocaleString('en-US',{maxim
 function initPrice(){
   const q=document.getElementById('pr-q');if(q&&q.value!==_prQ)q.value=_prQ;
   renderPrice();
+  if(!window._prResizeHooked){window._prResizeHooked=true;window.addEventListener('resize',()=>{if(document.getElementById('sec-price').classList.contains('on'))prStickyTop();});}
 }
 function setPrCust(v){_prCust=!!v;renderPrice();}
-function setPrCo(id){_prCo=id;renderPrice();}
-function renderPrice(){
-  const tbl=document.getElementById('pr-table');if(!tbl)return;
-  const admin=prIsAdmin(),cust=prCustView();
-  ['pr-v-all','pr-v-cust'].forEach((id,i)=>{const b=document.getElementById(id);if(b){const on=i?_prCust:!_prCust;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);}});
-  document.getElementById('pr-sub').textContent=cust
-    ?'ราคาขายหน้าร้าน · เงินสด / พิเศษ-ยกลัง'
-    :'ต้นทุน = ราคาที่ฟาร์มใช้ (ตัวเดียวกับหน้าสต็อก) · เงินสด / พิเศษ-ยกลัง = ราคาขายลูกค้านอก';
+// ── สินค้าที่หน้านี้แสดง + กลุ่มบริษัท (ใช้ร่วมทั้งรายการและ dropdown ให้ตัวเลขตรงกัน) ──
+function prGroups(){
+  const admin=prIsAdmin();
   const cos=prCompanies(),coIds=new Set(cos.map(c=>c.id));
-  const all=(D.inventoryItems||[]).filter(i=>admin||!i.shopOff);
-  const q=_prQ.trim().toLowerCase();
-  const hit=i=>!q||[i.name,prCoName(i.companyId),i.shopNote,i.unit].some(x=>String(x||'').toLowerCase().includes(q));
   const coOf=i=>coIds.has(i.companyId)?i.companyId:'none';
+  const all=(D.inventoryItems||[]).filter(i=>admin||!i.shopOff);
   const live=all.filter(i=>!i.shopOff),off=all.filter(i=>i.shopOff);
   const cnt={};live.forEach(i=>{const k=coOf(i);cnt[k]=(cnt[k]||0)+1;});
-  const chip=(id,label,n)=>'<button type="button" class="pr-chip'+(_prCo===id?' on':'')+'" data-co="'+billEsc(id)+'" onclick="setPrCo(this.dataset.co)">'+billEsc(label)+' <span>'+n+'</span></button>';
-  document.getElementById('pr-chips').innerHTML=chip('','ทั้งหมด',live.length)
-    +cos.filter(c=>cnt[c.id]).map(c=>chip(c.id,c.name,cnt[c.id])).join('')
-    +(cnt.none?chip('none','ยังไม่ระบุบริษัท',cnt.none):'')
-    +(admin&&off.length?chip('off','เลิกขายแล้ว',off.length):'');
-  let list=(_prCo==='off'?off:live).filter(hit);
-  if(_prCo&&_prCo!=='off')list=list.filter(i=>coOf(i)===_prCo);
-  const groups=[...cos.map(c=>({id:c.id,name:c.name})),{id:'none',name:'ยังไม่ระบุบริษัท'}];
-  const cols=cust?5:8;
-  let h='<table class="pr-t"><thead><tr><th>สินค้า</th><th>หน่วย</th>'+(cust?'':'<th class="num">ต้นทุน</th>')
-    +'<th class="num">เงินสด</th><th class="num">พิเศษ/ยกลัง</th>'+(cust?'':'<th class="num">กำไร/หน่วย</th>')+'<th>หมายเหตุ</th>'+(cust?'':'<th></th>')+'</tr></thead><tbody>';
-  let any=false;
-  groups.forEach(g=>{
-    const rs=list.filter(i=>(_prCo==='off'?true:coOf(i)===g.id)&&(_prCo!=='off'||coOf(i)===g.id)).sort((a,b)=>String(a.name).localeCompare(String(b.name),'th',{numeric:true}));
-    if(!rs.length)return;any=true;
-    h+='<tr class="pr-co"><td colspan="'+cols+'">'+billEsc(g.name)+' <span>· '+rs.length+' รายการ</span></td></tr>';
-    rs.forEach(i=>{
-      const cost=parseFloat(i.unitPrice)||0,sell=parseFloat(i.shopPrice)||0;
-      const mg=sell>0&&cost>0?'<span class="pr-mg'+(sell<cost?' neg':'')+'">'+(sell>=cost?'+':'')+prB(sell-cost)+' ('+Math.round((sell-cost)/cost*100)+'%)</span>':'<span class="pr-dim">—</span>';
-      h+='<tr><td>'+billEsc(i.name)+'</td><td>'+billEsc(i.unit||'')+'</td>'
-        +(cust?'':'<td class="num pr-cost">'+(cost?prB(cost):'—')+'</td>')
-        +'<td class="num pr-sell">'+(sell?prB(sell):'<span class="pr-dim">'+(cust?'สอบถาม':'ยังไม่ตั้ง')+'</span>')+'</td>'
-        +'<td class="num">'+(prB(i.shopBulk)||'<span class="pr-dim">—</span>')+'</td>'
-        +(cust?'':'<td class="num">'+mg+'</td>')
-        +'<td class="pr-note">'+billEsc(i.shopNote||'')+'</td>'
-        +(cust?'':'<td><button type="button" class="btn-sm" data-id="'+billEsc(i.id)+'" onclick="openPrItem(this.dataset.id)" aria-label="แก้ราคา '+billEsc(i.name)+'">✏️</button></td>')+'</tr>';
-    });
-  });
-  h+='</tbody></table>';
-  tbl.innerHTML=any?h:'<p class="pr-empty">'+(q?'ไม่พบสินค้าที่ตรงกับ "'+billEsc(_prQ)+'"':'ยังไม่มีสินค้าในกลุ่มนี้')+'</p>';
+  return{cos,coOf,live,off,cnt};
 }
+function prSelLabel(g){
+  if(!_prCo)return['ทุกบริษัท',g.live.length];
+  if(_prCo==='none')return['ยังไม่ระบุบริษัท',g.cnt.none||0];
+  if(_prCo==='off')return['เลิกขายแล้ว',g.off.length];
+  const c=g.cos.find(x=>x.id===_prCo);return c?[c.name,g.cnt[c.id]||0]:['ทุกบริษัท',g.live.length];
+}
+// ── เรียงในบริษัท: ราคาขายมาก→น้อย (พี่เลือก) · ยังไม่ตั้งราคาไว้ท้าย เรียงชื่อ ──
+function prSort(a,b){
+  const x=parseFloat(a.shopPrice)||0,y=parseFloat(b.shopPrice)||0;
+  if(x!==y)return y-x;
+  return String(a.name).localeCompare(String(b.name),'th',{numeric:true});
+}
+// ── แถบค้นหาติดบนสุดต้องอยู่ใต้หัวเว็บที่ sticky อยู่ (ความสูงต่างกันมือถือ/คอม) — วัดจริงทุกครั้งที่วาด ──
+function prStickyTop(){
+  let t=0;['.hdr','.tabs-wrap'].forEach(q=>{const e=document.querySelector(q);if(e&&getComputedStyle(e).position==='sticky'&&e.offsetHeight)t=Math.max(t,e.offsetTop+e.offsetHeight);});
+  const sec=document.getElementById('sec-price');if(!sec)return;
+  sec.style.setProperty('--pr-top',t+'px');
+  const top=document.getElementById('pr-top');if(top)sec.style.setProperty('--pr-gtop',(t+top.offsetHeight)+'px');
+}
+function renderPrice(){
+  const el=document.getElementById('pr-list');if(!el)return;
+  if(_prCo&&_prCo!=='none'&&_prCo!=='off'&&!(D.shopCompanies||[]).some(c=>c.id===_prCo))_prCo='';   // บริษัทถูกลบจากอีกเครื่อง
+  const admin=prIsAdmin(),cust=prCustView(),g=prGroups();
+  const [lbl,n]=prSelLabel(g);
+  document.getElementById('pr-sel').innerHTML='<span>'+billEsc(lbl)+' <span class="pr-cnt">· '+n+'</span></span><span aria-hidden="true">▾</span>';
+  const cb=document.getElementById('pr-cust');if(cb){cb.classList.toggle('on',_prCust);cb.setAttribute('aria-pressed',_prCust);}
+  document.getElementById('pr-sub').textContent=admin&&_prCust?'🧾 โหมดโชว์ลูกค้า — ซ่อนต้นทุนและกำไร':'';
+  const q=_prQ.trim().toLowerCase();
+  const hit=i=>!q||[i.name,prCoName(i.companyId),i.shopNote,i.unit].some(x=>String(x||'').toLowerCase().includes(q));
+  let list=(_prCo==='off'?g.off:g.live).filter(hit);
+  if(_prCo&&_prCo!=='off')list=list.filter(i=>g.coOf(i)===_prCo);
+  const groups=[...g.cos.map(c=>({id:c.id,name:c.name})),{id:'none',name:'ยังไม่ระบุบริษัท'}];
+  let h='';
+  groups.forEach(gr=>{
+    const rs=list.filter(i=>g.coOf(i)===gr.id).sort(prSort);
+    if(!rs.length)return;
+    h+='<div class="pr-grp">'+billEsc(gr.name)+' <span>· '+rs.length+' รายการ</span></div><div class="pr-items">';
+    rs.forEach(i=>{
+      const cost=parseFloat(i.unitPrice)||0,sell=parseFloat(i.shopPrice)||0,bulk=parseFloat(i.shopBulk)||0;
+      const costLine=cust?'':'<span class="pr-c">ทุน '+(cost?prB(cost):'—')
+        +(sell&&cost?' · <span class="pr-mg'+(sell<cost?' neg':'')+'">'+(sell>=cost?'+':'−')+prB(Math.abs(sell-cost))+' ('+Math.round((sell-cost)/cost*100)+'%)</span>':'')+'</span>';
+      const left='<span class="pr-l"><span class="pr-n">'+billEsc(i.name)+'</span>'
+        +'<span class="pr-u">'+billEsc(i.unit||'')+'</span>'+costLine
+        +(i.shopNote?'<span class="pr-nt">'+billEsc(i.shopNote)+'</span>':'')+'</span>';
+      const right='<span class="pr-r">'+(sell?'<span class="pr-sp">฿'+prB(sell)+'</span>':'<span class="pr-none">'+(cust?'สอบถาม':'ยังไม่ตั้งราคา')+'</span>')
+        +(bulk?'<span class="pr-bk">ยกลัง ฿'+prB(bulk)+'</span>':'')+'</span>';
+      h+=admin&&!cust
+        ?'<button type="button" class="pr-it" data-id="'+billEsc(i.id)+'" onclick="openPrItem(this.dataset.id)" aria-label="แก้ราคา '+billEsc(i.name)+'">'+left+right+'</button>'
+        :'<div class="pr-it">'+left+right+'</div>';
+    });
+    h+='</div>';
+  });
+  el.innerHTML=h||'<p class="pr-empty">'+(q?'ไม่พบสินค้าที่ตรงกับ "'+billEsc(_prQ)+'"':'ยังไม่มีสินค้าในกลุ่มนี้')+'</p>';
+  prStickyTop();
+}
+function openPrPick(){
+  const g=prGroups();
+  const opt=(id,name,n,cls)=>'<button type="button" class="pr-opt'+(cls||'')+(_prCo===id?' on':'')+'" data-co="'+billEsc(id)+'" onclick="pickPrCo(this.dataset.co)"><span>'+billEsc(name)+'</span><span class="pr-cnt">'+n+'</span></button>';
+  document.getElementById('prp-list').innerHTML=opt('','ทุกบริษัท',g.live.length)
+    +g.cos.filter(c=>g.cnt[c.id]).map(c=>opt(c.id,c.name,g.cnt[c.id])).join('')
+    +(g.cnt.none?opt('none','ยังไม่ระบุบริษัท',g.cnt.none,' sub'):'')
+    +(prIsAdmin()&&g.off.length?opt('off','เลิกขายแล้ว',g.off.length,' sub'):'');
+  document.getElementById('prPickModal').classList.add('on');
+  const on=document.querySelector('#prp-list .pr-opt.on');if(on)on.scrollIntoView({block:'nearest'});
+}
+function closePrPick(){document.getElementById('prPickModal').classList.remove('on');}
+function pickPrCo(id){_prCo=id;closePrPick();renderPrice();window.scrollTo({top:0});}
 // ── หน้าต่างแก้สินค้า ──
 function openPrItem(id){
   if(!prIsAdmin())return;
@@ -6010,7 +6071,7 @@ function openPrItem(id){
   v('pri-unit',it?it.unit:'');v('pri-name','');v('pri-cat','equip');
   v('pri-cost',it?it.unitPrice:'');v('pri-sell',it?it.shopPrice:'');v('pri-bulk',it?it.shopBulk:'');v('pri-note',it?it.shopNote:'');
   const off=document.getElementById('pri-off');off.style.display=it?'':'none';
-  if(it)off.textContent=it.shopOff?'↩️ กลับมาขายหน้าร้าน':'เลิกขายหน้าร้าน';
+  if(it)off.textContent=it.shopOff?'↩️ กลับมาขาย':'เลิกขาย';
   document.getElementById('pri-msg').innerHTML='';
   document.getElementById('prItemModal').classList.add('on');
 }
