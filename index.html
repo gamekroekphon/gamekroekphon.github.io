@@ -1445,7 +1445,9 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   .card table,.sec>table,#pl-tbl table,#abw-tbl table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
   /* ⚠️ ตารางที่มี wrapper เลื่อนอยู่แล้ว (div overflow-x:auto / .tbl-wrap) ห้ามเป็นกล่องเลื่อนซ้อนอีกชั้น —
      ปัดครั้งแรกเลื่อนแค่ตัวใน พอสุดต้องปัดอีกครั้งให้ตัวนอกเลื่อน (พี่เจอที่ P&L รายบ่อรายรอบ · ~33 ตารางทั้งแอป — entry #296) */
-  .card [style*="overflow-x:auto"]>table,.card [style*="overflow-x: auto"]>table,.card .tbl-wrap>table{display:table;overflow:visible}
+  /* ⚠️ ใช้ :where() ให้ specificity เท่ากฎบน (0,1,1) — ชนะ display:block ข้างบนเพราะอยู่ทีหลัง แต่ห้ามชนะกฎที่ "ตั้งใจซ่อน" ตารางบนมือถือ
+     เดิมเขียน .card [style*=..]>table (0,2,1) → ไปทับ .card .ovd-table{display:none} (0,2,0) ตารางภาพรวมโผล่ซ้ำกับการ์ดบ่อทุกบ่อ (entry #299) */
+  .card :where([style*="overflow-x:auto"],[style*="overflow-x: auto"],.tbl-wrap)>table{display:table;overflow:visible}
   .hdr-logout-btn{display:none!important}
   .mobile-logout-block{display:block!important}
 }
@@ -3955,6 +3957,7 @@ function setSyncStatus(type, msg) {
 function normalizeD(d) {
   const curYear = new Date().getFullYear();
   d.ponds.forEach(p => {
+    dropArchivedDupes(p);   // entry #299
     ['feedLog','samples','waterLog','chemLog','labResults','partialHarvests'].forEach(k => {
       if (!p[k]) p[k] = [];
     });
@@ -4843,6 +4846,26 @@ function mergeChecklist(local, remote) {
     notes: local.notes || remote.notes || ''
   };
 }
+// ══ ข้อมูลรายวันที่ค้างในบ่อหลังปิดรอบ (entry #299) ══
+//    ปิดรอบ = คัดลอก records/feedLog/… เข้า cropHistory แล้วล้างออกจากบ่อ — แต่ไม่ได้ tombstone
+//    เครื่องที่ยังค้างหน้าเก่าบันทึกอะไรก็ตาม → merge แบบ union ดึงของเก่ากลับมาทั้งชุด (เจอ A.19 31 รายการ · A.1 110 รายการ)
+//    ของที่ค้างทำให้บ่อที่ปิดแล้วดูเหมือนยังมีกุ้ง (อายุจาก record) โผล่หน้าภาพรวม
+//    → ตัดเฉพาะ "สำเนาที่ id ตรงกับของใน cropHistory" ออกจากระดับบ่อ · รายการที่ไม่มีในประวัติ (บันทึกหลังปิด) ห้ามลบ เก็บไว้ตามเดิม
+//    ปลอดภัยกับรอบใหม่: id รายวันผูกกับ บ่อ+วันที่ (wq_/fd_/…) รอบใหม่คนละวันจึงคนละ id ──
+const POND_DAILY_KEYS=['records','feedLog','samples','waterLog','chemLog','labResults','partialHarvests','mortalityLog'];
+function dropArchivedDupes(p){
+  if(!p||!(p.cropHistory||[]).length)return 0;
+  const archived=new Set();
+  p.cropHistory.forEach(c=>{if(!c)return;POND_DAILY_KEYS.forEach(k=>(c[k]||[]).forEach(r=>{if(r&&r.id!=null)archived.add(k+':'+r.id);}));});
+  if(!archived.size)return 0;
+  let n=0;
+  POND_DAILY_KEYS.forEach(k=>{
+    if(!Array.isArray(p[k])||!p[k].length)return;
+    const kept=p[k].filter(r=>!r||r.id==null||!archived.has(k+':'+r.id));
+    n+=p[k].length-kept.length;p[k]=kept;
+  });
+  return n;
+}
 function mergeRemote(local, remote) {
   const merged = cln(local);
   // tombstone: union รายการที่ถูกลบจากทุกเครื่อง → กรองออกหลัง merge
@@ -4860,6 +4883,7 @@ function mergeRemote(local, remote) {
     const rp = remotePonds[p.id];
     if (!rp) return;
     LOG_KEYS.forEach(k => { p[k] = sortLogArr(k, dropDead(mergeArr(p[k], rp[k]))); });
+    dropArchivedDupes(p);   // เครื่องค้างหน้าเก่าดันข้อมูลรอบที่ปิดแล้วกลับมา — ตัดสำเนาทิ้ง (entry #299)
     // ── เช็คลิสต์เตรียมบ่อ: เคารพ tombstone ก่อน merge — ถ้าฝั่งใดถูกล้างไปแล้ว (id อยู่ใน deletedIds) ห้ามให้อีกฝั่งดันกลับมา ──
     const lc = p.prepChecklist, rc = rp.prepChecklist;
     const lDead = !!(lc && lc.id && dead.has(lc.id)), rDead = !!(rc && rc.id && dead.has(rc.id));
@@ -5622,6 +5646,9 @@ function refreshZoneDatalist(){
 }
 function pondStatusOv(p){
   if(!Array.isArray(p.records))p.records=[];
+  // ── ไม่มีวันลงกุ้ง + เคยปิดรอบแล้ว = บ่อว่าง (entry #299) — ห้ามเอาอายุจาก record ที่ค้างอยู่มาทำให้ดูเหมือนมีกุ้ง
+  //    fallback อายุจาก record เหลือไว้ให้เฉพาะบ่อเก่าที่ไม่เคยมีประวัติรอบเลย (ข้อมูลยุคก่อนมี startDate) ──
+  if(!p.startDate&&!p.harvestDate&&(p.cropHistory||[]).length)return'prep';
   const last=p.records[p.records.length-1];
   const age=p.startDate?pondCurAge(p):(last&&last.age!=null?last.age:0);
   // จับกุ้งแล้ว รอล้างบ่อ/เก็บบิลให้ครบก่อนกดปิดรอบ — ไม่มีกุ้งในบ่อแล้ว
