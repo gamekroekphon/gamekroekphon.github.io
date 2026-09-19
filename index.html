@@ -1443,6 +1443,9 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 /* 3. ตารางที่ยังไม่มี wrapper: ปัดซ้าย-ขวาได้บนมือถือ */
 @media(max-width:768px){
   .card table,.sec>table,#pl-tbl table,#abw-tbl table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  /* ⚠️ ตารางที่มี wrapper เลื่อนอยู่แล้ว (div overflow-x:auto / .tbl-wrap) ห้ามเป็นกล่องเลื่อนซ้อนอีกชั้น —
+     ปัดครั้งแรกเลื่อนแค่ตัวใน พอสุดต้องปัดอีกครั้งให้ตัวนอกเลื่อน (พี่เจอที่ P&L รายบ่อรายรอบ · ~33 ตารางทั้งแอป — entry #296) */
+  .card [style*="overflow-x:auto"]>table,.card [style*="overflow-x: auto"]>table,.card .tbl-wrap>table{display:table;overflow:visible}
   .hdr-logout-btn{display:none!important}
   .mobile-logout-block{display:block!important}
 }
