@@ -5347,18 +5347,34 @@ function mergeHatcheryNames(){
   initHatchery();
   showMsg('hatchery-merge-msg','ok',`✅ รวมชื่อสำเร็จ อัปเดต ${changed} รายการ เป็น "${target}"`);
 }
+// ══════ ล็อกราคา ณ วันบันทึก (entry #298 — พี่ตัดสิน 19 ก.ย. 69 ครบ 4 ข้อ) ══════
+//    1) ล็อกราคาไว้ตอนกดบันทึก: รายการเบิกเข้าบ่อ (inventoryLog type 'out') และบันทึกอาหาร (feedLog) จด unitCost = ราคาต่อหน่วย/กระสอบ ณ ตอนนั้น
+//    2) ของที่บันทึกก่อนมีฟีเจอร์นี้ (ไม่มี unitCost) ปล่อยตามเดิม = ใช้ราคาปัจจุบัน — ไม่ migrate ข้อมูลเก่า
+//    3) แก้บันทึกอาหารวันเดิม เบอร์เดิม → เก็บราคาเดิม · เปลี่ยนเบอร์ → ล็อกราคาเบอร์ใหม่ ณ ตอนแก้
+//    4) อาหารที่ไม่ได้เลือกเบอร์ → ราคาเฉลี่ยทุกเบอร์ "ปัจจุบัน" เหมือนเดิม
+//    ⚠️ ทุกที่ที่คิดต้นทุนอาหาร/ของเบิกต้องผ่าน feedRecSackPrice() / getStockItemsForPond() เท่านั้น — ห้ามอ่าน item.unitPrice ตรงๆ อีก
+//    (มูลค่าสต็อกคงเหลือ และราคาพยากรณ์ feedPricePerKg ใช้ราคาปัจจุบันถูกแล้ว — ไม่ใช่ต้นทุนที่เกิดขึ้นแล้ว) ──
+function feedAvgPerKgNow(){
+  const feedItems=(D.inventoryItems||[]).filter(i=>i.category==='feed'&&i.unitPrice);
+  return feedItems.length?feedItems.reduce((s,i)=>s+i.unitPrice,0)/feedItems.length/25:0;
+}
+// ราคาต่อกระสอบของบันทึกอาหาร 1 วัน → {price,item} · null = ไม่ได้ผูกเบอร์ (ใช้ราคาเฉลี่ย)
+//   ผูกเบอร์ไว้แต่สินค้าถูกลบ: มีราคาที่ล็อกไว้ → ใช้ราคานั้น · ไม่มี → ราคาเฉลี่ยแบบเดิม
+function feedRecSackPrice(r){
+  if(!r||!r.stockItemId)return null;
+  const item=(D.inventoryItems||[]).find(i=>i.id===r.stockItemId)||null;
+  const locked=parseFloat(r.unitCost);
+  if(locked>0)return{price:locked,item,locked:true};
+  if(item)return{price:parseFloat(item.unitPrice)||0,item,locked:false};
+  return null;
+}
 function pondFeedCost(p){
   let cost=0;
+  const avgPerKg=feedAvgPerKgNow();
   (p.feedLog||[]).forEach(r=>{
-    if(r.stockItemId){
-      const item=(D.inventoryItems||[]).find(i=>i.id===r.stockItemId);
-      if(item){cost+=(r.totalFeed/25)*(item.unitPrice||0);return;}
-    }
-    const feedItems=(D.inventoryItems||[]).filter(i=>i.category==='feed'&&i.unitPrice);
-    if(feedItems.length){
-      const avgPerKg=feedItems.reduce((s,i)=>s+i.unitPrice,0)/feedItems.length/25;
-      cost+=(r.totalFeed||0)*avgPerKg;
-    }
+    const sp=feedRecSackPrice(r);
+    if(sp){cost+=((r.totalFeed||0)/25)*sp.price;return;}
+    cost+=(r.totalFeed||0)*avgPerKg;
   });
   return Math.round(cost);
 }
@@ -6179,8 +6195,10 @@ function savePrItem(){
     // ── แก้ต้นทุน = ต้นทุนบ่อที่เคยเบิกไปแล้วเปลี่ยนย้อนหลัง → บอกยอดที่เปลี่ยนก่อนบันทึก ──
     const old=parseFloat(it.unitPrice)||0;
     if(cost!=null&&Math.abs(cost-old)>=0.005){
-      const q=(D.inventoryLog||[]).filter(l=>l.itemId===it.id&&l.type==='out').reduce((t,l)=>t+(parseFloat(l.qty)||0),0);
-      if(q>0&&!confirm('แก้ต้นทุน '+it.name+' '+prB(old)+' → '+prB(cost)+' บาท\n\nเคยเบิกเข้าบ่อไปแล้ว '+prB(q)+' '+(it.unit||'')+'\nต้นทุนบ่อจะเปลี่ยนย้อนหลัง '+(cost>old?'+':'−')+prB(Math.abs(q*(cost-old)))+' บาท\n\nยืนยัน?'))return;
+      // ตั้งแต่ #298 รายการที่ล็อกราคาไว้แล้วไม่เปลี่ยนตาม — นับเฉพาะรายการเก่าที่ยังคิดด้วยราคาปัจจุบัน (เบิก + บันทึกอาหาร)
+      let q=(D.inventoryLog||[]).filter(l=>l.itemId===it.id&&l.type==='out'&&!(parseFloat(l.unitCost)>0)&&!String(l.id||'').startsWith('sl_fd_')).reduce((t,l)=>t+(parseFloat(l.qty)||0),0);
+      if(it.category==='feed')(D.ponds||[]).forEach(p=>[p,...(p.cropHistory||[])].forEach(c=>(c.feedLog||[]).forEach(r=>{if(r.stockItemId===it.id&&!(parseFloat(r.unitCost)>0))q+=(parseFloat(r.totalFeed)||0)/25;})));
+      if(q>0&&!confirm('แก้ต้นทุน '+it.name+' '+prB(old)+' → '+prB(cost)+' บาท\n\nรายการเก่า (ก่อนล็อกราคา) ที่ยังคิดด้วยราคาปัจจุบัน '+prB(q)+' '+(it.unit||'')+'\nต้นทุนบ่อจะเปลี่ยนย้อนหลัง '+(cost>old?'+':'−')+prB(Math.abs(q*(cost-old)))+' บาท\n\nยืนยัน?'))return;
     }
   }else{
     const name=g('pri-name');
@@ -10139,6 +10157,8 @@ function saveStockTxBatch(){
       entry.sellPrice=c.sellPrice||0;
       entry.unitCost=item.unitPrice||0;
     }
+    // ── เบิกเข้าบ่อ: ล็อกราคาต่อหน่วย ณ ตอนกดบันทึก (entry #298) — แก้ราคาสินค้าทีหลัง ต้นทุนบ่อไม่เปลี่ยนย้อนหลัง ──
+    if(mode==='out'&&parseFloat(item.unitPrice)>0)entry.unitCost=parseFloat(item.unitPrice);
     D.inventoryLog.push(entry);
     saved.push(c.itemName);
   }
@@ -13792,6 +13812,7 @@ function applyFeedStockDeduction(rec,pid,d,stockItemId,sacks){
   if(!D.inventoryLog)D.inventoryLog=[];
   const logId='sl_fd_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
   D.inventoryLog.push({id:logId,itemId:item.id,itemName:item.name,type:'out',qty:sacks,date:d,note:'ตัดอัตโนมัติจากบันทึกอาหาร',pondId:pid,balanceAfter:item.qty,unit:item.unit||'กระสอบ',by:curUserLabel()});
+  if(parseFloat(rec.unitCost)>0){const lg=D.inventoryLog.find(l=>l.id===logId);if(lg)lg.unitCost=parseFloat(rec.unitCost);}
   rec.stockItemId=item.id;rec.stockQty=sacks;rec.stockLogId=logId;
 }
 function feedGridRow(p,d,feedItems){
@@ -13878,6 +13899,13 @@ function saveFeedGridAll(){
     const rec={id:recId,date:d,age:docAge(p.startDate,d)||0,
       feedBrand:brand,feedGrade:oldRec?.feedGrade||'',
       totalFeed:total,feedRate:null,notes};
+    // ── ล็อกราคาต่อกระสอบ (entry #298) · วันเดิม เบอร์เดิม = เก็บราคาเดิม (ข้อ 3)
+    //    ของเก่าที่ไม่เคยล็อก แก้ซ้ำเบอร์เดิมก็ยังไม่ล็อก (ข้อ 2 ปล่อยตามเดิม) · เบอร์ใหม่/รายการใหม่ = ราคาปัจจุบัน ณ ตอนกด ──
+    if(stockItem){
+      const sameItem=oldRec&&oldRec.stockItemId===stockItemId&&oldRec.date===d;
+      if(sameItem){if(parseFloat(oldRec.unitCost)>0)rec.unitCost=parseFloat(oldRec.unitCost);}
+      else if(parseFloat(stockItem.unitPrice)>0)rec.unitCost=parseFloat(stockItem.unitPrice);
+    }
     if(stockItemId)applyFeedStockDeduction(rec,p.id,d,stockItemId,newSacks);
     // ⚠️ ไม่เลือกเบอร์ = ต้นทุนวันนั้นตกไปใช้ "ราคาเฉลี่ยทุกเบอร์" คลาดได้ถึง 20% (entry #262/#269)
     //    ไม่บล็อกการบันทึก — แค่บอกทันทีว่าตัวเลขกำลังจะเพี้ยน จะได้กลับมาแก้ตอนยังจำได้
@@ -17639,7 +17667,9 @@ function getStockItemsForPond(pondId,startDate,endDate){
   const end=endDate||today();
   return(D.inventoryLog||[]).filter(l=>l.type==='out'&&l.pondId===pondId&&l.date>=startDate&&l.date<=end)
     .map(l=>{const item=(D.inventoryItems||[]).find(i=>i.id===l.itemId);
-      return{name:l.itemName||item?.name||'-',category:item?.category||'',date:l.date,qty:l.qty||0,unit:l.unit||item?.unit||'',unitPrice:item?.unitPrice||0};
+      // ราคาที่ล็อกไว้ตอนเบิก (entry #298) ก่อน · รายการเก่าที่ไม่มี = ราคาปัจจุบันแบบเดิม
+      const locked=parseFloat(l.unitCost);
+      return{name:l.itemName||item?.name||'-',category:item?.category||'',date:l.date,qty:l.qty||0,unit:l.unit||item?.unit||'',unitPrice:locked>0?locked:(item?.unitPrice||0),locked:locked>0};
     })
     // ── ตัดหมวด 'feed' (คิดแยกจาก pondFeedCost อยู่แล้ว) และหมวดเก่า 'seed' (คิดแยกจาก p.costFry อยู่แล้ว — ป้องกันนับซ้ำ) ──
     // ⚠️ จุดนี้คือ single source of truth ของ "รายการสต็อกที่นับเป็นต้นทุนบ่อ" ใช้ร่วมกันทั้งการ์ด "ต้นทุนสะสม" หน้ารายละเอียดบ่อ, KPI ต้นทุนสะสมหน้าภาพรวม, และฟอร์ม "ปิดรอบ" — ถ้าตัดหมวดตรงนี้จุดเดียว ทุกจุดจะตรงกันเสมอ (เดิมฟอร์มปิดรอบตัด 'seed' เองอีกที ทำให้ถ้ามีสินค้าที่ยังติดหมวดเก่า 'seed' อยู่ ตัวเลข "รวมต้นทุนสะสม" กับตอนปิดบ่อจะไม่ตรงกัน เพราะการ์ดต้นทุนสะสมนับรวม แต่ฟอร์มปิดรอบไม่ได้ดึงมาให้)
@@ -18234,18 +18264,15 @@ function plSharedItems(rows,fuelOnly){
 //    จึงแยกออกมาเป็นแถวของตัวเอง ให้เห็นชัดว่ามีอาหารกี่ กก. ที่คิดด้วยราคาเดา ไม่ใช่ราคาจริง
 function plFeedItems(rows){
   const m=new Map();
-  const feedItems=(D.inventoryItems||[]).filter(i=>i.category==='feed'&&i.unitPrice);
-  const avgPerKg=feedItems.length?feedItems.reduce((s,i)=>s+i.unitPrice,0)/feedItems.length/25:0;
+  const avgPerKg=feedAvgPerKgNow();
   rows.forEach(r=>{
     const log=(r&&r._crop&&r._crop.feedLog)||[];
     log.forEach(f=>{
       const kg=parseFloat(f&&f.totalFeed)||0;
       if(!kg)return;
       let name='⚠️ ไม่ได้ผูกสินค้า — ใช้ราคาเฉลี่ยทุกเบอร์',amt=kg*avgPerKg;
-      if(f.stockItemId){
-        const it=(D.inventoryItems||[]).find(i=>i.id===f.stockItemId);
-        if(it){name=it.name||'-';amt=(kg/25)*(it.unitPrice||0);}
-      }
+      const sp=feedRecSackPrice(f);   // ราคาที่ล็อกไว้ก่อน — กิ่งเดียวกับ pondFeedCost
+      if(sp){name=(sp.item&&sp.item.name)||f.feedBrand||'สินค้าที่ถูกลบ';amt=(kg/25)*sp.price;}
       const o=m.get(name)||{name,unit:'กก.',qty:0,amt:0,times:0,last:''};
       o.qty+=kg;o.amt+=amt;o.times++;
       if((f.date||'')>o.last)o.last=f.date||'';
