@@ -3889,6 +3889,50 @@ let db = null;
 let _unsubscribe = null;
 let _lastSaveTime = 0;
 let _remoteIgnoreUntil = 0;  // ms — ignore remote update right after local save
+// ══════ ซิงก์แบบบีบอัด (entry #297) — ลดดาวน์โหลด Realtime Database ~85% ══════
+//    /tawan_app = { json, z:{u,d}, updated }
+//      json    = ข้อมูลเต็ม (รูปแบบเดิม ยังเขียนทุกครั้ง) — แอปเวอร์ชันเก่า · ฟังก์ชันแจ้งเตือนไลน์ · สคริปต์ทั้งหมด อ่านตัวนี้
+//      z.d     = gzip ของ json "ตัวเดียวกันทุกตัวอักษร" เป็น base64 (2 MB → ~280 KB) — แอปเวอร์ชันนี้ดาวน์โหลดตัวนี้แทน
+//      z.u     = updated ตอนที่บีบ z · ถ้าไม่ตรงกับ updated = z ค้างเก่า (มีใครเขียน json อย่างเดียว) → ห้ามใช้ อ่าน json แทน
+//      updated = เวลาเขียนล่าสุด — ฟังตัวนี้ (ไม่กี่ไบต์) แทนการฟังทั้งก้อน
+//    ⚠️ ห้ามแปลง/ลบ json · ⚠️ ใครเขียน /tawan_app จากนอกแอป (สคริปต์แก้ข้อมูล) ด้วย update({json,updated}) z จะค้าง —
+//       ปลอดภัยเพราะ z.u ไม่ตรง แต่ทุกเครื่องจะกลับไปโหลด json เต็มจนกว่าจะมีคนกดบันทึกในแอป → สคริปต์ควรส่ง z:null ไปด้วย
+//    เครื่องที่ไม่มี CompressionStream (Safari < 16.4) ใช้ json เหมือนเดิมทุกอย่าง
+const CAN_Z = typeof CompressionStream==='function' && typeof DecompressionStream==='function';
+let _lastUpdated = null;   // updated ของเวอร์ชัน cloud ที่ D มีครบแล้ว — null = ไม่แน่ใจ ต้องดึงมา merge ก่อนเขียนเสมอ
+async function zPack(str){
+  const buf=new Uint8Array(await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());
+  let bin='';for(let i=0;i<buf.length;i+=0x8000)bin+=String.fromCharCode.apply(null,buf.subarray(i,i+0x8000));
+  return btoa(bin);
+}
+async function zUnpack(b64){
+  const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+  return await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+}
+// ── ดึงข้อมูลล่าสุดจาก cloud → {json, updated} หรือ null (ยังไม่มีข้อมูลรูปแบบนี้)
+//    ⚠️ อ่าน updated "ก่อน" z/json เสมอ — ถ้ามีคนเขียนแทรกระหว่างสองจังหวะ เราจะได้ข้อมูลใหม่กว่า updated ที่จำไว้
+//       ซึ่งปลอดภัย (ครั้งหน้าแค่ดึงมา merge ซ้ำ) · ถ้ากลับลำดับ จะจำ updated ใหม่ทั้งที่ข้อมูลเก่า → บันทึกครั้งถัดไปข้าม merge แล้วทับของคนอื่น ──
+async function fetchRemoteJson(){
+  const root=firebase.database().ref(RTDB_PATH);
+  const updated=(await root.child('updated').once('value')).val();
+  if(CAN_Z){
+    const z=(await root.child('z').once('value')).val();
+    if(z&&z.d&&z.u&&z.u===updated){
+      try{return{json:await zUnpack(z.d),updated,via:'z'};}catch(e){console.warn('zUnpack failed → ใช้ json',e);}
+    }
+  }
+  const json=(await root.child('json').once('value')).val();
+  return json?{json,updated,via:'json'}:null;
+}
+// ── เขียนทั้งก้อน: json เดิม + z + updated ในครั้งเดียว (set = แทนทั้ง node ไม่มีทาง z ค้าง) ──
+async function writeRemote(json){
+  const updated=new Date().toISOString();
+  const rec={json,updated};
+  if(CAN_Z){try{rec.z={u:updated,d:await zPack(json)};}catch(e){console.warn('zPack failed → เขียน json อย่างเดียว',e);}}
+  await firebase.database().ref(RTDB_PATH).set(rec);
+  _lastUpdated=updated;
+  return updated;
+}
 
 function setSyncStatus(type, msg) {
   const ind = document.getElementById('sync-ind');
@@ -4119,21 +4163,23 @@ async function initFirebase() {
     // Firebase app already initialized in DOMContentLoaded auth flow
     const dbRef = firebase.database().ref(RTDB_PATH);
 
-    // ── โหลดข้อมูลจาก Cloud ──────────────────────────────
+    // ── โหลดข้อมูลจาก Cloud (บีบอัด ถ้ามี) ─────────────────
     setSyncStatus('sync-load', 'กำลังโหลดข้อมูลจาก Cloud...');
-    const snap = await dbRef.once('value');
-    const val  = snap.val();
+    const first = await fetchRemoteJson();
 
-    if (val && val.json) {
-      // ── มีข้อมูล format ใหม่ (JSON blob) ──
-      const remote = normalizeD(JSON.parse(val.json));
+    if (first) {
+      const remote = normalizeD(JSON.parse(first.json));
       D = remote;
+      _lastUpdated = first.updated;
       seedPonds();
       const json_loaded = JSON.stringify(D);
       localStorage.setItem(SK, json_loaded);
       populateAll(); renderOv();
       setSyncStatus('sync-ok', '✅ โหลดข้อมูลสำเร็จ (' + (D.ponds||[]).length + ' บ่อ)');
-    } else if (val && val.ponds) {
+    } else {
+      const snap = await dbRef.once('value');
+      const val  = snap.val();
+      if (val && val.ponds) {
       // ── มีข้อมูล format เก่า (tawan_v3 array) → migrate ──
       setSyncStatus('sync-load', '🔄 กำลัง migrate ข้อมูลเก่า...');
       const oldPonds = Array.isArray(val.ponds) ? val.ponds : Object.values(val.ponds);
@@ -4150,39 +4196,61 @@ async function initFirebase() {
       }
       seedPonds();
       const json = JSON.stringify(D);
-      await dbRef.set({ json, updated: new Date().toISOString() });
+      await writeRemote(json);
       localStorage.setItem(SK, json);
       populateAll(); renderOv();
       setSyncStatus('sync-ok', '✅ Migrate สำเร็จ — ' + (D.ponds||[]).length + ' บ่อ');
-    } else {
+      } else {
       // ── ยังไม่มีข้อมูลบน Cloud → push local ──
-      const json = JSON.stringify(D);
-      await dbRef.set({ json, updated: new Date().toISOString() });
+      await writeRemote(JSON.stringify(D));
       setSyncStatus('sync-ok', '✅ สร้างข้อมูลใหม่บน Cloud');
+      }
     }
 
-    // ── Real-time listener ─────────────────────────────────
+    // ── Real-time listener — ฟังแค่ updated (ไม่กี่ไบต์) พอเปลี่ยนค่อยดึงตัวบีบอัด (entry #297)
+    //    เดิมฟังทั้ง node → ทุกครั้งที่ใครบันทึก ทุกเครื่องที่เปิดอยู่โหลด 2 MB ──
     if (_unsubscribe) _unsubscribe();
-    dbRef.on('value', snap => {
-      const v = snap.val();
-      if (!v || !v.json) return;
-      if (Date.now() < _remoteIgnoreUntil) return; // skip echo of own save
-      // ── ข้อ6: เลื่อนงานหนัก (parse+render) ออกจาก event handler ทันที ให้เบราว์เซอร์ได้ paint/ตอบสนอง input ก่อน ลดอาการหน้าจอค้างชั่วครู่ ──
-      setTimeout(() => {
-        const remote = normalizeD(JSON.parse(v.json));
+    const updRef = dbRef.child('updated');
+    let _pullBusy = false, _pullAgain = false;
+    const pullRemote = async () => {
+      if (_pullBusy) { _pullAgain = true; return; }
+      _pullBusy = true;
+      try {
+        // เช็ก updated (ไม่กี่ไบต์) ก่อนดึงตัวบีบอัด — echo ของที่เราเพิ่งบันทึกจะจบตรงนี้ ไม่เสียดาวน์โหลด
+        const u0 = (await dbRef.child('updated').once('value')).val();
+        if (!u0 || u0 === _lastUpdated) return;
+        const r = await fetchRemoteJson();
+        if (!r || r.updated === _lastUpdated) return;
+        if (Date.now() < _remoteIgnoreUntil) { setTimeout(pullRemote, _remoteIgnoreUntil - Date.now() + 50); return; }   // กำลังบันทึกของเราเองอยู่ — กลับมาดูใหม่พอพ้นช่วง
+        const remote = normalizeD(JSON.parse(r.json));
         D = remote;
-        localStorage.setItem(SK, v.json);
+        _lastUpdated = r.updated;
+        localStorage.setItem(SK, r.json);
         if (isEditingField()) {
           _pendingRerender = true;
         } else {
           populateAll(); renderOv();
         }
         setSyncStatus('sync-ok', '🔄 ซิงค์แล้ว');
-      }, 0);
+      } catch (e) {
+        console.warn('pullRemote failed', e);
+      } finally {
+        _pullBusy = false;
+        if (_pullAgain) { _pullAgain = false; setTimeout(pullRemote, 0); }
+      }
+    };
+    updRef.on('value', snap => {
+      const u = snap.val();
+      if (!u || u === _lastUpdated) return;          // echo ของที่เราเพิ่งเขียน หรือยังเป็นเวอร์ชันเดิม
+      // ── ช่วง 4 วิหลังเราบันทึก: เดิมทิ้งเหตุการณ์ไปเลย เครื่องอื่นบันทึกแทรกช่วงนี้จอจะค้างของเก่าจนมีเหตุการณ์ถัดไป
+      //    ตอนนี้นัดดูใหม่หลังพ้นช่วง (pullRemote เช็ก updated ซ้ำเอง ถ้าเป็น echo ของเราก็ไม่ทำอะไร) ──
+      if (Date.now() < _remoteIgnoreUntil) { setTimeout(pullRemote, _remoteIgnoreUntil - Date.now() + 50); return; }
+      // ── ข้อ6: เลื่อนงานหนัก (ดึง+parse+render) ออกจาก event handler ให้เบราว์เซอร์ได้ paint ก่อน ──
+      setTimeout(pullRemote, 0);
     }, err => {
       setSyncStatus('sync-err', '⚠️ ขาดการเชื่อมต่อ — บันทึกในเครื่องเท่านั้น');
     });
-    _unsubscribe = () => dbRef.off('value');
+    _unsubscribe = () => updRef.off('value');
 
     // ── Connection state monitor ──────────────────────────
     firebase.database().ref('.info/connected').on('value', snap => {
@@ -4850,16 +4918,19 @@ async function save() {
   _remoteIgnoreUntil = Date.now() + 4000;
   setSyncStatus('sync-load', 'กำลังบันทึก...');
   try {
-    const dbRef = firebase.database().ref(RTDB_PATH);
-    const snap = await dbRef.once('value');
-    const val = snap.val();
-    if (val && val.json) {
-      const remote = normalizeD(JSON.parse(val.json));
-      D = mergeRemote(D, remote);
+    // ── เช็กแค่ updated (ไม่กี่ไบต์) ก่อน — ถ้ายังเป็นเวอร์ชันที่ D มีครบอยู่แล้ว ไม่ต้องดึงทั้งก้อนมา merge (entry #297)
+    //    มีคนอื่นบันทึกแทรกมา (updated ไม่ตรง / ไม่รู้เวอร์ชัน) → ดึงมา merge แบบเดิม ──
+    const remoteUpd = (await firebase.database().ref(RTDB_PATH).child('updated').once('value')).val();
+    if (remoteUpd && remoteUpd !== _lastUpdated) {
+      const r = await fetchRemoteJson();
+      if (r) {
+        const remote = normalizeD(JSON.parse(r.json));
+        D = mergeRemote(D, remote);
+      }
     }
     const json = JSON.stringify(D);
     localStorage.setItem(SK, json);
-    await dbRef.set({ json, updated: new Date().toISOString() });
+    await writeRemote(json);
     setSyncStatus('sync-ok', '✅ บันทึกสำเร็จ');
   } catch(e) {
     setSyncStatus('sync-err', '⚠️ บันทึกไม่ได้: ' + e.message);
@@ -4874,7 +4945,7 @@ async function saveForce(){
   setSyncStatus('sync-load','กำลังบันทึก...');
   try{
     const json=JSON.stringify(D);
-    await firebase.database().ref(RTDB_PATH).set({json,updated:new Date().toISOString()});
+    await writeRemote(json);
     setSyncStatus('sync-ok','✅ บันทึกสำเร็จ');
   }catch(e){setSyncStatus('sync-err','⚠️ บันทึกไม่ได้: '+e.message);}
 }
