@@ -3602,46 +3602,12 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <button class="stock-sub-btn on" id="skb-items" onclick="stockTab('items',this)">รายการพัสดุ</button>
     <button class="stock-sub-btn" id="skb-tx" onclick="stockTab('tx',this)">บันทึกรับ-เบิก</button>
     <button class="stock-sub-btn" id="skb-log" onclick="stockTab('log',this)">ประวัติ</button>
+    <button class="stock-sub-btn admin-only" id="skb-newitem" onclick="stockTab('newitem',this)">➕ เพิ่มพัสดุ</button>
     <button class="stock-sub-btn admin-only" id="skb-sale" onclick="stockTab('sale',this)">🛒 ยอดขายลูกค้าภายนอก</button>
     <button class="stock-sub-btn admin-only" id="skb-cash" onclick="stockTab('cash',this)">💰 รายรับ-รายจ่าย (เสมียน)</button>
   </div>
   <!-- pane: รายการพัสดุ -->
   <div class="stock-pane on" id="skp-items">
-    <div class="card admin-only">
-      <div style="font-weight:700;color:var(--tx);margin-bottom:10px">เพิ่มรายการพัสดุ</div>
-      <div class="fg"><label class="fl" for="sk-name">ชื่อพัสดุ</label><input class="fi" id="sk-name" placeholder="เช่น อาหาร 0# CP, คลอรีน"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-        <div class="fg"><label class="fl" for="sk-cat">หมวดหมู่</label>
-          <select class="fi" id="sk-cat">
-            <option value="feed">🍚 อาหารกุ้ง</option>
-            <option value="chemOral">💊 ยากิน</option>
-            <option value="chemWater">🧪 ยาลงน้ำ</option>
-            <option value="probioOral">🦠 จุลินทรีย์กิน</option>
-            <option value="probioWater">🧫 จุลินทรีย์ลงน้ำ</option>
-            <option value="lime">🪨 ปูน</option>
-            <option value="equip">🔧 อุปกรณ์</option>
-          </select>
-        </div>
-        <div class="fg"><label class="fl" for="sk-unit">หน่วย</label><input class="fi" id="sk-unit" placeholder="กก., กระสอบ, ขวด..."></div>
-        <div class="fg"><label class="fl" for="sk-price">ราคาต้นทุน (บาท/หน่วย)</label><input type="number" class="fi" id="sk-price" placeholder="0" inputmode="decimal" step="any"></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="fg"><label class="fl" for="sk-qty">จำนวนเริ่มต้น</label><input type="number" class="fi" id="sk-qty" placeholder="0" inputmode="decimal"></div>
-        <div class="fg"><label class="fl" for="sk-min">ขั้นต่ำเตือน</label><input type="number" class="fi" id="sk-min" placeholder="5" inputmode="decimal"></div>
-      </div>
-      <!-- ── สรรพคุณ/ความเข้มข้น — กันหยิบผิดตัวและกันลืมว่าตัวไหนทำอะไร (พี่สั่ง entry #260)
-           สำคัญกับหมวด ยากิน/ยาลงน้ำ/จุลินทรีย์กิน/จุลินทรีย์ลงน้ำ ที่มีหลายตัวและหน้าที่ไม่เหมือนกัน ── -->
-      <div class="fg"><label class="fl" for="sk-props">สรรพคุณ / หน้าที่</label>
-        <textarea class="fi" id="sk-props" rows="2" placeholder="เช่น ย่อยสลายของเสียก้นบ่อ ลดแอมโมเนีย · ยับยั้งวิบริโอ ใช้ตอนเชื้อเหลืองขึ้น" style="resize:vertical;min-height:52px;font-family:inherit"></textarea>
-        <span class="lbl-std">จะขึ้นให้เห็นตอนเบิกของ — จังหวะที่หยิบผิดตัวได้</span></div>
-      <div class="fg"><label class="fl" for="sk-potency">ความเข้มข้น <span style="font-weight:400;color:var(--tx3)">(จุลินทรีย์/ยา)</span></label><input class="fi" id="sk-potency" placeholder="เช่น 1x10^9 CFU/g · 5x10^8 CFU/mL"><span class="lbl-std">พิมพ์ <code>10^9</code> ระบบจะแสดงเป็น 10⁹ ให้เอง</span></div>
-      <div class="fg"><label class="fl" for="sk-note-item">ผู้จำหน่าย/หมายเหตุ</label><input class="fi" id="sk-note-item" placeholder="—"></div>
-      <div style="display:flex;gap:8px;margin-top:4px">
-        <button onclick="saveStockItem()">💾 บันทึกรายการ</button>
-        <button onclick="clearStockItem()" style="background:var(--sf2);color:var(--tx2)">ล้างฟอร์ม</button>
-      </div>
-      <div id="sk-msg-item"></div>
-    </div>
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px">
         <span style="font-weight:700;color:var(--tx)">รายการพัสดุทั้งหมด</span>
@@ -3793,6 +3759,45 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
         <div class="admin-only" style="margin-bottom:12px"><div class="g4" id="skl-shared-kpi"></div></div>
         <div id="sk-log-shared-table"></div>
       </div>
+    </div>
+  </div>
+  <!-- pane: เพิ่ม/แก้รายการพัสดุ — แยกออกมาเป็นแท็บของตัวเอง (พี่สั่ง entry #307)
+       เดิมฟอร์มนี้อยู่บนสุดของแท็บ "รายการพัสดุ" ทำให้เปิดหน้าสต็อกมาเจอฟอร์มก่อน ต้องเลื่อนลงไปดูของคงเหลือ -->
+  <div class="stock-pane" id="skp-newitem">
+    <div class="card admin-only">
+      <div style="font-weight:700;color:var(--tx);margin-bottom:10px">เพิ่มรายการพัสดุ</div>
+      <div class="fg"><label class="fl" for="sk-name">ชื่อพัสดุ</label><input class="fi" id="sk-name" placeholder="เช่น อาหาร 0# CP, คลอรีน"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div class="fg"><label class="fl" for="sk-cat">หมวดหมู่</label>
+          <select class="fi" id="sk-cat">
+            <option value="feed">🍚 อาหารกุ้ง</option>
+            <option value="chemOral">💊 ยากิน</option>
+            <option value="chemWater">🧪 ยาลงน้ำ</option>
+            <option value="probioOral">🦠 จุลินทรีย์กิน</option>
+            <option value="probioWater">🧫 จุลินทรีย์ลงน้ำ</option>
+            <option value="lime">🪨 ปูน</option>
+            <option value="equip">🔧 อุปกรณ์</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl" for="sk-unit">หน่วย</label><input class="fi" id="sk-unit" placeholder="กก., กระสอบ, ขวด..."></div>
+        <div class="fg"><label class="fl" for="sk-price">ราคาต้นทุน (บาท/หน่วย)</label><input type="number" class="fi" id="sk-price" placeholder="0" inputmode="decimal" step="any"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="fg"><label class="fl" for="sk-qty">จำนวนเริ่มต้น</label><input type="number" class="fi" id="sk-qty" placeholder="0" inputmode="decimal"></div>
+        <div class="fg"><label class="fl" for="sk-min">ขั้นต่ำเตือน</label><input type="number" class="fi" id="sk-min" placeholder="5" inputmode="decimal"></div>
+      </div>
+      <!-- ── สรรพคุณ/ความเข้มข้น — กันหยิบผิดตัวและกันลืมว่าตัวไหนทำอะไร (พี่สั่ง entry #260)
+           สำคัญกับหมวด ยากิน/ยาลงน้ำ/จุลินทรีย์กิน/จุลินทรีย์ลงน้ำ ที่มีหลายตัวและหน้าที่ไม่เหมือนกัน ── -->
+      <div class="fg"><label class="fl" for="sk-props">สรรพคุณ / หน้าที่</label>
+        <textarea class="fi" id="sk-props" rows="2" placeholder="เช่น ย่อยสลายของเสียก้นบ่อ ลดแอมโมเนีย · ยับยั้งวิบริโอ ใช้ตอนเชื้อเหลืองขึ้น" style="resize:vertical;min-height:52px;font-family:inherit"></textarea>
+        <span class="lbl-std">จะขึ้นให้เห็นตอนเบิกของ — จังหวะที่หยิบผิดตัวได้</span></div>
+      <div class="fg"><label class="fl" for="sk-potency">ความเข้มข้น <span style="font-weight:400;color:var(--tx3)">(จุลินทรีย์/ยา)</span></label><input class="fi" id="sk-potency" placeholder="เช่น 1x10^9 CFU/g · 5x10^8 CFU/mL"><span class="lbl-std">พิมพ์ <code>10^9</code> ระบบจะแสดงเป็น 10⁹ ให้เอง</span></div>
+      <div class="fg"><label class="fl" for="sk-note-item">ผู้จำหน่าย/หมายเหตุ</label><input class="fi" id="sk-note-item" placeholder="—"></div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button onclick="saveStockItem()">💾 บันทึกรายการ</button>
+        <button onclick="clearStockItem()" style="background:var(--sf2);color:var(--tx2)">ล้างฟอร์ม</button>
+      </div>
+      <div id="sk-msg-item"></div>
     </div>
   </div>
   <!-- pane: ยอดขายลูกค้าภายนอก -->
@@ -9173,7 +9178,7 @@ function seedStockCatalog(){
 
 // ── ⚠️ แท็บที่มีจำนวนเงิน — staff เปิดไม่ได้ (กันระดับฟังก์ชัน ไม่ใช่แค่ซ่อนปุ่มด้วย CSS
 //    เพราะปุ่มอาจโผล่จาก specificity ที่ชนกัน หรือถูกเรียกผ่าน console/โค้ดอื่น) ──
-const STOCK_ADMIN_TABS=['sale','cash'];
+const STOCK_ADMIN_TABS=['sale','cash','newitem'];
 function stockTab(paneId,btn){
   if(STOCK_ADMIN_TABS.includes(paneId)&&APP_ROLE!=='admin')return;
   document.querySelectorAll('.stock-pane').forEach(p=>p.classList.remove('on'));
@@ -9211,7 +9216,7 @@ function pickStockJob(mode){
   // "เพิ่มรายการพัสดุ" ไม่ใช่โหมดบันทึกรับ-เบิก — พาไปแท็บรายการพัสดุแล้วโฟกัสฟอร์มให้เลย
   if(mode==='newitem'){
     if(APP_ROLE!=='admin')return;
-    stockTab('items',document.getElementById('skb-items'));
+    stockTab('newitem',document.getElementById('skb-newitem'));
     const n=document.getElementById('sk-name');
     if(n){n.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>n.focus(),250);}
     return;
@@ -10034,7 +10039,7 @@ function editStockItem(id){
   document.getElementById('sk-note-item').value=item.note||'';
   {const e=document.getElementById('sk-props');if(e)e.value=item.props||'';}
   {const e=document.getElementById('sk-potency');if(e)e.value=item.potency||'';}
-  stockTab('items',document.getElementById('skb-items'));
+  stockTab('newitem',document.getElementById('skb-newitem'));   // ฟอร์มย้ายมาแท็บนี้แล้ว (entry #307)
   document.getElementById('sk-name').focus();
   document.getElementById('sk-name').scrollIntoView({behavior:'smooth',block:'center'});
 }
