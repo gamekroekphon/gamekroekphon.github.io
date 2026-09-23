@@ -12771,6 +12771,7 @@ function renderPdLabCard(p){
   }
   const lat=rows[0];
   const num=v=>(typeof v==='number')?v.toLocaleString():'-';
+  const cfu=v=>(typeof v==='number')?sciNum(v):'-';   // จำนวนเชื้อโชว์เป็นเลขยกกำลัง (พี่สั่ง entry #304)
   const sc=st=>st==='danger'?'var(--d)':st==='warn'?'var(--w)':'var(--ok)';
   const ehpL=pdLabBadge(lat.ehpLarva,25,0),gut=pdLabBadge(lat.gutInflam,30,10),lip=pdLabBadge(lat.lipidDroplet,70,50,true);
   const ehpDisp=(typeof lat.ehp==='number')?(lat.ehp+'%'):(lat.ehp?(EHP_LBL[lat.ehp]||lat.ehp):'-');
@@ -12780,10 +12781,10 @@ function renderPdLabCard(p){
   const sg=classifyOv('tcbsGreen',lat.tcbsGreen),shg=classifyOv('hepatoGreen',lat.hepatoGreen);
   el.innerHTML=
     '<div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-bottom:8px">ผลล่าสุด '+fD(lat.date)+(lat.labName?' · '+mpEsc(lat.labName):'')+((recAge(p,lat)??lat.age)!=null?' · อายุ '+(recAge(p,lat)??lat.age)+' วัน':'')+'</div>'+
-    row('🟢 เชื้อเขียว (น้ำ)','<span style="color:'+sc(sg)+'">'+num(lat.tcbsGreen)+'</span> CFU/mL')+
-    row('🟡 เชื้อเหลือง (น้ำ)',num(lat.tcbsYellow)+' CFU/mL')+
-    row('🟢 เชื้อเขียว (ตับ)','<span style="color:'+sc(shg)+'">'+num(lat.hepatoGreen)+'</span> CFU/g')+
-    row('🟡 เชื้อเหลือง (ตับ)',num(lat.hepatoYellow)+' CFU/g')+
+    row('🟢 เชื้อเขียว (น้ำ)','<span style="color:'+sc(sg)+'">'+cfu(lat.tcbsGreen)+'</span> CFU/mL')+
+    row('🟡 เชื้อเหลือง (น้ำ)',cfu(lat.tcbsYellow)+' CFU/mL')+
+    row('🟢 เชื้อเขียว (ตับ)','<span style="color:'+sc(shg)+'">'+cfu(lat.hepatoGreen)+'</span> CFU/g')+
+    row('🟡 เชื้อเหลือง (ตับ)',cfu(lat.hepatoYellow)+' CFU/g')+
     row('EHP','<span class="badge '+ehpCls+'">'+ehpDisp+'</span>')+
     row('EHP ตัวอ่อน','<span class="badge '+ehpL.c+'">'+ehpL.d+'</span>')+
     row('ลำไส้อักเสบ','<span class="badge '+gut.c+'">'+gut.d+'</span>')+
@@ -14665,7 +14666,7 @@ function renderLabTable(){
       const gutCls=(typeof r.gutInflam==='number')?(r.gutInflam>30?'b-danger':r.gutInflam>10?'b-warn':'b-ok'):'b-na';
       const lipidDisp=(typeof r.lipidDroplet==='number')?`${r.lipidDroplet}%`:'-';
       const lipidCls=(typeof r.lipidDroplet==='number')?(r.lipidDroplet>=70?'b-ok':r.lipidDroplet>=50?'b-warn':'b-danger'):'b-na';
-      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editLab('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteLab('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${recAge(p,r)??r.age}</td><td>${r.labName||'-'}</td><td style="font-weight:700;color:${sc(sg)}">${r.tcbsGreen!=null?r.tcbsGreen.toLocaleString():'-'}</td><td>${r.tcbsYellow!=null?r.tcbsYellow.toLocaleString():'-'}</td><td style="font-weight:700;color:${sc(shg)}">${r.hepatoGreen!=null?r.hepatoGreen.toLocaleString():'-'}</td><td>${r.hepatoYellow!=null?r.hepatoYellow.toLocaleString():'-'}</td><td>${r.tvc?r.tvc.toExponential(1):'-'}</td><td>${r.tvcHepato?r.tvcHepato.toExponential(1):'-'}</td><td><span class="badge ${ehpCls}">${ehpDisp}</span></td><td><span class="badge ${ehpLarvaCls}">${ehpLarvaDisp}</span></td><td><span class="badge ${gutCls}">${gutDisp}</span></td><td><span class="badge ${lipidCls}">${lipidDisp}</span></td><td><span class="badge ${!r.hepato?'b-na':r.hepato==='normal'?'b-ok':r.hepato==='pale'?'b-warn':'b-danger'}">${r.hepato?(HEPATO_LBL[r.hepato]||r.hepato):'-'}</span></td><td>${r.notes||'-'}</td></tr>`;
+      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editLab('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteLab('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${recAge(p,r)??r.age}</td><td>${r.labName||'-'}</td><td style="font-weight:700;color:${sc(sg)}">${r.tcbsGreen!=null?sciNum(r.tcbsGreen):'-'}</td><td>${r.tcbsYellow!=null?sciNum(r.tcbsYellow):'-'}</td><td style="font-weight:700;color:${sc(shg)}">${r.hepatoGreen!=null?sciNum(r.hepatoGreen):'-'}</td><td>${r.hepatoYellow!=null?sciNum(r.hepatoYellow):'-'}</td><td>${r.tvc?sciNum(r.tvc):'-'}</td><td>${r.tvcHepato?sciNum(r.tvcHepato):'-'}</td><td><span class="badge ${ehpCls}">${ehpDisp}</span></td><td><span class="badge ${ehpLarvaCls}">${ehpLarvaDisp}</span></td><td><span class="badge ${gutCls}">${gutDisp}</span></td><td><span class="badge ${lipidCls}">${lipidDisp}</span></td><td><span class="badge ${!r.hepato?'b-na':r.hepato==='normal'?'b-ok':r.hepato==='pale'?'b-warn':'b-danger'}">${r.hepato?(HEPATO_LBL[r.hepato]||r.hepato):'-'}</span></td><td>${r.notes||'-'}</td></tr>`;
     }).join('')}</tbody></table>`;
 }
 function deleteLab(pid,id){
@@ -16701,7 +16702,7 @@ function chCropInfoHtml(p,c){
 //    ⚠️ ค่าน้ำรายวัน/จัดการน้ำไม่เอาเข้าไทม์ไลน์ — มีปุ่มข้อมูลดิบอยู่แล้ว และจะท่วมจนอ่านไม่ออก
 // ── จำนวนเชื้อโชว์เป็นเลขยกกำลังแบบที่ฟาร์มใช้พูดกัน: 14,000 → 1.4×10⁴ · 310 → 3.1×10² (เกณฑ์ของฟาร์มเป็น 10² / 10⁴ อยู่แล้ว entry #260)
 //    ⚠️ แปลงตอนแสดงผลเท่านั้น ข้อมูลยังเก็บเป็นตัวเลขดิบเหมือนเดิม
-function chSciNum(v){
+function sciNum(v){
   const n=parseFloat(v);
   if(!isFinite(n))return String(v==null?'-':v);
   if(n===0)return'0';
@@ -16732,7 +16733,7 @@ function chTimelineHtml(p,c){
     CH_LAB_KEYS.forEach(([k,lbl])=>{
       const v=r[k];if(v==null||v==='')return;
       const cl=classifyOv(k,parseFloat(v));
-      if(cl!=='ok'){flags.push(lbl+' '+(CH_CFU_KEYS.includes(k)?chSciNum(v):parseFloat(v).toLocaleString()));worst=worstOv(worst,cl);}
+      if(cl!=='ok'){flags.push(lbl+' '+(CH_CFU_KEYS.includes(k)?sciNum(v):parseFloat(v).toLocaleString()));worst=worstOv(worst,cl);}
     });
     if(r.hepato&&classifyOv('hepato',r.hepato)!=='ok'){flags.push('ตับ '+((typeof HEPATO_LBL!=='undefined'&&HEPATO_LBL[r.hepato])||r.hepato));worst=worstOv(worst,classifyOv('hepato',r.hepato));}
     const lip=(typeof r.lipidDroplet==='number')?r.lipidDroplet:(r.lipidDroplet!=null&&r.lipidDroplet!==''?parseFloat(r.lipidDroplet):null);
@@ -17164,12 +17165,12 @@ function renderChChemTable(c){
     rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${getCatLabel(r.category)}</td><td>${r.product||'-'}</td><td>${r.amount?r.amount+' '+(r.unit||''):'-'}</td><td>${r.reason||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')
   }</tbody></table>`;
 }
-// ⚠️ จำนวนเชื้อในตารางนี้โชว์เป็นเลขยกกำลัง (chSciNum) ให้ตรงกับที่ฟาร์มใช้พูดกัน — ข้อมูลดิบไม่ได้แปลง
+// ⚠️ จำนวนเชื้อในตารางนี้โชว์เป็นเลขยกกำลัง (sciNum) ให้ตรงกับที่ฟาร์มใช้พูดกัน — ข้อมูลดิบไม่ได้แปลง
 function renderChLabTable(c){
   const rows=(c.labResults||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
   if(!rows.length)return '<p style="color:var(--tx3);text-align:center;padding:14px;font-style:italic">ไม่มีข้อมูล</p>';
   return `<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>อายุ</th><th>แล็บ</th><th>🟢 น้ำ</th><th>🟡 น้ำ</th><th>🟢 ตับ</th><th>🟡 ตับ</th><th>TVC น้ำ</th><th>EHP</th><th>เม็ดไขมัน</th><th>หมายเหตุ</th></tr></thead><tbody>${
-    rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${(()=>{const g=docAge(c.startDate,r.date);return g>0?g:(r.age||'-');})()}</td><td>${r.labName||'-'}</td><td>${r.tcbsGreen!=null?chSciNum(r.tcbsGreen):'-'}</td><td>${r.tcbsYellow!=null?chSciNum(r.tcbsYellow):'-'}</td><td>${r.hepatoGreen!=null?chSciNum(r.hepatoGreen):'-'}</td><td>${r.hepatoYellow!=null?chSciNum(r.hepatoYellow):'-'}</td><td>${r.tvc!=null?chSciNum(r.tvc):'-'}</td><td>${r.ehp!=null?r.ehp:'-'}</td><td>${(typeof r.lipidDroplet==='number')?r.lipidDroplet+'%':'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')
+    rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${(()=>{const g=docAge(c.startDate,r.date);return g>0?g:(r.age||'-');})()}</td><td>${r.labName||'-'}</td><td>${r.tcbsGreen!=null?sciNum(r.tcbsGreen):'-'}</td><td>${r.tcbsYellow!=null?sciNum(r.tcbsYellow):'-'}</td><td>${r.hepatoGreen!=null?sciNum(r.hepatoGreen):'-'}</td><td>${r.hepatoYellow!=null?sciNum(r.hepatoYellow):'-'}</td><td>${r.tvc!=null?sciNum(r.tvc):'-'}</td><td>${r.ehp!=null?r.ehp:'-'}</td><td>${(typeof r.lipidDroplet==='number')?r.lipidDroplet+'%':'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')
   }</tbody></table></div>`;
 }
 function exportChPdf(pid,idx){
