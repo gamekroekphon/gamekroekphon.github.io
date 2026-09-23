@@ -1494,6 +1494,21 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 /* --pb ไม่เคยมีอยู่จริงในแอป ป้ายนี้จึงพื้นหลังโปร่งใสมาตลอด — เขียนตามที่เห็นจริง ไม่เปลี่ยนหน้าตา
    (ถ้าอยากได้พื้นหลังทองอ่อนแบบเม็ดยา เปลี่ยนเป็น var(--pl) ได้) */
 .hdr-role-badge.role-admin{background:transparent;color:var(--p)}.hdr-role-badge.role-staff{background:var(--sf2);color:var(--tx3)}
+/* ── เลือกบ่อหลายบ่อในหน้าเติมน้ำ (entry #308) — ชิปแตะง่ายบนมือถือ ── */
+.wl-row{display:flex;gap:9px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}
+.wl-quick{display:flex;gap:6px}
+.wl-quick button{border:1px solid var(--bd);background:var(--sf);border-radius:9px;padding:9px 13px;font-family:inherit;font-size:calc(13px * var(--ui-scale));color:var(--tx2);cursor:pointer;min-height:42px}
+.wl-quick button.on{background:var(--pl);border-color:#EBD9A8;color:#7A5403;font-weight:700}
+.wl-grp{display:flex;justify-content:space-between;align-items:center;font-size:calc(12.5px * var(--ui-scale));font-weight:700;color:var(--tx2);margin:6px 0 8px}
+.wl-grp span{font-weight:400;color:var(--tx3)}
+.wl-chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px}
+.wl-chip{position:relative;border:1.5px solid var(--bd);background:var(--sf);border-radius:11px;padding:9px 6px 7px;font-family:inherit;font-size:calc(15px * var(--ui-scale));font-weight:700;color:var(--tx);display:flex;flex-direction:column;align-items:center;gap:2px;min-height:56px;cursor:pointer}
+.wl-chip .sub{font-size:var(--fs10);font-weight:400;color:var(--tx3)}
+.wl-chip.on{background:var(--pl);border-color:var(--p);color:#7A5403;box-shadow:0 0 0 2px rgba(154,106,4,.12)}
+.wl-chip.on .sub{color:#7A5403}
+.wl-chip .tick{position:absolute;top:3px;right:6px;font-size:var(--fs10);color:var(--ok);font-weight:700}
+.wl-save{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.wl-hint{font-size:var(--fs10);color:var(--tx3);margin-top:10px;border-top:1px dashed var(--bd);padding-top:9px;line-height:1.6}
 /* ── Mobile UX patch ── */
 /* 1. แถบเมนูบน: ปัดนิ้วซ้าย-ขวาได้บน iOS */
 .tabs{-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
@@ -2487,29 +2502,32 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 <div id="sec-watlog" class="sec">
   <div class="sec-hdr"><div class="sec-title">💦 บันทึกการจัดการน้ำ</div></div>
   <div class="g2" style="margin-bottom:16px;align-items:start">
+    <!-- ฟอร์มเติมน้ำหลายบ่อในครั้งเดียว (entry #308) — ฟาร์มมีแค่ "เติมน้ำ" อย่างเดียว จึงไม่มีดรอปดาวน์เลือกงาน -->
     <div class="card">
-      <div class="card-t">📝 บันทึกการเปลี่ยน/เติมน้ำ</div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <input type="hidden" id="wl-edit-id">
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl" for="wl-pond">บ่อ *</label><select class="fi" id="wl-pond" onchange="onWlPond()"><option value="">-- เลือกบ่อ --</option></select></div>
-          <div class="fg"><label class="fl" for="wl-date">วันที่ *</label><input type="date" class="fi" id="wl-date" onchange="calcAge('wl')"></div>
-        </div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl" for="wl-age">อายุ (วัน)</label><input type="number" class="fi" id="wl-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
-          <div class="fg"><label class="fl" for="wl-action">การดำเนินการ</label><select class="fi" id="wl-action" onchange="toggleWlShockHint()"><option value="exchange">เปลี่ยนถ่ายน้ำ</option><option value="add">เติมน้ำ</option><option value="drain">ระบายน้ำ</option><option value="treat">บำบัดน้ำ</option></select></div>
-        </div>
-        <div class="hint" id="wl-shock-hint" style="display:none">⚠️ ถ่ายน้ำปริมาณมากรวดเดียว เสี่ยงกุ้งช็อกถ้าน้ำใหม่อุณหภูมิ/ความเค็มต่างจากบ่อเดิมเกิน 5°C — ควรทยอยเปลี่ยนทีละน้อยแทนครั้งเดียว</div>
-        <div class="fg"><label class="fl" for="wl-notes">เหตุผล / หมายเหตุ</label><input type="text" class="fi" id="wl-notes" placeholder="เหตุผลในการเปลี่ยนน้ำ..."></div>
-        <div style="display:flex;gap:10px"><button class="btn btn-p" onclick="saveWaterLog()">💾 บันทึก</button><button class="btn btn-s" onclick="clearWaterLog()">🗑️ ล้าง</button></div>
-        <div id="wl-msg"></div>
+      <div class="card-t">💧 เติมน้ำ <span style="font-weight:400;font-size:var(--fs11);color:var(--tx3)">เลือกได้หลายบ่อในครั้งเดียว</span></div>
+      <div class="wl-row">
+        <div class="fg" style="flex:1;min-width:160px;margin:0"><label class="fl" for="wl-date">วันที่</label><input type="date" class="fi" id="wl-date" onchange="renderWlPonds()"></div>
+        <div class="wl-quick"><button type="button" id="wl-q-today" onclick="wlSetDate(0)">วันนี้</button><button type="button" id="wl-q-yest" onclick="wlSetDate(-1)">เมื่อวาน</button></div>
       </div>
+      <div class="wl-grp"><span style="color:var(--tx2);font-weight:700">🦐 บ่อที่มีกุ้ง</span><span id="wl-cnt"></span></div>
+      <div class="wl-chips" id="wl-chips"></div>
+      <div class="fg" style="margin-top:14px"><label class="fl" for="wl-notes">หมายเหตุ <span style="font-weight:400;color:var(--tx3)">(ไม่บังคับ)</span></label><input type="text" class="fi" id="wl-notes" placeholder="—"></div>
+      <div class="wl-save">
+        <button class="btn btn-p" id="wl-save-btn" onclick="saveWaterLog()">💾 บันทึกเติมน้ำ</button>
+        <button class="btn btn-s" onclick="clearWaterLog()">ล้างที่เลือก</button>
+        <span id="wl-sel-info" style="font-size:var(--fs11);color:var(--tx3)"></span>
+      </div>
+      <div id="wl-msg"></div>
+      <div class="wl-hint">✓ = วันนั้นบันทึกไว้แล้ว — กดซ้ำได้ ระบบอัปเดตทับให้ ไม่เกิดรายการซ้ำ · ตัวเลขใต้ชื่อบ่อ = อายุกุ้ง ณ วันที่เลือก · เติมน้ำต้องผ่านการตัดเชื้อทุกครั้ง จึงมีเฉพาะบ่อที่มีกุ้งให้เลือก</div>
     </div>
-    <div class="card"><div class="card-t">📊 สรุปกิจกรรมน้ำ</div><div id="wl-summary"></div></div>
+    <div class="card"><div class="card-t">📊 7 วันล่าสุด</div><div id="wl-summary"></div></div>
   </div>
   <div class="card">
-    <div class="card-t">📋 ประวัติ</div>
-    <div class="tbl-wrap" id="wl-tbl-wrap"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อเพื่อดูข้อมูล</p></div>
+    <div class="card-t" style="justify-content:space-between">
+      <span>📋 ประวัติทั้งหมด</span>
+      <select class="fi" id="wl-filter" style="width:auto;min-width:130px;font-size:calc(12px * var(--ui-scale));padding:5px 9px" onchange="renderWaterTable()"><option value="">ทุกบ่อ</option></select>
+    </div>
+    <div class="tbl-wrap" id="wl-tbl-wrap"></div>
   </div>
 </div>
 <!-- MORTALITY LOG -->
@@ -5118,7 +5136,7 @@ function pondOptionsHtml(){
 //    เดิมทุกหน้าเริ่มจากว่าง ต้องเลือกบ่อเดิมซ้ำทุกหน้า
 //    เติมเฉพาะตอนที่หน้านั้น "ยังไม่ได้เลือกบ่อ" — ไม่เขียนทับสิ่งที่ผู้ใช้เลือกไว้เอง ──
 let _curPondId=null;
-const POND_SEL_IDS=['sp-pond','wl-pond','lb-pond','mt-pond','hv-pond'];
+const POND_SEL_IDS=['sp-pond','lb-pond','mt-pond','hv-pond'];   // wl-pond เลิกใช้แล้ว หน้าเติมน้ำเลือกบ่อเป็นชิปหลายบ่อ (entry #308)
 function setCurPond(pid){if(pid)_curPondId=pid;}
 function applyCurPond(){
   if(!_curPondId||!D.ponds.some(p=>p.id===_curPondId))return;   // บ่ออาจถูกลบไปแล้ว
@@ -6031,12 +6049,12 @@ function populateAll(){
   if(seedPondZones())save();
   refreshZoneDatalist();
   const simple={
-    'sp-pond':'','wl-pond':'','lb-pond':'','ex-pond':'all','mt-pond':'','cash-pond':'',
+    'sp-pond':'','lb-pond':'','ex-pond':'all','mt-pond':'','cash-pond':'',
   };
   // ── ⚠️ ช่องเลือกบ่อของงานกรอกรายวัน (สุ่ม/จัดการน้ำ/ผลแล็บ/กุ้งตาย/จับกุ้ง/เวชภัณฑ์)
   //    ใช้ pondOptionsHtml() = เรียงตามอายุกุ้ง + ป้าย DOC ให้ตรงกับหน้าคุณภาพน้ำ/อาหาร
   //    ยกเว้น ex-pond/cash-pond (หน้ารายงาน ไม่ใช่หน้ากรอก) ──
-  const AGE_SORTED_SELS=['sp-pond','wl-pond','lb-pond','mt-pond'];
+  const AGE_SORTED_SELS=['sp-pond','lb-pond','mt-pond'];
   Object.entries(simple).forEach(([id,def])=>{
     const el=document.getElementById(id);if(!el)return;const cur=el.value;
     const opts=AGE_SORTED_SELS.includes(id)?pondOptionsHtml():sortedPonds().map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');
@@ -14078,18 +14096,17 @@ function editSample(pid,d){
   }
   const el=document.getElementById('sp-pond');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
 }
+// แก้รายการเดิม: ตั้งวันที่ + เลือกเฉพาะบ่อนั้น + ดึงหมายเหตุมา แล้วกด "บันทึก" = อัปเดตทับรายการเดิม (บ่อ+วันเดียวกัน)
 function editWaterLog(pid,idx){
   const p=pond(pid);if(!p||!p.waterLog||!p.waterLog[idx])return;
   const r=p.waterLog[idx];
-  document.getElementById('wl-edit-id').value=r.id||'';
-  document.getElementById('wl-pond').value=pid;
-  document.getElementById('wl-date').value=r.date;
-  syncDateHint(document.getElementById('wl-date'));
-  calcAge('wl');
-  const aEl=document.getElementById('wl-action');if(aEl)aEl.value=r.action||'in';
-  toggleWlShockHint();
+  const dEl=document.getElementById('wl-date');
+  if(dEl){dEl.value=r.date;syncDateHint(dEl);}
+  _wlSel=new Set([pid]);
   document.getElementById('wl-notes').value=r.notes||'';
-  const el=document.getElementById('wl-pond');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+  renderWlPonds();
+  showMsg('wl-msg','warn','กำลังแก้ของบ่อ '+p.name+' วันที่ '+fD(r.date)+' — แก้หมายเหตุแล้วกดบันทึกเพื่ออัปเดตทับ (ถ้าเปลี่ยนวันที่จะกลายเป็นรายการใหม่)');
+  const el=document.getElementById('wl-chips');if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
 }
 function editChem(){/* ลบฟอร์มสารเคมีแล้ว — ใช้สต็อก → เบิกออก แทน */}
 function editLab(pid,d){
@@ -14258,7 +14275,6 @@ function saveFeedGridAll(){
 }
 // ===== POND CHANGE HANDLERS =====
 function onSpPond(){clearSample();renderSampleTable();renderSampleChart();const pid=document.getElementById('sp-pond').value;if(pid)renderSampleMetrics(pid);}
-function onWlPond(){clearWaterLog();renderWaterTable();}
 function onLbPond(){clearLab();renderLabTable();}
 function feedPer100k(totalFeed,stock){
   if(!totalFeed||!stock||stock<=0)return null;
@@ -14425,49 +14441,138 @@ function deleteSample(pid,id){
   save();renderSampleTable();renderSampleChart();
 }
 // ===== WATER LOG =====
-function initWaterLog(){populateAll();document.getElementById('wl-date').value=today();calcAge('wl');renderWaterSummary();renderWaterTable();toggleWlShockHint();}
-// ── เตือนความเสี่ยงกุ้งช็อกเมื่อเลือก "เปลี่ยนถ่ายน้ำ" — แอปไม่มีข้อมูลอุณหภูมิ/ความเค็มของน้ำใหม่ที่จะเติมเข้ามา (ไม่ได้วัดตอนสูบเข้า) จึงแจ้งเป็นข้อควรระวังทั่วไปแทนการคำนวณเทียบจริง
-function toggleWlShockHint(){
-  const act=document.getElementById('wl-action')?.value;
-  const el=document.getElementById('wl-shock-hint');
-  if(el)el.style.display=act==='exchange'?'':'none';
+// ══════ บันทึกเติมน้ำหลายบ่อในครั้งเดียว (entry #308 — พี่สั่ง 23 ก.ย. 69) ══════
+//    ข้อมูลจริง 96 รายการที่ผ่านมาเป็น "เติมน้ำ" 93 (เปลี่ยนถ่ายน้ำ 3 อยู่ในประวัติรอบที่ปิดแล้ว) · 18 จาก 21 วันเป็นการเติมหลายบ่อในวันเดียว
+//    → ตัดดรอปดาวน์การดำเนินการทิ้ง บันทึกเป็น action:'add' เสมอ · เลือกบ่อเป็นชิปกดได้หลายบ่อ
+//    ⚠️ มีเฉพาะ "บ่อที่มีกุ้ง ณ วันที่เลือก" ให้กด — พี่สั่งว่าเติมน้ำต้องผ่านการตัดเชื้อทุกครั้ง บ่อว่าง/เตรียมบ่อไม่ต้องมี
+//    ⚠️ รายการเก่าที่เป็น exchange/drain/treat ยังแสดงในประวัติตามเดิม (อ่านอย่างเดียว) ห้ามแปลงข้อมูลเก่า
+let _wlSel=new Set();
+function wlActivePondsOn(d){
+  return (D.ponds||[]).filter(p=>p.startDate&&p.startDate<=d&&(!p.harvestDate||d<=p.harvestDate))
+    .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'th',{numeric:true}));
+}
+function wlSetDate(off){
+  const el=document.getElementById('wl-date');if(!el)return;
+  el.value=off?addDaysStr(today(),off):today();
+  syncDateHint(el);renderWlPonds();
+}
+function wlToggle(pid){
+  if(_wlSel.has(pid))_wlSel.delete(pid);else _wlSel.add(pid);
+  renderWlPonds();
+}
+function renderWlPonds(){
+  const box=document.getElementById('wl-chips');if(!box)return;
+  const dEl=document.getElementById('wl-date');
+  const d=(dEl&&dEl.value)||today();
+  const list=wlActivePondsOn(d);
+  [..._wlSel].forEach(id=>{if(!list.some(p=>p.id===id))_wlSel.delete(id);});   // เปลี่ยนวันแล้วบ่อหลุดลิสต์ ต้องเอาออกจากที่เลือกไว้
+  const cnt=document.getElementById('wl-cnt');if(cnt)cnt.textContent=list.length+' บ่อ';
+  box.innerHTML=list.length?list.map(p=>{
+    const done=(p.waterLog||[]).some(r=>r.date===d);
+    const age=docAge(p.startDate,d);
+    return '<button type="button" class="wl-chip'+(_wlSel.has(p.id)?' on':'')+'" onclick="wlToggle(\''+p.id+'\')">'
+      +(p.name||'-')+'<span class="sub">'+(age>0?age+' วัน':'-')+'</span>'+(done?'<span class="tick">✓</span>':'')+'</button>';
+  }).join(''):'<div style="color:var(--tx3);font-style:italic;padding:10px 2px;font-size:calc(13px * var(--ui-scale))">วันที่เลือกยังไม่มีบ่อไหนมีกุ้ง</div>';
+  const names=list.filter(p=>_wlSel.has(p.id)).map(p=>p.name);
+  const btn=document.getElementById('wl-save-btn');
+  if(btn){btn.textContent=names.length?'💾 บันทึกเติมน้ำ '+names.length+' บ่อ':'💾 บันทึกเติมน้ำ';btn.disabled=!names.length;btn.style.opacity=names.length?'':'0.5';}
+  const info=document.getElementById('wl-sel-info');
+  if(info)info.innerHTML=names.length?'เลือกอยู่ <b style="color:#7A5403">'+names.join(' · ')+'</b>':'ยังไม่ได้เลือกบ่อ';
+  const qT=document.getElementById('wl-q-today'),qY=document.getElementById('wl-q-yest');
+  if(qT)qT.className=(d===today()?'on':'');
+  if(qY)qY.className=(d===addDaysStr(today(),-1)?'on':'');
 }
 function saveWaterLog(){
-  const pid=document.getElementById('wl-pond').value,d=document.getElementById('wl-date').value;
-  if(!pid||!d){showMsg('wl-msg','warn','กรุณาเลือกบ่อและวันที่');return}
-  const p=pond(pid);if(!p)return;if(!p.waterLog)p.waterLog=[];
-  const editId=document.getElementById('wl-edit-id').value;
-  const rec={id:editId||('wl_'+pid+'_'+d+'_'+Date.now()),date:d,age:parseInt(document.getElementById('wl-age').value)||0,
-    action:document.getElementById('wl-action').value,vol:null,
-    notes:document.getElementById('wl-notes').value};
-  const idx=editId?p.waterLog.findIndex(r=>r.id===editId):-1;
-  if(idx>=0){p.waterLog[idx]=rec;showMsg('wl-msg','warn',`อัปเดต ${WL_ACT[rec.action]||rec.action} บ่อ ${p.name}`);}
-  else{p.waterLog.push(rec);showMsg('wl-msg','ok',`✅ ${WL_ACT[rec.action]||rec.action} บ่อ ${p.name}`);}
-  p.waterLog.sort((a,b)=>new Date(a.date)-new Date(b.date));
-  document.getElementById('wl-edit-id').value='';
-  save();renderWaterTable();renderWaterSummary();
+  const dEl=document.getElementById('wl-date');
+  const d=(dEl&&dEl.value)||'';
+  if(!d){showMsg('wl-msg','warn','กรุณาเลือกวันที่');return}
+  if(!_wlSel.size){showMsg('wl-msg','warn','กรุณาแตะเลือกบ่อที่เติมน้ำ');return}
+  const notes=(document.getElementById('wl-notes').value||'').trim();
+  let added=0,updated=0;const names=[];
+  wlActivePondsOn(d).filter(p=>_wlSel.has(p.id)).forEach(p=>{
+    if(!p.waterLog)p.waterLog=[];
+    const ex=p.waterLog.find(r=>r.date===d);   // บ่อ+วันเดียวกัน = อัปเดตทับ ไม่เพิ่มรายการซ้ำ
+    if(ex){ex.action='add';ex.vol=null;ex.notes=notes;ex.age=docAge(p.startDate,d)||0;updated++;}
+    else{p.waterLog.push({id:'wl_'+p.id+'_'+d+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+      date:d,age:docAge(p.startDate,d)||0,action:'add',vol:null,notes});added++;}
+    p.waterLog.sort((a,b)=>new Date(a.date)-new Date(b.date));
+    names.push(p.name);
+  });
+  save();
+  _wlSel.clear();
+  document.getElementById('wl-notes').value='';
+  showMsg('wl-msg','ok','✅ บันทึกเติมน้ำ '+fD(d)+' '+names.length+' บ่อ — '+names.join(' · ')+(updated?' (อัปเดตทับ '+updated+' บ่อ)':''));
+  renderWlPonds();renderWaterTable();renderWaterSummary();
 }
 function clearWaterLog(){
-  document.getElementById('wl-date').value=today();
-  document.getElementById('wl-edit-id').value='';
-  document.getElementById('wl-notes').value='';
-  document.getElementById('wl-msg').innerHTML='';calcAge('wl');
+  _wlSel.clear();
+  const n=document.getElementById('wl-notes');if(n)n.value='';
+  const m=document.getElementById('wl-msg');if(m)m.innerHTML='';
+  renderWlPonds();
 }
+function initWaterLog(){
+  populateAll();
+  const dEl=document.getElementById('wl-date');
+  if(dEl&&!dEl.value){dEl.value=today();syncDateHint(dEl);}
+  _wlSel.clear();
+  populateWlFilter();renderWlPonds();renderWaterSummary();renderWaterTable();
+}
+function populateWlFilter(){
+  const sel=document.getElementById('wl-filter');if(!sel)return;
+  const cur=sel.value;
+  const withLog=(D.ponds||[]).filter(p=>(p.waterLog||[]).length)
+    .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'th',{numeric:true}));
+  sel.innerHTML='<option value="">ทุกบ่อ</option>'+withLog.map(p=>'<option value="'+p.id+'"'+(p.id===cur?' selected':'')+'>บ่อ '+p.name+'</option>').join('');
+}
+// สรุป 7 วันล่าสุด — จัดกลุ่มเป็นรายวัน (วันไหนเติมบ่อไหนบ้าง) แทนรายการยาวทีละบ่อ
 function renderWaterSummary(){
   const el=document.getElementById('wl-summary');if(!el)return;
-  const allLogs=D.ponds.flatMap(p=>(p.waterLog||[]).map(r=>({...r,pondName:p.name})));
-  const last7=allLogs.filter(r=>(new Date()-new Date(r.date))/86400000<=7).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
-  el.innerHTML=last7.length>0?`<div style="font-size:calc(13px * var(--ui-scale));font-weight:600;color:var(--tx2);margin-bottom:8px">กิจกรรมใน 7 วันล่าสุด:</div>${last7.map(r=>`<div style="padding:8px 12px;background:var(--sf2);border-radius:7px;margin-bottom:6px;font-size:calc(13px * var(--ui-scale))"><span class="badge b-info" style="margin-right:6px">บ่อ ${r.pondName}</span>${fD(r.date)} — ${WL_ACT[r.action]||r.action} <strong>${r.vol?r.vol+' ซม.':''}</strong>${r.notes?' · '+r.notes:''}</div>`).join('')}`:'<div style="color:var(--tx3);text-align:center;padding:20px;font-size:calc(13px * var(--ui-scale))">ยังไม่มีกิจกรรมใน 7 วันล่าสุด</div>';
+  const byDate={};
+  (D.ponds||[]).forEach(p=>(p.waterLog||[]).forEach(r=>{
+    if(!r||!r.date)return;
+    if((new Date()-new Date(r.date))/86400000>7)return;
+    (byDate[r.date]=byDate[r.date]||[]).push({name:p.name,act:r.action,notes:r.notes});
+  }));
+  const days=Object.keys(byDate).sort().reverse().slice(0,7);
+  if(!days.length){el.innerHTML='<div style="color:var(--tx3);text-align:center;padding:20px;font-size:calc(13px * var(--ui-scale))">ยังไม่มีการเติมน้ำใน 7 วันล่าสุด</div>';return;}
+  el.innerHTML=days.map(d=>{
+    const a=byDate[d].slice().sort((x,y)=>String(x.name).localeCompare(String(y.name),'th',{numeric:true}));
+    const note=a.map(x=>x.notes).filter(Boolean)[0]||'';
+    const odd=a.filter(x=>x.act&&x.act!=='add').length;
+    return '<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 2px;border-bottom:1px solid var(--bd);font-size:calc(13px * var(--ui-scale))">'
+      +'<span style="color:var(--tx2);white-space:nowrap">'+fD(d)+'</span>'
+      +'<span style="text-align:right"><b style="color:var(--in)">'+a.length+' บ่อ</b> · '+a.map(x=>x.name).join(' · ')
+      +(odd?' <span style="color:var(--w)">(มีรายการแบบเก่า '+odd+')</span>':'')
+      +(note?'<div style="font-size:var(--fs10);color:var(--tx3)">'+note+'</div>':'')+'</span></div>';
+  }).join('');
 }
+// ประวัติเห็นทุกบ่อเรียงตามวันทันที (เดิมต้องเลือกบ่อก่อน) · เพดาน 300 แถว ตามบทเรียน entry #306
+const WL_TBL_MAX=300;
 function renderWaterTable(){
-  const pid=document.getElementById('wl-pond')?.value;
   const wrap=document.getElementById('wl-tbl-wrap');if(!wrap)return;
-  if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
-  const p=pond(pid);const rows=sortLogArr('waterLog',p?.waterLog||[]).reverse();
-  if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">บ่อนี้ยังไม่มีข้อมูลจัดการน้ำ — บันทึกได้จากฟอร์มด้านบน</p>';return}
-  const wlPond=pond(pid);const wlFull=sortLogArr('waterLog',wlPond?.waterLog||[]).reverse();
-  wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>การดำเนินการ</th><th>ปริมาณ (ซม.)</th><th>หมายเหตุ</th></tr></thead><tbody>${
-    rows.map((r,i)=>{const origIdx=(wlPond?.waterLog||[]).indexOf(r);return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editWaterLog('${pid}',${origIdx})">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteWaterLog('${pid}','${r.id||origIdx}')">🗑️</button></td><td>${fD(r.date)}</td><td>${recAge(p,r)??r.age}</td><td><span class="badge b-info">${WL_ACT[r.action]||r.action}</span></td><td>${r.vol?r.vol+' ซม.':'-'}</td><td>${r.notes||'-'}</td></tr>`}).join('')}</tbody></table>`;
+  const f=document.getElementById('wl-filter')?.value||'';
+  let rows=[];
+  (D.ponds||[]).forEach(p=>{
+    if(f&&p.id!==f)return;
+    (p.waterLog||[]).forEach(r=>{if(r&&r.date)rows.push({r,p});});
+  });
+  if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">'+(f?'บ่อนี้ยังไม่มีบันทึกเติมน้ำ':'ยังไม่มีบันทึกเติมน้ำ — เลือกบ่อแล้วกดบันทึกจากฟอร์มด้านบน')+'</p>';return}
+  rows.sort((a,b)=>String(b.r.date).localeCompare(String(a.r.date))||String(a.p.name).localeCompare(String(b.p.name),'th',{numeric:true}));
+  const total=rows.length,shown=rows.slice(0,WL_TBL_MAX);
+  wrap.innerHTML='<table class="tbl"><thead><tr><th>วันที่</th><th>บ่อ</th><th>อายุ</th><th>การดำเนินการ</th><th>หมายเหตุ</th><th></th></tr></thead><tbody>'
+    +shown.map(({r,p},i)=>{
+      const idx=(p.waterLog||[]).indexOf(r);
+      const legacy=r.action&&r.action!=='add';
+      return '<tr class="'+(i===0?'hi':'')+'">'
+        +'<td>'+fD(r.date)+'</td>'
+        +'<td><span class="badge b-info">'+(p.name||'-')+'</span></td>'
+        +'<td>'+((recAge(p,r)??r.age)||'-')+'</td>'
+        +'<td><span class="badge '+(legacy?'b-warn':'b-ok')+'">'+(WL_ACT[r.action]||'เติมน้ำ')+'</span></td>'
+        +'<td style="color:var(--tx2)">'+(r.notes||'-')+'</td>'
+        +'<td class="tbl-act-cell" style="white-space:nowrap"><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editWaterLog(\''+p.id+'\','+idx+')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteWaterLog(\''+p.id+'\',\''+(r.id||idx)+'\')">🗑️</button></td></tr>';
+    }).join('')
+    +'</tbody></table>'
+    +(total>shown.length?'<div style="text-align:center;font-size:var(--fs11);color:var(--tx3);padding:10px">แสดง '+shown.length+' จาก '+total.toLocaleString()+' รายการ (ล่าสุดก่อน) — กรองบ่อด้านบนเพื่อดูย้อนหลัง</div>':'');
 }
 function deleteWaterLog(pid,id){
   const p=pond(pid);if(!p)return;
@@ -14476,7 +14581,7 @@ function deleteWaterLog(pid,id){
   if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(target.date)+' ใช่หรือไม่?'))return;
   p.waterLog=(p.waterLog||[]).filter(r=>r!==target);
   D.deletedIds=D.deletedIds||[];if(target.id)D.deletedIds.push(target.id);
-  save();renderWaterTable();renderWaterSummary();
+  save();populateWlFilter();renderWlPonds();renderWaterTable();renderWaterSummary();
 }
 // ===== MORTALITY LOG (กุ้งตายรายวัน — จากเอกสารวิชาการ ดร.พุทธ: 1 ใน 5 ข้อมูลหลักที่ควรบันทึกทุกวัน) =====
 function initMortality(){populateAll();document.getElementById('mt-date').value=today();calcAge('mt');renderMtSummary();renderMtBars();renderMtTable();}
