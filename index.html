@@ -1060,6 +1060,59 @@ body:not(.role-admin) .staff-only{display:revert}
 .stock-mode-btn.on-out{background:var(--p);color:#fff}
 .stock-mode-btn.on-shared{background:#0d9488;color:#fff}
 .stock-mode-btn.on-sale{background:#7c3aed;color:#fff}
+.stock-mode-btn.on-count{background:#1D4ED8;color:#fff}
+/* ── นับสต็อกเป็นรอบ 10 วัน (entry #301) — คนในฟาร์มนับของ/จดการเบิกลงกระดาษทุก 10 วัน
+   หน้านี้ยุบรายการย่อยของสินค้าตัวเดียวกันมาไว้บรรทัดเดียว เพื่อไล่เทียบกับกระดาษได้ทีละรายการ
+   จอคอม = ตาราง · มือถือ = การ์ด (ซ่อนสลับกันเหมือน .pd-hist-cards) ── */
+.skc-bar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:9px}
+.skc-arw{width:40px;height:40px;flex:none;border:1px solid var(--bd);border-radius:9px;background:var(--sf);color:var(--tx2);font-size:calc(14px * var(--ui-scale));cursor:pointer;font-family:inherit}
+.skc-arw:disabled{opacity:.35;cursor:default}
+.skc-sub{font-size:var(--fs11);color:var(--tx3);margin-bottom:11px;line-height:1.6}
+.skc-sub b{color:var(--tx2)}
+.skc-tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.skc-tbl td.num,.skc-tbl th.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.skc-tbl td.skc-nm{font-weight:600;color:var(--tx);min-width:170px}
+.skc-tbl td.skc-in{color:var(--ok);font-weight:700}
+.skc-tbl td.skc-out{color:var(--d);font-weight:700}
+/* ⚠️ ต้องเขียนเจาะจงกว่า .tbl tbody tr:nth-child(even) td (0,2,3) ไม่งั้นแถวคู่กลืนสีที่ตั้งใจเน้น (บทเรียน entry #296/#299) */
+table.skc-tbl tbody tr td.skc-sys,table.skc-tbl thead th.skc-sys{background:var(--pl);font-weight:800;color:var(--tx)}
+table.skc-tbl tbody tr:hover td.skc-sys{background:#F7ECCD}
+table.skc-tbl tbody tr td.skc-box{background:repeating-linear-gradient(-45deg,transparent,transparent 7px,rgba(0,0,0,.025) 7px,rgba(0,0,0,.025) 14px);min-width:72px}
+/* จอแคบ — ตัดช่องเปล่าที่เว้นไว้จดกระดาษออกก่อน ไม่งั้นช่อง "คงเหลือตามระบบ" ที่ต้องใช้ไล่นับถูกดันหลุดขอบ */
+@media(max-width:1000px){table.skc-tbl th.skc-box,table.skc-tbl td.skc-box{display:none}.skc-dsk{display:none}}
+.skc-tbl th.skc-day,.skc-tbl td.skc-day{text-align:right;padding-left:6px;padding-right:6px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.skc-tbl td.skc-day.e{color:#D3D7DC}
+table.skc-tbl tbody tr.skc-grp td,table.skc-tbl tbody tr.skc-grp:hover td{background:var(--sf2);font-weight:700;color:#7A5403;font-size:var(--fs11);letter-spacing:.02em}
+table.skc-tbl tbody tr.quiet td{color:var(--tx3)}
+table.skc-tbl tbody tr.skc-det td,table.skc-tbl tbody tr.skc-det:hover td{background:var(--sf2);padding:0}
+.skc-det-in{padding:8px 14px 10px;font-size:var(--fs11);color:var(--tx2)}
+.skc-det-in .r{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px dotted var(--bd)}
+.skc-det-in .r:last-child{border-bottom:0}
+.skc-det-in .r b{color:var(--tx);font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.skc-lnk{margin-left:7px;border:0;background:var(--ib);color:var(--in);border-radius:6px;padding:1px 7px;font-family:inherit;font-size:var(--fs10);font-weight:700;cursor:pointer}
+.skc-auto{margin-left:6px;background:var(--sf2);color:var(--tx3);border-radius:5px;padding:1px 6px;font-size:var(--fs10);font-weight:700}
+.skc-none{margin-left:7px;font-size:var(--fs10);color:var(--tx3);font-weight:400;font-style:italic}
+.skc-cards{display:none}
+@media(max-width:600px){.skc-tblwrap{display:none}.skc-cards{display:block}}
+.skc-mgrp{font-size:var(--fs11);font-weight:700;color:#7A5403;padding:11px 2px 5px}
+.skc-mgrp span{color:var(--tx3);font-weight:400}
+.skc-mlist{border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+.skc-mit{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--bd);min-height:56px;background:var(--sf);cursor:pointer}
+.skc-mit:last-child{border-bottom:0}
+.skc-mit.quiet .skc-mn,.skc-mit.quiet .skc-mv{color:var(--tx3)}
+.skc-mn{font-weight:700;font-size:calc(13.5px * var(--ui-scale));color:var(--tx);line-height:1.3}
+.skc-mm{font-size:var(--fs11);color:var(--tx3);margin-top:2px;font-variant-numeric:tabular-nums}
+.skc-mm b{color:var(--tx2)}
+.skc-mm i{font-style:normal;margin-left:6px;font-weight:700}
+.skc-mm i.in{color:var(--ok)}
+.skc-mm i.out{color:var(--d)}
+.skc-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.skc-chip{background:var(--sf2);border-radius:5px;padding:1px 6px;font-size:var(--fs10);color:var(--tx2);font-variant-numeric:tabular-nums}
+.skc-chip b{color:var(--in);font-weight:700}
+.skc-mr{text-align:right;flex:none}
+.skc-mv{font-size:calc(16px * var(--ui-scale));font-weight:800;color:var(--tx);font-variant-numeric:tabular-nums}
+.skc-mu{font-size:var(--fs10);color:var(--tx3)}
+.skc-mdet{background:var(--sf2);border-top:1px solid var(--bd);padding:8px 12px}
 /* ── ปุ่ม "เลือกงาน" หน้าสต็อก — แทนแถบโหมดเล็กๆ ที่พนักงานกดผิดบ่อย
    แสดงเฉพาะงานที่ role นั้นทำได้ (staff เห็น 2 / admin เห็น 5) กดปุ่มเดียวได้โหมดที่ถูกเลย ── */
 .sk-kpi-bar{display:flex;gap:7px 16px;flex-wrap:wrap;align-items:center;background:var(--sf);border:1px solid var(--bd);
@@ -3674,10 +3727,11 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   <!-- pane: ประวัติ -->
   <div class="stock-pane" id="skp-log">
     <div class="card">
-      <div style="display:flex;gap:0;background:var(--sf2);border-radius:8px;padding:3px;margin-bottom:14px;width:fit-content">
+      <div style="display:flex;gap:0;background:var(--sf2);border-radius:8px;padding:3px;margin-bottom:14px;width:fit-content;max-width:100%;flex-wrap:wrap">
         <button id="skl-mode-out" class="stock-mode-btn on-out" onclick="setStockLogMode('out')">📤 เบิกออก</button>
         <button id="skl-mode-in" class="stock-mode-btn" onclick="setStockLogMode('in')">📥 รับเข้า</button>
         <button id="skl-mode-shared" class="stock-mode-btn" onclick="setStockLogMode('shared')">🔧 แชร์ทุกบ่อ</button>
+        <button id="skl-mode-count" class="stock-mode-btn" onclick="setStockLogMode('count')">🧮 นับสต็อก</button>
       </div>
       <div id="skl-pane-out">
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
@@ -3701,6 +3755,18 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       </div>
       <div id="skl-pane-in" style="display:none">
         <div id="sk-log-in-table"></div>
+      </div>
+      <!-- ── นับสต็อกเป็นรอบ 10 วัน (entry #301) — เลือกรอบ + เลือกบ่อ · ทุกบ่อ = ใบนับของในคลัง · เลือกบ่อ = ใบตรวจการเบิกรายบ่อ ── -->
+      <div id="skl-pane-count" style="display:none">
+        <div class="skc-bar">
+          <button class="skc-arw" id="skc-prev" onclick="skcShift(-1)" title="รอบก่อนหน้า" aria-label="รอบก่อนหน้า">◀</button>
+          <select class="fi" id="skc-period" style="width:185px" onchange="skcPick()"></select>
+          <button class="skc-arw" id="skc-next" onclick="skcShift(1)" title="รอบถัดไป" aria-label="รอบถัดไป">▶</button>
+          <select class="fi" id="skc-pond" style="width:190px" onchange="skcPickPond()"></select>
+          <button class="btn" id="skc-allbtn" style="font-size:calc(12px * var(--ui-scale));padding:6px 12px;white-space:nowrap;background:var(--s1);color:var(--tx2)" onclick="skcToggleAll()">แสดงทั้งหมดที่มีของ</button>
+        </div>
+        <div class="skc-sub" id="skc-sub"></div>
+        <div id="skc-body"></div>
       </div>
       <div id="skl-pane-shared" style="display:none">
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
@@ -10221,14 +10287,19 @@ function setStockLogMode(mode){
   if(btnOut)btnOut.className='stock-mode-btn'+(mode==='out'?' on-out':'');
   if(btnIn)btnIn.className='stock-mode-btn'+(mode==='in'?' on-in':'');
   if(btnShared)btnShared.className='stock-mode-btn'+(mode==='shared'?' on-shared':'');
+  const btnCount=document.getElementById('skl-mode-count');
+  if(btnCount)btnCount.className='stock-mode-btn'+(mode==='count'?' on-count':'');
   const paneOut=document.getElementById('skl-pane-out');
   const paneIn=document.getElementById('skl-pane-in');
   const paneShared=document.getElementById('skl-pane-shared');
   if(paneOut)paneOut.style.display=mode==='out'?'':'none';
   if(paneIn)paneIn.style.display=mode==='in'?'':'none';
   if(paneShared)paneShared.style.display=mode==='shared'?'':'none';
+  const paneCount=document.getElementById('skl-pane-count');
+  if(paneCount)paneCount.style.display=mode==='count'?'':'none';
   if(mode==='out'){populateStockOutFilters();renderStockOutLog();}
   else if(mode==='shared'){renderStockShareLog();}
+  else if(mode==='count'){renderStockCount();}
   else{renderStockInLog();}
 }
 function renderStockInLog(){
@@ -10344,7 +10415,206 @@ function renderStockShareLog(){
     }).join('')
   }</tbody></table></div>`;
 }
-function renderStockLog(){if(_stockLogMode==='in')renderStockInLog();else if(_stockLogMode==='shared')renderStockShareLog();else{populateStockOutFilters();renderStockOutLog();}}// backward-compat stub
+// ══════ นับสต็อกเป็นรอบ 10 วัน (entry #301 — พี่สั่ง 23 ก.ย. 69) ══════
+//    คนในฟาร์มนับของและจดการเบิกลงกระดาษทุก 10 วัน แล้วเอามาไล่เทียบกับในแอป — ประวัติเดิมเป็นรายการย่อย (รอบเดียว 800+ บรรทัด) ไล่นับไม่ไหว
+//    รอบตายตัว 3 รอบ/เดือน: 1–10 / 11–20 / 21–สิ้นเดือน (รอบสุดท้ายยาว 10–11 วันตามเดือน — พี่ยืนยัน)
+//    2 มุมมอง: ทุกบ่อ = ใบนับของในคลัง (ยกมา → รับเข้า → เบิก/ใช้ → คงเหลือตามระบบ) · เลือกบ่อ = ใบตรวจการเบิก (รายการ × วัน เหมือนกระดาษที่จด)
+//    ⚠️ "ยกมา" คำนวณย้อนจากยอดคงเหลือปัจจุบัน ลบความเคลื่อนไหวทุกรายการที่ลงวัน *หลัง* รอบนั้น —
+//       ถ้ามีใครแก้ยอดคงเหลือตรงๆ ในหน้ารายการพัสดุ (ไม่ผ่านรับเข้า/เบิก) ยอดยกมาของรอบเก่าจะเพี้ยนเท่าที่แก้ · รอบปัจจุบันไม่กระทบ
+//    ⚠️ ช่อง "นับจริง/ต่าง" เว้นว่างไว้ให้จดลงกระดาษ (พี่สั่ง — ยังไม่เก็บยอดนับในแอป) ห้ามเอาไปผูกกับ D.* โดยไม่ถาม
+const SKC_CAT_ORDER=['feed','chemWater','chemOral','probioWater','probioOral','lime','equip','fuel','chem','seed',''];
+let _skcKey='',_skcPond='',_skcAll=false;
+const _skcOpen={};
+const skcR=v=>Math.round((parseFloat(v)||0)*100)/100;
+const skcN=v=>skcR(v).toLocaleString('en-US',{maximumFractionDigits:2});
+function skcKeyOf(d){if(!d)return'';const dd=+d.slice(8,10);return d.slice(0,7)+'-'+(dd<=10?1:dd<=20?2:3);}
+function skcRange(key){
+  const y=+key.slice(0,4),m=+key.slice(5,7),n=+key.slice(8);
+  const p2=v=>String(v).padStart(2,'0');
+  const last=new Date(y,m,0).getDate();
+  const d1=n===1?1:n===2?11:21,d2=n===1?10:n===2?20:last;
+  return{start:y+'-'+p2(m)+'-'+p2(d1),end:y+'-'+p2(m)+'-'+p2(d2),d1,d2};
+}
+function skcLabel(key){
+  const r=skcRange(key);
+  return r.d1+'–'+r.d2+' '+new Date(r.end).toLocaleDateString('th-TH',{month:'short',year:'2-digit'});
+}
+function skcNextKey(k,step){
+  let y=+k.slice(0,4),m=+k.slice(5,7),n=+k.slice(8)+step;
+  while(n>3){n-=3;m++;if(m>12){m=1;y++;}}
+  while(n<1){n+=3;m--;if(m<1){m=12;y--;}}
+  return y+'-'+String(m).padStart(2,'0')+'-'+n;
+}
+// ทุกรอบตั้งแต่รายการแรกในประวัติจนถึงรอบปัจจุบัน — ใหม่สุดอยู่บนสุด
+function skcAllKeys(){
+  const dates=(D.inventoryLog||[]).map(l=>l.date).filter(Boolean).sort();
+  const cur=skcKeyOf(today());
+  let k=skcKeyOf(dates[0]||today());
+  const keys=[];
+  while(k<=cur&&keys.length<500){keys.push(k);k=skcNextKey(k,1);}
+  if(!keys.length)keys.push(cur);
+  return keys.reverse();
+}
+function skcPopulate(){
+  const sel=document.getElementById('skc-period');if(!sel)return;
+  if(!_skcKey)_skcKey=skcKeyOf(today());
+  const keys=skcAllKeys();
+  if(keys.indexOf(_skcKey)<0)keys.unshift(_skcKey);
+  const cur=skcKeyOf(today());
+  sel.innerHTML=keys.map(k=>'<option value="'+k+'"'+(k===_skcKey?' selected':'')+'>'+skcLabel(k)+(k===cur?' (รอบปัจจุบัน)':'')+'</option>').join('');
+  const prev=document.getElementById('skc-prev'),next=document.getElementById('skc-next');
+  if(prev)prev.disabled=sel.selectedIndex>=sel.options.length-1;
+  if(next)next.disabled=sel.selectedIndex<=0;
+  const psel=document.getElementById('skc-pond');
+  if(psel){
+    // บ่อที่เคยมีรายการเบิก เรียงตามอายุกุ้งมากไปน้อย (ชุดเดียวกับตัวกรองประวัติเบิกออก)
+    const ids=[...new Set((D.inventoryLog||[]).filter(l=>l.type==='out'&&l.pondId).map(l=>l.pondId))];
+    const opts=ids.map(id=>({id,name:pondNameById(id),age:pondCurAge(pond(id))})).sort((a,b)=>b.age-a.age);
+    psel.innerHTML='<option value="">🦐 ทุกบ่อ (ใบนับของ)</option>'+opts.map(o=>'<option value="'+o.id+'"'+(o.id===_skcPond?' selected':'')+'>🦐 บ่อ '+o.name+'</option>').join('');
+    if(_skcPond&&psel.value!==_skcPond){_skcPond='';psel.value='';}
+  }
+  const ab=document.getElementById('skc-allbtn');
+  if(ab){
+    ab.style.display=_skcPond?'none':'';
+    ab.textContent=_skcAll?'เฉพาะที่เคลื่อนไหว':'แสดงทั้งหมดที่มีของ';
+    ab.style.background=_skcAll?'var(--pl)':'var(--s1)';
+    ab.style.color=_skcAll?'#7A5403':'var(--tx2)';
+  }
+}
+function skcShift(dir){   // ◀ = ย้อนรอบ (ลิสต์เรียงใหม่→เก่า จึงเดินคนละทางกับ index)
+  const sel=document.getElementById('skc-period');if(!sel)return;
+  const i=sel.selectedIndex+(dir<0?1:-1);
+  if(i<0||i>=sel.options.length)return;
+  sel.selectedIndex=i;_skcKey=sel.value;renderStockCount();
+}
+function skcPick(){_skcKey=document.getElementById('skc-period').value;renderStockCount();}
+function skcPickPond(){_skcPond=document.getElementById('skc-pond').value;renderStockCount();}
+function skcToggleAll(){_skcAll=!_skcAll;renderStockCount();}
+function skcToggleItem(id){_skcOpen[id]=!_skcOpen[id];renderStockCount();}
+// ── มุมมองทุกบ่อ: ยอดยกมา/รับเข้า/เบิก-ใช้/คงเหลือ ของทุกสินค้าในรอบ ──
+//    รายการที่ไม่ใช่ 'in' (out/sale/shared) ตัดสต็อกทั้งหมด — รวมรายการที่ระบบตัดเองจากบันทึกอาหาร (sl_fd_)
+function skcAllRows(start,end){
+  const agg={};
+  (D.inventoryItems||[]).forEach(i=>{agg[i.id]={item:i,inQ:0,outQ:0,after:0,logs:[]};});
+  (D.inventoryLog||[]).forEach(l=>{
+    const r=agg[l.itemId];if(!r||!l.date)return;
+    const q=parseFloat(l.qty)||0;
+    if(l.date>=start&&l.date<=end){if(l.type==='in')r.inQ+=q;else r.outQ+=q;r.logs.push(l);}
+    else if(l.date>end)r.after+=(l.type==='in'?q:-q);
+  });
+  return Object.values(agg).map(r=>{
+    const closing=skcR((parseFloat(r.item.qty)||0)-r.after);
+    const inQ=skcR(r.inQ),outQ=skcR(r.outQ);
+    return{item:r.item,logs:r.logs.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')),n:r.logs.length,inQ,outQ,closing,opening:skcR(closing-inQ+outQ)};
+  });
+}
+// ── มุมมองรายบ่อ: เบิกลงบ่อนั้น แยกตามวันในรอบ (สินค้าที่ถูกลบไปแล้วยังโชว์ได้ เพราะ key ตกไปใช้ชื่อ) ──
+function skcPondRows(start,end,pid){
+  const IM={};(D.inventoryItems||[]).forEach(i=>{IM[i.id]=i;});
+  const map={};
+  (D.inventoryLog||[]).forEach(l=>{
+    if(l.type!=='out'||l.pondId!==pid||!l.date||l.date<start||l.date>end)return;
+    const it=IM[l.itemId];
+    const k=l.itemId||('nm:'+(l.itemName||''));
+    const r=map[k]=map[k]||{name:l.itemName||it?.name||'-',cat:it?.category||'',unit:l.unit||it?.unit||'',days:{},n:0,auto:0};
+    const d=+l.date.slice(8,10);
+    r.days[d]=(r.days[d]||0)+(parseFloat(l.qty)||0);   // สะสมดิบก่อน ปัดทีเดียวตอนแสดง
+    r.n++;
+    if(String(l.id||'').startsWith('sl_fd_'))r.auto++;
+  });
+  // ยอด "รวมทั้งรอบ" = ผลบวกของช่องรายวัน *ที่ปัดแล้ว* — คนงานบวกเลขในแถวตามได้พอดี
+  // (ของบางตัวเบิกเป็นเศษ เช่น 1.125 ถุง ถ้าปัดคนละจังหวะยอดรวมจะไม่ตรงกับที่เห็นในแถว)
+  return Object.values(map).map(r=>{
+    let t=0;Object.keys(r.days).forEach(d=>{r.days[d]=skcR(r.days[d]);t+=r.days[d];});
+    return Object.assign(r,{total:skcR(t)});
+  });
+}
+function skcGroup(rows){   // จัดกลุ่มตามหมวด เรียงตามลำดับที่ใช้ทั้งแอป
+  const by={};rows.forEach(r=>{const c=r.cat||'';(by[c]=by[c]||[]).push(r);});
+  return SKC_CAT_ORDER.filter(c=>by[c]&&by[c].length).map(c=>[c,by[c]]);
+}
+function renderStockCount(){
+  const box=document.getElementById('skc-body');if(!box)return;
+  skcPopulate();
+  const key=_skcKey||skcKeyOf(today()),rg=skcRange(key);
+  const isCur=key===skcKeyOf(today());
+  const end=isCur&&today()<rg.end?today():rg.end;   // รอบปัจจุบันยังไม่จบ — รวมยอดถึงวันนี้
+  const sub=document.getElementById('skc-sub');
+  if(_skcPond)renderSkcPond(box,sub,rg.start,end,key);
+  else renderSkcAll(box,sub,rg.start,end,isCur);
+}
+function renderSkcAll(box,sub,start,end,isCur){
+  const rows=skcAllRows(start,end);
+  const moved=rows.filter(r=>r.n>0).length;
+  const shown=rows.filter(r=>r.n>0||(_skcAll&&(r.closing!==0||r.opening!==0)));
+  if(sub)sub.innerHTML='รอบ <b>'+skcLabel(_skcKey)+'</b>'+(isCur&&end<skcRange(_skcKey).end?' · รอบนี้ยังไม่จบ รวมยอดถึงวันนี้ ('+fD(end)+')':'')+
+    ' · <b>'+moved+'</b> รายการมีความเคลื่อนไหว จาก '+rows.filter(r=>r.closing!==0||r.opening!==0||r.n>0).length+' รายการที่มีของ<br>'+
+    '<b>ยกมา</b> = ยอดคงเหลือตอนเริ่มรอบ · <b>คงเหลือตามระบบ</b> = ยกมา + รับเข้า − เบิก/ใช้ (ยอดที่เอาไปเทียบกับของที่นับได้จริง)<span class="skc-dsk"> · ช่อง "นับจริง/ต่าง" เว้นไว้จดลงกระดาษ</span>';
+  if(!shown.length){box.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ไม่มีความเคลื่อนไหวในรอบนี้</p>';return;}
+  const groups=skcGroup(shown.map(r=>Object.assign(r,{cat:r.item.category||''})));
+  let tb='',mc='';
+  groups.forEach(([c,arr])=>{
+    arr.sort((a,b)=>(b.n>0)-(a.n>0)||String(a.item.name||'').localeCompare(String(b.item.name||''),'th'));
+    tb+='<tr class="skc-grp"><td colspan="8">'+(STOCK_CAT_LABEL[c]||'อื่นๆ')+' · '+arr.length+' รายการ</td></tr>';
+    mc+='<div class="skc-mgrp">'+(STOCK_CAT_LABEL[c]||'อื่นๆ')+' <span>· '+arr.length+' รายการ</span></div><div class="skc-mlist">';
+    arr.forEach(r=>{
+      const id=r.item.id,open=!!_skcOpen[id];
+      tb+='<tr'+(r.n?'':' class="quiet"')+'><td class="skc-nm">'+(r.item.name||'-')+
+        (r.n?'<button class="skc-lnk" onclick="skcToggleItem(\''+id+'\')">'+r.n+' ครั้ง '+(open?'▴':'▾')+'</button>':'<span class="skc-none">ไม่มีความเคลื่อนไหว</span>')+'</td>'+
+        '<td style="color:var(--tx3)">'+(r.item.unit||'')+'</td>'+
+        '<td class="num">'+skcN(r.opening)+'</td>'+
+        '<td class="num skc-in">'+(r.inQ?'+'+skcN(r.inQ):'—')+'</td>'+
+        '<td class="num skc-out">'+(r.outQ?'−'+skcN(r.outQ):'—')+'</td>'+
+        '<td class="num skc-sys">'+skcN(r.closing)+'</td>'+
+        '<td class="skc-box"></td><td class="skc-box"></td></tr>';
+      if(open)tb+='<tr class="skc-det"><td colspan="8">'+skcDetailHtml(r)+'</td></tr>';
+      mc+='<div class="skc-mit'+(r.n?'':' quiet')+'"'+(r.n?' onclick="skcToggleItem(\''+id+'\')"':'')+'>'+
+        '<div><div class="skc-mn">'+(r.item.name||'-')+'</div><div class="skc-mm">'+
+        (r.n?'<b>'+skcN(r.opening)+'</b>'+(r.inQ?'<i class="in">+'+skcN(r.inQ)+'</i>':'')+(r.outQ?'<i class="out">−'+skcN(r.outQ)+'</i>':'')+' <span style="color:var(--in)">· '+r.n+' ครั้ง '+(open?'▴':'▾')+'</span>':'ไม่มีความเคลื่อนไหว')+
+        '</div></div><div class="skc-mr"><div class="skc-mv">'+skcN(r.closing)+'</div><div class="skc-mu">'+(r.item.unit||'')+'</div></div></div>'+
+        (open?'<div class="skc-mdet">'+skcDetailHtml(r)+'</div>':'');
+    });
+    mc+='</div>';
+  });
+  box.innerHTML='<div class="skc-tblwrap"><table class="tbl skc-tbl"><thead><tr><th>รายการ</th><th>หน่วย</th><th class="num">ยกมา</th><th class="num">รับเข้า</th><th class="num">เบิก / ใช้</th><th class="num skc-sys">คงเหลือ (ระบบ)</th><th class="num skc-box">นับจริง</th><th class="num skc-box">ต่าง</th></tr></thead><tbody>'+tb+'</tbody></table></div>'+
+    '<div class="skc-cards">'+mc+'</div>';
+}
+function skcDetailHtml(r){
+  return '<div class="skc-det-in">'+r.logs.map(l=>{
+    const where=l.type==='in'?'รับเข้าสต็อกกลาง':l.type==='shared'?'แชร์ทุกบ่อ':l.type==='sale'?('ขาย '+(l.custName||'ลูกค้านอก')):
+      (l.pondId?'เบิกลงบ่อ '+pondNameById(l.pondId):'เบิกออก')+(String(l.id||'').startsWith('sl_fd_')?' <span class="skc-auto">อัตโนมัติ</span>':'');
+    return '<div class="r"><span>'+fD(l.date)+' · '+where+'</span><b>'+(l.type==='in'?'+':'−')+skcN(l.qty)+' '+(l.unit||'')+'</b></div>';
+  }).join('')+'</div>';
+}
+function renderSkcPond(box,sub,start,end,key){
+  const rows=skcPondRows(start,end,_skcPond);
+  const rg=skcRange(key);
+  const days=[];for(let d=rg.d1;d<=+end.slice(8,10)&&d<=rg.d2;d++)days.push(d);
+  const hits=rows.reduce((s,r)=>s+r.n,0);
+  if(sub)sub.innerHTML='เบิกลงบ่อ <b>'+pondNameById(_skcPond)+'</b> รอบ <b>'+skcLabel(key)+'</b> · <b>'+rows.length+'</b> รายการ · '+hits+' ครั้ง<br>'+
+    'ช่องว่าง (·) = วันนั้นไม่มีการเบิกตัวนี้ · แถวที่ติดป้าย <b>อัตโนมัติ</b> คือระบบตัดสต็อกให้เองจากหน้าบันทึกอาหาร คนงานไม่ได้กดเบิก จึงไม่มีในกระดาษ';
+  if(!rows.length){box.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">บ่อนี้ไม่มีรายการเบิกในรอบนี้</p>';return;}
+  let tb='',mc='';
+  skcGroup(rows).forEach(([c,arr])=>{
+    arr.sort((a,b)=>b.total-a.total);
+    tb+='<tr class="skc-grp"><td colspan="'+(3+days.length)+'">'+(STOCK_CAT_LABEL[c]||'อื่นๆ')+' · '+arr.length+' รายการ</td></tr>';
+    mc+='<div class="skc-mgrp">'+(STOCK_CAT_LABEL[c]||'อื่นๆ')+' <span>· '+arr.length+' รายการ</span></div><div class="skc-mlist">';
+    arr.forEach(r=>{
+      const auto=r.auto?'<span class="skc-auto" title="ระบบตัดสต็อกให้เองจากหน้าบันทึกอาหาร">อัตโนมัติ</span>':'';
+      tb+='<tr><td class="skc-nm">'+r.name+auto+'</td><td style="color:var(--tx3)">'+(r.unit||'')+'</td>'+
+        '<td class="num skc-sys">'+skcN(r.total)+'</td>'+
+        days.map(d=>'<td class="skc-day'+(r.days[d]?'':' e')+'">'+(r.days[d]?skcN(r.days[d]):'·')+'</td>').join('')+'</tr>';
+      mc+='<div class="skc-mit" style="cursor:default"><div><div class="skc-mn">'+r.name+auto+'</div>'+
+        '<div class="skc-chips">'+days.filter(d=>r.days[d]).map(d=>'<span class="skc-chip"><b>'+d+'</b> '+skcN(r.days[d])+'</span>').join('')+'</div></div>'+
+        '<div class="skc-mr"><div class="skc-mv">'+skcN(r.total)+'</div><div class="skc-mu">'+(r.unit||'')+'</div></div></div>';
+    });
+    mc+='</div>';
+  });
+  box.innerHTML='<div class="skc-tblwrap"><table class="tbl skc-tbl"><thead><tr><th>รายการ</th><th>หน่วย</th><th class="num skc-sys">รวมทั้งรอบ</th>'+
+    days.map(d=>'<th class="skc-day">'+d+'</th>').join('')+'</tr></thead><tbody>'+tb+'</tbody></table></div>'+
+    '<div class="skc-cards">'+mc+'</div>';
+}
+function renderStockLog(){if(_stockLogMode==='in')renderStockInLog();else if(_stockLogMode==='shared')renderStockShareLog();else if(_stockLogMode==='count')renderStockCount();else{populateStockOutFilters();renderStockOutLog();}}// backward-compat stub
 
 function deleteStockLog(id){
   const log=(D.inventoryLog||[]).find(l=>l.id===id);if(!log)return;
