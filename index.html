@@ -16892,6 +16892,7 @@ function exportChPdf(pid,idx){
 // ===== CLOSE CROP MODAL =====
 function openCropModal(pid){
   _cmAutoShare=null;   // ลืมค่าอัตโนมัติชุดก่อน กันเข้าใจว่าพี่แก้มือ
+  _cmPhOpen=false;     // แจกแจงการจับรายครั้ง เริ่มที่ย่อไว้ (entry #302)
   // ── กัน staff 2 ชั้น — ปุ่มซ่อนไว้แล้ว แต่เรียกตรงจาก console ยังเข้าได้ (ฟอร์มนี้มีตัวเลขต้นทุน/กำไร) ──
   if(APP_ROLE!=='admin')return;
   const p=pond(pid);if(!p)return;
@@ -17021,7 +17022,11 @@ function cmRenderStep1Bar(p){
       +cell('ไซส์จับ',gv('cm-size')?gv('cm-size')+' ตัว/กก.':'—')
       +cell('รายได้ทั้งรอบ',rev?'฿'+Math.round(rev).toLocaleString():'—')
     +'</div>'
-    +'<div style="font-size:var(--fs10);color:var(--tx3);margin-top:7px">เหลือขั้นที่ 2 — กรอกต้นทุนด้านล่างแล้วกดปิดรอบ'+(pt.kg>0?' · ผลผลิตรวมนับพาเชียล '+Math.round(pt.kg).toLocaleString()+' กก. เข้าไปแล้ว':'')+'</div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:7px">'
+      +'<span style="font-size:var(--fs10);color:var(--tx3)">เหลือขั้นที่ 2 — กรอกต้นทุนด้านล่างแล้วกดปิดรอบ'+(pt.kg>0?' · ผลผลิตรวมนับพาเชียล '+Math.round(pt.kg).toLocaleString()+' กก. เข้าไปแล้ว':'')+'</span>'
+      +(totalKg>0?'<button type="button" class="btn btn-s" id="cm-ph-btn" style="white-space:nowrap" onclick="cmTogglePh()">'+(_cmPhOpen?'▲ ย่อรายครั้ง':'▾ ดูการจับรายครั้ง')+'</button>':'')
+    +'</div>'
+    +'<div id="cm-ph-detail"></div>'
   +'</div>';
   cmSetStep1Collapsed(true);
 }
@@ -17153,6 +17158,36 @@ function cmRenderBrk(id,rows,total,footNote){
     +(footNote?`<div style="color:${warn?'#7c4a06':'var(--tx3)'};margin-top:${rows.length?'5px':'0'}">${footNote}</div>`:'')
   +`</div>`;
 }
+// ══ แจกแจงการจับรายครั้งในฟอร์มปิดรอบ (entry #302 — พี่สั่ง 23 ก.ย. 69) ══
+//    เดิมกล่องนี้บอกแค่ยอดรวมพาเชียล ตอนปิดบ่อจึงไล่ดูไม่ได้ว่าแต่ละครั้งจับไปเท่าไหร่ ขายแพไหน ราคาเท่าไหร่
+//    ⚠️ ตัวเลขต้องมาจาก harvestRowKg/harvestRowBaht ชุดเดียวกับ partialTotals() เท่านั้น — ยอดในตารางจึงบวกได้เท่ายอดรวมเสมอ
+//    แถว "ปิดบ่อ" คิดสดจากช่องน้ำหนัก × ราคา ในฟอร์ม (ยังไม่บันทึก) จึงขยับตามที่พิมพ์ทันที
+let _cmPhOpen=false;
+function cmTogglePh(){_cmPhOpen=!_cmPhOpen;calcCropEcon();}
+function cmPhDetailHtml(p,close){
+  const rows=((p&&p.partialHarvests)||[]).slice()
+    .sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')))
+    .filter(r=>harvestRowKg(r)>0)
+    .map((r,i)=>({
+      lbl:'พาเชียล '+(i+1),date:r.date,buyer:(r.buyer||'').trim(),size:parseFloat(r.size)||0,
+      kg:harvestRowKg(r),baht:harvestRowBaht(r),gr:((r.grades||[]).length>0)
+    }));
+  if(close&&close.closeKg>0)rows.push({lbl:'ปิดบ่อ',date:(document.getElementById('cm-close-date')||{}).value||'',
+    buyer:((document.getElementById('cm-buyer')||{}).value||'').trim(),size:close.size||0,
+    kg:close.closeKg,baht:close.closeBaht,gr:(_cmGrades||[]).length>0,isClose:true});
+  const line=r=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px dashed rgba(0,0,0,.09)${r.isClose?';font-weight:700':''}">
+      <span style="min-width:0">${r.lbl}${r.date?' · '+fD(r.date):''}${r.buyer?' · '+mpEsc(r.buyer):''}${r.size?' · ไซส์ '+r.size:''}${r.gr?' <span style="color:var(--tx3)">(รวมเกรดพิเศษ)</span>':''}</span>
+      <span style="white-space:nowrap;font-variant-numeric:tabular-nums">${Math.round(r.kg).toLocaleString()} กก.${r.baht>0?' · ฿'+Math.round(r.baht).toLocaleString():''}</span>
+    </div>`;
+  return `<div style="background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:8px 11px;margin-top:7px;font-size:calc(11.5px * var(--ui-scale));line-height:1.6">
+    ${rows.map(line).join('')}
+    <div style="display:flex;justify-content:space-between;gap:10px;padding-top:6px;margin-top:2px;font-weight:800;color:var(--pd)">
+      <span>รวม ${rows.length} ครั้ง</span>
+      <span style="white-space:nowrap;font-variant-numeric:tabular-nums">${Math.round(close.totalKg).toLocaleString()} กก. · ฿${Math.round(close.totalBaht).toLocaleString()}</span>
+    </div>
+    <div style="color:var(--tx3);font-weight:400;margin-top:4px">ยอดแถว "ปิดบ่อ" คิดสดจากช่องน้ำหนัก × ราคาด้านบน — ถ้ารายได้จริงตามบิลแพต่างจากนี้ ให้ยึดยอดที่กรอกในช่องรายได้</div>
+  </div>`;
+}
 function calcCropEcon(){
   const pid=document.getElementById('cm-pond-id').value;
   const p=pond(pid);if(!p)return;
@@ -17206,9 +17241,17 @@ function calcCropEcon(){
         <span style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">📦 พาเชียลรอบนี้ <b>${n} ครั้ง</b> · ${pt.kg.toLocaleString()} กก.${pt.baht>0?` · ${Math.round(pt.baht).toLocaleString()} บ.`:''}</span>
         <span style="font-size:calc(13px * var(--ui-scale));font-weight:700;color:var(--pd)">ผลผลิตรวมทั้งรอบ ${totalKg.toLocaleString()} กก.</span>
       </div>
-      <div style="font-size:calc(10.5px * var(--ui-scale));color:var(--tx3);margin-top:4px">ดึงจากหน้า "🦐 จับกุ้ง" อัตโนมัติ — FCR / อัตรารอด / รายได้ ด้านล่างคิดจากยอดรวมนี้แล้ว</div>`;
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:5px">
+        <span style="font-size:calc(10.5px * var(--ui-scale));color:var(--tx3)">ดึงจากหน้า "🦐 จับกุ้ง" อัตโนมัติ — FCR / อัตรารอด / รายได้ ด้านล่างคิดจากยอดรวมนี้แล้ว</span>
+        <button type="button" class="btn btn-s" style="white-space:nowrap" onclick="cmTogglePh()">${_cmPhOpen?'▲ ย่อรายครั้ง':'▾ ดูรายครั้ง'}</button>
+      </div>`
+      +(_cmPhOpen?cmPhDetailHtml(p,{closeKg,closeBaht:w*price+cmGrBaht,size:sz,totalKg,totalBaht:calcAll}):'');
     }else phBox.style.display='none';
   }
+  // ── แถบเขียว "ขั้นที่ 1" ใช้ข้อมูลชุดเดียวกัน — อัปเดตเฉพาะกล่องรายละเอียด ไม่วาดแถบใหม่ ──
+  {const btn=document.getElementById('cm-ph-btn'),det=document.getElementById('cm-ph-detail');
+   if(btn)btn.textContent=_cmPhOpen?'▲ ย่อรายครั้ง':'▾ ดูการจับรายครั้ง';
+   if(det)det.innerHTML=(_cmPhOpen&&totalKg>0)?cmPhDetailHtml(p,{closeKg,closeBaht:w*price+cmGrBaht,size:sz,totalKg,totalBaht:calcAll}):'';}
   // ── ตัวเลขแนะนำ (เงา) สำหรับ "% คนเลี้ยง" กับ "ค่าจับกุ้ง" — โชว์เป็น placeholder เฉยๆ ไม่เติมค่าให้อัตโนมัติ ต้องพิมพ์ยืนยันเอง (อาจปัดเศษ) ──
   // ── ส่วนแบ่งคนเลี้ยง: คิดแยกทีละรอบจับ (entry #251) — เดิมใช้ อัตราไซส์ปิดบ่อ × น้ำหนักปิดบ่อ ตกพาเชียลทั้งหมด ──
   const careEl=document.getElementById('cm-pct-caretaker');
