@@ -3741,10 +3741,10 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       </div>
       <div id="skl-pane-out">
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-          <select class="fi" id="skl-out-pond" style="width:170px" onchange="renderStockOutLog()">
+          <select class="fi" id="skl-out-pond" style="width:170px" onchange="renderStockOutLog(true)">
             <option value="">ทุกบ่อ</option>
           </select>
-          <select class="fi" id="skl-out-cat" style="width:150px" onchange="renderStockOutLog()">
+          <select class="fi" id="skl-out-cat" style="width:150px" onchange="renderStockOutLog(true)">
             <option value="">ทุกหมวด</option>
             <option value="feed">🍚 อาหารกุ้ง</option>
             <option value="chemOral">💊 ยากิน</option>
@@ -3754,7 +3754,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
             <option value="lime">🪨 ปูน</option>
             <option value="equip">🔧 อุปกรณ์</option>
           </select>
-          <input type="month" class="fi" id="skl-out-month" style="width:150px" onchange="renderStockOutLog()">
+          <input type="month" class="fi" id="skl-out-month" style="width:150px" onchange="renderStockOutLog(true)">
           <button class="btn" style="font-size:calc(12px * var(--ui-scale));padding:6px 12px;white-space:nowrap;background:var(--s1);color:var(--tx2)" onclick="clearStockOutFilter()">ล้างตัวกรอง</button>
         </div>
         <div id="sk-log-out-table"></div>
@@ -10303,7 +10303,7 @@ function setStockLogMode(mode){
   if(paneShared)paneShared.style.display=mode==='shared'?'':'none';
   const paneCount=document.getElementById('skl-pane-count');
   if(paneCount)paneCount.style.display=mode==='count'?'':'none';
-  if(mode==='out'){populateStockOutFilters();renderStockOutLog();}
+  if(mode==='out'){populateStockOutFilters();renderStockOutLog(true);}
   else if(mode==='shared'){renderStockShareLog();}
   else if(mode==='count'){renderStockCount();}
   else{renderStockInLog();}
@@ -10341,28 +10341,40 @@ function clearStockOutFilter(){
   const p=document.getElementById('skl-out-pond');if(p)p.value='';
   const c=document.getElementById('skl-out-cat');if(c)c.value='';
   const m=document.getElementById('skl-out-month');if(m)m.value='';
-  renderStockOutLog();
+  renderStockOutLog(true);
 }
-function renderStockOutLog(){
+// ══ ประวัติเบิกออก: จำกัดจำนวนแถวที่วาด (entry #306 — พี่แจ้งว่าแท็บประวัติโหลดนาน) ══
+//    ข้อมูลจริงมีรายการเบิก 4,400+ แถว วาดทีเดียวหมด = HTML 2.3 MB ใช้เวลา ~340ms บนคอม (มือถือหลายวินาที)
+//    วาดเฉพาะ 300 แถวล่าสุดก่อน แล้วมีปุ่ม "แสดงทั้งหมด" ไว้ให้กดเมื่อต้องการ — ตัวกรอง (บ่อ/หมวด/เดือน) ยังกรองจากข้อมูลทั้งหมดเหมือนเดิม
+//    ⚠️ ห้ามตัดข้อมูลทิ้งจริง — แค่ไม่วาด · ทุกครั้งที่เปลี่ยนตัวกรองให้กลับไปเริ่มที่ 300 แถวใหม่
+const SK_OUT_PAGE=300;
+let _skOutAll=false;
+function skOutShowAll(){_skOutAll=true;renderStockOutLog();}
+function renderStockOutLog(resetLimit){
   const tbl=document.getElementById('sk-log-out-table');if(!tbl)return;
+  if(resetLimit)_skOutAll=false;
   const pid=document.getElementById('skl-out-pond')?.value||'';
   const cat=document.getElementById('skl-out-cat')?.value||'';
   const month=document.getElementById('skl-out-month')?.value||'';
   const itemMap={};(D.inventoryItems||[]).forEach(i=>itemMap[i.id]=i);
+  // ชื่อบ่อทำเป็นตารางค้นครั้งเดียว — เดิมเรียก pondNameById() ทุกแถว (find ใน 27 บ่อ × 4,400 แถว)
+  const pondMap={};(D.ponds||[]).forEach(p=>{pondMap[p.id]=p.name;});
   let logs=(D.inventoryLog||[]).filter(l=>l.type==='out'&&l.pondId);
   if(pid)logs=logs.filter(l=>l.pondId===pid);
   if(cat)logs=logs.filter(l=>{const it=itemMap[l.itemId];return it&&it.category===cat;});
   if(month)logs=logs.filter(l=>l.date&&l.date.startsWith(month));
   logs=logs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ไม่มีประวัติเบิกออกไปบ่อ'+(pid||cat||month?'ตามตัวกรองนี้':'')+'</p>';return;}
+  const total=logs.length;
+  const shown=_skOutAll?logs:logs.slice(0,SK_OUT_PAGE);
   tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>บ่อ</th><th>หมวด</th><th>รายการ</th><th style="text-align:right">จำนวน</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
-    logs.map(l=>{
+    shown.map(l=>{
       const it=itemMap[l.itemId];
       const catLbl=STOCK_CAT_LABEL[it?.category]||'-';
       const catCss=STOCK_CAT_CSS[it?.category]||'';
       return `<tr>
         <td>${fD(l.date)}</td>
-        <td><span class="badge b-info">${pondNameById(l.pondId)}</span></td>
+        <td><span class="badge b-info">${pondMap[l.pondId]||l.pondId||'-'}</span></td>
         <td><span class="badge ${catCss}">${catLbl}</span></td>
         <td>${l.itemName||'-'}</td>
         <td style="text-align:right">${l.qty} ${l.unit||''}</td>
@@ -10371,7 +10383,11 @@ function renderStockOutLog(){
         <td><button class="btn-sm btn-del" onclick="deleteStockLog('${l.id}')">🗑️</button></td>
       </tr>`;
     }).join('')
-  }</tbody></table></div>`;
+  }</tbody></table></div>`
+  +(shown.length<total?`<div style="text-align:center;padding:12px 8px 4px">
+      <div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:7px">แสดง ${shown.length.toLocaleString()} จาก ${total.toLocaleString()} รายการ (ล่าสุดก่อน) — กรองด้วยบ่อ/หมวด/เดือนด้านบนจะเร็วกว่า</div>
+      <button class="btn" onclick="skOutShowAll()">แสดงทั้งหมด ${total.toLocaleString()} รายการ</button></div>`
+    :(total>SK_OUT_PAGE?`<div style="text-align:center;font-size:var(--fs11);color:var(--tx3);padding:10px 8px 2px">แสดงครบ ${total.toLocaleString()} รายการ</div>`:''));
 }
 // ── ประวัติแชร์ทุกบ่อ (อุปกรณ์นอก): กรองด้วยหมวด/เดือน + คำนวณส่วนแบ่งต้นทุนต่อบ่อ ณ วันที่บันทึกรายการนั้น (สูตรเดียวกับ getSharedCostForPond) ──
 function clearStockShareFilter(){
