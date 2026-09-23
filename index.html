@@ -1487,7 +1487,13 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .hdr-user{display:flex;align-items:center;gap:8px;font-size:calc(12px * var(--ui-scale));color:var(--tx2)}
 .hdr-user .uname{max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hdr-role-badge{font-size:var(--fs10);padding:2px 6px;border-radius:4px;font-weight:500}
-.role-admin{background:var(--pb);color:var(--p)}.role-staff{background:var(--sf2);color:var(--tx3)}
+/* ⚠️ ต้องผูกกับ .hdr-role-badge เสมอ — class role-admin ถูกเอาไปติดที่ <body> ด้วย (คุมเมนู admin-only)
+   ถ้าเขียนลอยๆ แบบเดิม body จะรับ color:var(--p) ไปทั้งหน้า → ข้อความที่ไม่ได้ตั้งสีเองกลายเป็นสีทองเฉพาะ admin
+   (ชื่อบ่อหน้าภาพรวมมือถือ ฯลฯ) และ background:var(--pb) ซึ่งไม่มีตัวแปรนี้อยู่จริง ทำให้พื้นหลังหน้าเว็บโปร่งใส
+   เคยแก้ปลายเหตุมาแล้วที่ #sec-price — entry #305 */
+/* --pb ไม่เคยมีอยู่จริงในแอป ป้ายนี้จึงพื้นหลังโปร่งใสมาตลอด — เขียนตามที่เห็นจริง ไม่เปลี่ยนหน้าตา
+   (ถ้าอยากได้พื้นหลังทองอ่อนแบบเม็ดยา เปลี่ยนเป็น var(--pl) ได้) */
+.hdr-role-badge.role-admin{background:transparent;color:var(--p)}.hdr-role-badge.role-staff{background:var(--sf2);color:var(--tx3)}
 /* ── Mobile UX patch ── */
 /* 1. แถบเมนูบน: ปัดนิ้วซ้าย-ขวาได้บน iOS */
 .tabs{-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
