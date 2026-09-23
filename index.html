@@ -16690,9 +16690,81 @@ function chCropInfoHtml(p,c){
     +'display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px">'
     +cell('ที่มาลูกกุ้ง',hatch?mpEsc(hatch):'-',[plType?mpEsc(plType):'',plW!=null?plW+' กรัม/ตัว':''].filter(Boolean).join(' · '))
     +cell('จำนวนที่ปล่อย',rel?rel.toLocaleString()+' ตัว':'-',rel?('ซื้อ '+order.toLocaleString()+(bonus?' + แถม '+bonus.toLocaleString():'')):'')
-    +cell('ความหนาแน่น',perRai!=null?perRai.toLocaleString()+' ตัว/ไร่':'-',rai?'บ่อ '+rai+' ไร่':'ยังไม่ได้ใส่ขนาดบ่อ')
+    +cell('ความหนาแน่น',perRai!=null?perRai.toLocaleString()+' ตัว/ไร่':'-',rai?('บ่อ '+rai+' ไร่ · '+Math.round(rel/(rai*1600)).toLocaleString()+' ตัว/ตร.ม.'):'ยังไม่ได้ใส่ขนาดบ่อ')
     +cell('ผลผลิต/ไร่',(()=>{const w=cropTotalKg(c);return(w&&rai)?Math.round(w/rai).toLocaleString()+' กก./ไร่':'-';})(),'')
   +'</div>';
+}
+// ══ ไทม์ไลน์เหตุการณ์ของรอบ (entry #304 ข้อ 5) ══
+//    รวมเหตุการณ์ "ที่ตัดสินใจอะไรบางอย่าง" จากข้อมูลที่ archive ไว้ — ลงกุ้ง · สุ่ม · วันแรกที่กินอาหารถึงแต่ละระดับ · ผลแล็บผิดปกติ · ลงยา/สารเคมี · จับกุ้ง
+//    ⚠️ กุ้งตายไม่เอาเข้าไทม์ไลน์ (พี่สั่ง 23 ก.ย. 69) — ดูครบได้ที่ปุ่มข้อมูลดิบ ☠️
+//    ⚠️ ผลแล็บใช้เกณฑ์ classifyOv() ชุดเดียวกับหน้าแล็บ/ภาพรวม ห้ามตั้งเกณฑ์ใหม่ที่นี่ (entry #260)
+//    ⚠️ ค่าน้ำรายวัน/จัดการน้ำไม่เอาเข้าไทม์ไลน์ — มีปุ่มข้อมูลดิบอยู่แล้ว และจะท่วมจนอ่านไม่ออก
+const CH_LAB_KEYS=[['tcbsGreen','เชื้อเขียวในน้ำ'],['tcbsYellow','เชื้อเหลืองในน้ำ'],['hepatoGreen','เชื้อเขียวในตับ'],['hepatoYellow','เชื้อเหลืองในตับ'],['tvc','TVC น้ำ'],['tvcHepato','TVC ตับ'],['ehp','EHP'],['gutInflam','ลำไส้อักเสบ'],['lipidDroplet','ไขมันในตับ']];
+// ระดับการกินอาหารที่ฟาร์มใช้จำ (กก./แสนตัว) — ไทม์ไลน์บอก "วันแรกที่ถึงระดับนั้น" ของแต่ละขั้น
+const CH_FEED_STEPS=[30,40,50,60,70,80,90,100];
+function chTimelineHtml(p,c){
+  const ev=[];
+  const age=d=>docAge(c.startDate,d);
+  if(c.startDate)ev.push({d:c.startDate,ic:'🐣',t:'ลงลูกกุ้ง '+((parseFloat(c.stock)||0)+(parseFloat(c.stockBonus)||0)).toLocaleString()+' ตัว'+(c.hatchery?' · '+mpEsc(c.hatchery):''),lv:'in'});
+  (c.samples||[]).forEach(r=>{if(!r||!r.date)return;
+    const abw=parseFloat(r.abw)||0;
+    ev.push({d:r.date,ic:'📏',t:'สุ่มกุ้ง'+(abw?' ABW '+abw+' ก. (ไซส์ '+Math.round(1000/abw)+')':'')+(r.survivalRate?' · รอด '+r.survivalRate+'%':''),lv:''});
+  });
+  (c.labResults||[]).forEach(r=>{if(!r||!r.date)return;
+    const flags=[];let worst='ok';
+    CH_LAB_KEYS.forEach(([k,lbl])=>{
+      const v=r[k];if(v==null||v==='')return;
+      const cl=classifyOv(k,parseFloat(v));
+      if(cl!=='ok'){flags.push(lbl+' '+(parseFloat(v)>=1e5?parseFloat(v).toExponential(1):parseFloat(v).toLocaleString()));worst=worstOv(worst,cl);}
+    });
+    if(r.hepato&&classifyOv('hepato',r.hepato)!=='ok'){flags.push('ตับ '+((typeof HEPATO_LBL!=='undefined'&&HEPATO_LBL[r.hepato])||r.hepato));worst=worstOv(worst,classifyOv('hepato',r.hepato));}
+    if(!flags.length)return;
+    ev.push({d:r.date,ic:'🔬',t:'ผลแล็บผิดปกติ — '+flags.join(' · '),lv:worst==='danger'?'d':'w'});
+  });
+  (c.chemLog||[]).forEach(r=>{if(!r||!r.date)return;
+    ev.push({d:r.date,ic:'🧪',t:'ลงสารเคมี/ยา '+(r.product||getCatLabel(r.category))+(r.amount?' '+r.amount+' '+(r.unit||''):'')+(r.reason?' · '+r.reason:''),lv:''});
+  });
+  // ── วันแรกที่การกินอาหารถึงแต่ละระดับ (กก./แสนตัว) ──
+  //    ⚠️ ฐาน "แสนตัว" ใช้ pondFeedBaseOnDate() ตัวเดียวกับหน้าบ่อ/กราฟ = ยอดปล่อย − ตัวที่พาเชียลไปแล้ว ณ วันนั้น
+  //       (ห้ามเอาอัตรารอดมาหาร — เป็นค่าประเมิน ตัวเลขจะขยับทุกครั้งที่สุ่ม เกณฑ์ที่ฟาร์มจำไว้จะใช้ไม่ได้)
+  //    ⚠️ เอาเฉพาะ "วันแรก" ที่ถึงระดับนั้น — อาหารขึ้นๆ ลงๆ ได้ ถ้าเอาทุกวันที่ผ่านเกณฑ์จะกลายเป็นรายการซ้ำเต็มไทม์ไลน์
+  {
+    const hit={};
+    (c.feedLog||[]).filter(r=>r&&r.date&&(parseFloat(r.totalFeed)||0)>0)
+      .sort((a,b)=>String(a.date).localeCompare(String(b.date)))
+      .forEach(r=>{
+        const base=pondFeedBaseOnDate(c,r.date);
+        if(!base||base<=0)return;
+        const per=(parseFloat(r.totalFeed)||0)/(base/100000);
+        CH_FEED_STEPS.forEach(st=>{
+          if(hit[st]||per<st)return;
+          hit[st]=true;
+          // ⚠️ วันที่พาเชียลไปแล้ว ฐานจะเล็กลง ตัวเลข กก./แสน จึงกระโดดขึ้นได้ทั้งที่ให้อาหารน้อยลง — ต้องบอกฐานกำกับ ไม่งั้นอ่านผิด
+          const cut=base<pRelease(c);
+          ev.push({d:r.date,ic:'🍽️',t:'กินอาหารถึง '+st+' กก./แสน — ให้จริง '+Math.round(parseFloat(r.totalFeed)).toLocaleString()+' กก. ('+per.toFixed(1)+' กก./แสน)'
+            +(cut?' · ฐาน '+Math.round(base).toLocaleString()+' ตัว (หักพาเชียลแล้ว)':''),lv:'in'});
+        });
+      });
+  }
+  (c.partialHarvests||[]).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))).forEach((r,i)=>{
+    const kg=harvestRowKg(r);if(!(kg>0))return;
+    ev.push({d:r.date,ic:'📦',t:'พาเชียล '+(i+1)+' — '+Math.round(kg).toLocaleString()+' กก.'+(r.size?' ไซส์ '+r.size:'')+(r.buyer?' · '+mpEsc(r.buyer):''),lv:'in'});
+  });
+  const hr=cropHarvestResult(c)||{};
+  if(c.closeDate)ev.push({d:c.closeDate,ic:'🏁',t:'จับปิดบ่อ '+(hr.totalWeight?Math.round((parseFloat(hr.totalWeight)||0)+gradeKg(hr)).toLocaleString()+' กก.':'')+(hr.size?' ไซส์ '+hr.size:'')+(hr.buyer?' · '+mpEsc(hr.buyer):''),lv:'ok'});
+  if(!ev.length)return'';
+  ev.sort((a,b)=>String(a.d).localeCompare(String(b.d)));
+  const col=lv=>lv==='d'?'var(--d)':lv==='w'?'var(--w)':lv==='ok'?'var(--ok)':lv==='in'?'var(--in)':'var(--tx2)';
+  return'<div style="background:var(--sf2);border-radius:var(--r);padding:12px;margin-bottom:16px">'
+    +'<div style="font-weight:700;font-size:calc(13px * var(--ui-scale));margin-bottom:2px;color:var(--p)">🗓️ ไทม์ไลน์รอบนี้ <span style="font-weight:400;color:var(--tx3);font-size:var(--fs10)">'+ev.length+' เหตุการณ์</span></div>'
+    +'<div style="font-size:var(--fs10);color:var(--tx3);margin-bottom:7px">ลงกุ้ง · สุ่ม · วันแรกที่กินอาหารถึงแต่ละระดับ (กก./แสนตัว) · ผลแล็บที่ผิดเกณฑ์ · ลงยา/สารเคมี · จับกุ้ง (ค่าน้ำรายวัน/กุ้งตาย ดูที่ปุ่มข้อมูลดิบด้านล่าง)</div>'
+    +'<div style="max-height:360px;overflow-y:auto;-webkit-overflow-scrolling:touch">'
+    +ev.map(e=>'<div style="display:flex;gap:9px;align-items:flex-start;padding:5px 2px;border-bottom:1px dashed var(--bd);font-size:calc(12px * var(--ui-scale))">'
+      +'<span style="flex:none;width:78px;color:var(--tx3);white-space:nowrap">'+fD(e.d)+'</span>'
+      +'<span style="flex:none;width:44px;color:var(--tx3);white-space:nowrap;text-align:right">'+(age(e.d)>0?'วัน '+age(e.d):'')+'</span>'
+      +'<span style="flex:none">'+e.ic+'</span>'
+      +'<span style="color:'+col(e.lv)+(e.lv==='d'||e.lv==='ok'?';font-weight:700':'')+'">'+e.t+'</span></div>').join('')
+    +'</div></div>';
 }
 // ══ ต้นทุนแยกหมวด + กำไร ของรอบที่ปิดแล้ว (entry #303 ข้อ 1) ══
 //    ⚠️ ตัวเลขมาจาก harvestResult ที่บันทึกไว้ตอนปิดรอบเท่านั้น (getCloseSummary) — ห้ามคำนวณใหม่จาก inventoryLog มาทับ
@@ -16881,6 +16953,7 @@ function renderClosedDetail(){
     <div style="background:var(--sf2);border-radius:var(--r);padding:12px;margin-bottom:16px">${chHarvestRowsHtml(s,hr,isAdminCh)}</div>
     ${chBenchHtml(p,c,s)}
     ${isAdminCh?chCostBlockHtml(p,s):''}
+    ${chTimelineHtml(p,c)}
     <div style="background:var(--wb);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:calc(12.5px * var(--ui-scale));color:var(--w)">
       📝 สาเหตุปิดบ่อ/หมายเหตุ: ${esc(c.notes)||'-'}
     </div>
