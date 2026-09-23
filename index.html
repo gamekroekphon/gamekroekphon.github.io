@@ -17020,6 +17020,9 @@ function cmRenderStep1Bar(p){
     +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px">'
       +cell('ผลผลิตรวมทั้งรอบ',totalKg?Math.round(totalKg).toLocaleString()+' กก.':'—')
       +cell('ไซส์จับ',gv('cm-size')?gv('cm-size')+' ตัว/กก.':'—')
+      +cell('ราคาเฉลี่ยทั้งรอบ',(rev&&totalKg)?'฿'+Math.round(rev/totalKg).toLocaleString()+'/กก.'
+          +(gv('cm-price')?'<span style="font-size:var(--fs10);color:var(--tx3);font-weight:400"> · ปิดบ่อ ฿'+gv('cm-price').toLocaleString()+'</span>':'')
+        :(gv('cm-price')?'฿'+gv('cm-price').toLocaleString()+'/กก.':'—'))
       +cell('รายได้ทั้งรอบ',rev?'฿'+Math.round(rev).toLocaleString():'—')
     +'</div>'
     +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:7px">'
@@ -17170,20 +17173,28 @@ function cmPhDetailHtml(p,close){
     .filter(r=>harvestRowKg(r)>0)
     .map((r,i)=>({
       lbl:'พาเชียล '+(i+1),date:r.date,buyer:(r.buyer||'').trim(),size:parseFloat(r.size)||0,
-      kg:harvestRowKg(r),baht:harvestRowBaht(r),gr:((r.grades||[]).length>0)
+      kg:harvestRowKg(r),baht:harvestRowBaht(r),gr:((r.grades||[]).length>0),price:parseFloat(r.price)||0
     }));
   if(close&&close.closeKg>0)rows.push({lbl:'ปิดบ่อ',date:(document.getElementById('cm-close-date')||{}).value||'',
     buyer:((document.getElementById('cm-buyer')||{}).value||'').trim(),size:close.size||0,
-    kg:close.closeKg,baht:close.closeBaht,gr:(_cmGrades||[]).length>0,isClose:true});
-  const line=r=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px dashed rgba(0,0,0,.09)${r.isClose?';font-weight:700':''}">
+    kg:close.closeKg,baht:close.closeBaht,gr:(_cmGrades||[]).length>0,isClose:true,
+    price:parseFloat((document.getElementById('cm-price')||{}).value)||0});
+  const perKg=r=>{
+    if(r.price>0)return{v:r.price,approx:false};
+    return (r.kg>0&&r.baht>0)?{v:r.baht/r.kg,approx:true}:null;
+  };
+  const line=r=>{
+    const pk=perKg(r);
+    return `<div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px dashed rgba(0,0,0,.09)${r.isClose?';font-weight:700':''}">
       <span style="min-width:0">${r.lbl}${r.date?' · '+fD(r.date):''}${r.buyer?' · '+mpEsc(r.buyer):''}${r.size?' · ไซส์ '+r.size:''}${r.gr?' <span style="color:var(--tx3)">(รวมเกรดพิเศษ)</span>':''}</span>
-      <span style="white-space:nowrap;font-variant-numeric:tabular-nums">${Math.round(r.kg).toLocaleString()} กก.${r.baht>0?' · ฿'+Math.round(r.baht).toLocaleString():''}</span>
+      <span style="white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums">${Math.round(r.kg).toLocaleString()} กก.${pk?' × '+(pk.approx?'≈':'')+'฿'+Math.round(pk.v).toLocaleString():''}${r.baht>0?'<br>฿'+Math.round(r.baht).toLocaleString():''}</span>
     </div>`;
+  };
   return `<div style="background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:8px 11px;margin-top:7px;font-size:calc(11.5px * var(--ui-scale));line-height:1.6">
     ${rows.map(line).join('')}
     <div style="display:flex;justify-content:space-between;gap:10px;padding-top:6px;margin-top:2px;font-weight:800;color:var(--pd)">
       <span>รวม ${rows.length} ครั้ง</span>
-      <span style="white-space:nowrap;font-variant-numeric:tabular-nums">${Math.round(close.totalKg).toLocaleString()} กก. · ฿${Math.round(close.totalBaht).toLocaleString()}</span>
+      <span style="white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums">${Math.round(close.totalKg).toLocaleString()} กก.${(close.totalKg>0&&close.totalBaht>0)?' × เฉลี่ย ฿'+Math.round(close.totalBaht/close.totalKg).toLocaleString():''}<br>฿${Math.round(close.totalBaht).toLocaleString()}</span>
     </div>
     <div style="color:var(--tx3);font-weight:400;margin-top:4px">ยอดแถว "ปิดบ่อ" คิดสดจากช่องน้ำหนัก × ราคาด้านบน — ถ้ารายได้จริงตามบิลแพต่างจากนี้ ให้ยึดยอดที่กรอกในช่องรายได้</div>
   </div>`;
