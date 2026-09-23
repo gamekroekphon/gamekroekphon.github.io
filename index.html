@@ -16699,9 +16699,24 @@ function chCropInfoHtml(p,c){
 //    ⚠️ กุ้งตายไม่เอาเข้าไทม์ไลน์ (พี่สั่ง 23 ก.ย. 69) — ดูครบได้ที่ปุ่มข้อมูลดิบ ☠️
 //    ⚠️ ผลแล็บใช้เกณฑ์ classifyOv() ชุดเดียวกับหน้าแล็บ/ภาพรวม ห้ามตั้งเกณฑ์ใหม่ที่นี่ (entry #260)
 //    ⚠️ ค่าน้ำรายวัน/จัดการน้ำไม่เอาเข้าไทม์ไลน์ — มีปุ่มข้อมูลดิบอยู่แล้ว และจะท่วมจนอ่านไม่ออก
-const CH_LAB_KEYS=[['tcbsGreen','เชื้อเขียวในน้ำ'],['tcbsYellow','เชื้อเหลืองในน้ำ'],['hepatoGreen','เชื้อเขียวในตับ'],['hepatoYellow','เชื้อเหลืองในตับ'],['tvc','TVC น้ำ'],['tvcHepato','TVC ตับ'],['ehp','EHP'],['gutInflam','ลำไส้อักเสบ'],['lipidDroplet','ไขมันในตับ']];
+// ── จำนวนเชื้อโชว์เป็นเลขยกกำลังแบบที่ฟาร์มใช้พูดกัน: 14,000 → 1.4×10⁴ · 310 → 3.1×10² (เกณฑ์ของฟาร์มเป็น 10² / 10⁴ อยู่แล้ว entry #260)
+//    ⚠️ แปลงตอนแสดงผลเท่านั้น ข้อมูลยังเก็บเป็นตัวเลขดิบเหมือนเดิม
+function chSciNum(v){
+  const n=parseFloat(v);
+  if(!isFinite(n))return String(v==null?'-':v);
+  if(n===0)return'0';
+  const neg=n<0,a=Math.abs(n);
+  let e=Math.floor(Math.log10(a));
+  let m=Math.round((a/Math.pow(10,e))*10)/10;
+  if(m>=10){m=m/10;e++;}                       // 9,960 → 9.96 ปัดเป็น 10.0 ต้องขยับเลขชี้กำลัง
+  const sup=String(e).split('').map(ch=>ch==='-'?'⁻':(_SUP[ch]||ch)).join('');
+  return(neg?'-':'')+(Math.round(m*10)/10)+'×10'+sup;
+}
+const CH_LAB_KEYS=[['tcbsGreen','เชื้อเขียวในน้ำ'],['tcbsYellow','เชื้อเหลืองในน้ำ'],['hepatoGreen','เชื้อเขียวในตับ'],['hepatoYellow','เชื้อเหลืองในตับ'],['tvc','TVC น้ำ'],['tvcHepato','TVC ตับ'],['ehp','EHP'],['gutInflam','ลำไส้อักเสบ']];
 // ระดับการกินอาหารที่ฟาร์มใช้จำ (กก./แสนตัว) — ไทม์ไลน์บอก "วันแรกที่ถึงระดับนั้น" ของแต่ละขั้น
 const CH_FEED_STEPS=[30,40,50,60,70,80,90,100];
+// ค่าที่เป็น "จำนวนเชื้อ" (CFU) — โชว์เป็นเลขยกกำลัง · ที่เหลือ (ลำไส้อักเสบ/EHP/เม็ดไขมัน) เป็น % หรือคะแนน โชว์เลขปกติ
+const CH_CFU_KEYS=['tcbsGreen','tcbsYellow','hepatoGreen','hepatoYellow','tvc','tvcHepato'];
 function chTimelineHtml(p,c){
   const ev=[];
   const age=d=>docAge(c.startDate,d);
@@ -16710,16 +16725,26 @@ function chTimelineHtml(p,c){
     const abw=parseFloat(r.abw)||0;
     ev.push({d:r.date,ic:'📏',t:'สุ่มกุ้ง'+(abw?' ABW '+abw+' ก. (ไซส์ '+Math.round(1000/abw)+')':'')+(r.survivalRate?' · รอด '+r.survivalRate+'%':''),lv:''});
   });
+  // ── ผลแล็บ: ขึ้น "ทุกครั้งที่ตรวจ" พร้อมเม็ดไขมันรวม (พี่สั่ง) — ค่าที่ผิดเกณฑ์ต่อท้ายให้เห็นว่าผิดตัวไหน
+  //    ⚠️ เกณฑ์เม็ดไขมันรวม >70 ดี · 50–70 เฝ้าระวัง · <50 อันตราย (classifyOv('lipidDroplet') ชุดเดียวกับหน้าแล็บ) ──
   (c.labResults||[]).forEach(r=>{if(!r||!r.date)return;
     const flags=[];let worst='ok';
     CH_LAB_KEYS.forEach(([k,lbl])=>{
       const v=r[k];if(v==null||v==='')return;
       const cl=classifyOv(k,parseFloat(v));
-      if(cl!=='ok'){flags.push(lbl+' '+(parseFloat(v)>=1e5?parseFloat(v).toExponential(1):parseFloat(v).toLocaleString()));worst=worstOv(worst,cl);}
+      if(cl!=='ok'){flags.push(lbl+' '+(CH_CFU_KEYS.includes(k)?chSciNum(v):parseFloat(v).toLocaleString()));worst=worstOv(worst,cl);}
     });
     if(r.hepato&&classifyOv('hepato',r.hepato)!=='ok'){flags.push('ตับ '+((typeof HEPATO_LBL!=='undefined'&&HEPATO_LBL[r.hepato])||r.hepato));worst=worstOv(worst,classifyOv('hepato',r.hepato));}
-    if(!flags.length)return;
-    ev.push({d:r.date,ic:'🔬',t:'ผลแล็บผิดปกติ — '+flags.join(' · '),lv:worst==='danger'?'d':'w'});
+    const lip=(typeof r.lipidDroplet==='number')?r.lipidDroplet:(r.lipidDroplet!=null&&r.lipidDroplet!==''?parseFloat(r.lipidDroplet):null);
+    let lipTxt=' · เม็ดไขมันรวม <span style="color:var(--tx3)">ไม่ได้ตรวจ</span>';
+    if(lip!=null&&!isNaN(lip)){
+      const cl=classifyOv('lipidDroplet',lip);
+      worst=worstOv(worst,cl);
+      const col=cl==='ok'?'var(--ok)':cl==='warn'?'var(--w)':'var(--d)';
+      lipTxt=' · เม็ดไขมันรวม <b style="color:'+col+'">'+lip+'%</b>';
+    }
+    ev.push({d:r.date,ic:'🔬',t:'ผลแล็บ'+(r.labName?' '+mpEsc(r.labName):'')+lipTxt+(flags.length?' — ผิดเกณฑ์: '+flags.join(' · '):''),
+      lv:worst==='danger'?'d':worst==='warn'?'w':''});
   });
   (c.chemLog||[]).forEach(r=>{if(!r||!r.date)return;
     ev.push({d:r.date,ic:'🧪',t:'ลงสารเคมี/ยา '+(r.product||getCatLabel(r.category))+(r.amount?' '+r.amount+' '+(r.unit||''):'')+(r.reason?' · '+r.reason:''),lv:''});
@@ -16757,7 +16782,7 @@ function chTimelineHtml(p,c){
   const col=lv=>lv==='d'?'var(--d)':lv==='w'?'var(--w)':lv==='ok'?'var(--ok)':lv==='in'?'var(--in)':'var(--tx2)';
   return'<div style="background:var(--sf2);border-radius:var(--r);padding:12px;margin-bottom:16px">'
     +'<div style="font-weight:700;font-size:calc(13px * var(--ui-scale));margin-bottom:2px;color:var(--p)">🗓️ ไทม์ไลน์รอบนี้ <span style="font-weight:400;color:var(--tx3);font-size:var(--fs10)">'+ev.length+' เหตุการณ์</span></div>'
-    +'<div style="font-size:var(--fs10);color:var(--tx3);margin-bottom:7px">ลงกุ้ง · สุ่ม · วันแรกที่กินอาหารถึงแต่ละระดับ (กก./แสนตัว) · ผลแล็บที่ผิดเกณฑ์ · ลงยา/สารเคมี · จับกุ้ง (ค่าน้ำรายวัน/กุ้งตาย ดูที่ปุ่มข้อมูลดิบด้านล่าง)</div>'
+    +'<div style="font-size:var(--fs10);color:var(--tx3);margin-bottom:7px">ลงกุ้ง · สุ่ม · วันแรกที่กินอาหารถึงแต่ละระดับ (กก./แสนตัว) · ผลแล็บทุกครั้ง (เม็ดไขมันรวม + ค่าที่ผิดเกณฑ์) · ลงยา/สารเคมี · จับกุ้ง (ค่าน้ำรายวัน/กุ้งตาย ดูที่ปุ่มข้อมูลดิบด้านล่าง)</div>'
     +'<div style="max-height:360px;overflow-y:auto;-webkit-overflow-scrolling:touch">'
     +ev.map(e=>'<div style="display:flex;gap:9px;align-items:flex-start;padding:5px 2px;border-bottom:1px dashed var(--bd);font-size:calc(12px * var(--ui-scale))">'
       +'<span style="flex:none;width:78px;color:var(--tx3);white-space:nowrap">'+fD(e.d)+'</span>'
@@ -17139,12 +17164,13 @@ function renderChChemTable(c){
     rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${getCatLabel(r.category)}</td><td>${r.product||'-'}</td><td>${r.amount?r.amount+' '+(r.unit||''):'-'}</td><td>${r.reason||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')
   }</tbody></table>`;
 }
+// ⚠️ จำนวนเชื้อในตารางนี้โชว์เป็นเลขยกกำลัง (chSciNum) ให้ตรงกับที่ฟาร์มใช้พูดกัน — ข้อมูลดิบไม่ได้แปลง
 function renderChLabTable(c){
   const rows=(c.labResults||[]).slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
   if(!rows.length)return '<p style="color:var(--tx3);text-align:center;padding:14px;font-style:italic">ไม่มีข้อมูล</p>';
-  return `<table class="tbl"><thead><tr><th>วันที่</th><th>อายุ</th><th>แล็บ</th><th>🟢</th><th>🟡</th><th>TVC</th><th>EHP</th><th>หมายเหตุ</th></tr></thead><tbody>${
-    rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${r.age||'-'}</td><td>${r.labName||'-'}</td><td>${r.tcbsGreen!=null?r.tcbsGreen:'-'}</td><td>${r.tcbsYellow!=null?r.tcbsYellow:'-'}</td><td>${r.tvc!=null?r.tvc:'-'}</td><td>${r.ehp!=null?r.ehp:'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')
-  }</tbody></table>`;
+  return `<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>อายุ</th><th>แล็บ</th><th>🟢 น้ำ</th><th>🟡 น้ำ</th><th>🟢 ตับ</th><th>🟡 ตับ</th><th>TVC น้ำ</th><th>EHP</th><th>เม็ดไขมัน</th><th>หมายเหตุ</th></tr></thead><tbody>${
+    rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${(()=>{const g=docAge(c.startDate,r.date);return g>0?g:(r.age||'-');})()}</td><td>${r.labName||'-'}</td><td>${r.tcbsGreen!=null?chSciNum(r.tcbsGreen):'-'}</td><td>${r.tcbsYellow!=null?chSciNum(r.tcbsYellow):'-'}</td><td>${r.hepatoGreen!=null?chSciNum(r.hepatoGreen):'-'}</td><td>${r.hepatoYellow!=null?chSciNum(r.hepatoYellow):'-'}</td><td>${r.tvc!=null?chSciNum(r.tvc):'-'}</td><td>${r.ehp!=null?r.ehp:'-'}</td><td>${(typeof r.lipidDroplet==='number')?r.lipidDroplet+'%':'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')
+  }</tbody></table></div>`;
 }
 function exportChPdf(pid,idx){
   const exPond=document.getElementById('ex-pond');
