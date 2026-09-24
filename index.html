@@ -5683,10 +5683,24 @@ function feedAvgPerKgNow(){
   const feedItems=(D.inventoryItems||[]).filter(i=>i.category==='feed'&&i.unitPrice);
   return feedItems.length?feedItems.reduce((s,i)=>s+i.unitPrice,0)/feedItems.length/25:0;
 }
-// ราคาต่อกระสอบของบันทึกอาหาร 1 วัน → {price,item} · null = ไม่ได้ผูกเบอร์ (ใช้ราคาเฉลี่ย)
+const FEED_ALIAS={CP3S:'7703S',CP4S:'7704S',CO4S:'7704S','โภคา4':'โภคา #9074 S (39%)'};
+function feedAliasItem(r){
+  if(!r)return null;
+  // ตัดช่องว่าง/ขีด/จุด ออกให้เหลือแกนชื่อ — ครอบทุกแบบที่สะกด "CP 3S" / "Cp 3s" / "Cp/3s" → CP3S
+  const k=((r.feedBrand||'')+(r.feedGrade||'')).toUpperCase().replace(/[^A-Z0-9ก-๙]/g,'');
+  if(!k)return null;
+  const nm=FEED_ALIAS[k];if(!nm)return null;
+  return (D.inventoryItems||[]).find(i=>i&&i.category==='feed'&&i.name===nm)||null;
+}
+// ราคาต่อกระสอบของบันทึกอาหาร 1 วัน → {price,item} · null = ไม่รู้ราคา (ใช้ราคาเฉลี่ย)
 //   ผูกเบอร์ไว้แต่สินค้าถูกลบ: มีราคาที่ล็อกไว้ → ใช้ราคานั้น · ไม่มี → ราคาเฉลี่ยแบบเดิม
+//   ไม่ได้ผูกเบอร์: เทียบชื่อที่พิมพ์กับ FEED_ALIAS ก่อน ถ้าตรงใช้ราคาสินค้าจริงแทนราคาเฉลี่ย
 function feedRecSackPrice(r){
-  if(!r||!r.stockItemId)return null;
+  if(!r)return null;
+  if(!r.stockItemId){
+    const al=feedAliasItem(r);
+    return al?{price:parseFloat(al.unitPrice)||0,item:al,locked:false,alias:true}:null;
+  }
   const item=(D.inventoryItems||[]).find(i=>i.id===r.stockItemId)||null;
   const locked=parseFloat(r.unitCost);
   if(locked>0)return{price:locked,item,locked:true};
@@ -16530,6 +16544,47 @@ function csDiffLine(sum,shown){
     +`ที่บันทึกตอนปิดรอบ ${Math.round(shown).toLocaleString()} · ส่วนต่าง ${diff>0?'+':''}${diff.toLocaleString()} (กรอก/แก้ด้วยมือ)</div>`;
 }
 const CS_EMPTY_MSG=`<div style="font-size:var(--fs10);color:var(--tx3)">ไม่พบรายการเบิกในช่วงของรอบนี้ — ตัวเลขนี้มาจากการกรอกด้วยมือตอนปิดรอบ</div>`;
+// จัดกลุ่มบันทึกอาหารตามเบอร์ — คืนค่าเรียงตามยอดเงินมากไปน้อย
+function feedByGrade(logs){
+  const avg=feedAvgPerKgNow();
+  const g={};
+  (logs||[]).forEach(r=>{
+    if(!r)return;
+    const kg=parseFloat(r.totalFeed)||0;if(!kg)return;
+    const sp=feedRecSackPrice(r);
+    const typed=((r.feedBrand||'')+' '+(r.feedGrade||'')).replace(/\s+/g,' ').trim();
+    const nm=(sp&&sp.item&&sp.item.name)||typed||'ไม่ระบุเบอร์';
+    // ผูกสต็อกแล้วยึด id · ยังไม่ผูกยึดชื่อที่พิมพ์แบบไม่สนตัวพิมพ์เล็กใหญ่/ช่องว่าง/ขีด
+    const key=(sp&&sp.item)?('i:'+sp.item.id):('t:'+nm.toUpperCase().replace(/[\s\/#._-]/g,''));
+    const disp=(sp&&sp.item)?nm:nm.toUpperCase().replace(/\s*\/\s*/g,' ');
+    const e=g[key]||(g[key]={name:disp,kg:0,baht:0,estKg:0,linked:!!(sp&&sp.item)});
+    e.kg+=kg;
+    if(sp){e.baht+=kg/25*sp.price;}
+    else{e.baht+=kg*avg;e.estKg+=kg;}   // ไม่ได้ผูกเบอร์ = ราคาเฉลี่ย (ตรงกับที่ pondFeedCost คิด)
+  });
+  return Object.values(g).sort((a,b)=>b.baht-a.baht);
+}
+function csFeedHTML(logs,shown){
+  const rows=feedByGrade(logs);
+  if(!rows.length)return CS_EMPTY_MSG;
+  const kgAll=rows.reduce((a,x)=>a+x.kg,0);
+  const sum=rows.reduce((a,x)=>a+x.baht,0);
+  const body=rows.map(x=>{
+    const sacks=x.kg/25;
+    const perSack=sacks>0?x.baht/sacks:0;
+    const pct=kgAll>0?Math.round(x.kg/kgAll*100):0;
+    return'<div style="display:flex;justify-content:space-between;gap:10px;padding:2px 0;font-size:var(--fs10);color:var(--tx2)">'
+      +'<span>'+mpEsc(x.name)+' <span style="color:var(--tx3)">· '+_plNum(x.kg)+' กก. ('+_plNum(Math.round(sacks))+' กระสอบ) × ฿'+_plNum(Math.round(perSack))
+      +(x.estKg?' <span style="color:var(--w)">ประมาณ</span>':'')+'</span></span>'
+      +'<span style="font-variant-numeric:tabular-nums;white-space:nowrap">'
+      +'<span style="color:var(--tx3);margin-right:7px">'+pct+'%</span>'+Math.round(x.baht).toLocaleString()+'</span></div>';
+  }).join('');
+  const estKg=rows.reduce((a,x)=>a+x.estKg,0);
+  const foot='<div style="margin-top:5px;font-size:var(--fs10);color:var(--tx3)">รวม '+_plNum(kgAll)+' กก. ('+_plNum(Math.round(kgAll/25))+' กระสอบ)'
+    +(kgAll>0?' · เฉลี่ย ฿'+_plNum(Math.round(sum/(kgAll/25)))+'/กระสอบ':'')+'</div>'
+    +(estKg?'<div style="margin-top:3px;font-size:var(--fs10);color:var(--w)">⚠️ '+_plNum(estKg)+' กก. ไม่ได้ผูกเบอร์กับสต็อกตอนบันทึก — คิดด้วยราคาเฉลี่ยของอาหารทุกเบอร์</div>':'');
+  return body+foot+csDiffLine(sum,shown);
+}
 function csItemsHTML(items,shown){
   if(!items.length)return CS_EMPTY_MSG;
   const sum=items.reduce((a,i)=>a+i.amt,0);
@@ -17786,7 +17841,7 @@ function chCostBlockHtml(p,s){
   const detRows=s._crop?[{_pond:p,_crop:s._crop}]:null;
   const tot=s.totalCost||0;
   const items=[
-    {l:'อาหารกุ้ง',v:s.costFeed},
+    {l:'อาหารกุ้ง',v:s.costFeed,k:'feed'},
     {l:'ลูกกุ้ง',v:s.costFry},
     {l:'ค่าขนส่งลูกกุ้ง',v:s.costTransport},
     {l:'เวชภัณฑ์',v:s.costMed,k:'med'},
@@ -17804,7 +17859,8 @@ function chCostBlockHtml(p,s){
   ].filter(x=>x.v!=null&&x.v!==0);
   const line=(x)=>{
     const pct=tot>0?Math.round((x.v/tot)*100):null;
-    const html=(detRows&&x.k)?(x.k==='med'?csMedGroupHTML(detRows,s.costMed||0)
+    const html=(detRows&&x.k)?(x.k==='feed'?csFeedHTML((s._crop&&s._crop.feedLog)||[],s.costFeed||0)
+      :x.k==='med'?csMedGroupHTML(detRows,s.costMed||0)
       :x.k==='lime'?csItemsHTML(plCatItems(detRows,'lime'),s.costLime||0)
       :x.k==='equip'?csItemsHTML(plCatItems(detRows,'equip'),s.costEquip||0)
       :x.k==='fuel'?csItemsHTML(plSharedItems(detRows,true),s.costFuel||0)
