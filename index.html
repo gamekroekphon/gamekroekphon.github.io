@@ -1609,6 +1609,36 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .gr-item:last-child{border-bottom:0}
 .gr-item .t{font-weight:700;font-size:calc(13.5px * var(--ui-scale))}
 .gr-item .m{font-size:var(--fs10);color:var(--tx3);margin-top:2px;line-height:1.6}
+/* ── กุ้งตายรายวัน: ทุกบ่อในหน้าเดียว (entry #310) ── */
+.mt-row{display:flex;gap:9px;align-items:flex-end;flex-wrap:wrap;margin-bottom:6px}
+.mt-quick{display:flex;gap:6px}
+.mt-quick button{border:1px solid var(--bd);background:var(--sf);border-radius:9px;padding:9px 13px;font-family:inherit;
+  font-size:calc(13px * var(--ui-scale));color:var(--tx2);cursor:pointer;min-height:44px}
+.mt-quick button.on{background:var(--pl);border-color:#EBD9A8;color:#7A5403;font-weight:700}
+.mt-list{display:flex;flex-direction:column;gap:8px}
+.mt-pc{display:flex;align-items:center;gap:10px;border:1.5px solid var(--bd);border-radius:12px;background:var(--sf);padding:8px 10px}
+.mt-pc.has{border-color:var(--p);background:var(--pl)}
+.mt-pc.saved{border-color:var(--ok);background:var(--ob)}
+.mt-pc.alarm{border-color:var(--d);background:var(--db)}
+.mt-pc .info{flex:1 1 auto;min-width:0}
+.mt-pc .nm{font-weight:800;font-size:calc(16px * var(--ui-scale))}
+.mt-pc .ag{font-size:var(--fs10);color:var(--tx3);margin-left:7px;font-weight:400}
+.mt-pc .sub{font-size:var(--fs10);color:var(--tx3);margin-top:2px}
+.mt-stp{display:flex;gap:5px;align-items:stretch;flex:none}
+.mt-stp button{flex:none;width:44px;min-height:44px;border:1.5px solid var(--bd);background:var(--sf);border-radius:10px;
+  font-family:inherit;font-size:calc(20px * var(--ui-scale));font-weight:700;color:var(--tx2);cursor:pointer;line-height:1;padding:0}
+.mt-stp input{width:64px;text-align:center;border:1.5px solid var(--bd);border-radius:10px;background:var(--sf);
+  font-family:inherit;font-size:calc(18px * var(--ui-scale));font-weight:800;min-height:44px;padding:0 2px;color:var(--tx)}
+.mt-pc.saved .mt-stp input{border-color:#BFE3CB}
+.mt-trend{border:1px solid var(--bd);border-radius:11px;padding:10px 11px;margin-bottom:9px}
+.mt-trend.hot{border-color:#F3C9C9;background:#FFFCFC}
+.mt-trend .h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:calc(13px * var(--ui-scale))}
+.mt-trend .h em{font-style:normal;font-size:var(--fs10);color:var(--tx3)}
+.mt-spark{display:flex;align-items:flex-end;gap:3px;height:46px;margin:6px 0 2px}
+.mt-spark i{flex:1;background:var(--p);border-radius:2px 2px 0 0;min-height:3px;opacity:.75}
+.mt-spark i.hi{background:var(--d);opacity:1}
+.mt-sparkx{display:flex;gap:3px;font-size:var(--fs10);color:var(--tx3)}
+.mt-sparkx span{flex:1;text-align:center}
 /* ── เลือกบ่อหลายบ่อในหน้าเติมน้ำ (entry #308) — ชิปแตะง่ายบนมือถือ ── */
 .wl-row{display:flex;gap:9px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}
 .wl-quick{display:flex;gap:6px}
@@ -2720,40 +2750,32 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   </div>
   <div class="g2" style="margin-bottom:16px;align-items:start">
     <div class="card">
-      <div class="card-t">📝 บันทึกจำนวนกุ้งตาย</div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl" for="mt-pond">บ่อ *</label><select class="fi" id="mt-pond" onchange="onMtPond()"><option value="">-- เลือกบ่อ --</option></select></div>
-          <div class="fg"><label class="fl" for="mt-date">วันที่ *</label><input type="date" class="fi" id="mt-date" onchange="calcAge('mt')"></div>
-        </div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
-          <div class="fg"><label class="fl" for="mt-age">อายุ (วัน)</label><input type="number" class="fi" id="mt-age" readonly style="background:var(--sf2);color:var(--p);font-weight:700"></div>
-          <div class="fg"><label class="fl" for="mt-count">จำนวนกุ้งตาย (ตัว) *</label><input type="number" class="fi" id="mt-count" placeholder="0" oninput="onMtCountInput()"></div>
-        </div>
-        <div class="fg"><label class="fl" for="mt-cause">สาเหตุที่สังเกตได้</label>
-          <select class="fi" id="mt-cause">
-            <option value="">-- ไม่ทราบ/ไม่ระบุ --</option>
-            <option value="do">คาดว่า DO ต่ำ</option>
-            <option value="disease">คาดว่าโรค/เชื้อ</option>
-            <option value="weather">สภาพอากาศ/ฝนตก</option>
-            <option value="predator">ศัตรูธรรมชาติ</option>
-            <option value="other">อื่นๆ</option>
-          </select>
-        </div>
-        <div class="fg"><label class="fl" for="mt-notes">หมายเหตุ</label><input type="text" class="fi" id="mt-notes" placeholder="เช่น ลอยหัวตอนเช้า, พบบริเวณมุมบ่อ..."></div>
-        <div id="mt-warn"></div>
-        <div style="display:flex;gap:10px"><button class="btn btn-p" id="mt-save-btn" onclick="saveMortality()">💾 บันทึก</button><button class="btn btn-s" onclick="clearMortality()">🗑️ ล้าง</button></div>
-        <div id="mt-msg"></div>
+      <div class="card-t" style="justify-content:space-between"><span>📝 บันทึกกุ้งตาย</span>
+        <span style="font-weight:400;font-size:var(--fs11);color:var(--tx3)">แตะ + − หรือพิมพ์ตัวเลข</span></div>
+      <div class="mt-row">
+        <div class="fg" style="flex:1 1 150px;margin:0"><label class="fl" for="mt-date">วันที่</label>
+          <input type="date" class="fi" id="mt-date" onchange="mtSetDate(this.value)"></div>
+        <div class="mt-quick"><button type="button" id="mt-q-today" onclick="mtQuickDate(0)">วันนี้</button>
+          <button type="button" id="mt-q-yest" onclick="mtQuickDate(1)">เมื่อวาน</button></div>
       </div>
+      <div class="wl-grp"><span id="mt-grp-l">บ่อที่มีกุ้ง</span><span>เรียงตามอายุกุ้ง มาก → น้อย</span></div>
+      <div id="mt-rows"></div>
+      <div id="mt-warn"></div>
+      <div style="display:flex;gap:10px;margin-top:13px;flex-wrap:wrap">
+        <button class="btn btn-p" id="mt-save-btn" onclick="saveMortality()">💾 บันทึก</button>
+        <button class="btn btn-s" onclick="clearMortality()">↺ ล้างที่กรอก</button></div>
+      <div id="mt-msg"></div>
     </div>
     <div class="card">
-      <div class="card-t">📊 สรุปการตายรอบนี้</div>
-      <div id="mt-summary"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อเพื่อดูสรุป</p></div>
+      <div class="card-t" style="justify-content:space-between"><span>📊 บ่อที่กำลังตายเพิ่ม</span>
+        <span style="font-weight:400;font-size:var(--fs11);color:var(--tx3)">7 วันล่าสุด</span></div>
+      <div id="mt-summary"></div>
     </div>
   </div>
   <div class="card">
-    <div class="card-t">📋 ประวัติ</div>
-    <div class="tbl-wrap" id="mt-tbl-wrap"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อเพื่อดูข้อมูล</p></div>
+    <div class="card-t" style="justify-content:space-between"><span>📋 ประวัติ</span>
+      <select class="fi" id="mt-filter" style="width:auto;min-width:150px" onchange="renderMtTable(true)"></select></div>
+    <div class="tbl-wrap" id="mt-tbl-wrap"></div>
   </div>
 </div>
 <!-- LAB RESULTS -->
@@ -5320,7 +5342,7 @@ function pondOptionsHtml(){
 //    เดิมทุกหน้าเริ่มจากว่าง ต้องเลือกบ่อเดิมซ้ำทุกหน้า
 //    เติมเฉพาะตอนที่หน้านั้น "ยังไม่ได้เลือกบ่อ" — ไม่เขียนทับสิ่งที่ผู้ใช้เลือกไว้เอง ──
 let _curPondId=null;
-const POND_SEL_IDS=['sp-pond','lb-pond','mt-pond','hv-pond'];   // wl-pond เลิกใช้แล้ว หน้าเติมน้ำเลือกบ่อเป็นชิปหลายบ่อ (entry #308)
+const POND_SEL_IDS=['sp-pond','lb-pond','hv-pond'];   // wl-pond/mt-pond เลิกใช้แล้ว หน้าเติมน้ำ+กุ้งตายแสดงทุกบ่อพร้อมกัน (entry #308/#310)
 function setCurPond(pid){if(pid)_curPondId=pid;}
 function applyCurPond(){
   if(!_curPondId||!D.ponds.some(p=>p.id===_curPondId))return;   // บ่ออาจถูกลบไปแล้ว
@@ -6233,12 +6255,12 @@ function populateAll(){
   if(seedPondZones())save();
   refreshZoneDatalist();
   const simple={
-    'sp-pond':'','lb-pond':'','ex-pond':'all','mt-pond':'','cash-pond':'',
+    'sp-pond':'','lb-pond':'','ex-pond':'all','cash-pond':'',
   };
   // ── ⚠️ ช่องเลือกบ่อของงานกรอกรายวัน (สุ่ม/จัดการน้ำ/ผลแล็บ/กุ้งตาย/จับกุ้ง/เวชภัณฑ์)
   //    ใช้ pondOptionsHtml() = เรียงตามอายุกุ้ง + ป้าย DOC ให้ตรงกับหน้าคุณภาพน้ำ/อาหาร
   //    ยกเว้น ex-pond/cash-pond (หน้ารายงาน ไม่ใช่หน้ากรอก) ──
-  const AGE_SORTED_SELS=['sp-pond','lb-pond','mt-pond'];
+  const AGE_SORTED_SELS=['sp-pond','lb-pond'];
   Object.entries(simple).forEach(([id,def])=>{
     const el=document.getElementById(id);if(!el)return;const cur=el.value;
     const opts=AGE_SORTED_SELS.includes(id)?pondOptionsHtml():sortedPonds().map(p=>`<option value="${p.id}">บ่อ ${p.name}</option>`).join('');
@@ -13064,12 +13086,13 @@ function renderPdMortCard(p){
     '<div class="card-sub" style="margin:10px 0 0">7 วันล่าสุด (แท่งแดง = สูงกว่าเฉลี่ยเกิน 2 เท่า)</div>'+bars+
     '<div style="margin-top:6px"><button class="btn btn-s" onclick="jumpMort('+Q+p.id+Q+')">🦐 ดู/บันทึกกุ้งตายทั้งหมด</button></div>';
 }
+// ไม่มีดรอปดาวน์บ่อแล้ว (entry #310) — เลื่อนไปที่แถวของบ่อนั้นแทน
 function jumpMort(pid){
   document.getElementById('tab-mortality').click();
   setTimeout(()=>{
-    const sel=document.getElementById('mt-pond');
-    if(sel){sel.value=pid;if(typeof onMtPond==='function')onMtPond();}
-  },80);
+    const row=document.querySelector('#mt-rows .mt-pc[data-pid="'+pid+'"]');
+    if(row){row.scrollIntoView({behavior:'smooth',block:'center'});const i=row.querySelector('input');if(i)i.focus();}
+  },120);
 }
 // ══════ การ์ด "📚 ประวัติรอบเลี้ยงบ่อนี้" หน้ารายละเอียดบ่อ ══════
 // ⚠️ อ่านผ่าน cropHarvestResult() เสมอ — FCR/อัตรารอด/รายได้ จะได้ตรงกับหน้า P&L และ PDF ปิดบ่อ (นับพาเชียล + ฐานยอดปล่อยจริง)
@@ -15315,8 +15338,88 @@ function deleteWaterLog(pid,id){
   save();populateWlFilter();renderWlPonds();renderWaterTable();renderWaterSummary();
 }
 // ===== MORTALITY LOG (กุ้งตายรายวัน — จากเอกสารวิชาการ ดร.พุทธ: 1 ใน 5 ข้อมูลหลักที่ควรบันทึกทุกวัน) =====
-function initMortality(){populateAll();document.getElementById('mt-date').value=today();calcAge('mt');renderMtSummary();renderMtBars();renderMtTable();}
-function onMtPond(){clearMortality();renderMtSummary();renderMtBars();renderMtTable();}
+// ══════ กุ้งตายรายวัน — ทุกบ่อในหน้าเดียว (entry #310, พี่สั่ง 24 ก.ย. 69) ══════
+//   ⚠️ พี่สั่ง: ไม่มีกุ้งตายให้บันทึก 0 (ไม่ใช่เว้นว่าง) — "ไม่มีบันทึก" จะได้แปลว่า "ยังไม่ได้เดินดู" จริงๆ
+//   ⚠️ เรียงบ่อตามอายุกุ้ง มาก → น้อย (พี่สั่ง) ตรงกับลำดับที่คนเลี้ยงเดินดู
+//   ⚠️ ตัดช่อง "สาเหตุ" ออกจากฟอร์ม (ใช้จริง 4/103 ครั้ง) — ข้อมูลเก่ายังแสดงในประวัติผ่าน MT_CAUSE_LBL
+const MT_TBL_MAX=300;     // เพดานแถวประวัติ (บทเรียน entry #306) — 13 บ่อ/วัน = ~4,700 แถว/ปี
+let _mtDate=null;         // วันที่ที่กำลังกรอก
+let _mtVals={};           // {pondId: จำนวน} ที่พิมพ์ไว้ ยังไม่กดบันทึก
+function initMortality(){
+  populateAll();
+  _mtDate=today();_mtVals={};
+  const d=document.getElementById('mt-date');if(d){d.value=_mtDate;syncDateHint(d);}
+  renderMtRows();renderMtSummary();populateMtFilter();renderMtTable(true);
+}
+function mtSetDate(v){if(!v)return;_mtDate=v;_mtVals={};renderMtRows();}
+function mtQuickDate(back){
+  const d=addDaysStr(today(),-back);
+  _mtDate=d;_mtVals={};
+  const el=document.getElementById('mt-date');if(el){el.value=d;syncDateHint(el);}
+  renderMtRows();
+}
+// บ่อที่มีกุ้ง ณ วันที่เลือก — เรียงอายุมาก → น้อย (ย้อนวันแล้วรายชื่อบ่อถูกต้องตามวันนั้น ไม่ใช่วันนี้)
+function mtPondsOn(d){
+  return (D.ponds||[]).filter(p=>p&&p.startDate&&p.startDate<=d&&(!p.harvestDate||d<=p.harvestDate))
+    .map(p=>({p,age:docAge(p.startDate,d)}))
+    .sort((a,b)=>(b.age-a.age)||String(a.p.name||'').localeCompare(String(b.p.name||''),'th',{numeric:true}));
+}
+function mtRecOn(p,d){return cropMortalityLog(p).find(r=>r&&r.date===d)||null;}
+function mtValOf(pid,d){
+  if(_mtVals[pid]!==undefined)return _mtVals[pid];
+  const r=mtRecOn(pond(pid),d);
+  return r?(r.count||0):0;    // ยังไม่เคยบันทึก = ตั้งต้น 0 ตามที่พี่สั่ง
+}
+function renderMtRows(){
+  const box=document.getElementById('mt-rows');if(!box)return;
+  const d=_mtDate||today();
+  const list=mtPondsOn(d);
+  const lbl=document.getElementById('mt-grp-l');
+  if(lbl)lbl.textContent='บ่อที่มีกุ้ง '+list.length+' บ่อ';
+  if(!list.length){box.innerHTML='<p style="color:var(--tx3);text-align:center;padding:18px;font-style:italic">วันที่เลือกยังไม่มีบ่อที่เลี้ยงกุ้งอยู่</p>';mtSyncSaveBtn();return;}
+  // ⚠️ ต้องโชว์ครบทุกบ่อที่จะถูกบันทึก — ปุ่มเดียวเขียน 0 ให้ทุกบ่อ ห้ามซ่อนบ่อที่คนกรอกไม่เห็น
+  box.innerHTML='<div class="mt-list">'+list.map(x=>mtRowHtml(x,d)).join('')+'</div>';
+  const t=document.getElementById('mt-q-today'),y=document.getElementById('mt-q-yest');
+  if(t)t.className=(d===today()?'on':'');
+  if(y)y.className=(d===addDaysStr(today(),-1)?'on':'');
+  mtSyncSaveBtn();mtSyncWarn();
+}
+function mtRowHtml(x,d){
+  const p=x.p,v=mtValOf(p.id,d),saved=!!mtRecOn(p,d);
+  const avg=mtAvg7(p);
+  const alarm=v>0&&avg>0&&v>=avg*2&&v>=3;
+  const cls=alarm?'alarm':(saved?'saved':(v>0?'has':''));
+  return '<div class="mt-pc '+cls+'" data-pid="'+p.id+'">'
+    +'<div class="info"><span class="nm">'+mpEsc(p.name||'-')+'<span class="ag">'+x.age+' วัน</span></span>'
+    +(saved?'<div class="sub" style="color:var(--ok);font-weight:700">✓ บันทึกแล้ว</div>':'')+'</div>'
+    +'<div class="mt-stp">'
+    +'<button type="button" onclick="mtStep(\''+p.id+'\',-1)">−</button>'
+    +'<input type="number" inputmode="numeric" min="0" value="'+v+'" oninput="mtType(\''+p.id+'\',this.value)">'
+    +'<button type="button" onclick="mtStep(\''+p.id+'\',1)">+</button></div></div>';
+}
+function mtStep(pid,n){
+  const v=Math.max(0,(parseInt(mtValOf(pid,_mtDate||today()),10)||0)+n);
+  _mtVals[pid]=v;renderMtRows();
+}
+function mtType(pid,v){
+  _mtVals[pid]=Math.max(0,parseInt(v,10)||0);
+  mtSyncSaveBtn();mtSyncWarn();
+}
+function mtSyncSaveBtn(){
+  const b=document.getElementById('mt-save-btn');if(!b)return;
+  const n=mtPondsOn(_mtDate||today()).length;
+  b.textContent='💾 บันทึก '+n+' บ่อ';b.disabled=!n;
+}
+// เตือนเมื่อค่าที่กรอกสูงกว่าเฉลี่ย 7 วันเกิน 2 เท่า — ไม่โชว์ตัวเลขเฉลี่ยบนแถวบ่อ (พี่สั่งให้เอาออก)
+function mtSyncWarn(){
+  const el=document.getElementById('mt-warn');if(!el)return;
+  const d=_mtDate||today();
+  const hot=mtPondsOn(d).map(x=>{const v=mtValOf(x.p.id,d),a=mtAvg7(x.p);return{n:x.p.name,v,a};})
+    .filter(x=>x.v>0&&x.a>0&&x.v>=x.a*2&&x.v>=3);
+  el.innerHTML=hot.length?'<div style="background:var(--db);border-left:3px solid var(--d);border-radius:6px;padding:8px 12px;'
+    +'font-size:calc(12.5px * var(--ui-scale));color:var(--d);margin-top:11px">⚠️ สูงกว่าค่าเฉลี่ย 7 วันเกิน 2 เท่า — '
+    +hot.map(x=>'บ่อ '+mpEsc(x.n)+' '+x.v+' ตัว (เฉลี่ย '+x.a.toFixed(1)+')').join(' · ')+'</div>':'';
+}
 // ── ⚠️ บันทึกกุ้งตายเฉพาะ "รอบเลี้ยงปัจจุบัน" — ทุกจุดที่แสดง/นับยอดกุ้งตายต้องใช้ตัวนี้ ห้ามอ่าน p.mortalityLog ตรงๆ
 //    ตอนปิดรอบระบบล้าง p.mortalityLog ให้แล้ว (เก็บเข้า cropHistory) แต่บ่อที่ปิดรอบไปก่อนมีการแก้นี้ จะมีข้อมูลรอบเก่าค้างอยู่
 //    กรองด้วยวันลงกุ้งอีกชั้นเพื่อไม่ให้ยอด "สะสมรอบนี้" บวมจากรอบก่อน จนกว่าจะถูกล้างตอนปิดรอบครั้งถัดไป ──
@@ -15326,106 +15429,124 @@ function cropMortalityLog(p){
   return log.filter(r=>r&&r.date&&r.date>=p.startDate);
 }
 function mtLast7(p){
-  const end=new Date(today()+'T00:00:00');
-  const days=Array.from({length:7},(_,i)=>{const d=new Date(end);d.setDate(end.getDate()-(6-i));return d.toISOString().slice(0,10);});
+  const days=Array.from({length:7},(_,i)=>addDaysStr(today(),-(6-i)));
   const log=cropMortalityLog(p);
   return days.map(d=>({date:d,count:log.filter(r=>r.date===d).reduce((s,r)=>s+(r.count||0),0)}));
 }
 function mtAvg7(p){const last7=mtLast7(p);return last7.reduce((s,r)=>s+r.count,0)/7;}
-function onMtCountInput(){
-  const pid=document.getElementById('mt-pond').value;
-  const input=document.getElementById('mt-count');
-  const el=document.getElementById('mt-warn');
-  const v=parseFloat(input.value)||0;
-  if(!pid){input.classList.remove('fi-danger');el.innerHTML='';return;}
-  const p=pond(pid);if(!p)return;
-  const avg=mtAvg7(p);
-  if(v>0&&v>=avg*2&&v>=3){
-    input.classList.add('fi-danger');
-    el.innerHTML=`<div style="background:var(--db);border-left:3px solid var(--d);border-radius:6px;padding:8px 12px;font-size:calc(12.5px * var(--ui-scale));color:var(--d)">⚠️ จำนวนตายวันนี้ (${v} ตัว) สูงกว่าค่าเฉลี่ย 7 วัน (${avg.toFixed(1)} ตัว) มากกว่า 2 เท่า — ควรตรวจ DO/พฤติกรรมกุ้งเพิ่มเติม</div>`;
-  }else{
-    input.classList.remove('fi-danger');
-    el.innerHTML='';
-  }
-}
+
+// บันทึกทีเดียวทุกบ่อที่มีกุ้งวันนั้น — บ่อที่ไม่มีกุ้งตายได้ค่า 0 (พี่สั่ง)
+//   id = mt_<pond>_<date> จึงบันทึกซ้ำวันเดิมได้ = อัปเดตทับ ไม่เพิ่มแถว
 function saveMortality(){
-  const pid=document.getElementById('mt-pond').value,d=document.getElementById('mt-date').value;
-  if(!pid||!d){showMsg('mt-msg','warn','กรุณาเลือกบ่อและวันที่');return}
-  const p=pond(pid);if(!p)return;if(!p.mortalityLog)p.mortalityLog=[];
-  const count=parseFloat(document.getElementById('mt-count').value);
-  if(!count||count<=0){showMsg('mt-msg','warn','กรุณาระบุจำนวนกุ้งตาย');return}
-  const rec={id:'mt_'+pid+'_'+d,date:d,age:parseInt(document.getElementById('mt-age').value)||0,
-    count,cause:document.getElementById('mt-cause').value,notes:document.getElementById('mt-notes').value,by:curUserLabel()};
-  const idx=p.mortalityLog.findIndex(r=>r.id===rec.id||r.date===d);
-  if(idx>=0){p.mortalityLog[idx]=rec;showMsg('mt-msg','warn',`อัปเดต ${fD(d)} บ่อ ${p.name}: ${count} ตัว`);}
-  else{p.mortalityLog.push(rec);p.mortalityLog.sort((a,b)=>new Date(a.date)-new Date(b.date));showMsg('mt-msg','ok',`✅ บันทึก ${fD(d)} บ่อ ${p.name}: ${count} ตัว`);}
-  save();renderMtTable();renderMtSummary();renderMtBars();
+  const d=_mtDate||today();
+  const list=mtPondsOn(d);
+  if(!list.length){showMsg('mt-msg','warn','วันที่เลือกยังไม่มีบ่อที่เลี้ยงกุ้งอยู่');return;}
+  let add=0,upd=0,dead=0;
+  list.forEach(x=>{
+    const p=x.p;if(!p.mortalityLog)p.mortalityLog=[];
+    const count=Math.max(0,parseInt(mtValOf(p.id,d),10)||0);
+    dead+=count;
+    const old=p.mortalityLog.find(r=>r&&(r.id==='mt_'+p.id+'_'+d||r.date===d));
+    const rec={id:'mt_'+p.id+'_'+d,date:d,age:x.age,count,
+      cause:(old&&old.cause)||'',notes:(old&&old.notes)||'',by:curUserLabel()};
+    if(old){Object.assign(old,rec);upd++;}
+    else{p.mortalityLog.push(rec);p.mortalityLog.sort((a,b)=>new Date(a.date)-new Date(b.date));add++;}
+  });
+  _mtVals={};
+  save();
+  renderMtRows();renderMtSummary();populateMtFilter();renderMtTable(true);
+  showMsg('mt-msg','ok','บันทึก '+fD(d)+' · '+list.length+' บ่อ · ตายรวม '+dead.toLocaleString()+' ตัว'
+    +(upd?' (อัปเดต '+upd+' บ่อ)':''));
   flashSaveBtn(document.getElementById('mt-save-btn'));
 }
 function clearMortality(){
-  document.getElementById('mt-date').value=today();
-  document.getElementById('mt-count').value='';
-  document.getElementById('mt-cause').value='';
-  document.getElementById('mt-notes').value='';
-  document.getElementById('mt-count').classList.remove('fi-danger');
-  document.getElementById('mt-warn').innerHTML='';
-  document.getElementById('mt-msg').innerHTML='';calcAge('mt');
+  _mtVals={};
+  document.getElementById('mt-msg').innerHTML='';
+  renderMtRows();mtSyncWarn();
 }
 const MT_CAUSE_LBL={do:'DO ต่ำ',disease:'โรค/เชื้อ',weather:'สภาพอากาศ',predator:'ศัตรูธรรมชาติ',other:'อื่นๆ'};
+// การ์ดขวา: เฉพาะบ่อที่มีการตายใน 7 วันล่าสุด เรียงมากไปน้อย — เดิมต้องเลือกบ่อก่อนถึงจะเห็นอะไร
 function renderMtSummary(){
-  const pid=document.getElementById('mt-pond')?.value;
   const el=document.getElementById('mt-summary');if(!el)return;
-  if(!pid){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อเพื่อดูสรุป</p>';return}
-  const p=pond(pid);if(!p)return;
-  const log=cropMortalityLog(p);
-  const todayCount=log.filter(r=>r.date===today()).reduce((s,r)=>s+(r.count||0),0);
-  const cumCount=log.reduce((s,r)=>s+(r.count||0),0);
-  // ── หารด้วยยอดปล่อยจริง (สั่งซื้อ+แถม) ให้อยู่ฐานเดียวกับอัตรารอด ──
-  const pct=pRelease(p)>0?(cumCount/pRelease(p)*100):null;
-  const todayCls=todayCount>0?(todayCount>=mtAvg7(p)*2&&todayCount>=3?'danger':'warn'):'ok';
-  el.innerHTML=`<div class="ovd-sum-strip">
-    <div class="ovd-sum-chip ${todayCls}"><div class="n">${todayCount}</div><div class="l">ตายวันนี้</div></div>
-    <div class="ovd-sum-chip na"><div class="n">${cumCount.toLocaleString()}</div><div class="l">สะสมรอบนี้</div></div>
-    <div class="ovd-sum-chip ${pct!=null&&pct>1?'warn':'ok'}"><div class="n">${pct!=null?pct.toFixed(3)+'%':'-'}</div><div class="l">% จากจำนวนปล่อย</div></div>
-  </div>`;
+  const d=today();
+  const rows=mtPondsOn(d).map(x=>{
+    const l7=mtLast7(x.p);
+    return{p:x.p,age:x.age,l7,sum:l7.reduce((a,r)=>a+r.count,0),
+      todayN:l7[l7.length-1].count,avg:mtAvg7(x.p),cum:cropMortalityLog(x.p).reduce((a,r)=>a+(r.count||0),0)};
+  }).filter(r=>r.sum>0).sort((a,b)=>b.sum-a.sum);
+  const nQuiet=mtPondsOn(d).length-rows.length;
+  if(!rows.length){
+    el.innerHTML='<div class="gr-alert ok">✅ ไม่มีบ่อไหนมีกุ้งตายใน 7 วันล่าสุด</div>';return;}
+  el.innerHTML=rows.map(r=>{
+    const max=Math.max.apply(null,r.l7.map(z=>z.count).concat([1]));
+    const rise=r.l7[0].count>0?(r.todayN/r.l7[0].count):0;
+    const hot=r.todayN>0&&r.avg>0&&r.todayN>=r.avg*2&&r.todayN>=3;
+    const pct=pRelease(r.p)>0?(r.cum/pRelease(r.p)*100):null;
+    return '<div class="mt-trend'+(hot?' hot':'')+'">'
+      +'<div class="h"><b>บ่อ '+mpEsc(r.p.name)+'</b><em>'+r.age+' วัน · สะสม '+r.cum.toLocaleString()+' ตัว'
+      +(pct!=null?' ('+pct.toFixed(3)+'%)':'')+'</em></div>'
+      +'<div class="mt-spark">'+r.l7.map(z=>{
+        const h=Math.max(3,Math.round(z.count/max*44));
+        const hi=z.count>0&&r.avg>0&&z.count>=r.avg*2;
+        return '<i class="'+(hi?'hi':'')+'" style="height:'+h+'px" title="'+fD(z.date)+' — '+z.count+' ตัว"></i>';
+      }).join('')+'</div>'
+      +'<div class="mt-sparkx">'+r.l7.map(z=>'<span>'+(+z.date.slice(8,10))+'</span>').join('')+'</div>'
+      +'<div style="font-size:var(--fs11);margin-top:5px">วันนี้ <b>'+r.todayN+' ตัว</b> · เฉลี่ย 7 วัน '+r.avg.toFixed(1)
+      +(rise>=2?' · <span style="color:var(--d);font-weight:700">เพิ่มขึ้น '+rise.toFixed(1)+' เท่าใน 7 วัน</span>':'')+'</div></div>';
+  }).join('')
+  +(nQuiet?'<div style="font-size:var(--fs11);color:var(--tx3);margin-top:6px">อีก '+nQuiet+' บ่อไม่มีกุ้งตายใน 7 วันนี้</div>':'');
 }
-function renderMtBars(){
-  const pid=document.getElementById('mt-pond')?.value;
-  const wrap=document.getElementById('mt-summary');if(!wrap)return;
-  const existing=document.getElementById('mt-bars');if(existing)existing.remove();
-  if(!pid)return;
-  const p=pond(pid);if(!p)return;
-  const last7=mtLast7(p);
-  const avg=mtAvg7(p);
-  const max=Math.max(...last7.map(r=>r.count),1);
-  const days=['อา','จ','อ','พ','พฤ','ศ','ส'];
-  const barsHtml=`<div class="mt-bars" id="mt-bars">${last7.map(r=>{
-    const h=Math.max(4,(r.count/max)*60);
-    const cls=r.count>0&&avg>0&&r.count>=avg*2?'hi':(r.count>0?'has':'');
-    const dow=days[new Date(r.date+'T00:00:00').getDay()];
-    return `<div class="mt-bar-col"><div class="mt-bar-val">${r.count}</div><div class="mt-bar ${cls}" style="height:${h}px"></div><div class="mt-bar-lbl">${dow}</div></div>`;
-  }).join('')}</div>`;
-  wrap.insertAdjacentHTML('beforeend',barsHtml);
+function renderMtBars(){renderMtSummary();}   // ชื่อเดิม — หน้าอื่นยังเรียกอยู่
+function populateMtFilter(){
+  const sel=document.getElementById('mt-filter');if(!sel)return;
+  const cur=sel.value;
+  const withLog=(D.ponds||[]).filter(p=>cropMortalityLog(p).length)
+    .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'th',{numeric:true}));
+  sel.innerHTML='<option value="">ทุกบ่อ</option>'+withLog.map(p=>'<option value="'+p.id+'"'+(p.id===cur?' selected':'')+'>บ่อ '+mpEsc(p.name)+'</option>').join('');
 }
-function renderMtTable(){
-  const pid=document.getElementById('mt-pond')?.value;
+let _mtTblAll=false;
+function mtTableShowAll(){_mtTblAll=true;renderMtTable();}
+// ⚠️ ทุกบ่อเรียงตามวันทันที — เดิมต้องเลือกบ่อก่อนถึงจะเห็นอะไร
+//    เพดาน MT_TBL_MAX แถว (บทเรียน entry #306) เพราะ 13 บ่อ/วัน โตเร็วกว่าเดิมมาก
+function renderMtTable(reset){
+  if(reset)_mtTblAll=false;
   const wrap=document.getElementById('mt-tbl-wrap');if(!wrap)return;
-  if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
-  const p=pond(pid);const rows=sortLogArr('mortalityLog',cropMortalityLog(p)).reverse();
-  if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">บ่อนี้ยังไม่มีบันทึกกุ้งตาย — บันทึกได้จากฟอร์มด้านบน</p>';return}
-  wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>จำนวนตาย</th><th>สาเหตุ</th><th>หมายเหตุ</th></tr></thead><tbody>${
-    rows.map(r=>`<tr><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editMortality('${pid}','${r.id}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteMortality('${pid}','${r.id}')">🗑️</button></td><td>${fD(r.date)}</td><td>${(()=>{const a=recAge(p,r)??r.age;return a>0?a+' วัน':'-';})()}</td><td style="font-weight:700${r.count>=3?';color:var(--w)':''}">${r.count} ตัว</td><td>${r.cause?`<span class="badge b-warn">${MT_CAUSE_LBL[r.cause]||r.cause}</span>`:'<span style="color:var(--tx3)">-</span>'}</td><td style="color:var(--tx2)">${r.notes||'-'}</td></tr>`).join('')
-  }</tbody></table>`;
+  const pid=(document.getElementById('mt-filter')||{}).value||'';
+  const all=[];
+  (D.ponds||[]).forEach(p=>{
+    if(pid&&p.id!==pid)return;
+    cropMortalityLog(p).forEach(r=>all.push({p,r}));
+  });
+  all.sort((a,b)=>String(b.r.date).localeCompare(String(a.r.date))
+    ||String(a.p.name||'').localeCompare(String(b.p.name||''),'th',{numeric:true}));
+  if(!all.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีบันทึกกุ้งตาย — บันทึกได้จากฟอร์มด้านบน</p>';return;}
+  const rows=_mtTblAll?all:all.slice(0,MT_TBL_MAX);
+  wrap.innerHTML='<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>บ่อ</th><th>อายุ</th><th>จำนวนตาย</th><th>เทียบเฉลี่ย</th><th>ผู้บันทึก</th><th>หมายเหตุ</th></tr></thead><tbody>'
+    +rows.map(({p,r})=>{
+      const a=recAge(p,r)??r.age;
+      const avg=mtAvg7(p);
+      const hot=r.count>0&&avg>0&&r.count>=avg*2&&r.count>=3;
+      return '<tr><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editMortality(\''+p.id+'\',\''+r.id+'\')">✏️</button> '
+        +'<button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteMortality(\''+p.id+'\',\''+r.id+'\')">🗑️</button></td>'
+        +'<td>'+fD(r.date)+'</td><td style="font-weight:700">'+mpEsc(p.name||'-')+'</td>'
+        +'<td>'+(a>0?a+' วัน':'-')+'</td>'
+        +'<td style="font-weight:700'+(r.count>0?';color:var(--w)':';color:var(--tx3)')+'">'+(r.count||0)+' ตัว</td>'
+        +'<td>'+(hot?'<span class="badge b-danger">สูงกว่าเฉลี่ย</span>':(r.count>0?'<span class="badge b-ok">ปกติ</span>':'<span style="color:var(--tx3)">ไม่มีตาย</span>'))+'</td>'
+        +'<td>'+mpEsc(r.by||'-')+'</td>'
+        +'<td style="color:var(--tx2)">'+(r.cause?'<span class="badge b-warn">'+(MT_CAUSE_LBL[r.cause]||r.cause)+'</span> ':'')+mpEsc(r.notes||'')+'</td></tr>';
+    }).join('')
+    +'</tbody></table>'
+    +(rows.length<all.length?'<div style="text-align:center;padding:10px"><button class="btn btn-s" onclick="mtTableShowAll()">แสดงทั้งหมด '+all.length.toLocaleString()+' รายการ</button></div>':'');
 }
+// แก้ไข = ย้อนไปวันนั้นแล้วเลื่อนไปที่แถวของบ่อนั้น กรอกใหม่แล้วกดบันทึก (บันทึกซ้ำวันเดิม = อัปเดตทับ)
 function editMortality(pid,id){
-  const p=pond(pid);const rec=(p?.mortalityLog||[]).find(r=>r.id===id);if(!rec)return;
-  document.getElementById('mt-pond').value=pid;
-  document.getElementById('mt-date').value=rec.date;
-  document.getElementById('mt-count').value=rec.count;
-  document.getElementById('mt-cause').value=rec.cause||'';
-  document.getElementById('mt-notes').value=rec.notes||'';
-  calcAge('mt');onMtCountInput();
-  showMsg('mt-msg','warn',`✏️ กำลังแก้ไขข้อมูลวันที่ ${fD(rec.date)} — แก้ค่าแล้วกด "บันทึก" เพื่ออัปเดต`);
+  const p=pond(pid);const rec=((p&&p.mortalityLog)||[]).find(r=>r.id===id);if(!rec)return;
+  _mtDate=rec.date;_mtVals={};
+  const el=document.getElementById('mt-date');if(el){el.value=rec.date;syncDateHint(el);}
+  renderMtRows();
+  const row=document.querySelector('#mt-rows .mt-pc[data-pid="'+pid+'"]');
+  if(row){row.scrollIntoView({behavior:'smooth',block:'center'});const i=row.querySelector('input');if(i){i.focus();i.select();}}
+  showMsg('mt-msg','warn','✏️ ย้อนมาที่วันที่ '+fD(rec.date)+' บ่อ '+p.name+' — แก้ตัวเลขแล้วกดบันทึกเพื่ออัปเดต');
 }
 function deleteMortality(pid,id){
   const p=pond(pid);if(!p)return;
@@ -15434,7 +15555,7 @@ function deleteMortality(pid,id){
   if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(target.date)+' ใช่หรือไม่?'))return;
   p.mortalityLog=(p.mortalityLog||[]).filter(r=>r!==target);
   D.deletedIds=D.deletedIds||[];D.deletedIds.push(target.id);
-  save();renderMtTable();renderMtSummary();renderMtBars();
+  save();renderMtRows();renderMtSummary();populateMtFilter();renderMtTable();
 }
 // ===== LAB RESULTS =====
 function initLab(){populateAll();document.getElementById('lb-date').value=today();calcAge('lb');renderLabTable();updateLabSrcCount('water');updateLabSrcCount('hep');}
