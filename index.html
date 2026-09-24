@@ -1549,6 +1549,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   .gq-btns button{flex:1}
 }
 /* ── ผังอุปกรณ์ในบ่อ (entry #309) ── */
+.gm-sel{font-family:inherit;font-size:calc(15px * var(--ui-scale));font-weight:800;color:var(--tx);
+  border:1.5px solid var(--bd);border-radius:9px;padding:5px 7px;background:var(--sf);min-height:40px}
 .gm-tools{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
 .gm-tools button{border:1.5px solid var(--bd);background:var(--sf);border-radius:10px;padding:9px 12px;font-family:inherit;
   font-size:calc(13px * var(--ui-scale));min-height:44px;cursor:pointer;color:var(--tx2)}
@@ -2671,8 +2673,11 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <span><i style="background:var(--db);color:var(--d)">⚠</i>พบปัญหา ยังไม่ซ่อม</span>
     </div>
   </div>
-  <div class="card" id="gr-pond-card" style="display:none">
-    <div class="card-t" id="gr-pond-title"></div>
+  <div class="card" id="gr-pond-card">
+    <div class="card-t" style="flex-wrap:wrap;gap:8px">
+      <span>🗺️ ผังอุปกรณ์ บ่อ <select id="gr-pond-sel" class="gm-sel" onchange="grShowPond(this.value,true)"></select></span>
+      <span id="gr-pond-title" style="font-weight:400;font-size:var(--fs11);color:var(--tx3)"></span>
+    </div>
     <!-- ผังอุปกรณ์: แตะไอคอน = บันทึกเช็คของชิ้นนั้น · โหมดจัดผัง = ลากย้าย/หมุน/ลบ -->
     <div id="gr-map"></div>
     <div id="gr-pond-body"></div>
@@ -14764,7 +14769,19 @@ const GR_ST={done:{c:'var(--ob)',t:'var(--ok)',i:'✓',l:'เช็คแล้�
 function gearPonds(){
   return (D.ponds||[]).slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'th',{numeric:true}));
 }
-function initGear(){renderGearAlert();renderGearQueue();renderGearGrid();renderGearTypes();}
+function initGear(){
+  renderGearAlert();renderGearQueue();renderGearGrid();renderGearTypes();
+  // เปิดผังของบ่อที่ควรดูก่อน (มีปัญหาค้าง > ต้องเช็คก่อนลงกุ้ง) ไม่งั้นบ่อแรก — จะได้ไม่ต้องหาทางเข้าเอง
+  const ps=gearPonds();if(!ps.length)return;
+  let pick=_gmPond&&pond(_gmPond)?_gmPond:null;
+  if(!pick){
+    const al=gearAlertList();
+    const hot=al.find(x=>x.s==='issue')||al.find(x=>x.s==='duePrep');
+    const hp=hot?ps.find(x=>x.name===hot.pondName):null;
+    pick=(hp||ps[0]).id;
+  }
+  grShowPond(pick,true);
+}
 function grToggleGrid(btn){
   const a=document.getElementById('gr-grid-wrap'),b=document.getElementById('gr-lg-wrap');
   const open=!a.classList.contains('open');
@@ -14817,7 +14834,8 @@ function renderGearGrid(){
   const box=document.getElementById('gr-grid');if(!box)return;
   const types=gearTypes();
   if(!(D.pondGear||[]).length){
-    box.innerHTML='<p style="color:var(--tx3);padding:20px;text-align:center;font-style:italic">ยังไม่ได้ผูกอุปกรณ์กับบ่อ — กด "ใส่ให้ทุกบ่อ" ที่การ์ดชุดอุปกรณ์มาตรฐานด้านล่าง</p>';return;}
+    box.innerHTML='<p style="color:var(--tx3);padding:20px;text-align:center;font-style:italic">ยังไม่ได้ผูกอุปกรณ์กับบ่อ —'
+      +' วางของลงผังด้านบนได้เลย (ผูกให้เอง) หรือกด "ใส่ให้ทุกบ่อ" ที่การ์ดชุดอุปกรณ์มาตรฐานด้านล่าง</p>';return;}
   box.innerHTML='<table class="gr-tbl"><thead><tr><th>บ่อ</th>'
     +types.map(t=>'<th>'+String(t.name).replace(' + ','<br>+ ').replace(' / ','<br>/ ')+'</th>').join('')+'</tr></thead><tbody>'
     +gearPonds().map(p=>{
@@ -14864,9 +14882,13 @@ function grShowPond(pid,keepScroll){
   card.style.display='';
   if(_gmPond!==pid){_gmPond=pid;_gmSel=null;_gmPlace=null;_gmCp=null;}
   renderGearMap();
+  const sel=document.getElementById('gr-pond-sel');
+  if(sel)sel.innerHTML=gearPonds().map(x=>'<option value="'+x.id+'"'+(x.id===pid?' selected':'')+'>'+mpEsc(x.name||'-')
+    +(pondLayout(x.id).length?'':' (ยังไม่วางผัง)')+'</option>').join('');
   const age=pondCurAge(p);
-  ttl.innerHTML='🦐 บ่อ '+p.name+' <span style="font-weight:400;font-size:var(--fs11);color:var(--tx3)">'
-    +(p.harvestDate?'จับแล้ว รอปิดรอบ':(age>0?'กำลังเลี้ยง '+age+' วัน':'ว่าง/เตรียมบ่อ'))+'</span>';
+  const nMap=gearPonds().filter(x=>pondLayout(x.id).length).length;
+  ttl.innerHTML='· '+(p.harvestDate?'จับแล้ว รอปิดรอบ':(age>0?'กำลังเลี้ยง '+age+' วัน':'ว่าง/เตรียมบ่อ'))
+    +' · วางผังแล้ว '+nMap+'/'+gearPonds().length+' บ่อ';
   const types=gearTypes();
   body.innerHTML=types.filter(t=>gearRow(pid,t.id)).map(t=>{
     const g=gearRow(pid,t.id),st=gearStatus(p,t.id),d=GR_ST[st.s];
@@ -14926,7 +14948,8 @@ function renderGearMap(){
     +'<button type="button" class="'+(isEdit?'on':'')+'" onclick="gmSetMode(\'edit\')">✏️ โหมดจัดผัง</button>'
     +(isEdit?'<button type="button" onclick="gmRotate()">🔄 หมุน 45°</button>'
       +'<button type="button" onclick="gmCopyFrom()">📥 ดึงผังจากบ่ออื่น</button>'
-      +'<button type="button" onclick="gmCopyTo()">📤 ส่งผังนี้ไปหลายบ่อ</button>':'')
+      +'<button type="button" onclick="gmCopyTo()">📤 ส่งผังนี้ไปหลายบ่อ</button>'
+      :(!list.length&&gmPondsWithLayout().length?'<button type="button" onclick="gmCopyFrom()">📥 ดึงผังจากบ่ออื่น</button>':''))
     +'</div>'
     +'<div class="gm-cp" id="gm-cp"><h4 id="gm-cp-t"></h4><div id="gm-cp-b"></div>'
       +'<div class="gm-tools" style="margin:9px 0 0"><button type="button" class="on" onclick="gmCpRun()">ทำเลย</button>'
@@ -14942,6 +14965,10 @@ function renderGearMap(){
           +'<span class="lbl">'+mpEsc(gmLabel(list,i))+'</span>'
           +((isEdit&&_gmSel===it.id)?'<button type="button" class="del" onclick="gmDel(\''+it.id+'\')">✕</button>':'')+'</div>';
       }).join('')+'</div>'
+    +(list.length?'':'<div class="gm-hint" style="text-align:center;padding:10px 0;color:var(--d);font-weight:700">'
+      +(isEdit?'⬆️ เลือกชนิดอุปกรณ์จากแถบด้านบน แล้วแตะในบ่อเพื่อวาง'
+             :'บ่อนี้ยังไม่ได้วางผัง — กด "✏️ โหมดจัดผัง" เพื่อเริ่มวาง'
+               +(gmPondsWithLayout().length?' หรือ "📥 ดึงผังจากบ่ออื่น"':''))+'</div>')
     +'<div class="gm-hint">'+(isEdit
        ?'แตะไอคอน = เลือก (หมุน/ลบได้) · ลากนิ้ว = ย้าย · เลือกชนิดจากแถบด้านบนแล้วแตะในบ่อเพื่อวางเพิ่ม<br>วางผิดลบได้: แตะไอคอนนั้น แล้วกดปุ่ม ✕ แดงมุมขวาบน'
        :'แตะไอคอนเพื่อบันทึกการเช็คของชิ้นนั้น · สีป้ายชื่อ: แดง = ต้องเช็ค · เขียว = เช็คแล้วรอบนี้')
@@ -14995,7 +15022,7 @@ function gmAdd(tid,x,y){
   D.pondLayout.push({id:'pl_'+_gmPond+'_'+tid+'_'+Date.now().toString(36),pondId:_gmPond,typeId:tid,
     x:Math.max(2,Math.min(98,x)),y:Math.max(2,Math.min(98,y)),rot:0});
   gmEnsureGear(_gmPond,tid);
-  save();renderGearMap();grShowPond(_gmPond,true);
+  save();initGear();
 }
 function gmEnsureGear(pid,tid){
   D.pondGear=D.pondGear||[];
@@ -15017,7 +15044,7 @@ function gmDel(id){
   (D.gearChecks||[]).forEach(c=>{if(c.itemId===id)D.deletedIds.push(c.id);});
   D.gearChecks=(D.gearChecks||[]).filter(c=>c.itemId!==id);
   D.pondLayout=(D.pondLayout||[]).filter(l=>l.id!==id);
-  _gmSel=null;save();renderGearMap();grShowPond(rec.pondId,true);
+  _gmSel=null;save();initGear();
 }
 // ── คัดลอกผัง: ตำแหน่ง/ทิศตามต้นแบบ แต่ "สถานะเช็คเริ่มใหม่" ไม่ยกประวัติของบ่อต้นแบบไปด้วย ──
 function gmPondsWithLayout(){return gearPonds().filter(p=>pondLayout(p.id).length);}
