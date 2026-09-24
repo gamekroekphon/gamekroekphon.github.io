@@ -1494,6 +1494,119 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 /* --pb ไม่เคยมีอยู่จริงในแอป ป้ายนี้จึงพื้นหลังโปร่งใสมาตลอด — เขียนตามที่เห็นจริง ไม่เปลี่ยนหน้าตา
    (ถ้าอยากได้พื้นหลังทองอ่อนแบบเม็ดยา เปลี่ยนเป็น var(--pl) ได้) */
 .hdr-role-badge.role-admin{background:transparent;color:var(--p)}.hdr-role-badge.role-staff{background:var(--sf2);color:var(--tx3)}
+/* ── อุปกรณ์ประจำบ่อ & รอบเช็ค (entry #309) ── */
+.gr-alert{border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:calc(13px * var(--ui-scale))}
+.gr-alert.bad{background:var(--db);border:1.5px solid var(--d)}
+.gr-alert.ok{background:var(--ob);border:1.5px solid var(--ok);color:var(--ok);font-weight:700}
+.gr-alert .h{font-weight:800;color:var(--d);margin-bottom:8px}
+.gr-arow{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed rgba(0,0,0,.12);align-items:flex-start}
+.gr-arow:last-child{border-bottom:0}
+.gr-arow .n{font-size:var(--fs10);color:var(--tx3)}
+.gr-pill{border-radius:6px;padding:1px 8px;font-size:var(--fs10);font-weight:700;white-space:nowrap}
+.gr-pill.due{background:var(--db);color:var(--d)}
+.gr-pill.miss{background:var(--wb);color:var(--w)}
+.gr-pill.never{background:var(--sf2);color:var(--tx3)}
+.gr-pill.okp{background:var(--ob);color:var(--ok)}
+.gr-tbl{width:100%;border-collapse:collapse;font-size:calc(12.5px * var(--ui-scale))}
+.gr-tbl th{background:var(--sf2);color:var(--tx2);font-size:var(--fs10);font-weight:700;padding:7px 5px;border-bottom:1px solid var(--bd);text-align:center;line-height:1.35}
+.gr-tbl th:first-child{text-align:left}
+.gr-tbl td{padding:5px;border-bottom:1px solid #EEF0F2}
+.gr-tbl td.pn{font-weight:700;white-space:nowrap;cursor:pointer}
+.gr-tbl td.pn span{display:block;font-size:var(--fs10);color:var(--tx3);font-weight:400}
+.gr-tbl td.st{text-align:center;font-weight:800;cursor:pointer;border-radius:6px}
+.gr-lg{display:flex;gap:14px;flex-wrap:wrap;font-size:var(--fs11);color:var(--tx2);margin-top:10px}
+.gr-lg i{font-style:normal;display:inline-block;width:15px;height:15px;border-radius:4px;vertical-align:-3px;margin-right:5px;text-align:center;font-size:10px;font-weight:800;line-height:15px}
+.gr-res{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gr-res button{border:1.5px solid var(--bd);background:var(--sf);border-radius:10px;padding:11px 10px;font-family:inherit;font-size:calc(13px * var(--ui-scale));text-align:left;cursor:pointer;min-height:46px}
+.gr-res button.on{border-color:var(--p);background:var(--pl);color:#7A5403;font-weight:700}
+.gr-item{display:flex;justify-content:space-between;gap:10px 12px;padding:9px 0;border-bottom:1px solid var(--bd);align-items:flex-start;flex-wrap:wrap}
+.gr-item>div:first-child{min-width:0;flex:1 1 190px}
+.gr-item .gr-btns{display:flex;gap:6px;flex-wrap:wrap}
+/* ── คิวเช็ควันนี้ — ออกแบบให้พนักงานกดบนมือถือขณะเดินบ่อ (entry #309) ── */
+.gq-pond{border:1.5px solid var(--bd);border-radius:12px;padding:11px 12px;margin-bottom:11px;background:var(--sf)}
+.gq-pond.hot{border-color:var(--d);background:#FFFBFB}
+.gq-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:9px;flex-wrap:wrap}
+.gq-h b{font-size:calc(16px * var(--ui-scale))}
+.gq-h span{font-size:var(--fs11);color:var(--tx3)}
+.gq-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px dashed var(--bd);flex-wrap:wrap}
+.gq-row .nm{font-weight:700;font-size:calc(14px * var(--ui-scale));flex:1 1 130px;min-width:0}
+.gq-row .nm small{display:block;font-weight:400;font-size:var(--fs10);color:var(--tx3);margin-top:1px}
+.gq-btns{display:flex;gap:6px;flex:none}
+.gq-btns button{border:1.5px solid var(--bd);background:var(--sf);border-radius:10px;font-family:inherit;
+  font-size:calc(13px * var(--ui-scale));font-weight:700;padding:9px 12px;min-height:44px;cursor:pointer;white-space:nowrap}
+.gq-btns button.ok{border-color:var(--ok);color:var(--ok)}
+.gq-btns button.bad{border-color:var(--w);color:var(--w)}
+.gq-btns button.more{color:var(--tx3);padding:9px 11px}
+.gq-done{font-size:calc(13px * var(--ui-scale));color:var(--ok);font-weight:700;padding:6px 0}
+.gr-grid-wrap{display:block}
+.gr-toggle{display:none}
+@media(max-width:600px){
+  .gr-grid-wrap{display:none}
+  .gr-grid-wrap.open{display:block}
+  .gr-toggle{display:inline-flex}
+  .gq-row .nm{flex:1 1 100%}
+  .gq-btns{width:100%}
+  .gq-btns button{flex:1}
+}
+/* ── ผังอุปกรณ์ในบ่อ (entry #309) ── */
+.gm-tools{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.gm-tools button{border:1.5px solid var(--bd);background:var(--sf);border-radius:10px;padding:9px 12px;font-family:inherit;
+  font-size:calc(13px * var(--ui-scale));min-height:44px;cursor:pointer;color:var(--tx2)}
+.gm-tools button.on{background:var(--pl);border-color:#EBD9A8;color:#7A5403;font-weight:700}
+.gm-pond{position:relative;width:100%;max-width:520px;margin:0 auto;aspect-ratio:1/1;border:3px solid #6B7480;border-radius:10px;
+  background:linear-gradient(#EAF4FB,#DCEBF7);overflow:hidden;touch-action:none}
+.gm-pond::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,0,0,.05) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,0,0,.05) 1px,transparent 1px);background-size:10% 10%}
+.gm-it{position:absolute;transform:translate(-50%,-50%);cursor:grab;user-select:none;display:flex;align-items:center;justify-content:center;
+  min-width:44px;min-height:44px;touch-action:none}
+.gm-it.drag{cursor:grabbing;filter:drop-shadow(0 3px 6px rgba(0,0,0,.3))}
+.gm-it .lbl{position:absolute;top:100%;left:50%;transform:translate(-50%,-4px);pointer-events:none;white-space:nowrap;
+  font-size:calc(9.5px * var(--ui-scale));color:var(--tx2);background:rgba(255,255,255,.82);border-radius:4px;padding:0 3px}
+.gm-it.st-done .lbl{background:var(--ob);color:var(--ok);font-weight:700}
+.gm-it.st-duePrep .lbl,.gm-it.st-issue .lbl{background:var(--db);color:var(--d);font-weight:700}
+.gm-it.st-missed .lbl{background:var(--wb);color:var(--w);font-weight:700}
+.gm-it.sel{z-index:900!important}
+.gm-it.sel .gm-sym{outline:2px dashed var(--p);outline-offset:5px;border-radius:5px}
+.gm-it.sel .lbl{background:var(--p);color:#fff;font-weight:700}
+.gm-it .del{position:absolute;top:-16px;right:-18px;width:30px;height:30px;padding:0;border:2px solid #fff;border-radius:50%;
+  background:var(--d);color:#fff;font-size:calc(14px * var(--ui-scale));font-weight:800;line-height:1;cursor:pointer;z-index:12;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.28)}
+.gm-sym{display:block;flex:none}
+.gm-paddle{width:54px;height:16px;position:relative}
+.gm-paddle b{position:absolute;top:7px;left:0;right:0;height:2px;background:#1F2937}
+.gm-paddle i{position:absolute;top:0;width:2px;height:16px;background:#1F2937}
+.gm-feeder{width:38px;height:14px;position:relative}
+.gm-feeder b{position:absolute;top:6px;left:0;right:8px;height:2px;background:#1F2937}
+.gm-feeder i{position:absolute;right:0;top:2px;width:10px;height:10px;border:2px solid #1F2937;border-radius:50%;background:#fff}
+.gm-bubble{width:40px;height:34px}
+.gm-turbine{width:22px;height:22px;border:2px solid #1F2937;border-radius:50%;position:relative;background:#fff}
+.gm-turbine::before,.gm-turbine::after{content:'';position:absolute;background:#1F2937}
+.gm-turbine::before{left:50%;top:-4px;bottom:-4px;width:2px;margin-left:-1px}
+.gm-turbine::after{top:50%;left:-4px;right:-4px;height:2px;margin-top:-1px}
+.gm-pit{width:46px;height:46px;border:2px solid #1F2937;border-radius:50%;background:rgba(255,255,255,.55)}
+.gm-pump{width:20px;height:20px;border:2px solid var(--d);border-radius:5px;background:#fff;position:relative}
+.gm-pump::after{content:'P';position:absolute;inset:0;display:grid;place-items:center;font-size:calc(11px * var(--ui-scale));font-weight:800;color:var(--d)}
+.gm-panel{width:26px;height:18px;border:2px solid #1F2937;border-radius:3px;background:#fff;position:relative}
+.gm-panel::after{content:'⚡';position:absolute;inset:0;display:grid;place-items:center;font-size:calc(11px * var(--ui-scale))}
+.gm-pal{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+.gm-pal button{display:flex;align-items:center;gap:7px;border:1.5px solid var(--bd);background:var(--sf);border-radius:10px;
+  padding:8px 11px;font-family:inherit;font-size:calc(12.5px * var(--ui-scale));min-height:46px;cursor:pointer;color:var(--tx2)}
+.gm-pal button.on{border-color:var(--p);background:var(--pl);color:#7A5403;font-weight:700}
+.gm-hint{font-size:var(--fs10);color:var(--tx3);line-height:1.7;margin-top:8px}
+/* กล่องคัดลอกผัง */
+.gm-cp{display:none;border:1.5px solid var(--p);border-radius:12px;padding:12px;margin-bottom:11px;background:var(--pl)}
+.gm-cp.on{display:block}
+.gm-cp h4{margin:0 0 3px;font-size:calc(14px * var(--ui-scale))}
+.gm-cp .s{font-size:var(--fs11);color:var(--tx3);line-height:1.6}
+.gm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:6px;max-height:210px;overflow:auto;margin:9px 0;padding:1px}
+.gm-grid label{display:flex;align-items:center;gap:6px;border:1.5px solid var(--bd);border-radius:9px;padding:7px 6px;background:var(--sf);
+  font-size:calc(12.5px * var(--ui-scale));min-height:44px;cursor:pointer}
+.gm-grid label.on{border-color:var(--p);background:#FFF6E0;font-weight:700}
+.gm-grid label.has{color:var(--tx3)}
+.gm-grid input{width:18px;height:18px;flex:none}
+.gr-item:last-child{border-bottom:0}
+.gr-item .t{font-weight:700;font-size:calc(13.5px * var(--ui-scale))}
+.gr-item .m{font-size:var(--fs10);color:var(--tx3);margin-top:2px;line-height:1.6}
 /* ── เลือกบ่อหลายบ่อในหน้าเติมน้ำ (entry #308) — ชิปแตะง่ายบนมือถือ ── */
 .wl-row{display:flex;gap:9px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px}
 .wl-quick{display:flex;gap:6px}
@@ -1575,6 +1688,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <button class="sn-link tab-item" onclick="goTab('sample',this)">⚖️ สุ่มตัวอย่าง</button>
       <button class="sn-link tab-item" onclick="goTab('watlog',this)">💦 จัดการน้ำ</button>
       <button class="sn-link tab-item" onclick="goTab('mortality',this)">🦐 กุ้งตาย</button>
+      <button class="sn-link tab-item" onclick="goTab('gear',this)">🔧 อุปกรณ์บ่อ</button>
     </div>
 
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-crop')"><span>🌾</span> รอบเลี้ยง <span class="sn-caret">▾</span></button>
@@ -1660,6 +1774,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <button class="tab-item" id="tab-sample" onclick="goTab('sample',this)">⚖️ สุ่มตัวอย่าง</button>
       <button class="tab-item" id="tab-watlog" onclick="goTab('watlog',this)">💦 จัดการน้ำ</button>
       <button class="tab-item" id="tab-mortality" onclick="goTab('mortality',this)">🦐 กุ้งตาย</button>
+      <button class="tab-item" id="tab-gear" onclick="goTab('gear',this)">🔧 อุปกรณ์บ่อ</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-crop">
@@ -1731,6 +1846,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <button class="mob-sheet-item" data-t="price" onclick="mobMenuGo(this)"><span class="ic">💲</span>ราคาสินค้า</button>
     <button class="mob-sheet-item" data-t="sample" onclick="mobMenuGo(this)"><span class="ic">⚖️</span>สุ่มตัวอย่าง</button>
     <button class="mob-sheet-item" data-t="watlog" onclick="mobMenuGo(this)"><span class="ic">💦</span>จัดการน้ำ</button>
+    <button class="mob-sheet-item" data-t="gear" onclick="mobMenuGo(this)"><span class="ic">🔧</span>อุปกรณ์บ่อ</button>
     <button class="mob-sheet-item" data-t="mortality" onclick="mobMenuGo(this)"><span class="ic">🦐</span>กุ้งตาย</button>
     <div class="mob-sheet-grp">🌾 รอบเลี้ยง</div>
     <button class="mob-sheet-item" data-t="crops" onclick="mobMenuGo(this)"><span class="ic">🌾</span>รอบเลี้ยง</button>
@@ -2528,6 +2644,67 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <select class="fi" id="wl-filter" style="width:auto;min-width:130px;font-size:calc(12px * var(--ui-scale));padding:5px 9px" onchange="renderWaterTable()"><option value="">ทุกบ่อ</option></select>
     </div>
     <div class="tbl-wrap" id="wl-tbl-wrap"></div>
+  </div>
+</div>
+<!-- ═══ อุปกรณ์ประจำบ่อ & รอบเช็ค (entry #309) ═══
+     ที่มา: ปั๊มดูดกลางบ่อรั่วที่ A.14/A.16 → กุ้งตัวแดง เสียทั้งรอบ · ของแบบนี้ยกขึ้นมาเช็คตอนมีกุ้งไม่ได้
+     รอบเช็คจึงผูกกับ "ช่วงเตรียมบ่อก่อนลงกุ้งรอบใหม่" ตามที่พี่สั่ง ไม่ใช่ทุกกี่เดือน -->
+<div id="sec-gear" class="sec">
+  <div class="sec-hdr">
+    <div class="sec-title">🔧 อุปกรณ์ประจำบ่อ</div>
+    <div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-top:2px">เช็คทุกครั้งตอนเตรียมบ่อก่อนลงกุ้งรอบใหม่ — ลงกุ้งแล้วยกขึ้นมาเช็คไม่ได้</div>
+  </div>
+  <div id="gr-alert"></div>
+  <!-- คิวเช็ค: จัดกลุ่มตามบ่อ กดปุ่มเดียวจบต่อชิ้น — จุดที่พนักงานใช้จริงบนมือถือ -->
+  <div id="gr-queue"></div>
+  <div class="card">
+    <div class="card-t" style="justify-content:space-between"><span>📋 สถานะทุกบ่อ</span>
+      <button type="button" class="btn btn-s gr-toggle" onclick="grToggleGrid(this)">▾ เปิดตาราง</button>
+      <span style="font-size:var(--fs11);font-weight:400;color:var(--tx3)" class="skc-dsk">แตะช่องเพื่อบันทึกการเช็ค</span></div>
+    <div class="gr-grid-wrap" id="gr-grid-wrap"><div style="overflow-x:auto" id="gr-grid"></div></div>
+    <div class="gr-lg gr-grid-wrap" id="gr-lg-wrap">
+      <span><i style="background:var(--ob);color:var(--ok)">✓</i>เช็คแล้วรอบนี้</span>
+      <span><i style="background:var(--db);color:var(--d)">✕</i>ต้องเช็คก่อนลงกุ้ง</span>
+      <span><i style="background:var(--wb);color:var(--w)">!</i>รอบนี้ไม่ได้เช็ค</span>
+      <span><i style="background:var(--sf2);color:var(--tx3)">–</i>ยังไม่มีแผนลงกุ้ง</span>
+      <span><i style="background:var(--sf2);color:var(--tx3)">·</i>ไม่ได้ผูกอุปกรณ์ชนิดนี้</span>
+      <span><i style="background:var(--db);color:var(--d)">⚠</i>พบปัญหา ยังไม่ซ่อม</span>
+    </div>
+  </div>
+  <div class="card" id="gr-pond-card" style="display:none">
+    <div class="card-t" id="gr-pond-title"></div>
+    <!-- ผังอุปกรณ์: แตะไอคอน = บันทึกเช็คของชิ้นนั้น · โหมดจัดผัง = ลากย้าย/หมุน/ลบ -->
+    <div id="gr-map"></div>
+    <div id="gr-pond-body"></div>
+  </div>
+  <div class="card admin-only">
+    <div class="card-t" style="justify-content:space-between"><span>⚙️ ชุดอุปกรณ์มาตรฐาน</span>
+      <button class="btn btn-s" onclick="grAddType()">➕ เพิ่มชนิดอุปกรณ์</button></div>
+    <div id="gr-types"></div>
+    <div style="font-size:var(--fs11);color:var(--tx3);margin-top:10px">ตั้งครั้งเดียวแล้วกด "ใส่ให้ทุกบ่อ" — บ่อที่มีอยู่แล้วจะไม่ถูกเพิ่มซ้ำ</div>
+  </div>
+</div>
+<!-- หน้าต่างบันทึกการเช็ค -->
+<div class="modal-bg" id="gearModal" onclick="if(event.target===this)grCloseModal()">
+  <div class="modal" style="max-width:460px" role="dialog" aria-labelledby="gr-mod-title">
+    <div class="fsl-h"><div><b id="gr-mod-title">บันทึกการเช็ค</b></div><button type="button" class="bill-x" aria-label="ปิด" onclick="grCloseModal()">✕</button></div>
+    <div style="padding-top:12px">
+      <input type="hidden" id="gr-m-pond"><input type="hidden" id="gr-m-type"><input type="hidden" id="gr-m-res"><input type="hidden" id="gr-m-item">
+      <div class="fg"><label class="fl" for="gr-m-date">วันที่เช็ค</label><input type="date" class="fi" id="gr-m-date"></div>
+      <div class="fg"><label class="fl">ผลการเช็ค</label>
+        <div class="gr-res">
+          <button type="button" data-r="ok" onclick="grPickRes('ok')">✅ ปกติ ใช้ต่อได้</button>
+          <button type="button" data-r="fix" onclick="grPickRes('fix')">🔧 ซ่อมแล้ว</button>
+          <button type="button" data-r="replace" onclick="grPickRes('replace')">♻️ เปลี่ยนใหม่</button>
+          <button type="button" data-r="issue" onclick="grPickRes('issue')">⚠️ พบปัญหา ยังไม่ซ่อม</button>
+        </div>
+      </div>
+      <div class="fg"><label class="fl" for="gr-m-note">บันทึก</label><input type="text" class="fi" id="gr-m-note" placeholder="เช่น รั่วที่ซีล เปลี่ยนตัวใหม่"></div>
+      <div id="gr-m-hint" style="font-size:var(--fs10);color:var(--tx3);line-height:1.6"></div>
+      <div id="gr-m-msg"></div>
+      <div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-p" onclick="grSaveCheck()">💾 บันทึก</button><button class="btn btn-s" onclick="grCloseModal()">ยกเลิก</button></div>
+      <div id="gr-m-hist" style="margin-top:14px"></div>
+    </div>
   </div>
 </div>
 <!-- MORTALITY LOG -->
@@ -5011,7 +5188,9 @@ function mergeRemote(local, remote) {
   //    medTrials[].journal เป็นอาเรย์ในรายการ → ชนะทั้งรายการตามฝั่ง local (ไม่ merge ระดับบันทึก)
   //    ⚠️ D.medProtoGroups ไม่ต้อง merge: มีแค่ 2 กลุ่มคงที่ (feed/water) seed เหมือนกันทุกเครื่อง ไม่มีหน้าไหนแก้ได้ และไม่มี id
   //       (ถ้าวันหน้ามีปุ่มเปลี่ยนชื่อกลุ่ม ต้อง merge ด้วย key ห้ามใช้ mergeArr — ไม่มี id จะกลายเป็นกลุ่มซ้ำ)
-  ['clerkCash','medTrials'].forEach(k => {
+  // ── อุปกรณ์ประจำบ่อ (entry #309): gearTypes/pondGear มี id คงที่ (gt_/pg_<บ่อ>_<ชนิด>) · gearChecks id มีเวลา
+  //    ทุกฟังก์ชันลบ push เข้า deletedIds แล้ว
+  ['gearTypes','pondGear','pondLayout','gearChecks','clerkCash','medTrials'].forEach(k => {
     merged[k] = dropDead(mergeArr(merged[k]||[], remote[k]||[]));
   });
   // ── ค่าแรงรายวัน: 1 สัปดาห์ (weekEnd) ต้องมีรายการเดียว — saveDailyWeek() เขียนทับตาม weekEnd อยู่แล้ว
@@ -6611,7 +6790,7 @@ function goTab(t,btn){
   if(btn.classList.contains('sn-top'))document.querySelectorAll('.sn-sub').forEach(s=>s.classList.remove('open'));
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));document.getElementById('sec-'+t).classList.add('on');
   if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='stock')initStock();if(t==='abw')initAbw();if(t==='feed')initFeed();if(t==='pl')initPL();
-  if(t==='sample')initSample();if(t==='watlog')initWaterLog();
+  if(t==='sample')initSample();if(t==='watlog')initWaterLog();if(t==='gear')initGear();
   if(t==='lab')initLab();if(t==='mortality')initMortality();
   if(t==='trial')initTrialTab();
   if(t==='compare')initCompare();if(t==='risk'){if(_wxDaily)renderRisk(_wxDaily);else fetchWx();}if(t==='export')initExport();if(t==='wqfeed')initWqFeed();if(t==='hatchery')initHatchery();
@@ -14509,6 +14688,531 @@ function clearWaterLog(){
   const n=document.getElementById('wl-notes');if(n)n.value='';
   const m=document.getElementById('wl-msg');if(m)m.innerHTML='';
   renderWlPonds();
+}
+// ══════════ อุปกรณ์ประจำบ่อ & รอบเช็ค (entry #309 — พี่สั่ง 24 ก.ย. 69) ══════════
+//    ⚠️ รอบเช็คผูกกับ "ช่วงเตรียมบ่อของรอบปัจจุบัน" (พี่สั่ง) = ตั้งแต่วันตัดต้นทุนรอบก่อน +1 ถึงวันลงกุ้ง
+//       ไม่ใช่ทุกกี่เดือน เพราะปั๊มดูดกลางบ่อ/ท่อกลาง ยกขึ้นมาเช็คตอนมีกุ้งไม่ได้
+//    ⚠️ 3 คีย์ใหม่ระดับบนของ D (gearTypes/pondGear/gearChecks) — ต้อง merge ใน mergeRemote และลบต้อง push deletedIds (entry #272)
+//    ⚠️ อนาคตพี่จะแยก role ละเอียด (ช่างไฟ/เสมียน/Lab) — ตอนนี้ staff บันทึกได้ทุกชนิด ถ้าจะจำกัดทีหลังให้เพิ่มเงื่อนไขที่ grSaveCheck() จุดเดียว
+const GEAR_SEED=[
+  {id:'gt_aer',  name:'ใบพัดตีน้ำ',        order:1, sym:'paddle'},
+  {id:'gt_feed', name:'ตู้ฟีดอาหาร',        order:2, sym:'feeder'},
+  {id:'gt_bub',  name:'ท่อรินฟอง',          order:3, sym:'bubble'},
+  {id:'gt_turb', name:'เทอร์ไบน์เติมอากาศ',  order:4, sym:'turbine'},
+  {id:'gt_pit',  name:'หลุมกลางบ่อ',        order:5, sym:'pit'},
+  {id:'gt_pump', name:'ปั๊มดูดกลางบ่อ',      order:6, sym:'pump'},
+  {id:'gt_liner',name:'ผ้าใบปูบ่อ (HDPE)',  order:7, sym:''},
+  {id:'gt_elec', name:'ตู้ไฟ / สายไฟ',      order:8, sym:'panel'},
+];
+// ชนิดที่ต้องเลือกทิศได้ · ใบพัดเป็นแท่งสมมาตร วน 180 พอ · ตู้ฟีด/ท่อรินฟองมีหัวด้านเดียว ต้องวนครบ 360
+const GEAR_ROT={paddle:180,feeder:360,bubble:360};
+// ชิ้นเล็กต้องวาดทับชิ้นใหญ่ ไม่งั้นปั๊มที่วางอยู่ในหลุมจะแตะไม่โดน
+const GEAR_AREA={pit:2116,paddle:864,bubble:1360,feeder:1444,panel:468,turbine:484,pump:400};
+const GEAR_RES={ok:'✅ ปกติ',fix:'🔧 ซ่อมแล้ว',replace:'♻️ เปลี่ยนใหม่',issue:'⚠️ พบปัญหา ยังไม่ซ่อม'};
+function gearTypes(){
+  if(!Array.isArray(D.gearTypes)||!D.gearTypes.length)D.gearTypes=GEAR_SEED.map(g=>({...g}));
+  return D.gearTypes.slice().sort((a,b)=>(a.order||0)-(b.order||0));
+}
+// ต้นช่วง "เตรียมบ่อรอบปัจจุบัน" — วันตัดต้นทุนรอบก่อน +1 (ใช้ costEndDate ก่อน closeDate ตามกฎ entry #250)
+function gearCycleStart(p){
+  const hist=(p.cropHistory||[]).filter(c=>c&&c.closeDate).sort((a,b)=>String(a.closeDate).localeCompare(String(b.closeDate)));
+  const last=hist[hist.length-1];
+  return last?addDaysStr(last.costEndDate||last.closeDate,1):null;   // null = บ่อที่ไม่เคยปิดรอบในระบบ
+}
+function gearChecksOf(pondId,typeId){
+  return (D.gearChecks||[]).filter(c=>c&&c.pondId===pondId&&c.typeId===typeId)
+    .sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+}
+function gearRow(pondId,typeId){return (D.pondGear||[]).find(g=>g&&g.pondId===pondId&&g.typeId===typeId)||null;}
+// ── ผังบ่อ: ตำแหน่งจริงของอุปกรณ์แต่ละชิ้น (x,y เป็น % ของบ่อ จึงยืดตามจอทุกขนาด) ──
+//    จำนวนอุปกรณ์ต่อบ่อ = จำนวนชิ้นบนผัง ไม่มีช่องกรอกจำนวนแยก (แหล่งข้อมูลเดียว — "มีเพิ่ม ลด แล้วแต่บ่อ")
+function pondLayout(pid){return (D.pondLayout||[]).filter(l=>l&&l.pondId===pid);}
+function layoutItems(pid,typeId){return (D.pondLayout||[]).filter(l=>l&&l.pondId===pid&&l.typeId===typeId);}
+// สถานะของ "หนึ่งหน่วย" จากประวัติการเช็คที่เรียงวันแล้ว — ใช้ร่วมกันทั้งรายชิ้นและรายชนิด
+function gearUnitStatus(p,ch){
+  const last=ch[ch.length-1]||null;
+  const cyc=gearCycleStart(p);
+  const hasShrimp=!!(p.startDate&&p.startDate<=today()&&!p.harvestDate);
+  // ⚠️ บ่อว่างที่ยังไม่ตั้งวันลงกุ้ง = ยังไม่มีแผน ไม่ต้องขึ้น checklist (พี่สั่ง — ไม่งั้นรายการท่วมจนหาของจริงไม่เจอ)
+  //    พอใส่วันลงกุ้งในหน้าจัดการบ่อเมื่อไหร่ อุปกรณ์ของบ่อนั้นจะเด้งเป็น "ต้องเช็คก่อนลงกุ้ง" ทันที
+  if(!p.startDate&&!p.harvestDate)return{s:'noplan',last};
+  if(last&&last.result==='issue')return{s:'issue',last};
+  const checkedThisCycle=!!(last&&(!cyc||last.date>=cyc));
+  if(checkedThisCycle)return{s:'done',last};
+  // บ่อมีกุ้งแล้ว = ยกขึ้นมาเช็คไม่ได้ ต้องรอรอบหน้า (เตือนไว้ให้รู้ว่ารอบนี้พลาด)
+  // บ่อว่าง/กำลังเตรียม = ทำได้เลย ต้องเช็คก่อนลงกุ้ง
+  return{s:hasShrimp?'missed':'duePrep',last,never:!last};
+}
+function gearItemStatus(p,item){
+  return gearUnitStatus(p,(D.gearChecks||[]).filter(c=>c&&c.itemId===item.id)
+    .sort((a,b)=>String(a.date).localeCompare(String(b.date))));
+}
+// สถานะ: done / duePrep / missed / noplan / issue  (มีผัง = ม้วนจากชิ้นที่แย่ที่สุด)
+const GEAR_RANK={issue:0,duePrep:1,missed:2,noplan:3,done:4};
+function gearStatus(p,typeId){
+  const its=layoutItems(p.id,typeId);
+  if(!its.length)return gearUnitStatus(p,gearChecksOf(p.id,typeId).filter(c=>!c.itemId));
+  const sts=its.map(it=>gearItemStatus(p,it));
+  let w=sts[0];sts.forEach(x=>{if(GEAR_RANK[x.s]<GEAR_RANK[w.s])w=x;});
+  return Object.assign({},w,{n:its.length,nDone:sts.filter(x=>x.s==='done').length});
+}
+const GR_ST={done:{c:'var(--ob)',t:'var(--ok)',i:'✓',l:'เช็คแล้วรอบนี้'},
+  noplan:{c:'var(--sf2)',t:'var(--tx3)',i:'–',l:'ยังไม่มีแผนลงกุ้ง'},
+  duePrep:{c:'var(--db)',t:'var(--d)',i:'✕',l:'ต้องเช็คก่อนลงกุ้ง'},
+  missed:{c:'var(--wb)',t:'var(--w)',i:'!',l:'รอบนี้ไม่ได้เช็ค'},
+  issue:{c:'var(--db)',t:'var(--d)',i:'⚠',l:'พบปัญหา ยังไม่ซ่อม'}};
+function gearPonds(){
+  return (D.ponds||[]).slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'th',{numeric:true}));
+}
+function initGear(){renderGearAlert();renderGearQueue();renderGearGrid();renderGearTypes();}
+function grToggleGrid(btn){
+  const a=document.getElementById('gr-grid-wrap'),b=document.getElementById('gr-lg-wrap');
+  const open=!a.classList.contains('open');
+  [a,b].forEach(el=>{if(el)el.classList.toggle('open',open);});
+  if(btn)btn.textContent=open?'▴ ปิดตาราง':'▾ เปิดตาราง';
+}
+// ── คิวเช็ค: เฉพาะที่ลงมือได้ตอนนี้ (บ่อที่มีแผนลงกุ้ง + รายการที่พบปัญหาค้าง) จัดกลุ่มตามบ่อ ──
+//    ⚠️ ปุ่ม "ปกติ" บันทึกทันทีวันนี้ ไม่ต้องเปิดหน้าต่าง — พนักงานยืนอยู่หน้าบ่อ กดครั้งเดียวจบ
+//       ปุ่มอื่น (ซ่อม/เปลี่ยน/มีปัญหา) เปิดหน้าต่างให้พิมพ์รายละเอียด
+function renderGearQueue(){
+  const box=document.getElementById('gr-queue');if(!box)return;
+  const types={};gearTypes().forEach(t=>types[t.id]=t.name);
+  const byPond={};
+  (D.pondGear||[]).forEach(g=>{
+    const p=pond(g.pondId);if(!p||!types[g.typeId])return;
+    const st=gearStatus(p,g.typeId);
+    if(st.s==='done'||st.s==='noplan'||st.s==='missed')return;
+    (byPond[p.id]=byPond[p.id]||{p,items:[]}).items.push({typeId:g.typeId,name:types[g.typeId],st});
+  });
+  const groups=Object.values(byPond).sort((a,b)=>{
+    const ad=a.p.startDate||'9999',bd=b.p.startDate||'9999';
+    return String(ad).localeCompare(String(bd))||String(a.p.name).localeCompare(String(b.p.name),'th',{numeric:true});
+  });
+  if(!groups.length){box.innerHTML='';return;}
+  box.innerHTML='<div class="card"><div class="card-t">✅ คิวเช็ควันนี้ <span style="font-weight:400;font-size:var(--fs11);color:var(--tx3)">'
+    +groups.length+' บ่อ · '+groups.reduce((s,g)=>s+g.items.length,0)+' ชิ้น</span></div>'
+  +groups.map(g=>{
+    const hot=g.items.some(i=>i.st.s==='issue');
+    const plan=g.p.startDate?(g.p.startDate>today()?'ลงกุ้ง '+fD(g.p.startDate)+' (อีก '+dDiff(today(),g.p.startDate)+' วัน)':'ลงกุ้งแล้ว '+fD(g.p.startDate)):'ยังไม่กำหนดวันลง';
+    return '<div class="gq-pond'+(hot?' hot':'')+'"><div class="gq-h"><b>บ่อ '+(g.p.name||'-')+'</b><span>'+plan+' · เหลือ '+g.items.length+' ชิ้น</span></div>'
+      +g.items.map(i=>'<div class="gq-row"><div class="nm">'+mpEsc(i.name)+(i.st.n>1?' <span style="font-weight:400;color:var(--tx3)">'+(i.st.n-i.st.nDone)+'/'+i.st.n+' ชิ้น</span>':'')
+        +'<small>'+(i.st.s==='issue'?'⚠️ พบปัญหาค้าง'+(i.st.last&&i.st.last.note?' — '+mpEsc(i.st.last.note):'')
+          :(i.st.last?'เช็คล่าสุด '+fD(i.st.last.date):'ยังไม่เคยเช็ค'))+'</small></div>'
+        +'<div class="gq-btns">'
+        +'<button type="button" class="ok" onclick="grQuickOk(\''+g.p.id+'\',\''+i.typeId+'\')">✅ ปกติ</button>'
+        +'<button type="button" class="bad" onclick="grOpenModal(\''+g.p.id+'\',\''+i.typeId+'\',\'issue\')">⚠️ มีปัญหา</button>'
+        +'<button type="button" class="more" onclick="grOpenModal(\''+g.p.id+'\',\''+i.typeId+'\')" title="ซ่อม/เปลี่ยนใหม่">⋯</button>'
+        +'</div></div>').join('')
+    +'</div>';
+  }).join('')+'</div>';
+}
+// กดปุ่มเดียวบันทึก "ปกติ" ของวันนี้
+function grQuickOk(pid,tid){
+  gearWriteChecks(pid,tid,today(),'ok','','');
+  save();initGear();
+  const card=document.getElementById('gr-pond-card');
+  if(card&&card.style.display!=='none')grShowPond(pid,true);
+}
+function renderGearGrid(){
+  const box=document.getElementById('gr-grid');if(!box)return;
+  const types=gearTypes();
+  if(!(D.pondGear||[]).length){
+    box.innerHTML='<p style="color:var(--tx3);padding:20px;text-align:center;font-style:italic">ยังไม่ได้ผูกอุปกรณ์กับบ่อ — กด "ใส่ให้ทุกบ่อ" ที่การ์ดชุดอุปกรณ์มาตรฐานด้านล่าง</p>';return;}
+  box.innerHTML='<table class="gr-tbl"><thead><tr><th>บ่อ</th>'
+    +types.map(t=>'<th>'+String(t.name).replace(' + ','<br>+ ').replace(' / ','<br>/ ')+'</th>').join('')+'</tr></thead><tbody>'
+    +gearPonds().map(p=>{
+      const age=pondCurAge(p);
+      const sub=p.harvestDate?'รอปิดรอบ':(age>0?age+' วัน':(p.startDate?'รอลงกุ้ง':'ว่าง'));
+      return '<tr><td class="pn" onclick="grShowPond(\''+p.id+'\')">'+(p.name||'-')+'<span>'+sub+'</span></td>'
+        +types.map(t=>{
+          if(!gearRow(p.id,t.id))return '<td class="st" style="color:var(--tx3)">·</td>';
+          const st=gearStatus(p,t.id),d=GR_ST[st.s];
+          return '<td class="st" style="background:'+d.c+';color:'+d.t+'" title="'+d.l+'" onclick="grOpenModal(\''+p.id+'\',\''+t.id+'\')">'+d.i+'</td>';
+        }).join('')+'</tr>';
+    }).join('')+'</tbody></table>';
+}
+function renderGearAlert(){
+  const el=document.getElementById('gr-alert');if(!el)return;
+  const list=gearAlertList();
+  const n={duePrep:0,issue:0,missed:0};list.forEach(x=>n[x.s]++);
+  const act=list.filter(x=>x.s!=='missed');
+  const missNote=n.missed?'<div style="font-weight:400;color:var(--tx2);font-size:var(--fs11);margin-top:5px">อีก '+n.missed+' ชิ้นเป็นบ่อที่มีกุ้งอยู่แล้ว — ยกขึ้นมาเช็คไม่ได้ ต้องรอรอบหน้า</div>':'';
+  if(!act.length){el.innerHTML='<div class="gr-alert ok">✅ บ่อที่มีแผนลงกุ้ง เช็คอุปกรณ์ครบแล้ว'+missNote+'</div>';return;}
+  // ⚠️ แถบนี้เป็นสรุปบรรทัดเดียว — รายการจริงอยู่ในการ์ด "คิวเช็ควันนี้" ด้านล่าง (กดบันทึกได้เลย) ไม่ต้องแสดงซ้ำ
+  const nPond=new Set(act.map(x=>x.pondName)).size;
+  el.innerHTML='<div class="gr-alert bad"><div class="h" style="margin-bottom:0">⚠️ ต้องเช็ค '+act.length+' ชิ้น ใน '+nPond+' บ่อ'
+    +(n.issue?' · มีของที่พบปัญหาค้าง '+n.issue+' ชิ้น':'')+'</div>'+missNote+'</div>';
+}
+// รายการที่ต้องเตือน — เรียงความสำคัญ: พบปัญหาค้าง → บ่อกำลังเตรียม(ต้องเช็คก่อนลงกุ้ง) → ยังไม่เคยเช็ค → รอบนี้ไม่ได้เช็ค
+function gearAlertList(){
+  const types={};gearTypes().forEach(t=>types[t.id]=t.name);
+  const out=[];
+  (D.pondGear||[]).forEach(g=>{
+    const p=pond(g.pondId);if(!p||!types[g.typeId])return;
+    const st=gearStatus(p,g.typeId);
+    if(st.s==='done'||st.s==='noplan')return;   // ยังไม่มีแผนลงกุ้ง = ไม่ต้องเตือน
+    out.push({s:st.s,never:!!st.never,pondName:p.name,typeName:types[g.typeId],last:st.last?st.last.date:null,
+      note:st.last&&st.last.result==='issue'?(st.last.note||'พบปัญหาแต่ยังไม่ได้ซ่อม'):''});
+  });
+  const rank={issue:0,duePrep:1,missed:2};
+  return out.sort((a,b)=>(rank[a.s]-rank[b.s])||String(a.pondName).localeCompare(String(b.pondName),'th',{numeric:true}));
+}
+function grShowPond(pid,keepScroll){
+  const p=pond(pid);if(!p)return;
+  const card=document.getElementById('gr-pond-card'),ttl=document.getElementById('gr-pond-title'),body=document.getElementById('gr-pond-body');
+  if(!card)return;
+  card.style.display='';
+  if(_gmPond!==pid){_gmPond=pid;_gmSel=null;_gmPlace=null;_gmCp=null;}
+  renderGearMap();
+  const age=pondCurAge(p);
+  ttl.innerHTML='🦐 บ่อ '+p.name+' <span style="font-weight:400;font-size:var(--fs11);color:var(--tx3)">'
+    +(p.harvestDate?'จับแล้ว รอปิดรอบ':(age>0?'กำลังเลี้ยง '+age+' วัน':'ว่าง/เตรียมบ่อ'))+'</span>';
+  const types=gearTypes();
+  body.innerHTML=types.filter(t=>gearRow(pid,t.id)).map(t=>{
+    const g=gearRow(pid,t.id),st=gearStatus(p,t.id),d=GR_ST[st.s];
+    const qty=layoutItems(pid,t.id).length;
+    const inst=g.installDate||'';
+    const ageTxt=inst?(()=>{const m=Math.floor(dDiff(inst,today())/30.44);return m<12?m+' เดือน':Math.floor(m/12)+' ปี '+(m%12)+' เดือน';})():'ไม่ได้ระบุ';
+    return '<div class="gr-item"><div><div class="t">'+mpEsc(t.name)+(qty?' <span style="color:var(--tx3);font-weight:400">× '+qty+'</span>':'')
+      +' <span class="gr-pill '+(st.s==='done'?'okp':st.s==='missed'?'miss':st.s==='noplan'?'never':'due')+'">'+d.l
+      +(qty>1&&st.s!=='done'?' ('+st.nDone+'/'+qty+' แล้ว)':'')+'</span></div>'
+      +'<div class="m">ติดตั้ง/เปลี่ยนล่าสุด '+(inst?fD(inst):'—')+' · อายุ '+ageTxt
+      +(st.last?' · เช็คล่าสุด '+fD(st.last.date)+' ('+(GEAR_RES[st.last.result]||st.last.result)+')':' · ยังไม่เคยเช็ค')
+      +(st.last&&st.last.note?'<br>📝 '+mpEsc(st.last.note):'')+'</div></div>'
+      +'<div class="gr-btns"><button class="btn btn-s" onclick="grOpenModal(\''+pid+'\',\''+t.id+'\')">📝 บันทึกเช็ค'+(qty>1?'ทั้ง '+qty+' ชิ้น':'')+'</button></div></div>';
+  }).join('')||'<p style="color:var(--tx3);font-style:italic;padding:8px 0">บ่อนี้ยังไม่มีอุปกรณ์ผูกไว้</p>';
+  const hist=(D.gearChecks||[]).filter(c=>c.pondId===pid).sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,12);
+  if(hist.length){
+    const tn={};types.forEach(t=>tn[t.id]=t.name);
+    body.innerHTML+='<div style="font-weight:700;font-size:calc(13px * var(--ui-scale));margin:14px 0 6px">📜 ประวัติการเช็ค/ซ่อม</div>'
+      +'<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>อุปกรณ์</th><th>ผล</th><th>บันทึก</th><th>ผู้ตรวจ</th><th></th></tr></thead><tbody>'
+      +hist.map(c=>{const ly=pondLayout(pid),k=c.itemId?ly.findIndex(l=>l.id===c.itemId):-1;
+        return '<tr><td>'+fD(c.date)+'</td><td>'+mpEsc(k>=0?gmLabel(ly,k):(tn[c.typeId]||c.typeId))+'</td><td>'+(GEAR_RES[c.result]||c.result)+'</td>'
+        +'<td style="color:var(--tx2)">'+mpEsc(c.note||'-')+'</td><td>'+mpEsc(c.by||'-')+'</td>'
+        +'<td><button class="btn-sm btn-del" onclick="grDeleteCheck(\''+c.id+'\')">🗑️</button></td></tr>';}).join('')
+      +'</tbody></table></div>';
+  }
+  if(!keepScroll)card.scrollIntoView({behavior:'smooth',block:'start'});
+}
+// ══════════ ผังอุปกรณ์ในบ่อ ══════════
+let _gmPond=null,_gmMode='use',_gmSel=null,_gmPlace=null,_gmCp=null;
+function gmTypeOf(tid){return gearTypes().find(t=>t.id===tid)||null;}
+function gmSymHtml(sym,rot){
+  const r=(GEAR_ROT[sym]?'style="transform:rotate('+(rot||0)+'deg)"':'');
+  if(sym==='paddle')return '<div class="gm-sym gm-paddle" '+r+'><b></b><i style="left:6px"></i><i style="left:18px"></i><i style="left:30px"></i><i style="left:42px"></i></div>';
+  if(sym==='feeder')return '<div class="gm-sym gm-feeder" '+r+'><b></b><i></i></div>';
+  if(sym==='bubble')return '<svg class="gm-sym gm-bubble" '+r+' viewBox="0 0 40 34"><path d="M38 4 L4 17 L38 30" fill="none" stroke="#1F2937" stroke-width="2"/><circle cx="5" cy="17" r="4" fill="#fff" stroke="#1F2937" stroke-width="2"/></svg>';
+  if(sym==='turbine')return '<div class="gm-sym gm-turbine"></div>';
+  if(sym==='pit')return '<div class="gm-sym gm-pit"></div>';
+  if(sym==='pump')return '<div class="gm-sym gm-pump"></div>';
+  if(sym==='panel')return '<div class="gm-sym gm-panel"></div>';
+  return '<div class="gm-sym gm-panel"></div>';
+}
+// ชื่อบนป้าย: ชนิด + ลำดับ (นับเฉพาะเมื่อมีมากกว่า 1 ชิ้น)
+function gmLabel(list,i){
+  const it=list[i],t=gmTypeOf(it.typeId);const nm=t?t.name:it.typeId;
+  const tot=list.filter(x=>x.typeId===it.typeId).length;
+  if(tot<2)return nm;
+  return nm+' #'+(list.slice(0,i+1).filter(x=>x.typeId===it.typeId).length);
+}
+function renderGearMap(){
+  const box=document.getElementById('gr-map');if(!box||!_gmPond)return;
+  const p=pond(_gmPond);if(!p)return;
+  const list=pondLayout(_gmPond);
+  const palTypes=gearTypes().filter(t=>t.sym);
+  const isEdit=_gmMode==='edit';
+  box.innerHTML='<div class="gm-tools">'
+    +'<button type="button" class="'+(isEdit?'':'on')+'" onclick="gmSetMode(\'use\')">👆 โหมดใช้งาน</button>'
+    +'<button type="button" class="'+(isEdit?'on':'')+'" onclick="gmSetMode(\'edit\')">✏️ โหมดจัดผัง</button>'
+    +(isEdit?'<button type="button" onclick="gmRotate()">🔄 หมุน 45°</button>'
+      +'<button type="button" onclick="gmCopyFrom()">📥 ดึงผังจากบ่ออื่น</button>'
+      +'<button type="button" onclick="gmCopyTo()">📤 ส่งผังนี้ไปหลายบ่อ</button>':'')
+    +'</div>'
+    +'<div class="gm-cp" id="gm-cp"><h4 id="gm-cp-t"></h4><div id="gm-cp-b"></div>'
+      +'<div class="gm-tools" style="margin:9px 0 0"><button type="button" class="on" onclick="gmCpRun()">ทำเลย</button>'
+      +'<button type="button" onclick="gmCpClose()">ยกเลิก</button></div></div>'
+    +(isEdit?'<div class="gm-pal">'+palTypes.map(t=>'<button type="button" class="'+(_gmPlace===t.id?'on':'')+'" onclick="gmPick(\''+t.id+'\')">'
+        +gmSymHtml(t.sym,0)+'<span>'+mpEsc(t.name)+'</span></button>').join('')+'</div>':'')
+    +'<div class="gm-pond" id="gm-pond">'+list.map((it,i)=>{
+        const t=gmTypeOf(it.typeId);if(!t)return '';
+        const st=gearItemStatus(p,it);
+        const z=GEAR_AREA[t.sym]?Math.max(1,Math.round(3000/Math.sqrt(GEAR_AREA[t.sym]))):50;
+        return '<div class="gm-it st-'+st.s+(_gmSel===it.id?' sel':'')+'" data-id="'+it.id+'" '
+          +'style="left:'+it.x+'%;top:'+it.y+'%;z-index:'+z+'">'+gmSymHtml(t.sym,it.rot)
+          +'<span class="lbl">'+mpEsc(gmLabel(list,i))+'</span>'
+          +((isEdit&&_gmSel===it.id)?'<button type="button" class="del" onclick="gmDel(\''+it.id+'\')">✕</button>':'')+'</div>';
+      }).join('')+'</div>'
+    +'<div class="gm-hint">'+(isEdit
+       ?'แตะไอคอน = เลือก (หมุน/ลบได้) · ลากนิ้ว = ย้าย · เลือกชนิดจากแถบด้านบนแล้วแตะในบ่อเพื่อวางเพิ่ม<br>วางผิดลบได้: แตะไอคอนนั้น แล้วกดปุ่ม ✕ แดงมุมขวาบน'
+       :'แตะไอคอนเพื่อบันทึกการเช็คของชิ้นนั้น · สีป้ายชื่อ: แดง = ต้องเช็ค · เขียว = เช็คแล้วรอบนี้')
+    +'<br>ตำแหน่งเก็บเป็น % ของขนาดบ่อ จึงยืดตามจอทุกขนาด · จำนวนอุปกรณ์ของบ่อนี้นับจากผังนี้</div>';
+  gmBind();
+}
+function gmSetMode(m){_gmMode=m;_gmSel=null;_gmPlace=null;gmCpClose();renderGearMap();}
+function gmPick(tid){if(_gmMode!=='edit')_gmMode='edit';_gmPlace=(_gmPlace===tid?null:tid);renderGearMap();}
+function gmBind(){
+  const pondEl=document.getElementById('gm-pond');if(!pondEl)return;
+  pondEl.querySelectorAll('.gm-it').forEach(el=>{
+    let sx,sy,ox,oy,moved=false,dragging=false,rec=null;
+    const move=e=>{
+      if(!dragging)return;e.preventDefault();
+      const q=e.touches?e.touches[0]:e,r=pondEl.getBoundingClientRect();
+      if(Math.abs(q.clientX-sx)>4||Math.abs(q.clientY-sy)>4)moved=true;
+      rec.x=Math.max(2,Math.min(98,ox+(q.clientX-sx)/r.width*100));
+      rec.y=Math.max(2,Math.min(98,oy+(q.clientY-sy)/r.height*100));
+      el.style.left=rec.x+'%';el.style.top=rec.y+'%';
+    };
+    const up=()=>{
+      dragging=false;el.classList.remove('drag');
+      document.removeEventListener('mousemove',move);document.removeEventListener('touchmove',move);
+      document.removeEventListener('mouseup',up);document.removeEventListener('touchend',up);
+      if(moved){save();renderGearMap();return;}
+      if(_gmMode==='use')grOpenModal(_gmPond,rec.typeId,null,rec.id);
+      else renderGearMap();
+    };
+    const down=e=>{
+      if(e.target.closest('.del'))return;                 // แตะปุ่มลบ ไม่ใช่เริ่มลาก
+      rec=(D.pondLayout||[]).find(l=>l.id===el.dataset.id);if(!rec)return;
+      _gmSel=rec.id;
+      const q=e.touches?e.touches[0]:e;
+      sx=q.clientX;sy=q.clientY;ox=rec.x;oy=rec.y;moved=false;dragging=true;
+      el.classList.add('drag');
+      document.addEventListener('mousemove',move);document.addEventListener('touchmove',move,{passive:false});
+      document.addEventListener('mouseup',up);document.addEventListener('touchend',up);
+    };
+    el.addEventListener('mousedown',down);el.addEventListener('touchstart',down,{passive:true});
+  });
+  pondEl.addEventListener('click',e=>{
+    if(_gmMode!=='edit'||!_gmPlace)return;
+    if(e.target.closest('.gm-it'))return;
+    const r=pondEl.getBoundingClientRect();
+    gmAdd(_gmPlace,(e.clientX-r.left)/r.width*100,(e.clientY-r.top)/r.height*100);
+  });
+}
+// วางชิ้นใหม่ — ผูก pondGear ให้อัตโนมัติ จะได้โผล่ในตารางสถานะและคิวเช็คทันที
+function gmAdd(tid,x,y){
+  D.pondLayout=D.pondLayout||[];
+  D.pondLayout.push({id:'pl_'+_gmPond+'_'+tid+'_'+Date.now().toString(36),pondId:_gmPond,typeId:tid,
+    x:Math.max(2,Math.min(98,x)),y:Math.max(2,Math.min(98,y)),rot:0});
+  gmEnsureGear(_gmPond,tid);
+  save();renderGearMap();grShowPond(_gmPond,true);
+}
+function gmEnsureGear(pid,tid){
+  D.pondGear=D.pondGear||[];
+  if(!gearRow(pid,tid))D.pondGear.push({id:'pg_'+pid+'_'+tid,pondId:pid,typeId:tid,installDate:'',note:''});
+}
+function gmRotate(){
+  const rec=(D.pondLayout||[]).find(l=>l.id===_gmSel);
+  if(!rec)return alert('แตะไอคอนที่จะหมุนก่อน');
+  const t=gmTypeOf(rec.typeId),max=t?GEAR_ROT[t.sym]:0;
+  if(!max)return alert((t?t.name:'อุปกรณ์นี้')+' ไม่ต้องหมุนทิศ (วางตรงไหนก็เหมือนกัน)');
+  rec.rot=((rec.rot||0)+45)%max;save();renderGearMap();
+}
+function gmDel(id){
+  const rec=(D.pondLayout||[]).find(l=>l.id===id);if(!rec)return;
+  const list=pondLayout(rec.pondId),nm=gmLabel(list,list.findIndex(l=>l.id===id));
+  const nCh=(D.gearChecks||[]).filter(c=>c.itemId===id).length;
+  if(!confirm('ลบ '+nm+' ออกจากผังบ่อนี้?'+(nCh?'\nประวัติการเช็คของชิ้นนี้ '+nCh+' รายการจะถูกลบด้วย':'')))return;
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
+  (D.gearChecks||[]).forEach(c=>{if(c.itemId===id)D.deletedIds.push(c.id);});
+  D.gearChecks=(D.gearChecks||[]).filter(c=>c.itemId!==id);
+  D.pondLayout=(D.pondLayout||[]).filter(l=>l.id!==id);
+  _gmSel=null;save();renderGearMap();grShowPond(rec.pondId,true);
+}
+// ── คัดลอกผัง: ตำแหน่ง/ทิศตามต้นแบบ แต่ "สถานะเช็คเริ่มใหม่" ไม่ยกประวัติของบ่อต้นแบบไปด้วย ──
+function gmPondsWithLayout(){return gearPonds().filter(p=>pondLayout(p.id).length);}
+function gmCopyFrom(){
+  const src=gmPondsWithLayout().filter(p=>p.id!==_gmPond);
+  if(!src.length)return alert('ยังไม่มีบ่ออื่นที่วางผังไว้');
+  _gmCp='from';
+  document.getElementById('gm-cp-t').innerHTML='📥 ดึงผังมาลงบ่อ '+mpEsc(pond(_gmPond).name)
+    +'<div class="s">เลือกบ่อต้นแบบ 1 บ่อ — ของเดิมในบ่อนี้ ('+pondLayout(_gmPond).length+' ชิ้น) จะถูกแทนที่</div>';
+  document.getElementById('gm-cp-b').innerHTML='<div class="gm-grid">'+src.map(p=>
+    '<label><input type="radio" name="gmcp" value="'+p.id+'">'+mpEsc(p.name)+' <span class="s">'+pondLayout(p.id).length+'</span></label>').join('')+'</div>';
+  gmCpBind();document.getElementById('gm-cp').classList.add('on');
+}
+function gmCopyTo(){
+  const n=pondLayout(_gmPond).length;
+  if(!n)return alert('บ่อนี้ยังไม่มีอุปกรณ์บนผังให้คัดลอก');
+  _gmCp='to';
+  document.getElementById('gm-cp-t').innerHTML='📤 ส่งผังบ่อ '+mpEsc(pond(_gmPond).name)+' ('+n+' ชิ้น) ไปบ่ออื่น'
+    +'<div class="s">ติ๊กได้หลายบ่อพร้อมกัน · บ่อที่วางผังไว้แล้วจะถูกแทนที่ทั้งผัง</div>';
+  document.getElementById('gm-cp-b').innerHTML=
+    '<div class="gm-tools" style="margin:0"><button type="button" onclick="gmCpAll(1)">เลือกทุกบ่อที่ยังไม่วางผัง</button>'
+    +'<button type="button" onclick="gmCpAll(0)">ล้างที่เลือก</button></div>'
+    +'<div class="gm-grid">'+gearPonds().filter(p=>p.id!==_gmPond).map(p=>{
+      const k=pondLayout(p.id).length;
+      return '<label class="'+(k?'has':'')+'"><input type="checkbox" value="'+p.id+'">'+mpEsc(p.name)
+        +(k?' <span class="s">'+k+'</span>':'')+'</label>';}).join('')+'</div>';
+  gmCpBind();document.getElementById('gm-cp').classList.add('on');
+}
+function gmCpBind(){
+  document.querySelectorAll('#gm-cp-b input').forEach(i=>i.onchange=()=>{
+    document.querySelectorAll('#gm-cp-b label').forEach(l=>l.classList.toggle('on',l.querySelector('input').checked));});
+}
+function gmCpAll(on){
+  document.querySelectorAll('#gm-cp-b input[type=checkbox]').forEach(i=>{
+    if(on&&i.closest('label').classList.contains('has'))return;   // ไม่ไปทับบ่อที่วางผังไว้แล้ว
+    i.checked=!!on;});
+  document.querySelectorAll('#gm-cp-b label').forEach(l=>l.classList.toggle('on',l.querySelector('input').checked));
+}
+function gmCpClose(){const b=document.getElementById('gm-cp');if(b)b.classList.remove('on');_gmCp=null;}
+function gmWipe(pid){
+  D.deletedIds=D.deletedIds||[];
+  pondLayout(pid).forEach(l=>{
+    D.deletedIds.push(l.id);
+    (D.gearChecks||[]).forEach(c=>{if(c.itemId===l.id)D.deletedIds.push(c.id);});
+    D.gearChecks=(D.gearChecks||[]).filter(c=>c.itemId!==l.id);
+  });
+  D.pondLayout=(D.pondLayout||[]).filter(l=>l.pondId!==pid);
+}
+function gmPaste(srcPid,dstPid){
+  gmWipe(dstPid);
+  D.pondLayout=D.pondLayout||[];
+  pondLayout(srcPid).forEach((l,i)=>{
+    D.pondLayout.push({id:'pl_'+dstPid+'_'+l.typeId+'_'+Date.now().toString(36)+i.toString(36),
+      pondId:dstPid,typeId:l.typeId,x:l.x,y:l.y,rot:l.rot||0});
+    gmEnsureGear(dstPid,l.typeId);
+  });
+}
+function gmCpRun(){
+  if(_gmCp==='from'){
+    const r=document.querySelector('#gm-cp-b input:checked');
+    if(!r)return alert('เลือกบ่อต้นแบบก่อน');
+    gmPaste(r.value,_gmPond);
+    gmCpClose();_gmSel=null;save();renderGearMap();grShowPond(_gmPond,true);initGear();
+    alert('คัดลอกจากบ่อ '+pond(r.value).name+' มาแล้ว '+pondLayout(_gmPond).length+' ชิ้น — ขยับให้ตรงบ่อจริงได้เลย');
+  }else if(_gmCp==='to'){
+    const t=[].slice.call(document.querySelectorAll('#gm-cp-b input:checked')).map(i=>i.value);
+    if(!t.length)return alert('ติ๊กบ่อปลายทางก่อน');
+    const n=pondLayout(_gmPond).length;
+    if(!confirm('ส่งผัง '+n+' ชิ้น ไป '+t.length+' บ่อ?\n'+t.map(id=>pond(id).name).join(', ')))return;
+    t.forEach(id=>gmPaste(_gmPond,id));
+    gmCpClose();save();renderGearMap();initGear();
+    alert('ส่งผังไป '+t.length+' บ่อแล้ว · รวมวางผังแล้ว '+gmPondsWithLayout().length+'/'+gearPonds().length+' บ่อ');
+  }
+}
+function grOpenModal(pid,tid,preset,itemId){
+  const p=pond(pid);if(!p)return;
+  const t=gearTypes().find(x=>x.id===tid);if(!t)return;
+  document.getElementById('gr-m-pond').value=pid;
+  document.getElementById('gr-m-type').value=tid;
+  document.getElementById('gr-m-item').value=itemId||'';
+  document.getElementById('gr-m-res').value=preset||'ok';
+  document.getElementById('gr-m-date').value=today();
+  syncDateHint(document.getElementById('gr-m-date'));
+  document.getElementById('gr-m-note').value='';
+  document.getElementById('gr-m-msg').innerHTML='';
+  // ถ้ามาจากไอคอนบนผัง ให้ระบุชิ้นให้ชัด (ใบพัด #7 ไม่ใช่ใบพัดทั้ง 10 ใบ)
+  let ttl='บ่อ '+p.name+' · '+t.name;
+  const its=layoutItems(pid,tid);
+  if(itemId){const list=pondLayout(pid);const i=list.findIndex(l=>l.id===itemId);if(i>=0)ttl='บ่อ '+p.name+' · '+gmLabel(list,i);}
+  else if(its.length>1)ttl+=' (ทั้ง '+its.length+' ชิ้น)';
+  document.getElementById('gr-mod-title').textContent=ttl;
+  grPickRes(preset||'ok');
+  const ch=(itemId?(D.gearChecks||[]).filter(c=>c&&c.itemId===itemId).sort((a,b)=>String(a.date).localeCompare(String(b.date)))
+                 :gearChecksOf(pid,tid)).slice(-5).reverse();
+  document.getElementById('gr-m-hist').innerHTML=ch.length
+    ?'<div style="font-size:var(--fs10);color:var(--tx3);margin-bottom:4px">ประวัติล่าสุด</div>'
+      +ch.map(c=>'<div style="font-size:var(--fs11);color:var(--tx2);padding:3px 0;border-bottom:1px dashed var(--bd)">'
+        +fD(c.date)+' · '+(GEAR_RES[c.result]||c.result)+(c.note?' — '+mpEsc(c.note):'')+'</div>').join('')
+    :'';
+  document.getElementById('gearModal').classList.add('on');
+}
+function grCloseModal(){document.getElementById('gearModal').classList.remove('on');}
+function grPickRes(r){
+  document.getElementById('gr-m-res').value=r;
+  document.querySelectorAll('#gearModal .gr-res button').forEach(b=>b.className=(b.dataset.r===r?'on':''));
+  const h=document.getElementById('gr-m-hint');
+  if(h)h.textContent=r==='replace'?'เลือก "เปลี่ยนใหม่" → ระบบตั้งวันติดตั้งใหม่เป็นวันที่เช็ค อายุเริ่มนับใหม่'
+    :r==='issue'?'เลือก "พบปัญหา" → รายการนี้จะค้างอยู่ในแถบเตือนจนกว่าจะบันทึกว่าซ่อม/เปลี่ยนแล้ว':'';
+}
+function grSaveCheck(){
+  const pid=document.getElementById('gr-m-pond').value,tid=document.getElementById('gr-m-type').value;
+  const d=document.getElementById('gr-m-date').value,res=document.getElementById('gr-m-res').value||'ok';
+  const note=(document.getElementById('gr-m-note').value||'').trim();
+  if(!pid||!tid||!d){showMsg('gr-m-msg','warn','กรุณาเลือกวันที่');return;}
+  const itemId=document.getElementById('gr-m-item').value||'';
+  gearWriteChecks(pid,tid,d,res,note,itemId);
+  if(res==='replace'){const g=gearRow(pid,tid);if(g)g.installDate=d;}   // เปลี่ยนใหม่ = อายุเริ่มนับใหม่
+  save();
+  grCloseModal();
+  initGear();
+  const card=document.getElementById('gr-pond-card');
+  if(card&&card.style.display!=='none')grShowPond(pid,true);
+}
+// เขียนบันทึกการเช็ค — ระบุชิ้น = 1 รายการ · ไม่ระบุแต่บ่อมีผัง = กระจายให้ครบทุกชิ้นของชนิดนั้น
+//   ⚠️ ต้องกระจาย ไม่ใช่เขียนรายการเดียว เพราะสถานะของชนิดม้วนมาจากชิ้นที่แย่ที่สุด
+//      ถ้าเขียนรายการเดียวแบบไม่มี itemId ชิ้นบนผังจะยังค้างเป็น "ต้องเช็ค" อยู่ดี
+function gearWriteChecks(pid,tid,d,res,note,itemId){
+  D.gearChecks=D.gearChecks||[];
+  const by=(typeof curUserLabel==='function'?curUserLabel():'');
+  const stamp=Date.now().toString(36);
+  const ids=itemId?[itemId]:layoutItems(pid,tid).map(l=>l.id);
+  if(!ids.length)ids.push('');                                     // ไม่มีผัง = เช็คทั้งชนิดเป็นก้อนเดียว
+  ids.forEach((iid,k)=>{
+    const r={id:'gc_'+pid+'_'+tid+'_'+d+'_'+stamp+k.toString(36),pondId:pid,typeId:tid,date:d,result:res,note,by};
+    if(iid)r.itemId=iid;
+    D.gearChecks.push(r);
+  });
+  return ids.length;
+}
+function grDeleteCheck(id){
+  const c=(D.gearChecks||[]).find(x=>x.id===id);if(!c)return;
+  if(!confirm('ลบบันทึกการเช็ควันที่ '+fD(c.date)+'?'))return;
+  D.gearChecks=(D.gearChecks||[]).filter(x=>x.id!==id);
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
+  save();initGear();grShowPond(c.pondId,true);
+}
+function renderGearTypes(){
+  const el=document.getElementById('gr-types');if(!el)return;
+  const types=gearTypes();
+  el.innerHTML=types.map(t=>{
+    const n=(D.pondGear||[]).filter(g=>g.typeId===t.id).length;
+    return '<div class="gr-item"><div><div class="t">'+mpEsc(t.name)+'</div>'
+      +'<div class="m">ผูกไว้ '+n+' บ่อ</div></div>'
+      +'<div class="gr-btns"><button class="btn btn-s" onclick="grRenameType(\''+t.id+'\')">✏️</button> '
+      +'<button class="btn btn-s" onclick="grApplyAll(\''+t.id+'\')">ใส่ให้ทุกบ่อ</button> '
+      +'<button class="btn-sm btn-del" onclick="grDeleteType(\''+t.id+'\')">🗑️</button></div></div>';
+  }).join('')
+  +'<div style="margin-top:12px"><button class="btn btn-p" onclick="grApplyAll()">📥 ใส่ทุกชนิดให้ครบทุกบ่อ</button></div>';
+}
+function grAddType(){
+  const n=(prompt('ชื่อชนิดอุปกรณ์ใหม่')||'').trim();if(!n)return;
+  D.gearTypes=gearTypes();
+  D.gearTypes.push({id:'gt_'+Date.now().toString(36),name:n,order:(D.gearTypes.length+1),sym:''});  // ชนิดที่เพิ่มเองยังไม่มีสัญลักษณ์บนผัง
+  save();initGear();
+}
+function grRenameType(id){
+  const t=(D.gearTypes||[]).find(x=>x.id===id);if(!t)return;
+  const n=(prompt('ชื่อใหม่',t.name)||'').trim();if(!n)return;
+  t.name=n;save();initGear();
+}
+function grDeleteType(id){
+  const t=(D.gearTypes||[]).find(x=>x.id===id);if(!t)return;
+  const rows=(D.pondGear||[]).filter(g=>g.typeId===id);
+  if(!confirm('ลบ "'+t.name+'" ออกจากชุดอุปกรณ์?\nจะถอดออกจาก '+rows.length+' บ่อ (ประวัติการเช็คเดิมยังอยู่)'))return;
+  D.deletedIds=D.deletedIds||[];
+  D.deletedIds.push(id);rows.forEach(g=>D.deletedIds.push(g.id));
+  (D.pondLayout||[]).forEach(l=>{if(l.typeId===id)D.deletedIds.push(l.id);});
+  D.gearTypes=(D.gearTypes||[]).filter(x=>x.id!==id);
+  D.pondGear=(D.pondGear||[]).filter(g=>g.typeId!==id);
+  D.pondLayout=(D.pondLayout||[]).filter(l=>l.typeId!==id);
+  save();initGear();
+  if(_gmPond)renderGearMap();
+}
+// ใส่อุปกรณ์ให้ทุกบ่อ (ข้ามบ่อที่มีอยู่แล้ว ไม่เพิ่มซ้ำ) — ไม่รู้วันติดตั้งจริง ปล่อยว่างให้พี่เติมทีหลัง
+function grApplyAll(typeId){
+  const types=typeId?gearTypes().filter(t=>t.id===typeId):gearTypes();
+  D.pondGear=D.pondGear||[];
+  let add=0;
+  gearPonds().forEach(p=>types.forEach(t=>{
+    if(gearRow(p.id,t.id))return;
+    D.pondGear.push({id:'pg_'+p.id+'_'+t.id,pondId:p.id,typeId:t.id,installDate:'',note:''});add++;
+  }));
+  if(!add){alert('ทุกบ่อมีอุปกรณ์ชุดนี้ครบแล้ว');return;}
+  save();initGear();
+  alert('เพิ่มให้ '+add+' รายการแล้ว — ใส่วันติดตั้งได้ที่การ์ดรายบ่อ (กดชื่อบ่อในตาราง)');
 }
 function initWaterLog(){
   populateAll();
