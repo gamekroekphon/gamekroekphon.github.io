@@ -3168,7 +3168,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     </div>
     <div id="cr-history"></div>
   </div>
-  <div class="card" style="margin-top:16px">
+  <div class="card" style="margin-top:16px" id="ch-card">
     <div class="card-t">🔍 ดูข้อมูลย้อนหลังบ่อที่ปิดแล้ว</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
       <div class="fg" style="flex:1;min-width:160px">
@@ -19876,8 +19876,13 @@ function goCropDetail(pondId,idx){
   onChPondChange();
   const cSel=document.getElementById('ch-cycle');
   if(cSel&&[...cSel.options].some(o=>o.value===String(idx))){cSel.value=String(idx);onChCycleChange();}
-  const el=document.getElementById('ch-detail');
-  if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
+  const el=document.getElementById('ch-card')||document.getElementById('ch-detail');
+  if(el)requestAnimationFrame(()=>{
+    const hd=document.querySelector('.mob-hd,.hdr');
+    const pad=(hd?hd.getBoundingClientRect().height:0)+12;
+    const top=el.getBoundingClientRect().top+window.scrollY-pad;
+    window.scrollTo({top:Math.max(0,top),behavior:'smooth'});
+  });
 }
 // ══════ แยก "เวชภัณฑ์" ออกเป็น 4 หมวดย่อยในตาราง ต้นทุน/กก. (พี่สั่ง entry #263) ══════
 // ⚠️ `harvestResult.costMed` เก็บเป็น "ก้อนเดียว" ตั้งแต่ตอนปิดรอบ — ไม่มีรายละเอียดหมวดย่อยเก็บไว้เลย
