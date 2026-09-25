@@ -1163,20 +1163,6 @@ input.sk-cart-price{width:90px!important;text-align:center;font-size:calc(13px *
 .meter-grid{display:grid;grid-template-columns:110px 1fr 1fr 1fr;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--sf2)}
 .meter-grid:last-of-type{border-bottom:none}
 .elec-total-bar{background:var(--pl);border-radius:10px;padding:12px 16px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-top:14px}
-.abw-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
-.abw-leg-item{display:flex;align-items:center;gap:5px;font-size:var(--fs11);color:var(--tx2)}
-.abw-leg-line{width:18px;height:2px;border-radius:2px;flex-shrink:0}
-.abw-leg-dash{width:18px;height:0;border-top:2px dashed #94A3B8;flex-shrink:0}
-.abw-chip{padding:3px 10px;border-radius:16px;border:1.5px solid var(--bd);background:none;font-size:var(--fs115);cursor:pointer;font-family:inherit;transition:all .15s}
-.abw-chip.on{font-weight:600}
-.abw-tbl{width:100%;border-collapse:collapse;font-size:calc(12px * var(--ui-scale))}
-.abw-tbl th{background:var(--sf2);padding:8px 12px;text-align:left;font-size:var(--fs11);color:var(--tx3);font-weight:500;border-bottom:1px solid var(--bd);white-space:nowrap}
-.abw-tbl td{padding:8px 12px;border-bottom:1px solid var(--bd);white-space:nowrap;vertical-align:middle}
-.abw-tbl tr:last-child td{border-bottom:none}
-.abw-bar-bg{background:var(--sf2);border-radius:4px;height:6px;width:70px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:4px}
-.abw-bar-fill{height:100%;border-radius:4px;transition:width .3s}
-.abw-badge{display:inline-block;font-size:var(--fs105);padding:2px 8px;border-radius:10px;font-weight:600}
-.abw-ok{background:var(--ob);color:var(--ok)}.abw-warn{background:var(--wb);color:var(--w-tx)}.abw-danger{background:var(--db);color:var(--d)}
 .wq-htbl{width:100%;border-collapse:collapse;font-size:calc(12px * var(--ui-scale))}
 .wq-htbl th{background:var(--sf2);padding:6px 10px;text-align:center;font-size:var(--fs10);color:var(--tx3);font-weight:500;border-bottom:1px solid var(--bd);white-space:nowrap;position:sticky;top:0;z-index:1}
 .wq-htbl th.wq-pond-col{text-align:left;position:sticky;left:0;z-index:2;background:var(--sf2)}
@@ -1699,7 +1685,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .tbl-wrap,[style*="overflow-x:auto"],[style*="overflow-x: auto"]{-webkit-overflow-scrolling:touch}
 /* 3. ตารางที่ยังไม่มี wrapper: ปัดซ้าย-ขวาได้บนมือถือ */
 @media(max-width:768px){
-  .card table,.sec>table,#pl-tbl table,#abw-tbl table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .card table,.sec>table,#pl-tbl table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
   /* ⚠️ ตารางที่มี wrapper เลื่อนอยู่แล้ว (div overflow-x:auto / .tbl-wrap) ห้ามเป็นกล่องเลื่อนซ้อนอีกชั้น —
      ปัดครั้งแรกเลื่อนแค่ตัวใน พอสุดต้องปัดอีกครั้งให้ตัวนอกเลื่อน (พี่เจอที่ P&L รายบ่อรายรอบ · ~33 ตารางทั้งแอป — entry #296) */
   /* ⚠️ ใช้ :where() ให้ specificity เท่ากฎบน (0,1,1) — ชนะ display:block ข้างบนเพราะอยู่ทีหลัง แต่ห้ามชนะกฎที่ "ตั้งใจซ่อน" ตารางบนมือถือ
@@ -1776,9 +1762,6 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <button class="sn-link tab-item" onclick="goTab('trial',this)">🧪 ทดลองเวชภัณฑ์</button>
       <button class="sn-link tab-item" onclick="goTab('compare',this)">🔄 เปรียบเทียบ</button>
       <button class="sn-link tab-item" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
-      <button class="sn-link tab-item" onclick="goTab('wqfeed',this)">🌡️ น้ำ-อาหาร</button>
-      <button class="sn-link tab-item" onclick="goTab('hatchery',this)">🥚 โรงเพาะฟัก</button>
-      <button class="sn-link tab-item" onclick="goTab('abw',this)">📈 ABW Growth</button>
     </div>
 
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-market')"><span>💰</span> ค่าแรง / ค่าไฟ <span class="sn-caret">▾</span></button>
@@ -1864,9 +1847,6 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
       <button class="tab-item" id="tab-trial" onclick="goTab('trial',this)">🧪 ทดลองเวชภัณฑ์</button>
       <button class="tab-item" id="tab-compare" onclick="goTab('compare',this)">🔄 เปรียบเทียบ</button>
       <button class="tab-item" id="tab-risk" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
-      <button class="tab-item" id="tab-wqfeed" onclick="goTab('wqfeed',this)">🌡️ น้ำ-อาหาร</button>
-      <button class="tab-item" id="tab-hatchery" onclick="goTab('hatchery',this)">🥚 โรงเพาะฟัก</button>
-      <button class="tab-item" id="tab-abw" onclick="goTab('abw',this)">📈 ABW Growth</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-market">
@@ -1929,9 +1909,6 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     <button class="mob-sheet-item" data-t="trial" onclick="mobMenuGo(this)"><span class="ic">🧪</span>ทดลองเวชภัณฑ์</button>
     <button class="mob-sheet-item" data-t="compare" onclick="mobMenuGo(this)"><span class="ic">🔄</span>เปรียบเทียบ</button>
     <button class="mob-sheet-item" data-t="risk" onclick="mobMenuGo(this)"><span class="ic">⚠️</span>ความเสี่ยง</button>
-    <button class="mob-sheet-item" data-t="wqfeed" onclick="mobMenuGo(this)"><span class="ic">🌡️</span>น้ำ-อาหาร</button>
-    <button class="mob-sheet-item" data-t="hatchery" onclick="mobMenuGo(this)"><span class="ic">🥚</span>โรงเพาะฟัก</button>
-    <button class="mob-sheet-item" data-t="abw" onclick="mobMenuGo(this)"><span class="ic">📈</span>ABW Growth</button>
     <div class="mob-sheet-grp">💰 ค่าแรง / ค่าไฟ</div>
     <button class="mob-sheet-item admin-only" data-t="labor" onclick="mobMenuGo(this)"><span class="ic">👷</span>ค่าแรง</button>
     <button class="mob-sheet-item admin-only" data-t="elec" onclick="mobMenuGo(this)"><span class="ic">⚡</span>ค่าไฟฟ้า</button>
@@ -3091,58 +3068,6 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   <div class="card" style="margin-bottom:16px"><div class="card-t">🦐 ความเสี่ยงรายบ่อ</div><div class="g3" id="risk-grid"></div></div>
   <div class="card"><div class="card-t">💡 คำแนะนำ</div><div id="risk-recs"></div></div>
 </div>
-<div id="sec-wqfeed" class="sec">
-  <div class="sec-hdr"><div class="sec-title">🌡️ สหสัมพันธ์น้ำ-อาหาร</div></div>
-  <div id="wqfeed-alerts" style="margin-bottom:14px"></div>
-  <div class="card">
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-      <label class="fl" style="margin:0" for="wqfeed-pond">เลือกบ่อ:</label>
-      <select class="fi" id="wqfeed-pond" onchange="renderWqFeedChart()" style="width:160px"></select>
-    </div>
-    <div style="position:relative;height:180px;margin-bottom:8px"><canvas id="wqfeed-c-water"></canvas></div>
-    <div style="position:relative;height:120px"><canvas id="wqfeed-c-feed"></canvas></div>
-  </div>
-</div>
-<div id="sec-hatchery" class="sec">
-  <div class="sec-hdr"><div class="sec-title">🦐 เปรียบเทียบโรงเพาะฟัก</div></div>
-  <div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-bottom:10px">วิเคราะห์จากรอบเลี้ยงที่ปิดแล้วเท่านั้น (มีผลผลิต/อัตรารอดบันทึกครบ) · ปีของรอบยึดตาม<b>วันที่จับ</b> เหมือนหน้าประวัติรอบเลี้ยง</div>
-  <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
-    <label class="fl" for="hat-year">ปี:</label>
-    <select class="fi" id="hat-year" onchange="initHatchery()" style="width:120px"></select>
-    <span id="hat-badge" style="font-size:calc(12px * var(--ui-scale));color:var(--tx3)"></span>
-  </div>
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-t" id="hatchery-chart-t">📊 อัตรารอดเฉลี่ยตามโรงเพาะฟัก</div>
-    <p id="hatchery-chart-empty" style="display:none;color:var(--tx3);text-align:center;padding:24px">ยังไม่มีรอบเลี้ยงที่ปิดแล้วพอสำหรับวิเคราะห์</p>
-    <div id="hatchery-chart-wrap" style="position:relative;height:220px"><canvas id="hatchery-chart"></canvas></div>
-  </div>
-  <div class="card"><div class="card-t" id="hatchery-table-t">📋 สรุปตามโรงเพาะฟัก</div><div id="hatchery-table"></div></div>
-  <div class="card" id="hatchery-hist-card">
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:4px">
-      <div class="card-t" style="margin:0">📅 ประวัติรายปี — ทีละโรง</div>
-      <select class="fi" id="hat-hist-metric" onchange="renderHatcheryHistory()" style="width:auto;margin-left:auto;font-size:calc(12px * var(--ui-scale));padding:4px 8px">
-        <option value="surv">อัตรารอด (รวมแถม)</option>
-        <option value="survOrder">อัตรารอด (ยอดสั่งซื้อ)</option>
-        <option value="fcr">FCR</option>
-        <option value="adg">ADG</option>
-        <option value="bonus">% ยอดแถม</option>
-      </select>
-    </div>
-    <div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-bottom:10px">แต่ละปีของแต่ละโรงคิดแยกกัน — ไม่ได้เอาทุกปีมาถัวรวมกัน · ตัวหนาเขียว = ดีที่สุดของปีนั้น</div>
-    <div id="hatchery-hist-tbl"></div>
-  </div>
-  <div class="card" id="hatchery-merge-card" style="display:none">
-    <div class="card-t">🔧 รวมชื่อโรงเพาะฟักที่สะกดต่างกัน</div>
-    <div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-bottom:10px">เลือกชื่อที่หมายถึงโรงเพาะฟักเดียวกัน (เช่น "cp ชุมพร1" กับ "ซีพี") อย่างน้อย 2 ชื่อ แล้วกรอกชื่อที่ต้องการใช้จริง — ระบบจะแก้ทุกบ่อ/ทุกรอบเลี้ยงที่เกี่ยวข้องให้อัตโนมัติ (Admin เท่านั้น)</div>
-    <div id="hatchery-merge-list" style="max-height:260px;overflow-y:auto;margin-bottom:12px"></div>
-    <div class="fgrid" style="grid-template-columns:1fr auto;align-items:end">
-      <div class="fg"><label class="fl" for="hatchery-merge-target">รวมเป็นชื่อ</label><input type="text" class="fi" id="hatchery-merge-target" placeholder="เช่น ซีพี ชุมพร1"></div>
-      <button class="btn btn-p" onclick="mergeHatcheryNames()">🔗 รวมชื่อที่เลือก</button>
-    </div>
-    <div id="hatchery-merge-msg" style="margin-top:10px"></div>
-  </div>
-</div>
-<!-- CROPS -->
 <div id="sec-crops" class="sec">
   <div class="sec-hdr">
     <div class="sec-title">📚 ประวัติรอบเลี้ยง (Crop Cycles)</div>
@@ -4097,34 +4022,6 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
     </div>
   </div>
 </div>
-<div id="sec-abw" class="sec">
-  <div class="sec-hdr"><div class="sec-title">📈 ABW Growth Curve</div></div>
-  <div class="g4" id="abw-kpi"></div>
-  <div class="card" style="margin-bottom:0">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-      <span style="font-size:calc(13px * var(--ui-scale));font-weight:600;color:var(--tx)">เส้นการเติบโต ABW เทียบข้ามบ่อ</span>
-      <div style="display:flex;gap:6px;flex-wrap:wrap" id="abw-chips"></div>
-    </div>
-    <div style="position:relative;height:240px"><canvas id="abwChart"></canvas></div>
-    <div class="abw-legend" id="abw-legend"></div>
-  </div>
-  <div class="card" style="padding:0;overflow:hidden">
-    <div style="overflow-x:auto">
-      <table class="abw-tbl">
-        <thead><tr>
-          <th>บ่อ</th>
-          <th>วันที่เลี้ยง</th>
-          <th>ABW ล่าสุด</th>
-          <th>เทียบเป้า</th>
-          <th>ADG</th>
-          <th>สถานะ</th>
-        </tr></thead>
-        <tbody id="abw-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-<!-- P&L DASHBOARD -->
 <div id="sec-pl" class="sec">
   <div class="sec-hdr"><div class="sec-title">📊 สรุปกำไร-ขาดทุน (P&amp;L) รายบ่อ รายรอบ</div></div>
   <div class="g4" id="pl-kpi" style="margin-bottom:16px"></div>
@@ -5383,316 +5280,6 @@ function wqfeedAvg(rows,keys){
   const vals=rows.flatMap(r=>keys.map(k=>r[k])).filter(v=>v!=null&&v!=='').map(parseFloat).filter(v=>!isNaN(v));
   return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
 }
-function initWqFeed(){
-  const sel=document.getElementById('wqfeed-pond');if(!sel)return;
-  const actives=sortPondsByAge(wqfeedActivePonds());
-  sel.innerHTML=actives.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
-  renderWqFeedAlerts(actives);
-  if(actives.length)renderWqFeedChart();
-  else{
-    const wEl=document.getElementById('wqfeed-c-water');if(wEl)wEl.parentElement.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px">ไม่มีบ่อที่กำลังเลี้ยงอยู่</p>';
-  }
-}
-function renderWqFeedAlerts(actives){
-  const el=document.getElementById('wqfeed-alerts');if(!el)return;
-  const warns=[];
-  actives.forEach(p=>{
-    const{recs,feeds}=wqfeedPondStats(p);
-    if(recs.length<2||feeds.length<7)return;
-    const avgDO=wqfeedAvg(recs.slice(-2),['doM','doA']);
-    const tempNow=wqfeedAvg(recs.slice(-3),['tM','tA']);
-    const tempBefore=wqfeedAvg(recs.slice(-10,-3),['tM','tA']);
-    const feedLast2=feeds.slice(-2).reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0)/2;
-    const feedPrior=feeds.slice(-7,-2);
-    const feedPriorAvg=feedPrior.length?feedPrior.reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0)/feedPrior.length:0;
-    const feedDropPct=feedPriorAvg>0?Math.round((1-feedLast2/feedPriorAvg)*100):0;
-    const causes=[];
-    if(avgDO!=null&&avgDO<5)causes.push(`DO ต่ำ (${avgDO.toFixed(1)} mg/L)`);
-    if(tempBefore!=null&&tempNow!=null&&(tempBefore-tempNow)>=1.5)causes.push(`อุณหภูมิลด ${(tempBefore-tempNow).toFixed(1)}°C`);
-    if(!causes.length)return;
-    if(feedDropPct>=10){
-      warns.push({level:'high',text:`บ่อ ${p.name}: ${causes.join(' + ')} และอาหารลด ${feedDropPct}% ใน 2 วันล่าสุด — สอดคล้องกับพฤติกรรมกุ้งกินน้อยลง ควรพิจารณาลดอาหารเพิ่มเพื่อลดของเสียในบ่อ`});
-    }else{
-      warns.push({level:'watch',text:`บ่อ ${p.name}: ${causes.join(' + ')} — เฝ้าระวังการกินอาหารช่วง 1-2 วันนี้`});
-    }
-  });
-  if(!warns.length){el.innerHTML='<div class="card" style="background:var(--ob);border-color:var(--ok)"><p style="color:var(--ok);font-size:calc(13px * var(--ui-scale))">✅ ไม่พบความผิดปกติของค่าน้ำที่กระทบการกินอาหารในช่วงนี้</p></div>';return;}
-  el.innerHTML=warns.map(w=>`<div class="card" style="background:${w.level==='high'?'var(--db)':'var(--wb)'};border-color:${w.level==='high'?'var(--d)':'var(--w)'};margin-bottom:8px"><p style="color:${w.level==='high'?'var(--d)':'var(--w-tx)'};font-size:calc(12.5px * var(--ui-scale))">⚠️ ${w.text}</p></div>`).join('');
-}
-let _wqfeedWaterChart=null,_wqfeedFeedChart=null;
-function renderWqFeedChart(){
-  const sel=document.getElementById('wqfeed-pond');if(!sel||!sel.value)return;
-  const p=D.ponds.find(x=>x.id===sel.value);if(!p)return;
-  const{recs,feeds}=wqfeedPondStats(p);
-  const rr=recs.slice(-14),ff=feeds.slice(-14);
-  if(_wqfeedWaterChart){_wqfeedWaterChart.destroy();_wqfeedWaterChart=null;}
-  if(_wqfeedFeedChart){_wqfeedFeedChart.destroy();_wqfeedFeedChart=null;}
-  const wEl=document.getElementById('wqfeed-c-water');
-  if(wEl&&rr.length&&typeof Chart!=='undefined'){
-    _wqfeedWaterChart=new Chart(wEl,{type:'line',data:{labels:rr.map(r=>fD(r.date)),datasets:[
-      {label:'อุณหภูมิ',data:rr.map(r=>{const v=wqfeedAvg([r],['tM','tA']);return v!=null?+v.toFixed(1):null;}),borderColor:'#e5533c',tension:.35,spanGaps:true,pointRadius:0},
-      {label:'DO',data:rr.map(r=>{const v=wqfeedAvg([r],['doM','doA']);return v!=null?+v.toFixed(2):null;}),borderColor:'#185fa5',tension:.35,spanGaps:true,pointRadius:0,yAxisID:'y1'}
-    ]},options:{maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{boxWidth:10,font:{size:10}}}},scales:{x:{ticks:{font:{size:9}}},y:{ticks:{font:{size:9}}},y1:{position:'right',grid:{drawOnChartArea:false},ticks:{font:{size:9}}}}}});
-  }else if(wEl)wEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:calc(12px * var(--ui-scale));text-align:center;padding:20px">ยังไม่มีข้อมูลค่าน้ำพอสำหรับกราฟนี้ — บันทึกเพิ่มได้ที่หน้า "คุณภาพน้ำ"</p>';
-  const fEl=document.getElementById('wqfeed-c-feed');
-  if(fEl&&ff.length&&typeof Chart!=='undefined'){
-    _wqfeedFeedChart=new Chart(fEl,{type:'bar',data:{labels:ff.map(r=>fD(r.date)),datasets:[{label:'อาหาร กก./วัน',data:ff.map(r=>parseFloat(r.totalFeed)||0),backgroundColor:'#3f6212',borderRadius:4}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:8}}},y:{ticks:{font:{size:9}}}}}});
-  }else if(fEl)fEl.parentElement.innerHTML='<p style="color:var(--tx3);font-size:calc(12px * var(--ui-scale));text-align:center;padding:20px">ยังไม่มีข้อมูลอาหารพอสำหรับกราฟนี้ — บันทึกเพิ่มได้ที่หน้า "อาหาร & FCR"</p>';
-}
-// yrBE: ปี พ.ศ. ที่ต้องการ (ไม่ระบุ/ว่าง = ทุกปี) — ปีของรอบใช้ histRecYear() ตัวเดียวกับหน้าประวัติรอบเลี้ยง
-// ⚠️ ห้ามอ่าน c.cropYear ตรงๆ เพื่อแบ่งปี — ข้อมูลจริงมีทั้ง พ.ศ. (seed เก่า) และ ค.ศ. (รอบที่ปิดผ่านแอป) ปนกันอยู่
-function hatcheryStats(yrBE){
-  const groups={};
-  D.ponds.forEach(p=>{
-    (p.cropHistory||[]).forEach(c=>{
-      // ── ทุก record ใน cropHistory คือรอบที่ปิดแล้วอยู่แล้ว (ไม่ต้องพึ่ง c.closed ที่ confirmCloseCrop() ไม่เคยตั้งค่าให้) ──
-      if(!c.harvestResult)return;
-      if(yrBE&&String(histRecYear(c))!==String(yrBE))return;
-      const name=(c.hatchery||'').trim()||'ไม่ระบุ';
-      if(!groups[name])groups[name]={name,rounds:0,survSum:0,survN:0,fcrSum:0,fcrN:0,adgSum:0,adgN:0,
-        bonusSum:0,bonusN:0,ordSum:0,ordN:0,stockSum:0,bonusQtySum:0,
-        caughtSum:0,relSum:0,ordCaughtSum:0,ordStockSum:0,feedSum:0,kgSum:0};   // ยอดรวมสำหรับถัวเฉลี่ยแบบถ่วงน้ำหนัก
-      const g=groups[name];
-      g.rounds++;
-      const hr=cropHarvestResult(c);   // นับพาเชียลรวมแล้ว
-      if(hr.survivalRate!=null){g.survSum+=parseFloat(hr.survivalRate)||0;g.survN++;}
-      // ── ยอดรวมจริงไว้ถัวเฉลี่ยแบบถ่วงน้ำหนัก — รอบที่จับได้ 800 กก. ต้องไม่ถ่วงเท่ารอบ 12,000 กก. ──
-      const _rel=(parseFloat(c.stock)||0)+(parseFloat(c.stockBonus)||0);
-      const _caught=parseFloat(hr.caught)||0;
-      if(_rel>0&&_caught>0){g.caughtSum+=_caught;g.relSum+=_rel;}
-      const _ord=parseFloat(c.stock)||0;
-      if(_ord>0&&_caught>0){g.ordCaughtSum+=_caught;g.ordStockSum+=_ord;}
-      // ── % ยอดแถม ของแต่ละโรง — ไว้เทียบว่าโรงที่แถมเยอะ กุ้งรอดดีกว่า/แย่กว่าโรงที่แถมน้อยไหม
-      //    ⚠️ ถัวเฉลี่ยแบบถ่วงน้ำหนักด้วยยอดสั่งซื้อ (รวมตัวแถมทุกรอบ ÷ รวมยอดสั่งทุกรอบ)
-      //       ไม่ใช่เฉลี่ย % รายรอบ เพราะรอบที่สั่งน้อยจะดึงค่าเฉลี่ยเพี้ยน
-      const ord=parseFloat(c.stock)||0, bon=parseFloat(c.stockBonus)||0;
-      if(ord>0){g.stockSum+=ord;g.bonusQtySum+=bon;g.bonusN++;}
-      // อัตรารอดฐาน "ยอดสั่งซื้ออย่างเดียว" (ฐานเดียวกับสมุดจดมือของฟาร์ม) — ไว้เทียบคู่กับฐานรวมแถม
-      if(hr.survivalRateOrder!=null){g.ordSum+=parseFloat(hr.survivalRateOrder)||0;g.ordN++;}
-      const totalFeed=(c.feedLog||[]).reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0);
-      // ⚠️ ตัวหารต้องเป็นน้ำหนักที่จับได้ทั้งหมด (รวมพาเชียล) — hr.totalWeightAll มีเฉพาะตอนมีพาเชียล
-      //    ถ้า fallback ไปใช้ hr.totalWeight (เฉพาะตอนปิดบ่อ) FCR จะสูงเกินจริง
-      const _kgAll=(parseFloat(hr.totalWeightAll)||parseFloat(hr.totalWeight)||0);
-      const fcr=hr.fcr!=null?parseFloat(hr.fcr):(totalFeed&&_kgAll?+(totalFeed/_kgAll).toFixed(2):null);
-      if(fcr!=null&&!isNaN(fcr)){g.fcrSum+=fcr;g.fcrN++;}
-      if(totalFeed>0&&_kgAll>0){g.feedSum+=totalFeed;g.kgSum+=_kgAll;}
-      const ageDays=docAge(c.startDate,c.closeDate||today());
-      const finalWeightG=hr.size?1000/hr.size:null;
-      const adg=(finalWeightG!=null&&ageDays)?(finalWeightG-(c.plWeight||0))/ageDays:null;
-      if(adg!=null&&!isNaN(adg)){g.adgSum+=adg;g.adgN++;}
-    });
-  });
-  return Object.values(groups).map(g=>({
-    name:g.name,rounds:g.rounds,
-    // ── ถ่วงน้ำหนัก: กุ้งที่จับได้รวม ÷ ยอดปล่อยรวม — ไม่ใช่เฉลี่ย % รายรอบ
-    //    (หลักเดียวกับ bonusAvg ข้างล่าง และ ค่าแรง/กก. ใน #217) — fallback เป็นค่าเฉลี่ยธรรมดาถ้าขาดข้อมูลจำนวนตัว ──
-    survAvg:g.relSum>0?+(g.caughtSum/g.relSum*100).toFixed(1):(g.survN?+(g.survSum/g.survN).toFixed(1):null),
-    survOrderAvg:g.ordStockSum>0?+(g.ordCaughtSum/g.ordStockSum*100).toFixed(1):(g.ordN?+(g.ordSum/g.ordN).toFixed(1):null),
-    bonusAvg:g.stockSum>0?+(g.bonusQtySum/g.stockSum*100).toFixed(1):null,
-    stockSum:g.stockSum,bonusQtySum:g.bonusQtySum,
-    // FCR ถ่วงน้ำหนัก: อาหารรวมทุกรอบ ÷ น้ำหนักรวมทุกรอบ
-    fcrAvg:g.kgSum>0?+(g.feedSum/g.kgSum).toFixed(2):(g.fcrN?+(g.fcrSum/g.fcrN).toFixed(2):null),
-    adgAvg:g.adgN?+(g.adgSum/g.adgN).toFixed(3):null
-  })).sort((a,b)=>(b.survAvg||0)-(a.survAvg||0));
-}
-// ปี พ.ศ. ทั้งหมดที่มีรอบปิดแล้ว (ใหม่→เก่า)
-function hatcheryYears(){
-  const ys=new Set();
-  D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{
-    if(!c.harvestResult)return;
-    const y=histRecYear(c);if(y)ys.add(String(y));
-  }));
-  return[...ys].sort().reverse();
-}
-// หน่วยวัดในตารางประวัติรายปี — better บอกว่า "มากดีกว่า" หรือ "น้อยดีกว่า" (FCR ยิ่งต่ำยิ่งดี)
-const HAT_METRICS={
-  surv:{key:'survAvg',label:'อัตรารอด (รวมแถม)',suffix:'%',dec:1,hiGood:true},
-  survOrder:{key:'survOrderAvg',label:'อัตรารอด (ยอดสั่งซื้อ)',suffix:'%',dec:1,hiGood:true},
-  fcr:{key:'fcrAvg',label:'FCR',suffix:'',dec:2,hiGood:false},
-  adg:{key:'adgAvg',label:'ADG (ก./วัน)',suffix:'',dec:3,hiGood:true},
-  bonus:{key:'bonusAvg',label:'% ยอดแถม',suffix:'%',dec:1,hiGood:true}
-};
-let _hatcheryChart=null;
-function initHatchery(){
-  // ── เติมตัวเลือกปี (เก็บค่าที่เลือกไว้ถ้ายังมีอยู่) ──
-  const ySel=document.getElementById('hat-year');
-  const years=hatcheryYears();
-  let yr='';
-  if(ySel){
-    const cur=ySel.value;
-    yr=(cur&&(cur===''||years.includes(cur)))?cur:'';
-    ySel.innerHTML='<option value="">ทุกปี</option>'+years.map(y=>`<option value="${y}"${y===yr?' selected':''}>${y}</option>`).join('');
-    ySel.value=yr;
-  }
-  const stats=hatcheryStats(yr);
-  const badge=document.getElementById('hat-badge');
-  if(badge)badge.textContent=stats.length?(stats.length+' โรง · '+stats.reduce((a,x)=>a+x.rounds,0)+' รอบ'):'ไม่มีรอบปิดในปีนี้';
-  const tEl=document.getElementById('hatchery-chart-t');
-  if(tEl)tEl.textContent='📊 อัตรารอดเฉลี่ยตามโรงเพาะฟัก'+(yr?' — ปี '+yr:' — ทุกปีรวมกัน');
-  const t2El=document.getElementById('hatchery-table-t');
-  if(t2El)t2El.textContent='📋 สรุปตามโรงเพาะฟัก'+(yr?' — ปี '+yr:' — ทุกปีรวมกัน');
-  const chEl=document.getElementById('hatchery-chart');
-  const chEmpty=document.getElementById('hatchery-chart-empty');
-  const chWrap=document.getElementById('hatchery-chart-wrap');
-  if(_hatcheryChart){_hatcheryChart.destroy();_hatcheryChart=null;}
-  // ⚠️ ห้าม innerHTML ทับการ์ดนี้ — canvas จะหายถาวร แล้วพอสลับปีกลับมากราฟจะไม่ขึ้นอีกเลย
-  if(chEmpty)chEmpty.style.display=stats.length?'none':'';
-  if(chWrap)chWrap.style.display=stats.length?'':'none';
-  if(stats.length&&chEl&&typeof Chart!=='undefined'){
-    _hatcheryChart=new Chart(chEl,{type:'bar',data:{labels:stats.map(s=>s.name+' ('+s.rounds+' รอบ)'),datasets:[{data:stats.map(s=>s.survAvg||0),backgroundColor:'#3f6212',borderRadius:4}]},options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+'% รอด'}}},scales:{x:{max:100,ticks:{font:{size:10},callback:v=>v+'%'}},y:{ticks:{font:{size:11}}}}}});
-  }
-  const tbl=document.getElementById('hatchery-table');
-  if(tbl){
-    if(!stats.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:10px">-</p>';}
-    else{
-      // ── % ยอดแถม + อัตรารอด 2 ฐาน วางติดกัน เพื่อตอบว่า "โรงที่แถมเยอะ กุ้งรอดดีจริงไหม"
-      //    ฐานรวมแถม = แอปใช้คำนวณทั้งระบบ · ฐานยอดสั่งซื้อ = ตรงกับสมุดจดมือของฟาร์ม
-      const avgBonusAll=(()=>{const st=stats.reduce((a,s)=>a+(s.stockSum||0),0),bo=stats.reduce((a,s)=>a+(s.bonusQtySum||0),0);return st>0?bo/st*100:null;})();
-      tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>โรงเพาะฟัก</th><th style="text-align:right">รอบที่เลี้ยง</th><th style="text-align:right">% ยอดแถม</th><th style="text-align:right">อัตรารอด<br><span style="font-weight:400;font-size:var(--fs10)">(รวมแถม)</span></th><th style="text-align:right">อัตรารอด<br><span style="font-weight:400;font-size:var(--fs10)">(ยอดสั่งซื้อ)</span></th><th style="text-align:right">FCR เฉลี่ย</th><th style="text-align:right">ADG เฉลี่ย</th></tr></thead><tbody>${
-        stats.map(s=>{
-          // สีเทียบกับค่าเฉลี่ยแถมของทั้งฟาร์ม — เขียว = แถมมากกว่าเพื่อน
-          const bCol=(s.bonusAvg!=null&&avgBonusAll!=null)?(s.bonusAvg>=avgBonusAll?'var(--ok)':'var(--tx2)'):'var(--tx3)';
-          return `<tr><td>${mpEsc(s.name)}</td><td style="text-align:right">${s.rounds}</td>`+
-          `<td style="text-align:right;color:${bCol};font-weight:700">${s.bonusAvg!=null?'+'+s.bonusAvg+'%':'-'}`+
-            (s.bonusQtySum>0?`<div style="font-size:var(--fs10);color:var(--tx3);font-weight:400">แถม ${Math.round(s.bonusQtySum).toLocaleString()} จาก ${Math.round(s.stockSum).toLocaleString()}</div>`:'')+`</td>`+
-          `<td style="text-align:right;font-weight:700">${s.survAvg!=null?s.survAvg+'%':'-'}</td>`+
-          `<td style="text-align:right;color:var(--tx2)">${s.survOrderAvg!=null?s.survOrderAvg+'%':'-'}</td>`+
-          `<td style="text-align:right">${s.fcrAvg!=null?s.fcrAvg:'-'}</td>`+
-          `<td style="text-align:right">${s.adgAvg!=null?s.adgAvg+' ก./วัน':'-'}</td></tr>`;
-        }).join('')
-      }</tbody></table></div>
-      <div style="font-size:var(--fs11);color:var(--tx3);margin-top:9px;line-height:1.75">
-        <b>% ยอดแถม</b> = ตัวแถมรวมทุกรอบ ÷ ยอดสั่งซื้อรวมทุกรอบ (ถ่วงน้ำหนัก ไม่ใช่เฉลี่ย % รายรอบ) · สีเขียว = แถมมากกว่าค่าเฉลี่ยทั้งฟาร์ม${avgBonusAll!=null?' (+'+avgBonusAll.toFixed(1)+'%)':''}<br>
-        <b>อัตรารอด 2 ฐาน</b>: <b>รวมแถม</b> = ฐานที่แอปใช้คำนวณทุกอย่าง · <b>ยอดสั่งซื้อ</b> = ฐานเดียวกับสมุดจดมือ — โรงที่แถมเยอะ ตัวเลข 2 ช่องนี้จะห่างกันมากกว่าโรงที่แถมน้อย<br>
-        💡 <b>วิธีอ่าน</b>: ถ้าโรงไหน <b>แถมเยอะแต่อัตรารอด (รวมแถม) ต่ำ</b> แปลว่าแถมมาเพื่อชดเชยลูกกุ้งที่ไม่แข็งแรง — ได้จำนวนแต่ไม่ได้คุณภาพ
-      </div>`;
-    }
-  }
-  const mergeCard=document.getElementById('hatchery-merge-card');
-  if(mergeCard){
-    mergeCard.style.display=APP_ROLE==='admin'?'':'none';
-    if(APP_ROLE==='admin')renderHatcheryMergeTool();
-  }
-  renderHatcheryHistory();
-}
-// ══════ ประวัติรายปีของแต่ละโรงเพาะฟัก (พี่สั่ง — แต่ละปี performance ไม่เหมือนกัน) ══════
-// ⚠️ ทุกช่องในตารางนี้มาจาก hatcheryStats(ปี) ตัวเดียวกับกราฟ/ตารางข้างบน — ไม่มีสูตรเส้นที่สอง
-//    ค่าเฉลี่ยของแต่ละปีคิด "ถ่วงน้ำหนักภายในปีนั้น" เอง ไม่ใช่เอาค่าเฉลี่ยรายปีมาเฉลี่ยซ้ำ (จะเพี้ยนเพราะแต่ละปีจำนวนรอบไม่เท่ากัน)
-function renderHatcheryHistory(){
-  const el=document.getElementById('hatchery-hist-tbl');if(!el)return;
-  const mKey=(document.getElementById('hat-hist-metric')||{}).value||'surv';
-  const M=HAT_METRICS[mKey]||HAT_METRICS.surv;
-  const years=hatcheryYears().slice().reverse();   // เก่า→ใหม่ อ่านเป็นไทม์ไลน์จากซ้ายไปขวา
-  if(!years.length){
-    el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:14px">ยังไม่มีรอบเลี้ยงที่ปิดแล้ว</p>';return;
-  }
-  const byYear={};years.forEach(y=>{byYear[y]={};hatcheryStats(y).forEach(st=>{byYear[y][st.name]=st;});});
-  const all=hatcheryStats();   // ทุกปีรวมกัน — ใช้เรียงแถวและเป็นคอลัมน์สุดท้าย
-  if(!all.length){
-    el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:14px">ยังไม่มีรอบเลี้ยงที่ปิดแล้ว</p>';return;
-  }
-  const names=all.slice().sort((a,b)=>b.rounds-a.rounds).map(x=>x.name);
-  // ตัวที่ดีที่สุดของแต่ละปี (คอลัมน์ละตัว) — FCR ยิ่งต่ำยิ่งดี จึงต้องดู M.hiGood
-  const best={};
-  years.forEach(y=>{
-    let b=null;
-    names.forEach(n=>{
-      const v=byYear[y][n]?byYear[y][n][M.key]:null;
-      if(v==null||isNaN(v))return;
-      if(b==null||(M.hiGood?v>b:v<b))b=v;
-    });
-    best[y]=b;
-  });
-  const fmt=v=>(v==null||isNaN(v))?null:(+v).toFixed(M.dec)+M.suffix;
-  const cell=(st,isBest)=>{
-    if(!st)return'<td style="text-align:right;color:var(--tx3)">-</td>';
-    const v=st[M.key];
-    const txt=fmt(v);
-    if(txt==null)return'<td style="text-align:right;color:var(--tx3)">-<div style="font-size:var(--fs10)">'+st.rounds+' รอบ</div></td>';
-    return'<td style="text-align:right;'+(isBest?'color:var(--ok);font-weight:700':'')+'">'+txt
-      +'<div style="font-size:var(--fs10);color:var(--tx3);font-weight:400">'+st.rounds+' รอบ</div></td>';
-  };
-  const head='<th>โรงเพาะฟัก</th>'+years.map(y=>'<th style="text-align:right">'+y+'</th>').join('')
-    +'<th style="text-align:right;border-left:2px solid var(--bd)">ทุกปีรวมกัน</th>';
-  const body=names.map(n=>{
-    const allSt=all.find(x=>x.name===n);
-    return'<tr><td>'+mpEsc(n)+'</td>'
-      +years.map(y=>{
-        const st=byYear[y][n];
-        const v=st?st[M.key]:null;
-        return cell(st,v!=null&&best[y]!=null&&+v===+best[y]);
-      }).join('')
-      +'<td style="text-align:right;border-left:2px solid var(--bd);color:var(--tx2)">'+(fmt(allSt?allSt[M.key]:null)||'-')
-      +'<div style="font-size:var(--fs10);color:var(--tx3)">'+(allSt?allSt.rounds:0)+' รอบ</div></td></tr>';
-  }).join('');
-  el.innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>'
-    +'<div style="font-size:var(--fs11);color:var(--tx3);margin-top:9px;line-height:1.75">'
-    +'กำลังดู <b>'+M.label+'</b> · ปีที่โรงไหนไม่ได้ส่งลูกกุ้งจะขึ้น "-"<br>'
-    +'💡 <b>วิธีอ่าน</b>: ดูแนวนอนทีละโรง — โรงที่เคยดีแล้วปีหลังตก หรือโรงที่ค่อยๆ ดีขึ้น จะเห็นทันที '
-    +'ค่าเฉลี่ย "ทุกปีรวมกัน" กลบเรื่องนี้ไว้หมด<br>'
-    +'⚠️ ปีที่มีรอบน้อย (1-2 รอบ) ตัวเลขเหวี่ยงง่าย ดูจำนวนรอบใต้ตัวเลขประกอบเสมอ</div>';
-}
-// ── รวมชื่อโรงเพาะฟักที่สะกดต่างกันแต่หมายถึงที่เดียวกัน (แก้ทั้ง pond.hatchery ปัจจุบัน + cropHistory ทุกรอบ) ──
-let _hatcheryMergeSel=new Set();
-let _hatcheryMergeUsageCache=[];
-function hatcheryNameUsage(){
-  const map={};
-  D.ponds.forEach(p=>{
-    const cur=(p.hatchery||'').trim();
-    if(cur){if(!map[cur])map[cur]={name:cur,count:0};map[cur].count++;}
-    (p.cropHistory||[]).forEach(c=>{
-      const n=(c.hatchery||'').trim();
-      if(!n)return;
-      if(!map[n])map[n]={name:n,count:0};
-      map[n].count++;
-    });
-  });
-  return Object.values(map).sort((a,b)=>b.count-a.count);
-}
-function renderHatcheryMergeTool(){
-  const el=document.getElementById('hatchery-merge-list');if(!el)return;
-  const usage=hatcheryNameUsage();
-  for(const name of[..._hatcheryMergeSel])if(!usage.some(u=>u.name===name))_hatcheryMergeSel.delete(name);
-  if(!usage.length){el.innerHTML='<p style="color:var(--tx3);font-size:calc(12.5px * var(--ui-scale));padding:8px 0">ยังไม่มีชื่อโรงเพาะฟักที่บันทึกไว้</p>';return;}
-  el.innerHTML=usage.map((u,i)=>{
-    return`<label style="display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid var(--bd);font-size:calc(13px * var(--ui-scale));cursor:pointer">
-      <input type="checkbox" onchange="toggleHatcheryMergeSelByIdx(${i},this.checked)" ${_hatcheryMergeSel.has(u.name)?'checked':''}>
-      <span style="flex:1">${u.name}</span>
-      <span style="color:var(--tx3);font-size:var(--fs115)">${u.count} รายการ</span>
-    </label>`;
-  }).join('');
-  _hatcheryMergeUsageCache=usage;
-}
-function toggleHatcheryMergeSelByIdx(idx,checked){
-  const u=_hatcheryMergeUsageCache[idx];if(!u)return;
-  if(checked)_hatcheryMergeSel.add(u.name);else _hatcheryMergeSel.delete(u.name);
-}
-function mergeHatcheryNames(){
-  const target=document.getElementById('hatchery-merge-target').value.trim();
-  if(!target){showMsg('hatchery-merge-msg','warn','กรุณากรอกชื่อที่จะรวมเป็น');return}
-  if(_hatcheryMergeSel.size<2){showMsg('hatchery-merge-msg','warn','กรุณาเลือกอย่างน้อย 2 ชื่อที่ต้องการรวม');return}
-  const names=[..._hatcheryMergeSel];
-  if(!confirm(`รวมชื่อ "${names.join('", "')}" เป็น "${target}" ทั้งหมดใช่หรือไม่?\n(จะแก้ไขทุกบ่อและทุกรอบเลี้ยงที่เคยใช้ชื่อเหล่านี้)`))return;
-  let changed=0;
-  D.ponds.forEach(p=>{
-    if(p.hatchery&&names.includes(p.hatchery.trim())){p.hatchery=target;changed++;}
-    (p.cropHistory||[]).forEach(c=>{
-      if(c.hatchery&&names.includes(c.hatchery.trim())){c.hatchery=target;changed++;}
-    });
-  });
-  save();
-  _hatcheryMergeSel.clear();
-  document.getElementById('hatchery-merge-target').value='';
-  initHatchery();
-  showMsg('hatchery-merge-msg','ok',`✅ รวมชื่อสำเร็จ อัปเดต ${changed} รายการ เป็น "${target}"`);
-}
-// ══════ ล็อกราคา ณ วันบันทึก (entry #298 — พี่ตัดสิน 19 ก.ย. 69 ครบ 4 ข้อ) ══════
-//    1) ล็อกราคาไว้ตอนกดบันทึก: รายการเบิกเข้าบ่อ (inventoryLog type 'out') และบันทึกอาหาร (feedLog) จด unitCost = ราคาต่อหน่วย/กระสอบ ณ ตอนนั้น
-//    2) ของที่บันทึกก่อนมีฟีเจอร์นี้ (ไม่มี unitCost) ปล่อยตามเดิม = ใช้ราคาปัจจุบัน — ไม่ migrate ข้อมูลเก่า
-//    3) แก้บันทึกอาหารวันเดิม เบอร์เดิม → เก็บราคาเดิม · เปลี่ยนเบอร์ → ล็อกราคาเบอร์ใหม่ ณ ตอนแก้
-//    4) อาหารที่ไม่ได้เลือกเบอร์ → ราคาเฉลี่ยทุกเบอร์ "ปัจจุบัน" เหมือนเดิม
-//    ⚠️ ทุกที่ที่คิดต้นทุนอาหาร/ของเบิกต้องผ่าน feedRecSackPrice() / getStockItemsForPond() เท่านั้น — ห้ามอ่าน item.unitPrice ตรงๆ อีก
-//    (มูลค่าสต็อกคงเหลือ และราคาพยากรณ์ feedPricePerKg ใช้ราคาปัจจุบันถูกแล้ว — ไม่ใช่ต้นทุนที่เกิดขึ้นแล้ว) ──
 function feedAvgPerKgNow(){
   const feedItems=(D.inventoryItems||[]).filter(i=>i.category==='feed'&&i.unitPrice);
   return feedItems.length?feedItems.reduce((s,i)=>s+i.unitPrice,0)/feedItems.length/25:0;
@@ -6844,11 +6431,11 @@ function goTab(t,btn){
   }
   if(btn.classList.contains('sn-top'))document.querySelectorAll('.sn-sub').forEach(s=>s.classList.remove('open'));
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));document.getElementById('sec-'+t).classList.add('on');
-  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='stock')initStock();if(t==='abw')initAbw();if(t==='feed')initFeed();if(t==='pl')initPL();
+  if(t==='overview')renderOv();if(t==='tide')renderTide();if(t==='entry')initEntry();if(t==='labor')initLabor();if(t==='elec')initElec();if(t==='stock')initStock();if(t==='feed')initFeed();if(t==='pl')initPL();
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();if(t==='gear')initGear();
   if(t==='lab')initLab();if(t==='mortality')initMortality();
   if(t==='trial')initTrialTab();
-  if(t==='compare')initCompare();if(t==='risk'){if(_wxDaily)renderRisk(_wxDaily);else fetchWx();}if(t==='export')initExport();if(t==='wqfeed')initWqFeed();if(t==='hatchery')initHatchery();
+  if(t==='compare')initCompare();if(t==='risk'){if(_wxDaily)renderRisk(_wxDaily);else fetchWx();}if(t==='export')initExport();
   if(t==='manage')renderManage();
   if(t==='palm')initPalm();
   if(t==='forecast')initForecast();
@@ -19649,113 +19236,6 @@ function getAbwTarget(age){
   return pts[pts.length-1][1];
 }
 
-function initAbw(){
-  const ponds=sortPondsByAge(D.ponds.filter(p=>p.startDate&&!p.closed&&(p.samples||[]).some(s=>s.abw)));
-  const chipsEl=document.getElementById('abw-chips');
-  if(chipsEl){
-    chipsEl.innerHTML=ponds.map((p,i)=>{
-      const col=ABW_COLORS[i%ABW_COLORS.length];
-      const on=!_abwHiddenPonds.has(p.id);
-      return`<button class="abw-chip${on?' on':''}" style="border-color:${col};${on?`background:${col}20;color:${col}`:''}" onclick="abwTogglePond('${p.id}',this,${i})">${p.name}</button>`;
-    }).join('');
-  }
-  renderAbwKPI(ponds);
-  renderAbwChart(ponds);
-  renderAbwTable(ponds);
-}
-
-function abwTogglePond(id,btn,idx){
-  if(_abwHiddenPonds.has(id))_abwHiddenPonds.delete(id);else _abwHiddenPonds.add(id);
-  const on=!_abwHiddenPonds.has(id);
-  const col=ABW_COLORS[idx%ABW_COLORS.length];
-  btn.classList.toggle('on',on);
-  btn.style.background=on?col+'20':'';
-  btn.style.color=on?col:'';
-  if(_abwChart){
-    const dsIdx=_abwChart.data.datasets.findIndex(ds=>ds.pondId===id);
-    if(dsIdx>=0){_abwChart.data.datasets[dsIdx].hidden=!on;_abwChart.update();}
-  }
-}
-
-function renderAbwKPI(ponds){
-  const el=document.getElementById('abw-kpi');if(!el)return;
-  if(!ponds.length){el.innerHTML='<div class="kpi-card" style="grid-column:1/-1;text-align:center;color:var(--tx3);padding:20px">ยังไม่มีข้อมูล ABW — กรอกข้อมูลสุ่มตัวอย่างก่อน</div>';return;}
-  let totalAbw=0,cntAbw=0,slowPonds=0,totalAdg=0,cntAdg=0;
-  ponds.forEach(p=>{
-    const samps=(p.samples||[]).filter(s=>s.abw).sort((a,b)=>a.age-b.age);
-    if(!samps.length)return;
-    const lat=samps[samps.length-1];
-    const tgt=getAbwTarget(lat.age);
-    totalAbw+=lat.abw;cntAbw++;
-    if(tgt>0&&lat.abw<tgt*0.8)slowPonds++;
-    if(samps.length>=2){
-      const a=samps[samps.length-2],b=lat;
-      const days=b.age-a.age;
-      if(days>0&&a.abw&&b.abw){totalAdg+=(b.abw-a.abw)/days;cntAdg++;}
-    }
-  });
-  const avgAbw=cntAbw?(totalAbw/cntAbw).toFixed(1):'-';
-  const avgAdg=cntAdg?(totalAdg/cntAdg).toFixed(2):'-';
-  el.innerHTML=`
-    <div class="kpi-card"><div class="kpi-lbl">ABW เฉลี่ย</div><div class="kpi-val">${avgAbw}<span class="kpi-unit"> g</span></div><div class="kpi-sub">${ponds.length} บ่อที่กำลังเลี้ยง</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">บ่อโตช้า (&lt;80%เป้า)</div><div class="kpi-val" style="color:${slowPonds?'var(--d)':'var(--ok)'}">${slowPonds}</div><div class="kpi-sub">${slowPonds?'⚠️ ต้องติดตาม':'✅ ปกติทั้งหมด'}</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">ADG เฉลี่ย</div><div class="kpi-val">${avgAdg}<span class="kpi-unit"> g/วัน</span></div><div class="kpi-sub">อัตราเติบโตเฉลี่ย</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">เป้า 60 วัน</div><div class="kpi-val">15<span class="kpi-unit"> g</span></div><div class="kpi-sub">มาตรฐาน Vannamei</div></div>`;
-}
-
-function renderAbwChart(ponds){
-  const canvas=document.getElementById('abwChart');if(!canvas)return;
-  if(_abwChart){_abwChart.destroy();_abwChart=null;}
-  let maxAge=42;
-  ponds.forEach(p=>(p.samples||[]).forEach(s=>{if(s.age>maxAge)maxAge=s.age;}));
-  maxAge=Math.ceil((maxAge+7)/7)*7;
-  const tgtPts=[];for(let a=0;a<=maxAge;a+=7)tgtPts.push({x:a,y:parseFloat(getAbwTarget(a).toFixed(2))});
-  const datasets=[{label:'เป้าหมาย',data:tgtPts,borderColor:'#CBD5E1',borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,tension:.4,pondId:'__target__'}];
-  ponds.forEach((p,i)=>{
-    const samps=(p.samples||[]).filter(s=>s.abw!=null).sort((a,b)=>a.age-b.age);
-    if(!samps.length)return;
-    const col=ABW_COLORS[i%ABW_COLORS.length];
-    datasets.push({label:p.name,data:samps.map(s=>({x:s.age,y:s.abw})),borderColor:col,backgroundColor:col+'25',borderWidth:2.5,pointRadius:4,pointBackgroundColor:col,fill:false,tension:.3,hidden:_abwHiddenPonds.has(p.id),pondId:p.id});
-  });
-  _abwChart=new Chart(canvas,{
-    type:'line',data:{datasets},
-    options:{responsive:true,maintainAspectRatio:false,
-      interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(15,23,42,.92)',padding:10,titleFont:{size:11},bodyFont:{size:11},callbacks:{title:items=>`วันที่ ${items[0].parsed.x}`,label:ctx=>ctx.parsed.y==null?null:` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} g`}}},
-      scales:{
-        x:{type:'linear',min:0,title:{display:true,text:'วันที่เลี้ยง',font:{size:10},color:'var(--tx3)'},ticks:{font:{size:10},color:'var(--tx3)',stepSize:7,callback:v=>`วัน ${v}`},grid:{color:'rgba(0,0,0,0.04)'}},
-        y:{min:0,title:{display:true,text:'ABW (กรัม)',font:{size:10},color:'var(--tx3)'},ticks:{font:{size:10},color:'var(--tx3)',callback:v=>`${v}g`},grid:{color:'rgba(0,0,0,0.04)'}}
-      }
-    }
-  });
-  const legEl=document.getElementById('abw-legend');
-  if(legEl)legEl.innerHTML=`<div class="abw-leg-item"><div class="abw-leg-dash"></div>เป้าหมาย</div>`+ponds.filter(p=>(p.samples||[]).some(s=>s.abw)).map((p,i)=>`<div class="abw-leg-item"><div class="abw-leg-line" style="background:${ABW_COLORS[i%ABW_COLORS.length]}"></div>${p.name}</div>`).join('');
-}
-
-function renderAbwTable(ponds){
-  const tbody=document.getElementById('abw-tbody');if(!tbody)return;
-  const rows=ponds.map((p,i)=>{
-    const samps=(p.samples||[]).filter(s=>s.abw).sort((a,b)=>a.age-b.age);
-    if(!samps.length)return null;
-    const lat=samps[samps.length-1];
-    const curAge=p.startDate?pondCurAge(p):lat.age;
-    const tgt=getAbwTarget(lat.age);
-    const pct=tgt>0?Math.round(lat.abw/tgt*100):null;
-    const col=ABW_COLORS[i%ABW_COLORS.length];
-    let adg='-';
-    if(samps.length>=2){const a=samps[samps.length-2],b=lat,days=b.age-a.age;if(days>0&&a.abw&&b.abw)adg=((b.abw-a.abw)/days).toFixed(2)+' g/วัน';}
-    let badge,bcls;
-    if(pct==null){badge='ไม่มีข้อมูล';bcls='abw-warn';}
-    else if(pct>=95){badge='ดีมาก';bcls='abw-ok';}
-    else if(pct>=80){badge='ปกติ';bcls='abw-ok';}
-    else if(pct>=65){badge='ติดตาม';bcls='abw-warn';}
-    else{badge='ช้ามาก';bcls='abw-danger';}
-    const bw=pct!=null?Math.min(pct,100):0;
-    const bc=pct==null?'#CBD5E1':pct>=80?'#22C55E':pct>=65?'#F59E0B':'#EF4444';
-    return`<tr><td><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${col};margin-right:5px;vertical-align:middle"></span><b>${p.name}</b></td><td>${curAge} วัน</td><td><b>${lat.abw} g</b></td><td><div class="abw-bar-bg"><div class="abw-bar-fill" style="width:${bw}%;background:${bc}"></div></div><span style="font-size:var(--fs11);color:${pct!=null&&pct<80?'var(--d)':'var(--tx2)'}">${pct!=null?pct+'%':'-'}</span></td><td>${adg}</td><td><span class="abw-badge ${bcls}">${badge}</span></td></tr>`;
-  }).filter(Boolean);
-  tbody.innerHTML=rows.length?rows.join(''):'<tr><td colspan="6" style="text-align:center;color:var(--tx3);padding:20px">ยังไม่มีข้อมูล — กรอกข้อมูลสุ่มตัวอย่างก่อน</td></tr>';
-}
 // ═══════════════════════════════════════════════════════════════════════════
 
 // ═══════════════════════════ WQ HEATMAP ═══════════════════════════════
