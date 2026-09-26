@@ -522,6 +522,11 @@ body.role-admin .mp-actions{display:flex!important;gap:2px;flex-wrap:wrap}
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--sf2)}::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
 .hint{font-size:var(--fs11);color:var(--tx3);font-style:italic;margin-top:3px}
 .date-hint{display:block;font-size:var(--fs11);color:var(--p);font-weight:700;margin-top:2px}
+/* ช่องวันที่ + ปุ่มลัด วันนี้/เมื่อวาน อยู่บรรทัดเดียวกัน สูงเท่าช่องกรอก (#320) — ป้าย "= 26 ก.ย. 69" ไปอยู่ใต้ทั้งแถว (syncDateHint)
+   เดิมปุ่มอยู่นอกกล่อง .fg + align-items:flex-end → ป้ายใต้ช่องวันที่ดันปุ่มลงต่ำกว่าช่องกรอก ~26px */
+.dq-line{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
+.dq-line>input{flex:1 1 150px;min-width:0}
+.dq-line>div{flex:none;display:flex;gap:6px}
 .lbl-std{font-size:var(--fs10);color:var(--tx3);margin-top:1px}
 .lbl-std-warn{font-size:var(--fs10);color:var(--w);margin-top:1px;font-weight:700}
 .lbl-std-danger{font-size:var(--fs10);color:var(--d);margin-top:1px;font-weight:700}
@@ -2684,10 +2689,10 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       <div class="card-t" style="justify-content:space-between"><span>📝 บันทึกการสุ่ม</span>
         <span style="font-weight:400;font-size:var(--fs11);color:var(--tx3)">กรอกเฉพาะบ่อที่สุ่มวันนี้</span></div>
       <div class="sp-row">
-        <div class="fg" style="flex:1 1 150px;margin:0"><label class="fl" for="sp-date">วันที่</label>
-          <input type="date" class="fi" id="sp-date" onchange="spSetDate(this.value)"></div>
-        <div class="sp-quick"><button type="button" id="sp-q-today" onclick="spQuickDate(0)">วันนี้</button>
-          <button type="button" id="sp-q-yest" onclick="spQuickDate(1)">เมื่อวาน</button></div>
+        <div class="fg" style="flex:1 1 100%;margin:0"><label class="fl" for="sp-date">วันที่</label>
+          <div class="dq-line"><input type="date" class="fi" id="sp-date" onchange="spSetDate(this.value)">
+          <div class="sp-quick"><button type="button" id="sp-q-today" onclick="spQuickDate(0)">วันนี้</button>
+          <button type="button" id="sp-q-yest" onclick="spQuickDate(1)">เมื่อวาน</button></div></div></div>
       </div>
       <div class="wl-grp"><span id="sp-grp-l">บ่อที่มีกุ้ง</span><span>เรียงตามอายุกุ้ง มาก → น้อย · เว้นว่าง = ไม่บันทึก</span></div>
       <div id="sp-rows"></div>
@@ -2722,8 +2727,9 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <div class="card">
       <div class="card-t">💧 เติมน้ำ <span style="font-weight:400;font-size:var(--fs11);color:var(--tx3)">เลือกได้หลายบ่อในครั้งเดียว</span></div>
       <div class="wl-row">
-        <div class="fg" style="flex:1;min-width:160px;margin:0"><label class="fl" for="wl-date">วันที่</label><input type="date" class="fi" id="wl-date" onchange="renderWlPonds()"></div>
-        <div class="wl-quick"><button type="button" id="wl-q-today" onclick="wlSetDate(0)">วันนี้</button><button type="button" id="wl-q-yest" onclick="wlSetDate(-1)">เมื่อวาน</button></div>
+        <div class="fg" style="flex:1 1 100%;margin:0"><label class="fl" for="wl-date">วันที่</label>
+          <div class="dq-line"><input type="date" class="fi" id="wl-date" onchange="renderWlPonds()">
+          <div class="wl-quick"><button type="button" id="wl-q-today" onclick="wlSetDate(0)">วันนี้</button><button type="button" id="wl-q-yest" onclick="wlSetDate(-1)">เมื่อวาน</button></div></div></div>
       </div>
       <div class="wl-grp"><span style="color:var(--tx2);font-weight:700">🦐 บ่อที่มีกุ้ง</span><span id="wl-cnt"></span></div>
       <div class="wl-chips" id="wl-chips"></div>
@@ -2822,10 +2828,10 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       <div class="card-t" style="justify-content:space-between"><span>📝 บันทึกกุ้งตาย</span>
         <span style="font-weight:400;font-size:var(--fs11);color:var(--tx3)">แตะ + − หรือพิมพ์ตัวเลข</span></div>
       <div class="mt-row">
-        <div class="fg" style="flex:1 1 150px;margin:0"><label class="fl" for="mt-date">วันที่</label>
-          <input type="date" class="fi" id="mt-date" onchange="mtSetDate(this.value)"></div>
-        <div class="mt-quick"><button type="button" id="mt-q-today" onclick="mtQuickDate(0)">วันนี้</button>
-          <button type="button" id="mt-q-yest" onclick="mtQuickDate(1)">เมื่อวาน</button></div>
+        <div class="fg" style="flex:1 1 100%;margin:0"><label class="fl" for="mt-date">วันที่</label>
+          <div class="dq-line"><input type="date" class="fi" id="mt-date" onchange="mtSetDate(this.value)">
+          <div class="mt-quick"><button type="button" id="mt-q-today" onclick="mtQuickDate(0)">วันนี้</button>
+          <button type="button" id="mt-q-yest" onclick="mtQuickDate(1)">เมื่อวาน</button></div></div></div>
       </div>
       <div class="wl-grp"><span id="mt-grp-l">บ่อที่มีกุ้ง</span><span>เรียงตามอายุกุ้ง มาก → น้อย</span></div>
       <div id="mt-rows"></div>
@@ -5574,10 +5580,12 @@ function goTabByName(t){
 // ── ข้อ2: input[type=date] เป็น ค.ศ. เสมอ (ข้อจำกัดเบราว์เซอร์) จึงแสดงป้าย พ.ศ. ไทยคู่กันเพื่อไม่ให้สับสน ──
 function syncDateHint(el){
   if(!el||el.type!=='date')return;
-  let h=el.nextElementSibling;
+  // ช่องวันที่ที่มีปุ่มลัดอยู่บรรทัดเดียวกัน (.dq-line) → ป้ายไปอยู่ใต้ทั้งแถว ไม่แทรกระหว่างช่องกับปุ่ม (#320)
+  const at=el.parentElement&&el.parentElement.classList.contains('dq-line')?el.parentElement:el;
+  let h=at.nextElementSibling;
   if(!h||!h.classList||!h.classList.contains('date-hint')){
     h=document.createElement('span');h.className='date-hint';
-    el.insertAdjacentElement('afterend',h);
+    at.insertAdjacentElement('afterend',h);
   }
   h.textContent=el.value?('= '+fD(el.value)):'';
 }
