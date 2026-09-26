@@ -6013,22 +6013,28 @@ function fcrTargetFor(p,ageOverride){
 // ── FCR เกินเกณฑ์ = อาหารที่ใช้เกิน แปลงเป็นเงินด้วยราคาอาหารจริงของบ่อนี้ ──
 //    ⚠️ ราคาต่อ กก. คิดจาก ต้นทุนอาหารจริง ÷ อาหารที่ให้จริง — ไม่ได้ตั้งราคาตายตัวไว้ในโค้ด
 function fcrGapMoney(p){
-  const t=fcrTargetFor(p);const fcrStr=getFCR(p);
-  if(t==null||fcrStr==null)return null;
-  const fcr=parseFloat(fcrStr);
-  const feedKg=getCumFeed(p);if(!(feedKg>0))return null;
-  const produced=feedKg/fcr;                    // = biomass + พาเชียล (ตัวหารเดียวกับ getFCR)
-  const costPerKg=pondFeedCost(p)/feedKg;
+  const x=fcrAtSample(p);if(!x||x.target==null)return null;
+  const t=x.target,fcr=parseFloat(x.fcr.toFixed(2));
+  const produced=x.produced;                    // = biomass + พาเชียล ณ วันสุ่ม (ตัวหารเดียวกับ getFCR)
+  const allFeed=getCumFeed(p);if(!(allFeed>0))return null;
+  const costPerKg=pondFeedCost(p)/allFeed;       // ราคาเฉลี่ยต่อ กก. ของอาหารทั้งรอบ
   const overKg=(fcr-t)*produced;
   return{fcr,target:t,produced,costPerKg,overKg,baht:overKg*costPerKg};
 }
-function getFCR(p){
-  const f=getCumFeed(p);const b=getLatestBiomass(p);
-  if(b==null||f<=0)return null;
-  const produced=b+partialTotals(p.partialHarvests).kg;
-  if(produced<=0)return null;
-  return(f/produced).toFixed(2);
+// ══════ FCR สะสม "ณ วันสุ่มล่าสุด" — สูตรเดียวทั้งแอป (entry #322 พี่สั่ง 26 ก.ย. 69) ══════
+//    = อาหารสะสมถึงวันสุ่ม ÷ (biomass ในบ่อวันนั้น + กก. พาเชียลที่จับไปแล้วถึงวันนั้น) — ตัวเดียวกับแถวล่าสุดในตารางประวัติการสุ่ม (sampleFeedFcr)
+//    เดิมใช้อาหารถึง "วันนี้" ÷ biomass วันสุ่ม → FCR ไหลขึ้นทุกวันระหว่าง 2 ครั้งสุ่ม (นับอาหารเพิ่มแต่ไม่นับการโต) แล้วตกลงตอนสุ่มใหม่
+//    ทำให้บ่อดูแย่ลงทั้งที่ไม่ได้แย่ + ขึ้นแดงผิด (A.3: 1.43 vs จริง ณ วันสุ่ม 1.33)
+//    ⚠️ เกณฑ์ต้องเทียบ "อายุวันสุ่ม" (target ในผลลัพธ์) ไม่ใช่ fcrTargetFor(p) ที่เป็นอายุวันนี้ — ตัวเลขสองฝั่งต้องอยู่วันเดียวกัน
+//    ⚠️ FCR ตอนปิดรอบ (cm-fcr = อาหารทั้งรอบ ÷ ผลผลิตจริง) เป็นคนละตัว ไม่เกี่ยวกับฟังก์ชันนี้
+function fcrAtSample(p){
+  const lat=latestSample(p);if(!lat||!lat.date)return null;
+  const bio=sampleInPondBiomass(p,lat);
+  const sf=sampleFeedFcr(p,lat,bio);if(sf.fcr==null)return null;
+  const age=recAge(p,lat)!=null?recAge(p,lat):lat.age;
+  return{fcr:sf.fcr,feed:sf.feed,produced:sf.feed/sf.fcr,date:lat.date,age,target:age>0?fcrTargetFor(p,age):null};
 }
+function getFCR(p){const x=fcrAtSample(p);return x?x.fcr.toFixed(2):null;}
 function getPDG(samples){
   if(!samples||samples.length<2)return null;
   // เรียงตามวันที่ก่อน — รับ array มาตรงๆ จึงเรียงที่นี่เอง (ไม่แก้ของเดิม คืนสำเนาใหม่)
@@ -7149,13 +7155,14 @@ function pondRiskEconomic(p){
   //    FCR สะสมสูงขึ้นตามอายุโดยธรรมชาติ เกณฑ์คงที่ทำให้บ่ออายุน้อยที่แย่จริงไม่เตือน
   //    ส่วนบ่ออายุมากที่ปกติดีกลับโดนเตือน = เตือนแทบจะเฉพาะตอนใกล้จบรอบ ซึ่งแก้ไม่ทันแล้ว
   if(fcr!=null){
-    const f=parseFloat(fcr),t=fcrTargetFor(p);
+    const fx=fcrAtSample(p);
+    const f=parseFloat(fcr),t=fx?fx.target:null;
     if(t!=null){
       const over=f-t;
       const g=fcrGapMoney(p);
       const money=(g&&g.baht>1000)?` ≈ อาหารเกิน ${ceoMoney(g.baht)}`:'';
-      if(over>=0.3)cands.push({level:'danger',reason:`FCR สะสม ${fcr} สูงกว่าเกณฑ์วันนี้ (${t.toFixed(1)}) อยู่ ${over.toFixed(2)}${money}`});
-      else if(over>=0.15)cands.push({level:'warn',reason:`FCR สะสม ${fcr} เริ่มสูงกว่าเกณฑ์วันนี้ (${t.toFixed(1)})${money}`});
+      if(over>=0.3)cands.push({level:'danger',reason:`FCR สะสม ${fcr} (สุ่ม ${fD(fx.date)}) สูงกว่าเกณฑ์อายุ ${fx.age} วัน (${t.toFixed(1)}) อยู่ ${over.toFixed(2)}${money}`});
+      else if(over>=0.15)cands.push({level:'warn',reason:`FCR สะสม ${fcr} (สุ่ม ${fD(fx.date)}) เริ่มสูงกว่าเกณฑ์อายุ ${fx.age} วัน (${t.toFixed(1)})${money}`});
     }else if(f>2.0)cands.push({level:'danger',reason:`FCR สะสม ${fcr} สูงมาก — ต้นทุนอาหารบานปลาย`});
   }
   return _fcPick(cands,'ต้นทุนอยู่ในแผน');
@@ -7217,7 +7224,8 @@ function renderPondDetail(id){
   const lat=samples.length?samples[samples.length-1]:null;
   const latPrev=samples.length>1?samples[samples.length-2]:null;
   const fcr=getFCR(p);
-  const pdFcrT=fcrTargetFor(p);          // เกณฑ์ FCR ของฟาร์ม ณ อายุวันนี้ (entry #256)
+  const pdFcrX=fcrAtSample(p);
+  const pdFcrT=pdFcrX?pdFcrX.target:null; // เกณฑ์ FCR ณ อายุวันสุ่ม — คู่กับ FCR ณ วันสุ่ม (entry #256, #322)
   const pdFcrGap=fcrGapMoney(p);
   const pdSC=pondShrimpCount(p);   // จำนวนกุ้งรอดสะสม / จับพาเชียลไปแล้ว / คงเหลือในบ่อ — ใช้ร่วมทั้งหน้า
   // กก./ไร่ — สูตรเดียวกับ partialHarvestInfo() (biomass ในบ่อ ÷ ขนาดบ่อ) จะได้ตรงกับการ์ดพาเชียลเสมอ
@@ -7303,10 +7311,10 @@ function renderPondDetail(id){
       <div style="font-size:calc(22px * var(--ui-scale));font-weight:500;color:#15803d;line-height:1">${cumFeed?cumFeed.toLocaleString():'—'}</div>
       <div style="font-size:var(--fs10);color:#16a34a;margin-top:3px">กก. ตลอดรอบ</div>
     </div>
-    <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px" title="ประเมินจากอาหารสะสม ÷ biomass ประเมิน — ไม่ใช่ FCR สุดท้ายตอนปิดรอบ">
+    <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px" title="อาหารสะสมถึงวันสุ่ม ÷ biomass วันสุ่ม (+พาเชียล) — ไม่ใช่ FCR สุดท้ายตอนปิดรอบ">
       <div style="font-size:var(--fs10);color:#16a34a;margin-bottom:4px">FCR ประเมิน</div>
       <div style="font-size:calc(22px * var(--ui-scale));font-weight:500;color:${fcrValColor};line-height:1">${fcr??'—'}</div>
-      <div style="font-size:var(--fs10);color:#16a34a;margin-top:3px">${pdFcrT!=null?'เกณฑ์วันนี้ '+pdFcrT.toFixed(1):'เป้าตามอายุกุ้ง'}</div>
+      <div style="font-size:var(--fs10);color:#16a34a;margin-top:3px">${pdFcrX?'ณ สุ่ม '+fD(pdFcrX.date)+(pdFcrT!=null?' · เกณฑ์ '+pdFcrT.toFixed(1):''):'เป้าตามอายุกุ้ง'}</div>
     </div>
     <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px" title="${pdSC&&pdSC.hasPartial?'อัตรารอดสะสม — นับกุ้งที่จับพาเชียลไปแล้วเป็นตัวที่รอดด้วย (ไม่ได้ตาย แค่ขายออกไป) · บรรทัดล่างคือที่ยังอยู่ในบ่อจริง':'จากสุ่มตัวอย่างล่าสุด — กรอกเอง'}">
       <div style="font-size:var(--fs10);color:#16a34a;margin-bottom:4px">อัตรารอด${pdSC&&pdSC.hasPartial?' (สะสม)':''}</div>
@@ -14461,9 +14469,10 @@ function renderSpRows(){
 // อาหารรวมทั้งรอบ + FCR สะสม ของบ่อ (entry #321) — ตัวเลขชุดเดียวกับหน้าอาหาร & FCR (getCumFeed / getFCR / fcrTargetFor)
 //    FCR ต้องมี biomass จากการสุ่ม — ยังไม่เคยสุ่มจึงขึ้น "-" · เกินเกณฑ์ตามอายุ = สีแดง
 //    บ่อที่จับพาเชียลแล้ว (entry #321 พี่สั่ง) → โน้ตบอกจำนวนครั้ง/กก./ตัว + FCR ป้าย "รวมพาเชียล"
-//    getFCR() = อาหารรวม ÷ (biomass ที่ยังอยู่ในบ่อ + กก. ที่จับพาเชียลไปแล้ว) — ถ้าไม่บวกพาเชียล FCR จะพุ่งเกินจริงหลังจับ
+//    getFCR() = FCR ณ วันสุ่มล่าสุด (#322) — ตรงกับแถวล่าสุดในตารางประวัติ · อาหารรวมที่โชว์ = ทั้งรอบถึงวันนี้
+//    ตัวหารบวกพาเชียลแล้ว — ถ้าไม่บวก FCR จะพุ่งเกินจริงหลังจับ
 function spFeedLine(p,d){
-  const kg=getCumFeed(p),fcr=getFCR(p),t=fcrTargetFor(p);
+  const kg=getCumFeed(p),fcr=getFCR(p),fx=fcrAtSample(p),t=fx?fx.target:null;
   const over=fcr!=null&&t!=null&&parseFloat(fcr)>t;
   const phs=spPartialsOn(p,d),pt=partialTotals(phs);
   const hasPh=pt.kg>0;
@@ -14641,6 +14650,16 @@ function renderSampleChart(){
 // ⚠️ ทุกบ่อเรียงตามวันทันที + ตัวกรองบ่อ + เพดานแถว (บทเรียน entry #306) — เดิมต้องเลือกบ่อก่อนถึงจะเห็นอะไร
 let _spTblAll=false;
 function spTableShowAll(){_spTblAll=true;renderSampleTable();}
+// ── อาหารรวม + FCR "ณ วันที่สุ่มครั้งนั้น" (entry #322) — อาหารนับถึงวันสุ่ม (รวมวันนั้น) · ตัวหาร = biomass ในบ่อวันนั้น + กก. พาเชียลที่จับไปแล้วถึงวันนั้น
+//    getFCR() ทั้งแอปเรียกตัวนี้ผ่าน fcrAtSample() (#322) → แถวล่าสุดในตาราง = FCR ที่โชว์ทุกหน้า
+//    ⚠️ p.feedLog / p.samples คือรอบปัจจุบันเท่านั้น (ปิดรอบแล้วย้ายเข้า cropHistory) — ตารางนี้แสดงเฉพาะรอบปัจจุบันอยู่แล้ว
+function sampleFeedFcr(p,r,bio){
+  if(!p||!r||!r.date)return{feed:0,fcr:null};
+  const feed=(p.feedLog||[]).reduce((s,f)=>s+(f&&f.date&&f.date<=r.date?(f.totalFeed||0):0),0);
+  const phKg=partialTotals((p.partialHarvests||[]).filter(x=>x&&(!x.date||x.date<=r.date))).kg;
+  const produced=(bio!=null?bio:0)+phKg;
+  return{feed,fcr:(bio!=null&&feed>0&&produced>0)?feed/produced:null};
+}
 function renderSampleTable(reset){
   if(reset)_spTblAll=false;
   const wrap=document.getElementById('sp-tbl-wrap');if(!wrap)return;
@@ -14652,9 +14671,13 @@ function renderSampleTable(reset){
   if(!all.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลสุ่มตัวอย่าง — บันทึกได้จากฟอร์มด้านบน</p>';return;}
   const rows=_spTblAll?all:all.slice(0,SP_TBL_MAX);
   const q=String.fromCharCode(39);
-  wrap.innerHTML='<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>บ่อ</th><th>อายุ</th><th>ตัวอย่าง</th><th>น้ำหนักรวม (กก.)</th><th>ABW (g)</th><th>ไซส์ (ตัว/กก.)</th><th>Survival%</th><th>Biomass ในบ่อ (kg)</th><th>PDG (g/วัน)</th><th>หมายเหตุ</th></tr></thead><tbody>'
+  wrap.innerHTML='<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>บ่อ</th><th>อายุ</th><th>ตัวอย่าง</th><th>น้ำหนักรวม (กก.)</th><th>ABW (g)</th><th>ไซส์ (ตัว/กก.)</th><th>Survival%</th><th>Biomass ในบ่อ (kg)</th><th>อาหารรวม (กก.)</th><th>FCR</th><th>PDG (g/วัน)</th><th>หมายเหตุ</th></tr></thead><tbody>'
     +rows.map(({p,r})=>{
       const b=sampleInPondBiomass(p,r);
+      const sf=sampleFeedFcr(p,r,b);
+      const age=recAge(p,r)!=null?recAge(p,r):r.age;
+      const tg=sf.fcr!=null&&age>0?fcrTargetFor(p,age):null;
+      const over=tg!=null&&sf.fcr>tg;
       return'<tr><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editSample('+q+p.id+q+','+q+r.date+q+')">✏️</button> '
         +'<button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteSample('+q+p.id+q+','+q+(r.id||r.date)+q+')">🗑️</button></td>'
         +'<td>'+fD(r.date)+'</td><td style="font-weight:700">'+mpEsc(p.name||'-')+'</td>'
@@ -14664,6 +14687,8 @@ function renderSampleTable(reset){
         +'<td><strong style="color:var(--in)">'+(r.plCount||'-')+'</strong></td>'
         +'<td>'+(r.survivalRate?r.survivalRate+'%':'-')+'</td>'
         +'<td>'+(b!=null?Math.round(b).toLocaleString():'-')+'</td>'
+        +'<td>'+(sf.feed>0?Math.round(sf.feed).toLocaleString():'-')+'</td>'
+        +'<td'+(over?' style="color:var(--d);font-weight:700" title="เกินเกณฑ์ตามอายุ ('+tg+')"':'')+'>'+(sf.fcr!=null?sf.fcr.toFixed(2):'-')+'</td>'
         +'<td>'+(r.pdg||'-')+'</td><td>'+mpEsc(r.notes||'-')+'</td></tr>';
     }).join('')
     +'</tbody></table>'
