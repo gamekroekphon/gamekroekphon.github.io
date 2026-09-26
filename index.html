@@ -1687,6 +1687,13 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 .sp-pc .ag{font-size:var(--fs10);color:var(--tx3)}
 .sp-pc .last{font-size:var(--fs10);color:var(--tx3);margin-left:auto}
 .sp-pc .last b{color:var(--tx2)}
+.sp-feed{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:var(--fs11);color:var(--tx3);margin:-3px 0 8px}
+.sp-feed b{color:var(--tx);font-variant-numeric:tabular-nums}
+.sp-feed b.over{color:var(--d)}
+.sp-feed em,.sp-feed i{font-style:normal;color:var(--tx3)}
+.sp-ph{font-size:var(--fs11);color:var(--in);background:var(--ib);border-radius:8px;padding:6px 9px;margin:-2px 0 9px;line-height:1.5}
+.sp-ph b{font-variant-numeric:tabular-nums}
+.sp-ph span{display:block;color:var(--tx2)}
 .sp-ins{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
 .sp-ins label{font-size:var(--fs10);color:var(--tx3);display:block;margin-bottom:3px}
 .sp-ins input{width:100%;min-width:0;text-align:center;border:1.5px solid var(--bd);border-radius:10px;background:var(--sf);
@@ -2703,7 +2710,6 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       <div id="sp-result" style="display:none;margin-top:10px"></div>
     </div>
     <div>
-      <div class="g2" id="sp-metrics" style="margin-bottom:14px"></div>
       <div class="card">
         <div class="card-t" style="justify-content:space-between"><span>📈 กราฟไซส์ (ตัว/กก.)</span>
           <select class="fi" id="sp-chart-pond" style="width:auto;min-width:120px;font-size:var(--fs11);padding:4px 7px;min-height:36px" onchange="spPickChartPond()"></select></div>
@@ -14406,14 +14412,18 @@ function spVals(p,d){
     notes:cur?(cur.notes||''):''
   };
 }
+// พาเชียลที่เกิดขึ้นแล้ว ณ วันที่ d (รวมวันเดียวกัน) — ตรงกับ sampleInPondBiomass() ที่ใช้ในตารางประวัติ
+function spPartialsOn(p,d){return(p.partialHarvests||[]).filter(x=>x&&(!d||!x.date||x.date<=d));}
 // คำนวณ ABW / ไซส์ / Biomass — สูตรเดียวกับของเดิมทุกกิ่ง (หักกุ้งที่พาเชียลไปแล้วออก)
-function spCalc(p,v){
+//    ⚠️ อัตรารอดที่กรอก = อัตรารอดสะสมทั้งรอบ (นับรวมตัวที่จับพาเชียลไปแล้ว) — ข้อมูลจริง A.1/A.2 รอบ 1 กรอกแบบนี้ (ก่อน/หลังพาเชียลใกล้กัน 93→96, 103→105)
+//    หักพาเชียลเฉพาะที่เกิดก่อน/วันเดียวกับวันที่สุ่ม (entry #321) — เดิมหักทั้งหมด ย้อนไปกรอกวันก่อนพาเชียลแล้ว biomass ถูกหักเกิน
+function spCalc(p,v,d){
   const cnt=parseFloat(v.count)||0, kg=parseFloat(v.weight)||0, surv=parseFloat(v.surv)||0;
   const abw=cnt>0?(kg*1000)/cnt:0;
   const size=abw>0?Math.round(1000/abw):0;
   let bio=null,inPond=null,ph=null;
   if(abw>0&&surv>0){
-    ph=partialTotals(p.partialHarvests);
+    ph=partialTotals(spPartialsOn(p,d));
     const aliveAll=pRelease(p)*(surv/100);
     inPond=Math.max(0,aliveAll-ph.count);
     bio=inPond*abw/1000;
@@ -14421,7 +14431,7 @@ function spCalc(p,v){
   return{abw,size,bio,inPond,ph,cnt,kg,surv};
 }
 function spOutHtml(p,d,v){
-  const c=spCalc(p,v);
+  const c=spCalc(p,v,d);
   if(!(c.abw>0))return'';
   const prev=spPrev(p,d);
   let grow='';
@@ -14448,6 +14458,23 @@ function renderSpRows(){
   if(y)y.className=(d===addDaysStr(today(),-1)?'on':'');
   spSyncSave();
 }
+// อาหารรวมทั้งรอบ + FCR สะสม ของบ่อ (entry #321) — ตัวเลขชุดเดียวกับหน้าอาหาร & FCR (getCumFeed / getFCR / fcrTargetFor)
+//    FCR ต้องมี biomass จากการสุ่ม — ยังไม่เคยสุ่มจึงขึ้น "-" · เกินเกณฑ์ตามอายุ = สีแดง
+//    บ่อที่จับพาเชียลแล้ว (entry #321 พี่สั่ง) → โน้ตบอกจำนวนครั้ง/กก./ตัว + FCR ป้าย "รวมพาเชียล"
+//    getFCR() = อาหารรวม ÷ (biomass ที่ยังอยู่ในบ่อ + กก. ที่จับพาเชียลไปแล้ว) — ถ้าไม่บวกพาเชียล FCR จะพุ่งเกินจริงหลังจับ
+function spFeedLine(p,d){
+  const kg=getCumFeed(p),fcr=getFCR(p),t=fcrTargetFor(p);
+  const over=fcr!=null&&t!=null&&parseFloat(fcr)>t;
+  const phs=spPartialsOn(p,d),pt=partialTotals(phs);
+  const hasPh=pt.kg>0;
+  const lastPh=hasPh?phs.map(x=>x.date).filter(Boolean).sort().slice(-1)[0]:null;
+  return'<div class="sp-feed"><span>🍚 อาหารรวม <b>'+(kg>0?Math.round(kg).toLocaleString()+' กก.':'-')+'</b></span>'
+    +'<span>FCR'+(hasPh?' <i>(รวมพาเชียล)</i>':'')+' <b'+(over?' class="over" title="เกินเกณฑ์ตามอายุ ('+t+')"':'')+'>'+(fcr!=null?fcr:'-')+'</b>'
+    +(fcr!=null&&t!=null?'<em> เกณฑ์ '+t+'</em>':'')+'</span></div>'
+    +(hasPh?'<div class="sp-ph">🎣 จับพาเชียลไปแล้ว <b>'+phs.length+' ครั้ง · '+Math.round(pt.kg).toLocaleString()+' กก.</b>'
+      +(pt.count>0?' (~'+Math.round(pt.count).toLocaleString()+' ตัว)':'')+(lastPh?' · ล่าสุด '+fD(lastPh):'')
+      +'<span>อัตรารอดให้กรอกแบบสะสมทั้งรอบ (นับรวมตัวที่จับไปแล้ว) — Biomass หักตัวที่จับออกให้เอง</span></div>':'');
+}
 function spRowHtml(x,d){
   const p=x.p,v=spVals(p,d),prev=spPrev(p,d),cur=spRecOn(p,d);
   const has=(parseFloat(v.count)||0)>0&&(parseFloat(v.weight)||0)>0;
@@ -14455,6 +14482,7 @@ function spRowHtml(x,d){
   return'<div class="sp-pc'+(has?' on':'')+'" data-pid="'+p.id+'">'
     +'<div class="hd"><span class="nm">'+mpEsc(p.name||'-')+'</span><span class="ag">'+x.age+' วัน</span>'
     +'<span class="last">'+(cur?'✓ บันทึกแล้ววันนี้':(prev?'สุ่มล่าสุด '+fD(prev.date)+' · <b>ABW '+prev.abw+' ก.</b>':'ยังไม่เคยสุ่มรอบนี้'))+'</span></div>'
+    +spFeedLine(p,d)
     +'<div class="sp-ins">'
       +'<div><label>จำนวนตัวที่ชั่ง</label><input type="number" inputmode="numeric" min="0" value="'+mpEsc(v.count)+'" placeholder="—" oninput="spType('+q+p.id+q+','+q+'count'+q+',this.value)"></div>'
       +'<div><label>น้ำหนักรวม (กก.)</label><input type="number" inputmode="decimal" step="0.001" min="0" value="'+mpEsc(v.weight)+'" placeholder="—" oninput="spType('+q+p.id+q+','+q+'weight'+q+',this.value)"></div>'
@@ -14509,7 +14537,7 @@ function saveSample(){
   if(!rows.length){showMsg('sp-msg','warn','กรุณากรอกจำนวนตัวและน้ำหนักอย่างน้อย 1 บ่อ');return;}
   const done=[];
   rows.forEach(x=>{
-    const p=x.p,v=spVals(p,d),c=spCalc(p,v);
+    const p=x.p,v=spVals(p,d),c=spCalc(p,v,d);
     if(!p.samples)p.samples=[];
     const pdg=p.samples.length>0?parseFloat(getPDG([].concat(p.samples,[{age:x.age,abw:c.abw}]))):null;
     const rec={id:'sp_'+p.id+'_'+d,date:d,age:x.age,
@@ -14534,7 +14562,7 @@ function clearSample(){
   document.getElementById('sp-msg').innerHTML='';
   renderSpRows();
 }
-function spPickChartPond(){renderSampleMetrics(spChartPond());renderSampleChart();}
+function spPickChartPond(){renderSampleChart();}
 function spChartPond(){const el=document.getElementById('sp-chart-pond');return el?el.value:'';}
 function populateSpChartPond(){
   const el=document.getElementById('sp-chart-pond');if(!el)return;
@@ -14543,7 +14571,6 @@ function populateSpChartPond(){
     .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'th',{numeric:true}));
   el.innerHTML=withS.map(p=>'<option value="'+p.id+'">บ่อ '+mpEsc(p.name)+'</option>').join('')||'<option value="">— ยังไม่มีข้อมูล —</option>';
   if(cur&&withS.some(p=>p.id===cur))el.value=cur;
-  renderSampleMetrics(el.value);
 }
 function populateSpFilter(){
   const el=document.getElementById('sp-filter');if(!el)return;
@@ -14592,26 +14619,8 @@ function sampleInPondBiomass(p,r){
   const ph=partialTotals((p.partialHarvests||[]).filter(x=>!r.date||!x.date||x.date<=r.date)).count;
   return Math.max(0,rel*(parseFloat(r.survivalRate)/100)-ph)*r.abw/1000;
 }
-function renderSampleMetrics(pid){
-  if(!pid)return;const p=pond(pid);if(!p)return;
-  const samps=sortedSamples(p);const lat=samps.slice(-1)[0];const pdg=getPDG(samps);const ph=projHarvest(p);
-  // ── ⚠️ อ่าน biomass ผ่าน getLatestBiomass() ไม่ใช่ lat.biomass ที่บันทึกไว้
-  //    เพราะบันทึกเก่า (ก่อนแก้ calcBiomass) เก็บค่าที่ยังไม่หักพาเชียล — คำนวณใหม่ตอนแสดงผลจึงถูกเสมอ
-  //    และไม่ต้องไปแก้ข้อมูลเก่าใน Firebase (หลักเดียวกับ cropHarvestResult() entry #176) ──
-  const spBio=getLatestBiomass(p);
-  const spPh=partialTotals(p.partialHarvests);
-  const hasPh=spPh.count>0||spPh.kg>0;
-  document.getElementById('sp-metrics').innerHTML=`
-    <div class="metric-card"><div class="mv" style="color:var(--p)">${lat?lat.abw+'g':'-'}</div><div class="ml">ABW ล่าสุด</div></div>
-    <div class="metric-card"><div class="mv" style="color:var(--in)">${lat&&lat.plCount?lat.plCount+' ตัว/กก.':'-'}</div><div class="ml">ไซส์ล่าสุด</div></div>
-    <div class="metric-card"><div class="mv">${spBio!=null?Math.round(spBio).toLocaleString()+'kg':'-'}</div><div class="ml">Biomass <span style="font-size:var(--fs9);opacity:.7">(กุ้งในบ่อตอนนี้)</span></div></div>
-    ${hasPh?`<div class="metric-card"><div class="mv" style="color:var(--in)">${Math.round(spPh.kg).toLocaleString()}kg</div><div class="ml">🎣 จับพาเชียลไปแล้ว <span style="font-size:var(--fs9);opacity:.7">(${Math.round(spPh.count).toLocaleString()} ตัว)</span></div></div>
-    <div class="metric-card"><div class="mv" style="color:var(--pd)">${spBio!=null?Math.round(spBio+spPh.kg).toLocaleString()+'kg':'-'}</div><div class="ml">📦 ผลผลิตรวมทั้งรอบ <span style="font-size:var(--fs9);opacity:.7">(ในบ่อ + จับไปแล้ว)</span></div></div>`:''}
-    <div class="metric-card"><div class="mv">${lat&&lat.survivalRate?lat.survivalRate+'%':'-'}</div><div class="ml">Survival Rate${hasPh?' <span style="font-size:var(--fs9);opacity:.7">(สะสม)</span>':''}</div></div>
-    <div class="metric-card"><div class="mv">${pdg?pdg+'g':'-'}</div><div class="ml">PDG (g/วัน)</div></div>
-    <div class="metric-card"><div class="mv" style="color:var(--in)">${ph&&!ph.ready?ph.days+'วัน':ph&&ph.ready?'พร้อมจับ!':'-'}</div><div class="ml">เหลือ (target 22g)</div></div>
-  `;
-}
+// ── กล่องตัวเลข ABW/ไซส์/Biomass/อัตรารอด/PDG/เหลือกี่วัน (renderSampleMetrics) ลบออกแล้ว — ซ้ำกับที่โชว์ใต้บ่อแต่ละบ่อ (พี่สั่ง entry #321)
+//    อาหารรวม + FCR ย้ายไปโชว์ใต้ชื่อบ่อในฟอร์ม (spRowHtml → spFeedLine) แทน
 function renderSampleChart(){
   const pid=spChartPond();if(!pid)return;
   const p=pond(pid);if(spCh){spCh.destroy();spCh=null;}
