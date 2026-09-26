@@ -1135,6 +1135,16 @@ table.skc-tbl tbody tr.skc-det td,table.skc-tbl tbody tr.skc-det:hover td{backgr
 .sk-job.on-in .t{color:var(--ok)}
 .sk-job.on-sale{border-color:#7c3aed;background:#f3e8ff}
 .sk-job.on-sale .t{color:#7c3aed}
+/* แถบเลือกโซน หน้ากุ้งตาย/จัดการน้ำ (#318) */
+.dz-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px;max-width:620px}
+.dz-bar:empty{display:none}
+.dz-btn{border:1.5px solid var(--bd);background:var(--sf);border-radius:12px;padding:9px 12px;text-align:left;cursor:pointer;font-family:inherit;min-height:60px;min-width:0;color:var(--tx)}
+.dz-btn .zn{font-size:calc(15px * var(--ui-scale));font-weight:800;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.dz-btn .zs{font-size:var(--fs11);color:var(--tx3);margin-top:3px;line-height:1.35}
+.dz-st{font-size:var(--fs10);font-weight:700;padding:1px 7px;border-radius:99px;white-space:nowrap}
+.dz-st.done{background:var(--ob);color:var(--ok)}.dz-st.part{background:var(--ib);color:var(--in)}.dz-st.todo{background:#FFF4E0;color:#B45309}
+.dz-btn.on{border:2px solid #1D4ED8;background:#EEF3FF}.dz-btn.on .zn{color:#1D4ED8}
+.dz-btn.on.z-B{border-color:#0F766E;background:#ECFDF8}.dz-btn.on.z-B .zn{color:#0F766E}
 /* งานอุปกรณ์นอก (#317) — ปุ่มสลับ 3 ทาง / ชิปหมวด / ประวัติรายเดือน */
 .ext-seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:var(--sf2);padding:4px;border-radius:12px;margin-bottom:12px}
 .ext-seg button{border:none;background:none;border-radius:9px;min-height:48px;font-family:inherit;font-weight:700;font-size:calc(12.5px * var(--ui-scale));color:var(--tx2);cursor:pointer;line-height:1.25;padding:4px 2px;white-space:nowrap;min-width:0}
@@ -2698,6 +2708,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 <!-- WATER LOG -->
 <div id="sec-watlog" class="sec">
   <div class="sec-hdr"><div class="sec-title">💦 บันทึกการจัดการน้ำ</div></div>
+  <div class="dz-bar" id="wl-zones"></div>
   <div class="g2" style="margin-bottom:16px;align-items:start">
     <!-- ฟอร์มเติมน้ำหลายบ่อในครั้งเดียว (entry #308) — ฟาร์มมีแค่ "เติมน้ำ" อย่างเดียว จึงไม่มีดรอปดาวน์เลือกงาน -->
     <div class="card">
@@ -2797,6 +2808,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <div class="sec-title">🦐 กุ้งตายรายวัน</div>
     <div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-top:2px">บันทึกทุกวันช่วยจับความผิดปกติได้เร็วก่อนสูญเสียมาก</div>
   </div>
+  <div class="dz-bar" id="mt-zones"></div>
   <div class="g2" style="margin-bottom:16px;align-items:start">
     <div class="card">
       <div class="card-t" style="justify-content:space-between"><span>📝 บันทึกกุ้งตาย</span>
@@ -5652,6 +5664,65 @@ function allZones(){
 function refreshZoneDatalist(){
   const dl=document.getElementById('zone-list');if(!dl)return;
   dl.innerHTML=allZones().map(z=>'<option value="'+z+'">').join('');
+}
+// ══════ งานกรอกรายวันแยกตามโซน — หน้ากุ้งตาย + จัดการน้ำ (entry #318 พี่สั่ง 26 ก.ย. 69) ══════
+//    ฟาร์มมีผู้ดูแลโซนละคน กรอกคนละเครื่อง — เดิมปุ่มบันทึกกุ้งตายเขียนทุกบ่อ ผู้ดูแล B กดทีไรเขียน 0 ทับบ่อ A ทั้งโซน
+//    (เกิดจริง 25–26 ก.ย. 69: 9 บ่อ Zone A ได้ 0 ตัวในชื่อโต๊ด) → ฟอร์ม/ปุ่มบันทึก/สรุป/ประวัติ เห็นและเขียนเฉพาะโซนที่เลือก
+//    ⚠️ ห้ามเพิ่มตัวเลือก "ทุกโซน" ในฟอร์มบันทึก — จะกลับไปเขียนทับข้ามโซนได้อีก
+//    โซนที่เลือกจำไว้ในเครื่อง (localStorage) · ครั้งแรกเดาจากชื่อคนล็อกอินเทียบ ZONE_KEEPER · บ่อมีกุ้งที่ยังไม่ตั้งโซน → ปุ่ม "ไม่ระบุโซน"
+const ZONE_KEEPER={A:'โป๊ะ',B:'โต๊ด'};   // ผู้ดูแลแต่ละโซน (พี่บอก A = โป๊ะ · B = โต๊ด จากข้อมูลที่กรอกจริง) — ใช้แสดงผล + เดาโซนเริ่มต้นเท่านั้น
+const DZ_NONE='-';
+let _dz=null;
+function dzOf(p){return pondZone(p)||DZ_NONE;}
+function dzList(){
+  const s=new Set();
+  (D.ponds||[]).forEach(p=>{const z=pondZone(p);if(z)s.add(z);else if(p&&p.startDate)s.add(DZ_NONE);});
+  return[...s].sort((a,b)=>a===DZ_NONE?1:b===DZ_NONE?-1:a.localeCompare(b));
+}
+function dzCur(){
+  const zs=dzList();
+  if(_dz&&zs.includes(_dz))return _dz;
+  let z=null;try{z=localStorage.getItem('tf_dailyZone');}catch(e){}
+  if(!z||!zs.includes(z)){const me=curUserLabel();z=Object.keys(ZONE_KEEPER).find(k=>me&&ZONE_KEEPER[k]===me&&zs.includes(k))||zs[0]||'';}
+  _dz=z;return z;
+}
+function dzIn(p){const z=dzCur();return !z||dzOf(p)===z;}   // ยังไม่มีโซนเลยทั้งฟาร์ม → เห็นทุกบ่อเหมือนเดิม
+function dzLabel(z){return z===DZ_NONE?'ไม่ระบุโซน':'Zone '+z;}
+function dzPick(z){
+  _dz=z;try{localStorage.setItem('tf_dailyZone',z);}catch(e){}
+  _mtVals={};_wlSel.clear();
+  if(document.getElementById('sec-mortality')?.classList.contains('on')){renderMtRows();renderMtSummary();populateMtFilter();renderMtTable(true);}
+  if(document.getElementById('sec-watlog')?.classList.contains('on')){populateWlFilter();renderWlPonds();renderWaterSummary();renderWaterTable();}
+  renderDzBars();
+}
+// เปิดรายการของบ่ออีกโซน (แก้จากประวัติ/ทางลัด) → สลับโซนตามบ่อนั้นก่อน ไม่งั้นแถวของบ่อนั้นไม่อยู่ในฟอร์ม
+function dzFollow(p){if(p&&dzOf(p)!==dzCur()){_dz=dzOf(p);try{localStorage.setItem('tf_dailyZone',_dz);}catch(e){}}}
+function renderDzBars(){
+  const zs=dzList(),cur=dzCur();
+  const mk=(id,stat)=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.innerHTML=zs.length<2?'':zs.map(z=>{
+      const s=stat(z);
+      return '<button type="button" class="dz-btn z-'+mpEsc(z)+(z===cur?' on':'')+'" aria-pressed="'+(z===cur)+'" onclick="dzPick(\''+mpEsc(z)+'\')">'
+        +'<div class="zn"><span>'+dzLabel(z)+'</span>'+s.badge+'</div>'
+        +'<div class="zs">'+(ZONE_KEEPER[z]?'ผู้ดูแล '+mpEsc(ZONE_KEEPER[z])+' · ':'')+s.sub+'</div></button>';
+    }).join('');
+  };
+  mk('mt-zones',z=>{
+    const d=_mtDate||today();
+    const ps=mtPondsAllOn(d).filter(x=>dzOf(x.p)===z);
+    const recs=ps.map(x=>mtRecOn(x.p,d)).filter(Boolean);
+    const by=[...new Set(recs.map(r=>r.by).filter(Boolean))].join(', ');
+    const badge=!ps.length?'':recs.length>=ps.length?'<span class="dz-st done">✓ บันทึกแล้ว</span>'
+      :recs.length?'<span class="dz-st part">'+recs.length+'/'+ps.length+' บ่อ</span>':'<span class="dz-st todo">ยังไม่บันทึก</span>';
+    return{badge,sub:ps.length+' บ่อมีกุ้ง'+(by?' · กรอกโดย '+mpEsc(by):'')};
+  });
+  mk('wl-zones',z=>{
+    const d=(document.getElementById('wl-date')||{}).value||today();
+    const ps=wlActivePondsAllOn(d).filter(p=>dzOf(p)===z);
+    const n=ps.filter(p=>(p.waterLog||[]).some(r=>r.date===d)).length;
+    return{badge:!ps.length?'':n?'<span class="dz-st done">✓ เติม '+n+' บ่อ</span>':'<span class="dz-st todo">ยังไม่มีเติมน้ำ</span>',sub:ps.length+' บ่อมีกุ้ง'};
+  });
 }
 function pondStatusOv(p){
   if(!Array.isArray(p.records))p.records=[];
@@ -14071,6 +14142,7 @@ function editWaterLog(pid,idx){
   const r=p.waterLog[idx];
   const dEl=document.getElementById('wl-date');
   if(dEl){dEl.value=r.date;syncDateHint(dEl);}
+  if(dzOf(p)!==dzCur()){dzFollow(p);populateWlFilter();renderWaterSummary();renderWaterTable();}
   _wlSel=new Set([pid]);
   document.getElementById('wl-notes').value=r.notes||'';
   renderWlPonds();
@@ -14585,10 +14657,11 @@ function deleteSample(pid,id){
 //    ⚠️ มีเฉพาะ "บ่อที่มีกุ้ง ณ วันที่เลือก" ให้กด — พี่สั่งว่าเติมน้ำต้องผ่านการตัดเชื้อทุกครั้ง บ่อว่าง/เตรียมบ่อไม่ต้องมี
 //    ⚠️ รายการเก่าที่เป็น exchange/drain/treat ยังแสดงในประวัติตามเดิม (อ่านอย่างเดียว) ห้ามแปลงข้อมูลเก่า
 let _wlSel=new Set();
-function wlActivePondsOn(d){
+function wlActivePondsAllOn(d){
   return (D.ponds||[]).filter(p=>p.startDate&&p.startDate<=d&&(!p.harvestDate||d<=p.harvestDate))
     .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'th',{numeric:true}));
 }
+function wlActivePondsOn(d){return wlActivePondsAllOn(d).filter(dzIn);}   // เฉพาะโซนที่เลือก (#318)
 function wlSetDate(off){
   const el=document.getElementById('wl-date');if(!el)return;
   el.value=off?addDaysStr(today(),off):today();
@@ -14604,7 +14677,8 @@ function renderWlPonds(){
   const d=(dEl&&dEl.value)||today();
   const list=wlActivePondsOn(d);
   [..._wlSel].forEach(id=>{if(!list.some(p=>p.id===id))_wlSel.delete(id);});   // เปลี่ยนวันแล้วบ่อหลุดลิสต์ ต้องเอาออกจากที่เลือกไว้
-  const cnt=document.getElementById('wl-cnt');if(cnt)cnt.textContent=list.length+' บ่อ';
+  const cnt=document.getElementById('wl-cnt');if(cnt)cnt.textContent=(dzList().length>1?dzLabel(dzCur())+' · ':'')+list.length+' บ่อ';
+  renderDzBars();
   box.innerHTML=list.length?list.map(p=>{
     const done=(p.waterLog||[]).some(r=>r.date===d);
     const age=docAge(p.startDate,d);
@@ -15305,7 +15379,7 @@ function initWaterLog(){
 function populateWlFilter(){
   const sel=document.getElementById('wl-filter');if(!sel)return;
   const cur=sel.value;
-  const withLog=(D.ponds||[]).filter(p=>(p.waterLog||[]).length)
+  const withLog=(D.ponds||[]).filter(p=>dzIn(p)&&(p.waterLog||[]).length)
     .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'th',{numeric:true}));
   sel.innerHTML='<option value="">ทุกบ่อ</option>'+withLog.map(p=>'<option value="'+p.id+'"'+(p.id===cur?' selected':'')+'>บ่อ '+p.name+'</option>').join('');
 }
@@ -15313,7 +15387,7 @@ function populateWlFilter(){
 function renderWaterSummary(){
   const el=document.getElementById('wl-summary');if(!el)return;
   const byDate={};
-  (D.ponds||[]).forEach(p=>(p.waterLog||[]).forEach(r=>{
+  (D.ponds||[]).filter(dzIn).forEach(p=>(p.waterLog||[]).forEach(r=>{
     if(!r||!r.date)return;
     if((new Date()-new Date(r.date))/86400000>7)return;
     (byDate[r.date]=byDate[r.date]||[]).push({name:p.name,act:r.action,notes:r.notes});
@@ -15339,6 +15413,7 @@ function renderWaterTable(){
   let rows=[];
   (D.ponds||[]).forEach(p=>{
     if(f&&p.id!==f)return;
+    if(!dzIn(p))return;
     (p.waterLog||[]).forEach(r=>{if(r&&r.date)rows.push({r,p});});
   });
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">'+(f?'บ่อนี้ยังไม่มีบันทึกเติมน้ำ':'ยังไม่มีบันทึกเติมน้ำ — เลือกบ่อแล้วกดบันทึกจากฟอร์มด้านบน')+'</p>';return}
@@ -15390,11 +15465,13 @@ function mtQuickDate(back){
   renderMtRows();
 }
 // บ่อที่มีกุ้ง ณ วันที่เลือก — เรียงอายุมาก → น้อย (ย้อนวันแล้วรายชื่อบ่อถูกต้องตามวันนั้น ไม่ใช่วันนี้)
-function mtPondsOn(d){
+function mtPondsAllOn(d){
   return (D.ponds||[]).filter(p=>p&&p.startDate&&p.startDate<=d&&(!p.harvestDate||d<=p.harvestDate))
     .map(p=>({p,age:docAge(p.startDate,d)}))
     .sort((a,b)=>(b.age-a.age)||String(a.p.name||'').localeCompare(String(b.p.name||''),'th',{numeric:true}));
 }
+// ⚠️ เฉพาะโซนที่เลือก (#318) — ฟอร์ม/ปุ่มบันทึก/เตือน/สรุป ใช้ตัวนี้ทั้งหมด ปุ่มบันทึกจึงเขียนแค่บ่อในโซนนั้น
+function mtPondsOn(d){return mtPondsAllOn(d).filter(x=>dzIn(x.p));}
 function mtRecOn(p,d){return cropMortalityLog(p).find(r=>r&&r.date===d)||null;}
 function mtValOf(pid,d){
   if(_mtVals[pid]!==undefined)return _mtVals[pid];
@@ -15406,7 +15483,8 @@ function renderMtRows(){
   const d=_mtDate||today();
   const list=mtPondsOn(d);
   const lbl=document.getElementById('mt-grp-l');
-  if(lbl)lbl.textContent='บ่อที่มีกุ้ง '+list.length+' บ่อ';
+  if(lbl)lbl.textContent=(dzList().length>1?dzLabel(dzCur())+' · ':'')+'บ่อที่มีกุ้ง '+list.length+' บ่อ';
+  renderDzBars();
   if(!list.length){box.innerHTML='<p style="color:var(--tx3);text-align:center;padding:18px;font-style:italic">วันที่เลือกยังไม่มีบ่อที่เลี้ยงกุ้งอยู่</p>';mtSyncSaveBtn();return;}
   // ⚠️ ต้องโชว์ครบทุกบ่อที่จะถูกบันทึก — ปุ่มเดียวเขียน 0 ให้ทุกบ่อ ห้ามซ่อนบ่อที่คนกรอกไม่เห็น
   box.innerHTML='<div class="mt-list">'+list.map(x=>mtRowHtml(x,d)).join('')+'</div>';
@@ -15439,7 +15517,7 @@ function mtType(pid,v){
 function mtSyncSaveBtn(){
   const b=document.getElementById('mt-save-btn');if(!b)return;
   const n=mtPondsOn(_mtDate||today()).length;
-  b.textContent='💾 บันทึก '+n+' บ่อ';b.disabled=!n;
+  b.textContent='💾 บันทึก '+(dzList().length>1?dzLabel(dzCur())+' · ':'')+n+' บ่อ';b.disabled=!n;
 }
 // เตือนเมื่อค่าที่กรอกสูงกว่าเฉลี่ย 7 วันเกิน 2 เท่า — ไม่โชว์ตัวเลขเฉลี่ยบนแถวบ่อ (พี่สั่งให้เอาออก)
 function mtSyncWarn(){
@@ -15486,7 +15564,7 @@ function saveMortality(){
   _mtVals={};
   save();
   renderMtRows();renderMtSummary();populateMtFilter();renderMtTable(true);
-  showMsg('mt-msg','ok','บันทึก '+fD(d)+' · '+list.length+' บ่อ · ตายรวม '+dead.toLocaleString()+' ตัว'
+  showMsg('mt-msg','ok','บันทึก '+fD(d)+' · '+(dzList().length>1?dzLabel(dzCur())+' ':'')+list.length+' บ่อ · ตายรวม '+dead.toLocaleString()+' ตัว'
     +(upd?' (อัปเดต '+upd+' บ่อ)':''));
   flashSaveBtn(document.getElementById('mt-save-btn'));
 }
@@ -15531,7 +15609,7 @@ function renderMtBars(){renderMtSummary();}   // ชื่อเดิม — �
 function populateMtFilter(){
   const sel=document.getElementById('mt-filter');if(!sel)return;
   const cur=sel.value;
-  const withLog=(D.ponds||[]).filter(p=>cropMortalityLog(p).length)
+  const withLog=(D.ponds||[]).filter(p=>dzIn(p)&&cropMortalityLog(p).length)
     .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'th',{numeric:true}));
   sel.innerHTML='<option value="">ทุกบ่อ</option>'+withLog.map(p=>'<option value="'+p.id+'"'+(p.id===cur?' selected':'')+'>บ่อ '+mpEsc(p.name)+'</option>').join('');
 }
@@ -15546,6 +15624,7 @@ function renderMtTable(reset){
   const all=[];
   (D.ponds||[]).forEach(p=>{
     if(pid&&p.id!==pid)return;
+    if(!dzIn(p))return;
     cropMortalityLog(p).forEach(r=>all.push({p,r}));
   });
   all.sort((a,b)=>String(b.r.date).localeCompare(String(a.r.date))
@@ -15572,6 +15651,7 @@ function renderMtTable(reset){
 // แก้ไข = ย้อนไปวันนั้นแล้วเลื่อนไปที่แถวของบ่อนั้น กรอกใหม่แล้วกดบันทึก (บันทึกซ้ำวันเดิม = อัปเดตทับ)
 function editMortality(pid,id){
   const p=pond(pid);const rec=((p&&p.mortalityLog)||[]).find(r=>r.id===id);if(!rec)return;
+  dzFollow(p);
   _mtDate=rec.date;_mtVals={};
   const el=document.getElementById('mt-date');if(el){el.value=rec.date;syncDateHint(el);}
   renderMtRows();
