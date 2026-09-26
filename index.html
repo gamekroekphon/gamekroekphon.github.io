@@ -408,6 +408,8 @@ body.role-admin .mp-actions{display:flex!important;gap:2px;flex-wrap:wrap}
 .pd-chart-card{margin-top:12px}
 .pd-chart-wrap{height:200px;margin-top:6px}
 /* เติมน้ำ + อาหาร vs การเติบโต (#324) */
+.pd-wfill{display:inline-block;margin-left:6px;background:var(--ib);color:var(--in);border-radius:99px;padding:1px 8px;font-size:var(--fs10);font-weight:700;white-space:nowrap}
+.pd-rec-date .pd-wfill{margin-left:0;margin-top:3px}
 .pd-wbig{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.pd-wbig b{font-size:calc(18px * var(--ui-scale))}.pd-wbig span{color:var(--tx3);font-size:var(--fs11)}
 .pd-wmeta{font-size:calc(12.5px * var(--ui-scale));color:var(--tx2);margin:5px 0 9px}
 .pd-wline{display:flex;align-items:center;flex-wrap:wrap;gap:4px;font-size:calc(12px * var(--ui-scale))}
@@ -7496,6 +7498,7 @@ ${String(p.cropNote).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`:''}
       <div class="card-sub">ประวัติย้อนหลังของบ่อนี้ แก้ไข/ลบได้เลย ไม่ต้องออกไปหน้า "อาหาร & FCR"</div>
       <div class="chip-row" id="pd-feed-hist-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
       <div id="pd-feed-hist-table"></div>`)}
+    ${pdCard('watman','🚰 เติมน้ำ',wmHtml)}
     ${pdCard('med','💊 เวชภัณฑ์ที่ใช้ล่าสุด',
       `<div class="card-sub">ดึงจากหน้าสต็อกอัตโนมัติ ไม่ต้องออกไปดูหน้าประวัติสต็อก</div>
       <div class="chip-row" id="pd-med-hist-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
@@ -7507,7 +7510,6 @@ ${String(p.cropNote).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`:''}
     ${pdCard('mort',`🦐 บันทึกกุ้งตาย${cropMortalityLog(p).length?` · ${cropMortalityLog(p).length} วัน`:''}`,'<div id="pd-mort-card"></div>')}
     ${pdCard('crophist',`📚 ประวัติรอบเลี้ยงบ่อนี้${(p.cropHistory||[]).length?` · ${p.cropHistory.length} รอบ`:''}`,'<div id="pd-crophist-card"></div>')}
     ${pdCard('bio','⚖️ เปรียบเทียบ Biomass 2 วิธี','<div id="pd-biocompare-card"></div>')}
-    ${pdCard('watman','🚰 เติมน้ำ',wmHtml)}
     <div class="pd-actions">
       <button class="btn btn-p" onclick="jumpEntry('${p.id}')">📝 กรอกข้อมูลใหม่</button>
       <button class="btn" onclick="jumpFeed('${p.id}')">🍖 กรอกอาหาร</button>
@@ -12550,7 +12552,7 @@ function renderEpChips(){
     const done=(p.records||[]).some(r=>r.date===d);
     const isPrep=clsNoShrimp(pondStatusOv(p));
     const cls='pond-chk'+(done?' wq-done':'')+(p.id===activePid?' on':'');
-    return`<span class="${cls}" onclick="selectEPond('${p.id}')">${done?'✓ ':''}บ่อ ${p.name}${isPrep?' 🧹':''}</span>`;
+    return`<span class="${cls}" onclick="selectEPond('${p.id}')"${pdFilledNightBefore(p,d)?' title="เติมน้ำเมื่อคืน"':''}>${done?'✓ ':''}บ่อ ${p.name}${isPrep?' 🧹':''}${pdFilledNightBefore(p,d)?' 💧':''}</span>`;
   }).join('');
   const doneCount=list.filter(p=>(p.records||[]).some(r=>r.date===d)).length;
   const progTxt=document.getElementById('ep-prog-txt');
@@ -12568,7 +12570,7 @@ function updateEpHeader(){
   nameEl.textContent='บ่อ '+p.name;
   const d=document.getElementById('ep-date')?.value||today();
   const age=docAge(p.startDate,d)||0;
-  if(subEl)subEl.textContent=age>0?`อายุ ${age} วัน`:'';
+  if(subEl)subEl.innerHTML=(age>0?`อายุ ${age} วัน`:'')+wfillBadge(p,d);   // เติมน้ำเมื่อคืน (#325) — ค่าเช้านี้อาจเปลี่ยนเพราะน้ำใหม่
   const done=(p.records||[]).some(r=>r.date===d);
   if(tagEl){
     tagEl.style.display='';
@@ -12691,7 +12693,7 @@ function renderWQTable(){
     rec.map((r,i)=>{
       // ข้อ 1: คำนวณอายุจากวันปล่อย ไม่ใช้ค่าที่เก็บไว้ (ป้องกันค่าผิดจากการกรอกมือ)
       const ageCalc=docAge(p.startDate,r.date)??r.age;
-      return`<tr class="${i===0?'hi':''}""><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editWQ('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteWQ('${pid}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc!=null?ageCalc:'-'}</td>${show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v,r);
+      return`<tr class="${i===0?'hi':''}""><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editWQ('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteWQ('${pid}','${r.date}')">🗑️</button></td><td>${fD(r.date)}${wfillBadge(p,r.date)}</td><td>${ageCalc!=null?ageCalc:'-'}</td>${show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v,r);
         // ข้อ 5: null (ยังไม่กรอก) แสดง – สีเทา / 0 (ค่าจริง) แสดง 0 ตามสถานะ
         const cell=v===null||v===undefined
           ?`<span style="color:var(--tx3);font-size:calc(12px * var(--ui-scale))" title="ยังไม่ได้กรอก">–</span>`
@@ -12718,6 +12720,11 @@ function setPdWqPeriod(v,btn){_pdWqPeriod=v;document.querySelectorAll('#pd-wq-hi
 function setPdFeedPeriod(v,btn){_pdFeedPeriod=v;document.querySelectorAll('#pd-feed-hist-chips .trial-chip').forEach(el=>el.classList.remove('on'));btn.classList.add('on');renderPdFeedHistory(pond(_pdCurPondId));}
 function pdEditWQ(pid,d){document.getElementById('tab-entry')?.click();setTimeout(()=>editWQ(pid,d),80);}
 function pdDeleteWQ(pid,d){deleteWQ(pid,d);const p=pond(pid);if(p)renderPdWqHistory(p);}
+// ── เติมน้ำเมื่อคืน (entry #325 พี่สั่ง 26 ก.ย. 69) — ฟาร์มเติมน้ำตอนกลางคืน แล้วตรวจค่าน้ำตอนเช้าอีกวัน
+//    บันทึกเติมน้ำวันที่ d → ขึ้นป้ายที่แถวค่าน้ำวันที่ d+1 (ไม่ใช่วันเดียวกัน) ไว้อ่านคู่กับค่าน้ำที่เปลี่ยน
+//    ใช้ทุกหน้าที่แสดงค่าน้ำรายวัน: ประวัติค่าน้ำหน้าบ่อ · หน้าคุณภาพน้ำ (ตาราง/ฟอร์มกรอก/ชิปบ่อ/ตารางสีรายวัน) · ประวัติรอบที่ปิดแล้ว
+function pdFilledNightBefore(src,d){if(!src||!d)return false;const y=addDaysStr(d,-1);return(src.waterLog||[]).some(r=>r&&r.date===y);}
+function wfillBadge(src,d){return pdFilledNightBefore(src,d)?'<span class="pd-wfill" title="มีบันทึกเติมน้ำวันที่ '+fD(addDaysStr(d,-1))+' (เติมตอนกลางคืน)">💧 เติมน้ำเมื่อคืน</span>':'';}
 function renderPdWqHistory(p){
   const tbl=document.getElementById('pd-wq-hist-table');if(!tbl||!p)return;
   const chipsEl=document.getElementById('pd-wq-hist-chips');
@@ -12729,7 +12736,7 @@ function renderPdWqHistory(p){
   const tableHtml=`<div class="pd-hist-tblwrap"><div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวาเพื่อดูทุกค่า →</div><div style="overflow-x:auto"><table class="tbl" style="white-space:nowrap"><thead><tr><th></th><th>วันที่</th><th>อายุ</th>${show.map(pm=>`<th>${pm.lbl}</th>`).join('')}<th>หมายเหตุ</th></tr></thead><tbody>${
     rec.map((r,i)=>{
       const ageCalc=docAge(p.startDate,r.date)??r.age;
-      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdEditWQ('${p.id}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdDeleteWQ('${p.id}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc!=null?ageCalc:'-'}</td>${show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v,r);
+      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdEditWQ('${p.id}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdDeleteWQ('${p.id}','${r.date}')">🗑️</button></td><td>${fD(r.date)}${wfillBadge(p,r.date)}</td><td>${ageCalc!=null?ageCalc:'-'}</td>${show.map(pm=>{const v=r[pm.key];const s=st(pm.key,v,r);
         const cell=v===null||v===undefined?`<span style="color:var(--tx3);font-size:calc(12px * var(--ui-scale))" title="ยังไม่ได้กรอก">–</span>`:`<span style="color:${sc(s)}">${v}</span>`;
         return`<td>${cell}</td>`;}).join('')}<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.notes||'<span style="color:var(--tx3);font-size:calc(12px * var(--ui-scale))">–</span>'}</td></tr>`;
     }).join('')}</tbody></table></div></div>`;
@@ -12743,7 +12750,7 @@ function renderPdWqHistory(p){
     }).join('');
     return`<div class="pd-rec-card${i===0?' hi':''}">
       <div class="pd-rec-top">
-        <div class="pd-rec-date"><b>${fD(r.date)}</b><span>${ageCalc!=null?'อายุ '+ageCalc+' วัน':'ตรวจก่อนลงกุ้ง'}</span></div>
+        <div class="pd-rec-date"><b>${fD(r.date)}</b><span>${ageCalc!=null?'อายุ '+ageCalc+' วัน':'ตรวจก่อนลงกุ้ง'}</span>${pdFilledNightBefore(p,r.date)?'<span class="pd-wfill">💧 เติมน้ำเมื่อคืน</span>':''}</div>
         <div class="pd-rec-actions"><button onclick="pdEditWQ('${p.id}','${r.date}')" title="แก้ไข">✏️</button><button class="del" onclick="pdDeleteWQ('${p.id}','${r.date}')" title="ลบ">🗑️</button></div>
       </div>
       <div class="pd-rec-grid">${items}</div>
@@ -18372,7 +18379,7 @@ function renderChWqTable(c){
   if(!rows.length)return '<p style="color:var(--tx3);text-align:center;padding:14px;font-style:italic">ไม่มีข้อมูล</p>';
   const show=PARAMS.slice(0,8);
   return `<div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวาเพื่อดูทุกค่า →</div><div style="overflow-x:auto"><table class="tbl" style="white-space:nowrap"><thead><tr><th>วันที่</th><th>อายุ</th>${show.map(pm=>`<th>${pm.lbl}</th>`).join('')}<th>หมายเหตุ</th></tr></thead><tbody>${
-    rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${r.age||'-'}</td>${show.map(pm=>{const v=r[pm.key];return`<td>${v===null||v===undefined||v===''?'<span style="color:var(--tx3)">–</span>':v}</td>`;}).join('')}<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.notes||'-'}</td></tr>`).join('')
+    rows.map(r=>`<tr><td>${fD(r.date)}${wfillBadge(c,r.date)}</td><td>${r.age||'-'}</td>${show.map(pm=>{const v=r[pm.key];return`<td>${v===null||v===undefined||v===''?'<span style="color:var(--tx3)">–</span>':v}</td>`;}).join('')}<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.notes||'-'}</td></tr>`).join('')
   }</tbody></table></div>`;
 }
 function renderChWaterTable(c){
@@ -19773,7 +19780,7 @@ function renderWQHeatmap(){
       const arrow=prev?wqArrow(pm.key,v,prev[pm.key]):'';
       return`<td><span class="wq-cell ${cls}">${disp}${arrow}</span></td>`;
     }).join('');
-    return`<tr><td class="wq-pond-name">${p.name}${stBadge}</td>${cells}</tr>`;
+    return`<tr><td class="wq-pond-name">${p.name}${stBadge}${pdFilledNightBefore(p,date)?'<span class="pd-wfill" title="เติมน้ำเมื่อคืน">💧</span>':''}</td>${cells}</tr>`;
   }).join('');
 }
 // ══════════════════════════════════════════════════════════════════════════
