@@ -1296,6 +1296,10 @@ input.sk-cart-price{width:90px!important;text-align:center;font-size:calc(13px *
 .bnav-btn.bn-admin{display:none}
 body.role-admin .bnav-btn.bn-admin{display:flex}
 body.role-admin .bnav-btn.bn-staff{display:none}
+/* ผู้ดูแลโซน (#319) — body.zone-keeper ตั้งจากชื่อคนล็อกอินใน updateUserHeader() · ต้องอยู่หลังกฎ role เพื่อชนะ specificity เท่ากัน */
+.bnav-btn.bn-keeper{display:none}
+body.zone-keeper .bnav-btn.bn-keeper{display:flex}
+body.zone-keeper .bnav-btn.bn-staff,body.zone-keeper .bnav-btn.bn-admin,body.zone-keeper #bnav-stock{display:none}
 /* แถบล่างมีพื้นที่จำกัด 5 ช่อง — จำกัดการขยายไว้ที่ 1.08 เท่า ไม่งั้นตอน ก++ ข้อความจะตัดบรรทัดล้นแถบ */
 .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;color:var(--tx3);font-size:calc(11.5px * min(var(--ui-scale), 1.08));font-weight:600;padding:6px 2px;cursor:pointer;position:relative;min-height:54px;white-space:nowrap;line-height:1.25}
 .bnav-btn .bnav-ic{font-size:calc(18px * var(--ui-scale));line-height:1}
@@ -1945,6 +1949,10 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <button class="bnav-btn bn-admin" id="bnav-price" onclick="bnavGo('price',this)"><span class="bnav-ic">💲</span>ราคาสินค้า</button>
   <button class="bnav-btn bn-admin" id="bnav-harveststat" onclick="bnavGo('harveststat',this)"><span class="bnav-ic">📊</span>สถิติจับกุ้ง</button>
   <button class="bnav-btn" id="bnav-stock" onclick="bnavGo('stock',this)"><span class="bnav-ic">📦</span>สต็อก</button>
+  <!-- ผู้ดูแลโซน (ZONE_KEEPER: โป๊ะ/โต๊ด) เห็นเฉพาะงานของตัวเอง แทน กรอกน้ำ/กรอกอาหาร/สต็อก (พี่สั่ง entry #319) -->
+  <button class="bnav-btn bn-keeper" id="bnav-tide" onclick="bnavGo('tide',this)"><span class="bnav-ic">🌊</span>สภาพอากาศ</button>
+  <button class="bnav-btn bn-keeper" id="bnav-watlog" onclick="bnavGo('watlog',this)"><span class="bnav-ic">💦</span>จัดการน้ำ</button>
+  <button class="bnav-btn bn-keeper" id="bnav-mortality" onclick="bnavGo('mortality',this)"><span class="bnav-ic">☠️</span>กุ้งตาย</button>
   <button class="bnav-btn" id="bnav-more" onclick="toggleMobMenu(this)"><span class="bnav-ic">☰<span class="bnav-badge" id="bnav-alert-badge"></span></span>เพิ่มเติม</button>
 </nav>
 <div class="mob-sheet-scrim" id="mobSheetScrim" onclick="closeMobMenu()"></div>
@@ -4356,6 +4364,8 @@ function applyRole(role){
 function updateUserHeader(user,role){
   const u=document.getElementById('hdr-user');if(u)u.style.display='flex';
   const uname=user.displayName||user.email.split('@')[0];
+  // ผู้ดูแลโซน → แถบล่างมือถือเหลือ ภาพรวม/สภาพอากาศ/จัดการน้ำ/กุ้งตาย/เพิ่มเติม (entry #319) — รายชื่อเดียวกับ ZONE_KEEPER เปลี่ยนผู้ดูแลที่เดียว
+  document.body.classList.toggle('zone-keeper',Object.values(ZONE_KEEPER).includes(String(uname).trim()));
   const n=document.getElementById('hdr-uname');if(n)n.textContent=uname;
   const mn=document.getElementById('mobile-uname');if(mn)mn.textContent=uname;
   const sn=document.getElementById('sn-uname');if(sn)sn.textContent=uname;
@@ -6611,7 +6621,8 @@ function goTab(t,btn){
   if(t==='price')initPrice();
   // ── sync bottom nav (ข้อ 6) ──
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
-  const bnavMap={overview:'bnav-overview',entry:'bnav-entry',feed:'bnav-feed',stock:'bnav-stock',price:'bnav-price',harveststat:'bnav-harveststat'};
+  const bnavMap={overview:'bnav-overview',entry:'bnav-entry',feed:'bnav-feed',stock:'bnav-stock',price:'bnav-price',harveststat:'bnav-harveststat',
+    tide:'bnav-tide',watlog:'bnav-watlog',mortality:'bnav-mortality'};
   if(bnavMap[t]){const bb=document.getElementById(bnavMap[t]);if(bb)bb.classList.add('on');}
   const tw=document.querySelector('.tabs-wrap');if(tw)tw.classList.remove('mob-open');
   closeMobMenu();
