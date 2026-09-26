@@ -2691,6 +2691,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 <!-- SAMPLING -->
 <div id="sec-sample" class="sec">
   <div class="sec-hdr"><div class="sec-title">⚖️ สุ่มตัวอย่าง (Sampling)</div></div>
+  <div class="dz-bar" id="sp-zones"></div>
   <div class="g2" style="margin-bottom:16px;align-items:start">
     <div class="card">
       <div class="card-t" style="justify-content:space-between"><span>📝 บันทึกการสุ่ม</span>
@@ -5690,6 +5691,7 @@ function refreshZoneDatalist(){
   dl.innerHTML=allZones().map(z=>'<option value="'+z+'">').join('');
 }
 // ══════ งานกรอกรายวันแยกตามโซน — หน้ากุ้งตาย + จัดการน้ำ (entry #318 พี่สั่ง 26 ก.ย. 69) ══════
+//    หน้าสุ่มตัวอย่างใช้แถบเดียวกัน (entry #323 — ผู้ดูแลแต่ละโซนสุ่มคนละเวลา)
 //    ฟาร์มมีผู้ดูแลโซนละคน กรอกคนละเครื่อง — เดิมปุ่มบันทึกกุ้งตายเขียนทุกบ่อ ผู้ดูแล B กดทีไรเขียน 0 ทับบ่อ A ทั้งโซน
 //    (เกิดจริง 25–26 ก.ย. 69: 9 บ่อ Zone A ได้ 0 ตัวในชื่อโต๊ด) → ฟอร์ม/ปุ่มบันทึก/สรุป/ประวัติ เห็นและเขียนเฉพาะโซนที่เลือก
 //    ⚠️ ห้ามเพิ่มตัวเลือก "ทุกโซน" ในฟอร์มบันทึก — จะกลับไปเขียนทับข้ามโซนได้อีก
@@ -5717,6 +5719,9 @@ function dzPick(z){
   _mtVals={};_wlSel.clear();
   if(document.getElementById('sec-mortality')?.classList.contains('on')){renderMtRows();renderMtSummary();populateMtFilter();renderMtTable(true);}
   if(document.getElementById('sec-watlog')?.classList.contains('on')){populateWlFilter();renderWlPonds();renderWaterSummary();renderWaterTable();}
+  if(document.getElementById('sec-sample')?.classList.contains('on')){
+    _spVals={};const r=document.getElementById('sp-result');if(r){r.style.display='none';r.innerHTML='';}
+    renderSpRows();populateSpChartPond();populateSpFilter();renderSampleTable(true);renderSampleChart();}
   renderDzBars();
 }
 // เปิดรายการของบ่ออีกโซน (แก้จากประวัติ/ทางลัด) → สลับโซนตามบ่อนั้นก่อน ไม่งั้นแถวของบ่อนั้นไม่อยู่ในฟอร์ม
@@ -5740,6 +5745,12 @@ function renderDzBars(){
     const badge=!ps.length?'':recs.length>=ps.length?'<span class="dz-st done">✓ บันทึกแล้ว</span>'
       :recs.length?'<span class="dz-st part">'+recs.length+'/'+ps.length+' บ่อ</span>':'<span class="dz-st todo">ยังไม่บันทึก</span>';
     return{badge,sub:ps.length+' บ่อมีกุ้ง'+(by?' · กรอกโดย '+mpEsc(by):'')};
+  });
+  mk('sp-zones',z=>{
+    const d=_spDate||today();
+    const ps=spPondsAllOn(d).filter(x=>dzOf(x.p)===z);
+    const n=ps.filter(x=>spRecOn(x.p,d)).length;
+    return{badge:!ps.length?'':n>=ps.length?'<span class="dz-st done">✓ สุ่มครบ</span>':n?'<span class="dz-st part">สุ่มแล้ว '+n+'/'+ps.length+'</span>':'<span class="dz-st todo">ยังไม่สุ่ม</span>',sub:ps.length+' บ่อมีกุ้ง'};
   });
   mk('wl-zones',z=>{
     const d=(document.getElementById('wl-date')||{}).value||today();
@@ -14157,6 +14168,7 @@ function editWQ(pid,d){
 }
 // แก้รายการเดิม = ย้อนไปวันนั้น แล้วเลื่อนไปที่แถวของบ่อนั้น (ค่าเดิมถูกดึงมาให้เอง) กดบันทึก = อัปเดตทับ
 function editSample(pid,d){
+  if(dzOf(pond(pid))!==dzCur()){dzFollow(pond(pid));populateSpChartPond();populateSpFilter();renderSampleTable(true);renderSampleChart();}
   _spDate=d;_spVals={};
   const el=document.getElementById('sp-date');if(el){el.value=d;syncDateHint(el);}
   renderSpRows();
@@ -14399,7 +14411,9 @@ function spQuickDate(back){
   renderSpRows();
 }
 // บ่อที่มีกุ้ง ณ วันที่เลือก เรียงอายุมาก→น้อย (ฐานเดียวกับหน้ากุ้งตาย)
-function spPondsOn(d){
+// ⚠️ เฉพาะโซนที่เลือก (#323) — ฟอร์ม/ปุ่มบันทึก (spFilled) ใช้ตัวนี้ · สถานะแถบโซนใช้ spPondsAllOn
+function spPondsOn(d){return spPondsAllOn(d).filter(x=>dzIn(x.p));}
+function spPondsAllOn(d){
   return (D.ponds||[]).filter(p=>p&&p.startDate&&p.startDate<=d&&(!p.harvestDate||d<=p.harvestDate))
     .map(p=>({p,age:docAge(p.startDate,d)}))
     .sort((a,b)=>(b.age-a.age)||String(a.p.name||'').localeCompare(String(b.p.name||''),'th',{numeric:true}));
@@ -14458,7 +14472,8 @@ function renderSpRows(){
   const d=_spDate||today();
   const list=spPondsOn(d);
   const lbl=document.getElementById('sp-grp-l');
-  if(lbl)lbl.textContent='บ่อที่มีกุ้ง '+list.length+' บ่อ';
+  if(lbl)lbl.textContent=(dzList().length>1?dzLabel(dzCur())+' · ':'')+'บ่อที่มีกุ้ง '+list.length+' บ่อ';
+  renderDzBars();
   if(!list.length){box.innerHTML='<p style="color:var(--tx3);text-align:center;padding:18px;font-style:italic">วันที่เลือกยังไม่มีบ่อที่เลี้ยงกุ้งอยู่</p>';spSyncSave();return;}
   box.innerHTML='<div class="sp-list">'+list.map(x=>spRowHtml(x,d)).join('')+'</div>';
   const t=document.getElementById('sp-q-today'),y=document.getElementById('sp-q-yest');
@@ -14536,7 +14551,7 @@ function spFilled(d){
 function spSyncSave(){
   const b=document.getElementById('sp-save-btn');if(!b)return;
   const n=spFilled(_spDate||today()).length;
-  b.textContent=n?('💾 บันทึก '+n+' บ่อ'):'💾 บันทึก';
+  b.textContent=(n?('💾 บันทึก '+n+' บ่อ'):'💾 บันทึก')+(dzList().length>1?' · '+dzLabel(dzCur()):'');
   b.disabled=!n;
 }
 // บันทึกทุกบ่อที่กรอกครบ (จำนวนตัว + น้ำหนัก) · id เดิม sp_<pond>_<date> จึงบันทึกซ้ำวันเดิม = อัปเดตทับ
@@ -14562,7 +14577,7 @@ function saveSample(){
   save();
   renderSpRows();populateSpChartPond();populateSpFilter();renderSampleTable(true);renderSampleChart();renderOv();
   renderSampleResult(done,d);
-  showMsg('sp-msg','ok','บันทึก '+fD(d)+' · '+done.length+' บ่อ');
+  showMsg('sp-msg','ok','บันทึก '+fD(d)+' · '+(dzList().length>1?dzLabel(dzCur())+' ':'')+done.length+' บ่อ');
   flashSaveBtn(document.getElementById('sp-save-btn'));
 }
 function clearSample(){
@@ -14576,7 +14591,7 @@ function spChartPond(){const el=document.getElementById('sp-chart-pond');return 
 function populateSpChartPond(){
   const el=document.getElementById('sp-chart-pond');if(!el)return;
   const cur=el.value;
-  const withS=(D.ponds||[]).filter(p=>(p.samples||[]).length)
+  const withS=(D.ponds||[]).filter(p=>dzIn(p)&&(p.samples||[]).length)
     .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'th',{numeric:true}));
   el.innerHTML=withS.map(p=>'<option value="'+p.id+'">บ่อ '+mpEsc(p.name)+'</option>').join('')||'<option value="">— ยังไม่มีข้อมูล —</option>';
   if(cur&&withS.some(p=>p.id===cur))el.value=cur;
@@ -14584,10 +14599,10 @@ function populateSpChartPond(){
 function populateSpFilter(){
   const el=document.getElementById('sp-filter');if(!el)return;
   const cur=el.value;
-  const withS=(D.ponds||[]).filter(p=>(p.samples||[]).length)
+  const withS=(D.ponds||[]).filter(p=>dzIn(p)&&(p.samples||[]).length)
     .sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'th',{numeric:true}));
   el.innerHTML='<option value="">ทุกบ่อ</option>'+withS.map(p=>'<option value="'+p.id+'">บ่อ '+mpEsc(p.name)+'</option>').join('');
-  if(cur)el.value=cur;
+  if(cur&&withS.some(p=>p.id===cur))el.value=cur;else el.value='';
 }
 // ── ผลทันทีหลังบันทึกสุ่ม — แปลผลให้เลยว่ากุ้งโตตามเกณฑ์อายุไหม ไม่ต้องเทียบตารางเอง + ทางลัดไปดู FCR/กราฟที่หน้ารายละเอียดบ่อ (FCR โชว์ที่เดียวตามนโยบายเดิม) ──
 // สรุปผลหลังบันทึก — แปลผลให้ทุกบ่อที่เพิ่งบันทึกว่ากุ้งโตตามเกณฑ์อายุไหม
@@ -14631,7 +14646,7 @@ function sampleInPondBiomass(p,r){
 // ── กล่องตัวเลข ABW/ไซส์/Biomass/อัตรารอด/PDG/เหลือกี่วัน (renderSampleMetrics) ลบออกแล้ว — ซ้ำกับที่โชว์ใต้บ่อแต่ละบ่อ (พี่สั่ง entry #321)
 //    อาหารรวม + FCR ย้ายไปโชว์ใต้ชื่อบ่อในฟอร์ม (spRowHtml → spFeedLine) แทน
 function renderSampleChart(){
-  const pid=spChartPond();if(!pid)return;
+  const pid=spChartPond();if(!pid){if(spCh){spCh.destroy();spCh=null;}return;}   // โซนนี้ยังไม่มีบ่อที่เคยสุ่ม → ล้างกราฟของโซนก่อน
   const p=pond(pid);if(spCh){spCh.destroy();spCh=null;}
   const sizePts=(p.samples||[]).filter(r=>r.plCount).map(r=>({x:recAge(p,r),y:r.plCount}));
   const feedPts=(p.feedLog||[]).filter(r=>r.totalFeed&&r.date).map(r=>{const v=feedPer100k(r.totalFeed,pondFeedBaseOnDate(p,r.date));return v!=null?{x:recAge(p,r),y:parseFloat(v.toFixed(2))}:null}).filter(Boolean);
@@ -14665,7 +14680,7 @@ function renderSampleTable(reset){
   const wrap=document.getElementById('sp-tbl-wrap');if(!wrap)return;
   const fp=(document.getElementById('sp-filter')||{}).value||'';
   const all=[];
-  (D.ponds||[]).forEach(p=>{if(fp&&p.id!==fp)return;(p.samples||[]).forEach(r=>all.push({p,r}));});
+  (D.ponds||[]).forEach(p=>{if(fp&&p.id!==fp)return;if(!dzIn(p))return;(p.samples||[]).forEach(r=>all.push({p,r}));});
   all.sort((a,b)=>String(b.r.date).localeCompare(String(a.r.date))
     ||String(a.p.name||'').localeCompare(String(b.p.name||''),'th',{numeric:true}));
   if(!all.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลสุ่มตัวอย่าง — บันทึกได้จากฟอร์มด้านบน</p>';return;}
