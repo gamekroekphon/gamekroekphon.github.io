@@ -1364,6 +1364,24 @@ body.zone-keeper .bnav-btn.bn-staff,body.zone-keeper .bnav-btn.bn-admin,body.zon
 .mob-sheet-item.admin-only{display:none!important}
 body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 @media(min-width:601px){.mob-sheet,.mob-sheet-scrim{display:none!important}}
+/* ══════ มือถือแนวนอน (entry #326 พี่สั่ง 28 ก.ย. 69) ══════
+   มือถือหมุนแนวนอน จอกว้าง > 600px → เดิมสลับเป็นเลย์เอาต์คอม มีเมนูซ้ายกว้าง 230px กินพื้นที่ ทั้งที่พี่หมุนจอเพื่อ "ดูข้อมูลเต็มจอ"
+   จับด้วย แนวนอน + สูงไม่เกิน 500px + จอสัมผัส (คอม/แท็บเล็ตไม่เข้าเงื่อนไข) → ซ่อนเมนูซ้าย เนื้อหาเต็มความกว้าง
+   เปลี่ยนหน้าใช้แถบล่างเหมือนแนวตั้ง (บางลง ไอคอนอยู่ข้างชื่อ) + เมนู ☰ เพิ่มเติม · หัวแอปเลื่อนหายไปตอนเลื่อนลง ไม่ค้างกินที่ด้านบน
+   ⚠️ ต้องอยู่หลังกฎ @media(min-width:601px) ของ .side-nav/.hdr/.main/.mob-sheet — ใช้ !important ทับของเดิมที่เป็น !important */
+@media(min-width:601px) and (orientation:landscape) and (max-height:500px) and (pointer:coarse){
+  .side-nav{display:none!important}
+  .hdr{margin-left:0!important;width:100%!important;position:relative;top:auto;height:48px}
+  .main{margin-left:0!important;width:100%!important;max-width:100%!important}
+  .bnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--sf);border-top:1px solid var(--bd);z-index:150;
+    padding:0 max(0px,env(safe-area-inset-right)) env(safe-area-inset-bottom) max(0px,env(safe-area-inset-left))}
+  .bnav-btn{flex-direction:row;gap:6px;min-height:44px;padding:4px 2px}
+  .bnav-btn .bnav-ic{font-size:calc(16px * var(--ui-scale))}
+  body{padding-bottom:48px}
+  .mob-sheet.show{display:flex!important}
+  .mob-sheet-scrim.show{display:block!important}
+  .mob-sheet{max-height:92vh;max-width:560px;margin:0 auto}
+}
 .cat-tag{display:inline-flex;align-items:center;gap:4px;background:var(--sf2);border:1px solid var(--bd);border-radius:20px;padding:3px 10px;font-size:calc(12px * var(--ui-scale));margin:3px;}
 .cat-del{cursor:pointer;color:var(--d);font-weight:700;padding:0 2px;}
 .kpi-card{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
