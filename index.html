@@ -10255,7 +10255,7 @@ function renderStockItems(){
   const items=(D.inventoryItems||[]).filter(i=>{
     if(cat&&i.category!==cat)return false;
     if(search&&!i.name.toLowerCase().includes(search)&&!(i.note||'').toLowerCase().includes(search))return false;
-    if(!_stockShowZero&&(i.qty||0)===0)return false;
+    if(!_stockShowZero&&(i.qty||0)===0&&shopQ(i)===0)return false;   // ฟาร์มหมดแต่หน้าร้านมี = ยังต้องเห็น (#334)
     return true;
   });
   if(!items.length){el.innerHTML=`<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">${(cat||search)?'ไม่พบรายการที่ตรงกับตัวกรองนี้ — ลองเปลี่ยนคำค้นหรือหมวดหมู่':'ยังไม่มีรายการพัสดุ — เพิ่มได้จากฟอร์มด้านบน'}</p>`;return;}
@@ -10268,7 +10268,7 @@ function renderStockItems(){
   });
   const isAdminView=APP_ROLE==='admin';
   const priceHdr=isAdminView?'<th style="text-align:right">ราคา/หน่วย</th><th style="text-align:right">มูลค่า</th>':'';
-  el.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>รายการ</th><th>หมวด</th>${priceHdr}<th>คงเหลือ</th><th>ขั้นต่ำ</th><th>สถานะ</th><th></th></tr></thead><tbody>${
+  el.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>รายการ</th><th>หมวด</th>${priceHdr}<th style="text-align:right">ฟาร์ม</th><th style="text-align:right">หน้าร้าน</th><th>ขั้นต่ำ</th><th>สถานะ</th><th></th></tr></thead><tbody>${
     sorted.map(i=>{
       const isLow=i.minQty>0&&i.qty<=i.minQty;
       const statusBadge=isLow
@@ -10280,6 +10280,7 @@ function renderStockItems(){
       const priceCols=isAdminView
         ?`<td style="text-align:right">${price?price.toLocaleString()+' ฿':'—'}</td><td style="text-align:right;color:${val?'var(--tx)':'var(--tx3)'}">${val?val.toLocaleString()+' ฿':'—'}</td>`
         :'';
+      // สต็อกหน้าร้าน (#334): ยังไม่เคยนับ และเป็น 0 → แสดง — (ยังไม่รู้ยอด ไม่ใช่ไม่มีของ)
       const actionBtns=isAdminView
         ?`<button class="btn-sm" onclick="editStockItem('${i.id}')">✏️</button> <button class="btn-sm btn-del" onclick="deleteStockItem('${i.id}')">🗑️</button>`
         :`<button class="btn-sm" onclick="stockTab('tx',document.getElementById('skb-tx'));setTimeout(()=>addStockToCart('${i.id}'),80)">📥 รับเข้า</button>`;
@@ -10287,7 +10288,8 @@ function renderStockItems(){
         <td><strong>${i.name}</strong><br><span style="font-size:var(--fs11);color:var(--tx3)">${i.note||''}</span></td>
         <td><span class="badge ${catCss}">${STOCK_CAT_LABEL[i.category]||i.category}</span></td>
         ${priceCols}
-        <td class="${isLow?'stock-qty-low':''}">${i.qty} ${i.unit}</td>
+        <td class="${isLow?'stock-qty-low':''}" style="text-align:right;white-space:nowrap">${i.qty} ${i.unit}</td>
+        <td style="text-align:right;white-space:nowrap;color:${shopQ(i)>0?'var(--pd)':'var(--tx3)'}">${(shopQ(i)>0||i.shopCountedAt)?shopQ(i)+' '+i.unit:'—'}</td>
         <td>${i.minQty||'-'} ${i.minQty?i.unit:''}</td>
         <td>${statusBadge}</td>
         <td style="white-space:nowrap">${actionBtns}</td>
