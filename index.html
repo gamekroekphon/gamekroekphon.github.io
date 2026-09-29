@@ -1398,6 +1398,25 @@ body.role-admin .bnav-btn.bn-staff{display:none}
 .bnav-btn.bn-keeper{display:none}
 body.zone-keeper .bnav-btn.bn-keeper{display:flex}
 body.zone-keeper .bnav-btn.bn-staff,body.zone-keeper .bnav-btn.bn-admin,body.zone-keeper #bnav-stock{display:none}
+/* คนหน้าร้าน (#337) — body.shop-clerk ตั้งจากชื่อคนล็อกอิน (SHOP_CLERK) · แถบล่าง = หน้าร้าน · สต็อก · ราคาสินค้า · อุปกรณ์นอก · เพิ่มเติม */
+.bnav-btn.bn-clerk{display:none}
+body.shop-clerk .bnav-btn.bn-clerk{display:flex}
+body.shop-clerk #bnav-overview,body.shop-clerk #bnav-harveststat,body.shop-clerk .bnav-btn.bn-staff,body.shop-clerk .bnav-btn.bn-keeper{display:none}
+body.shop-clerk #bnav-shop{order:1}body.shop-clerk #bnav-stock{order:2}body.shop-clerk #bnav-price{order:3}body.shop-clerk #bnav-ext{order:4}body.shop-clerk #bnav-more{order:5}
+/* เมนูเพิ่มเติมของคนหน้าร้าน: งานของฉันขึ้นบนสุด · เมนูเรื่องกุ้งพับเก็บ (ค้นหาแล้วเห็นทั้งหมด) */
+body:not(.shop-clerk) .clerk-only{display:none!important}
+body.shop-clerk #mobMenuBody{display:flex;flex-direction:column}
+body.shop-clerk #mobMenuBody>.clerk-g0{order:-3}
+body.shop-clerk #mobMenuBody>.clerk-mine{order:-2}
+body.shop-clerk #mobMenuBody>.clerk-g9{order:-1}
+body.shop-clerk #mobMenuBody:not(.clerk-open):not(.clerk-search)>:not(.clerk-mine):not(.clerk-only){display:none!important}
+body.shop-clerk #mobMenuBody.clerk-search>.clerk-g9,body.shop-clerk #mobMenuBody>.clerk-hide{display:none!important}
+.mob-clerk-fold{width:100%;display:flex;justify-content:space-between;align-items:center;margin:8px 0 2px;padding:11px 12px;border:1px dashed var(--bd);border-radius:10px;background:none;color:var(--tx2);font-family:inherit;font-size:calc(13.5px * var(--ui-scale));cursor:pointer}
+.shp-quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.shp-quick button{background:var(--sf);border:1.5px solid var(--bd);border-radius:11px;padding:10px 8px;font-family:inherit;font-weight:700;font-size:calc(13px * var(--ui-scale));color:var(--tx);cursor:pointer}
+.shp-quick .ic{display:block;font-size:calc(20px * var(--ui-scale))}
+/* มือถือคนหน้าร้าน: ที่หน้าร้าน ซ่อนสรุปสต็อกฟาร์ม/แถบใกล้หมด (ซ้ำกับรายการต้องทำ) ให้งานวันนี้ขึ้นมาเห็นเลย */
+@media(max-width:600px){body.shop-clerk #sec-stock:has(#skp-shop.on) :is(#sk-kpi,#sk-warn,.stock-sub){display:none!important}}
 /* แถบล่างมีพื้นที่จำกัด 5 ช่อง — จำกัดการขยายไว้ที่ 1.08 เท่า ไม่งั้นตอน ก++ ข้อความจะตัดบรรทัดล้นแถบ */
 .bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;color:var(--tx3);font-size:calc(11.5px * min(var(--ui-scale), 1.08));font-weight:600;padding:6px 2px;cursor:pointer;position:relative;min-height:54px;white-space:nowrap;line-height:1.25}
 .bnav-btn .bnav-ic{font-size:calc(18px * var(--ui-scale));line-height:1}
@@ -2076,6 +2095,9 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <button class="bnav-btn bn-keeper" id="bnav-tide" onclick="bnavGo('tide',this)"><span class="bnav-ic">🌊</span>สภาพอากาศ</button>
   <button class="bnav-btn bn-keeper" id="bnav-watlog" onclick="bnavGo('watlog',this)"><span class="bnav-ic">💦</span>จัดการน้ำ</button>
   <button class="bnav-btn bn-keeper" id="bnav-mortality" onclick="bnavGo('mortality',this)"><span class="bnav-ic">☠️</span>กุ้งตาย</button>
+  <!-- คนหน้าร้าน (SHOP_CLERK: ปุ๊ก) — หน้าร้าน/อุปกรณ์นอก อยู่ในหน้าสต็อก กดแล้วเปิดตรงงานนั้นเลย (พี่สั่ง entry #337) -->
+  <button class="bnav-btn bn-clerk" id="bnav-shop" onclick="clerkGo('shop')"><span class="bnav-ic">🏪</span>หน้าร้าน</button>
+  <button class="bnav-btn bn-clerk" id="bnav-ext" onclick="clerkGo('ext')"><span class="bnav-ic">🔧</span>อุปกรณ์นอก</button>
   <button class="bnav-btn" id="bnav-more" onclick="toggleMobMenu(this)"><span class="bnav-ic">☰<span class="bnav-badge" id="bnav-alert-badge"></span></span>เพิ่มเติม</button>
 </nav>
 <div class="mob-sheet-scrim" id="mobSheetScrim" onclick="closeMobMenu()"></div>
@@ -2085,7 +2107,11 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <div class="mob-sheet-search"><span class="ic">🔍</span><input type="text" id="mobMenuSearch" placeholder="ค้นหาเมนู เช่น อาหาร, ค่าไฟ..." oninput="filterMobMenu(this.value)"></div>
   <div class="mob-uisize uisize"><span class="uisize-lbl">ขนาดตัวอักษร</span><div class="uisize-seg" role="group" aria-label="ขนาดตัวอักษร"><button type="button" onclick="setUiSize('')" data-uis="" aria-pressed="true" title="ขนาดปกติ">ก</button><button type="button" onclick="setUiSize('lg')" data-uis="lg" aria-pressed="false" title="ใหญ่ขึ้น 12%">ก+</button><button type="button" onclick="setUiSize('xl')" data-uis="xl" aria-pressed="false" title="ใหญ่ขึ้น 25%">ก++</button></div></div>
   <div class="mob-sheet-body" id="mobMenuBody">
-    <button class="mob-sheet-item" data-t="alerts" onclick="mobMenuGo(this)"><span class="ic">🔔</span>การแจ้งเตือน<span class="mob-sheet-badge" id="mobsheet-alert-badge"></span></button>
+    <div class="mob-sheet-grp clerk-only clerk-g0">⭐ งานของฉัน</div>
+    <button class="mob-sheet-item clerk-only clerk-mine" data-t="overview" onclick="mobMenuGo(this)"><span class="ic">🏠</span>ภาพรวมบ่อ</button>
+    <button class="mob-sheet-item clerk-only clerk-mine" data-t="stock-sale" onclick="mobMenuGo(this)"><span class="ic">🛒</span>ยอดขายลูกค้าภายนอก</button>
+    <button type="button" class="mob-clerk-fold clerk-only clerk-g9" onclick="toggleClerkFold()"><span>เมนูอื่นทั้งหมด <span id="mob-clerk-n"></span></span><span id="mob-clerk-arr">▾</span></button>
+    <button class="mob-sheet-item clerk-mine" data-t="alerts" onclick="mobMenuGo(this)"><span class="ic">🔔</span>การแจ้งเตือน<span class="mob-sheet-badge" id="mobsheet-alert-badge"></span></button>
     <div class="mob-sheet-grp">📅 รายวัน</div>
     <button class="mob-sheet-item" data-t="tide" onclick="mobMenuGo(this)"><span class="ic">🌊</span>สภาพอากาศและน้ำขึ้นน้ำลง</button>
     <button class="mob-sheet-item" data-t="entry" onclick="mobMenuGo(this)"><span class="ic">💧</span>คุณภาพน้ำ</button>
@@ -2108,9 +2134,9 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <button class="mob-sheet-item" data-t="compare" onclick="mobMenuGo(this)"><span class="ic">🔄</span>เปรียบเทียบ</button>
     <button class="mob-sheet-item" data-t="risk" onclick="mobMenuGo(this)"><span class="ic">⚠️</span>ความเสี่ยง</button>
     <button class="mob-sheet-item admin-only" data-t="hatchery" onclick="mobMenuGo(this)"><span class="ic">🥚</span>โรงเพาะฟัก</button>
-    <div class="mob-sheet-grp">💰 ค่าแรง / ค่าไฟ</div>
-    <button class="mob-sheet-item admin-only" data-t="labor" onclick="mobMenuGo(this)"><span class="ic">👷</span>ค่าแรง</button>
-    <button class="mob-sheet-item admin-only" data-t="elec" onclick="mobMenuGo(this)"><span class="ic">⚡</span>ค่าไฟฟ้า</button>
+    <div class="mob-sheet-grp clerk-hide">💰 ค่าแรง / ค่าไฟ</div>
+    <button class="mob-sheet-item admin-only clerk-mine" data-t="labor" onclick="mobMenuGo(this)"><span class="ic">👷</span>ค่าแรง</button>
+    <button class="mob-sheet-item admin-only clerk-mine" data-t="elec" onclick="mobMenuGo(this)"><span class="ic">⚡</span>ค่าไฟฟ้า</button>
     <div class="mob-sheet-grp">🔧 เครื่องมือ</div>
     <button class="mob-sheet-item" data-t="forecast" onclick="mobMenuGo(this)"><span class="ic">🔮</span>คำนวณ &amp; คาดการณ์</button>
     <button class="mob-sheet-item" data-t="medproto" onclick="mobMenuGo(this)"><span class="ic">💊</span>Protocol เวชภัณฑ์</button>
@@ -4483,11 +4509,34 @@ function applyRole(role){
     const ms=document.getElementById('mhd-sub');if(ms)ms.textContent='ตะวันฟาร์ม · พนักงาน';
   }
 }
+// ── คนหน้าร้าน (พี่สั่ง entry #337) — ปุ๊ก: สต็อกเข้าออกร้าน/ฟาร์ม · อุปกรณ์นอก · ราคาสินค้า · ค่าแรง · ค่าไฟ · ไม่ได้ดูเรื่องกุ้ง
+//    มือถือ: เปิดแอปเจอหน้าร้าน · แถบล่างเฉพาะงานนี้ · เมนูเรื่องกุ้งพับไว้ใน ☰ (ไม่ได้ปิดสิทธิ์ — admin เหมือนเดิม) · คอมเหมือนเดิม
+const SHOP_CLERK='ปุ๊ก';
+let _clerkLanded=false;
+function clerkGo(which){
+  const st=document.getElementById('tab-stock');if(!st)return;
+  st.click();   // initStock → เปิดที่บันทึกรับ-เบิก
+  if(which==='shop')stockTab('shop',document.getElementById('skb-shop'));
+  else if(which==='ext')setStockMode('shared');
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById(which==='shop'?'bnav-shop':'bnav-ext')?.classList.add('on');
+}
+function clerkFoldLabel(){
+  const body=document.getElementById('mobMenuBody');if(!body)return;
+  const n=[...body.querySelectorAll('.mob-sheet-item')].filter(b=>!b.classList.contains('clerk-mine')&&!b.classList.contains('clerk-only')).length;
+  const nEl=document.getElementById('mob-clerk-n');if(nEl)nEl.textContent='('+n+')';
+  const a=document.getElementById('mob-clerk-arr');if(a)a.textContent=body.classList.contains('clerk-open')?'▴':'▾';
+}
+function toggleClerkFold(){document.getElementById('mobMenuBody')?.classList.toggle('clerk-open');clerkFoldLabel();}
 function updateUserHeader(user,role){
   const u=document.getElementById('hdr-user');if(u)u.style.display='flex';
   const uname=user.displayName||user.email.split('@')[0];
   // ผู้ดูแลโซน → แถบล่างมือถือเหลือ ภาพรวม/สภาพอากาศ/จัดการน้ำ/กุ้งตาย/เพิ่มเติม (entry #319) — รายชื่อเดียวกับ ZONE_KEEPER เปลี่ยนผู้ดูแลที่เดียว
   document.body.classList.toggle('zone-keeper',Object.values(ZONE_KEEPER).includes(String(uname).trim()));
+  const isClerk=String(uname).trim()===SHOP_CLERK;
+  document.body.classList.toggle('shop-clerk',isClerk);
+  // เปิดแอปบนมือถือ (มีแถบล่าง) → หน้าร้านทันที ครั้งเดียวต่อการเปิดแอป · รอ applyRole ข้างล่างก่อน (หน้าร้านเป็นของ admin)
+  if(isClerk&&!_clerkLanded&&getComputedStyle(document.getElementById('bnav')).display!=='none'){_clerkLanded=true;setTimeout(()=>clerkGo('shop'),0);}
   const n=document.getElementById('hdr-uname');if(n)n.textContent=uname;
   const mn=document.getElementById('mobile-uname');if(mn)mn.textContent=uname;
   const sn=document.getElementById('sn-uname');if(sn)sn.textContent=uname;
@@ -4625,6 +4674,7 @@ async function initFirebase() {
       const json_loaded = JSON.stringify(D);
       localStorage.setItem(SK, json_loaded);
       populateAll(); renderOv();
+      if(document.getElementById('skp-shop')?.classList.contains('on'))renderShop();   // คนหน้าร้านเปิดแอปมาที่หน้าร้าน (#337)
       setSyncStatus('sync-ok', '✅ โหลดข้อมูลสำเร็จ (' + (D.ponds||[]).length + ' บ่อ)');
     } else {
       const snap = await dbRef.once('value');
@@ -6263,6 +6313,7 @@ function toggleMobMenu(btn){
     document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
     btn.classList.add('on');
     const se=document.getElementById('mobMenuSearch');if(se)se.value='';
+    document.getElementById('mobMenuBody')?.classList.remove('clerk-open');clerkFoldLabel();
     filterMobMenu('');
     highlightMobSheetCurrent();
   }else{
@@ -6278,12 +6329,14 @@ function mobMenuGo(el){
   const t=el.dataset.t;
   closeMobMenu();
   if(t==='alerts'){bnavAlerts(null);return;}
+  if(t==='stock-sale'){document.getElementById('tab-stock')?.click();stockTab('sale',document.getElementById('skb-sale'));return;}
   const tabBtn=document.getElementById('tab-'+t);
   if(tabBtn)tabBtn.click();
 }
 function filterMobMenu(q){
   q=(q||'').trim().toLowerCase();
   const body=document.getElementById('mobMenuBody');if(!body)return;
+  body.classList.toggle('clerk-search',!!q);   // คนหน้าร้าน: ค้นหาแล้วเห็นเมนูที่พับไว้ด้วย (#337)
   const items=[...body.children];
   // ── ซ่อนด้วย setProperty(...,'important') ไม่ใช่ el.style.display เฉยๆ — เพราะ .mob-sheet-item.admin-only มี !important
   //    (กันบัค CSS specificity เดิม) ถ้า inline style ธรรมดาจะแพ้ !important ของสไตล์ชีท ทำให้ค้นหาแล้วซ่อนไม่ได้สำหรับปุ่ม admin-only ──
@@ -9422,6 +9475,7 @@ function xferAdd(id,q){
 function shopGoXfer(){
   _xferDir='toFarm';stockTab('tx',document.getElementById('skb-tx'));pickStockJob('xfer');
 }
+function clerkJob(m){stockTab('tx',document.getElementById('skb-tx'));setStockMode(m);}
 function renderShop(){
   const el=document.getElementById('shop-wrap');if(!el)return;
   if(APP_ROLE!=='admin'){el.innerHTML='';return;}
@@ -9434,6 +9488,9 @@ function renderShop(){
   const bar=r=>'<div class="shp-bar"><div class="f" style="width:'+Math.min(100,(r.fd||0)/30*100)+'%"></div><div class="s" style="width:'+Math.min(100,(r.rate>0?r.shop/r.rate:0)/30*100)+'%"></div></div>';
   const line=r=>'ฟาร์ม '+r.farm+' · ร้าน '+r.shop+' '+mpEsc(r.i.unit||'')+' · ใช้ '+shopD1(r.rate)+'/วัน → พอ '+shopD1(r.td)+' วัน';
   if(_shopView==='todo'){
+    if(document.body.classList.contains('shop-clerk'))
+      s+='<div class="shp-quick"><button type="button" onclick="clerkJob(\'in\')"><span class="ic">📥</span>รับเข้าหน้าร้าน</button>'
+        +'<button type="button" onclick="clerkJob(\'xfer\')"><span class="ic">🔁</span>หน้าร้าน ⇄ ฟาร์ม</button></div>';
     s+='<div class="card"><div class="shp-chips"><button type="button" class="'+(_shopTodo==='buy'?'on':'')+'" onclick="_shopTodo=\'buy\';renderShop()">🔴 สั่งบริษัท '+buy.length+'</button>'
       +'<button type="button" class="'+(_shopTodo==='move'?'on':'')+'" onclick="_shopTodo=\'move\';renderShop()">🟠 หน้าร้าน เข้า ฟาร์ม '+mv.length+'</button></div>';
     if(_shopTodo==='buy'){
