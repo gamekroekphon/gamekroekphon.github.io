@@ -432,9 +432,13 @@ body.role-admin .mp-actions{display:flex!important;gap:2px;flex-wrap:wrap}
 .pd-ms-chips{display:flex;flex-wrap:wrap;gap:5px}
 .pd-ms-chip{border-radius:99px;padding:3px 10px;font-size:var(--fs11);font-weight:600}
 .pd-ms-grid{display:grid;grid-template-columns:minmax(84px,1.3fr) repeat(14,minmax(0,1fr));gap:2px;align-items:center;font-size:var(--fs11)}
-.pd-ms-grid .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:4px}
+.pd-ms-grid .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:4px;display:flex;align-items:center;gap:5px}
+.pd-ms-grid .nm i{flex:none;width:8px;height:8px;border-radius:2px}
+.pd-ms-grid .brk{border-top:1px solid var(--bd);padding-top:3px;margin-top:3px}
+.pd-ms-leg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:var(--fs11);color:var(--tx2);margin-bottom:6px}
+.pd-ms-leg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px}
 .pd-ms-grid .c{height:16px;display:flex;align-items:center;justify-content:center}
-.pd-ms-grid .c i{width:10px;height:10px;border-radius:50%;display:block}
+.pd-ms-grid .c i{width:12px;height:12px;border-radius:50%;display:block}
 .pd-ms-grid .c.e i{width:4px;height:4px;background:#d1d5db}
 .pd-ms-grid .hd{font-size:calc(9.5px * var(--ui-scale));color:var(--tx3);text-align:center}
 .pd-ms-more{margin-top:8px;border:1px dashed var(--bd);background:none;border-radius:8px;min-height:40px;width:100%;font-family:inherit;color:var(--tx2);cursor:pointer}
@@ -12838,7 +12842,9 @@ function renderPdFeedHistory(p){
 // ── เวชภัณฑ์ที่ใช้ลงบ่อนี้ — ดึงจาก getStockItemsForPond() ชุดเดียวกับที่ใช้คิดต้นทุนสะสม (ไม่สร้าง query คู่ขนาน) กรองเฉพาะหมวดยา/จุลินทรีย์ + เลือกช่วงวัน/หมวดได้เหมือนตัวกรองประวัติเบิกออกในหน้าสต็อก ──
 const PD_MED_CATS=['chemOral','chemWater','probioOral','probioWater','chem','lime'];   // + ปูน (entry #328)
 // ── ปุ่มเลือกหมวด: สีตรงกับ STOCK_CAT_CSS (ตัวเดียวกับ badge ในตาราง) ให้กดแล้วรู้ทันทีว่ากำลังกรองหมวดไหนอยู่ ──
-const PD_MED_CAT_OPTS=[['','ทุกหมวด',null],['chemOral','💊 ยากิน','#1D4ED8'],['chemWater','🧪 ยาลงน้ำ','#0369A1'],['probioOral','🦠 จุลินทรีย์กิน','#4338CA'],['probioWater','🧫 จุลินทรีย์ลงน้ำ','#A21CAF'],['lime','🪨 ปูน','#6B7280']];
+// ⚠️ สี 5 หมวดต้องต่างโทนกันชัด (entry #329) — เดิมม่วง/คราม/น้ำเงิน/ฟ้า 4 หมวดใกล้กัน จุดในตาราง 14 วันแยกไม่ออก
+//    ลำดับในอาร์เรย์ = ลำดับกลุ่มแถวในตาราง 14 วัน
+const PD_MED_CAT_OPTS=[['','ทุกหมวด',null],['probioWater','🧫 จุลินทรีย์ลงน้ำ','#0891B2'],['probioOral','🦠 จุลินทรีย์กิน','#16A34A'],['chemWater','🧪 ยาลงน้ำ','#DC2626'],['chemOral','💊 ยากิน','#EA580C'],['lime','🪨 ปูน','#78716C']];
 let _pdMedPeriod=7,_pdMedCat='';
 function pdMedPeriodChips(period){
   return[[7,'7 วัน'],[14,'14 วัน'],[30,'30 วัน'],['all','ทั้งหมด']].map(([v,lbl])=>
@@ -12922,15 +12928,19 @@ function renderPdMedSummary(p){
   const win=all.filter(i=>i.date>=md[0]);
   const cnt={},cat={};win.forEach(i=>{cnt[i.name]=(cnt[i.name]||0)+1;if(!cat[i.name])cat[i.name]=i.category;});
   const names=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]||a.localeCompare(b,'th'));
-  const shown=_pdMedGridAll?names:names.slice(0,8);
+  const cOrd=c=>{const i=PD_MED_CAT_OPTS.findIndex(o=>o[0]===c);return i<0?99:i;};
+  const shown=(_pdMedGridAll?names:names.slice(0,8)).slice().sort((a,b)=>cOrd(cat[a])-cOrd(cat[b])||cnt[b]-cnt[a]||a.localeCompare(b,'th'));
   const head='<div></div>'+md.map((d,i)=>'<div class="hd">'+((13-i)%2===0?+d.slice(8):'')+'</div>').join('');
-  const grid=head+shown.map(n=>'<div class="nm" title="'+mpEsc(n)+'">'+mpEsc(n)+'</div>'
-    +md.map(d=>win.some(i=>i.name===n&&i.date===d)?'<div class="c"><i style="background:'+col(cat[n])+'" title="'+fD(d)+'"></i></div>':'<div class="c e"><i></i></div>').join('')).join('');
+  const grid=head+shown.map((n,ri)=>{const brk=ri>0&&cat[shown[ri-1]]!==cat[n];
+    return'<div class="nm'+(brk?' brk':'')+'" title="'+mpEsc(n)+'"><i style="background:'+col(cat[n])+'"></i>'+mpEsc(n)+'</div>'
+    +md.map(d=>win.some(i=>i.name===n&&i.date===d)?'<div class="c'+(brk?' brk':'')+'"><i style="background:'+col(cat[n])+'" title="'+fD(d)+'"></i></div>':'<div class="c e'+(brk?' brk':'')+'"><i></i></div>').join('');}).join('');
+  const inCats=PD_MED_CAT_OPTS.filter(o=>o[0]&&shown.some(n=>cat[n]===o[0]));
+  const leg='<div class="pd-ms-leg">'+inCats.map(o=>'<span><i style="background:'+o[2]+'"></i>'+o[1].replace(/^\S+\s/,'')+'</span>').join('')+'</div>';
   const more=names.length>8?'<button type="button" class="pd-ms-more" onclick="_pdMedGridAll=!_pdMedGridAll;renderPdMedSummary(pond(\''+p.id+'\'))">'+(_pdMedGridAll?'ย่อ ▴':'ดูทั้งหมด '+names.length+' รายการ ▾')+'</button>':'';
   const cc={};all.forEach(i=>{cc[i.category]=(cc[i.category]||0)+1;});
   const cats=Object.keys(cc).sort((a,b)=>cc[b]-cc[a]).map(c=>{const o=PD_MED_CAT_OPTS.find(x=>x[0]===c);return'<span style="color:'+col(c)+'">'+(o?o[1]:(STOCK_CAT_LABEL[c]||c))+' <b>'+cc[c]+'</b></span>';}).join('');
   el.innerHTML='<div class="pd-fs-lbl" style="margin-top:0">ล่าสุด '+fD(lastD)+'</div><div class="pd-ms-chips">'+latest+'</div>'
-    +'<div class="pd-fs-lbl">14 วันล่าสุด · ใช้วันไหนบ้าง</div><div class="pd-ms-grid">'+grid+'</div>'+more
+    +'<div class="pd-fs-lbl">14 วันล่าสุด · ใช้วันไหนบ้าง</div>'+leg+'<div class="pd-ms-grid">'+grid+'</div>'+more
     +'<div class="pd-fs-lbl">รอบนี้ใช้ไปแล้ว (ครั้ง)</div><div class="pd-ms-cat">'+cats+'</div>'
     +'<div class="pd-fs-lbl" style="margin-top:14px">รายการ</div>';
 }
