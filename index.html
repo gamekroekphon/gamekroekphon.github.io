@@ -2058,7 +2058,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 
   <div class="card" style="margin-bottom:14px">
     <div class="card-t">⚙️ ตัวแปรที่ใช้คำนวณ</div>
-    <div class="card-sub">ช่องพื้นฟ้า = ดึงจากข้อมูลจริงของบ่อให้อัตโนมัติ · แก้ตัวเลขในหน้านี้ได้เต็มที่ <b>ไม่กระทบข้อมูลจริงของบ่อ</b> — เป็นการลองสมมติชั่วคราว</div>
+    <div class="card-sub">ช่องฟ้า = ดึงจากบ่อ · แก้ได้ ไม่กระทบข้อมูลจริง</div>
     <div class="fgrid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
       <div class="fg"><label class="fl" for="fc-pond">บ่อ</label><select class="fi" id="fc-pond" onchange="fcLoadPond()"></select></div>
       <div style="grid-column:1/-1;font-size:calc(12.5px * var(--ui-scale));font-weight:800;color:var(--pd);margin:6px 0 -2px;padding-bottom:5px;border-bottom:1px solid var(--bd)">🦐 สภาพกุ้งตอนนี้ <span style="font-weight:400;color:var(--tx3)">— ดึงจากข้อมูลจริงของบ่อ แก้ทับได้ถ้าไม่ตรง</span></div>
@@ -2105,14 +2105,14 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <!-- ══ ต้นทุนเดินเครื่องต่อวัน รายบ่อ (admin เท่านั้น — มีจำนวนเงิน) ══ -->
   <div class="card admin-only" style="margin-top:14px">
     <div class="card-t">💸 ต้นทุนเฉลี่ยต่อวัน — ทุกบ่อที่กำลังเลี้ยง <span class="pd-admin-tag">ADMIN</span></div>
-    <div class="card-sub" style="font-size:var(--fs115);color:var(--tx3);margin-bottom:10px">ค่าอาหารต่างกันตามขนาดกุ้งและน้ำหนักในบ่อ · ค่าแรงกับค่าไฟหารเท่ากันตามจำนวนบ่อที่เลี้ยงพร้อมกัน · เวชภัณฑ์/ปูนใช้ค่าเฉลี่ยจริงของบ่อนั้น</div>
+    
     <div id="hv-daily"></div>
   </div>
 
   <!-- ══ จับวันนี้ หรือ ลากต่อ (admin เท่านั้น) ══ -->
   <div class="card admin-only" style="margin-top:14px">
     <div class="card-t">⚖️ จับวันนี้ หรือ ลากต่อ <span class="pd-admin-tag">ADMIN</span></div>
-    <div class="card-sub" style="font-size:var(--fs115);color:var(--tx3);margin-bottom:10px">ใส่ราคาที่แพให้มาในแต่ละไซส์ ระบบคำนวณให้ว่าลากต่อแล้ว<b>กำไรเพิ่มขึ้นจริงเท่าไร</b> หลังหักค่าอาหาร ค่าแรง ค่าไฟ เวชภัณฑ์ที่จ่ายเพิ่ม</div>
+    <div class="card-sub" style="font-size:var(--fs115);color:var(--tx3);margin-bottom:10px">ใส่ราคาแพแต่ละไซส์ → ดูกำไรที่เพิ่มถ้าลากต่อ</div>
     <div class="fgrid" style="margin-bottom:12px">
       <div class="fg"><label class="fl" for="hv-price-now">ราคาถ้าจับวันนี้ (บ./กก.)</label>
         <input type="number" step="any" class="fi" id="hv-price-now" placeholder="เช่น 245" oninput="hvCalc()"></div>
@@ -2130,7 +2130,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 <div id="sec-medproto" class="sec">
   <div class="sec-hdr"><div class="sec-title">💊 Protocol เวชภัณฑ์ล่าสุด</div></div>
   <div class="card">
-    <div class="card-sub" style="margin-bottom:14px">โปรแกรมที่ใช้จริงหน้างาน — ไม่ผูกกับบ่อใดบ่อหนึ่ง อัปเดตอิสระเมื่อหน้างานเปลี่ยน · จุดเขียวบนแท็บ = หัวข้อนั้นกรอกแล้ว</div>
+    <div class="card-sub" style="margin-bottom:14px">จุดเขียวบนแท็บ = กรอกแล้ว</div>
     <div class="mp-grps" id="mp-grps"></div>
     <div class="mp-tabs" id="mp-tabs"></div>
     <div class="mp-ttl-row">
@@ -2146,7 +2146,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       </span>
     </div>
     <textarea class="fi mp-ta" id="mp-ta" readonly onclick="mpExpand()" placeholder="แตะที่นี่เพื่อเปิดหน้าเต็มจอสำหรับอ่าน/พิมพ์..."></textarea>
-    <div class="mp-ta-tap-hint">👆 แตะกล่องด้านบนเพื่อขยายเป็นหน้าเต็มจอ อ่าน/พิมพ์ได้ง่ายขึ้นบนมือถือ</div>
+    <div class="mp-ta-tap-hint">👆 แตะเพื่อขยายเต็มจอ</div>
     <div class="mp-foot">
       <span id="mp-upd" style="font-size:var(--fs105);color:var(--tx3)"></span>
       <div style="display:flex;gap:7px;flex-wrap:wrap">
@@ -2160,7 +2160,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <div class="sec-hdr"><div class="sec-title">📋 กัน</div></div>
   <div style="background:var(--ib);border:1px solid #c7d7fb;border-radius:9px;padding:11px 14px;font-size:calc(13px * var(--ui-scale));margin-bottom:14px">
     📥 <b>ตารางเปล่าสำหรับกรอกข้อมูล แยกจากแอปหลัก</b> — กรอกได้เต็มที่ ตัวเลขในหน้าอื่น (รอบเลี้ยง · โรงเพาะฟัก · กำไร-ขาดทุน) <b>ไม่เปลี่ยนตาม</b><br>
-    <span style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">คัดลอกจากชีตมาวางได้ ค่าจะลงตามช่องตรงๆ ไม่มีการแปลงอะไร · บันทึกให้อัตโนมัติ</span>
+    <span style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">วางจากชีตได้ · บันทึกอัตโนมัติ</span>
   </div>
   <div class="card">
     <div class="kan-tbar">
@@ -2203,9 +2203,8 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
         <option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option>
       </select>
     </div>
-    <div style="font-size:var(--fs105);color:var(--tx3);margin:2px 0 10px">
-      แตะช่องเพื่อเลือก · แตะเลข <b>1 2 3</b> เลือกทั้งแถว · แตะ <b>A B C</b> เลือกทั้งคอลัมน์ · กด <b>Shift</b> แล้วคลิกอีกจุด = เลือกเป็นช่วง · กด <b>Ctrl</b> (Mac ใช้ <b>⌘</b>) แล้วคลิก = เลือกเพิ่มทีละช่อง/แถว/คอลัมน์ ไม่ต้องติดกัน<br>แท็บชีตอยู่ใต้ตาราง · แตะ <b>+ เพิ่มชีต</b> เพื่อสร้างหน้าใหม่ · แตะ <b>▾</b> บนแท็บที่เปิดอยู่เพื่อเปลี่ยนชื่อ/ลบ<br>ช่อง <b>🔍 ซูม</b> ย่อตารางให้เห็นหลายแถวพร้อมกัน — ย่อแล้วยังพิมพ์/ทาสีได้ตามปกติ<br><b>Ctrl+C</b> คัดลอก · <b>Ctrl+X</b> ตัด · <b>Ctrl+V</b> วาง · <b>Delete</b> ลบค่า (สีไม่หาย) · <b>Ctrl+A</b> เลือกทั้งตาราง · <b>ลูกศร</b> ย้ายช่อง (ใช้ได้ทั้งตอนคลิกอยู่ในช่อง · กด Shift ค้าง = ขยายช่วง · เริ่มพิมพ์แล้วซ้าย/ขวาเลื่อนเคอร์เซอร์ก่อน · <b>F2</b> เข้าแก้ข้อความ) · <b>Enter</b> ลงบรรทัดถัดไป (Shift+Enter ขึ้นบน) · <b>Tab</b> ไปช่องขวา · <b>Esc</b> ออกจากช่อง<br>บน iPad ที่ต่อคีย์บอร์ด ใช้ <b>⌘C / ⌘V</b> ได้เหมือนกัน<br><b>สูตร</b> — พิมพ์ <b>=</b> นำหน้า เช่น <b>=SUM(D3:D7)</b> · <b>=AVERAGE · COUNT · COUNTA · MIN · MAX · ROUND · ABS</b> · บวกลบคูณหารและวงเล็บได้ · ช่องสูตรขึ้นเป็นสีน้ำเงิน แตะเข้าไปเห็นสูตรจริง ออกมาเห็นผลลัพธ์
-    </div>
+    <details class="kan-help" style="font-size:var(--fs105);color:var(--tx3);margin:2px 0 10px"><summary style="cursor:pointer;font-weight:600">❔ วิธีใช้ตาราง</summary>แตะช่องเพื่อเลือก · แตะเลข <b>1 2 3</b> เลือกทั้งแถว · แตะ <b>A B C</b> เลือกทั้งคอลัมน์ · กด <b>Shift</b> แล้วคลิกอีกจุด = เลือกเป็นช่วง · กด <b>Ctrl</b> (Mac ใช้ <b>⌘</b>) แล้วคลิก = เลือกเพิ่มทีละช่อง/แถว/คอลัมน์ ไม่ต้องติดกัน<br>แท็บชีตอยู่ใต้ตาราง · แตะ <b>+ เพิ่มชีต</b> เพื่อสร้างหน้าใหม่ · แตะ <b>▾</b> บนแท็บที่เปิดอยู่เพื่อเปลี่ยนชื่อ/ลบ<br>ช่อง <b>🔍 ซูม</b> ย่อตารางให้เห็นหลายแถวพร้อมกัน — ย่อแล้วยังพิมพ์/ทาสีได้ตามปกติ<br><b>Ctrl+C</b> คัดลอก · <b>Ctrl+X</b> ตัด · <b>Ctrl+V</b> วาง · <b>Delete</b> ลบค่า (สีไม่หาย) · <b>Ctrl+A</b> เลือกทั้งตาราง · <b>ลูกศร</b> ย้ายช่อง (ใช้ได้ทั้งตอนคลิกอยู่ในช่อง · กด Shift ค้าง = ขยายช่วง · เริ่มพิมพ์แล้วซ้าย/ขวาเลื่อนเคอร์เซอร์ก่อน · <b>F2</b> เข้าแก้ข้อความ) · <b>Enter</b> ลงบรรทัดถัดไป (Shift+Enter ขึ้นบน) · <b>Tab</b> ไปช่องขวา · <b>Esc</b> ออกจากช่อง<br>บน iPad ที่ต่อคีย์บอร์ด ใช้ <b>⌘C / ⌘V</b> ได้เหมือนกัน<br><b>สูตร</b> — พิมพ์ <b>=</b> นำหน้า เช่น <b>=SUM(D3:D7)</b> · <b>=AVERAGE · COUNT · COUNTA · MIN · MAX · ROUND · ABS</b> · บวกลบคูณหารและวงเล็บได้ · ช่องสูตรขึ้นเป็นสีน้ำเงิน แตะเข้าไปเห็นสูตรจริง ออกมาเห็นผลลัพธ์
+    </details>
     <div id="kan-grid"></div>
     <div class="kan-stat" id="kan-stat"></div>
     <div id="kan-tabs"></div>
@@ -2343,7 +2342,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <div class="g4" id="palm-ov-kpi" style="margin-bottom:14px"></div>
     <div class="card" style="margin-bottom:12px">
       <div class="card-t">💼 สรุปธุรกิจปีนี้ (สำหรับเจ้าของ/ผู้จัดการ)</div>
-      <div class="card-sub">เทียบกับปีที่แล้ว · กำไรต่อกิโล · ราคาล่าสุด · เงินในกองทุน — คำนวณจากข้อมูลที่บันทึกไว้แล้วทั้งหมด</div>
+      
       <div id="palm-ov-biz"></div>
     </div>
     <div class="card" style="margin-bottom:12px">
@@ -2351,7 +2350,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
         <div class="card-t" style="margin-bottom:0">📈 แนวโน้มผลผลิต (12 เดือนล่าสุด)</div>
         <div class="chip-row" id="palm-yield-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
       </div>
-      <div class="card-sub">แท่งเขียว = น้ำหนักที่ขายได้ (กก.) · เส้นส้ม = ราคาเฉลี่ย/กก. เดือนนั้น — ดูได้ว่าเดือนไหนราคาดีที่สุด</div>
+      <div class="card-sub">แท่ง = กก. ที่ขาย · เส้น = ราคาเฉลี่ย/กก.</div>
       <div id="palm-yield-best" style="margin-bottom:8px"></div>
       <div style="position:relative;height:240px"><canvas id="palm-yield-chart"></canvas></div>
     </div>
@@ -2360,12 +2359,12 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
         <div class="card-t" style="margin-bottom:0">🌴 สรุปรายแปลง (ปีนี้)</div>
         <span id="palm-ov-plotyear" style="font-size:var(--fs11);color:var(--tx3)"></span>
       </div>
-      <div class="card-sub">ตัดไปแล้วกี่กิโล ได้เงินเท่าไร ใส่ปุ๋ยไปเท่าไร — นับเฉพาะปีปัจจุบัน (1 ม.ค. ถึงวันนี้)</div>
+      <div class="card-sub">นับเฉพาะปีนี้</div>
       <div id="palm-ov-plots"></div>
     </div>
     <div class="card">
       <div class="card-t">⏰ แปลงที่ใกล้/เลยกำหนดใส่ปุ๋ยรอบถัดไป</div>
-      <div class="card-sub">คำนวณจากวันที่บันทึก "กำหนดใส่รอบถัดไป" ล่าสุดต่อแปลงในแท็บ "ประวัติใส่ปุ๋ย"</div>
+      
       <div id="palm-ov-reminders"></div>
     </div>
   </div>
@@ -2613,7 +2612,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   </div>
   <div class="card" style="margin-bottom:14px;display:none" id="ov-partial-card">
     <div class="card-t">🗓️ ปฏิทินจับกุ้ง &amp; พาเชียล</div>
-    <div class="card-sub">เตือนเมื่อผลผลิตถึงเกณฑ์ — บ่อเริ่มแน่น ควรทยอยจับออก · คาดการณ์วันที่ + ไซส์ที่จะได้ ณ วันนั้น จากอัตราโตล่าสุด (PDG)</div>
+    
     <div id="ov-partial-tgt"></div>
     <div id="ov-partial-ready"></div>
     <div id="ov-partial-list"></div>
@@ -2723,7 +2722,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       <button class="btn btn-p" onclick="saveFeedGridAll()">💾 บันทึกทั้งหมด</button>
       <span id="fd-grid-msg"></span>
     </div>
-    <div class="hint" style="margin-top:10px">* ช่อง "อาหารวันนี้" ขึ้นค่าล่าสุดที่เคยกรอกให้อัตโนมัติ แค่เช็ค/ปรับตัวเลขแล้วกด "บันทึกทั้งหมด" — เว้นว่าง = ยังไม่กรอก (ข้ามบ่อนั้น), ถ้าเคยมีข้อมูลวันนี้แล้วลบให้ว่าง = ลบรายการวันนั้นทิ้ง</div>
+    <div class="hint" style="margin-top:10px">เว้นว่าง = ไม่บันทึก · ลบค่าที่เคยกรอก = ลบรายการวันนั้น</div>
   </div>
 </div>
 <!-- SAMPLING -->
@@ -2753,7 +2752,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
         <div class="card-t" style="justify-content:space-between"><span>📈 กราฟไซส์ (ตัว/กก.)</span>
           <select class="fi" id="sp-chart-pond" style="width:auto;min-width:120px;font-size:var(--fs11);padding:4px 7px;min-height:36px" onchange="spPickChartPond()"></select></div>
         <div class="chart-wrap"><canvas id="sampleChart"></canvas></div>
-        <div style="font-size:var(--fs11);color:var(--tx3);margin-top:8px">เส้นประ = มาตรฐาน vannamei อ้างอิง | แนวโน้มลดลง = กุ้งโตขึ้น</div>
+        <div style="font-size:var(--fs11);color:var(--tx3);margin-top:8px">เส้นประ = มาตรฐาน</div>
       </div>
     </div>
   </div>
@@ -2785,7 +2784,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
         <span id="wl-sel-info" style="font-size:var(--fs11);color:var(--tx3)"></span>
       </div>
       <div id="wl-msg"></div>
-      <div class="wl-hint">✓ = วันนั้นบันทึกไว้แล้ว — กดซ้ำได้ ระบบอัปเดตทับให้ ไม่เกิดรายการซ้ำ · ตัวเลขใต้ชื่อบ่อ = อายุกุ้ง ณ วันที่เลือก · เติมน้ำต้องผ่านการตัดเชื้อทุกครั้ง จึงมีเฉพาะบ่อที่มีกุ้งให้เลือก</div>
+      <div class="wl-hint">✓ = บันทึกแล้ว · กดซ้ำ = แก้ทับ</div>
     </div>
     <div class="card"><div class="card-t">📊 7 วันล่าสุด</div><div id="wl-summary"></div></div>
   </div>
@@ -2803,7 +2802,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 <div id="sec-gear" class="sec">
   <div class="sec-hdr">
     <div class="sec-title">🔩 อุปกรณ์ประจำบ่อ</div>
-    <div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-top:2px">เช็คทุกครั้งตอนเตรียมบ่อก่อนลงกุ้งรอบใหม่ — ลงกุ้งแล้วยกขึ้นมาเช็คไม่ได้</div>
+    <div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-top:2px">เช็คตอนเตรียมบ่อก่อนลงกุ้ง</div>
   </div>
   <div id="gr-alert"></div>
   <!-- คิวเช็ค: จัดกลุ่มตามบ่อ กดปุ่มเดียวจบต่อชิ้น — จุดที่พนักงานใช้จริงบนมือถือ -->
@@ -2835,7 +2834,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <div class="card-t" style="justify-content:space-between"><span>⚙️ ชุดอุปกรณ์มาตรฐาน</span>
       <button class="btn btn-s" onclick="grAddType()">➕ เพิ่มชนิดอุปกรณ์</button></div>
     <div id="gr-types"></div>
-    <div style="font-size:var(--fs11);color:var(--tx3);margin-top:10px">ตั้งครั้งเดียวแล้วกด "ใส่ให้ทุกบ่อ" — บ่อที่มีอยู่แล้วจะไม่ถูกเพิ่มซ้ำ</div>
+    
   </div>
 </div>
 <!-- หน้าต่างบันทึกการเช็ค -->
@@ -2865,7 +2864,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 <div id="sec-mortality" class="sec">
   <div class="sec-hdr">
     <div class="sec-title">🦐 กุ้งตายรายวัน</div>
-    <div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-top:2px">บันทึกทุกวันช่วยจับความผิดปกติได้เร็วก่อนสูญเสียมาก</div>
+    
   </div>
   <div class="dz-bar" id="mt-zones"></div>
   <div class="g2" style="margin-bottom:16px;align-items:start">
@@ -3028,7 +3027,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 
   <div class="card" style="margin-bottom:12px">
     <div class="card-t">ประเภทการทดลอง</div>
-    <div class="card-sub">เลือกก่อนเพื่อให้ระบบแสดงเฉพาะช่องที่เกี่ยวข้อง</div>
+    
     <div class="type-row">
       <button type="button" class="type-btn" id="tb-pond" onclick="setTrialType('pond')"><span class="ic">🦐</span> ทดลองในบ่อเลี้ยง</button>
       <button type="button" class="type-btn" id="tb-lab" onclick="setTrialType('lab')"><span class="ic">🧪</span> ทดลองในห้องแล็บ</button>
@@ -3067,7 +3066,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <div id="trial-pond-section">
   <div class="card" style="margin-bottom:12px">
     <div class="card-t">🐟 เลือกบ่อที่ต้องการเปรียบเทียบ (2-4 บ่อ)</div>
-    <div class="card-sub">แสดงเฉพาะบ่อที่ <strong>กำลังเลี้ยงอยู่ตอนนี้</strong> เท่านั้น (ไม่ดึงรอบเก่าที่ปิดไปแล้วมาเทียบ) เลือกได้ 2-4 บ่อ แล้วพิมพ์ชื่อสินค้าที่ใช้ในแต่ละบ่อ — พิมพ์ชื่อเดียวกันในหลายบ่อเพื่อจัดกลุ่ม หรือพิมพ์คนละชื่อเพื่อเทียบสินค้า A กับสินค้า B พร้อมกันได้ในการทดลองเดียว (เว้นว่างไว้ = ไม่ได้ใช้อะไรเลย) — แต่ละบ่อลงกุ้งคนละวัน ช่วงทดลองเดียวกันจึงตรงกับอายุกุ้ง (DOC) คนละช่วงกัน ระบบคำนวณให้อัตโนมัติ</div>
+    <div class="card-sub">เลือก 2–4 บ่อที่กำลังเลี้ยง แล้วพิมพ์ชื่อสินค้าที่ใช้ (เว้นว่าง = ไม่ได้ใช้)</div>
     <div id="trial-pond-picker" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
     <div id="trial-picked-list" style="display:flex;flex-direction:column;gap:8px"></div>
     <div class="hint" id="trial-doc-hint" style="margin-top:10px"></div>
@@ -3081,7 +3080,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 
   <div class="card" style="margin-bottom:12px" id="trial-growth-card">
     <div class="card-t">📈 การเติบโตในช่วงทดลอง</div>
-    <div class="card-sub">แกน X = วันที่ปฏิทิน — แถบสีอ่อนคือช่วงทดลองที่เลือกไว้ด้านบน</div>
+    <div class="card-sub">แถบสีอ่อน = ช่วงทดลอง</div>
     <div id="trial-growth-legend" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:var(--fs115)"></div>
     <div class="chart-wrap" style="height:280px"><canvas id="trialGrowthChart"></canvas></div>
     <div id="trial-adg-chips" style="margin-top:12px"></div>
@@ -3097,12 +3096,12 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <div class="card-t">📋 รายละเอียดรายบ่อ</div>
     <div id="trial-table"></div>
   </div>
-  <div class="hint" style="margin-bottom:12px">⚠️ เทียบจากบ่อจริงที่กำลังเลี้ยงอยู่ ไม่ใช่การทดลองแบบควบคุมทางวิทยาศาสตร์ — ปัจจัยอื่น (สายพันธุ์ลูกกุ้ง ความหนาแน่น สภาพอากาศ) อาจมีผลปนด้วย ใช้เป็นข้อมูลอ้างอิงประกอบการตัดสินใจ ไม่ใช่ข้อสรุปเด็ดขาด</div>
+  <div class="hint" style="margin-bottom:12px">⚠️ เทียบจากบ่อจริง ไม่ใช่การทดลองควบคุม — ใช้ประกอบการตัดสินใจ</div>
   </div>
 
   <div class="card" style="margin-bottom:12px">
     <div class="card-t">📝 บันทึกประจำการทดลอง</div>
-    <div class="card-sub">จดบันทึกความคืบหน้า/ข้อสังเกตระหว่างทดลองเป็นข้อความ — ใช้ได้ทั้งทดลองในบ่อและในแล็บ</div>
+    
     <span class="jr-add-toggle" onclick="toggleTrialJournalAdd()">+ เพิ่มบันทึกใหม่</span>
     <div class="jr-add-box" id="jr-add-box" style="display:none">
       <div class="fgrid" style="margin-bottom:8px">
@@ -3218,8 +3217,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       <thead><tr><th>โรงเพาะฟัก</th><th>รอบ</th><th>อัตรารอด</th><th>FCR</th><th>ผลผลิต/รอบ</th><th>วันเลี้ยง</th><th>ต้นทุน/กก.</th><th>ราคาขาย/กก.</th><th>กำไร/รอบ</th></tr></thead>
       <tbody id="hat-tb"></tbody></table></div>
     <div class="hat-cards" id="hat-cards"></div>
-    <div class="hat-foot">สีเขียว = ดีที่สุดในคอลัมน์ (เฉพาะโรงที่มี 5 รอบขึ้นไป และต้องมีอย่างน้อย 2 โรงให้เทียบ) · แถวสีจาง = น้อยกว่า 5 รอบ ยังตัดสินไม่ได้<br>
-      อัตรารอดคิดเฉพาะรอบที่มียอดสั่งซื้อ (จำนวนในวงเล็บ — น้อยกว่า 3 รอบเป็นตัวจาง) · ข้อมูลยุคเก่าบางรอบเกิน 100% เพราะไม่ได้บันทึกยอดแถม</div>
+    <div class="hat-foot">เขียว = ดีที่สุด (โรงที่มี 5 รอบขึ้นไป) · แถวจาง = ไม่ถึง 5 รอบ · (วงเล็บ) = จำนวนรอบที่มียอดสั่งซื้อ</div>
   </div>
   <div class="card">
     <div class="card-t" style="justify-content:space-between"><span>📅 วันเลี้ยงกับกำไร</span>
@@ -3236,7 +3234,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 <div id="sec-crops" class="sec">
   <div class="sec-hdr">
     <div class="sec-title">📚 ประวัติรอบเลี้ยง (Crop Cycles)</div>
-    <span style="font-size:calc(12px * var(--ui-scale));color:var(--tx3)">แสดงทุกรอบที่เลี้ยงในปีนั้น (บางบ่อทำได้ 3 รอบ/ปี) · ระยะเลี้ยงปกติ 90–120 วัน</span>
+    
   </div>
   <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
     <label class="fl" for="cr-year" style="margin:0">ปี:</label>
@@ -3565,7 +3563,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 <!-- HARVEST STAT -->
 <div id="sec-harveststat" class="sec">
   <div class="sec-hdr"><div class="sec-title">📊 สถิติจับกุ้ง</div></div>
-  <div class="hsy-sub">รวมทุกครั้งที่จับ (พาเชียล + ปิดบ่อ) ตามวันที่จับ — ดึงจากที่บันทึกตอนจับกุ้ง ไม่ต้องกรอกซ้ำ · แตะแถวเพื่อเปิดหน้าบ่อ</div>
+  <div class="hsy-sub">รวมพาเชียล + ปิดบ่อ · แตะแถวเพื่อเปิดหน้าบ่อ</div>
   <div class="hsy-yrs" id="hs-yr-btns"></div>
   <div class="hsy-kpis" id="hs-kpi"></div>
   <div class="hsy-grid">
@@ -3578,7 +3576,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <div class="card" style="margin-top:16px">
     <div class="card-t">📈 ยอดรวมรายปี (ล้านบาท) — แตะแท่งเพื่อดูปีนั้น</div>
     <div style="position:relative;height:220px"><canvas id="hs-chart-annual"></canvas></div>
-    <div class="hsy-note">แท่งสีเทา (ปี 60–67) เป็นยอดรวมจากชีตเดิม — ในแอปไม่มีรายการจับของปีเหล่านั้น</div>
+    <div class="hsy-note">แท่งเทา (ปี 60–67) = ยอดรวมจากชีตเดิม</div>
   </div>
 </div>
 <!-- EXPORT -->
@@ -3586,13 +3584,8 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <div class="sec-hdr"><div class="sec-title">📄 สรุปปิดบ่อ (PDF)</div></div>
   <div class="card" style="max-width:520px">
     <div class="card-t">📋 สร้างรายงานสรุปปิดบ่อ</div>
-    <p style="font-size:calc(13px * var(--ui-scale));color:var(--tx2);margin-bottom:16px;line-height:1.8">
-      รายงานสรุปผลการเลี้ยงเมื่อปิดบ่อ ครอบคลุม:<br>
-      ✔ ลูกกุ้ง/จำนวนปล่อย/แพที่จับ/ราคา<br>
-      ✔ ไซส์, อายุกุ้ง, น้ำหนักรวม, อัตรารอด<br>
-      ✔ อาหารรวม, FCR (อัตราแลกเนื้อ), ADG (อัตราการเติบโต/วัน), หมายเหตุ
-    </p>
-    <div class="fg" style="margin-bottom:16px">
+    
+      <div class="fg" style="margin-bottom:16px">
       <label class="fl" for="ex-pond">เลือกบ่อ</label>
       <select class="fi" id="ex-pond" onchange="onExPondChange()"><option value="all">ทุกบ่อ (สรุปรวม)</option></select>
     </div>
@@ -3698,7 +3691,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       <div class="fg"><button class="btn btn-p" onclick="addNewUser()">💾 เพิ่มผู้ใช้</button></div>
     </div>
     <div id="nu-msg" style="margin-top:10px;font-size:calc(12.5px * var(--ui-scale))"></div>
-    <div style="font-size:var(--fs115);color:var(--tx3);margin-top:6px">* สร้างบัญชีเข้าสู่ระบบ (Firebase Auth) ให้อัตโนมัติ แล้วตั้งสิทธิ์ให้เลย ไม่ต้องเข้า Firebase Console</div>
+    
   </div>
   <div class="card">
     <div class="card-t" style="justify-content:space-between">
@@ -3714,7 +3707,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       </table>
     </div>
     <div style="display:flex;gap:10px;background:var(--wb);border:1px solid #F5D98B;color:var(--w-tx);border-radius:8px;padding:10px 14px;font-size:calc(12.5px * var(--ui-scale));margin-top:12px">⚠️ เปลี่ยนสิทธิ์มีผลทันทีแบบเรียลไทม์ — staff จะไม่เห็นข้อมูลกำไร/ต้นทุน/ค่าแรงและแท็บการเงินอื่นๆ ทันที (ถ้ากำลังเปิดแอปอยู่ ต้อง refresh หน้าจอ 1 ครั้ง)</div>
-    <div style="font-size:var(--fs115);color:var(--tx3);margin-top:8px">* ปุ่ม "ลบ" คือเอาออกจากรายชื่อ/ตัดสิทธิ์ในแอปเท่านั้น ไม่ได้ลบบัญชีเข้าสู่ระบบจริง (ถ้าต้องการปิดการเข้าสู่ระบบถาวร ต้องลบใน Firebase Console → Authentication)</div>
+    <div style="font-size:var(--fs115);color:var(--tx3);margin-top:8px">* ลบ = ตัดสิทธิ์ในแอป ไม่ได้ลบบัญชีใน Firebase</div>
   </div>
 </div>
 <!-- ราคาวันนี้ -->
@@ -3746,7 +3739,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
             <option value="ธุรการ"><option value="ช่างไฟ"><option value="คนเลี้ยง">
           </datalist>
         </div>
-        <div class="fg"><label class="fl" for="st-salary">เงินเดือน (บาท/เดือน)</label><input type="number" class="fi" id="st-salary" placeholder="เช่น 25000" inputmode="decimal"><span class="lbl-std">ใส่ <b>0</b> ถ้าฟาร์มไม่ได้จ่ายเงินเดือน แต่ได้ส่วนแบ่ง — เช่น นักวิชาการจาก CP (entry #253)</span></div>
+        <div class="fg"><label class="fl" for="st-salary">เงินเดือน (บาท/เดือน)</label><input type="number" class="fi" id="st-salary" placeholder="เช่น 25000" inputmode="decimal"><span class="lbl-std">ใส่ 0 ถ้าไม่จ่ายเงินเดือน (ได้ส่วนแบ่งอย่างเดียว)</span></div>
         <div class="fg"><label class="fl" for="st-start">มีผลตั้งแต่</label><input type="date" class="fi" id="st-start"></div>
       </div>
       <!-- ── ส่วนแบ่งรายโซน (บ./กก.) — คอลัมน์งอกเองตามโซนที่มีในระบบ ไม่ฝัง A/B ตายตัว (entry #251) ── -->
@@ -3764,8 +3757,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <div class="card">
       <div class="card-t">📋 รายชื่อพนักงานประจำ (ปัจจุบัน)</div>
       <div id="st-table"></div>
-      <div class="hint" style="margin-top:10px">* <b>✏️ แก้ไข</b> = เขียนทับแถวเดิม ใช้ตอน<b>เติมข้อมูลที่ยังไม่ได้กรอก</b> (เช่นส่วนแบ่ง) หรือแก้ที่พิมพ์ผิด<br>
-        * <b>ปรับเงินเดือน/ส่วนแบ่งจริง</b> ให้<b>เพิ่มแถวใหม่</b>พร้อมวันที่มีผล อย่าแก้แถวเดิม — ระบบใช้ค่าล่าสุด ณ วันนั้นๆ รอบที่ปิดไปแล้วจะได้ไม่ขยับ</div>
+      <div class="hint" style="margin-top:10px">✏️ แก้ = เขียนทับ (แก้พิมพ์ผิด) · ปรับเงินเดือน/ส่วนแบ่ง = <b>เพิ่มแถวใหม่</b>พร้อมวันที่มีผล</div>
     </div>
     <!-- ── ตรวจย้อนหลัง: ส่วนแบ่งคนเลี้ยงรอบที่ปิดไปแล้ว (อ่านอย่างเดียว ไม่แก้ข้อมูล) — entry #255 ── -->
     <div class="card">
@@ -3842,7 +3834,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <!-- SUB-PANE: บันทึกบิล -->
   <div class="elec-pane on" id="ep-bill">
     <div class="card">
-      <p style="font-size:calc(12px * var(--ui-scale));color:var(--tx2);margin:0 0 10px">💡 ค่าไฟฟ้าจะถูกดึงไปคำนวณต้นทุนอัตโนมัติตอนปิดรอบ</p>
+      
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
         <label class="fl" style="margin:0" for="el-month">เดือน</label>
         <input type="month" id="el-month" class="fi" style="width:180px" onchange="loadElecBill()">
@@ -3970,7 +3962,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       </div>
       <div id="sk-tx-cust-row" style="display:none;margin-bottom:8px">
         <div class="fg"><label class="fl" for="sk-tx-cust">ชื่อลูกค้า / ร้าน *</label><input class="fi" id="sk-tx-cust" list="sk-cust-list" placeholder="เช่น ร้านฟาร์มสุข, คุณสมชาย" autocomplete="off"><datalist id="sk-cust-list"></datalist></div>
-        <div style="font-size:var(--fs11);color:var(--tx3);margin-top:-2px">💡 โหมดนี้ไม่มีช่องเลือกบ่อ — รายการขายจะไม่ถูกนับเป็นต้นทุนบ่อไหนเลย</div>
+        <div style="font-size:var(--fs11);color:var(--tx3);margin-top:-2px">💡 ขายไม่นับเป็นต้นทุนบ่อ</div>
       </div>
       <!-- ── งาน "อุปกรณ์นอก" (type:'shared') — entry #317 · ข้อมูลจริง 41/61 รายการเป็นบิลซื้อข้างนอก (จำนวน 1 × ยอดรวม ทุกรายการ หมวดอุปกรณ์/น้ำมันเท่านั้น)
            เดิมทางหลักนี้ซ่อนเป็นลิงก์เส้นประ "สินค้านี้ไม่มีในสต็อก" + ฟอร์ม 5 ช่อง → ปุ่มสลับ 3 ทางขนาดเท่ากัน เปิดมาที่ "ซื้อข้างนอก" ก่อน
@@ -3992,7 +3984,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
           <button type="button" class="ext-chip" id="ext-c-fuel" onclick="pickExtCat('fuel')">⛽ น้ำมัน</button>
         </div>
         <div class="fg"><label class="fl" for="sk-manual-name">ชื่อรายการ</label><input class="fi" id="sk-manual-name" placeholder="กดเลือกด้านบนก่อน ระบบตั้งชื่อให้" autocomplete="off">
-          <div class="ext-hint">ตั้งชื่อชุดถัดไปให้อัตโนมัติ แก้ได้ (เช่น "ก้อย+กัน")</div></div>
+          </div>
         <div class="fg"><label class="fl" for="sk-manual-price">ยอดเงินรวม (฿)</label><input class="fi ext-money" id="sk-manual-price" type="number" min="0" step="any" inputmode="decimal" placeholder="0" onkeydown="if(event.key==='Enter')addManualItemToCart()"></div>
         <button type="button" class="ext-add" onclick="addManualItemToCart()">+ เพิ่มรายการ</button>
       </div>
@@ -4115,7 +4107,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
            สำคัญกับหมวด ยากิน/ยาลงน้ำ/จุลินทรีย์กิน/จุลินทรีย์ลงน้ำ ที่มีหลายตัวและหน้าที่ไม่เหมือนกัน ── -->
       <div class="fg"><label class="fl" for="sk-props">สรรพคุณ / หน้าที่</label>
         <textarea class="fi" id="sk-props" rows="2" placeholder="เช่น ย่อยสลายของเสียก้นบ่อ ลดแอมโมเนีย · ยับยั้งวิบริโอ ใช้ตอนเชื้อเหลืองขึ้น" style="resize:vertical;min-height:52px;font-family:inherit"></textarea>
-        <span class="lbl-std">จะขึ้นให้เห็นตอนเบิกของ — จังหวะที่หยิบผิดตัวได้</span></div>
+        <span class="lbl-std">โชว์ตอนเบิก</span></div>
       <div class="fg"><label class="fl" for="sk-potency">ความเข้มข้น <span style="font-weight:400;color:var(--tx3)">(จุลินทรีย์/ยา)</span></label><input class="fi" id="sk-potency" placeholder="เช่น 1x10^9 CFU/g · 5x10^8 CFU/mL"><span class="lbl-std">พิมพ์ <code>10^9</code> ระบบจะแสดงเป็น 10⁹ ให้เอง</span></div>
       <div class="fg"><label class="fl" for="sk-note-item">ผู้จำหน่าย/หมายเหตุ</label><input class="fi" id="sk-note-item" placeholder="—"></div>
       <div style="display:flex;gap:8px;margin-top:4px">
@@ -4143,7 +4135,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <div class="stock-pane" id="skp-cash">
     <div class="card" style="margin-bottom:12px">
       <div style="font-weight:700;color:var(--tx);margin-bottom:10px">💰 รายรับ-รายจ่ายเงินสด (เสมียน)</div>
-      <div class="card-sub">บันทึกเงินที่เสมียนได้รับเข้ากระเป๋า (รายรับ) และค่าใช้จ่ายเบ็ดเตล็ดในฟาร์ม เช่น ซื้อของทำอาหารให้คนงาน (รายจ่าย) — <b>เก็บเป็นตัวเลขลอยๆ ไม่ผูกกับข้อมูลส่วนอื่นเลย</b> ไม่ไปรวมในต้นทุนบ่อ / P&L ใช้ดูเงินหมุนในฟาร์มอย่างเดียว (ทางบัญชีจะลงข้อมูล "อุปกรณ์นอก" แยกทีหลังเอง ถ้าผูกในแอปด้วยจะนับซ้ำ) ส่วน "รายรับ" แบ่งเป็น 2 แบบไว้ดูที่มาของเงิน: <b>เบิกจากส่วนกลาง</b> (ย้ายเงินมาเติมตอนเงินสดในกระเป๋าไม่พอ) กับ <b>ขายกุ้งสุ่ม/กุ้งเสีย</b> (เงินที่ได้จากการขายกุ้ง เข้ากระเป๋าเสมียนไว้ใช้จ่ายในฟาร์มเหมือนกัน)</div>
+      <div class="card-sub">เงินหมุนในกระเป๋าเสมียน — ไม่รวมในต้นทุนบ่อ / P&L</div>
       <div class="g4" id="cash-kpi" style="margin-top:12px"></div>
       <div id="cash-cleanup-row" class="admin-only" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)">
         <button onclick="cleanupClerkCashSharedLinks()" style="background:var(--sf2);color:var(--tx2);font-size:calc(12px * var(--ui-scale))">🧹 ล้างรายการเก่าที่เคยผูกกับ "อุปกรณ์นอก" (<span id="cash-cleanup-count">0</span> รายการ)</button>
@@ -4650,7 +4642,7 @@ const LAT=9.97,LON=99.08;
 const TOTAL_PONDS=27;
 const PARAMS=[
   {key:'phM',lbl:'pH เช้า',    unit:'',    min:7.5,max:8.5,dMin:7.0,dMax:9.0,dec:2,color:'#2b6cb0'},
-  {key:'phA',lbl:'pH บ่าย',    unit:'',    min:7.8,max:9.0,dMin:7.0,dMax:9.5,dec:2,color:'#3182ce',note:'เกณฑ์บ่ายสูงกว่าเช้าโดยตั้งใจ (สังเคราะห์แสงช่วงบ่ายดัน pH ขึ้น)'},
+  {key:'phA',lbl:'pH บ่าย',    unit:'',    min:7.8,max:9.0,dMin:7.0,dMax:9.5,dec:2,color:'#3182ce',note:'บ่ายสูงกว่าเช้าได้ (แสงแดด)'},
   {key:'tM', lbl:'Temp เช้า',  unit:'°C',  min:26, max:32, dMin:22, dMax:35, dec:1,color:'#e53e3e'},
   {key:'tA', lbl:'Temp บ่าย',  unit:'°C',  min:26, max:32, dMin:22, dMax:36, dec:1,color:'#fc8181'},
   {key:'doM',lbl:'DO เช้า',    unit:'mg/L',min:5,  max:15, dMin:3,  dMax:20, dec:2,color:'#0987a0'},
@@ -7505,7 +7497,7 @@ ${String(p.cropNote).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`:''}
     ${kpiHero}
     ${pdCard('chfeedweek','⚖️ อาหาร vs การเติบโต <span style="font-weight:400;font-size:var(--fs11);color:var(--tx3)">ต่อช่วงสุ่ม</span>','<div id="pd-fg-card"></div>')}
     ${pdCard('wqhist','📖 ประวัติค่าน้ำย้อนหลัง',
-      `<div class="card-sub">ดูย้อนหลังของบ่อนี้ แก้ไข/ลบได้เลย ไม่ต้องออกไปหน้า "จัดการน้ำ"</div>
+      `
       <div class="chip-row" id="pd-wq-hist-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
       <div id="pd-wq-hist-table"></div>`)}
     ${pdCard('feedhist',`🍖 อาหาร${latFeed&&latFeed.date?` · ล่าสุด ${fD(latFeed.date)}`:''}`,
@@ -7513,12 +7505,12 @@ ${String(p.cropNote).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`:''}
          <div style="font-size:calc(12px * var(--ui-scale));font-weight:700;color:var(--tx2);margin-bottom:4px">ล่าสุด${latFeed&&latFeed.date?' · '+fD(latFeed.date):''}</div>
          ${feedHtml}
        </div>
-      <div class="card-sub">ประวัติย้อนหลังของบ่อนี้ แก้ไข/ลบได้เลย ไม่ต้องออกไปหน้า "อาหาร & FCR"</div>
+      
       <div class="chip-row" id="pd-feed-hist-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
       <div id="pd-feed-hist-table"></div>`)}
     ${pdCard('watman','🚰 เติมน้ำ',wmHtml)}
     ${pdCard('med','💊 เวชภัณฑ์ที่ใช้ล่าสุด',
-      `<div class="card-sub">ดึงจากหน้าสต็อกอัตโนมัติ ไม่ต้องออกไปดูหน้าประวัติสต็อก</div>
+      `
       <div class="chip-row" id="pd-med-hist-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
       <div class="chip-row" id="pd-med-cat-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
       <div id="pd-med-hist-table"></div>`)}
@@ -7690,14 +7682,14 @@ function renderBioCompare(p){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
       <div class="fg"><label class="fl" for="bc-survival-${p.id}">อัตรารอด (%) — กรอกเอง (แบบฟาร์ม)</label><input type="text" class="fi" id="bc-survival-${p.id}" value="${farmSurvival}" readonly style="background:var(--sf2)"></div>
       <div class="fg">
-        <label class="fl" for="bc-feedrate-${p.id}">Feeding Rate (%) ที่ควรจะเป็น <span style="color:${auto?'var(--ok)':'var(--w)'};font-weight:400">— ${auto?'auto (สูตร ดร.พุทธ ตามอายุ+น้ำหนัก)':'แก้ไขเองแล้ว'}</span></label>
+        <label class="fl" for="bc-feedrate-${p.id}">Feeding Rate (%) ที่ควรจะเป็น <span style="color:${auto?'var(--ok)':'var(--w)'};font-weight:400">— ${auto?'auto':'แก้ไขเองแล้ว'}</span></label>
         <div style="display:flex;gap:6px">
           <input type="number" class="fi" id="bc-feedrate-${p.id}" step="0.1" value="${feedRate}" onchange="bcEditFeedRate('${p.id}',this.value)">
           <button type="button" class="btn btn-s" style="white-space:nowrap" onclick="bcResetFeedRate('${p.id}')">↺ ค่าแนะนำ</button>
         </div>
       </div>
     </div>
-    <div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:10px">${docRate!=null?`คำนวณจากสูตร Precision Feeding (ดร.พุทธ ส่องแสงจินดา): อายุ ${age} วัน + ABW ${abw} กรัม/ตัว → ${docRate}% ของน้ำหนักตัว/วัน — เป็นสมการถดถอยจากข้อมูลภาคสนามจริง ยังปรับแก้เองได้ตามคำแนะนำของฟาร์ม/นักวิชาการ`:'ไม่มีข้อมูลอายุกุ้ง (age) ของการสุ่มครั้งล่าสุด คำนวณสูตรอัตโนมัติไม่ได้ ใช้ค่าประมาณ 2.5% ไปก่อน — กรอกอายุกุ้งตอนสุ่มตัวอย่างเพื่อให้คำนวณได้แม่นยำขึ้น'}</div>
+    <div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:10px">${docRate!=null?`สูตร ดร.พุทธ: อายุ ${age} วัน + ABW ${abw} ก. → ${docRate}%/วัน`:'ไม่มีข้อมูลอายุกุ้ง (age) ของการสุ่มครั้งล่าสุด คำนวณสูตรอัตโนมัติไม่ได้ ใช้ค่าประมาณ 2.5% ไปก่อน — กรอกอายุกุ้งตอนสุ่มตัวอย่างเพื่อให้คำนวณได้แม่นยำขึ้น'}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
       <div style="border-radius:10px;padding:14px;border:1.5px solid var(--bd);background:var(--sf2)">
         <div style="font-size:calc(12.5px * var(--ui-scale));font-weight:700;color:var(--tx2);margin-bottom:10px">🏠 แบบฟาร์ม (อัตรารอดกรอกเอง)</div>
@@ -7770,7 +7762,7 @@ function renderSurvivalCard(p){
   if(bc){
     cmpHtml=`
     <div class="pd-surv-cmp-row">
-      <div class="pd-surv-cmp-lbl"><b>อัตรารอดโดยประมาณ (จากอาหารจริง)</b><span class="sub">คำนวณย้อนกลับจากยอดอาหารสะสมเทียบ feeding rate มาตรฐาน${bc.sc&&bc.sc.hasPartial?' + บวกตัวที่จับไปแล้วกลับเข้าไป จึงเทียบกันได้':''}</span></div>
+      <div class="pd-surv-cmp-lbl"><b>อัตรารอดโดยประมาณ (จากอาหารจริง)</b></div>
       <div style="text-align:right">
         <span class="pd-surv-cmp-val" style="color:${bc.delta>=10?'var(--w)':'var(--ok)'}">${bc.docImpliedSurvival.toFixed(1)}%</span>
         <div style="font-size:calc(10.5px * var(--ui-scale));font-weight:700;padding:2px 8px;border-radius:99px;margin-top:3px;display:inline-block;color:${bc.delta>=10?'var(--w)':'var(--ok)'};background:${bc.delta>=10?'var(--wb)':'var(--ob)'}">ต่างกัน ${bc.delta.toFixed(1)}%</div>
@@ -7809,7 +7801,7 @@ function renderSurvivalCard(p){
     </div>
     ${phHtml}
     ${cmpHtml}
-    ${chartHtml?`<div class="card-sub" style="margin-top:14px">แนวโน้มอัตรารอดตลอดรอบเลี้ยง (สุ่มตัวอย่าง ${chartSamples.length} ครั้งล่าสุด)</div>${chartHtml}`:''}
+    ${chartHtml?`<div class="card-sub" style="margin-top:14px">อัตรารอด ${chartSamples.length} ครั้งล่าสุด</div>${chartHtml}`:''}
   `;
 }
 // (การ์ด "เทียบกับรอบก่อน" + หัวข้อช่วย bm* ถูกลบออกตามที่พี่สั่ง — ซ้ำกับการ์ด "ประวัติรอบเลี้ยงบ่อนี้")
@@ -9962,7 +9954,7 @@ function renderOvPartialHarvest(){
       <div class="tgt-val"><div class="tgt-num">${_phTarget.toLocaleString()}</div><div class="tgt-unit">กก./ไร่ (${(_phTarget/1000).toFixed(1)} ตัน/ไร่)</div></div>
       <button class="tgt-btn" onclick="phStepTarget(${PH_TARGET_STEP})"${_phTarget>=PH_TARGET_MAX?' disabled':''}>▶</button>
     </div>
-    <div class="tgt-hint">เลื่อนเพื่อดูว่าถ้าจับที่เกณฑ์นี้ กุ้งจะได้ไซส์เท่าไร และอีกกี่วัน — เป็นแค่ตัวลองดู ปิด/รีเฟรชแอปแล้วกลับเป็น ${PARTIAL_YIELD_TARGET.toLocaleString()} เสมอ</div>
+    
   </div>`;
 
   // ── 1) บ่อที่ถึงเกณฑ์แล้ว ──
@@ -10533,7 +10525,7 @@ function renderStockOutLog(resetLimit){
     }).join('')
   }</tbody></table></div>`
   +(shown.length<total?`<div style="text-align:center;padding:12px 8px 4px">
-      <div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:7px">แสดง ${shown.length.toLocaleString()} จาก ${total.toLocaleString()} รายการ (ล่าสุดก่อน) — กรองด้วยบ่อ/หมวด/เดือนด้านบนจะเร็วกว่า</div>
+      <div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:7px">แสดง ${shown.length.toLocaleString()} จาก ${total.toLocaleString()} รายการ</div>
       <button class="btn" onclick="skOutShowAll()">แสดงทั้งหมด ${total.toLocaleString()} รายการ</button></div>`
     :(total>SK_OUT_PAGE?`<div style="text-align:center;font-size:var(--fs11);color:var(--tx3);padding:10px 8px 2px">แสดงครบ ${total.toLocaleString()} รายการ</div>`:''));
 }
@@ -10718,8 +10710,7 @@ function renderSkcAll(box,sub,start,end,isCur){
   const moved=rows.filter(r=>r.n>0).length;
   const shown=rows.filter(r=>r.n>0||(_skcAll&&(r.closing!==0||r.opening!==0)));
   if(sub)sub.innerHTML='รอบ <b>'+skcLabel(_skcKey)+'</b>'+(isCur&&end<skcRange(_skcKey).end?' · รอบนี้ยังไม่จบ รวมยอดถึงวันนี้ ('+fD(end)+')':'')+
-    ' · <b>'+moved+'</b> รายการมีความเคลื่อนไหว จาก '+rows.filter(r=>r.closing!==0||r.opening!==0||r.n>0).length+' รายการที่มีของ<br>'+
-    '<b>ยกมา</b> = ยอดคงเหลือตอนเริ่มรอบ · <b>คงเหลือตามระบบ</b> = ยกมา + รับเข้า − เบิก/ใช้ (ยอดที่เอาไปเทียบกับของที่นับได้จริง)<span class="skc-dsk"> · ช่อง "นับจริง/ต่าง" เว้นไว้จดลงกระดาษ</span>';
+    ' · <b>'+moved+'</b> รายการมีความเคลื่อนไหว';
   if(!shown.length){box.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ไม่มีความเคลื่อนไหวในรอบนี้</p>';return;}
   const groups=skcGroup(shown.map(r=>Object.assign(r,{cat:r.item.category||''})));
   let tb='',mc='';
@@ -11316,7 +11307,7 @@ function renderHvDaily(){
     (nOk?'<tr style="background:var(--sf2);font-weight:700"><td>รวมทั้งฟาร์ม</td><td colspan="3">'+nOk+' บ่อ</td>'+
       '<td>'+_hvMoney(tF)+'</td><td>'+_hvMoney(tL+tE)+'</td><td>'+_hvMoney(tM)+'</td><td>'+_hvMoney(tA)+'</td></tr>':'')+
     '</tbody></table></div>'+
-    '<div class="hint" style="margin-top:8px">อาหาร/วัน = <b>ที่ให้จริงจากบันทึกอาหาร</b> เฉลี่ยย้อนหลังไม่เกิน 7 วัน × ราคาอาหาร · % คือสัดส่วนต่อน้ำหนักในบ่อ · บ่อที่ยังไม่เคยบันทึกอาหารจึงจะใช้สูตรแทน</div>';
+    '';
 }
 
 function hvDefaultSizes(p){
@@ -11654,9 +11645,7 @@ function renderPalmOvBiz(year){
       '</div>'+
       // ⚠️ ต้องอธิบายว่าทำไม "เงินเข้าจริง/กก." ไม่เท่ากับ "ราคาเฉลี่ย" ด้านบน — ไม่งั้นดูเหมือนตัวเลขขัดกันเองในการ์ดเดียว
       '<div style="font-size:calc(11px * var(--ui-scale));color:var(--tx3);margin-top:6px">'+
-        'เงินเข้าจริง = รายรับสุทธิ '+B(cur.revenue)+' ÷ '+cur.kg.toLocaleString()+' กก.'+
-        (cur.avgPrice!=null?' — <b>ต่ำกว่าราคาเฉลี่ย ฿'+cur.avgPrice.toFixed(2)+' เพราะหักค่าจ้างทีมตัดแล้ว</b>':'')+'<br>'+
-        'ต้นทุน = รายจ่ายทั้งหมดปีนี้ '+B(cur.spend)+' ÷ ผลผลิต '+cur.kg.toLocaleString()+' กก. (รวมค่าปุ๋ย/ค่าน้ำมัน/อื่นๆ ที่บันทึกไว้)'+
+        'เงินเข้าจริงหักค่าจ้างทีมตัดแล้ว'+(cur.avgPrice!=null?' จึงต่ำกว่าราคาเฉลี่ย ฿'+cur.avgPrice.toFixed(2):'')+
       '</div>'+
     '</div>';
   }
@@ -13007,7 +12996,7 @@ function renderPdMortCard(p){
     '<div class="pd-water-row"><span style="color:var(--tx2)">ตายวันนี้</span><span style="font-weight:700;color:'+(spike?'var(--d)':(todayCount>0?'var(--w)':'var(--ok)'))+'">'+todayCount.toLocaleString()+' ตัว'+(spike?' ⚠️ สูงผิดปกติ':'')+'</span></div>'+
     '<div class="pd-water-row"><span style="color:var(--tx2)">สะสมรอบนี้</span><span style="font-weight:700">'+cum.toLocaleString()+' ตัว'+(pct!=null?' ('+pct.toFixed(3)+'%)':'')+'</span></div>'+
     '<div class="pd-water-row"><span style="color:var(--tx2)">เฉลี่ย 7 วัน</span><span style="font-weight:600">'+avg7.toFixed(1)+' ตัว/วัน</span></div>'+
-    '<div class="card-sub" style="margin:10px 0 0">7 วันล่าสุด (แท่งแดง = สูงกว่าเฉลี่ยเกิน 2 เท่า)</div>'+bars+
+    '<div class="card-sub" style="margin:10px 0 0">7 วันล่าสุด · แดง = เกิน 2 เท่าของเฉลี่ย</div>'+bars+
     '<div style="margin-top:6px"><button class="btn btn-s" onclick="jumpMort('+Q+p.id+Q+')">🦐 ดู/บันทึกกุ้งตายทั้งหมด</button></div>';
 }
 // ไม่มีดรอปดาวน์บ่อแล้ว (entry #310) — เลื่อนไปที่แถวของบ่อนั้นแทน
@@ -14541,7 +14530,7 @@ function spFeedLine(p,d){
     +(fcr!=null&&t!=null?'<em> เกณฑ์ '+t+'</em>':'')+'</span></div>'
     +(hasPh?'<div class="sp-ph">🎣 จับพาเชียลไปแล้ว <b>'+phs.length+' ครั้ง · '+Math.round(pt.kg).toLocaleString()+' กก.</b>'
       +(pt.count>0?' (~'+Math.round(pt.count).toLocaleString()+' ตัว)':'')+(lastPh?' · ล่าสุด '+fD(lastPh):'')
-      +'<span>อัตรารอดให้กรอกแบบสะสมทั้งรอบ (นับรวมตัวที่จับไปแล้ว) — Biomass หักตัวที่จับออกให้เอง</span></div>':'');
+      +'<span>อัตรารอด = สะสมทั้งรอบ</span></div>':'');
 }
 function spRowHtml(x,d){
   const p=x.p,v=spVals(p,d),prev=spPrev(p,d),cur=spRecOn(p,d);
@@ -14994,7 +14983,7 @@ function renderGearAlert(){
   const list=gearAlertList();
   const n={duePrep:0,issue:0,missed:0};list.forEach(x=>n[x.s]++);
   const act=list.filter(x=>x.s!=='missed');
-  const missNote=n.missed?'<div style="font-weight:400;color:var(--tx2);font-size:var(--fs11);margin-top:5px">อีก '+n.missed+' ชิ้นเป็นบ่อที่มีกุ้งอยู่แล้ว — ยกขึ้นมาเช็คไม่ได้ ต้องรอรอบหน้า</div>':'';
+  const missNote=n.missed?'<div style="font-weight:400;color:var(--tx2);font-size:var(--fs11);margin-top:5px">อีก '+n.missed+' ชิ้นอยู่ในบ่อที่มีกุ้ง — รอรอบหน้า</div>':'';
   if(!act.length){el.innerHTML='<div class="gr-alert ok">✅ บ่อที่มีแผนลงกุ้ง เช็คอุปกรณ์ครบแล้ว'+missNote+'</div>';return;}
   // ⚠️ แถบนี้เป็นสรุปบรรทัดเดียว — รายการจริงอยู่ในการ์ด "คิวเช็ควันนี้" ด้านล่าง (กดบันทึกได้เลย) ไม่ต้องแสดงซ้ำ
   const nPond=new Set(act.map(x=>x.pondName)).size;
@@ -15110,9 +15099,9 @@ function renderGearMap(){
              :'บ่อนี้ยังไม่ได้วางผัง — กด "✏️ โหมดจัดผัง" เพื่อเริ่มวาง'
                +(gmPondsWithLayout().length?' หรือ "📥 ดึงผังจากบ่ออื่น"':''))+'</div>')
     +'<div class="gm-hint">'+(isEdit
-       ?'แตะไอคอน = เลือก (หมุน/ลบได้) · ลากนิ้ว = ย้าย · เลือกชนิดจากแถบด้านบนแล้วแตะในบ่อเพื่อวางเพิ่ม<br>วางผิดลบได้: แตะไอคอนนั้น แล้วกดปุ่ม ✕ แดงมุมขวาบน'
-       :'แตะไอคอนเพื่อบันทึกการเช็คของชิ้นนั้น · สีป้ายชื่อ: แดง = ต้องเช็ค · เขียว = เช็คแล้วรอบนี้')
-    +'<br>ตำแหน่งเก็บเป็น % ของขนาดบ่อ จึงยืดตามจอทุกขนาด · จำนวนอุปกรณ์ของบ่อนี้นับจากผังนี้</div>';
+       ?'แตะ = เลือก (หมุน/ลบ ✕) · ลาก = ย้าย · เลือกชนิดด้านบนแล้วแตะในบ่อ = วางเพิ่ม'
+      :'แตะไอคอน = บันทึกการเช็ค · แดง = ต้องเช็ค · เขียว = เช็คแล้ว')
+      +'</div>';
   gmBind();
 }
 function gmSetMode(m){_gmMode=m;_gmSel=null;_gmPlace=null;gmCpClose();renderGearMap();}
@@ -16016,12 +16005,12 @@ function setTrialType(t){
   const labCard=document.getElementById('trial-lab-only-card');if(labCard)labCard.style.display=t==='lab'?'':'none';
   const descEl=document.getElementById('trial-type-desc');
   if(descEl)descEl.textContent=t==='pond'
-    ?'ผูกกับบ่อเลี้ยงจริง 2-4 บ่อ ที่กำลังเลี้ยงอยู่ตอนนี้ — เปรียบเทียบการเติบโต/FCR/กุ้งตาย/ผลแล็บ/ค่าน้ำ ระหว่างบ่อ'
-    :'ไม่ผูกกับบ่อเลี้ยงจริง — เหมาะกับการทดสอบสูตร/ส่วนผสมก่อนนำไปใช้จริงในบ่อ ไม่ต้องเลือกบ่อหรือดูกราฟเทียบ';
+    ?'เทียบ 2–4 บ่อที่กำลังเลี้ยง'
+    :'ทดสอบสูตรในแล็บ ไม่ผูกบ่อ';
   const subEl=document.getElementById('trial-period-sub');
   if(subEl)subEl.textContent=t==='pond'
-    ?'ระบุ "ช่วงเวลาที่ลงเวชภัณฑ์จริง" ไม่ใช่ทั้งรอบเลี้ยง — ระบบจะกรองข้อมูลอาหาร/สุ่มตัวอย่าง/กุ้งตาย/ค่าน้ำ/ผลแล็บของทุกบ่อให้เหลือเฉพาะช่วงนี้ก่อนเทียบ'
-    :'ระบุช่วงเวลาที่ทำการทดลองในห้องแล็บ ใช้เป็นข้อมูลอ้างอิงประกอบบันทึกด้านล่าง';
+    ?'ช่วงที่ใช้เวชภัณฑ์จริง (ไม่ใช่ทั้งรอบ)'
+    :'ช่วงที่ทดลองในแล็บ';
 }
 function initTrialTab(){
   populateTrialSelect();
