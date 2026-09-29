@@ -13031,13 +13031,14 @@ function renderFundPane(){
   const curValue=latest?netUnits*latest.nav+pendAmt:netInvested;
   const totalPL=(curValue+totalSellProceeds)-totalInvested;
   const totalPLPct=totalInvested?(totalPL/totalInvested*100):0;
-  const plCls=totalPL>=0?'':'style="color:var(--d)"';
-  const plSign=totalPL>=0?'+':'';
+  // กำไร = เขียว + · ขาดทุน = แดง − (พี่สั่ง entry #342 ให้ตัวเลขเด่น) — เดิมกำไรเป็นสีปกติ ขาดทุนขึ้น "฿-1,234"
+  const plCls=totalPL>=0?'style="color:var(--ok);font-weight:800"':'style="color:var(--d);font-weight:800"';
+  const plSign=totalPL>=0?'+':'−';
   document.getElementById('fund-kpi').innerHTML=`
     <div class="kpi-card"><div class="kpi-lbl">หน่วยที่ถืออยู่ตอนนี้</div><div class="kpi-val">${netUnits.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div><div class="kpi-sub">หน่วย</div></div>
     <div class="kpi-card"><div class="kpi-lbl">เงินลงทุนสุทธิ</div><div class="kpi-val">฿${Math.round(netInvested).toLocaleString()}</div><div class="kpi-sub">ซื้อ ${buys.length} ครั้ง · ขาย ${sells.length} ครั้ง</div></div>
     <div class="kpi-card"><div class="kpi-lbl">มูลค่าปัจจุบัน</div><div class="kpi-val">฿${Math.round(curValue).toLocaleString()}</div><div class="kpi-sub">${latest?'NAV ล่าสุด '+latest.nav.toFixed(4)+' ('+fD(latest.date)+')':'ยังไม่มีบันทึก NAV'}</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">กำไร/ขาดทุนสะสม</div><div class="kpi-val" ${plCls}>${plSign}฿${Math.round(totalPL).toLocaleString()}</div><div class="kpi-sub" ${plCls}>${plSign}${totalPLPct.toFixed(2)}%</div></div>`
+    <div class="kpi-card"><div class="kpi-lbl">กำไร/ขาดทุนสะสม</div><div class="kpi-val" ${plCls}>${plSign}฿${Math.abs(Math.round(totalPL)).toLocaleString()}</div><div class="kpi-sub" ${plCls}>${plSign}${Math.abs(totalPLPct).toFixed(2)}%</div></div>`
     +(_fundSel==='palm'&&sells.length?(()=>{
       const left=sells.reduce((t,s)=>t+Math.max(0,fundSellLinkState(s).left),0);
       return `<div class="kpi-card"><div class="kpi-lbl">ขายไปจ่ายค่าสวนแล้ว</div><div class="kpi-val">฿${Math.round(totalSellProceeds).toLocaleString()}</div><div class="kpi-sub"${left>=1?' style="color:var(--w)"':''}>${sells.length} ครั้ง · ${left>=1?'ยังไม่ได้ผูกรายจ่าย ฿'+Math.round(left).toLocaleString():'ผูกรายจ่ายครบทุกบาท'}</div></div>`;
