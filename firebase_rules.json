@@ -32,7 +32,7 @@
     "tawan_events": {
       "$eventId": {
         ".write": "auth != null && root.child('users').child(auth.uid).exists() && !data.exists() && newData.child('actorUid').val() === auth.uid",
-        ".validate": "newData.hasChildren(['type','billId','actorUid','at'])"
+        ".validate": "newData.hasChildren(['type','actorUid','at']) && (newData.hasChild('billId') || newData.hasChild('itemId'))"
       }
     }
   }

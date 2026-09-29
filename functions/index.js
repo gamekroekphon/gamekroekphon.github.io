@@ -12,7 +12,7 @@
 
 const {onRequest} = require("firebase-functions/v2/https");
 const {onValueCreated} = require("firebase-functions/v2/database");
-const {billEventText} = require("./billNotify");
+const {billEventText, stockEmptyText} = require("./billNotify");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
@@ -629,11 +629,14 @@ exports.lineWebhook = onRequest({region: "asia-southeast1"}, async (req, res) =>
 // แอปเขียน /tawan_events/<id> = {type, billId, actorUid, at} — ไม่มีข้อความมาด้วย
 // ฟังก์ชันนี้อ่านบิลจริงจาก tawan_app แล้วประกอบข้อความเอง (ดูเหตุผลใน billNotify.js)
 // ---------------------------------------------------------------------------
-async function loadBill(billId) {
+async function loadAppData() {
   const snap = await admin.database().ref(`${RTDB_PATH}/json`).get();
   const json = snap.val();
-  if (!json) return null;
-  const data = JSON.parse(json);
+  return json ? JSON.parse(json) : null;
+}
+async function loadBill(billId) {
+  const data = await loadAppData();
+  if (!data) return null;
   const bills = Array.isArray(data.stockBills) ? data.stockBills : [];
   return bills.find((b) => b && b.id === billId) || null;
 }
@@ -646,6 +649,24 @@ exports.billNotify = onValueCreated(
       const groupId = await getNotifyGroupId();
       if (!groupId) {
         logger.error("ยังไม่ได้ตั้งกลุ่มแจ้งเตือน — พิมพ์ \"สวัสดีตะวัน ตั้งกลุ่มแจ้งเตือน\" ในกลุ่ม");
+        return;
+      }
+      // ฟาร์มหมด (entry #336) — เหตุการณ์ชนิดนี้มี itemId แทน billId
+      if (ev.type === "stock_empty" && ev.itemId) {
+        // รอให้ save() ของแอปถึงเซิร์ฟเวอร์ — ยอดยังไม่เป็น 0 ก็ลองใหม่
+        let text = null;
+        for (let i = 0; i < 3 && !text; i++) {
+          if (i) await new Promise((r) => setTimeout(r, 4000));
+          const data = await loadAppData();
+          text = data ? stockEmptyText(data, ev.itemId) : null;
+        }
+        if (!text) {
+          await event.data.ref.update({skippedAt: Date.now(), why: "not empty / not found"});
+          return;
+        }
+        const ok = await lineApi("message/push", {to: groupId, messages: [{type: "text", text}]});
+        await event.data.ref.update(ok ? {sentAt: Date.now()} : {failedAt: Date.now()});
+        logger.info("stock_empty", ev.itemId, ok ? "sent" : "failed");
         return;
       }
       if (!ev.type || !ev.billId) {

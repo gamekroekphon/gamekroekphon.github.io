@@ -75,4 +75,42 @@ function billEventText(type, bill) {
   return null;
 }
 
-module.exports = {billEventText, clean, itemLines, APP_URL, MAX_ITEM_LINES};
+/**
+ * แจ้งเตือน "ฟาร์มหมด" (entry #336) — แอปส่งแค่ itemId หลังเบิกจนยอดฟาร์มเหลือ 0
+ * อ่านยอดจริงจาก tawan_app แล้วเช็คว่ายังหมดอยู่จริง (มีคนรับเข้าไปแล้ว = ไม่ต้องส่ง)
+ * ⚠️ ห้ามใส่ราคา — กลุ่มมี staff
+ * @param {object} data ข้อมูลแอปทั้งก้อน (D)
+ * @param {string} itemId สินค้าที่หมด
+ * @return {string|null} ข้อความ หรือ null ถ้าไม่ต้องส่ง
+ */
+function stockEmptyText(data, itemId) {
+  const items = Array.isArray(data && data.inventoryItems) ? data.inventoryItems : [];
+  const it = items.find((i) => i && i.id === itemId);
+  if (!it || (Number(it.qty) || 0) > 0) return null;
+  const unit = clean(it.unit, 12);
+  const shop = Math.round((Number(it.shopQty) || 0) * 100) / 100;
+  const cos = Array.isArray(data.shopCompanies) ? data.shopCompanies : [];
+  const co = cos.find((c) => c && c.id === it.companyId);
+  const last = (Array.isArray(data.inventoryLog) ? data.inventoryLog : [])
+      .filter((l) => l && l.itemId === itemId && (l.type === "out" || l.type === "shared"))
+      .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")) ||
+        String(b.id || "").localeCompare(String(a.id || "")))[0];
+  let where = "";
+  if (last) {
+    const ponds = Array.isArray(data.ponds) ? data.ponds : [];
+    const p = last.pondId ? ponds.find((x) => x && x.id === last.pondId) : null;
+    const dest = p ? `บ่อ ${clean(p.name, 20)}` : (last.type === "shared" ? "อุปกรณ์นอก" : "");
+    where = [clean(last.by, 30), dest].filter(Boolean).join(" · ");
+  }
+  const lines = [`🔴 ฟาร์มหมด: ${clean(it.name, 50)}`];
+  if (where) lines.push(`เบิกล่าสุด: ${where}`);
+  if (shop > 0) {
+    lines.push(`🏪 หน้าร้านมี ${shop} ${unit}`.trim());
+    lines.push("👉 เอาเข้าฟาร์ม แล้วบันทึก \"หน้าร้าน เข้า ฟาร์ม\"");
+  } else {
+    lines.push(`🏪 หน้าร้านก็หมด → ต้องสั่ง${co ? " " + clean(co.name, 40) : ""}`);
+  }
+  return lines.join("\n");
+}
+
+module.exports = {stockEmptyText, billEventText, clean, itemLines, APP_URL, MAX_ITEM_LINES};
