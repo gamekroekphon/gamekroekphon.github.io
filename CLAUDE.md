@@ -4,7 +4,7 @@
 
 ## หมายเหตุโครงสร้างโค้ด
 
-- `index.html` และ `TawanFarm_App.html` เป็นไฟล์เดียวกัน (ต้อง sync ทั้งคู่ทุกครั้งก่อน commit)
+- แอปจริงคือ `index.html` ไฟล์เดียว — `TawanFarm_App.html` ในรีโปเป็น**หน้าพาไป index.html** สำหรับลิงก์เก่า **ห้ามก๊อปแอปทับอีก** (เคยค้างเวอร์ชัน 18 ก.ย. 69 แต่ยังเปิดได้บนเว็บและต่อ Firebase จริง — entry #341) · สำเนาบนเครื่อง `../TawanFarm_App.html` (นอกรีโป) ยังก๊อปจาก index.html ได้ตามเดิม
 - แต่ละหน้าคือ `<div id="sec-xxx" class="sec">` เปลี่ยนหน้าโดย toggle class
 - Deploy ด้วย `git commit` + `push` ขึ้น GitHub Pages โดยตรง — สคริปต์ `push_*.bat` และ `deploy.ps1` เก่าถูกลบทิ้งแล้ว (entry #222)
 - ขนาดตัวอักษรทั้งแอปเขียนเป็น `calc(<N>px * var(--ui-scale))` — เวลาเพิ่มโค้ดใหม่ห้ามใส่ `font-size:NNpx` โดดๆ ไม่งั้นปุ่ม ก/ก+/ก++ จะไม่ขยายจุดนั้น (entry #225)
