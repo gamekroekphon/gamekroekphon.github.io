@@ -408,6 +408,38 @@ body.role-admin .mp-actions{display:flex!important;gap:2px;flex-wrap:wrap}
 .pd-chart-card{margin-top:12px}
 .pd-chart-wrap{height:200px;margin-top:6px}
 /* เติมน้ำ + อาหาร vs การเติบโต (#324) */
+/* การ์ดอาหาร + เวชภัณฑ์ หน้าบ่อ (#328) */
+.pd-fs-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pd-fs-tiles>div{background:var(--sf2);border-radius:10px;padding:8px 10px;min-width:0}
+.pd-fs-tiles span{display:block;font-size:var(--fs11);color:var(--tx3)}
+.pd-fs-tiles b{font-size:calc(18px * var(--ui-scale));font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.pd-fs-tiles .br b{color:var(--p);font-size:calc(15px * var(--ui-scale))}
+.pd-fs-step{margin-top:8px;font-size:calc(12.5px * var(--ui-scale));border-radius:8px;padding:6px 9px;background:var(--ob);color:var(--ok)}
+.pd-fs-step.flat{background:var(--wb);color:var(--w)}
+.pd-fs-lbl{font-size:var(--fs11);color:var(--tx3);margin:12px 0 6px;font-weight:700}
+.pd-fs-bars{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:3px;align-items:end;height:90px;border-bottom:1px solid var(--bd);margin-top:16px}
+.pd-fs-bars>div{position:relative;background:#9fd3a0;border-radius:3px 3px 0 0;min-height:3px}
+.pd-fs-bars>div.up{background:var(--ok)}
+.pd-fs-bars>div.miss{background:repeating-linear-gradient(45deg,#e5e7eb,#e5e7eb 3px,#f3f4f6 3px,#f3f4f6 6px);height:90px}
+.pd-fs-bars em{position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-style:normal;font-size:calc(9.5px * var(--ui-scale));color:var(--ok);font-weight:700;white-space:nowrap}
+.pd-fs-bx{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:3px;font-size:calc(9.5px * var(--ui-scale));color:var(--tx3);text-align:center;margin-top:3px}
+.pd-fs-leg{font-size:var(--fs10);color:var(--tx3);margin-top:5px}
+.pd-fs-brand{display:flex;height:22px;border-radius:6px;overflow:hidden}
+.pd-fs-brand>div{display:flex;align-items:center;justify-content:center;font-size:var(--fs11);font-weight:700;color:#fff;white-space:nowrap;overflow:hidden}
+.pd-fs-bl{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:var(--fs11);color:var(--tx2);margin-top:5px}
+.pd-fs-bl i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px}
+.pd-fs-bl b{color:var(--tx)}
+.pd-ms-chips{display:flex;flex-wrap:wrap;gap:5px}
+.pd-ms-chip{border-radius:99px;padding:3px 10px;font-size:var(--fs11);font-weight:600}
+.pd-ms-grid{display:grid;grid-template-columns:minmax(84px,1.3fr) repeat(14,minmax(0,1fr));gap:2px;align-items:center;font-size:var(--fs11)}
+.pd-ms-grid .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:4px}
+.pd-ms-grid .c{height:16px;display:flex;align-items:center;justify-content:center}
+.pd-ms-grid .c i{width:10px;height:10px;border-radius:50%;display:block}
+.pd-ms-grid .c.e i{width:4px;height:4px;background:#d1d5db}
+.pd-ms-grid .hd{font-size:calc(9.5px * var(--ui-scale));color:var(--tx3);text-align:center}
+.pd-ms-more{margin-top:8px;border:1px dashed var(--bd);background:none;border-radius:8px;min-height:40px;width:100%;font-family:inherit;color:var(--tx2);cursor:pointer}
+.pd-ms-cat{display:flex;flex-wrap:wrap;gap:6px}
+.pd-ms-cat span{font-size:var(--fs11);border-radius:8px;padding:4px 9px;background:var(--sf2)}
 .pd-wfill{display:inline-block;margin-left:6px;background:var(--ib);color:var(--in);border-radius:99px;padding:1px 8px;font-size:var(--fs10);font-weight:700;white-space:nowrap}
 .pd-rec-date .pd-wfill{margin-left:0;margin-top:3px}
 .pd-wbig{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.pd-wbig b{font-size:calc(18px * var(--ui-scale))}.pd-wbig span{color:var(--tx3);font-size:var(--fs11)}
@@ -7290,14 +7322,7 @@ function renderPondDetail(id){
 
   // (การ์ด "คุณภาพน้ำล่าสุด" ถูกลบออกตามที่พี่สั่ง — ข้อมูลชุดเดียวกันดูได้ในการ์ด "ประวัติค่าน้ำย้อนหลัง" ซึ่งตอนนี้แสดงครบทุกพารามิเตอร์แล้ว)
 
-  // ===== Feed section =====
-  const feedRate=latFeed&&latFeed.totalFeed&&biomass&&biomass>0?((latFeed.totalFeed/biomass)*100).toFixed(1):null;
-  const feedHtml=latFeed?`
-    <div class="pd-water-row"><span style="color:var(--tx2)">อาหารวันนี้</span><span style="font-weight:600">${latFeed.totalFeed} กก.</span></div>
-    ${per100k!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">กก./แสนตัว<span style="font-size:var(--fs10);color:var(--tx3)">${per100kCut?' · ฐาน '+Math.round(per100kBase).toLocaleString()+' ตัว (หักพาเชียลแล้ว)':''}</span></span><span style="font-weight:600">${per100k.toFixed(1)}</span></div>`:''}
-    ${feedRate!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">Feed Rate</span><span style="font-weight:600">${feedRate}%</span></div>`:''}
-    ${latFeed.meals!=null?`<div class="pd-water-row"><span style="color:var(--tx2)">จำนวนมื้อ</span><span style="font-weight:600">${latFeed.meals} มื้อ</span></div>`:''}
-  `:'<div style="color:var(--tx3);font-size:calc(13px * var(--ui-scale));padding:7px 0">ยังไม่มีข้อมูลอาหาร — บันทึกได้ที่หน้า "อาหาร & FCR"</div>';
+  // ===== Feed section — สรุปอยู่ใน renderPdFeedSummary() (entry #328) =====
 
   // ===== การ์ดเติมน้ำ (entry #324) — เติมล่าสุดวันไหน กี่วันก่อน · รอบนี้กี่ครั้ง เฉลี่ยทุกกี่วัน · 6 ครั้งล่าสุด + ระยะห่าง =====
   //    นับเฉพาะรอบนี้ (วันที่ ≥ วันลงกุ้ง) และนับวันซ้ำครั้งเดียว (ข้อมูลเก่าก่อน #308 มีวันเดียวกัน 2 รายการได้)
@@ -7501,16 +7526,13 @@ ${String(p.cropNote).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`:''}
       <div class="chip-row" id="pd-wq-hist-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
       <div id="pd-wq-hist-table"></div>`)}
     ${pdCard('feedhist',`🍖 อาหาร${latFeed&&latFeed.date?` · ล่าสุด ${fD(latFeed.date)}`:''}`,
-      `<div style="background:var(--sf2);border-radius:9px;padding:10px 12px;margin-bottom:12px">
-         <div style="font-size:calc(12px * var(--ui-scale));font-weight:700;color:var(--tx2);margin-bottom:4px">ล่าสุด${latFeed&&latFeed.date?' · '+fD(latFeed.date):''}</div>
-         ${feedHtml}
-       </div>
+      `<div id="pd-feed-sum"></div>
       
       <div class="chip-row" id="pd-feed-hist-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
       <div id="pd-feed-hist-table"></div>`)}
     ${pdCard('watman','🚰 เติมน้ำ',wmHtml)}
-    ${pdCard('med','💊 เวชภัณฑ์ที่ใช้ล่าสุด',
-      `
+    ${pdCard('med','💊 เวชภัณฑ์',
+      `<div id="pd-med-sum"></div>
       <div class="chip-row" id="pd-med-hist-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
       <div class="chip-row" id="pd-med-cat-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
       <div id="pd-med-hist-table"></div>`)}
@@ -7535,8 +7557,8 @@ ${String(p.cropNote).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`:''}
   renderPdCropHistCard(p);
   renderBioCompare(p);
   renderPdWqHistory(p);
-  renderPdFeedHistory(p);
-  renderPdMedHistory(p);
+  renderPdFeedHistory(p);renderPdFeedSummary(p);
+  renderPdMedHistory(p);renderPdMedSummary(p);
 }
 function pdToggleCatItems(key){
   document.getElementById('pd-cat-items-'+key)?.classList.toggle('show');
@@ -12559,7 +12581,7 @@ function renderEpChips(){
     const done=(p.records||[]).some(r=>r.date===d);
     const isPrep=clsNoShrimp(pondStatusOv(p));
     const cls='pond-chk'+(done?' wq-done':'')+(p.id===activePid?' on':'');
-    return`<span class="${cls}" onclick="selectEPond('${p.id}')"${pdFilledNightBefore(p,d)?' title="เติมน้ำเมื่อคืน"':''}>${done?'✓ ':''}บ่อ ${p.name}${isPrep?' 🧹':''}${pdFilledNightBefore(p,d)?' 💧':''}</span>`;
+    return`<span class="${cls}" onclick="selectEPond('${p.id}')"${pdFilledNightBefore(p,d)?' title="เติมน้ำคืนก่อน"':''}>${done?'✓ ':''}บ่อ ${p.name}${isPrep?' 🧹':''}${pdFilledNightBefore(p,d)?' 💧':''}</span>`;
   }).join('');
   const doneCount=list.filter(p=>(p.records||[]).some(r=>r.date===d)).length;
   const progTxt=document.getElementById('ep-prog-txt');
@@ -12577,7 +12599,7 @@ function updateEpHeader(){
   nameEl.textContent='บ่อ '+p.name;
   const d=document.getElementById('ep-date')?.value||today();
   const age=docAge(p.startDate,d)||0;
-  if(subEl)subEl.innerHTML=(age>0?`อายุ ${age} วัน`:'')+wfillBadge(p,d);   // เติมน้ำเมื่อคืน (#325) — ค่าเช้านี้อาจเปลี่ยนเพราะน้ำใหม่
+  if(subEl)subEl.innerHTML=(age>0?`อายุ ${age} วัน`:'')+wfillBadge(p,d);   // เติมน้ำคืนก่อน (#325) — ค่าเช้านี้อาจเปลี่ยนเพราะน้ำใหม่
   const done=(p.records||[]).some(r=>r.date===d);
   if(tagEl){
     tagEl.style.display='';
@@ -12727,11 +12749,11 @@ function setPdWqPeriod(v,btn){_pdWqPeriod=v;document.querySelectorAll('#pd-wq-hi
 function setPdFeedPeriod(v,btn){_pdFeedPeriod=v;document.querySelectorAll('#pd-feed-hist-chips .trial-chip').forEach(el=>el.classList.remove('on'));btn.classList.add('on');renderPdFeedHistory(pond(_pdCurPondId));}
 function pdEditWQ(pid,d){document.getElementById('tab-entry')?.click();setTimeout(()=>editWQ(pid,d),80);}
 function pdDeleteWQ(pid,d){deleteWQ(pid,d);const p=pond(pid);if(p)renderPdWqHistory(p);}
-// ── เติมน้ำเมื่อคืน (entry #325 พี่สั่ง 26 ก.ย. 69) — ฟาร์มเติมน้ำตอนกลางคืน แล้วตรวจค่าน้ำตอนเช้าอีกวัน
+// ── เติมน้ำคืนก่อน (entry #325 พี่สั่ง 26 ก.ย. 69) — ฟาร์มเติมน้ำตอนกลางคืน แล้วตรวจค่าน้ำตอนเช้าอีกวัน
 //    บันทึกเติมน้ำวันที่ d → ขึ้นป้ายที่แถวค่าน้ำวันที่ d+1 (ไม่ใช่วันเดียวกัน) ไว้อ่านคู่กับค่าน้ำที่เปลี่ยน
 //    ใช้ทุกหน้าที่แสดงค่าน้ำรายวัน: ประวัติค่าน้ำหน้าบ่อ · หน้าคุณภาพน้ำ (ตาราง/ฟอร์มกรอก/ชิปบ่อ/ตารางสีรายวัน) · ประวัติรอบที่ปิดแล้ว
 function pdFilledNightBefore(src,d){if(!src||!d)return false;const y=addDaysStr(d,-1);return(src.waterLog||[]).some(r=>r&&r.date===y);}
-function wfillBadge(src,d){return pdFilledNightBefore(src,d)?'<span class="pd-wfill" title="มีบันทึกเติมน้ำวันที่ '+fD(addDaysStr(d,-1))+' (เติมตอนกลางคืน)">💧 เติมน้ำเมื่อคืน</span>':'';}
+function wfillBadge(src,d){return pdFilledNightBefore(src,d)?'<span class="pd-wfill" title="มีบันทึกเติมน้ำวันที่ '+fD(addDaysStr(d,-1))+' (เติมตอนกลางคืน)">💧 เติมน้ำคืนก่อน</span>':'';}
 function renderPdWqHistory(p){
   const tbl=document.getElementById('pd-wq-hist-table');if(!tbl||!p)return;
   const chipsEl=document.getElementById('pd-wq-hist-chips');
@@ -12757,7 +12779,7 @@ function renderPdWqHistory(p){
     }).join('');
     return`<div class="pd-rec-card${i===0?' hi':''}">
       <div class="pd-rec-top">
-        <div class="pd-rec-date"><b>${fD(r.date)}</b><span>${ageCalc!=null?'อายุ '+ageCalc+' วัน':'ตรวจก่อนลงกุ้ง'}</span>${pdFilledNightBefore(p,r.date)?'<span class="pd-wfill">💧 เติมน้ำเมื่อคืน</span>':''}</div>
+        <div class="pd-rec-date"><b>${fD(r.date)}</b><span>${ageCalc!=null?'อายุ '+ageCalc+' วัน':'ตรวจก่อนลงกุ้ง'}</span>${pdFilledNightBefore(p,r.date)?'<span class="pd-wfill">💧 เติมน้ำคืนก่อน</span>':''}</div>
         <div class="pd-rec-actions"><button onclick="pdEditWQ('${p.id}','${r.date}')" title="แก้ไข">✏️</button><button class="del" onclick="pdDeleteWQ('${p.id}','${r.date}')" title="ลบ">🗑️</button></div>
       </div>
       <div class="pd-rec-grid">${items}</div>
@@ -12814,9 +12836,9 @@ function renderPdFeedHistory(p){
   tbl.innerHTML=tableHtml+cardsHtml;
 }
 // ── เวชภัณฑ์ที่ใช้ลงบ่อนี้ — ดึงจาก getStockItemsForPond() ชุดเดียวกับที่ใช้คิดต้นทุนสะสม (ไม่สร้าง query คู่ขนาน) กรองเฉพาะหมวดยา/จุลินทรีย์ + เลือกช่วงวัน/หมวดได้เหมือนตัวกรองประวัติเบิกออกในหน้าสต็อก ──
-const PD_MED_CATS=['chemOral','chemWater','probioOral','probioWater','chem'];
+const PD_MED_CATS=['chemOral','chemWater','probioOral','probioWater','chem','lime'];   // + ปูน (entry #328)
 // ── ปุ่มเลือกหมวด: สีตรงกับ STOCK_CAT_CSS (ตัวเดียวกับ badge ในตาราง) ให้กดแล้วรู้ทันทีว่ากำลังกรองหมวดไหนอยู่ ──
-const PD_MED_CAT_OPTS=[['','ทุกหมวด',null],['chemOral','💊 ยากิน','#1D4ED8'],['chemWater','🧪 ยาลงน้ำ','#0369A1'],['probioOral','🦠 จุลินทรีย์กิน','#4338CA'],['probioWater','🧫 จุลินทรีย์ลงน้ำ','#A21CAF']];
+const PD_MED_CAT_OPTS=[['','ทุกหมวด',null],['chemOral','💊 ยากิน','#1D4ED8'],['chemWater','🧪 ยาลงน้ำ','#0369A1'],['probioOral','🦠 จุลินทรีย์กิน','#4338CA'],['probioWater','🧫 จุลินทรีย์ลงน้ำ','#A21CAF'],['lime','🪨 ปูน','#6B7280']];
 let _pdMedPeriod=7,_pdMedCat='';
 function pdMedPeriodChips(period){
   return[[7,'7 วัน'],[14,'14 วัน'],[30,'30 วัน'],['all','ทั้งหมด']].map(([v,lbl])=>
@@ -12832,6 +12854,86 @@ function pdMedCatChips(cat){
 }
 function setPdMedPeriod(v,btn){_pdMedPeriod=v;document.querySelectorAll('#pd-med-hist-chips .trial-chip').forEach(el=>el.classList.remove('on'));btn.classList.add('on');renderPdMedHistory(pond(_pdCurPondId));}
 function setPdMedCat(v){_pdMedCat=v;renderPdMedHistory(pond(_pdCurPondId));}
+// ══════ การ์ดอาหาร + เวชภัณฑ์ หน้าบ่อ (entry #328 พี่สั่ง 29 ก.ย. 69 — "แสดงข้อมูลอะไรเพิ่มลดได้อีกไหม ให้ดูน่าสนใจกว่านี้") ══════
+//    ไม่มีตัวเลขเงิน (พนักงานดูได้) · ใช้ฐาน กก./แสน ตัวเดียวกับทั้งแอป (feedPer100k + pondFeedBaseOnDate)
+//    ขึ้นอาหาร = กก./แสน เพิ่ม > 0.05 จากบันทึกก่อนหน้า · คงที่ = ต่างกันไม่เกิน 0.05 · ไม่ได้ขึ้น ≥ 7 วัน = ส้ม
+function pdFeedBrandOf(f){
+  const it=f.stockItemId?(D.inventoryItems||[]).find(i=>i&&i.id===f.stockItemId):feedAliasItem(f);
+  return it?it.name:(((f.feedBrand||'')+' '+(f.feedGrade||'')).trim()||'ไม่ระบุเบอร์');
+}
+function renderPdFeedSummary(p){
+  const el=document.getElementById('pd-feed-sum');if(!el||!p)return;
+  const byDay={};
+  (p.feedLog||[]).forEach(f=>{if(!f||!f.date||(p.startDate&&f.date<p.startDate))return;const kg=parseFloat(f.totalFeed)||0;if(kg<=0)return;
+    (byDay[f.date]=byDay[f.date]||{d:f.date,kg:0,recs:[]}).kg+=kg;byDay[f.date].recs.push(f);});
+  const fl=Object.values(byDay).sort((a,b)=>a.d.localeCompare(b.d));
+  if(!fl.length){el.innerHTML='<div style="color:var(--tx3);font-size:calc(13px * var(--ui-scale));padding:7px 0">ยังไม่มีข้อมูลอาหาร</div>';return;}
+  const kpl=x=>feedPer100k(x.kg,pondFeedBaseOnDate(p,x.d))||0;
+  fl.forEach(x=>x.k=kpl(x));
+  const last=fl[fl.length-1];
+  const lastBrand=pdFeedBrandOf(last.recs[last.recs.length-1]);
+  // ── ขึ้นอาหารล่าสุด + ก่อนหน้านั้นคงที่กี่วัน ──
+  let ui=-1;for(let i=fl.length-1;i>0;i--)if(fl[i].k-fl[i-1].k>0.05){ui=i;break;}
+  let step;
+  if(ui<0)step='<div class="pd-fs-step flat">= ยังไม่เคยขึ้นอาหารรอบนี้</div>';
+  else{
+    let j=ui-1;while(j>0&&Math.abs(fl[j].k-fl[j-1].k)<=0.05)j--;
+    const flatDays=dDiff(fl[j].d,fl[ui-1].d)+1,since=dDiff(fl[ui].d,last.d);
+    step='<div class="pd-fs-step'+(since>=7?' flat':'')+'">▲ ขึ้นล่าสุด '+fD(fl[ui].d)+' +'+(fl[ui].k-fl[ui-1].k).toFixed(1)+' กก./แสน'
+      +(flatDays>=7?' · ก่อนหน้านั้นคงที่ '+flatDays+' วัน':'')+(since>=7?' · ไม่ได้ขึ้นมา '+since+' วัน':'')+'</div>';
+  }
+  // ── แท่ง 14 วัน ──
+  const days=[];for(let i=13;i>=0;i--){const d=addDaysStr(last.d,-i);days.push(byDay[d]||{d,miss:true});}
+  const mx=Math.max(...days.filter(x=>!x.miss).map(x=>x.k),1);
+  const bars=days.map((x,i)=>{
+    if(x.miss)return'<div class="miss" title="'+fD(x.d)+' ไม่ได้กรอก"></div>';
+    const pv=days[i-1],up=pv&&!pv.miss&&x.k-pv.k>0.05;
+    return'<div class="'+(up?'up':'')+'" style="height:'+Math.max(3,Math.round(x.k/mx*86))+'px" title="'+fD(x.d)+' · '+x.k.toFixed(1)+' กก./แสน · '+Math.round(x.kg).toLocaleString()+' กก.">'
+      +(up?'<em>▲'+(x.k-pv.k).toFixed(1)+'</em>':'')+'</div>';}).join('');
+  const bx=days.map((x,i)=>'<span>'+((13-i)%2===0?+x.d.slice(8):'')+'</span>').join('');
+  // ── เบอร์อาหารรอบนี้ ──
+  const br={},first={};
+  fl.forEach(x=>x.recs.forEach(f=>{const b=pdFeedBrandOf(f);br[b]=(br[b]||0)+(parseFloat(f.totalFeed)||0);if(!first[b])first[b]=x.d;}));
+  const keys=Object.keys(br).sort((a,b)=>first[a].localeCompare(first[b]));
+  const tot=keys.reduce((s,k)=>s+br[k],0),cols=['#d6b56a','#b8892b','#9A6A04','#6b4a03','#c9a24d','#8a6610'];
+  const brandBar=keys.map((k,i)=>'<div style="width:'+(br[k]/tot*100)+'%;background:'+cols[i%cols.length]+'" title="'+mpEsc(k)+'">'+(br[k]/tot>0.18?mpEsc(k):'')+'</div>').join('');
+  const brandLeg=keys.map((k,i)=>'<span><i style="background:'+cols[i%cols.length]+'"></i>'+mpEsc(k)+(k===lastBrand?' (ใช้อยู่)':'')+' <b>'+Math.round(br[k]).toLocaleString()+'</b> กก.</span>').join('')
+    +'<span>รวม <b>'+Math.round(tot).toLocaleString()+'</b> กก.</span>';
+  el.innerHTML='<div class="pd-fs-tiles">'
+      +'<div><span>ล่าสุด '+fD(last.d)+'</span><b>'+Math.round(last.kg).toLocaleString()+'</b> กก.</div>'
+      +'<div><span>กก./แสน</span><b>'+last.k.toFixed(1)+'</b></div>'
+      +'<div class="br"><span>เบอร์</span><b>'+mpEsc(lastBrand)+'</b></div></div>'
+    +step
+    +'<div class="pd-fs-lbl">14 วันล่าสุด · กก./แสน</div><div class="pd-fs-bars">'+bars+'</div><div class="pd-fs-bx">'+bx+'</div>'
+    +'<div class="pd-fs-leg">เขียวเข้ม = วันที่ขึ้นอาหาร · ลาย = ไม่ได้กรอก</div>'
+    +'<div class="pd-fs-lbl">เบอร์อาหารรอบนี้</div><div class="pd-fs-brand">'+brandBar+'</div><div class="pd-fs-bl">'+brandLeg+'</div>'
+    +'<div class="pd-fs-lbl" style="margin-top:14px">ประวัติรายวัน</div>';
+}
+let _pdMedGridAll=false;
+function renderPdMedSummary(p){
+  const el=document.getElementById('pd-med-sum');if(!el||!p)return;
+  const all=getStockItemsForPond(p.id,p.startDate,today()).filter(i=>PD_MED_CATS.includes(i.category));
+  if(!all.length){el.innerHTML='';return;}
+  const col=c=>((PD_MED_CAT_OPTS.find(o=>o[0]===c)||[])[2])||'#6B7280';
+  const lastD=all[0].date;   // getStockItemsForPond เรียงใหม่ → เก่าแล้ว
+  const agg={};all.filter(i=>i.date===lastD).forEach(i=>{const k=i.name+'|'+i.unit;(agg[k]=agg[k]||{n:i.name,u:i.unit,c:i.category,q:0}).q+=parseFloat(i.qty)||0;});
+  const latest=Object.values(agg).map(x=>'<span class="pd-ms-chip" style="background:'+col(x.c)+'1a;color:'+col(x.c)+'">'+mpEsc(x.n)+' '+(Math.round(x.q*100)/100)+' '+mpEsc(x.u||'')+'</span>').join('');
+  const md=[];for(let i=13;i>=0;i--)md.push(addDaysStr(lastD,-i));
+  const win=all.filter(i=>i.date>=md[0]);
+  const cnt={},cat={};win.forEach(i=>{cnt[i.name]=(cnt[i.name]||0)+1;if(!cat[i.name])cat[i.name]=i.category;});
+  const names=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]||a.localeCompare(b,'th'));
+  const shown=_pdMedGridAll?names:names.slice(0,8);
+  const head='<div></div>'+md.map((d,i)=>'<div class="hd">'+((13-i)%2===0?+d.slice(8):'')+'</div>').join('');
+  const grid=head+shown.map(n=>'<div class="nm" title="'+mpEsc(n)+'">'+mpEsc(n)+'</div>'
+    +md.map(d=>win.some(i=>i.name===n&&i.date===d)?'<div class="c"><i style="background:'+col(cat[n])+'" title="'+fD(d)+'"></i></div>':'<div class="c e"><i></i></div>').join('')).join('');
+  const more=names.length>8?'<button type="button" class="pd-ms-more" onclick="_pdMedGridAll=!_pdMedGridAll;renderPdMedSummary(pond(\''+p.id+'\'))">'+(_pdMedGridAll?'ย่อ ▴':'ดูทั้งหมด '+names.length+' รายการ ▾')+'</button>':'';
+  const cc={};all.forEach(i=>{cc[i.category]=(cc[i.category]||0)+1;});
+  const cats=Object.keys(cc).sort((a,b)=>cc[b]-cc[a]).map(c=>{const o=PD_MED_CAT_OPTS.find(x=>x[0]===c);return'<span style="color:'+col(c)+'">'+(o?o[1]:(STOCK_CAT_LABEL[c]||c))+' <b>'+cc[c]+'</b></span>';}).join('');
+  el.innerHTML='<div class="pd-fs-lbl" style="margin-top:0">ล่าสุด '+fD(lastD)+'</div><div class="pd-ms-chips">'+latest+'</div>'
+    +'<div class="pd-fs-lbl">14 วันล่าสุด · ใช้วันไหนบ้าง</div><div class="pd-ms-grid">'+grid+'</div>'+more
+    +'<div class="pd-fs-lbl">รอบนี้ใช้ไปแล้ว (ครั้ง)</div><div class="pd-ms-cat">'+cats+'</div>'
+    +'<div class="pd-fs-lbl" style="margin-top:14px">รายการ</div>';
+}
 function renderPdMedHistory(p){
   const tbl=document.getElementById('pd-med-hist-table');if(!tbl||!p)return;
   const chipsEl=document.getElementById('pd-med-hist-chips');
@@ -19787,7 +19889,7 @@ function renderWQHeatmap(){
       const arrow=prev?wqArrow(pm.key,v,prev[pm.key]):'';
       return`<td><span class="wq-cell ${cls}">${disp}${arrow}</span></td>`;
     }).join('');
-    return`<tr><td class="wq-pond-name">${p.name}${stBadge}${pdFilledNightBefore(p,date)?'<span class="pd-wfill" title="เติมน้ำเมื่อคืน">💧</span>':''}</td>${cells}</tr>`;
+    return`<tr><td class="wq-pond-name">${p.name}${stBadge}${pdFilledNightBefore(p,date)?'<span class="pd-wfill" title="เติมน้ำคืนก่อน">💧</span>':''}</td>${cells}</tr>`;
   }).join('');
 }
 // ══════════════════════════════════════════════════════════════════════════
