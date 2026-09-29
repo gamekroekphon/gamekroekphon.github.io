@@ -2690,8 +2690,10 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <span class="tx"><b>ต้นทุนทุกบ่อ ในหน้าเดียว</b><small id="ov-cost-btn-sub">ดูต้นทุนสะสม · ต้นทุน/กก. · ต้นทุน/วัน ทุกบ่อพร้อมกัน</small></span>
     <span class="go">›</span>
   </button>
+  <!-- แยกโซน (พี่สั่ง entry #339) — สถานะบ่อ + ปฏิทินจับกุ้ง เห็นทีละโซน ไม่ต้องเลื่อนยาว · ใช้โซนเดียวกับหน้ากุ้งตาย/จัดการน้ำ/สุ่ม (tf_dailyZone) -->
+  <div class="dz-bar" id="ov-zones"></div>
   <div class="card" style="margin-bottom:14px" id="ovd-card">
-    <div class="card-t">📊 สถานะบ่อทั้งหมด</div>
+    <div class="card-t">📊 สถานะบ่อ<span id="ovd-zone-t"></span></div>
     <div class="ovd-sum-strip" id="ovd-sum-strip"></div>
     <div class="ovd-filters" id="ovd-filters"></div>
     <div style="overflow-x:auto">
@@ -4341,6 +4343,8 @@ const SK='tawan_v3';
 let APP_ROLE='staff';
 // ── ชื่อผู้ใช้ที่ล็อกอินอยู่ ณ ขณะนี้ — ใช้แปะไว้กับ log ที่ต้องรู้ว่าใครเป็นคนบันทึก (เช่น ประวัติสต็อก) ──
 function curUserLabel(){
+  // ⚠️ ถูกเรียกได้ก่อน firebase.initializeApp (renderOv ตอน DOMContentLoaded → ปุ่มโซน dzCur) — firebase.auth() ตอนนั้น throw ทำให้แอปหยุดโหลด (#339)
+  if(!firebase.apps||!firebase.apps.length)return'';
   const u=firebase.auth&&firebase.auth().currentUser;
   if(!u)return'';
   return u.displayName||(u.email?u.email.split('@')[0]:'')||'';
@@ -5871,7 +5875,8 @@ function dzCur(){
   const zs=dzList();
   if(_dz&&zs.includes(_dz))return _dz;
   let z=null;try{z=localStorage.getItem('tf_dailyZone');}catch(e){}
-  if(!z||!zs.includes(z)){const me=curUserLabel();z=Object.keys(ZONE_KEEPER).find(k=>me&&ZONE_KEEPER[k]===me&&zs.includes(k))||zs[0]||'';}
+  if(!z||!zs.includes(z)){const me=curUserLabel();z=Object.keys(ZONE_KEEPER).find(k=>me&&ZONE_KEEPER[k]===me&&zs.includes(k))||zs[0]||'';
+    if(!me)return z;}   // ยังไม่รู้ว่าใครล็อกอิน (หน้าภาพรวมวาดก่อนล็อกอิน #339) — ยังไม่จำ ไว้เดาโซนของผู้ดูแลใหม่หลังล็อกอิน
   _dz=z;return z;
 }
 function dzIn(p){const z=dzCur();return !z||dzOf(p)===z;}   // ยังไม่มีโซนเลยทั้งฟาร์ม → เห็นทุกบ่อเหมือนเดิม
@@ -5880,6 +5885,7 @@ function dzPick(z){
   _dz=z;try{localStorage.setItem('tf_dailyZone',z);}catch(e){}
   _mtVals={};_wlSel.clear();
   if(document.getElementById('sec-mortality')?.classList.contains('on')){renderMtRows();renderMtSummary();populateMtFilter();renderMtTable(true);}
+  if(document.getElementById('sec-overview')?.classList.contains('on'))renderOv();
   if(document.getElementById('sec-watlog')?.classList.contains('on')){populateWlFilter();renderWlPonds();renderWaterSummary();renderWaterTable();}
   if(document.getElementById('sec-sample')?.classList.contains('on')){
     _spVals={};const r=document.getElementById('sp-result');if(r){r.style.display='none';r.innerHTML='';}
@@ -5907,6 +5913,12 @@ function renderDzBars(){
     const badge=!ps.length?'':recs.length>=ps.length?'<span class="dz-st done">✓ บันทึกแล้ว</span>'
       :recs.length?'<span class="dz-st part">'+recs.length+'/'+ps.length+' บ่อ</span>':'<span class="dz-st todo">ยังไม่บันทึก</span>';
     return{badge,sub:ps.length+' บ่อมีกุ้ง'+(by?' · กรอกโดย '+mpEsc(by):'')};
+  });
+  mk('ov-zones',z=>{
+    const ps=wqfeedActivePonds().filter(p=>dzOf(p)===z);
+    const dn=ps.filter(p=>pondStatusOv(p)==='danger').length,wn=ps.filter(p=>pondStatusOv(p)==='warn').length;
+    return{badge:!ps.length?'':dn?'<span class="dz-st todo">🔴 ต้องดู '+dn+'</span>':wn?'<span class="dz-st part">⚠️ เฝ้าระวัง '+wn+'</span>':'<span class="dz-st done">✓ ปกติ</span>',
+      sub:ps.length+' บ่อมีกุ้ง'};
   });
   mk('sp-zones',z=>{
     const d=_spDate||today();
@@ -8117,7 +8129,9 @@ function renderOv(){
   document.getElementById('ov-sections').innerHTML=html;
   updateAlertBadge(dcP+wcP);
   document.getElementById('ov-ts').textContent=new Date().toLocaleString('th-TH');
-  renderOvDashboard(active);
+  renderDzBars();
+  const zt=document.getElementById('ovd-zone-t');if(zt)zt.textContent=dzList().length>1?' · '+dzLabel(dzCur()):'ทั้งหมด';
+  renderOvDashboard(active.filter(m=>dzIn(m.p)));   // เห็นทีละโซน (#339) — การ์ด 4 กล่องบนสุดยังเป็นทั้งฟาร์ม
 }
 // ── การ์ดใหม่: แดชบอร์ดสถานะบ่อทั้งหมด — รวมสถานะ/ไซส์/Biomass/อาหาร/เช็คลิสต์วันนี้/ค่าผิดปกติทุกบ่อไว้ตารางเดียว (เดิมกระจายอยู่การ์ดบ่อแยก+เช็คลิสต์แยก+รายการแจ้งเตือนแยก) เรียงบ่อที่ต้องดูก่อนไว้บนสุด
 //    บ่อที่ "ปกติครบถ้วน" (สถานะปกติ + กรอกน้ำ/อาหาร/สต็อกครบ) ยุบเป็นแถวเดียวโดยอัตโนมัติ กันบ่อเยอะแล้วเลื่อนยาว — ระยะเลื่อนขึ้นกับจำนวนบ่อที่ต้องดู ไม่ใช่จำนวนบ่อทั้งหมด ──
@@ -10259,7 +10273,7 @@ function renderOvPartialHarvest(){
   const card=document.getElementById('ov-partial-card');if(!card)return;
   const tgtEl=document.getElementById('ov-partial-tgt'),readyEl=document.getElementById('ov-partial-ready'),listEl=document.getElementById('ov-partial-list'),calEl=document.getElementById('ov-partial-cal');
   const rows=[];
-  wqfeedActivePonds().forEach(p=>{const info=partialHarvestInfo(p);if(info)rows.push({p,info});});
+  wqfeedActivePonds().filter(dzIn).forEach(p=>{const info=partialHarvestInfo(p);if(info)rows.push({p,info});});   // ตามโซนที่เลือกบนหน้าภาพรวม (#339)
   if(!rows.length){card.style.display='none';return;}
   card.style.display='';
   const fmtYr=v=>Math.round(v).toLocaleString();
