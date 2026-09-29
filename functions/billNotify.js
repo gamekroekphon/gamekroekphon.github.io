@@ -86,9 +86,10 @@ function billEventText(type, bill) {
 function stockEmptyText(data, itemId) {
   const items = Array.isArray(data && data.inventoryItems) ? data.inventoryItems : [];
   const it = items.find((i) => i && i.id === itemId);
-  if (!it || (Number(it.qty) || 0) > 0) return null;
+  // เหลือต่ำกว่า 1 = หมด (entry #338) — แอปโชว์ยอดปัดลง เศษถุงที่เปิดอยู่จอโชว์ 0
+  if (!it || (Number(it.qty) || 0) >= 1) return null;
   const unit = clean(it.unit, 12);
-  const shop = Math.round((Number(it.shopQty) || 0) * 100) / 100;
+  const shop = Math.floor((Number(it.shopQty) || 0) + 1e-6);   // ปัดลงเหมือนในแอป (#338)
   const cos = Array.isArray(data.shopCompanies) ? data.shopCompanies : [];
   const co = cos.find((c) => c && c.id === it.companyId);
   const last = (Array.isArray(data.inventoryLog) ? data.inventoryLog : [])

@@ -6483,7 +6483,7 @@ function openPrItem(id){
   const v=(k,x)=>{const e=document.getElementById(k);if(e)e.value=x==null?'':x;};
   document.getElementById('pri-co').innerHTML='<option value="">— ยังไม่ระบุบริษัท —</option>'+prCompanies().map(c=>'<option value="'+billEsc(c.id)+'">'+billEsc(c.name)+'</option>').join('');
   document.getElementById('pri-title').textContent=it?'✏️ '+it.name:'+ เพิ่มสินค้า';
-  document.getElementById('pri-sub').textContent=it?'คงเหลือในสต็อก '+(it.qty||0)+' '+(it.unit||''):'สินค้าใหม่จะขึ้นในหน้าสต็อกด้วย (จำนวนเริ่ม 0)';
+  document.getElementById('pri-sub').textContent=it?'คงเหลือในสต็อก '+stkQ(it.qty)+' '+(it.unit||''):'สินค้าใหม่จะขึ้นในหน้าสต็อกด้วย (จำนวนเริ่ม 0)';
   document.getElementById('pri-new-row').style.display=it?'none':'';
   v('pri-co',it?it.companyId||'':(_prCo&&_prCo!=='none'&&_prCo!=='off'?_prCo:''));
   v('pri-unit',it?it.unit:'');v('pri-name','');v('pri-cat','equip');
@@ -9424,6 +9424,11 @@ const SHOP_LEAD_DEFAULT=10,SHOP_SAFETY=7,SHOP_FARM_LOW=5,SHOP_MOVE_DAYS=10,SHOP_
 let _xferDir='toFarm',_stockCartMode=null,_shopView='todo',_shopTodo='buy',_shopQ='',_shopCount={};
 function shopLogArr(){if(!Array.isArray(D.shopLog))D.shopLog=[];return D.shopLog;}
 function shopQ(i){return Math.round((parseFloat(i&&i.shopQty)||0)*100)/100;}
+// ยอดคงเหลือบนจอ = ปัดลงเป็นเลขกลม (พี่สั่ง entry #338) — ตรงกับจำนวนที่นับได้บนชั้น (ถัง/ถุงที่เปิดใช้อยู่ไม่นับ) · ติดลบปัดเข้าหา 0 (−0.3 → "-0")
+// ⚠️ แสดงผลเท่านั้น — ห้ามเอาไปเขียนทับ item.qty/shopQty (พนักงานเบิกเป็นเศษจริง เช่น ¼ ถุง ปัดข้อมูลแล้วยอดเพี้ยนสะสม) · จำนวนที่เบิก/รับแต่ละครั้งยังโชว์ตามจริง
+function stkQ(n){n=parseFloat(n)||0;const a=Math.floor(Math.abs(n)+1e-6);return n<0?'-'+a:String(a);}
+// เหลือต่ำกว่า 1 = หมด (entry #338) ให้ตรงกับที่จอโชว์ 0 — ใช้กับป้ายสถานะ/แจ้ง LINE · ดรอปดาวน์เบิกยังเลือกของที่เหลือเศษได้
+function stkOut(n){return(parseFloat(n)||0)<1;}
 function shopLead(i){const c=(D.shopCompanies||[]).find(x=>x&&x.id===i.companyId);const d=c?parseFloat(c.leadDays):0;return d>0?d:SHOP_LEAD_DEFAULT;}
 // ใช้/วัน คิดต่อบ่อ (พี่สั่ง entry #336): เบิกเข้าบ่อ 14 วัน ÷ บ่อ-วันที่มีกุ้งในช่วงนั้น × บ่อที่มีกุ้งวันนี้
 //   ลงกุ้งเพิ่ม → ใช้/วันขึ้นตามทันที · จับออก → ลดตาม · ตัวนับบ่อใช้ activePondCountOnDate() ตัวเดียวกับหารค่าไฟ
@@ -9443,7 +9448,7 @@ function shopRows(){
   return(D.inventoryItems||[]).filter(i=>i&&i.id).map(i=>{
     const r=rate[i.id]||0,farm=parseFloat(i.qty)||0,shop=shopQ(i),lead=shopLead(i);
     const fd=r>0?farm/r:null,td=r>0?(farm+shop)/r:null;
-    const need=r>0&&td<=lead+SHOP_SAFETY,move=r>0&&fd<=SHOP_FARM_LOW&&shop>0;
+    const need=r>0&&td<=lead+SHOP_SAFETY,move=r>0&&fd<=SHOP_FARM_LOW&&shop>=1;
     return{i,rate:r,farm,shop,lead,fd,td,need,move,
       buy:need?Math.max(1,Math.ceil(r*(lead+SHOP_BUY_COVER)-farm-shop)):0,
       mv:move?Math.max(1,Math.min(Math.floor(shop*100)/100,Math.ceil(r*SHOP_MOVE_DAYS-farm))):0};
@@ -9463,7 +9468,7 @@ function renderXferSugg(){
   if(_xferDir==='toShop'){el.innerHTML=seg;return;}
   const rows=shopRows().filter(r=>r.move&&!_stockCart.some(c=>c.itemId===r.i.id)).sort((a,b)=>a.fd-b.fd);
   el.innerHTML=seg+(rows.length?'<div class="sk-xs-h">🟠 ฟาร์มใกล้หมด · หน้าร้านมีของ</div>'+rows.map(r=>
-    '<div class="sk-xs"><span><b>'+mpEsc(r.i.name)+'</b><small>ฟาร์ม '+r.farm+' · ร้าน '+r.shop+' '+mpEsc(r.i.unit||'')+' · ใช้ '+shopD1(r.rate)+'/วัน</small></span>'
+    '<div class="sk-xs"><span><b>'+mpEsc(r.i.name)+'</b><small>ฟาร์ม '+stkQ(r.farm)+' · ร้าน '+stkQ(r.shop)+' '+mpEsc(r.i.unit||'')+' · ใช้ '+shopD1(r.rate)+'/วัน</small></span>'
     +'<button type="button" onclick="xferAdd(\''+r.i.id+'\','+r.mv+')">+ '+r.mv+'</button></div>').join('')
     :'<div class="sk-xs-h" style="color:var(--ok)">✓ ไม่มีของที่ฟาร์มใกล้หมด</div>');
 }
@@ -9486,7 +9491,7 @@ function renderShop(){
   let s=(counted?'':'<div class="shp-banner">📋 ยังไม่ได้นับหน้าร้าน — กด <b>✏️ นับของหน้าร้าน</b> ใส่ยอดครั้งแรก</div>')
     +'<div class="shp-chips">'+V.map(([k,l])=>'<button type="button" class="'+(_shopView===k?'on':'')+'" onclick="_shopView=\''+k+'\';renderShop()">'+l+'</button>').join('')+'</div>';
   const bar=r=>'<div class="shp-bar"><div class="f" style="width:'+Math.min(100,(r.fd||0)/30*100)+'%"></div><div class="s" style="width:'+Math.min(100,(r.rate>0?r.shop/r.rate:0)/30*100)+'%"></div></div>';
-  const line=r=>'ฟาร์ม '+r.farm+' · ร้าน '+r.shop+' '+mpEsc(r.i.unit||'')+' · ใช้ '+shopD1(r.rate)+'/วัน → พอ '+shopD1(r.td)+' วัน';
+  const line=r=>'ฟาร์ม '+stkQ(r.farm)+' · ร้าน '+stkQ(r.shop)+' '+mpEsc(r.i.unit||'')+' · ใช้ '+shopD1(r.rate)+'/วัน → พอ '+shopD1(r.td)+' วัน';
   if(_shopView==='todo'){
     if(document.body.classList.contains('shop-clerk'))
       s+='<div class="shp-quick"><button type="button" onclick="clerkJob(\'in\')"><span class="ic">📥</span>รับเข้าหน้าร้าน</button>'
@@ -9510,7 +9515,7 @@ function renderShop(){
   }else if(_shopView==='stock'){
     const list=rows.filter(r=>r.rate>0||r.shop>0).sort((a,b)=>(a.td==null?1e9:a.td)-(b.td==null?1e9:b.td));
     s+='<div class="card"><div style="overflow-x:auto"><table class="tbl shp-tbl"><thead><tr><th>สินค้า</th><th class="num">ฟาร์ม</th><th class="num">หน้าร้าน</th><th class="num">ใช้/วัน</th><th class="num">พอ (วัน)</th><th></th></tr></thead><tbody>'
-      +list.map(r=>{const st=r.need?'r1':r.move?'r2':'r3';return'<tr><td><b>'+mpEsc(r.i.name)+'</b></td><td class="num">'+r.farm+'</td><td class="num">'+r.shop+'</td><td class="num">'+shopD1(r.rate)+'</td><td class="num">'+shopD1(r.td)+'</td><td><span class="shp-pill '+st+'">'+(st==='r1'?'สั่ง':st==='r2'?'เข้าฟาร์ม':'พอ')+'</span></td></tr>';}).join('')
+      +list.map(r=>{const st=r.need?'r1':r.move?'r2':'r3';return'<tr><td><b>'+mpEsc(r.i.name)+'</b></td><td class="num">'+stkQ(r.farm)+'</td><td class="num">'+stkQ(r.shop)+'</td><td class="num">'+shopD1(r.rate)+'</td><td class="num">'+shopD1(r.td)+'</td><td><span class="shp-pill '+st+'">'+(st==='r1'?'สั่ง':st==='r2'?'เข้าฟาร์ม':'พอ')+'</span></td></tr>';}).join('')
       +'</tbody></table></div></div>';
   }else if(_shopView==='count'){
     const q=_shopQ.trim().toLowerCase();
@@ -9542,7 +9547,7 @@ function renderShopCountList(){
   const order=prCompanies().map(c=>c.id).concat(['']);
   el.innerHTML=order.filter(k=>by[k]).map(k=>'<div class="shp-co"><span>'+mpEsc(prCoName(k)||'ยังไม่ระบุบริษัท')+'</span></div>'
     +by[k].sort((a,b)=>String(a.name).localeCompare(String(b.name),'th')).map(i=>{const v=_shopCount[i.id];
-      return'<div class="shp-cnt'+(v!=null?' chg':'')+'"><span><b>'+mpEsc(i.name)+'</b><small>ตอนนี้ '+shopQ(i)+' '+mpEsc(i.unit||'')+(i.shopCountedAt?' · นับ '+fD(i.shopCountedAt):'')+'</small></span>'
+      return'<div class="shp-cnt'+(v!=null?' chg':'')+'"><span><b>'+mpEsc(i.name)+'</b><small>ตอนนี้ '+stkQ(shopQ(i))+' '+mpEsc(i.unit||'')+(i.shopCountedAt?' · นับ '+fD(i.shopCountedAt):'')+'</small></span>'
         +'<input class="fi" type="number" inputmode="decimal" min="0" step="any" placeholder="'+shopQ(i)+'" value="'+(v!=null?v:'')+'" oninput="shopCountSet(\''+i.id+'\',this.value,this)" aria-label="ยอดนับ '+mpEsc(i.name)+'"></div>';}).join('')).join('')
     ||'<div style="color:var(--tx3);padding:12px 0;text-align:center">ไม่พบสินค้า</div>';
 }
@@ -10169,8 +10174,8 @@ function renderStockWarn(){
   warnEl.style.display='flex';
   const parts=[];
   if(neg.length)parts.push('<b style="color:var(--d)">ค้างกรอกรับเข้า '+neg.length+' รายการ</b> — '
-    +neg.map(i=>mpEsc(i.name)+' <b style="color:var(--d)">'+i.qty+' '+(i.unit||'')+'</b>').join(' · '));
-  if(low.length)parts.push('ใกล้หมด — '+low.map(i=>mpEsc(i.name)+' เหลือ '+i.qty+' '+(i.unit||'')).join(' · '));
+    +neg.map(i=>mpEsc(i.name)+' <b style="color:var(--d)">'+stkQ(i.qty)+' '+(i.unit||'')+'</b>').join(' · '));
+  if(low.length)parts.push('ใกล้หมด — '+low.map(i=>mpEsc(i.name)+' เหลือ '+stkQ(i.qty)+' '+(i.unit||'')).join(' · '));
   txtEl.innerHTML=parts.join('<br>');
 }
 // ── เตือนสต็อกใกล้หมดในหน้าภาพรวม — ใช้เงื่อนไขเดียวกับ renderStockWarn() (i.qty<=i.minQty) แค่ดึงมาโชว์ซ้ำ ไม่มีเงื่อนไขใหม่ ซ่อนการ์ดทั้งใบถ้าไม่มีของใกล้หมด ──
@@ -10185,8 +10190,8 @@ function renderOvStockWarn(){
   card.style.display='';
   {const t=document.getElementById('ov-stockwarn-t');
    if(t)t.textContent=neg.length?(low.length?'📦 สต็อกค้างกรอกรับเข้า / ใกล้หมด':'📦 สต็อกค้างกรอกรับเข้า'):'📦 สต็อกใกล้หมด';}
-  listEl.innerHTML=neg.map(i=>`<div class="ov-stockwarn-item"><span class="nm">⚠️ ${mpEsc(i.name)}</span><span class="qty" style="color:var(--d);font-weight:700">${i.qty} ${i.unit||''} <small style="font-weight:400">/ ค้างกรอกรับเข้า</small></span></div>`).join('')
-    +low.map(i=>`<div class="ov-stockwarn-item"><span class="nm">${mpEsc(i.name)}</span><span class="qty">เหลือ ${i.qty} <small>/ ขั้นต่ำ ${i.minQty} ${i.unit||''}</small></span></div>`).join('');
+  listEl.innerHTML=neg.map(i=>`<div class="ov-stockwarn-item"><span class="nm">⚠️ ${mpEsc(i.name)}</span><span class="qty" style="color:var(--d);font-weight:700">${stkQ(i.qty)} ${i.unit||''} <small style="font-weight:400">/ ค้างกรอกรับเข้า</small></span></div>`).join('')
+    +low.map(i=>`<div class="ov-stockwarn-item"><span class="nm">${mpEsc(i.name)}</span><span class="qty">เหลือ ${stkQ(i.qty)} <small>/ ขั้นต่ำ ${i.minQty} ${i.unit||''}</small></span></div>`).join('');
 }
 
 // ── ปฏิทินจับกุ้ง / เตือนพาเชียล ──────────────────────────────────────────
@@ -10338,14 +10343,14 @@ function renderStockItems(){
   const items=(D.inventoryItems||[]).filter(i=>{
     if(cat&&i.category!==cat)return false;
     if(search&&!i.name.toLowerCase().includes(search)&&!(i.note||'').toLowerCase().includes(search))return false;
-    if(!_stockShowZero&&(i.qty||0)===0&&shopQ(i)===0)return false;   // ฟาร์มหมดแต่หน้าร้านมี = ยังต้องเห็น (#334)
+    if(!_stockShowZero&&stkOut(i.qty)&&stkOut(shopQ(i)))return false;   // ฟาร์มหมดแต่หน้าร้านมี = ยังต้องเห็น (#334)
     return true;
   });
   if(!items.length){el.innerHTML=`<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">${(cat||search)?'ไม่พบรายการที่ตรงกับตัวกรองนี้ — ลองเปลี่ยนคำค้นหรือหมวดหมู่':'ยังไม่มีรายการพัสดุ — เพิ่มได้จากฟอร์มด้านบน'}</p>`;return;}
   // sort: low stock first
   const sorted=[...items].sort((a,b)=>{
-    const aLow=a.minQty>0&&a.qty<=a.minQty?0:1;
-    const bLow=b.minQty>0&&b.qty<=b.minQty?0:1;
+    const aLow=stkOut(a.qty)?-1:a.minQty>0&&a.qty<=a.minQty?0:1;   // หมด (<1) ขึ้นก่อน (#338)
+    const bLow=stkOut(b.qty)?-1:b.minQty>0&&b.qty<=b.minQty?0:1;
     if(aLow!==bLow)return aLow-bLow;
     return a.name.localeCompare(b.name,'th');
   });
@@ -10354,7 +10359,9 @@ function renderStockItems(){
   el.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>รายการ</th><th>หมวด</th>${priceHdr}<th style="text-align:right">ฟาร์ม</th><th style="text-align:right">หน้าร้าน</th><th>ขั้นต่ำ</th><th>สถานะ</th><th></th></tr></thead><tbody>${
     sorted.map(i=>{
       const isLow=i.minQty>0&&i.qty<=i.minQty;
-      const statusBadge=isLow
+      const isOut=stkOut(i.qty);
+      const statusBadge=isOut?'<span class="badge" style="background:var(--d);color:#fff">หมด</span>'
+        :isLow
         ?'<span class="badge" style="background:var(--db);color:var(--d)">ใกล้หมด</span>'
         :'<span class="badge" style="background:var(--ob);color:var(--ok)">ปกติ</span>';
       const catCss=STOCK_CAT_CSS[i.category]||'';
@@ -10371,8 +10378,8 @@ function renderStockItems(){
         <td><strong>${i.name}</strong><br><span style="font-size:var(--fs11);color:var(--tx3)">${i.note||''}</span></td>
         <td><span class="badge ${catCss}">${STOCK_CAT_LABEL[i.category]||i.category}</span></td>
         ${priceCols}
-        <td class="${isLow?'stock-qty-low':''}" style="text-align:right;white-space:nowrap">${i.qty} ${i.unit}</td>
-        <td style="text-align:right;white-space:nowrap;color:${shopQ(i)>0?'var(--pd)':'var(--tx3)'}">${(shopQ(i)>0||i.shopCountedAt)?shopQ(i)+' '+i.unit:'—'}</td>
+        <td class="${isLow||isOut?'stock-qty-low':''}" style="text-align:right;white-space:nowrap">${stkQ(i.qty)} ${i.unit}</td>
+        <td style="text-align:right;white-space:nowrap;color:${shopQ(i)>0?'var(--pd)':'var(--tx3)'}">${(shopQ(i)>0||i.shopCountedAt)?stkQ(shopQ(i))+' '+i.unit:'—'}</td>
         <td>${i.minQty||'-'} ${i.minQty?i.unit:''}</td>
         <td>${statusBadge}</td>
         <td style="white-space:nowrap">${actionBtns}</td>
@@ -10531,7 +10538,7 @@ function filterStockSearch(){
     const pl=itemPropsLine(i,64);
     return `<div class="sk-drop-item${inCart?' sk-drop-in-cart':''}" onclick="addStockToCart('${i.id}')"${pl?' style="align-items:flex-start"':''}>
       <span style="color:var(--tx)">${i.name}${inCart?' <span style="font-size:var(--fs11);color:var(--tx3)">(เพิ่มแล้ว)</span>':''}${pl?`<div style="font-size:var(--fs10);color:var(--tx3);font-weight:400;line-height:1.5;margin-top:1px">${pl}</div>`:''}</span>
-      <span class="sk-drop-stk${isLowFn(i)?' low':''}">${(_stockMode==='in'||_stockMode==='xfer')?'ฟาร์ม '+i.qty+' · ร้าน '+shopQ(i):i.qty} ${i.unit}</span>
+      <span class="sk-drop-stk${isLowFn(i)?' low':''}">${(_stockMode==='in'||_stockMode==='xfer')?'ฟาร์ม '+stkQ(i.qty)+' · ร้าน '+stkQ(shopQ(i)):stkQ(i.qty)} ${i.unit}</span>
     </div>`;
   }).join('');
   drop.style.display='';
@@ -10688,7 +10695,7 @@ function saveStockTxBatch(){
   }
   if(!D.inventoryLog)D.inventoryLog=[];
   const saved=[],emptied=[];
-  const markEmpty=(item,before)=>{if(item&&before>0&&(parseFloat(item.qty)||0)<=0&&!emptied.includes(item.id))emptied.push(item.id);};
+  const markEmpty=(item,before)=>{if(item&&!stkOut(before)&&stkOut(item.qty)&&!emptied.includes(item.id))emptied.push(item.id);};   // <1 = หมด (#338)
   for(const c of _stockCart){
     // ── โหมด "แชร์ทุกบ่อ": สินค้าจากแคตตาล็อก (itemId มีค่า) ตัดสต็อกตามปกติ, สินค้าที่พิมพ์เอง (itemId ว่าง ไม่มีในสต็อก) แค่บันทึกเป็นรายการเฉยๆ ไม่มีสต็อกให้ตัด — snapshot หมวด/ราคาต่อหน่วยลงในรายการเองเสมอ (ต่างจากโหมดอื่นที่ join กับ D.inventoryItems เอาตอนอ่าน) เพราะสินค้าที่พิมพ์เองไม่มี itemId ให้ join ย้อนหลังได้ ──
     if(mode==='shared'){
@@ -11097,16 +11104,16 @@ function renderSkcAll(box,sub,start,end,isCur){
       tb+='<tr'+(r.n?'':' class="quiet"')+'><td class="skc-nm">'+(r.item.name||'-')+
         (r.n?'<button class="skc-lnk" onclick="skcToggleItem(\''+id+'\')">'+r.n+' ครั้ง '+(open?'▴':'▾')+'</button>':'<span class="skc-none">ไม่มีความเคลื่อนไหว</span>')+'</td>'+
         '<td style="color:var(--tx3)">'+(r.item.unit||'')+'</td>'+
-        '<td class="num">'+skcN(r.opening)+'</td>'+
+        '<td class="num">'+stkQ(r.opening)+'</td>'+
         '<td class="num skc-in">'+(r.inQ?'+'+skcN(r.inQ):'—')+'</td>'+
         '<td class="num skc-out">'+(r.outQ?'−'+skcN(r.outQ):'—')+'</td>'+
-        '<td class="num skc-sys">'+skcN(r.closing)+'</td>'+
+        '<td class="num skc-sys">'+stkQ(r.closing)+'</td>'+
         '<td class="skc-box"></td><td class="skc-box"></td></tr>';
       if(open)tb+='<tr class="skc-det"><td colspan="8">'+skcDetailHtml(r)+'</td></tr>';
       mc+='<div class="skc-mit'+(r.n?'':' quiet')+'"'+(r.n?' onclick="skcToggleItem(\''+id+'\')"':'')+'>'+
         '<div><div class="skc-mn">'+(r.item.name||'-')+'</div><div class="skc-mm">'+
-        (r.n?'<b>'+skcN(r.opening)+'</b>'+(r.inQ?'<i class="in">+'+skcN(r.inQ)+'</i>':'')+(r.outQ?'<i class="out">−'+skcN(r.outQ)+'</i>':'')+' <span style="color:var(--in)">· '+r.n+' ครั้ง '+(open?'▴':'▾')+'</span>':'ไม่มีความเคลื่อนไหว')+
-        '</div></div><div class="skc-mr"><div class="skc-mv">'+skcN(r.closing)+'</div><div class="skc-mu">'+(r.item.unit||'')+'</div></div></div>'+
+        (r.n?'<b>'+stkQ(r.opening)+'</b>'+(r.inQ?'<i class="in">+'+skcN(r.inQ)+'</i>':'')+(r.outQ?'<i class="out">−'+skcN(r.outQ)+'</i>':'')+' <span style="color:var(--in)">· '+r.n+' ครั้ง '+(open?'▴':'▾')+'</span>':'ไม่มีความเคลื่อนไหว')+
+        '</div></div><div class="skc-mr"><div class="skc-mv">'+stkQ(r.closing)+'</div><div class="skc-mu">'+(r.item.unit||'')+'</div></div></div>'+
         (open?'<div class="skc-mdet">'+skcDetailHtml(r)+'</div>':'');
     });
     mc+='</div>';
@@ -14876,7 +14883,7 @@ function saveFeedGridAll(){
   const neg=negStockItems();
   const warns=[];
   if(neg.length)warns.push('⚠️ <b>ค้างกรอกรับเข้าโกดัง</b> — '
-    +neg.map(i=>mpEsc(i.name)+' <b>'+i.qty+' '+(i.unit||'')+'</b>').join(' · ')
+    +neg.map(i=>mpEsc(i.name)+' <b>'+stkQ(i.qty)+' '+(i.unit||'')+'</b>').join(' · ')
     +' · ต้นทุนยังคิดถูกอยู่ แต่ยอดคงเหลือจะตรงก็ต่อเมื่อไปกรอกรับเข้าย้อนหลัง');
   const okTxt=parts.length?`✅ ${parts.join(' · ')} วันที่ ${fD(d)}`:'ไม่มีการเปลี่ยนแปลง';
   if(warns.length)showMsg('fd-grid-msg','warn',okTxt+'<div style="margin-top:6px;line-height:1.7">'+warns.join('<br>')+'</div>');
