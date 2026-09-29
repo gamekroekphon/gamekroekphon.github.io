@@ -779,7 +779,12 @@ html[data-uisize="xl"]{--ui-scale:1.25}
 .bill-mine{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px dashed var(--bd);font-size:calc(13px * var(--ui-scale))}
 .bill-mine.edit{cursor:pointer}.bill-mine.edit:hover{background:var(--sf2)}
 .bill-revgrid{display:grid;grid-template-columns:270px 1fr;gap:14px;align-items:start}
-@media(max-width:860px){.bill-revgrid{grid-template-columns:1fr}}
+@media(max-width:860px){
+  /* ⚠️ มือถือ: ห้ามเป็น grid — .bill-mb สูงจำกัด (overflow:auto) แถว auto หดเหลือ 0 ได้เพราะคิวบิลเป็น scroll container (min-height 0)
+     ส่วนรายละเอียด/รูปบิลเลยเริ่มทับรายการบิลด้านบน (พี่แจ้ง entry #330) → เรียงเป็น flex คอลัมน์ ห้ามหด */
+  .bill-revgrid{display:flex;flex-direction:column}
+  .bill-revgrid>*{flex:none;min-width:0}
+}
 .bill-queue{display:flex;flex-direction:column;gap:4px;max-height:72vh;overflow:auto}
 @media(max-width:860px){.bill-queue{max-height:190px}}
 .bill-q{display:flex;flex-direction:column;gap:2px;text-align:left;padding:9px 10px;border-radius:8px;border:1px solid transparent;background:transparent;font:inherit;cursor:pointer;color:var(--tx)}
@@ -789,7 +794,7 @@ html[data-uisize="xl"]{--ui-scale:1.25}
 .bill-q small{color:var(--tx3);font-size:calc(11.5px * var(--ui-scale))}
 .bill-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
 .bill-det{display:grid;grid-template-columns:minmax(220px,330px) 1fr;gap:14px;align-items:start}
-@media(max-width:1000px){.bill-det{grid-template-columns:1fr}}
+@media(max-width:1000px){.bill-det{grid-template-columns:minmax(0,1fr)}}   /* minmax(0,…) กันตารางดันกว้างเกินจอ (#330) */
 .bill-photo img{display:block;width:100%;border-radius:8px;border:1px solid var(--bd);cursor:zoom-in}
 .bill-pages{display:flex;gap:6px;margin:6px 0}
 .bill-pages img{width:50px;height:64px;object-fit:cover;border:2px solid transparent;cursor:pointer}
