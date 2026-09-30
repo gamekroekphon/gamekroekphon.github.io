@@ -1439,6 +1439,54 @@ body.role-admin .bnav-btn.bn-staff{display:none}
 body.zone-keeper .bnav-btn.bn-keeper{display:flex}
 body.zone-keeper .bnav-btn.bn-staff,body.zone-keeper .bnav-btn.bn-admin,body.zone-keeper #bnav-stock{display:none}
 /* คนหน้าร้าน (#337) — body.shop-clerk ตั้งจากชื่อคนล็อกอิน (SHOP_CLERK) · แถบล่าง = หน้าร้าน · สต็อก · ราคาสินค้า · อุปกรณ์นอก · เพิ่มเติม */
+/* เจ้าของ (#343) — body.owner-mode จากชื่อล็อกอิน (OWNER_NAMES) · แถบล่าง = สรุป · สต็อก · ราคาสินค้า · สถิติจับกุ้ง · เพิ่มเติม */
+.bnav-btn.bn-owner{display:none}
+body.owner-mode .bnav-btn.bn-owner{display:flex}
+body.owner-mode #bnav-overview,body.owner-mode #bnav-stock,body.owner-mode .bnav-btn.bn-staff,body.owner-mode .bnav-btn.bn-keeper,body.owner-mode .bnav-btn.bn-clerk{display:none}
+body.owner-mode #bnav-price,body.owner-mode #bnav-harveststat{display:flex}
+body.owner-mode #bnav-own-home{order:1}body.owner-mode #bnav-own-stock{order:2}body.owner-mode #bnav-price{order:3}body.owner-mode #bnav-harveststat{order:4}body.owner-mode #bnav-more{order:5}
+body:not(.owner-mode) .owner-only{display:none!important}
+body.owner-mode #mobMenuBody{display:flex;flex-direction:column}
+body.owner-mode #mobMenuBody>.owner-g0{order:-3}
+body.owner-mode #mobMenuBody>.owner-mine{order:-2}
+body.owner-mode #mobMenuBody>.owner-g9{order:-1}
+body.owner-mode #mobMenuBody:not(.clerk-open):not(.clerk-search)>:not(.owner-mine):not(.owner-only){display:none!important}
+body.owner-mode #mobMenuBody.clerk-search>.owner-g9{display:none!important}
+.own-seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:6px;background:var(--sf2);padding:4px;border-radius:12px;margin:10px 0 8px}
+.own-seg:empty{display:none}
+.own-seg button{border:none;background:none;border-radius:9px;min-height:44px;font-family:inherit;font-weight:700;font-size:calc(14px * var(--ui-scale));color:var(--tx);cursor:pointer}
+.own-seg button.on{background:var(--p);color:#fff}
+.own-sum{display:flex;justify-content:space-between;gap:8px;background:#DBEAFE;color:#1E40AF;border-radius:10px;padding:7px 12px;font-weight:700;font-size:calc(13px * var(--ui-scale));margin-bottom:8px}
+.own-sum:empty{display:none}
+.own-pc{display:block;width:100%;text-align:left;font-family:inherit;color:var(--tx);background:var(--sf);border:1.5px solid var(--bd);border-radius:14px;margin-bottom:8px;overflow:hidden;padding:0;cursor:pointer}
+.own-h{display:flex;justify-content:space-between;align-items:center;background:var(--pl);padding:6px 12px}
+.own-h b{font-size:calc(16px * var(--ui-scale))}.own-h span{font-weight:700;font-size:calc(13px * var(--ui-scale))}
+.own-g{display:grid;grid-template-columns:1fr 1fr}
+.own-g>div{padding:5px 12px;border-top:1px solid var(--sf2);min-width:0}
+.own-g>div:nth-child(odd){border-right:1px solid var(--sf2)}
+.own-g .l{font-size:calc(11.5px * var(--ui-scale));font-weight:600}
+.own-g .v{font-size:calc(16px * var(--ui-scale));font-weight:800;font-variant-numeric:tabular-nums;line-height:1.25}
+.own-g .v small{font-size:calc(12px * var(--ui-scale));font-weight:700}
+.own-g .l2{font-size:calc(12px * var(--ui-scale));font-weight:700}
+.own-g .mon .l,.own-g .mon .v{color:#1E40AF}
+.own-ns{display:flex;justify-content:space-between;padding:7px 12px;font-size:calc(13px * var(--ui-scale));font-weight:600;border-top:1px solid var(--sf2)}
+.own-chip{display:inline-block;font-size:calc(11.5px * var(--ui-scale));font-weight:700;border-radius:99px;padding:1px 8px;white-space:nowrap}
+.own-chip.w{background:var(--wb);color:var(--w)}.own-chip.d{background:var(--db);color:var(--d)}
+.own-q{width:100%;margin:10px 0 8px}
+.own-f{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;margin-bottom:8px}
+.own-f select{font-weight:700;font-size:calc(13px * var(--ui-scale));min-width:0}
+.own-f select.on{border-color:var(--p);background:var(--pl);color:var(--pd)}
+.own-chips{display:flex;gap:6px;margin-bottom:8px}
+.own-chips button{border:1.5px solid var(--bd);border-radius:99px;padding:5px 12px;min-height:36px;font-family:inherit;font-weight:700;font-size:calc(13px * var(--ui-scale));background:var(--sf);color:var(--tx);cursor:pointer}
+.own-chips button.on{background:var(--p);border-color:var(--p);color:#fff}
+.own-it{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:9px 12px;margin-bottom:6px}
+.own-it .n{display:flex;justify-content:space-between;align-items:center;gap:6px;font-weight:800;font-size:calc(14px * var(--ui-scale))}
+.own-it .co{font-size:calc(12px * var(--ui-scale));font-weight:700;margin-top:1px}
+.own-it .q{display:grid;grid-template-columns:1fr 1fr;margin-top:4px}
+.own-it .q>div{font-size:calc(11.5px * var(--ui-scale));font-weight:600}
+.own-it .q b{display:block;font-size:calc(16px * var(--ui-scale));font-weight:800;font-variant-numeric:tabular-nums}
+.own-it .q b small{font-size:calc(12px * var(--ui-scale));font-weight:700}
+.own-it .shop b{color:var(--pd)}
 .bnav-btn.bn-clerk{display:none}
 body.shop-clerk .bnav-btn.bn-clerk{display:flex}
 body.shop-clerk #bnav-overview,body.shop-clerk #bnav-harveststat,body.shop-clerk .bnav-btn.bn-staff,body.shop-clerk .bnav-btn.bn-keeper{display:none}
@@ -2136,6 +2184,9 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <button class="bnav-btn bn-keeper" id="bnav-watlog" onclick="bnavGo('watlog',this)"><span class="bnav-ic">💦</span>จัดการน้ำ</button>
   <button class="bnav-btn bn-keeper" id="bnav-mortality" onclick="bnavGo('mortality',this)"><span class="bnav-ic">☠️</span>กุ้งตาย</button>
   <!-- คนหน้าร้าน (SHOP_CLERK: ปุ๊ก) — หน้าร้าน/อุปกรณ์นอก อยู่ในหน้าสต็อก กดแล้วเปิดตรงงานนั้นเลย (พี่สั่ง entry #337) -->
+  <!-- เจ้าของ (OWNER_NAMES: ก้อย/กุ้ง) — สรุป · สต็อก(ดูอย่างเดียว) · ราคาสินค้า · สถิติจับกุ้ง (พี่สั่ง entry #343) -->
+  <button class="bnav-btn bn-owner" id="bnav-own-home" onclick="ownerGo('home')"><span class="bnav-ic">🏠</span>สรุป</button>
+  <button class="bnav-btn bn-owner" id="bnav-own-stock" onclick="ownerGo('stock')"><span class="bnav-ic">📦</span>สต็อก</button>
   <button class="bnav-btn bn-clerk" id="bnav-shop" onclick="clerkGo('shop')"><span class="bnav-ic">🏪</span>หน้าร้าน</button>
   <button class="bnav-btn bn-clerk" id="bnav-ext" onclick="clerkGo('ext')"><span class="bnav-ic">🔧</span>อุปกรณ์นอก</button>
   <button class="bnav-btn" id="bnav-more" onclick="toggleMobMenu(this)"><span class="bnav-ic">☰<span class="bnav-badge" id="bnav-alert-badge"></span></span>เพิ่มเติม</button>
@@ -2147,11 +2198,13 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <div class="mob-sheet-search"><span class="ic">🔍</span><input type="text" id="mobMenuSearch" placeholder="ค้นหาเมนู เช่น อาหาร, ค่าไฟ..." oninput="filterMobMenu(this.value)"></div>
   <div class="mob-uisize uisize"><span class="uisize-lbl">ขนาดตัวอักษร</span><div class="uisize-seg" role="group" aria-label="ขนาดตัวอักษร"><button type="button" onclick="setUiSize('')" data-uis="" aria-pressed="true" title="ขนาดปกติ">ก</button><button type="button" onclick="setUiSize('lg')" data-uis="lg" aria-pressed="false" title="ใหญ่ขึ้น 12%">ก+</button><button type="button" onclick="setUiSize('xl')" data-uis="xl" aria-pressed="false" title="ใหญ่ขึ้น 25%">ก++</button></div></div>
   <div class="mob-sheet-body" id="mobMenuBody">
+    <div class="mob-sheet-grp owner-only owner-g0">⭐ ของฉัน</div>
+    <button type="button" class="mob-clerk-fold owner-only owner-g9" onclick="toggleClerkFold()"><span>เมนูอื่นทั้งหมด <span id="mob-own-n"></span></span><span id="mob-own-arr">▾</span></button>
     <div class="mob-sheet-grp clerk-only clerk-g0">⭐ งานของฉัน</div>
     <button class="mob-sheet-item clerk-only clerk-mine" data-t="overview" onclick="mobMenuGo(this)"><span class="ic">🏠</span>ภาพรวมบ่อ</button>
     <button class="mob-sheet-item clerk-only clerk-mine" data-t="stock-sale" onclick="mobMenuGo(this)"><span class="ic">🛒</span>ยอดขายลูกค้าภายนอก</button>
     <button type="button" class="mob-clerk-fold clerk-only clerk-g9" onclick="toggleClerkFold()"><span>เมนูอื่นทั้งหมด <span id="mob-clerk-n"></span></span><span id="mob-clerk-arr">▾</span></button>
-    <button class="mob-sheet-item clerk-mine" data-t="alerts" onclick="mobMenuGo(this)"><span class="ic">🔔</span>การแจ้งเตือน<span class="mob-sheet-badge" id="mobsheet-alert-badge"></span></button>
+    <button class="mob-sheet-item clerk-mine owner-mine" data-t="alerts" onclick="mobMenuGo(this)"><span class="ic">🔔</span>การแจ้งเตือน<span class="mob-sheet-badge" id="mobsheet-alert-badge"></span></button>
     <div class="mob-sheet-grp">📅 รายวัน</div>
     <button class="mob-sheet-item" data-t="tide" onclick="mobMenuGo(this)"><span class="ic">🌊</span>สภาพอากาศและน้ำขึ้นน้ำลง</button>
     <button class="mob-sheet-item" data-t="entry" onclick="mobMenuGo(this)"><span class="ic">💧</span>คุณภาพน้ำ</button>
@@ -2163,9 +2216,9 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <button class="mob-sheet-item" data-t="gear" onclick="mobMenuGo(this)"><span class="ic">🔩</span>อุปกรณ์บ่อ</button>
     <button class="mob-sheet-item" data-t="mortality" onclick="mobMenuGo(this)"><span class="ic">☠️</span>กุ้งตาย</button>
     <div class="mob-sheet-grp">🌾 บันทึกรอบเลี้ยง</div>
-    <button class="mob-sheet-item" data-t="crops" onclick="mobMenuGo(this)"><span class="ic">📚</span>ประวัติรอบเลี้ยง</button>
+    <button class="mob-sheet-item owner-mine" data-t="crops" onclick="mobMenuGo(this)"><span class="ic">📚</span>ประวัติรอบเลี้ยง</button>
     <button class="mob-sheet-item" data-t="harveststat" onclick="mobMenuGo(this)"><span class="ic">📊</span>สถิติจับกุ้ง</button>
-    <button class="mob-sheet-item admin-only" data-t="pl" onclick="mobMenuGo(this)"><span class="ic">💵</span>P&amp;L สรุป</button>
+    <button class="mob-sheet-item admin-only owner-mine" data-t="pl" onclick="mobMenuGo(this)"><span class="ic">💵</span>P&amp;L สรุป</button>
     <button class="mob-sheet-item" data-t="export" onclick="mobMenuGo(this)"><span class="ic">📄</span>PDF ปิดบ่อ</button>
     <button class="mob-sheet-item" data-t="harvest" onclick="mobMenuGo(this)"><span class="ic">🦐</span>จับกุ้ง</button>
     <div class="mob-sheet-grp">🔍 วิเคราะห์</div>
@@ -2182,7 +2235,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <button class="mob-sheet-item" data-t="medproto" onclick="mobMenuGo(this)"><span class="ic">💊</span>Protocol เวชภัณฑ์</button>
     <button class="mob-sheet-item admin-only" data-t="kan" onclick="mobMenuGo(this)"><span class="ic">📋</span>กัน</button>
     <div class="mob-sheet-grp">🌳 สวนปาล์ม</div>
-    <button class="mob-sheet-item admin-only" data-t="palm" onclick="mobMenuGo(this)"><span class="ic">🌴</span>ตะวันปาล์ม</button>
+    <button class="mob-sheet-item admin-only owner-mine" data-t="palm" onclick="mobMenuGo(this)"><span class="ic">🌴</span>ตะวันปาล์ม</button>
     <div class="mob-sheet-grp">⚙️ ทั่วไป</div>
     <button class="mob-sheet-item" data-t="manage" onclick="mobMenuGo(this)"><span class="ic">🗺️</span>จัดการบ่อ</button>
     <button class="mob-sheet-item admin-only" data-t="users" onclick="mobMenuGo(this)"><span class="ic">👤</span>จัดการผู้ใช้</button>
@@ -2800,8 +2853,23 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 </div>
 <!-- TIDE -->
 <!-- POND DETAIL (read-only) -->
+<!-- หน้าเจ้าของ (ก้อย/กุ้ง) — entry #343 · มือถือเท่านั้น ดูอย่างเดียว · เปิดจากแถบล่าง (ownerGo) -->
+<div id="sec-owner" class="sec">
+  <div id="own-home">
+    <div class="ov-kpi-bar" id="own-kpi"></div>
+    <div class="own-seg" id="own-zones"></div>
+    <div class="own-sum" id="own-sum"></div>
+    <div id="own-ponds"></div>
+  </div>
+  <div id="own-stock" hidden>
+    <input class="fi own-q" id="own-q" type="search" placeholder="🔍 ค้นหาสินค้า..." oninput="renderOwnStock()" aria-label="ค้นหาสินค้า">
+    <div class="own-f"><select class="fi" id="own-cat" onchange="renderOwnStock()" aria-label="หมวด"></select><select class="fi" id="own-co" onchange="renderOwnStock()" aria-label="บริษัท"></select></div>
+    <div class="own-chips" id="own-chips"></div>
+    <div id="own-items"></div>
+  </div>
+</div>
 <div id="sec-ponddetail" class="sec">
-  <div class="pd-back" onclick="document.getElementById('tab-overview').click()">‹ ภาพรวม</div>
+  <div class="pd-back" onclick="pdGoBack()">‹ ภาพรวม</div>
   <div id="pd-body"></div>
 </div>
 <div id="sec-tide" class="sec">
@@ -4583,16 +4651,121 @@ function clerkGo(which){
 }
 function clerkFoldLabel(){
   const body=document.getElementById('mobMenuBody');if(!body)return;
-  const n=[...body.querySelectorAll('.mob-sheet-item')].filter(b=>!b.classList.contains('clerk-mine')&&!b.classList.contains('clerk-only')).length;
-  const nEl=document.getElementById('mob-clerk-n');if(nEl)nEl.textContent='('+n+')';
-  const a=document.getElementById('mob-clerk-arr');if(a)a.textContent=body.classList.contains('clerk-open')?'▴':'▾';
+  const own=document.body.classList.contains('owner-mode'),mine=own?'owner-mine':'clerk-mine',only=own?'owner-only':'clerk-only';   // เจ้าของใช้กลไกพับเดียวกัน (#343)
+  const n=[...body.querySelectorAll('.mob-sheet-item')].filter(b=>!b.classList.contains(mine)&&!b.classList.contains(only)&&(!b.classList.contains('admin-only')||APP_ROLE==='admin')).length;
+  ['mob-clerk-n','mob-own-n'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent='('+n+')';});
+  ['mob-clerk-arr','mob-own-arr'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=body.classList.contains('clerk-open')?'▴':'▾';});
 }
 function toggleClerkFold(){document.getElementById('mobMenuBody')?.classList.toggle('clerk-open');clerkFoldLabel();}
+// ══════ หน้ามือถือเจ้าของ (ก้อย/กุ้ง — พี่สั่ง entry #343) ══════
+//    ดูอย่างเดียว ไม่กรอกอะไร · เปิดมาเจอ Zone A ทุกครั้ง · คอมเหมือนเดิม · สิทธิ์ตามบัญชี (staff ไม่เห็นต้นทุน)
+//    4 กล่องบนสุด = ก๊อปจาก #ov-kpi-bar ของ renderOv() — ตัวเลขชุดเดียวกับหน้าภาพรวม ห้ามคิดคู่ขนาน
+//    คาดการณ์จันทร์หน้า = abw สุ่มล่าสุด + PDG × วัน · น้ำหนัก = กุ้งในบ่อ (pondShrimpCount) × abw นั้น · กก./ไร่ ÷ p.size
+//    ⚠️ ตัวหนังสือขนาดปกติ (พี่สั่ง ไม่ต้องใหญ่) · ไม่ใช้ตัวหนังสือสีเทา (เจ้าของจะคิดว่าไม่สำคัญ)
+const OWNER_NAMES=['ก้อย','ก้อย2','กุ้ง'];
+let _ownZone=null,_ownView='home',_ownFilt='all',_ownLanded=false,_ownBusy=false;
+function ownerGo(v,keepZone){
+  _ownView=v;
+  if(v==='home'&&!keepZone)_ownZone=null;   // กด "สรุป" = กลับไปเริ่มที่ Zone A · กลับจากรายละเอียดบ่อ = อยู่โซนเดิม
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.getElementById('sec-owner').classList.add('on');
+  document.getElementById('own-home').hidden=v!=='home';
+  document.getElementById('own-stock').hidden=v!=='stock';
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById(v==='home'?'bnav-own-home':'bnav-own-stock')?.classList.add('on');
+  closeMobMenu();
+  if(v==='home')renderOwnHome();else renderOwnStock();
+  window.scrollTo({top:0,behavior:'instant'});
+}
+function pdGoBack(){
+  if(document.body.classList.contains('owner-mode')&&getComputedStyle(document.getElementById('bnav')).display!=='none'){ownerGo('home',true);return;}
+  document.getElementById('tab-overview').click();
+}
+function ownNextMonday(){const t=today(),dow=new Date(t+'T00:00:00').getDay();return addDaysStr(t,((8-dow)%7)||7);}
+function ownProj(p,d){
+  const s=sortedSamples(p),lat=s[s.length-1],c=pondShrimpCount(p);
+  if(!lat||!(lat.abw>0)||!c)return null;
+  const pdg=s.length>=2?parseFloat(getPDG(s))||0:0;
+  const abw=lat.abw+(pdg>0?pdg*Math.max(0,dDiff(lat.date,d)):0);
+  const kg=c.inPond*abw/1000;
+  return{sizeNow:1000/lat.abw,sizeMon:1000/abw,kgMon:kg,kgRai:p.size>0?kg/p.size:null,bioNow:c.biomass,phKg:c.phKg||0};
+}
+function ownZoneLbl(z){return z===DZ_NONE?'ไม่ระบุโซน':'โซน '+z;}
+function renderOwnHome(){
+  _ownBusy=true;
+  try{
+    const src=document.getElementById('ov-kpi-bar'),kpi=document.getElementById('own-kpi');
+    renderOv();   // วาดใหม่ทุกครั้ง — กล่องที่ 4 ขึ้นกับสิทธิ์ (admin = ต้นทุนรวม · staff = บ่อต้องดู) ก๊อปของเก่าอาจเป็นของสิทธิ์อื่น (#343)
+    if(kpi&&src)kpi.innerHTML=src.innerHTML;
+    const act=wqfeedActivePonds(),zOf=p=>pondZone(p)||DZ_NONE;
+    const zs=[...new Set(act.map(zOf))].sort((a,b)=>a===DZ_NONE?1:b===DZ_NONE?-1:a.localeCompare(b));
+    if(!_ownZone||!zs.includes(_ownZone))_ownZone=zs.includes('A')?'A':(zs[0]||null);
+    document.getElementById('own-zones').innerHTML=zs.length>1?zs.map(z=>'<button type="button" class="'+(z===_ownZone?'on':'')+'" aria-pressed="'+(z===_ownZone)+'" onclick="_ownZone=\''+z+'\';renderOwnHome()">'
+      +ownZoneLbl(z)+' · '+act.filter(p=>zOf(p)===z).length+' บ่อ</button>').join(''):'';
+    const mon=ownNextMonday(),md=new Date(mon+'T00:00:00'),monTxt=md.getDate()+' '+MO_TH_SHORT[md.getMonth()];
+    const adm=APP_ROLE==='admin',M=v=>(v/1e6).toFixed(2);
+    const ps=act.filter(p=>zOf(p)===_ownZone).sort((a,b)=>(pondCurAge(b)||0)-(pondCurAge(a)||0));
+    let tons=0,cost=0;
+    const tiles=ps.map(p=>{
+      const pr=ownProj(p,mon),c=adm?ceoTotalCost(p):0;cost+=c;
+      const head='<div class="own-h"><b>'+mpEsc(p.name)+'</b><span>'+(pondCurAge(p)||0)+' วัน ›</span></div>';
+      if(!pr)return '<button type="button" class="own-pc" onclick="openPondDetail(\''+p.id+'\')">'+head
+        +'<div class="own-ns"><span>ยังไม่สุ่ม</span>'+(adm?'<span>ต้นทุน '+M(c)+' ล้าน</span>':'')+'</div></button>';
+      tons+=pr.kgMon;
+      const perKg=adm&&(pr.bioNow+pr.phKg)>0?c/(pr.bioNow+pr.phKg):null;
+      const yr=pr.kgRai;
+      const chip=yr==null?'':yr>=PARTIAL_YIELD_CEILING?'<span class="own-chip d">เต็มบ่อ</span>':yr>=PARTIAL_YIELD_TARGET?'<span class="own-chip w">ถึงเกณฑ์พาเชียล</span>':'';
+      const f=getFCR(p);
+      return '<button type="button" class="own-pc" onclick="openPondDetail(\''+p.id+'\')">'+head+'<div class="own-g">'
+        +'<div><div class="l">ไซส์ตอนนี้</div><div class="v">'+Math.round(pr.sizeNow)+' <small>ตัว/กก.</small></div></div>'
+        +'<div class="mon"><div class="l">จันทร์ '+monTxt+'</div><div class="v">~'+Math.round(pr.sizeMon)+' <small>· '+(pr.kgMon/1000).toFixed(1)+' ตัน</small></div></div>'
+        +(adm?'<div><div class="l">ต้นทุนสะสม</div><div class="v">'+M(c)+' <small>ล้าน</small></div>'+(perKg!=null?'<div class="l2">'+Math.round(perKg).toLocaleString()+' ฿/กก.</div>':'')+'</div>'
+          :'<div><div class="l">FCR</div><div class="v">'+(f!=null?f:'-')+'</div></div>')
+        +'<div class="mon"><div class="l">กก./ไร่ จันทร์หน้า</div><div class="v">'+(yr!=null?Math.round(yr).toLocaleString():'-')+'</div>'+chip+'</div>'
+        +'</div></button>';
+    }).join('');
+    document.getElementById('own-sum').innerHTML=ps.length?'<span>จันทร์หน้า ~'+(tons/1000).toFixed(1)+' ตัน</span>'+(adm?'<span>ต้นทุนรวม '+M(cost)+' ล้าน</span>':''):'';
+    document.getElementById('own-ponds').innerHTML=tiles||'<div class="card">ยังไม่มีบ่อที่มีกุ้งในโซนนี้</div>';
+  }finally{_ownBusy=false;}
+}
+// ── สต็อกดูอย่างเดียว: ฟาร์ม + หน้าร้าน · ค้นหา · หมวด · บริษัท (#343) — ยอดผ่าน stkQ()/stkOut() (#338)
+function renderOwnStock(){
+  const all=(D.inventoryItems||[]).filter(i=>i&&i.id&&(!stkOut(i.qty)||!stkOut(shopQ(i))||i.shopCountedAt));
+  const catSel=document.getElementById('own-cat'),coSel=document.getElementById('own-co');
+  const cat=catSel.value||'',co=coSel.dataset.v||coSel.value||'';
+  const cnt=(arr,k)=>arr.reduce((m,i)=>{const x=k(i);m[x]=(m[x]||0)+1;return m;},{});
+  const cc=cnt(all,i=>i.category||''),oc=cnt(all,i=>i.companyId||'');
+  catSel.innerHTML='<option value="">📂 หมวด: ทั้งหมด ('+all.length+')</option>'+Object.keys(cc).sort((a,b)=>cc[b]-cc[a])
+    .map(k=>'<option value="'+mpEsc(k)+'">📂 '+mpEsc(STOCK_CAT_LABEL[k]||k||'ไม่ระบุ')+' ('+cc[k]+')</option>').join('');
+  catSel.value=cat;
+  coSel.innerHTML='<option value="">🏢 บริษัท: ทั้งหมด ('+all.length+')</option>'+Object.keys(oc).sort((a,b)=>oc[b]-oc[a])
+    .map(k=>'<option value="'+mpEsc(k)+'">🏢 '+mpEsc(prCoName(k)||'ยังไม่ระบุบริษัท')+' ('+oc[k]+')</option>').join('');
+  coSel.value=co;coSel.dataset.v='';
+  catSel.classList.toggle('on',!!catSel.value);coSel.classList.toggle('on',!!coSel.value);
+  const q=(document.getElementById('own-q').value||'').trim().toLowerCase();
+  const out=i=>stkOut(i.qty),low=i=>!out(i)&&i.minQty>0&&(parseFloat(i.qty)||0)<=i.minQty;
+  let list=all.filter(i=>(!catSel.value||(i.category||'')===catSel.value)&&(!coSel.value||(i.companyId||'')===coSel.value)&&(!q||String(i.name).toLowerCase().includes(q)));
+  const bad=list.filter(i=>out(i)||low(i)).length;
+  document.getElementById('own-chips').innerHTML='<button type="button" class="'+(_ownFilt==='all'?'on':'')+'" onclick="_ownFilt=\'all\';renderOwnStock()">ทั้งหมด '+list.length+'</button>'
+    +'<button type="button" class="'+(_ownFilt==='bad'?'on':'')+'" onclick="_ownFilt=\'bad\';renderOwnStock()">หมด / ใกล้หมด '+bad+'</button>';
+  if(_ownFilt==='bad')list=list.filter(i=>out(i)||low(i));
+  list.sort((a,b)=>(out(a)?0:low(a)?1:2)-(out(b)?0:low(b)?1:2)||String(a.name).localeCompare(String(b.name),'th'));
+  document.getElementById('own-items').innerHTML=list.map(i=>{
+    const u=mpEsc(i.unit||''),shopKnown=!stkOut(shopQ(i))||i.shopCountedAt;
+    return '<div class="own-it"><div class="n"><span>'+mpEsc(i.name)+'</span>'+(out(i)?'<span class="own-chip d">หมด</span>':low(i)?'<span class="own-chip w">ใกล้หมด</span>':'')+'</div>'
+      +(prCoName(i.companyId)?'<div class="co">'+mpEsc(prCoName(i.companyId))+'</div>':'')
+      +'<div class="q"><div>ฟาร์ม<b>'+stkQ(i.qty)+' <small>'+u+'</small></b></div><div class="shop">หน้าร้าน<b>'+(shopKnown?stkQ(shopQ(i))+' <small>'+u+'</small>':'—')+'</b></div></div></div>';
+  }).join('')||'<div class="card">ไม่พบสินค้า</div>';
+}
 function updateUserHeader(user,role){
   const u=document.getElementById('hdr-user');if(u)u.style.display='flex';
   const uname=user.displayName||user.email.split('@')[0];
   // ผู้ดูแลโซน → แถบล่างมือถือเหลือ ภาพรวม/สภาพอากาศ/จัดการน้ำ/กุ้งตาย/เพิ่มเติม (entry #319) — รายชื่อเดียวกับ ZONE_KEEPER เปลี่ยนผู้ดูแลที่เดียว
   document.body.classList.toggle('zone-keeper',Object.values(ZONE_KEEPER).includes(String(uname).trim()));
+  const isOwner=OWNER_NAMES.includes(String(uname).trim());
+  document.body.classList.toggle('owner-mode',isOwner);
+  // เปิดแอปบนมือถือ → หน้าสรุปของเจ้าของ (เจอ Zone A) ครั้งเดียวต่อการเปิดแอป (#343)
+  if(isOwner&&!_ownLanded&&getComputedStyle(document.getElementById('bnav')).display!=='none'){_ownLanded=true;setTimeout(()=>ownerGo('home'),0);}
   const isClerk=String(uname).trim()===SHOP_CLERK;
   document.body.classList.toggle('shop-clerk',isClerk);
   // เปิดแอปบนมือถือ (มีแถบล่าง) → หน้าร้านทันที ครั้งเดียวต่อการเปิดแอป · รอ applyRole ข้างล่างก่อน (หน้าร้านเป็นของ admin)
@@ -4735,6 +4908,7 @@ async function initFirebase() {
       localStorage.setItem(SK, json_loaded);
       populateAll(); renderOv();
       if(document.getElementById('skp-shop')?.classList.contains('on'))renderShop();   // คนหน้าร้านเปิดแอปมาที่หน้าร้าน (#337)
+      if(document.getElementById('sec-owner')?.classList.contains('on'))ownerGo(_ownView,true);   // เจ้าของ (#343)
       setSyncStatus('sync-ok', '✅ โหลดข้อมูลสำเร็จ (' + (D.ponds||[]).length + ' บ่อ)');
     } else {
       const snap = await dbRef.once('value');
@@ -8186,6 +8360,7 @@ function renderOv(){
   updateAlertBadge(dcP+wcP);
   document.getElementById('ov-ts').textContent=new Date().toLocaleString('th-TH');
   renderDzBars();
+  if(!_ownBusy&&document.getElementById('sec-owner')?.classList.contains('on')){if(_ownView==='home')renderOwnHome();else renderOwnStock();}
   const zt=document.getElementById('ovd-zone-t');if(zt)zt.textContent=dzList().length>1?' · '+dzLabel(dzCur()):'ทั้งหมด';
   renderOvDashboard(active.filter(m=>dzIn(m.p)));   // เห็นทีละโซน (#339) — การ์ด 4 กล่องบนสุดยังเป็นทั้งฟาร์ม
 }
