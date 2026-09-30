@@ -13564,7 +13564,9 @@ function renderWQTable(){
   if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
   const p=pond(pid);if(!p||!p.records.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">บ่อนี้ยังไม่มีข้อมูลคุณภาพน้ำ — บันทึกได้จากฟอร์มด้านบน</p>';return}
   const rec=sortLogArr('records',p.records).reverse().slice(0,rows);
-  const show=PARAMS.slice(0,8);
+  // เดิม PARAMS.slice(0,8) → NH4/NO2/NO3 ไม่โชว์ทั้งที่กรอกไว้ (พี่แจ้ง entry #346) · NH4/NO2/NO3 โชว์เสมอต่อจาก Salinity · Ca/Hardness โชว์เมื่อมีค่าในช่วงที่ดู
+  const has=k=>rec.some(r=>r[k]!=null&&r[k]!=='');
+  const show=[...PARAMS.slice(0,8),...PARAMS.filter(pm=>['nh4','no2','no3'].includes(pm.key)),...PARAMS.filter(pm=>!['nh4','no2','no3'].includes(pm.key)&&PARAMS.indexOf(pm)>=8&&has(pm.key))];
   // ข้อ 4: แสดงชื่อบ่อในหัวตาราง
   const pondHdr=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:calc(13px * var(--ui-scale));color:var(--tx3)">ประวัติค่าน้ำ:</span><span style="font-size:calc(14px * var(--ui-scale));font-weight:700;color:var(--p)">${p.name}</span><span style="font-size:var(--fs11);color:var(--tx3)">(${p.records.length} บันทึก)</span></div>`;
   wrap.innerHTML=pondHdr+`<div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวาเพื่อดูทุกค่า →</div><table class="tbl" style="white-space:nowrap"><thead><tr><th style="white-space:nowrap"></th><th style="white-space:nowrap">วันที่</th><th style="white-space:nowrap">อายุ</th>${show.map(pm=>`<th style="white-space:nowrap">${pm.lbl}</th>`).join('')}<th style="white-space:nowrap">หมายเหตุ</th></tr></thead><tbody>${
