@@ -49,8 +49,8 @@ function addDays(dateStr, days) {
 function classifyOv(key, v) {
   if (v === null || v === undefined || v === "") return "na";
   switch (key) {
-    case "nh4":
-      return v > 0.5 ? "danger" : v >= 0.25 ? "warn" : "ok";
+    case "nh4":   // เกณฑ์ฟาร์ม ≥2.5 เตือน (entry #347 — ตรงกับแอป)
+      return v >= 2.5 ? "warn" : "ok";
     case "no2":
       return v > 4 ? "danger" : v >= 1 ? "warn" : "ok";
     case "phM":
@@ -60,8 +60,8 @@ function classifyOv(key, v) {
     case "phSwing":
       return v > 0.5 ? "danger" : v >= 0.3 ? "warn" : "ok";
     case "doM":
-    case "doA":
-      return v < 3 ? "danger" : v < 4 ? "warn" : "ok";
+    case "doA":   // 5–10 ปกติ · <5 แดง (#347)
+      return v < 5 ? "danger" : v > 10 ? "warn" : "ok";
     case "tM":
     case "tA":
       if (v > 33 || v < 26) return "danger";
@@ -69,7 +69,7 @@ function classifyOv(key, v) {
       return "ok";
     case "alk":
       if (v < 80 || v > 250) return "danger";
-      if (v < 100 || v > 200) return "warn";
+      if (v < 136 || v > 200) return "warn";   // ปกติ 136–200 (#347)
       return "ok";
     case "sal":
       return v > 35 ? "danger" : v > 30 ? "warn" : "ok";

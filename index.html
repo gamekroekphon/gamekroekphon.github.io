@@ -5050,14 +5050,14 @@ const PARAMS=[
   {key:'phA',lbl:'pH บ่าย',    unit:'',    min:7.8,max:9.0,dMin:7.0,dMax:9.5,dec:2,color:'#3182ce',note:'บ่ายสูงกว่าเช้าได้ (แสงแดด)'},
   {key:'tM', lbl:'Temp เช้า',  unit:'°C',  min:26, max:32, dMin:22, dMax:35, dec:1,color:'#e53e3e'},
   {key:'tA', lbl:'Temp บ่าย',  unit:'°C',  min:26, max:32, dMin:22, dMax:36, dec:1,color:'#fc8181'},
-  {key:'doM',lbl:'DO เช้า',    unit:'mg/L',min:5,  max:15, dMin:3,  dMax:20, dec:2,color:'#0987a0'},
-  {key:'doA',lbl:'DO บ่าย',    unit:'mg/L',min:6,  max:15, dMin:4,  dMax:20, dec:2,color:'#00b5d8'},
-  {key:'alk',lbl:'ALK',        unit:'mg/L',min:100,max:200,dMin:60, dMax:300,dec:0,color:'#6b46c1'},
+  {key:'doM',lbl:'DO เช้า',    unit:'mg/L',min:5,  max:10, dMin:5,  dMax:20, dec:2,color:'#0987a0'},
+  {key:'doA',lbl:'DO บ่าย',    unit:'mg/L',min:5,  max:10, dMin:5,  dMax:20, dec:2,color:'#00b5d8'},
+  {key:'alk',lbl:'ALK',        unit:'mg/L',min:136,max:200,dMin:80, dMax:250,dec:0,color:'#6b46c1'},
   {key:'sal',lbl:'Salinity',   unit:'ppt', min:10, max:30, dMin:5,  dMax:35, dec:0,color:'#2c7a7b'},
   {key:'ca', lbl:'Ca',         unit:'mg/L',min:200,max:500,dMin:100,dMax:800,dec:0,color:'#b7791f'},
   {key:'mg_',lbl:'Mg',         unit:'mg/L',min:800,max:1500,dMin:500,dMax:2000,dec:0,color:'#276749'},
   {key:'hard',lbl:'Hardness',  unit:'mg/L',min:2000,max:5000,dMin:1000,dMax:8000,dec:0,color:'#744210'},
-  {key:'nh4',lbl:'NH4+',       unit:'mg/L',min:0,  max:0.1,dMin:0,  dMax:0.5,dec:3,color:'#c05621',inv:true},
+  {key:'nh4',lbl:'NH4+',       unit:'mg/L',min:0,  max:2.5,dMin:0,  dMax:Infinity,dec:3,color:'#c05621',inv:true},
   {key:'no2',lbl:'NO2',        unit:'mg/L',min:0,  max:0.5,dMin:0,  dMax:1.0,dec:3,color:'#9b2335',inv:true},
   {key:'no3',lbl:'NO3',        unit:'mg/L',min:0,  max:20, dMin:0,  dMax:40, dec:1,color:'#702459',inv:true},
 ];
@@ -6063,20 +6063,20 @@ function warnDir(key,v){
     case'phM':case'phA':return v>8.5?'high':'low';
     case'alk':return v>200?'high':'low';
     case'tM':case'tA':return v>32?'high':'low';
-    case'doM':case'doA':return'low';
+    case'doM':case'doA':return v>10?'high':'low';
     default:return'high';
   }
 }
 function classifyOv(key,v){
   if(v===null||v===undefined||v==='')return'na';
   switch(key){
-    case'nh4':return v>0.5?'danger':v>=0.25?'warn':'ok';
+    case'nh4':return v>=2.5?'warn':'ok';   // เกณฑ์ฟาร์ม (พี่สั่ง entry #347) — เดิม >0.5 แดง / ≥0.25 เตือน
     case'no2':return v>4?'danger':v>=1?'warn':'ok';
     case'phM':if(v<7.5||v>8.6)return'danger';if(v<7.8||v>8.3)return'warn';return'ok';
     case'phSwing':return v>0.5?'danger':v>=0.3?'warn':'ok';
-    case'doM':case'doA':return v<3?'danger':v<4?'warn':'ok';
+    case'doM':case'doA':return v<5?'danger':v>10?'warn':'ok';   // 5–10 เขียว · <5 แดง (#347)
     case'tM':case'tA':if(v>33||v<26)return'danger';if(v>32||v<28)return'warn';return'ok';
-    case'alk':if(v<80||v>250)return'danger';if(v<100||v>200)return'warn';return'ok';
+    case'alk':if(v<80||v>250)return'danger';if(v<136||v>200)return'warn';return'ok';   // ปกติ 136–200 (#347)
     case'sal':return v>35?'danger':v>30?'warn':'ok';
     case'tcbsGreen':return v>1000?'danger':v>100?'warn':'ok';
     // ⚠️ เชื้อเขียว "ในตับ" — ฟาร์มผสมยากินเมื่อถึง 10² = 100 พอดี จึงต้องเป็น >= ไม่ใช่ >
@@ -17495,11 +17495,10 @@ function calcRisk(d,ix,p){
   let score=w.score;const pondReasons=[];
   const last=p.records[p.records.length-1];
   if(last){
-    if(last.alk!=null&&last.alk!==''&&last.alk<120){score+=1;pondReasons.push({l:'warn',m:`ALK ต่ำ (${last.alk}) เสี่ยงฝน`})}
-    if(last.doM!=null&&last.doM!==''&&last.doM<5.5){score+=1;pondReasons.push({l:'warn',m:`DO เช้าต่ำ (${last.doM})`})}
+    if(last.alk!=null&&last.alk!==''&&last.alk<136){score+=1;pondReasons.push({l:'warn',m:`ALK ต่ำ (${last.alk}) เสี่ยงฝน`})}
+    if(last.doM!=null&&last.doM!==''&&last.doM<5){score+=2;pondReasons.push({l:'danger',m:`DO เช้าต่ำกว่า 5 (${last.doM})`})}
     if(last.nh4!=null&&last.nh4!==''){
-      if(last.nh4>0.5){score+=3;pondReasons.push({l:'danger',m:`แอมโมเนีย (NH4+) เกินเกณฑ์อันตราย (${last.nh4})`})}
-      else if(last.nh4>=0.25){score+=1;pondReasons.push({l:'warn',m:`แอมโมเนีย (NH4+) เริ่มสูง (${last.nh4})`})}
+      if(last.nh4>=2.5){score+=2;pondReasons.push({l:'warn',m:`แอมโมเนีย (NH4+) สูง (${last.nh4})`})}   // เกณฑ์ฟาร์ม ≥2.5 (#347)
     }
     if(last.no2!=null&&last.no2!==''){
       if(last.no2>4){score+=3;pondReasons.push({l:'danger',m:`ไนไตรท์ (NO2) เกินเกณฑ์อันตราย (${last.no2})`})}

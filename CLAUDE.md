@@ -135,3 +135,4 @@
 - **`renderOv()` ทำงานตอน DOMContentLoaded ก่อน `firebase.initializeApp`** — อะไรที่หน้าภาพรวมเรียก ห้ามแตะ `firebase.auth()`/`database()` ตรงๆ (throw แล้วแอปหยุดโหลดทั้งแอป) · `curUserLabel()` กันไว้แล้ว (entry #339)
 - **กองทุนซื้อได้แบบรอธนาคารยืนยัน (`b.pending`, ไม่มี nav/units)** — รวมหน่วยต้องใช้ `fundBU(b)` · มูลค่าพอร์ตต้องบวก `fundPendAmt()` · ห้ามอ่าน `b.units`/`b.nav` ตรงๆ โดยไม่เช็ค pending (entry #340)
 - **ก้อย/กุ้ง = หน้ามือถือเจ้าของ (`OWNER_NAMES`, `body.owner-mode`, `#sec-owner`)** — ดูอย่างเดียว · ตัวหนังสือขนาดปกติ · ห้ามตัวหนังสือสีเทา · 4 กล่องบนสุดก๊อปจาก `#ov-kpi-bar` ห้ามคิดคู่ขนาน · ต้นทุนเห็นเฉพาะ admin (entry #343)
+- **เกณฑ์ค่าน้ำอยู่ 4 ที่ ต้องแก้พร้อมกันเสมอ**: `PARAMS` (สีช่อง) · `classifyOv`/`warnDir` (สถานะภาพรวม) · `calcRisk` (หน้าความเสี่ยง) · `functions/index.js` classifyOv (บอท LINE — ต้อง deploy) · เกณฑ์ฟาร์ม: DO 5–10 · ALK 136–200 · NH4 <2.5 (entry #347)
