@@ -1490,6 +1490,7 @@ body.owner-mode #mobMenuBody.clerk-search>.owner-g9{display:none!important}
 .tx-bar b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--d)}
 .tx-dt{font-size:calc(12.5px * var(--ui-scale))}
 .tx-axis{display:flex;justify-content:space-between;font-size:calc(11px * var(--ui-scale));font-weight:600;padding:2px 0 0}
+.menu-empty{display:none!important}   /* หัวกลุ่มเมนูที่ไม่มีเมนูให้กด (#349) */
 /* ตารางคุณภาพน้ำ (#348) */
 .wqg-card{padding:10px 10px 8px}
 .wqg-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
@@ -1634,6 +1635,19 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
   .mob-sheet.show{display:flex!important}
   .mob-sheet-scrim.show{display:block!important}
   .mob-sheet{max-height:92vh;max-width:560px;margin:0 auto}
+}
+/* แถบล่างแบบ Instagram (พี่สั่ง entry #350): ลอย · ใสเบลอ · โค้งมนเต็ม · ไอคอนอย่างเดียว · ปุ่มที่เลือกเป็นแคปซูลเทาอ่อน
+   ⚠️ ต้องอยู่หลังกฎ .bnav ของมือถือ/แท็บเล็ตด้านบน · ชื่อเมนูยังอยู่ใน DOM (font-size:0) โปรแกรมอ่านหน้าจอยังอ่านได้ */
+@media(max-width:600px),(min-width:601px) and (orientation:landscape) and (max-height:500px) and (pointer:coarse),(min-width:601px) and (max-width:1400px) and (pointer:coarse){
+  .bnav{left:max(14px,env(safe-area-inset-left));right:max(14px,env(safe-area-inset-right));bottom:calc(10px + env(safe-area-inset-bottom));
+    max-width:520px;margin:0 auto;border-radius:999px;border:1px solid rgba(255,255,255,.6);gap:2px;padding:6px;
+    background:rgba(255,255,255,.62);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);
+    box-shadow:0 10px 30px rgba(15,23,42,.16),inset 0 1px 0 rgba(255,255,255,.8)}
+  .bnav-btn{font-size:0;flex-direction:row;min-height:50px;padding:0;border-radius:999px;color:var(--tx);transition:background .2s}
+  .bnav-btn .bnav-ic{font-size:calc(23px * min(var(--ui-scale), 1.1));line-height:1;position:relative}
+  .bnav-btn.on{background:rgba(17,24,39,.08);color:var(--tx)}
+  .bnav-badge{top:-6px;right:-12px;font-size:10px}
+  body{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
 }
 .cat-tag{display:inline-flex;align-items:center;gap:4px;background:var(--sf2);border:1px solid var(--bd);border-radius:20px;padding:3px 10px;font-size:calc(12px * var(--ui-scale));margin:3px;}
 .cat-del{cursor:pointer;color:var(--d);font-weight:700;padding:0 2px;}
@@ -4723,6 +4737,31 @@ function applyRole(role){
     const sr=document.getElementById('sn-role');if(sr)sr.textContent='พนักงาน';
     const ms=document.getElementById('mhd-sub');if(ms)ms.textContent='ตะวันฟาร์ม · พนักงาน';
   }
+  pruneEmptyMenus();
+}
+// ── ซ่อนหัวกลุ่ม/หัวข้อเมนูที่ไม่มีเมนูให้กดเลย (พี่สั่ง entry #349 — staff เห็น "ค่าแรง / ค่าไฟ", "สวนปาล์ม" ว่างๆ)
+//    ตัดสินจากสิทธิ์ (admin-only / ซ่อนด้วย style ของ FINANCE_TABS) ไม่ใช้ computed style
+//    เพราะเมนูมือถือของปุ๊ก/เจ้าของพับรายการไว้ด้วย CSS — ถ้าดู computed style หัวกลุ่มจะหายถาวรตอนกางออก
+//    ครอบ 3 ชุดเมนู: แถบซ้าย (.sn-grp-btn+.sn-sub · .sn-label+.sn-nav) · แถบบน (.tab-grp) · แผงมือถือ (.mob-sheet-grp)
+function pruneEmptyMenus(){
+  document.querySelectorAll('.menu-empty').forEach(e=>e.classList.remove('menu-empty'));
+  const ok=e=>!(e.classList.contains('admin-only')&&APP_ROLE!=='admin')&&e.style.display!=='none';
+  document.querySelectorAll('.sn-grp-btn').forEach(b=>{
+    const m=(b.getAttribute('onclick')||'').match(/'([^']+)'/),sub=m&&document.getElementById(m[1]);
+    if(sub&&![...sub.querySelectorAll('.sn-link')].some(ok)){b.classList.add('menu-empty');sub.classList.add('menu-empty');}
+  });
+  document.querySelectorAll('.side-nav .sn-label').forEach(l=>{
+    const nav=l.nextElementSibling;if(!nav||!nav.classList.contains('sn-nav'))return;
+    if(![...nav.querySelectorAll('.sn-link,.sn-top')].some(x=>ok(x)&&!x.closest('.menu-empty'))){l.classList.add('menu-empty');nav.classList.add('menu-empty');}
+  });
+  document.querySelectorAll('.tab-grp').forEach(g=>{if(![...g.querySelectorAll('.tab-item')].some(ok))g.classList.add('menu-empty');});
+  const ch=[...(document.getElementById('mobMenuBody')?.children||[])];
+  ch.forEach((e,i)=>{
+    if(!e.classList.contains('mob-sheet-grp')||e.classList.contains('clerk-only')||e.classList.contains('owner-only'))return;
+    let any=false;
+    for(let j=i+1;j<ch.length&&!ch[j].classList.contains('mob-sheet-grp');j++){const it=ch[j];if(it.classList.contains('mob-sheet-item')&&!it.classList.contains('clerk-only')&&!it.classList.contains('owner-only')&&ok(it))any=true;}
+    if(!any)e.classList.add('menu-empty');
+  });
 }
 // ── คนหน้าร้าน (พี่สั่ง entry #337) — ปุ๊ก: สต็อกเข้าออกร้าน/ฟาร์ม · อุปกรณ์นอก · ราคาสินค้า · ค่าแรง · ค่าไฟ · ไม่ได้ดูเรื่องกุ้ง
 //    มือถือ: เปิดแอปเจอหน้าร้าน · แถบล่างเฉพาะงานนี้ · เมนูเรื่องกุ้งพับไว้ใน ☰ (ไม่ได้ปิดสิทธิ์ — admin เหมือนเดิม) · คอมเหมือนเดิม
