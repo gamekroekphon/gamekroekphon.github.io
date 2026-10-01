@@ -1506,7 +1506,13 @@ body.owner-mode #mobMenuBody.clerk-search>.owner-g9{display:none!important}
 .wqg-date{width:auto!important;font-weight:700}
 .wqg-prog{flex:1;min-width:150px;font-size:calc(13.5px * var(--ui-scale))}
 .wqg-save{min-height:44px;font-weight:800}.wqg-save:disabled{opacity:.55}
-.wqg-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.wqg-scroll{overflow:auto;-webkit-overflow-scrolling:touch;scroll-padding-top:60px;scroll-padding-left:140px}
+/* หัวตารางตรึงบนสุดตอนเลื่อนลงไปบ่อล่างๆ (พี่สั่ง entry #354) — กรอบ .wqg-scroll เลื่อนเองทั้งตั้ง/นอน สูงพอดีจอ (wqgFit)
+   ⚠️ sticky ของหัวตารางยึดกับกรอบที่ overflow ใกล้สุด → ต้องให้กรอบนี้เป็นตัวเลื่อนแนวตั้งด้วย ตรึงกับหน้าจอตรงๆ ไม่ได้เพราะกรอบเลื่อนซ้าย-ขวา
+   · เงาที่ th ปิดช่องว่าง border-spacing 3px ไม่ให้แถวที่เลื่อนผ่านโผล่ · scroll-padding = กด Enter ไปช่องถัดไปแล้วไม่มุดใต้หัวตาราง/คอลัมน์บ่อ */
+table.wqg thead{position:sticky;top:0;z-index:3}
+table.wqg thead th{background:var(--bg);box-shadow:0 -3px 0 var(--bg),0 3px 0 var(--bg)}
+table.wqg thead th.wqg-pc{z-index:4}
 .card table.wqg{display:table;overflow:visible}
 table.wqg{border-collapse:separate;border-spacing:0 3px;width:100%;min-width:1060px}
 table.wqg th{font-size:calc(12px * var(--ui-scale));font-weight:800;text-align:center;padding:2px 2px;line-height:1.2;color:var(--tx)}
@@ -13557,9 +13563,10 @@ function initEntry(){
 //    ค่าเดิมของวันนั้นเติมให้ในช่อง → แก้ในตารางได้เลย · บันทึกเฉพาะแถวที่แตะ (draft) — แถวที่แตะ: ช่องว่าง = ลบค่านั้น (เหมือน saveWQ เดิม)
 //    ⚠️ ค่าที่พิมพ์ค้างเก็บใน _wqDraft แยกจาก D — ข้อมูลจากอีกเครื่องเข้ามา D ถูกแทนทั้งก้อน แต่ค่าที่พิมพ์ไม่หาย
 //    Enter/ถัดไป: เดินตาม "ชุด" (เช้า+ALK/NH4 · บ่าย · ค่าอื่น) สุดชุดลงแถวถัดไป — ตอนเช้าไม่ต้องข้ามช่องบ่ายเอง
-const WQG_KEYS=['phM','tM','doM','phA','tA','doA','alk','nh4','sal','no2','no3','ca','mg_','hard'];
+const WQG_KEYS=['phM','tM','doM','phA','tA','doA','alk','nh4','no2','no3','sal','ca','mg_','hard'];   // NH4 NO2 NO3 เรียงติดกัน · Sal ไปอยู่หน้า Ca (พี่สั่ง entry #354)
 const WQG_GRP={phM:'wq1',tM:'wq1',doM:'wq1',phA:'wq2',tA:'wq2',doA:'wq2',alk:'wq3',nh4:'wq3'};
-const WQG_FLOWS=[['phM','tM','doM','alk','nh4'],['phA','tA','doA'],['sal','no2','no3','ca','mg_','hard']];
+// Enter: ชุดเช้าเดินต่อจาก NH4 ไป NO2 → … → Hard แล้วค่อยขึ้นบ่อถัดไป (พี่สั่ง entry #354 — เดิมหลัง NH4 ขึ้นบ่อใหม่เลย) · ชุดบ่ายแยกเหมือนเดิม
+const WQG_FLOWS=[['phM','tM','doM','alk','nh4','no2','no3','sal','ca','mg_','hard'],['phA','tA','doA']];
 const WQG_SHORT={phM:'pH',tM:'Temp',doM:'DO',phA:'pH',tA:'Temp',doA:'DO',alk:'ALK',nh4:'NH4+',sal:'Sal',no2:'NO2',no3:'NO3',ca:'Ca',mg_:'Mg',hard:'Hard'};
 let _wqDraft={},_wqDraftDate=null;
 function wqgDate(){return document.getElementById('ep-date')?.value||today();}
@@ -13601,7 +13608,18 @@ function renderWqGrid(){
       +'<td class="wqg-ck">'+(dr&&Object.keys(dr).length?'<span class="wqg-dirty">●</span>':rec?'✓':'')+'</td></tr>';
   }).join('')+'</tbody>';
   tbl.innerHTML=html;
-  wqgProg();
+  wqgProg();wqgFit();
+}
+// ── ความสูงกรอบตาราง = จอ − หัวเว็บที่ตรึง − แถบวันที่/บันทึก − แถบล่าง (entry #354) — วัดใหม่ทุกครั้งที่วาด/หมุนจอ
+//    ⚠️ ห้ามวัด sticky ด้วย offsetTop (#294) — ใช้ top ใน CSS + ความสูง เหมือน prStickyTop()
+function wqgFit(){
+  const box=document.querySelector('#sec-entry .wqg-scroll');if(!box||!box.offsetParent)return;
+  let t=0;['.hdr','.tabs-wrap'].forEach(q=>{const e=document.querySelector(q);if(!e||!e.offsetHeight)return;const cs=getComputedStyle(e);if(cs.position!=='sticky'&&cs.position!=='fixed')return;t=Math.max(t,(parseFloat(cs.top)||0)+e.offsetHeight);});
+  const nav=document.querySelector('.bnav');let nb=0;
+  if(nav&&nav.offsetHeight&&getComputedStyle(nav).position==='fixed'){const r=nav.getBoundingClientRect();nb=innerHeight-r.top;}
+  const bar=document.querySelector('#sec-entry .wqg-bar');
+  box.style.maxHeight=Math.max(320,innerHeight-t-nb-(bar?bar.offsetHeight:0)-28)+'px';
+  if(!window._wqgFitHooked){window._wqgFitHooked=true;window.addEventListener('resize',()=>{if(document.getElementById('sec-entry')?.classList.contains('on'))wqgFit();});}
 }
 function wqgProg(){
   const d=wqgDate(),ponds=wqEntryPonds();
