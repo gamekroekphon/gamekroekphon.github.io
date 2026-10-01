@@ -2728,6 +2728,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
         <button type="button" class="type-btn on-income" id="pm-view-income" onclick="setPalmMoneyViewType('income')">📥 รายรับ</button>
         <button type="button" class="type-btn" id="pm-view-expense" onclick="setPalmMoneyViewType('expense')">📤 รายจ่าย</button>
       </div>
+      <select class="fi" id="pm-month" style="width:150px;margin-bottom:10px" onchange="renderPalmMoney()" aria-label="เลือกเดือน"><option value="">ทุกเดือน</option></select>
       <div id="pm-table"></div>
     </div>
   </div>
@@ -2778,6 +2779,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
         <div class="card-t" style="margin-bottom:0">📋 ประวัติการใส่ปุ๋ยรายแปลง</div>
         <div class="chip-row" id="pfl-filter-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
       </div>
+      <select class="fi" id="pfl-month" style="width:150px;margin-bottom:10px" onchange="renderPalmFertLog()" aria-label="เลือกเดือน"><option value="">ทุกเดือน</option></select>
       <div id="palm-fert-table"></div>
     </div>
   </div>
@@ -2796,6 +2798,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <div class="card">
       <div class="card-t">📋 ประวัติตัดปาล์มรายครั้ง</div>
       <div class="card-sub">ตารางเดียวกับรายการ "รายรับ (ขายปาล์ม)" — แก้ไข/ลบได้ที่แท็บ "รายรับ-รายจ่าย"</div>
+      <select class="fi" id="phv-month" style="width:150px;margin-bottom:10px" onchange="renderPalmHarvestTable()" aria-label="เลือกเดือน"><option value="">ทุกเดือน</option></select>
       <div id="palm-harvest-table"></div>
     </div>
   </div>
@@ -4368,14 +4371,15 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
             <option value="lime">🪨 ปูน</option>
             <option value="equip">🔧 อุปกรณ์</option>
           </select>
-          <input type="month" class="fi" id="skl-out-month" style="width:150px" onchange="renderStockOutLog(true)">
+          <select class="fi" id="skl-out-month" style="width:150px" onchange="renderStockOutLog(true)" aria-label="เลือกเดือน"><option value="">ทุกเดือน</option></select>
           <button class="btn" style="font-size:calc(12px * var(--ui-scale));padding:6px 12px;white-space:nowrap;background:var(--s1);color:var(--tx2)" onclick="clearStockOutFilter()">ล้างตัวกรอง</button>
         </div>
         <div id="sk-log-out-table"></div>
       </div>
-      <div id="skl-pane-toshop" style="display:none"><div id="sk-log-toshop-table"></div></div>
-      <div id="skl-pane-shopin" style="display:none"><div id="sk-log-shopin-table"></div></div>
+      <div id="skl-pane-toshop" style="display:none"><select class="fi" id="skl-toshop-month" style="width:150px;margin-bottom:10px" onchange="renderStockToShopLog()" aria-label="เลือกเดือน"><option value="">ทุกเดือน</option></select><div id="sk-log-toshop-table"></div></div>
+      <div id="skl-pane-shopin" style="display:none"><select class="fi" id="skl-shopin-month" style="width:150px;margin-bottom:10px" onchange="renderStockShopInLog()" aria-label="เลือกเดือน"><option value="">ทุกเดือน</option></select><div id="sk-log-shopin-table"></div></div>
       <div id="skl-pane-in" style="display:none">
+        <select class="fi" id="skl-in-month" style="width:150px;margin-bottom:10px" onchange="renderStockInLog()" aria-label="เลือกเดือน"><option value="">ทุกเดือน</option></select>
         <div id="sk-log-in-table"></div>
       </div>
       <!-- ── นับสต็อกเป็นรอบ 10 วัน (entry #301) — เลือกรอบ + เลือกบ่อ · ทุกบ่อ = ใบนับของในคลัง · เลือกบ่อ = ใบตรวจการเบิกรายบ่อ ── -->
@@ -4403,7 +4407,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
             <option value="equip">🔧 อุปกรณ์</option>
             <option value="fuel">⛽ น้ำมัน</option>
           </select>
-          <input type="month" class="fi" id="skl-shared-month" style="width:150px" onchange="renderStockShareLog()">
+          <select class="fi" id="skl-shared-month" style="width:150px" onchange="renderStockShareLog()" aria-label="เลือกเดือน"><option value="">ทุกเดือน</option></select>
           <button class="btn" style="font-size:calc(12px * var(--ui-scale));padding:6px 12px;white-space:nowrap;background:var(--s1);color:var(--tx2)" onclick="clearStockShareFilter()">ล้างตัวกรอง</button>
         </div>
         <div class="admin-only" style="margin-bottom:12px"><div class="g4" id="skl-shared-kpi"></div></div>
@@ -9210,6 +9214,14 @@ function renderLaborMonthChart(){
   el.innerHTML=`<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%">${yTicks}${bars}</svg>`;
 }
 const MO_TH_SHORT=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+// ── ดรอปดาวน์เลือกเดือนของหน้าประวัติ (พี่สั่ง entry #352) — รายการเดือน = เฉพาะเดือนที่มีข้อมูล (ใหม่→เก่า) พร้อมจำนวน
+//    ส่ง dates ที่ผ่านตัวกรองอื่นแล้ว (บ่อ/หมวด/แปลง) → เลือกเดือนแล้วไม่มีทางได้รายการว่าง · เดือนที่เลือกหายไปจากตัวเลือก = กลับเป็น "ทุกเดือน"
+function histMonths(dates,cur){
+  const cnt={};(dates||[]).forEach(d=>{const k=String(d||'').slice(0,7);if(/^\d{4}-\d\d$/.test(k))cnt[k]=(cnt[k]||0)+1;});
+  const ks=Object.keys(cnt).sort().reverse(),val=ks.includes(cur)?cur:'';
+  return{val,opts:'<option value="">ทุกเดือน</option>'+ks.map(k=>'<option value="'+k+'"'+(k===val?' selected':'')+'>'+MO_TH_SHORT[+k.slice(5,7)-1]+' '+String(+k.slice(0,4)+543).slice(2)+' ('+cnt[k]+')</option>').join('')};
+}
+function histMonthFill(sel,dates){if(!sel)return'';const r=histMonths(dates,sel.value);sel.innerHTML=r.opts;sel.value=r.val;return r.val;}
 // ── ส่วน 3: ค่าแรง/กก. เทียบรอบที่ปิดแล้ว (ใช้ getLaborCostForPond สูตรใหม่ — เงินเดือนประจำ+รายวัน จัดสรรตามบ่อ active จริง) ──
 // ── ค่าเฉลี่ยคิดแยกเป็นรายปี (ปีไหนปีนั้น) ไม่ดึงรอบปีก่อนๆ มาถัวรวมกัน — ข้อมูลรอบเก่ายังอยู่ครบ สลับดูปีอื่นได้จาก dropdown (แพทเทิร์นเดียวกับ renderElecCropSummary) ──
 let lbCropYearSel=null; // null = ยังไม่ตั้งค่า (จะ default เป็นปีปัจจุบัน ถ้ามีข้อมูล ไม่งั้นปีล่าสุดที่มี)
@@ -9851,7 +9863,7 @@ function stockJobsForRole(){
 //    ⚠️ ยอดหน้าร้านเปลี่ยนผ่าน D.shopLog เท่านั้น · ฝั่งฟาร์มของการย้าย = inventoryLog 'in' from:'shop' (เข้าฟาร์ม) / 'toShop' (ออกจากฟาร์ม)
 //       ห้ามใส่การรับเข้าหน้าร้าน/นับหน้าร้านลง inventoryLog (นับสต็อกฟาร์มถือทุกรายการที่ไม่ใช่ 'in' เป็นการตัดของฟาร์ม)
 const SHOP_LEAD_DEFAULT=10,SHOP_SAFETY=7,SHOP_FARM_LOW=5,SHOP_MOVE_DAYS=10,SHOP_BUY_COVER=21,SHOP_RATE_DAYS=14;
-let _xferDir='toFarm',_stockCartMode=null,_shopView='todo',_shopTodo='buy',_shopQ='',_shopCount={};
+let _xferDir='toFarm',_stockCartMode=null,_shopView='todo',_shopTodo='buy',_shopQ='',_shopCount={},_shopMo='';
 function shopLogArr(){if(!Array.isArray(D.shopLog))D.shopLog=[];return D.shopLog;}
 function shopQ(i){return Math.round((parseFloat(i&&i.shopQty)||0)*100)/100;}
 // ยอดคงเหลือบนจอ = ปัดลงเป็นเลขกลม (พี่สั่ง entry #338) — ตรงกับจำนวนที่นับได้บนชั้น (ถัง/ถุงที่เปิดใช้อยู่ไม่นับ) · ติดลบปัดเข้าหา 0 (−0.3 → "-0")
@@ -9959,9 +9971,11 @@ function renderShop(){
     s+='<div class="card">'+prCompanies().map(c=>'<div class="shp-cnt"><span><b>'+mpEsc(c.name)+'</b></span><input class="fi" type="number" inputmode="numeric" min="1" placeholder="'+SHOP_LEAD_DEFAULT+'" value="'+(c.leadDays||'')+'" onchange="setShopLead(\''+c.id+'\',this.value)" aria-label="วันส่งของ '+mpEsc(c.name)+'"></div>').join('')
       +'<div style="font-size:var(--fs11);color:var(--tx3);margin-top:8px">วันส่งของหลังสั่ง · เว้นว่าง = '+SHOP_LEAD_DEFAULT+' วัน</div></div>';
   }else{
-    const L=shopLogArr().slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.id).localeCompare(String(a.id))).slice(0,80);
+    const LA=shopLogArr().slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.id).localeCompare(String(a.id)));
+    const HM=histMonths(LA.map(l=>l.date),_shopMo);_shopMo=HM.val;
+    const L=_shopMo?LA.filter(l=>String(l.date||'').startsWith(_shopMo)):LA.slice(0,80);
     const T={in:'📥 รับเข้าหน้าร้าน',xfer:'🏪→🦐 หน้าร้าน เข้า ฟาร์ม',fromFarm:'🦐→🏪 ฟาร์ม เข้า หน้าร้าน',adj:'✏️ นับ'};
-    s+='<div class="card">'+(L.length?L.map(l=>{const plus=l.type==='in'||l.type==='fromFarm'||(l.type==='adj'&&l.qty>0);
+    s+='<div class="card"><select class="fi" style="width:150px;margin-bottom:10px" onchange="_shopMo=this.value;renderShop()" aria-label="เลือกเดือน">'+HM.opts+'</select>'+(L.length?L.map(l=>{const plus=l.type==='in'||l.type==='fromFarm'||(l.type==='adj'&&l.qty>0);
       return'<div class="shp-log"><span><b>'+mpEsc(l.itemName||'-')+'</b><small>'+fD(l.date)+' · '+(T[l.type]||l.type)+' · '+mpEsc(l.by||'-')+'</small></span>'
         +'<span style="display:flex;align-items:center;gap:4px"><b class="'+(plus?'p':'m')+'">'+(plus?'+':'−')+Math.abs(l.qty)+' '+mpEsc(l.unit||'')+'</b>'
         +'<button type="button" class="btn-sm btn-del" onclick="deleteShopLog(\''+l.id+'\')" aria-label="ลบ">🗑️</button></span></div>';}).join('')
@@ -11256,7 +11270,8 @@ function setStockLogMode(mode){
 function renderStockShopInLog(){
   const tbl=document.getElementById('sk-log-shopin-table');if(!tbl)return;
   if(APP_ROLE!=='admin'){tbl.innerHTML='';return;}
-  const logs=shopLogArr().filter(l=>l&&l.type==='in').sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.id).localeCompare(String(a.id)));
+  let logs=shopLogArr().filter(l=>l&&l.type==='in').sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.id).localeCompare(String(a.id)));
+  const mo=histMonthFill(document.getElementById('skl-shopin-month'),logs.map(l=>l.date));if(mo)logs=logs.filter(l=>String(l.date||'').startsWith(mo));
   if(!logs.length){tbl.innerHTML='<p style="padding:10px;text-align:center">ยังไม่มีประวัติรับเข้าหน้าร้าน</p>';return;}
   tbl.innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>รายการ</th><th style="text-align:right">จำนวน</th><th>หน่วย</th><th>บริษัท</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>'
     +logs.map((l,i)=>{const it=(D.inventoryItems||[]).find(x=>x&&x.id===l.itemId);
@@ -11271,7 +11286,8 @@ function renderStockShopInLog(){
 // ── ประวัติ "กลับร้าน" (entry #335) = ฟาร์ม เข้า หน้าร้าน (inventoryLog type 'toShop') · ลบได้ → deleteStockLog คืนฟาร์ม + ลดหน้าร้าน ──
 function renderStockToShopLog(){
   const tbl=document.getElementById('sk-log-toshop-table');if(!tbl)return;
-  const logs=(D.inventoryLog||[]).filter(l=>l&&l.type==='toShop').sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.id).localeCompare(String(a.id)));
+  let logs=(D.inventoryLog||[]).filter(l=>l&&l.type==='toShop').sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.id).localeCompare(String(a.id)));
+  const mo=histMonthFill(document.getElementById('skl-toshop-month'),logs.map(l=>l.date));if(mo)logs=logs.filter(l=>String(l.date||'').startsWith(mo));
   if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีของกลับร้าน</p>';return;}
   tbl.innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>รายการ</th><th style="text-align:right">จำนวน</th><th>หน่วย</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>'
     +logs.map((l,i)=>'<tr><td'+(i>0&&logs[i-1].date===l.date?' style="color:transparent"':'')+'>'+fD(l.date)+'</td><td>'+mpEsc(l.itemName||'-')+'</td>'
@@ -11283,7 +11299,8 @@ function renderStockToShopLog(){
 }
 function renderStockInLog(){
   const tbl=document.getElementById('sk-log-in-table');if(!tbl)return;
-  const logs=[...(D.inventoryLog||[])].filter(l=>l.type==='in').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  let logs=[...(D.inventoryLog||[])].filter(l=>l.type==='in').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const mo=histMonthFill(document.getElementById('skl-in-month'),logs.map(l=>l.date));if(mo)logs=logs.filter(l=>String(l.date||'').startsWith(mo));
   if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีประวัติรับเข้าส่วนกลาง — บันทึกได้ที่ปุ่ม "+ รับเข้า สต็อกกลาง" ด้านบน</p>';return;}
   const byDate={};
   logs.forEach(l=>{if(!byDate[l.date])byDate[l.date]=[];byDate[l.date].push(l);});
@@ -11328,13 +11345,13 @@ function renderStockOutLog(resetLimit){
   if(resetLimit)_skOutAll=false;
   const pid=document.getElementById('skl-out-pond')?.value||'';
   const cat=document.getElementById('skl-out-cat')?.value||'';
-  const month=document.getElementById('skl-out-month')?.value||'';
   const itemMap={};(D.inventoryItems||[]).forEach(i=>itemMap[i.id]=i);
   // ชื่อบ่อทำเป็นตารางค้นครั้งเดียว — เดิมเรียก pondNameById() ทุกแถว (find ใน 27 บ่อ × 4,400 แถว)
   const pondMap={};(D.ponds||[]).forEach(p=>{pondMap[p.id]=p.name;});
   let logs=(D.inventoryLog||[]).filter(l=>l.type==='out'&&l.pondId);
   if(pid)logs=logs.filter(l=>l.pondId===pid);
   if(cat)logs=logs.filter(l=>{const it=itemMap[l.itemId];return it&&it.category===cat;});
+  const month=histMonthFill(document.getElementById('skl-out-month'),logs.map(l=>l.date));
   if(month)logs=logs.filter(l=>l.date&&l.date.startsWith(month));
   logs=logs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ไม่มีประวัติเบิกออกไปบ่อ'+(pid||cat||month?'ตามตัวกรองนี้':'')+'</p>';return;}
@@ -11371,10 +11388,10 @@ function clearStockShareFilter(){
 function renderStockShareLog(){
   const tbl=document.getElementById('sk-log-shared-table');if(!tbl)return;
   const cat=document.getElementById('skl-shared-cat')?.value||'';
-  const month=document.getElementById('skl-shared-month')?.value||'';
   const isAdmin=APP_ROLE==='admin';
   let logs=(D.inventoryLog||[]).filter(l=>l.type==='shared');
   if(cat)logs=logs.filter(l=>l.category===cat);
+  const month=histMonthFill(document.getElementById('skl-shared-month'),logs.map(l=>l.date));
   if(month)logs=logs.filter(l=>l.date&&l.date.startsWith(month));
   logs=logs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   const kpiEl=document.getElementById('skl-shared-kpi');
@@ -12926,6 +12943,7 @@ function renderPalmMoney(){
   if(_palmMoneyFilterPlot)list=list.filter(r=>r.plotId===_palmMoneyFilterPlot);
   list=list.filter(r=>r.type===_palmMoneyViewType);
   list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const _mo=histMonthFill(document.getElementById('pm-month'),list.map(r=>r.date));if(_mo)list=list.filter(r=>(r.date||'').startsWith(_mo));
   const thisMonth=today().slice(0,7),thisYear=today().slice(0,4);
   const periodLbl={month:'เดือนนี้',year:'ตั้งแต่ต้นปี',all:'ทั้งหมด'}[_palmMoneyPeriod];
   const periodList=palmMoneyList().filter(r=>{
@@ -13057,6 +13075,7 @@ function renderPalmFertLog(){
   let list=palmFertList().slice();
   if(_palmFertFilterPlot)list=list.filter(r=>r.plotId===_palmFertFilterPlot);
   list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const _mo=histMonthFill(document.getElementById('pfl-month'),list.map(r=>r.date));if(_mo)list=list.filter(r=>(r.date||'').startsWith(_mo));
   if(!list.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติการใส่ปุ๋ย — บันทึกได้จากฟอร์มด้านบน</p>';return;}
   const today0=today();
   const unitShort=r=>(r.unitLabel||'').split(' ')[0]||'หน่วย';
@@ -13134,6 +13153,7 @@ function renderPalmHarvestTable(){
   const tbl=document.getElementById('palm-harvest-table');if(!tbl)return;
   let list=palmHarvestList().filter(r=>_palmHarvestFilterPlot?r.plotId===_palmHarvestFilterPlot:true);
   list=list.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const _mo=histMonthFill(document.getElementById('phv-month'),list.map(r=>r.date));if(_mo)list=list.filter(r=>(r.date||'').startsWith(_mo));
   if(!list.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติตัดปาล์ม — บันทึกที่แท็บ "รายรับ-รายจ่าย" โดยกรอกน้ำหนักด้วย</p>';return;}
   const B=v=>'฿'+Math.round(v).toLocaleString();
   tbl.innerHTML=pmhRender(list.map(r=>({rec:r,date:r.date,
