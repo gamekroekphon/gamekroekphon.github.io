@@ -1490,6 +1490,40 @@ body.owner-mode #mobMenuBody.clerk-search>.owner-g9{display:none!important}
 .tx-bar b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--d)}
 .tx-dt{font-size:calc(12.5px * var(--ui-scale))}
 .tx-axis{display:flex;justify-content:space-between;font-size:calc(11px * var(--ui-scale));font-weight:600;padding:2px 0 0}
+/* ตารางคุณภาพน้ำ (#348) */
+.wqg-card{padding:10px 10px 8px}
+.wqg-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.wqg-date{width:auto!important;font-weight:700}
+.wqg-prog{flex:1;min-width:150px;font-size:calc(13.5px * var(--ui-scale))}
+.wqg-save{min-height:44px;font-weight:800}.wqg-save:disabled{opacity:.55}
+.wqg-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.card table.wqg{display:table;overflow:visible}
+table.wqg{border-collapse:separate;border-spacing:0 3px;width:100%;min-width:1060px}
+table.wqg th{font-size:calc(12px * var(--ui-scale));font-weight:800;text-align:center;padding:2px 2px;line-height:1.2;color:var(--tx)}
+table.wqg th small{display:block;font-size:calc(10.5px * var(--ui-scale));font-weight:600}
+table.wqg th.wqg-gh{border-radius:8px 8px 0 0;padding:3px}
+table.wqg th.wq1,table.wqg th.wqg-gh.wq1{background:#FEF3C7}table.wqg th.wq2,table.wqg th.wqg-gh.wq2{background:#E0E7FF}
+table.wqg th.wq3,table.wqg th.wqg-gh.wq3{background:#DCFCE7}table.wqg th.wq4,table.wqg th.wqg-gh.wq4{background:#F1F5F9}
+table.wqg td{background:var(--sf);padding:2px;vertical-align:middle;border-top:1px solid var(--sf2);border-bottom:1px solid var(--sf2)}
+table.wqg td.wq1{background:#FFFBEB}table.wqg td.wq2{background:#EEF2FF}table.wqg td.wq3{background:#F0FDF4}table.wqg td.wq4{background:#F8FAFC}
+table.wqg .wqg-pc{position:sticky;left:0;z-index:2;background:var(--sf);text-align:left;min-width:132px;width:132px;padding-left:8px;border-radius:10px 0 0 10px}
+table.wqg thead .wqg-pc{background:var(--bg)}
+table.wqg td.wqg-pc{border-left:1px solid var(--sf2)}
+.wqg-pcw{display:flex;align-items:center;gap:4px}   /* ห้าม flex ที่ td ตรงๆ (#241) */
+table.wqg tr.sel td.wqg-pc{background:var(--pl);box-shadow:inset 3px 0 0 var(--p)}
+.wqg-pn{flex:1;min-width:0;cursor:pointer;line-height:1.2}
+.wqg-pn b{font-size:calc(15px * var(--ui-scale))}
+.wqg-pn small{display:block;font-size:calc(10.5px * var(--ui-scale));font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wqg-note{border:none;background:none;min-width:36px;min-height:36px;font-size:calc(15px * var(--ui-scale));cursor:pointer;opacity:.35;padding:0}
+.wqg-note.has{opacity:1}
+.wqg-in{width:100%;min-width:58px;height:44px;border:2px solid var(--bd);border-radius:9px;text-align:center;font-family:inherit;font-size:16px;font-weight:800;background:#fff;color:var(--tx);font-variant-numeric:tabular-nums;padding:0 2px}
+.wqg-in:focus{outline:none;border:3px solid #2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.wqg-in.wqg-ok{border-color:#86EFAC;color:var(--ok)}
+.wqg-in.wqg-warn{border-color:#FDBA74;background:#FFEDD5;color:#9A3412}
+.wqg-in.wqg-bad{border-color:#FCA5A5;background:var(--db);color:var(--d)}
+table.wqg td.wqg-ck{text-align:center;color:var(--ok);font-weight:900;min-width:24px;border-radius:0 10px 10px 0;border-right:1px solid var(--sf2)}
+.wqg-dirty{color:#2563EB;font-weight:800}
+.wqg-help{font-size:calc(12px * var(--ui-scale));margin-top:6px}
 .own-seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:6px;background:var(--sf2);padding:4px;border-radius:12px;margin:10px 0 8px}
 .own-seg:empty{display:none}
 .own-seg button{border:none;background:none;border-radius:9px;min-height:44px;font-family:inherit;font-weight:700;font-size:calc(14px * var(--ui-scale));color:var(--tx);cursor:pointer}
@@ -1587,7 +1621,8 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
    จับด้วย แนวนอน + สูงไม่เกิน 500px + จอสัมผัส (คอม/แท็บเล็ตไม่เข้าเงื่อนไข) → ซ่อนเมนูซ้าย เนื้อหาเต็มความกว้าง
    เปลี่ยนหน้าใช้แถบล่างเหมือนแนวตั้ง (บางลง ไอคอนอยู่ข้างชื่อ) + เมนู ☰ เพิ่มเติม · หัวแอปเลื่อนหายไปตอนเลื่อนลง ไม่ค้างกินที่ด้านบน
    ⚠️ ต้องอยู่หลังกฎ @media(min-width:601px) ของ .side-nav/.hdr/.main/.mob-sheet — ใช้ !important ทับของเดิมที่เป็น !important */
-@media(min-width:601px) and (orientation:landscape) and (max-height:500px) and (pointer:coarse){
+/* มือถือแนวนอน (#326) + แท็บเล็ตทุกแนว (#348 พี่สั่ง: คนกรอกใช้แท็บเล็ตแนวนอน อยากได้จอเต็ม) */
+@media(min-width:601px) and (orientation:landscape) and (max-height:500px) and (pointer:coarse),(min-width:601px) and (max-width:1400px) and (pointer:coarse){
   .side-nav{display:none!important}
   .hdr{margin-left:0!important;width:100%!important;position:relative;top:auto;height:48px}
   .main{margin-left:0!important;width:100%!important;max-width:100%!important}
@@ -2940,7 +2975,17 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 <div id="sec-entry" class="sec">
   <div class="sec-hdr"><div class="sec-title">💧 บันทึกคุณภาพน้ำ</div></div>
   <input type="hidden" id="ep-pond">
-  <div class="card" style="margin-bottom:16px">
+  <!-- ตารางเดียว ทุกบ่อ ทุกค่า (พี่สั่ง entry #348 — คนกรอกคนเดียวบนแท็บเล็ต) · ฟอร์มรายบ่อเดิมซ่อนไว้ด้านล่าง (#ep-oldform) -->
+  <div class="card wqg-card">
+    <div class="wqg-bar">
+      <input type="date" class="fi wqg-date" id="wqg-date" onchange="wqgSetDate(this.value)" aria-label="วันที่">
+      <div class="wqg-prog" id="wqg-prog"></div>
+      <button type="button" class="btn btn-p wqg-save" id="wqg-save" onclick="saveWqGrid()">💾 บันทึก</button>
+    </div>
+    <div class="wqg-scroll"><table class="wqg" id="wqg-table"></table></div>
+    <div class="wqg-help">แตะชื่อบ่อ = ดูย้อนหลังด้านล่าง · 📝 = หมายเหตุ · ปุ่ม Enter/ถัดไป = ไปช่องถัดไป</div>
+  </div>
+  <div class="card" id="ep-oldform" style="display:none;margin-bottom:16px">
     <div style="margin-bottom:14px">
       <div style="font-size:calc(12.5px * var(--ui-scale));color:var(--tx2);font-weight:600;margin-bottom:6px" id="ep-prog-txt">0 / 0 บ่อ กรอกแล้ว</div>
       <div style="height:8px;background:var(--sf2);border-radius:99px;overflow:hidden"><div id="ep-prog-fill" style="height:100%;background:linear-gradient(90deg,var(--ok),#22a35a);border-radius:99px;width:0%;transition:width .3s"></div></div>
@@ -13398,7 +13443,116 @@ function initEntry(){
   calcAge('ep');
   renderEpChips();updateEpHeader();
   if(pid){renderWQTable();checkExistingWQ()}
+  renderWqGrid();   // ตารางเดียว (#348)
 }
+// ══════ ตารางกรอกค่าน้ำ (entry #348) ══════
+//    1 แถว = 1 บ่อ · ทุกค่าในตารางเดียว (พี่สั่ง: ไม่ต้องสลับหน้า ค่าที่วัดบางวันก็ต้องโชว์) · สีหัวแยกกลุ่ม เช้า/บ่าย/ALK-NH4/ค่าอื่น
+//    ค่าเดิมของวันนั้นเติมให้ในช่อง → แก้ในตารางได้เลย · บันทึกเฉพาะแถวที่แตะ (draft) — แถวที่แตะ: ช่องว่าง = ลบค่านั้น (เหมือน saveWQ เดิม)
+//    ⚠️ ค่าที่พิมพ์ค้างเก็บใน _wqDraft แยกจาก D — ข้อมูลจากอีกเครื่องเข้ามา D ถูกแทนทั้งก้อน แต่ค่าที่พิมพ์ไม่หาย
+//    Enter/ถัดไป: เดินตาม "ชุด" (เช้า+ALK/NH4 · บ่าย · ค่าอื่น) สุดชุดลงแถวถัดไป — ตอนเช้าไม่ต้องข้ามช่องบ่ายเอง
+const WQG_KEYS=['phM','tM','doM','phA','tA','doA','alk','nh4','sal','no2','no3','ca','mg_','hard'];
+const WQG_GRP={phM:'wq1',tM:'wq1',doM:'wq1',phA:'wq2',tA:'wq2',doA:'wq2',alk:'wq3',nh4:'wq3'};
+const WQG_FLOWS=[['phM','tM','doM','alk','nh4'],['phA','tA','doA'],['sal','no2','no3','ca','mg_','hard']];
+const WQG_SHORT={phM:'pH',tM:'Temp',doM:'DO',phA:'pH',tA:'Temp',doA:'DO',alk:'ALK',nh4:'NH4+',sal:'Sal',no2:'NO2',no3:'NO3',ca:'Ca',mg_:'Mg',hard:'Hard'};
+let _wqDraft={},_wqDraftDate=null;
+function wqgDate(){return document.getElementById('ep-date')?.value||today();}
+function wqgSetDate(d){
+  if(!d)return;
+  if(Object.keys(_wqDraft).length&&_wqDraftDate!==d&&!confirm('มีค่าที่ยังไม่ได้กดบันทึก — เปลี่ยนวันแล้วค่าที่พิมพ์จะหาย ยืนยัน?')){document.getElementById('wqg-date').value=_wqDraftDate;return;}
+  _wqDraft={};
+  const ep=document.getElementById('ep-date');if(ep){ep.value=d;syncDateHint(ep);}
+  renderWqGrid();renderEpChips();checkExistingWQ();
+}
+function wqgRange(p){if(!p)return'';const n=v=>String(v).replace(/\.0+$/,'');return p.inv?'< '+n(p.max):n(p.min)+'–'+n(p.max);}
+function wqgCls(k,raw,rec){
+  if(raw===''||raw==null)return'';
+  const v=parseFloat(raw);if(isNaN(v))return' wqg-bad';
+  const s=(k==='mg_'||k==='ca')?st(k,v,{sal:rec&&rec.sal}):st(k,v);
+  return s==='danger'?' wqg-bad':s==='warn'?' wqg-warn':' wqg-ok';
+}
+function renderWqGrid(){
+  const tbl=document.getElementById('wqg-table');if(!tbl)return;
+  const d=wqgDate();const dEl=document.getElementById('wqg-date');if(dEl&&dEl.value!==d){dEl.value=d;syncDateHint(dEl);}
+  if(_wqDraftDate!==d){_wqDraft={};_wqDraftDate=d;}
+  const ponds=sortPondsByAge(wqEntryPonds()),sel=document.getElementById('ep-pond')?.value,y=addDaysStr(d,-1);
+  const P=k=>PARAMS.find(x=>x.key===k);
+  const gh=g=>({wq1:'☀️ เช้า',wq2:'🌇 บ่าย',wq3:'',wq4:''})[g];
+  const grpOf=k=>WQG_GRP[k]||'wq4';
+  const spans=[];WQG_KEYS.forEach(k=>{const g=grpOf(k);const l=spans[spans.length-1];if(l&&l.g===g)l.n++;else spans.push({g,n:1});});
+  let html='<thead><tr><th class="wqg-pc"></th>'+spans.map(s=>'<th class="wqg-gh '+s.g+'" colspan="'+s.n+'">'+gh(s.g)+'</th>').join('')+'<th></th></tr>'
+    +'<tr><th class="wqg-pc">บ่อ</th>'+WQG_KEYS.map(k=>'<th class="'+grpOf(k)+'">'+WQG_SHORT[k]+'<small>'+wqgRange(P(k))+'</small></th>').join('')+'<th></th></tr></thead><tbody>';
+  html+=ponds.map(p=>{
+    const rec=(p.records||[]).find(r=>r.date===d),yr=(p.records||[]).find(r=>r.date===y),dr=_wqDraft[p.id]||{};
+    const age=docAge(p.startDate,d);
+    const ref=yr?'วาน pH '+(yr.phM??'–')+' · DO '+(yr.doM??'–'):'';
+    return '<tr data-pid="'+p.id+'"'+(p.id===sel?' class="sel"':'')+'><td class="wqg-pc"><div class="wqg-pcw"><div class="wqg-pn" onclick="wqgPick(\''+p.id+'\')"><b>'+mpEsc(p.name)+'</b>'
+        +(pdFilledNightBefore(p,d)?' <span title="เติมน้ำคืนก่อน">💧</span>':'')
+        +'<small>'+(age>0?age+' วัน':'')+'</small>'+(ref?'<small>'+ref+'</small>':'')+'</div>'
+        +'<button type="button" class="wqg-note'+(rec&&rec.notes?' has':'')+'" onclick="wqgNote(\''+p.id+'\')" aria-label="หมายเหตุ บ่อ '+mpEsc(p.name)+'">📝</button></div></td>'
+      +WQG_KEYS.map(k=>{const raw=k in dr?dr[k]:(rec&&rec[k]!=null?String(rec[k]):'');
+        return '<td class="'+grpOf(k)+'"><input class="wqg-in'+wqgCls(k,raw,rec)+'" data-k="'+k+'" value="'+mpEsc(raw)+'" inputmode="decimal" enterkeyhint="next" autocomplete="off" aria-label="'+mpEsc(p.name)+' '+mpEsc((P(k)||{}).lbl||k)+'"></td>';}).join('')
+      +'<td class="wqg-ck">'+(dr&&Object.keys(dr).length?'<span class="wqg-dirty">●</span>':rec?'✓':'')+'</td></tr>';
+  }).join('')+'</tbody>';
+  tbl.innerHTML=html;
+  wqgProg();
+}
+function wqgProg(){
+  const d=wqgDate(),ponds=wqEntryPonds();
+  const cnt=k=>ponds.filter(p=>(p.records||[]).some(r=>r.date===d&&r[k]!=null&&r[k]!=='')).length;
+  const dirty=Object.keys(_wqDraft).length;
+  const el=document.getElementById('wqg-prog');if(el)el.innerHTML='<b>เช้า '+cnt('phM')+'/'+ponds.length+'</b> · <b>บ่าย '+cnt('phA')+'/'+ponds.length+'</b>'+(dirty?' · <span class="wqg-dirty">● ยังไม่บันทึก '+dirty+' บ่อ</span>':'');
+  const b=document.getElementById('wqg-save');if(b){b.textContent=dirty?'💾 บันทึก '+dirty+' บ่อ':'💾 บันทึก';b.disabled=!dirty;}
+}
+function wqgPick(pid){
+  document.getElementById('ep-pond').value=pid;setCurPond(pid);saveLastEntry();
+  document.querySelectorAll('#wqg-table tr.sel').forEach(r=>r.classList.remove('sel'));
+  document.querySelector('#wqg-table tr[data-pid="'+pid+'"]')?.classList.add('sel');
+  renderWQTable();
+}
+function wqgNote(pid){
+  const p=pond(pid);if(!p)return;const d=wqgDate();
+  const rec=(p.records||[]).find(r=>r.date===d);
+  const t=prompt('หมายเหตุ บ่อ '+p.name+' · '+fD(d),rec&&rec.notes||'');if(t===null)return;
+  if(rec)rec.notes=t.trim();
+  else{if(!t.trim())return;const r={id:'wq_'+pid+'_'+d,date:d,age:docAge(p.startDate,d),notes:t.trim()};PARAMS.forEach(pm=>r[pm.key]=null);p.records.push(r);p.records.sort((a,b)=>new Date(a.date)-new Date(b.date));}
+  save();renderWqGrid();if(document.getElementById('ep-pond').value===pid)renderWQTable();
+}
+function saveWqGrid(){
+  const d=wqgDate(),ids=Object.keys(_wqDraft);if(!ids.length)return;
+  const bad=[];let n=0;
+  ids.forEach(pid=>{
+    const p=pond(pid);if(!p)return;const dr=_wqDraft[pid];
+    const vals={};let any=false;
+    Object.keys(dr).forEach(k=>{const s=String(dr[k]).trim().replace(',','.');if(s===''){vals[k]=null;return;}const v=parseFloat(s);if(isNaN(v)){bad.push(p.name+' '+WQG_SHORT[k]);return;}vals[k]=v;any=true;});
+    let rec=(p.records||[]).find(r=>r.date===d);
+    if(!rec){if(!any)return;rec={id:'wq_'+pid+'_'+d,date:d,age:docAge(p.startDate,d),notes:''};PARAMS.forEach(pm=>rec[pm.key]=null);p.records.push(rec);p.records.sort((a,b)=>new Date(a.date)-new Date(b.date));}
+    Object.assign(rec,vals);rec.age=docAge(p.startDate,d);n++;
+  });
+  if(bad.length){alert('ตัวเลขไม่ถูกต้อง: '+bad.join(', ')+'\nแก้แล้วกดบันทึกอีกครั้ง');return;}
+  _wqDraft={};
+  save();renderWqGrid();renderWQTable();renderEpChips();renderOv();
+  showToast('บันทึกสำเร็จ','คุณภาพน้ำ '+n+' บ่อ — '+fD(d));
+}
+// พิมพ์ในตาราง → เก็บ draft + ระบายสีทันที · Enter → ช่องถัดไปในชุดเดียวกัน
+document.addEventListener('input',e=>{
+  const i=e.target;if(!i.classList||!i.classList.contains('wqg-in'))return;
+  const tr=i.closest('tr'),pid=tr&&tr.dataset.pid,k=i.dataset.k;if(!pid||!k)return;
+  (_wqDraft[pid]=_wqDraft[pid]||{})[k]=i.value;_wqDraftDate=wqgDate();
+  const p=pond(pid),rec=p&&(p.records||[]).find(r=>r.date===_wqDraftDate);
+  i.className='wqg-in'+wqgCls(k,i.value,rec);
+  const ck=tr.querySelector('.wqg-ck');if(ck)ck.innerHTML='<span class="wqg-dirty">●</span>';
+  wqgProg();
+});
+document.addEventListener('keydown',e=>{
+  const i=e.target;if(e.key!=='Enter'||!i.classList||!i.classList.contains('wqg-in'))return;
+  e.preventDefault();
+  const k=i.dataset.k,flow=WQG_FLOWS.find(f=>f.includes(k))||[k],tr=i.closest('tr');
+  const ix=flow.indexOf(k);
+  let row=tr,key=flow[ix+1];
+  if(!key){row=tr.nextElementSibling;key=flow[0];}
+  const nx=row&&row.querySelector('.wqg-in[data-k="'+key+'"]');
+  if(nx){nx.focus();nx.select&&nx.select();}else i.blur();
+});
 function toggleWqExtra(){
   const el=document.getElementById('ep-fields-extra-wrap');if(!el)return;
   const open=el.classList.toggle('open');
@@ -15151,12 +15305,16 @@ function renderOvMedProtocol(){
 
 // ===== EDIT HISTORY FUNCTIONS =====
 function editWQ(pid,d){
+  // ตารางเดียว (#348): ย้อนไปวันนั้น ค่าเดิมอยู่ในช่องแล้ว → แก้ในแถวบ่อนั้นได้เลย
   document.getElementById('ep-pond').value=pid;
-  document.getElementById('ep-date').value=d;
-  syncDateHint(document.getElementById('ep-date'));
-  calcAge('ep');prefillWQ();
-  renderEpChips();updateEpHeader();
-  const el=document.getElementById('ep-fields');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+  if(wqgDate()!==d)wqgSetDate(d);else renderWqGrid();
+  wqgPick(pid);
+  const row=document.querySelector('#wqg-table tr[data-pid="'+pid+'"]');
+  if(row)requestAnimationFrame(()=>{
+    const hd=document.querySelector('.mob-hd,.hdr');const pad=(hd?hd.getBoundingClientRect().height:0)+12;
+    window.scrollTo({top:Math.max(0,row.getBoundingClientRect().top+window.scrollY-pad),behavior:'smooth'});
+    row.querySelector('.wqg-in')?.focus();
+  });
 }
 // แก้รายการเดิม = ย้อนไปวันนั้น แล้วเลื่อนไปที่แถวของบ่อนั้น (ค่าเดิมถูกดึงมาให้เอง) กดบันทึก = อัปเดตทับ
 function editSample(pid,d){
