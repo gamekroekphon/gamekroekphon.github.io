@@ -10828,7 +10828,7 @@ function renderStockItems(){
     return a.name.localeCompare(b.name,'th');
   });
   const isAdminView=APP_ROLE==='admin';
-  const priceHdr=isAdminView?'<th style="text-align:right">ราคา/หน่วย</th><th style="text-align:right">มูลค่า</th>':'';
+  const priceHdr=isAdminView?'<th style="text-align:right">ราคา/หน่วย</th>':'';   // ตัดคอลัมน์มูลค่าออก (พี่สั่ง entry #355 — ไม่ได้ดู · มือถือแคบ) มูลค่ารวมยังอยู่ที่ KPI บนสุด
   el.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>รายการ</th><th>หมวด</th>${priceHdr}<th style="text-align:right">ฟาร์ม</th><th style="text-align:right">หน้าร้าน</th><th>ขั้นต่ำ</th><th>สถานะ</th><th></th></tr></thead><tbody>${
     sorted.map(i=>{
       const isLow=i.minQty>0&&i.qty<=i.minQty;
@@ -10839,9 +10839,8 @@ function renderStockItems(){
         :'<span class="badge" style="background:var(--ob);color:var(--ok)">ปกติ</span>';
       const catCss=STOCK_CAT_CSS[i.category]||'';
       const price=i.unitPrice||0;
-      const val=price*(i.qty||0);
       const priceCols=isAdminView
-        ?`<td style="text-align:right">${price?price.toLocaleString()+' ฿':'—'}</td><td style="text-align:right;color:${val?'var(--tx)':'var(--tx3)'}">${val?val.toLocaleString()+' ฿':'—'}</td>`
+        ?`<td style="text-align:right">${price?price.toLocaleString()+' ฿':'—'}</td>`
         :'';
       // สต็อกหน้าร้าน (#334): ยังไม่เคยนับ และเป็น 0 → แสดง — (ยังไม่รู้ยอด ไม่ใช่ไม่มีของ)
       const actionBtns=isAdminView
