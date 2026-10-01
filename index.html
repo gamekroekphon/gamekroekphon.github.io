@@ -1168,7 +1168,15 @@ body:not(.role-admin) .staff-only{display:revert}
 .pmh-del span{font-size:calc(12.5px * var(--ui-scale));font-weight:700;color:var(--d);border:1px solid #F3B8B2;border-radius:99px;padding:2px 10px}
 .pm-cut-tag{font-size:calc(11.5px * var(--ui-scale));font-weight:700;background:var(--wb);color:var(--w);border-radius:99px;padding:1px 8px;white-space:nowrap}
 .stock-mode-btn.on-toshop{background:var(--p);color:#fff}
-.skl-modes .stock-mode-btn{flex:1 1 auto}   /* #351 ปุ่มโหมดประวัติ 6 ปุ่ม — ขึ้นบรรทัดใหม่แทนการบีบจนตัวหนังสือทับกันบนมือถือ */
+.skl-modes .stock-mode-btn{flex:1 1 auto}
+/* ── อาหารผสม 2 เบอร์ (entry #353) ── */
+.fdg-mixb{min-width:36px;height:36px;margin-left:6px;border:1px dashed var(--bd);border-radius:8px;background:none;color:var(--tx2);font-size:calc(16px * var(--ui-scale));cursor:pointer;vertical-align:middle}
+.fdg-mixb[hidden],.fdg-mix[hidden]{display:none!important}
+@media (pointer:coarse){.fdg-mixb{min-width:44px;height:44px}}
+.fdg-mix td{background:var(--sf2)!important;border-top:none}
+.fdg-mix td.fdg-mixlbl{font-weight:700;color:var(--tx);text-align:right}
+.fdg-mixrest{color:var(--tx);font-size:calc(13px * var(--ui-scale))}.fdg-mixrest.bad{color:var(--d);font-weight:700}
+.fdg-mixx{min-width:36px;height:36px;margin-left:6px;vertical-align:middle;border:none;background:none;color:var(--d);font-size:calc(16px * var(--ui-scale));cursor:pointer}   /* #351 ปุ่มโหมดประวัติ 6 ปุ่ม — ขึ้นบรรทัดใหม่แทนการบีบจนตัวหนังสือทับกันบนมือถือ */
 /* ── นับสต็อกเป็นรอบ 10 วัน (entry #301) — คนในฟาร์มนับของ/จดการเบิกลงกระดาษทุก 10 วัน
    หน้านี้ยุบรายการย่อยของสินค้าตัวเดียวกันมาไว้บรรทัดเดียว เพื่อไล่เทียบกับกระดาษได้ทีละรายการ
    จอคอม = ตาราง · มือถือ = การ์ด (ซ่อนสลับกันเหมือน .pd-hist-cards) ── */
@@ -5965,10 +5973,25 @@ function feedRecSackPrice(r){
   if(item)return{price:parseFloat(item.unitPrice)||0,item,locked:false};
   return null;
 }
+// ── บันทึกอาหารผสม 2 เบอร์ (entry #353) → แตกเป็นบันทึกย่อยทีละเบอร์ · ทุกจุดที่คิดเงิน/แยกเบอร์ต้องเดินผ่านฟังก์ชันนี้
+//    เบอร์หลัก = totalFeed − mix2.kg · บันทึกไม่ผสม = [r] ตามเดิม · ห้ามเอา totalFeed ของส่วนย่อยไปคิด FCR (ใช้ r.totalFeed ยอดรวม)
+function feedMixKg(r){const m=r&&r.mix2,t=parseFloat(r&&r.totalFeed)||0,k=m&&m.stockItemId?parseFloat(m.kg)||0:0;return k>0&&k<t?k:0;}
+function feedRecParts(r){
+  const k=feedMixKg(r);if(!k)return r?[r]:[];
+  const m=r.mix2;
+  return[{...r,mix2:undefined,totalFeed:(parseFloat(r.totalFeed)||0)-k},
+    {id:r.id+'_m2',date:r.date,stockItemId:m.stockItemId,unitCost:m.unitCost,feedBrand:m.name||'',feedGrade:'',totalFeed:k}];
+}
+function feedRecLabel(r){
+  const k=feedMixKg(r);if(!r)return'-';
+  const n1=r.feedBrand||'-';if(!k)return n1;
+  return n1+' '+_plNumKg((parseFloat(r.totalFeed)||0)-k)+' + '+(r.mix2.name||'-')+' '+_plNumKg(k);
+}
+function _plNumKg(v){return(Math.round(v*10)/10).toLocaleString()+' กก.';}
 function pondFeedCost(p){
   let cost=0;
   const avgPerKg=feedAvgPerKgNow();
-  (p.feedLog||[]).forEach(r=>{
+  (p.feedLog||[]).flatMap(feedRecParts).forEach(r=>{
     const sp=feedRecSackPrice(r);
     if(sp){cost+=((r.totalFeed||0)/25)*sp.price;return;}
     cost+=(r.totalFeed||0)*avgPerKg;
@@ -6885,7 +6908,7 @@ function savePrItem(){
     if(cost!=null&&Math.abs(cost-old)>=0.005){
       // ตั้งแต่ #298 รายการที่ล็อกราคาไว้แล้วไม่เปลี่ยนตาม — นับเฉพาะรายการเก่าที่ยังคิดด้วยราคาปัจจุบัน (เบิก + บันทึกอาหาร)
       let q=(D.inventoryLog||[]).filter(l=>l.itemId===it.id&&l.type==='out'&&!(parseFloat(l.unitCost)>0)&&!String(l.id||'').startsWith('sl_fd_')).reduce((t,l)=>t+(parseFloat(l.qty)||0),0);
-      if(it.category==='feed')(D.ponds||[]).forEach(p=>[p,...(p.cropHistory||[])].forEach(c=>(c.feedLog||[]).forEach(r=>{if(r.stockItemId===it.id&&!(parseFloat(r.unitCost)>0))q+=(parseFloat(r.totalFeed)||0)/25;})));
+      if(it.category==='feed')(D.ponds||[]).forEach(p=>[p,...(p.cropHistory||[])].forEach(c=>(c.feedLog||[]).flatMap(feedRecParts).forEach(r=>{if(r.stockItemId===it.id&&!(parseFloat(r.unitCost)>0))q+=(parseFloat(r.totalFeed)||0)/25;})));
       if(q>0&&!confirm('แก้ต้นทุน '+it.name+' '+prB(old)+' → '+prB(cost)+' บาท\n\nรายการเก่า (ก่อนล็อกราคา) ที่ยังคิดด้วยราคาปัจจุบัน '+prB(q)+' '+(it.unit||'')+'\nต้นทุนบ่อจะเปลี่ยนย้อนหลัง '+(cost>old?'+':'−')+prB(Math.abs(q*(cost-old)))+' บาท\n\nยืนยัน?'))return;
     }
   }else{
@@ -13908,7 +13931,7 @@ function renderPdFeedHistory(p){
   const tableHtml=`<div class="pd-hist-tblwrap"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ยี่ห้อ/เบอร์</th><th style="text-align:right">อาหาร (กก.)</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rec.map((r,i)=>{
       const ageCalc=docAge(p.startDate,r.date)??r.age;
-      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdEditFeed('${p.id}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdDeleteFeedEntry('${p.id}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc}</td><td>${r.feedBrand||'-'}</td><td style="text-align:right">${(r.totalFeed||0).toLocaleString()}</td><td style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">${r.notes||'-'}</td></tr>`;
+      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdEditFeed('${p.id}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdDeleteFeedEntry('${p.id}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc}</td><td>${feedRecLabel(r)}</td><td style="text-align:right">${(r.totalFeed||0).toLocaleString()}</td><td style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">${r.notes||'-'}</td></tr>`;
     }).join('')}</tbody></table></div></div>`;
   // ── มือถือ (≤600px): แสดงเป็นการ์ดแยกทีละวันแทนตารางเลื่อน (entry #146) ──
   const cardsHtml=`<div class="pd-hist-cards">${rec.map((r,i)=>{
@@ -13918,7 +13941,7 @@ function renderPdFeedHistory(p){
         <div class="pd-rec-date"><b>${fD(r.date)}</b><span>${ageCalc!=null?'อายุ '+ageCalc+' วัน':''}</span></div>
         <div class="pd-rec-actions"><button onclick="pdEditFeed('${p.id}','${r.date}')" title="แก้ไข">✏️</button><button class="del" onclick="pdDeleteFeedEntry('${p.id}','${r.date}')" title="ลบ">🗑️</button></div>
       </div>
-      <div class="pd-rec-feedrow"><span>ยี่ห้อ/เบอร์: ${r.feedBrand||'-'}</span><b>${(r.totalFeed||0).toLocaleString()} กก.</b></div>
+      <div class="pd-rec-feedrow"><span>ยี่ห้อ/เบอร์: ${feedRecLabel(r)}</span><b>${(r.totalFeed||0).toLocaleString()} กก.</b></div>
       ${r.notes?`<div class="pd-rec-note">📝 ${r.notes}</div>`:''}
     </div>`;
   }).join('')}</div>`;
@@ -13984,7 +14007,7 @@ function renderPdFeedSummary(p){
   const bx=days.map((x,i)=>'<span>'+((13-i)%2===0?+x.d.slice(8):'')+'</span>').join('');
   // ── เบอร์อาหารรอบนี้ ──
   const br={},first={};
-  fl.forEach(x=>x.recs.forEach(f=>{const b=pdFeedBrandOf(f);br[b]=(br[b]||0)+(parseFloat(f.totalFeed)||0);if(!first[b])first[b]=x.d;}));
+  fl.forEach(x=>x.recs.flatMap(feedRecParts).forEach(f=>{const b=pdFeedBrandOf(f);br[b]=(br[b]||0)+(parseFloat(f.totalFeed)||0);if(!first[b])first[b]=x.d;}));
   const keys=Object.keys(br).sort((a,b)=>first[a].localeCompare(first[b]));
   const tot=keys.reduce((s,k)=>s+br[k],0),cols=['#d6b56a','#b8892b','#9A6A04','#6b4a03','#c9a24d','#8a6610'];
   const brandBar=keys.map((k,i)=>'<div style="width:'+(br[k]/tot*100)+'%;background:'+cols[i%cols.length]+'" title="'+mpEsc(k)+'">'+(br[k]/tot>0.18?mpEsc(k):'')+'</div>').join('');
@@ -15461,6 +15484,7 @@ function initFeed(){
   renderFeedGrid();
 }
 function reverseFeedStockDeduction(rec){
+  if(rec&&rec.mix2&&rec.mix2.stockLogId)reverseFeedStockDeduction(rec.mix2);   // เบอร์ผสม (entry #353) — ใช้ช่องชื่อเดียวกัน
   if(!rec||!rec.stockItemId||!rec.stockLogId)return;
   const item=(D.inventoryItems||[]).find(i=>i.id===rec.stockItemId);
   if(item)item.qty=Math.round((item.qty+(rec.stockQty||0))*100)/100;
@@ -15494,24 +15518,66 @@ function feedGridRow(p,d,feedItems){
   //    ยอมให้สต็อกติดลบดีกว่า — ยอดคงเหลือแก้ได้ด้วยการกรอกรับเข้าย้อนหลัง แต่ราคาที่คิดผิดไปแล้วไม่มีใครรู้
   // ── ⚠️ ช่องนี้เป็นช่องบังคับแล้ว (พี่สั่ง entry #313) — กรอก กก. แล้วไม่เลือกเบอร์ = บันทึกไม่ผ่าน
   //    ช่องที่ยังว่างขึ้นกรอบเหลืองไว้ตั้งแต่แรก จะได้เห็นก่อนกดบันทึก ไม่ใช่รู้ตอนโดนบล็อก ──
-  const opts=feedItems;
-  const suggestedItem=suggestedStock?feedItems.find(i=>i.id===suggestedStock):null;
+  // ── ⚠️ แก้กฎ #262 ตามคำสั่งพี่ (entry #353): ซ่อนเบอร์ที่หมด (<1) — 19 เบอร์เหลือ 3 · แต่ต้องมีทางออกเสมอ
+  //    เพราะช่องนี้บังคับ (#313) ถ้าลืมกรอกรับเข้าจนเบอร์ที่ใช้อยู่หมด พนักงานจะบันทึกไม่ได้เลย →
+  //    (1) เบอร์ที่บ่อนี้ใช้อยู่ (เมื่อวาน/ที่บันทึกไว้) โชว์ต่อแม้หมด  (2) ตัวเลือกท้าย "⋯ แสดงเบอร์ที่หมด" กางครบทุกเบอร์
   return`<tr data-pond="${rid}">
     <td><b>${p.name}</b>${existing?' <span class="badge b-ok" style="font-size:var(--fs9)">บันทึกแล้ว</span>':''}</td>
     <td>${age>0?age+' วัน':'-'}</td>
     <td style="text-align:right">${bio?Math.round(bio).toLocaleString()+' กก.':'-'}</td>
     <td style="text-align:right;color:var(--tx3)">${prev&&prev.totalFeed!=null?prev.totalFeed.toFixed(1):'-'}</td>
-    <td style="text-align:right"><input type="number" step="0.1" class="fi" style="width:90px;text-align:right" id="fdg-${rid}-total" value="${suggestedTotal!=null?suggestedTotal:''}" placeholder="0.0" oninput="fdGridCalcRate('${rid}')"></td>
+    <td style="text-align:right"><input type="number" step="0.1" class="fi" style="width:90px;text-align:right" id="fdg-${rid}-total" value="${suggestedTotal!=null?suggestedTotal:''}" placeholder="0.0" oninput="fdGridCalcRate('${rid}');fdMixCalc('${rid}')"></td>
     <td style="text-align:right" id="fdg-${rid}-rate">${rateTxt}</td>
-    <td><select class="fi" style="width:220px${suggestedStock?'':';border-color:var(--w);background:var(--wb)'}" id="fdg-${rid}-stock" onchange="fdGridStockPick('${rid}')"><option value="">-- เลือกเบอร์อาหาร --</option>${opts.map(i=>{
-      const q=parseFloat(i.qty)||0;
-      // บอกสถานะของให้เห็นในตัวเลือกเลย จะได้รู้ว่าต้องไปกรอกรับเข้า ไม่ใช่ห้ามเลือก
-      const tag=q<0?' ⚠️ ค้างกรอกรับเข้า':q===0?' ⚠️ ของหมด':'';
-      return`<option value="${i.id}"${i.id===suggestedStock?' selected':''}>${i.name} — คงเหลือ ${q} ${i.unit||'กระสอบ'}${tag}</option>`;
-    }).join('')}</select></td>
+    <td><select class="fi" style="width:220px${suggestedStock?'':';border-color:var(--w);background:var(--wb)'}" id="fdg-${rid}-stock" onchange="fdGridStockPick('${rid}')"><option value="">-- เลือกเบอร์อาหาร --</option>${fdFeedOpts(feedItems,suggestedStock,false)}</select><button type="button" class="fdg-mixb" id="fdg-${rid}-mixbtn" onclick="fdMixToggle('${rid}',true)" title="ผสมเบอร์ที่ 2" aria-label="ผสมเบอร์ที่ 2"${existing&&feedMixKg(existing)?' hidden':''}>＋</button></td>
     ${APP_ROLE==='admin'?`<td style="text-align:right;color:var(--pd);font-weight:600">${pondFeedCost(p)?Math.round(pondFeedCost(p)).toLocaleString()+' บ.':'-'}</td>`:''}
     <td><input type="text" class="fi" style="width:120px" id="fdg-${rid}-notes" value="${existing?.notes||''}" placeholder="-"></td>
-  </tr>`;
+  </tr>${fdMixRow(p,existing,feedItems)}`;
+}
+// ── แถวผสมเบอร์ที่ 2 (entry #353) — โชว์เฉพาะบ่อที่กด ＋ หรือวันนั้นบันทึกผสมไว้แล้ว · ไม่ดึงจากเมื่อวาน (ผสมแค่ 1–2 วัน)
+function fdMixRow(p,existing,feedItems){
+  // ช่องกรอกวางใต้คอลัมน์เดียวกับแถวบ่อ (กก. ใต้ กก. · เบอร์ใต้เบอร์) — แท็บเล็ตเลื่อนตารางซ้าย-ขวาแล้วยังเห็นคู่กัน
+  const rid=p.id,m=existing&&feedMixKg(existing)?existing.mix2:null;
+  return '<tr class="fdg-mix" id="fdg-'+rid+'-mixrow" data-on="'+(m?1:'')+'"'+(m?'':' hidden')+'>'
+    +'<td colspan="4" class="fdg-mixlbl">＋ ผสม</td>'
+    +'<td style="text-align:right"><input type="number" step="0.1" inputmode="decimal" class="fi" style="width:90px;text-align:right" id="fdg-'+rid+'-kg2" value="'+(m?m.kg:'')+'" placeholder="กก." oninput="fdMixCalc(\''+rid+'\')" aria-label="กก. ของเบอร์ที่ผสม"></td>'
+    +'<td></td>'
+    +'<td><select class="fi" style="width:220px" id="fdg-'+rid+'-stock2" onchange="fdMixCalc(\''+rid+'\')" aria-label="เบอร์ที่ผสม"><option value="">-- เบอร์ที่ผสม --</option>'
+    +fdFeedOpts(feedItems,m?m.stockItemId:'',false)+'</select>'
+    +'<button type="button" class="fdg-mixx" onclick="fdMixToggle(\''+rid+'\',false)" aria-label="ไม่ผสม">✕</button></td>'
+    +'<td colspan="'+(APP_ROLE==='admin'?2:1)+'"><span class="fdg-mixrest" id="fdg-'+rid+'-mixrest"></span></td>'
+    +'</tr>';
+}
+function fdMixToggle(pid,on){
+  const r=document.getElementById('fdg-'+pid+'-mixrow');if(!r)return;
+  r.hidden=!on;r.dataset.on=on?'1':'';
+  const b=document.getElementById('fdg-'+pid+'-mixbtn');if(b)b.hidden=!!on;
+  if(on){fdMixCalc(pid);document.getElementById('fdg-'+pid+'-stock2')?.focus();}
+}
+// ── ตัวเลือกเบอร์อาหาร: มีของ (≥1) + เบอร์ที่เลือกอยู่ · ที่เหลือพับไว้หลัง "⋯ แสดงเบอร์ที่หมด" (entry #353) ──
+function fdFeedOpts(items,selId,all){
+  const show=items.filter(i=>all||!stkOut(i.qty)||i.id===selId),nHid=items.length-show.length;
+  return show.map(i=>{
+    const q=parseFloat(i.qty)||0;
+    // บอกสถานะของให้เห็นในตัวเลือกเลย จะได้รู้ว่าต้องไปกรอกรับเข้า ไม่ใช่ห้ามเลือก
+    const tag=q<0?' ⚠️ ค้างกรอกรับเข้า':stkOut(q)?' ⚠️ ของหมด':'';
+    return '<option value="'+i.id+'"'+(i.id===selId?' selected':'')+'>'+mpEsc(i.name)+' — คงเหลือ '+stkQ(q)+' '+mpEsc(i.unit||'กระสอบ')+tag+'</option>';
+  }).join('')+(nHid?'<option value="__all">⋯ แสดงเบอร์ที่หมด ('+nHid+')</option>':'');
+}
+// เลือก "⋯ แสดงเบอร์ที่หมด" → กางทุกเบอร์ในช่องนั้นช่องเดียว แล้วให้เลือกใหม่ · คืน true = ยังไม่ได้เลือกเบอร์จริง
+function fdFeedExpand(el){
+  if(!el||el.value!=='__all')return false;
+  const items=(D.inventoryItems||[]).filter(i=>i.category==='feed').sort((a,b)=>a.name.localeCompare(b.name,'th'));
+  el.innerHTML=el.options[0].outerHTML+fdFeedOpts(items,'',true);el.value='';
+  try{el.showPicker&&el.showPicker();}catch(e){}
+  return true;
+}
+function fdMixCalc(pid){
+  fdFeedExpand(document.getElementById('fdg-'+pid+'-stock2'));
+  const el=document.getElementById('fdg-'+pid+'-mixrest');if(!el)return;
+  const t=parseFloat(document.getElementById('fdg-'+pid+'-total')?.value)||0,k=parseFloat(document.getElementById('fdg-'+pid+'-kg2')?.value)||0;
+  const s1=document.getElementById('fdg-'+pid+'-stock');const n1=s1&&s1.value?s1.options[s1.selectedIndex].text.split(' — ')[0]:'เบอร์หลัก';
+  el.textContent=t&&k?(k<t?n1+' '+(Math.round((t-k)*10)/10)+' กก.':'กก. ผสมต้องน้อยกว่ายอดรวม '+t):'';
+  el.classList.toggle('bad',!!(t&&k&&k>=t));
 }
 function renderFeedGrid(){
   const wrap=document.getElementById('fd-grid-wrap');if(!wrap)return;
@@ -15528,10 +15594,12 @@ function renderFeedGrid(){
     <th style="text-align:right">อาหารวันนี้ (กก.)</th><th style="text-align:right">Feed Rate</th>
     <th>สต็อกที่ตัด</th>${APP_ROLE==='admin'?'<th style="text-align:right">ต้นทุนอาหารสะสม</th>':''}<th>หมายเหตุ</th>
   </tr></thead><tbody>${ponds.map(p=>feedGridRow(p,d,feedItems)).join('')}</tbody></table>`;
+  ponds.forEach(p=>fdMixCalc(p.id));
 }
 // ── ไฟกรอบช่องเบอร์อาหาร: ว่าง = เหลือง (ยังไม่ครบ) · เลือกแล้ว = ปกติ (entry #313) ──
 function fdGridStockPick(pid){
   const el=document.getElementById(`fdg-${pid}-stock`);if(!el)return;
+  fdFeedExpand(el);
   const need=!el.value;
   el.style.borderColor=need?'var(--w)':'';
   el.style.background=need?'var(--wb)':'';
@@ -15566,6 +15634,19 @@ function saveFeedGridAll(){
       return;
     }
   }
+  // ── แถวผสมที่เปิดอยู่ต้องครบ: เลือกเบอร์ · กก. > 0 และน้อยกว่ายอดรวม · ไม่ซ้ำเบอร์หลัก (entry #353) ──
+  const mixBad=ponds.filter(p=>{
+    const row=document.getElementById(`fdg-${p.id}-mixrow`);if(!row||!row.dataset.on)return false;
+    const t=parseFloat(document.getElementById(`fdg-${p.id}-total`)?.value)||0;
+    const s2=document.getElementById(`fdg-${p.id}-stock2`)?.value||'',k=parseFloat(document.getElementById(`fdg-${p.id}-kg2`)?.value)||0;
+    return t>0&&(!s2||!(k>0)||k>=t||s2===(document.getElementById(`fdg-${p.id}-stock`)?.value||''));
+  });
+  if(mixBad.length){
+    showMsg('fd-grid-msg','danger','<b>แถวผสมยังไม่ครบ</b> — บ่อ '+mixBad.map(p=>p.name).join(' · ')
+      +'<div style="margin-top:4px">เลือกเบอร์ที่ผสม (ไม่ซ้ำเบอร์หลัก) + กก. ที่น้อยกว่ายอดรวม · หรือกด ✕ ถ้าไม่ผสม · ยังไม่ได้บันทึกอะไรเลย</div>');
+    document.getElementById(`fdg-${mixBad[0].id}-stock2`)?.focus();
+    return;
+  }
   let saved=0,deleted=0;
   ponds.forEach(p=>{
     const totalEl=document.getElementById(`fdg-${p.id}-total`);if(!totalEl)return;
@@ -15583,8 +15664,13 @@ function saveFeedGridAll(){
     // ── ยี่ห้อ/เบอร์ ไม่ต้องพิมพ์เองแล้ว ดึงชื่อสินค้าที่เลือกในช่องสต็อกมาเก็บไว้แทน (กันข้อมูลว่างเวลาปิดรอบแล้วไปโชว์ในประวัติ) ──
     const stockItem=stockItemId?(D.inventoryItems||[]).find(i=>i.id===stockItemId):null;
     const brand=stockItem?stockItem.name:(oldRec?.feedBrand||'');
+    // ── ผสม (entry #353): เบอร์หลักได้ส่วนที่เหลือ ──
+    const mixOn=!!document.getElementById(`fdg-${p.id}-mixrow`)?.dataset.on;
+    const id2=mixOn?(document.getElementById(`fdg-${p.id}-stock2`)?.value||''):'';
+    const kg2=id2?(parseFloat(document.getElementById(`fdg-${p.id}-kg2`)?.value)||0):0;
+    const item2=id2&&kg2>0&&kg2<total?(D.inventoryItems||[]).find(i=>i.id===id2):null;
     let newSacks=0;
-    if(stockItemId)newSacks=Math.round((total/25)*100)/100;
+    if(stockItemId)newSacks=Math.round(((item2?total-kg2:total)/25)*100)/100;
     if(oldRec)reverseFeedStockDeduction(oldRec);
     const rec={id:recId,date:d,age:docAge(p.startDate,d)||0,
       feedBrand:brand,feedGrade:oldRec?.feedGrade||'',
@@ -15597,6 +15683,13 @@ function saveFeedGridAll(){
       else if(parseFloat(stockItem.unitPrice)>0)rec.unitCost=parseFloat(stockItem.unitPrice);
     }
     if(stockItemId)applyFeedStockDeduction(rec,p.id,d,stockItemId,newSacks);
+    if(item2){
+      const o2=oldRec&&oldRec.mix2&&oldRec.mix2.stockItemId===item2.id&&oldRec.date===d?oldRec.mix2:null;   // วันเดิม เบอร์เดิม = ราคาเดิม
+      rec.mix2={stockItemId:item2.id,name:item2.name,kg:kg2};
+      const uc=o2&&parseFloat(o2.unitCost)>0?parseFloat(o2.unitCost):parseFloat(item2.unitPrice)||0;
+      if(uc>0)rec.mix2.unitCost=uc;
+      applyFeedStockDeduction(rec.mix2,p.id,d,item2.id,Math.round((kg2/25)*100)/100);
+    }
     // ไม่มีกิ่ง "ไม่เลือกเบอร์" แล้ว — ด่านบนสุดของฟังก์ชันบล็อกไว้ก่อนถึงตรงนี้ (entry #313)
     const idx=p.feedLog.findIndex(r=>r.id===rec.id||r.date===d);
     if(idx>=0)p.feedLog[idx]=rec;else p.feedLog.push(rec);
@@ -17947,7 +18040,7 @@ const CS_EMPTY_MSG=`<div style="font-size:var(--fs10);color:var(--tx3)">ไม�
 function feedByGrade(logs){
   const avg=feedAvgPerKgNow();
   const g={};
-  (logs||[]).forEach(r=>{
+  (logs||[]).flatMap(feedRecParts).forEach(r=>{
     if(!r)return;
     const kg=parseFloat(r.totalFeed)||0;if(!kg)return;
     const sp=feedRecSackPrice(r);
@@ -19572,7 +19665,7 @@ function renderChFeedTable(c){
   const rows=(c.feedLog||[]).slice().sort((a,b)=>(a.age||0)-(b.age||0));
   if(!rows.length)return '<p style="color:var(--tx3);text-align:center;padding:14px;font-style:italic">ไม่มีข้อมูล</p>';
   return `<table class="tbl"><thead><tr><th>วันที่</th><th>อายุ</th><th>ยี่ห้อ</th><th>เบอร์</th><th>รวม (กก.)</th><th>Feed Rate</th><th>หมายเหตุ</th></tr></thead><tbody>${
-    rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.feedBrand||'-'}</td><td>${r.feedGrade||'-'}</td><td>${r.totalFeed!=null?(+r.totalFeed).toFixed(1):'-'}</td><td>${r.feedRate?r.feedRate+'%':'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')
+    rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${r.age}</td><td>${feedRecLabel(r)}</td><td>${r.feedGrade||'-'}</td><td>${r.totalFeed!=null?(+r.totalFeed).toFixed(1):'-'}</td><td>${r.feedRate?r.feedRate+'%':'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')
   }</tbody></table>`;
 }
 function renderChSampleTable(c){
@@ -21247,7 +21340,7 @@ function plFeedItems(rows){
   const avgPerKg=feedAvgPerKgNow();
   rows.forEach(r=>{
     const log=(r&&r._crop&&r._crop.feedLog)||[];
-    log.forEach(f=>{
+    log.flatMap(feedRecParts).forEach(f=>{
       const kg=parseFloat(f&&f.totalFeed)||0;
       if(!kg)return;
       let name='⚠️ ไม่ได้ผูกสินค้า — ใช้ราคาเฉลี่ยทุกเบอร์',amt=kg*avgPerKg;
