@@ -993,6 +993,10 @@ button.pr-it:hover,button.pr-it:active{background:var(--sf2)}
 .fsl-h b{display:block;font-size:calc(15px * var(--ui-scale))}
 .fsl-h small{display:block;font-size:calc(12px * var(--ui-scale));color:var(--tx2);margin-top:2px}
 .fsl-list{overflow-y:auto;max-height:55vh}
+.fsl-months{display:flex;gap:8px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--bd)}
+.fsl-months:empty{display:none}
+.fsl-mo{min-height:40px;padding:6px 14px;border:1.5px solid #BFE0C5;border-radius:99px;background:#fff;color:#2F7A3E;font:inherit;font-weight:700;font-size:calc(13.5px * var(--ui-scale));cursor:pointer}
+.fsl-mo.on{background:#2F7A3E;border-color:#2F7A3E;color:#fff}
 .fsl-pick{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--bd);font-size:calc(13.5px * var(--ui-scale));cursor:pointer;min-height:44px}
 .fsl-pick input{width:20px;height:20px;flex-shrink:0;accent-color:#2F7A3E}
 .fsl-pick.dis{opacity:.5;cursor:default}
@@ -2553,6 +2557,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <div class="modal fsl-modal" role="dialog" aria-labelledby="fsl-title">
     <div class="fsl-h"><div><b id="fsl-title"></b><small>ติ๊กรายจ่ายสวนที่จ่ายด้วยเงินก้อนนี้ · โชว์รายจ่ายช่วง 1 เดือนก่อน–หลังวันขาย</small></div>
       <button type="button" class="bill-x" aria-label="ปิด" onclick="closeFundSellLink()">✕</button></div>
+    <div id="fsl-months" class="fsl-months"></div>
     <div id="fsl-list" class="fsl-list"></div>
     <div id="fsl-sum" class="fsl-sum"></div>
     <div class="fsl-f"><button type="button" class="btn" onclick="closeFundSellLink()">ยกเลิก</button><button type="button" class="btn btn-p" onclick="saveFundSellLink()">💾 บันทึก</button></div>
@@ -13386,12 +13391,29 @@ function renderFundSellLink(){
       +'<span class="fsl-n">'+billEsc(r.note||'-')+' <span class="fsl-plot">· '+billEsc(palmPlotName(r.plotId))+'</span>'+(other?'<br><span class="fsl-other">ผูกกับเงินขาย '+fD(other.date)+' แล้ว</span>':'')+'</span>'
       +'<span class="fsl-amt">'+B(r.amount||0)+'</span></label>';
   }).join(''):'<p style="color:var(--tx3);padding:16px;text-align:center">ไม่มีรายจ่ายสวนช่วง 1 เดือนก่อน–หลังวันขาย</p>';
+  // ── ปุ่มติ๊กทั้งเดือน (พี่สั่ง entry #356 — เบิกกองทุนสิ้นเดือนก้อนเดียว รายจ่ายบันทึกยิบย่อย)
+  //    ทำปุ่มทุกเดือนที่อยู่ในรายการ ไม่เดาเดือนจากวันขาย (เบิก 1 พ.ย. ก็จ่ายของ ต.ค.) · กดซ้ำ = เอาติ๊กออกทั้งเดือน
+  //    ข้ามรายจ่ายที่ผูกกับเงินขายอื่นแล้ว (กันนับซ้ำ) ──
+  const mos={};list.forEach(r=>{const k=(r.date||'').slice(0,7);if(!k)return;if(taken[r.id]&&taken[r.id].id!==s.id)return;(mos[k]=mos[k]||[]).push(r.id);});
+  document.getElementById('fsl-months').innerHTML=Object.keys(mos).sort().map(k=>{
+    const all=mos[k].every(id=>_fslDraft.ids.has(id));
+    return '<button type="button" class="fsl-mo'+(all?' on':'')+'" onclick="fslMonth(\''+k+'\')">'+(all?'✓ ':'')+'ติ๊กทั้ง '+MO_TH_SHORT[+k.slice(5,7)-1]+' '+String(+k.slice(0,4)+543).slice(2)+' ('+mos[k].length+')</button>';
+  }).join('');
   const sum=list.filter(r=>_fslDraft.ids.has(r.id)).reduce((t,r)=>t+(r.amount||0),0);
   const left=(s.amount||0)-sum;
   const el=document.getElementById('fsl-sum');
   el.className='fsl-sum'+(Math.abs(left)<1?' ok':left>0?' left':' over');
   el.innerHTML='<span>รวมที่ติ๊ก '+B(sum)+' จาก '+B(s.amount)+'</span><span>'
     +(Math.abs(left)<1?'✓ พอดี':left>0?'เหลือ '+B(left):'เกิน '+B(-left))+'</span>';
+}
+function fslMonth(k){
+  if(!_fslDraft)return;
+  const s=(D.fundSells||[]).find(r=>r.id===_fslDraft.saleId);if(!s)return;
+  const taken=palmExpFundMap();
+  const ids=palmMoneyList().filter(r=>r.type==='expense'&&(r.date||'').slice(0,7)===k&&!(taken[r.id]&&taken[r.id].id!==s.id)).map(r=>r.id);
+  const all=ids.every(id=>_fslDraft.ids.has(id));
+  ids.forEach(id=>all?_fslDraft.ids.delete(id):_fslDraft.ids.add(id));
+  renderFundSellLink();
 }
 function fslToggle(id,on){if(!_fslDraft)return;if(on)_fslDraft.ids.add(id);else _fslDraft.ids.delete(id);renderFundSellLink();}
 function saveFundSellLink(){
