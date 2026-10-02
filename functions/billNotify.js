@@ -106,10 +106,10 @@ function stockEmptyText(data, itemId) {
   const lines = [`🔴 ฟาร์มหมด: ${clean(it.name, 50)}`];
   if (where) lines.push(`เบิกล่าสุด: ${where}`);
   if (shop > 0) {
-    lines.push(`🏪 หน้าร้านมี ${shop} ${unit}`.trim());
-    lines.push("👉 เอาเข้าฟาร์ม แล้วบันทึก \"หน้าร้าน เข้า ฟาร์ม\"");
+    lines.push(`🏪 บุญชูมี ${shop} ${unit}`.trim());
+    lines.push("👉 เอาเข้าฟาร์ม แล้วบันทึก \"บุญชูเข้าฟาร์ม\"");
   } else {
-    lines.push(`🏪 หน้าร้านก็หมด → ต้องสั่ง${co ? " " + clean(co.name, 40) : ""}`);
+    lines.push(`🏪 บุญชูก็หมด → ต้องสั่ง${co ? " " + clean(co.name, 40) : ""}`);
   }
   return lines.join("\n");
 }
