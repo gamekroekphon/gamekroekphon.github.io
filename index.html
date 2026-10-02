@@ -268,6 +268,7 @@ body.role-admin .side-nav .sn-link.admin-only{display:block!important}
 .crx-sum .g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
 @media(min-width:700px){.crx-sum .g{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .crx-sum .g div{background:rgba(255,255,255,.12);border-radius:12px;padding:8px}
+.crx-sum .g div.neg{background:#B91C1C}   /* กำไรติดลบ = กล่องแดง (พี่สั่ง entry #364) */
 .crx-sum b{display:block;font-size:calc(20px * var(--ui-scale));font-weight:900;white-space:nowrap}.crx-sum span{font-size:calc(12px * var(--ui-scale));font-weight:700}
 .crx-h{font-weight:800;font-size:calc(15px * var(--ui-scale));margin:4px 2px 8px}
 .crx-act{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px;scrollbar-width:thin}
@@ -18978,9 +18979,9 @@ function renderCrops(){
   const sumEl=document.getElementById('cr-sum');
   if(sumEl)sumEl.innerHTML='<div class="crx-sum"><div class="t">'+(selYear==='all'?'ทุกปี':'ปี '+selYear)+' · ปิดแล้ว '+rows.length+' รอบ</div><div class="g">'
     +'<div><b>'+(kgSum/1000).toFixed(0)+'</b><span>ตันรวม</span></div>'
-    +(isAdmin&&npRows.length?'<div><b>'+(npSum>=0?'+':'−')+M(Math.abs(npSum))+'</b><span>ล้าน กำไรรวม</span></div>':'')
+    +(isAdmin&&npRows.length?'<div'+(npSum<0?' class="neg"':'')+'><b>'+(npSum>=0?'+':'−')+M(Math.abs(npSum))+'</b><span>ล้าน กำไรรวม</span></div>':'')
     +'<div><b>'+(fAvg!=null?fAvg.toFixed(2):'—')+'</b><span>FCR เฉลี่ย</span></div>'
-    +(isAdmin&&npRows.length?'<div><b>'+(npSum/npRows.length>=0?'+':'−')+M(Math.abs(npSum/npRows.length))+'</b><span>ล้าน กำไร/รอบ</span></div>':'')
+    +(isAdmin&&npRows.length?'<div'+(npSum<0?' class="neg"':'')+'><b>'+(npSum/npRows.length>=0?'+':'−')+M(Math.abs(npSum/npRows.length))+'</b><span>ล้าน กำไร/รอบ</span></div>':'')
     +'</div></div>';
   // ── รอบปัจจุบัน (กำลังเลี้ยง / รอทำสรุป / เตรียมบ่อ) — โชว์เฉพาะดูปีนี้หรือทุกปี ──
   const isCurYear=selYear==='all'||selYear===yearBE(curY);
