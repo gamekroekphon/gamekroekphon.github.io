@@ -5090,7 +5090,7 @@ async function initFirebase() {
 
     if (first) {
       const remote = normalizeD(JSON.parse(first.json));
-      D = remote;
+      D = remote;tickMemoClear();
       _lastUpdated = first.updated;
       seedPonds();
       const json_loaded = JSON.stringify(D);
@@ -5146,7 +5146,7 @@ async function initFirebase() {
         if (!r || r.updated === _lastUpdated) return;
         if (Date.now() < _remoteIgnoreUntil) { setTimeout(pullRemote, _remoteIgnoreUntil - Date.now() + 50); return; }   // กำลังบันทึกของเราเองอยู่ — กลับมาดูใหม่พอพ้นช่วง
         const remote = normalizeD(JSON.parse(r.json));
-        D = remote;
+        D = remote;tickMemoClear();
         _lastUpdated = r.updated;
         localStorage.setItem(SK, r.json);
         if (isEditingField()) {
@@ -5862,6 +5862,7 @@ function mergeByMonth(localArr, remoteArr, dead) {
   return Object.values(map);
 }
 async function save() {
+  tickMemoClear();   // ข้อมูลเพิ่งเปลี่ยน — แคชระหว่างวาด (#363) ต้องล้าง
   localStorage.setItem(SK, JSON.stringify(D));
   if (!firebase.apps.length) return;
   _remoteIgnoreUntil = Date.now() + 4000;
@@ -5874,7 +5875,7 @@ async function save() {
       const r = await fetchRemoteJson();
       if (r) {
         const remote = normalizeD(JSON.parse(r.json));
-        D = mergeRemote(D, remote);
+        D = mergeRemote(D, remote);tickMemoClear();
       }
     }
     const json = JSON.stringify(D);
@@ -5887,6 +5888,7 @@ async function save() {
 }
 function fbSave(){} // save() ซิงค์ Firebase อยู่แล้ว — ฟังก์ชันนี้กันพังจาก legacy calls
 async function saveForce(){
+  tickMemoClear();
   // เขียน D ลง Firebase โดยไม่ merge กับ remote — ใช้สำหรับ delete operations ที่ต้องการให้ local ชนะ
   localStorage.setItem(SK,JSON.stringify(D));
   if(!firebase.apps.length)return;
@@ -6046,7 +6048,14 @@ function pondFeedCost(p){
   });
   return Math.round(cost);
 }
-function fD(d){if(!d)return'-';return new Date(d).toLocaleDateString('th-TH',{year:'2-digit',month:'short',day:'numeric'})}
+// วันที่แบบไทย — สร้างตัวจัดรูปแบบครั้งเดียว + จำผลของสตริงวันที่ไว้ (entry #363: เดิม toLocaleDateString สร้างใหม่ทุกครั้ง หน้าหนึ่งเรียก 100–240 ครั้ง)
+const _fDfmt=new Intl.DateTimeFormat('th-TH',{year:'2-digit',month:'short',day:'numeric'}),_fDc=new Map();
+function fD(d){
+  if(!d)return'-';
+  if(typeof d!=='string')return _fDfmt.format(new Date(d));
+  let s=_fDc.get(d);if(s!==undefined)return s;
+  s=_fDfmt.format(new Date(d));if(_fDc.size>3000)_fDc.clear();_fDc.set(d,s);return s;
+}
 // ── ย่อตัวเลขหลักพัน/ล้าน: >=1 ล้าน ขึ้น M เสมอ (ไม่โชว่ 1000K), >=1 พัน ขึ้น K, ต่ำกว่านั้นโชว่เต็ม ──
 function fmtKM(v){
   const n=Math.abs(v);
@@ -6426,8 +6435,8 @@ function showMsg(id,type,msg){
   const ic={ok:'✓',warn:'!',danger:'!'};
   el.innerHTML=`<div class="msg-box" style="background:${bg[type]};border-left:3px solid ${bc[type]}"><span class="mf-icon" style="background:${bc[type]}">${ic[type]}</span><span>${msg}</span></div>`;
   const box=el.firstElementChild;
-  void box.offsetWidth;
-  box.classList.add('show');
+  // เดิม void box.offsetWidth บังคับจัดหน้าทั้งหน้าทันทีเพื่อเริ่มแอนิเมชัน (หน้าคุณภาพน้ำ 90ms) — รอเฟรมถัดไปแทน (#363)
+  requestAnimationFrame(()=>requestAnimationFrame(()=>box.classList.add('show')));
   el._mfT1=setTimeout(()=>box.classList.add('fading'),4750);
   el._mfT2=setTimeout(()=>{el.innerHTML=''},5000);
 }
@@ -8155,7 +8164,8 @@ ${String(p.cropNote).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`:''}
       <button class="btn" onclick="jumpHarvest('${p.id}')">🦐 กรอกจับกุ้ง</button>
     </div>`;
   renderPdGauges(p,last);
-  renderPdCharts(p);
+  // กราฟวาดหลังหน้าขึ้นแล้ว 1 เฟรม — หน้าบ่อไม่ต้องรอ Chart.js (entry #363) · เปลี่ยนบ่อระหว่างรอ = ไม่วาดของบ่อเก่าทับ
+  {const _pid=p.id;requestAnimationFrame(()=>{if(_pdCurPondId===_pid&&document.getElementById('sec-ponddetail')?.classList.contains('on'))renderPdCharts(pond(_pid)||p);});}
   if(!clsNoShrimp(cls))renderFarmCard(p);
   renderSurvivalCard(p);
   renderPdHarvestCard(p);
@@ -9068,7 +9078,16 @@ function renderDailyWeekTable(){
   }</tbody></table>`;
 }
 // ── ค่าแรง: หาว่าแต่ละบ่อ "กำลังเลี้ยงอยู่จริง" ในวันไหนบ้าง ทั้งปัจจุบันและย้อนหลัง (รวมรอบที่ปิดไปแล้วจาก cropHistory) เพื่อหารต้นทุนค่าแรงให้ตรงกับจำนวนบ่อที่เลี้ยงพร้อมกันจริงในวันนั้นๆ ไม่ใช่หารคงที่ ──
+// ══ แคชระหว่างวาดหน้าจอ 1 ครั้ง (พี่แจ้ง entry #363 "บางหน้ากดเข้าไปหน่วงๆ ช้าๆ") ══
+//   ฟังก์ชันที่วนรายวัน (ค่าแรง/ค่าไฟ/ตัวหารบ่อ) ถูกเรียกหลายพันครั้งต่อการวาด 1 หน้า และคิดสิ่งเดิมซ้ำทุกครั้ง
+//   (หน้าต่างรอบเลี้ยงทุกบ่อ 7,654 ครั้ง · สัปดาห์ค่าแรง 4,083 ครั้ง · บิลไฟ 7,639 ครั้ง · รายการเบิกทั้งก้อน 210 ครั้ง)
+//   แคชอยู่แค่งานเดียวของเบราว์เซอร์ (ล้างเองด้วย setTimeout 0) + ล้างทุกครั้งที่ save()/saveForce()/D ถูกแทนจาก cloud
+//   ข้อมูลไม่เปลี่ยนระหว่างวาด → ตัวเลขเท่าเดิมทุกตัว · ⚠️ ถ้ามีโค้ดใหม่ที่ "แก้ D แล้วคำนวณต่อทันทีโดยยังไม่ save" ให้เรียก tickMemoClear() ก่อน
+let _tm=null;
+function tickMemo(){if(!_tm){_tm={};setTimeout(()=>{_tm=null;},0);}return _tm;}
+function tickMemoClear(){_tm=null;}
 function allCropWindows(){
+  const _m=tickMemo();if(_m.cw)return _m.cw;
   const windows=[];
   D.ponds.forEach(p=>{
     // ⚠️ ปิดหน้าต่างที่ harvestDate (วันจับกุ้ง) ไม่ใช่วันกดปิดรอบ
@@ -9076,10 +9095,13 @@ function allCropWindows(){
     if(p.startDate)windows.push({start:p.startDate,end:p.harvestDate||null}); // null = ยังเลี้ยงอยู่ต่อเนื่องถึงวันนี้/อนาคต
     (p.cropHistory||[]).forEach(c=>{if(c.startDate&&c.closeDate)windows.push({start:c.startDate,end:c.closeDate});});
   });
+  _m.cw=windows;
   return windows;
 }
 function activePondCountOnDate(dateStr){
-  return allCropWindows().filter(w=>w.start<=dateStr&&(w.end===null||dateStr<=w.end)).length;
+  const c=tickMemo().apc||(_tm.apc={});
+  if(dateStr in c)return c[dateStr];
+  return c[dateStr]=allCropWindows().filter(w=>w.start<=dateStr&&(w.end===null||dateStr<=w.end)).length;
 }
 // ── วันแรกที่มีข้อมูล "ประวัติจ่ายค่าแรงรายสัปดาห์" จริงย้อนหลังสุด (ต้นช่วงของสัปดาห์แรกที่บันทึกไว้) — ใช้ตัดรอบที่ปิดไปแล้วก่อนหน้านี้ออกจากค่าเฉลี่ย ค่าแรง/กก. เพราะรอบที่ปิดก่อนมีข้อมูลรายสัปดาห์จริง จะคำนวณส่วนพนักงานรายวันเป็น 0 (ไม่มีข้อมูล) ทำให้ค่าแรง/กก. ต่ำเกินจริงและฉุดค่าเฉลี่ยทั้งฟาร์มลง ──
 function laborDataStartDate(){
@@ -9136,7 +9158,11 @@ function dailyFixedStaffRate(dateStr){
 }
 // ── ค่าแรงพนักงานรายวัน: ตัดรอบทุกวันพุธ คุมช่วงทำงาน 7 วัน (พฤหัส–พุธ จบที่วันพุธที่กรอก) หาสัปดาห์ที่ช่วงคุมครอบวันที่ต้องการ ถ้าไม่มี (ช่วงปัจจุบันยังไม่ถึงวันตัดรอบ) ใช้ยอดของสัปดาห์ล่าสุดที่มีอยู่ยืดไปข้างหน้าเป็นค่าประมาณการ ──
 function weekOfDate(dateStr){
-  const weeks=(D.dailyLaborWeeks||[]).filter(w=>w.weekEnd).slice().sort((a,b)=>a.weekEnd.localeCompare(b.weekEnd));
+  const _m=tickMemo(),c=_m.wod||(_m.wod={});
+  if(dateStr in c)return c[dateStr];
+  return c[dateStr]=_weekOfDate(dateStr,_m.wks||(_m.wks=(D.dailyLaborWeeks||[]).filter(w=>w.weekEnd).slice().sort((a,b)=>a.weekEnd.localeCompare(b.weekEnd))));
+}
+function _weekOfDate(dateStr,weeks){
   if(!weeks.length)return null;
   for(const w of weeks){
     const periodStart=addDaysStr(w.weekEnd,-6);
@@ -9439,6 +9465,11 @@ function fmtMonth(ym){
 // ── หาบิลไฟจริงของเดือนที่ครอบวันที่กำหนด แปลงเป็นอัตรา/วัน — ถ้าเดือนนั้นยังไม่มีบิลจริง (เช่นเดือนปัจจุบันที่บิลยังไม่ออก) ใช้บิลเดือนล่าสุดที่มีจริงยืดไปเป็นค่าประมาณการ (แบบเดียวกับ weekOfDate ของค่าแรง) ──
 function dailyElecRate(dateStr){
   const ym=dateStr.slice(0,7);
+  const c=tickMemo().der||(_tm.der={});   // บิลเดียวทั้งเดือน → แคชรายเดือน
+  if(ym in c)return c[ym];
+  return c[ym]=_dailyElecRate(ym);
+}
+function _dailyElecRate(ym){
   const bills=(D.electricityBills||[]).filter(b=>b.month<=ym).sort((a,b)=>b.month.localeCompare(a.month));
   const bill=bills[0];
   if(!bill)return 0;
@@ -20986,8 +21017,13 @@ function equipNoCost(pondId,date){const f=EQUIP_NOCOST_FROM[pondId];return !f||S
 function getStockItemsForPond(pondId,startDate,endDate){
   if(!pondId||!startDate)return[];
   const end=endDate||today();
-  return(D.inventoryLog||[]).filter(l=>l.type==='out'&&l.pondId===pondId&&l.date>=startDate&&l.date<=end)
-    .map(l=>{const item=(D.inventoryItems||[]).find(i=>i.id===l.itemId);
+  const _m=tickMemo();
+  if(!_m.outByPond){
+    _m.outByPond={};(D.inventoryLog||[]).forEach(l=>{if(l&&l.type==='out'&&l.pondId)(_m.outByPond[l.pondId]=_m.outByPond[l.pondId]||[]).push(l);});
+    _m.itemById={};(D.inventoryItems||[]).forEach(i=>{if(i)_m.itemById[i.id]=i;});
+  }
+  return(_m.outByPond[pondId]||[]).filter(l=>l.date>=startDate&&l.date<=end)
+    .map(l=>{const item=_m.itemById[l.itemId];
       // ราคาที่ล็อกไว้ตอนเบิก (entry #298) ก่อน · รายการเก่าที่ไม่มี = ราคาปัจจุบันแบบเดิม
       const locked=parseFloat(l.unitCost);
       const nc=item?.category==='equip'&&equipNoCost(pondId,l.date);   // อุปกรณ์ = 0 บาท (#362)
