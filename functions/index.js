@@ -46,8 +46,26 @@ function addDays(dateStr, days) {
   return d.toISOString().split("T")[0];
 }
 
+// ── เกณฑ์ค่าน้ำที่วัดทุกวัน = PARAMS ในแอป (ตัวเลขของตารางคุณภาพน้ำ · entry #357) — แก้ที่แอปต้องแก้ตรงนี้ด้วย
+//    [min, max, dMin, dMax, inv] · ปกติ min–max · นอกนั้นเตือน · นอก dMin–dMax แดง · inv = ยิ่งต่ำยิ่งดี
+const OV_PARAMS = {
+  phM: [7.5, 8.5, 7.0, 9.0], phA: [7.8, 9.0, 7.0, 9.5],
+  tM: [26, 32, 22, 35], tA: [26, 32, 22, 36],
+  doM: [5, 10, 5, 20], doA: [5, 10, 5, 20],
+  alk: [136, 200, 80, 250], sal: [10, 30, 5, 35],
+  nh4: [0, 2.5, 0, Infinity, true], no2: [0, 0.5, 0, 1.0, true],
+};
 function classifyOv(key, v) {
   if (v === null || v === undefined || v === "") return "na";
+  const pr = OV_PARAMS[key];
+  if (pr) {
+    const [min, max, dMin, dMax, inv] = pr;
+    const x = parseFloat(v);
+    if (inv) return x >= dMax ? "danger" : x >= max ? "warn" : "ok";
+    if (x < dMin || x > dMax) return "danger";
+    if (x < min || x > max) return "warn";
+    return "ok";
+  }
   switch (key) {
     case "nh4":   // เกณฑ์ฟาร์ม ≥2.5 เตือน (entry #347 — ตรงกับแอป)
       return v >= 2.5 ? "warn" : "ok";
@@ -104,7 +122,7 @@ function pondStatusOv(p) {
   let level = "ok";
   if (last) {
     [
-      ["nh4", last.nh4], ["no2", last.no2], ["phM", last.phM],
+      ["nh4", last.nh4], ["no2", last.no2], ["phM", last.phM], ["phA", last.phA],
       ["doM", last.doM], ["doA", last.doA], ["alk", last.alk],
       ["sal", last.sal], ["tM", last.tM], ["tA", last.tA],
     ].forEach(([k, v]) => {
@@ -220,10 +238,12 @@ function waterLine(last) {
     if (s === "warn") flag.push(`${label} ${v}⚠️`);
     else if (s === "danger") flag.push(`${label} ${v}🔴`);
   };
+  chk("phA", "pHบ่าย", last.phA);
   chk("nh4", "NH4", last.nh4);
   chk("no2", "NO2", last.no2);
   chk("sal", "เค็ม", last.sal);
   chk("tM", "อุณหภูมิ", last.tM);
+  chk("tA", "อุณหภูมิบ่าย", last.tA);
   if (last.phM != null && last.phA != null && last.phM !== "" && last.phA !== "") {
     const sw = Math.abs(last.phM - last.phA);
     const s = classifyOv("phSwing", sw);

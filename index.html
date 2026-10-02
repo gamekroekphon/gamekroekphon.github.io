@@ -6184,16 +6184,17 @@ function sc(s){return s==='danger'?'var(--d)':s==='warn'?'var(--w)':s==='ok'?'va
 // ===== OVERVIEW-ONLY status engine (มาตรฐาน L. vannamei — ยืนยัน 16 มิ.ย. 69) =====
 // แยกจาก PARAMS/st() เดิมโดยตั้งใจ เพื่อไม่กระทบเกณฑ์ที่ใช้ในแท็บอื่น (บันทึกคุณภาพน้ำ/ผลแล็บ/แจ้งเตือน)
 function warnDir(key,v){
-  switch(key){
-    case'phM':case'phA':return v>8.5?'high':'low';
-    case'alk':return v>200?'high':'low';
-    case'tM':case'tA':return v>32?'high':'low';
-    case'doM':case'doA':return v>10?'high':'low';
-    default:return'high';
-  }
+  const p=PARAMS.find(x=>x.key===key);   // ทิศทางจากช่วงเดียวกับสีช่อง (entry #357)
+  if(!p||p.inv)return'high';
+  return v>p.max?'high':'low';
 }
+// ⚠️ ค่าน้ำที่วัดทุกวันใช้ PARAMS/st() ชุดเดียวกับสีช่องในตารางคุณภาพน้ำ (พี่สั่ง entry #357 "ใช้ตัวเลขชุดของตารางคุณภาพน้ำทั้งแอป")
+//    เดิมหน้านี้มีเกณฑ์ของตัวเอง → pH 7.6 ช่องเขียวแต่ภาพรวมเฝ้าระวัง · แก้เกณฑ์ที่ PARAMS ที่เดียว + functions/index.js (บอท) ให้ตรงกัน
+//    Ca/Mg/Hard/NO3 (วัดบางวัน) ไม่นับเป็นสถานะบ่อ (พี่เลือก) — สีในตารางยังมีเหมือนเดิม
+const OV_DAILY_KEYS=['phM','phA','tM','tA','doM','doA','alk','nh4','no2','sal'];
 function classifyOv(key,v){
   if(v===null||v===undefined||v==='')return'na';
+  if(OV_DAILY_KEYS.includes(key))return st(key,parseFloat(v));
   switch(key){
     case'nh4':return v>=2.5?'warn':'ok';   // เกณฑ์ฟาร์ม (พี่สั่ง entry #347) — เดิม >0.5 แดง / ≥0.25 เตือน
     case'no2':return v>4?'danger':v>=1?'warn':'ok';
@@ -6342,7 +6343,7 @@ function pondStatusOv(p){
   if(age<=0)return'prep';
   let level='ok';
   if(last){
-    [['nh4',last.nh4],['no2',last.no2],['phM',last.phM],['doM',last.doM],['doA',last.doA],
+    [['nh4',last.nh4],['no2',last.no2],['phM',last.phM],['phA',last.phA],['doM',last.doM],['doA',last.doA],
      ['alk',last.alk],['sal',last.sal],['tM',last.tM],['tA',last.tA]].forEach(([k,v])=>{
       if(v===null||v===undefined||v==='')return;
       level=worstOv(level,classifyOv(k,v));
@@ -6371,7 +6372,7 @@ function waterLineOv(last){
   let line=[seg('pH',last.phM,'phM'),seg('DO',last.doM,'doM'),seg('ALK',last.alk,'alk')].join(' · ');
   const extra=[];
   const chk=(key,lbl,unit)=>{const v=last[key];if(v===null||v===undefined||v==='')return;const s=classifyOv(key,v);if(s==='warn'||s==='danger'){const sfx=warnDir(key,v)==='low'?'ต่ำกว่าเกณฑ์':'เกินเกณฑ์';extra.push(`<span style="color:${s==='danger'?'var(--d)':'var(--w)'}">${lbl} ${v}${unit} ${sfx}</span>`)}};
-  chk('nh4','NH4','');chk('no2','NO2','');chk('sal','ความเค็ม',' ppt');
+  chk('phA','pH บ่าย','');chk('nh4','NH4','');chk('no2','NO2','');chk('sal','ความเค็ม',' ppt');
   if(last.phM!=null&&last.phA!=null&&last.phM!==''&&last.phA!==''){
     const sw=Math.abs(last.phM-last.phA);const s=classifyOv('phSwing',sw);
     if(s!=='ok')extra.push(`<span style="color:${s==='danger'?'var(--d)':'var(--w)'}">สวิง pH ${sw.toFixed(2)} เกินเกณฑ์</span>`);
@@ -7192,7 +7193,7 @@ function initUiSize(){
   applyUiSize(v);
 }
 initUiSize();
-const ADMIN_ONLY_TABS=['palm','users','labor','elec','pl','kan'];
+const ADMIN_ONLY_TABS=['palm','users','labor','elec','pl','kan','hatchery'];   // hatchery มีกำไร (#316) — เพิ่ม entry #357
 function goTab(t,btn){
   if(ADMIN_ONLY_TABS.includes(t)&&APP_ROLE!=='admin')return;
   document.querySelectorAll('.tab,.tab-item,.sn-top,.sn-link').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
@@ -7574,7 +7575,7 @@ function renderTide(){
 }
 // ── รวบรวม "ค่าผิดปกติทั้งหมด" ของบ่อ (ไม่ใช่แค่ตัวที่แย่สุด) เรียงแย่สุดก่อน — ใช้เป็นฐานให้ทั้ง reasonOv() (โชว์ตัวแย่สุด) และตาราง "สถานะบ่อทั้งหมด" (โชว่ตัวแย่สุด + ปุ่ม "+N อื่นๆ" ขยายดูที่เหลือ) กันเขียนเกณฑ์ซ้ำ 2 ที่ ──
 function allReasonsOv(p,last,age){
-  const lbl={nh4:'แอมโมเนีย',no2:'ไนไตรท์',phM:'pH เช้า',phSwing:'สวิง pH',doM:'DO เช้า',doA:'DO บ่าย',tM:'อุณหภูมิเช้า',tA:'อุณหภูมิบ่าย',alk:'อัลคาไลน์',sal:'ความเค็ม',tcbsGreen:'TCBS เขียว',tcbsYellow:'TCBS เหลือง',tvc:'TVC',ehp:'EHP',ehpLarva:'EHP ตัวอ่อน',hepato:'ตับอ่อน'};
+  const lbl={nh4:'แอมโมเนีย',no2:'ไนไตรท์',phM:'pH เช้า',phA:'pH บ่าย',phSwing:'สวิง pH',doM:'DO เช้า',doA:'DO บ่าย',tM:'อุณหภูมิเช้า',tA:'อุณหภูมิบ่าย',alk:'อัลคาไลน์',sal:'ความเค็ม',tcbsGreen:'TCBS เขียว',tcbsYellow:'TCBS เหลือง',tvc:'TVC',ehp:'EHP',ehpLarva:'EHP ตัวอ่อน',hepato:'ตับอ่อน'};
   const hepatoTx={swollen:'บวม/อักเสบ',black:'ซีด/ฝ่อ/ดำ'};
   const rk={ok:0,warn:1,danger:2};
   const out=[];
@@ -7592,7 +7593,7 @@ function allReasonsOv(p,last,age){
   };
   if(last){
     consider('nh4',last.nh4);consider('no2',last.no2);consider('doM',last.doM);consider('doA',last.doA);
-    consider('tM',last.tM);consider('tA',last.tA);consider('alk',last.alk);consider('sal',last.sal);consider('phM',last.phM);
+    consider('tM',last.tM);consider('tA',last.tA);consider('alk',last.alk);consider('sal',last.sal);consider('phM',last.phM);consider('phA',last.phA);
     if(last.phM!=null&&last.phA!=null&&last.phM!==''&&last.phA!=='')consider('phSwing',Math.abs(last.phM-last.phA));
   }
   const lab=sortLogArr('labResults',p.labResults||[]).slice(-1)[0];
@@ -7715,8 +7716,9 @@ function pondRiskStability(p,last){
   if(sAlk==='danger')cands.push({level:'danger',reason:`อัลคาไลน์ ${last.alk} mg/L ผิดเกณฑ์มาก`});
   else if(sAlk==='warn')cands.push({level:'warn',reason:`อัลคาไลน์ ${last.alk} mg/L เริ่มผิดเกณฑ์`});
   const sSal=classifyOv('sal',last.sal);
-  if(sSal==='danger')cands.push({level:'danger',reason:`ความเค็ม ${last.sal} ppt สูงเกินเกณฑ์`});
-  else if(sSal==='warn')cands.push({level:'warn',reason:`ความเค็ม ${last.sal} ppt เริ่มสูง`});
+  const salHi=warnDir('sal',last.sal)==='high';
+  if(sSal==='danger')cands.push({level:'danger',reason:`ความเค็ม ${last.sal} ppt ${salHi?'สูงเกินเกณฑ์':'ต่ำกว่าเกณฑ์'}`});
+  else if(sSal==='warn')cands.push({level:'warn',reason:`ความเค็ม ${last.sal} ppt ${salHi?'เริ่มสูง':'เริ่มต่ำ'}`});
   if(last.phM!=null&&last.phA!=null&&last.phM!==''&&last.phA!==''){
     const sw=Math.abs(last.phM-last.phA);const s=classifyOv('phSwing',sw);
     if(s==='danger')cands.push({level:'danger',reason:`pH แกว่ง ${sw.toFixed(2)} ระหว่างเช้า-บ่าย — บ่อไม่นิ่งมาก`});
@@ -13192,7 +13194,7 @@ function renderPalmHarvestTable(){
   tbl.innerHTML=pmhRender(list.map(r=>({rec:r,date:r.date,
     main:(r.weightKg||0).toLocaleString()+' กก.'+(r.pricePerKg>0?' × ฿'+(+r.pricePerKg).toFixed(2):''),
     amt:'+'+B(r.amount),cls:'in',
-    note:r.cutFee?'<span class="pm-cut-tag">หักค่าตัด '+B(r.cutFee)+'</span>':'',
+    note:r.cutFee?'<span class="pm-cut-tag">หักค่าตัด '+B(r.cutFee)+'</span>':(r.note?billEsc(r.note):''),   // ของเก่าเขียนค่าตัดไว้ในหมายเหตุ (แก้ entry #357)
     sub:'<span>'+billEsc(palmPlotName(r.plotId))+'</span>'})),
     rs=>rs.reduce((s,r)=>s+(r.weightKg||0),0).toLocaleString()+' กก. · <b class="in">+'+B(rs.reduce((s,r)=>s+(r.amount||0),0))+'</b>');
 }
@@ -13599,10 +13601,13 @@ function wqgSetDate(d){
   renderWqGrid();renderEpChips();checkExistingWQ();
 }
 function wqgRange(p){if(!p)return'';const n=v=>String(v).replace(/\.0+$/,'');return p.inv?'< '+n(p.max):n(p.min)+'–'+n(p.max);}
-function wqgCls(k,raw,rec){
+// sal = ความเค็มของแถวนี้ (ที่พิมพ์ค้างใน _wqDraft ก่อน ไม่มีค่อยใช้ที่บันทึกไว้) — เกณฑ์ Mg/Ca ขึ้นกับความเค็ม
+//   เดิมอ่านแค่ rec.sal → ตอนพิมพ์สีคิดแบบไม่รู้ความเค็ม กดบันทึกแล้วสีเปลี่ยนเอง (แก้ entry #357)
+function wqgSalOf(pid,rec){const dr=_wqDraft[pid];const s=dr&&'sal' in dr?String(dr.sal).trim().replace(',','.'):'';if(s!==''){const v=parseFloat(s);return isNaN(v)?null:v;}return rec&&rec.sal!=null?rec.sal:null;}
+function wqgCls(k,raw,rec,sal){
   if(raw===''||raw==null)return'';
   const v=parseFloat(raw);if(isNaN(v))return' wqg-bad';
-  const s=(k==='mg_'||k==='ca')?st(k,v,{sal:rec&&rec.sal}):st(k,v);
+  const s=(k==='mg_'||k==='ca')?st(k,v,{sal:sal!==undefined?sal:(rec&&rec.sal)}):st(k,v);
   return s==='danger'?' wqg-bad':s==='warn'?' wqg-warn':' wqg-ok';
 }
 function renderWqGrid(){
@@ -13625,7 +13630,7 @@ function renderWqGrid(){
         +'<small>'+(age>0?age+' วัน':'')+'</small>'+(ref?'<small>'+ref+'</small>':'')+'</div>'
         +'<button type="button" class="wqg-note'+(rec&&rec.notes?' has':'')+'" onclick="wqgNote(\''+p.id+'\')" aria-label="หมายเหตุ บ่อ '+mpEsc(p.name)+'">📝</button></div></td>'
       +WQG_KEYS.map(k=>{const raw=k in dr?dr[k]:(rec&&rec[k]!=null?String(rec[k]):'');
-        return '<td class="'+grpOf(k)+'"><input class="wqg-in'+wqgCls(k,raw,rec)+'" data-k="'+k+'" value="'+mpEsc(raw)+'" inputmode="decimal" enterkeyhint="next" autocomplete="off" aria-label="'+mpEsc(p.name)+' '+mpEsc((P(k)||{}).lbl||k)+'"></td>';}).join('')
+        return '<td class="'+grpOf(k)+'"><input class="wqg-in'+wqgCls(k,raw,rec,wqgSalOf(p.id,rec))+'" data-k="'+k+'" value="'+mpEsc(raw)+'" inputmode="decimal" enterkeyhint="next" autocomplete="off" aria-label="'+mpEsc(p.name)+' '+mpEsc((P(k)||{}).lbl||k)+'"></td>';}).join('')
       +'<td class="wqg-ck">'+(dr&&Object.keys(dr).length?'<span class="wqg-dirty">●</span>':rec?'✓':'')+'</td></tr>';
   }).join('')+'</tbody>';
   tbl.innerHTML=html;
@@ -13685,7 +13690,9 @@ document.addEventListener('input',e=>{
   const tr=i.closest('tr'),pid=tr&&tr.dataset.pid,k=i.dataset.k;if(!pid||!k)return;
   (_wqDraft[pid]=_wqDraft[pid]||{})[k]=i.value;_wqDraftDate=wqgDate();
   const p=pond(pid),rec=p&&(p.records||[]).find(r=>r.date===_wqDraftDate);
-  i.className='wqg-in'+wqgCls(k,i.value,rec);
+  const sal=wqgSalOf(pid,rec);
+  i.className='wqg-in'+wqgCls(k,i.value,rec,sal);
+  if(k==='sal')tr.querySelectorAll('.wqg-in[data-k="mg_"],.wqg-in[data-k="ca"]').forEach(x=>{x.className='wqg-in'+wqgCls(x.dataset.k,x.value,rec,sal);});   // ความเค็มเปลี่ยน → Mg/Ca ระบายสีใหม่ทันที
   const ck=tr.querySelector('.wqg-ck');if(ck)ck.innerHTML='<span class="wqg-dirty">●</span>';
   wqgProg();
 });
@@ -15686,6 +15693,8 @@ function saveFeedGridAll(){
     document.getElementById(`fdg-${mixBad[0].id}-stock2`)?.focus();
     return;
   }
+  // ── จำยอดอาหารก่อนตัด — หลังบันทึก เบอร์ไหนจาก ≥1 เหลือ <1 = หมด → แจ้ง LINE (แก้ entry #357 · เดิม #336 แจ้งเฉพาะเบิกหน้าสต็อก)
+  const feedBefore={};(D.inventoryItems||[]).forEach(i=>{if(i&&i.category==='feed')feedBefore[i.id]=parseFloat(i.qty)||0;});
   let saved=0,deleted=0;
   ponds.forEach(p=>{
     const totalEl=document.getElementById(`fdg-${p.id}-total`);if(!totalEl)return;
@@ -15735,7 +15744,9 @@ function saveFeedGridAll(){
     p.feedLog.sort((a,b)=>new Date(a.date)-new Date(b.date));
     saved++;
   });
-  save();
+  const savedP=save();
+  const feedEmptied=Object.keys(feedBefore).filter(id=>{const it=(D.inventoryItems||[]).find(i=>i.id===id);return it&&!stkOut(feedBefore[id])&&stkOut(it.qty);});
+  if(feedEmptied.length)stockEmptyEmit(savedP,feedEmptied);
   const parts=[];if(saved)parts.push(`บันทึกอาหาร ${saved} บ่อ`);if(deleted)parts.push(`ลบ ${deleted} บ่อ`);
   // ── เตือนหลังบันทึก (ไม่บล็อก) — ของติดลบ · เรื่องเบอร์อาหารย้ายไปเป็นด่านบล็อกก่อนบันทึกแล้ว (entry #313) ──
   const neg=negStockItems();
@@ -17875,8 +17886,9 @@ function calcRisk(d,ix,p){
       if(last.nh4>=2.5){score+=2;pondReasons.push({l:'warn',m:`แอมโมเนีย (NH4+) สูง (${last.nh4})`})}   // เกณฑ์ฟาร์ม ≥2.5 (#347)
     }
     if(last.no2!=null&&last.no2!==''){
-      if(last.no2>4){score+=3;pondReasons.push({l:'danger',m:`ไนไตรท์ (NO2) เกินเกณฑ์อันตราย (${last.no2})`})}
-      else if(last.no2>=1){score+=1;pondReasons.push({l:'warn',m:`ไนไตรท์ (NO2) เริ่มสูง (${last.no2})`})}
+      const sNo2=classifyOv('no2',last.no2);   // เกณฑ์ตาราง (#357) — เดิม >4 แดง / ≥1 เตือน
+      if(sNo2==='danger'){score+=3;pondReasons.push({l:'danger',m:`ไนไตรท์ (NO2) เกินเกณฑ์อันตราย (${last.no2})`})}
+      else if(sNo2==='warn'){score+=1;pondReasons.push({l:'warn',m:`ไนไตรท์ (NO2) เริ่มสูง (${last.no2})`})}
     }
   }
   const latLab=sortLogArr('labResults',p.labResults||[]).slice(-1)[0];
