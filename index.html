@@ -268,6 +268,13 @@ body.role-admin .side-nav .sn-link.admin-only{display:block!important}
 .fcx-cal input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
 .fcx-cal .date-hint{display:none}   /* ป้าย พ.ศ. อัตโนมัติของช่องวันที่ — ปุ่มนี้โชว์วันที่เองใน #fc-cal-t แล้ว */
 .fcx-lbl{font-size:calc(13px * var(--ui-scale));font-weight:800;margin:2px 2px 4px}
+.fcx-pdg{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--sf);border:1.5px solid var(--bd);border-radius:14px;padding:10px 12px;margin-bottom:12px}
+.fcx-pdg label{font-weight:800;font-size:calc(14.5px * var(--ui-scale))}
+.fcx-pdg input{width:90px!important;text-align:center;font-size:16px;font-weight:800}
+.fcx-pdg .u{font-weight:700;font-size:calc(14px * var(--ui-scale))}
+.fcx-pdg .btn{width:auto!important;flex:0 0 auto;min-width:44px;min-height:44px;margin:0}   /* มือถือตั้ง .btn เต็มความกว้าง — ปุ่มคืนค่าต้องอยู่บรรทัดเดียวกับช่อง */
+.fcx-pdg .hint{flex-basis:100%;margin:0;font-size:calc(12.5px * var(--ui-scale))}
+.fcx-pdg.edited{border-color:var(--p);background:var(--pl)}
 .fcx-hero{background:linear-gradient(135deg,#1f3d2b,#14532d);color:#fff;border-radius:18px;padding:16px;margin-bottom:12px}
 .fcx-hero .d{font-size:calc(14px * var(--ui-scale));font-weight:700}
 .fcx-hero .big{display:flex;align-items:baseline;gap:8px;margin:6px 0 2px}
@@ -2400,14 +2407,19 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <div class="fcx-lbl">ดูวันที่</div>
   <div class="fcx-chips"><span id="fc-days" style="display:contents"></span>
     <label class="fcx-chip fcx-cal" id="fc-cal" title="เลือกวัน">📅<span id="fc-cal-t"></span><input type="date" id="fc-pickd" onchange="fcCalc()" onclick="try{this.showPicker()}catch(e){}" aria-label="เลือกวันที่"></label></div>
+  <!-- ช่อง PDG อยู่นอกการ์ดพับ ให้เห็นตลอดว่าคิดที่โตวันละเท่าไหร่ แก้ได้ทันที (พี่สั่ง entry #361) -->
+  <div class="fcx-pdg">
+    <label for="fc-pdg">📈 คิดที่ PDG</label>
+    <input type="number" step="0.01" inputmode="decimal" class="fi fc-auto" id="fc-pdg" oninput="fcCalc()">
+    <span class="u">ก./วัน</span>
+    <button class="btn btn-s" type="button" onclick="fcResetField('pdg')" title="คืนค่าจากผลสุ่ม" aria-label="คืนค่าจากผลสุ่ม">↺</button>
+    <span class="hint" id="fc-pdg-hint"></span>
+  </div>
   <div id="fc-res"></div>
   <details class="card fcx-asm">
     <summary><span>⚙️ ค่าที่ใช้คิด<small id="fc-asm-s"></small></span><span class="fcx-arr">›</span></summary>
     <div class="fgrid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-top:10px">
       <div class="fg"><label class="fl" for="fc-abw">ABW ตอนนี้ (ก./ตัว)</label><input type="number" step="any" class="fi fc-auto" id="fc-abw" oninput="fcCalc()"><span class="hint" id="fc-abw-hint"></span></div>
-      <div class="fg"><label class="fl" for="fc-pdg">PDG อัตราโต (ก./วัน)</label>
-        <div style="display:flex;gap:6px"><input type="number" step="any" class="fi fc-auto" id="fc-pdg" oninput="fcCalc()"><button class="btn btn-s" type="button" onclick="fcResetField('pdg')" title="คืนค่าอัตโนมัติ">↺</button></div>
-        <span class="hint" id="fc-pdg-hint"></span></div>
       <div class="fg"><label class="fl" for="fc-surv">อัตรารอดตอนนี้ (%)</label><input type="number" step="any" class="fi fc-auto" id="fc-surv" oninput="fcCalc()"><span class="hint" id="fc-surv-hint"></span></div>
       <div class="fg"><label class="fl" for="fc-rel">ยอดปล่อย (ตัว)</label><input type="number" step="any" class="fi fc-auto" id="fc-rel" oninput="fcCalc()"></div>
       <div class="fg"><label class="fl" for="fc-rai">ขนาดบ่อ (ไร่)</label><input type="number" step="any" class="fi fc-auto" id="fc-rai" oninput="fcCalc()"></div>
@@ -12164,7 +12176,12 @@ function fcAsmLine(){
   const el=document.getElementById('fc-asm-s');if(!el)return;
   const parts=[];if(_fcAnchor)parts.push('สุ่ม '+fD(_fcAnchor));
   const a=_fcG('fc-abw'),g=_fcG('fc-pdg'),s=_fcG('fc-surv');
-  if(a>0)parts.push('ABW '+a.toFixed(1)+' ก.');if(g>0)parts.push('โต '+g.toFixed(2)+' ก./วัน');if(s>0)parts.push('รอด '+Math.round(s)+'%');
+  if(a>0)parts.push('ABW '+a.toFixed(1)+' ก.');if(s>0)parts.push('รอด '+Math.round(s)+'%');
+  // ช่อง PDG (นอกการ์ดพับ) — แก้เองแล้วกรอบเปลี่ยนสี + บอกค่าจากผลสุ่ม
+  const pb=document.querySelector('.fcx-pdg'),ph=document.getElementById('fc-pdg-hint'),auto=+(_fcAuto.pdg||0);
+  const pEd=String(document.getElementById('fc-pdg')?.value||'')!==String(_fcAuto.pdg||'');
+  if(pb)pb.classList.toggle('edited',pEd);
+  if(ph)ph.textContent=pEd?('แก้เอง · ค่าจากผลสุ่ม = '+(auto>0?auto.toFixed(2):'คำนวณไม่ได้')+' (กด ↺ คืนค่า)'):(auto>0?'จากสุ่ม 2 ครั้งล่าสุด':'ยังคำนวณไม่ได้ (ต้องสุ่ม ≥2 ครั้ง) — ใส่เองได้');
   const edited=['abw','pdg','surv','rel','rai','fcr','fd100k'].some(k=>{const e=document.getElementById('fc-'+k);return e&&_fcAuto[k]!=null&&String(e.value)!==String(_fcAuto[k]||'');});
   el.textContent=(parts.join(' · ')||'ยังไม่มีผลสุ่ม')+(edited?' · แก้เองอยู่':'');
 }
@@ -12177,7 +12194,7 @@ function fcCalc(){
   const nS=sortedSamples(p).filter(s=>s.abw!=null&&s.abw!=='').length;
   // ── ข้อมูลไม่พอ = บอกตรงๆ (เดิมสุ่มครั้งเดียว ไซส์ไม่โตเลย น้ำหนักลดลงเรื่อยๆ · ไม่เคยสุ่ม = ช่องว่างเปล่า)
   if(!(abw>0)){resEl.innerHTML='<div class="fcx-warn">🦐 '+mpEsc(p.name)+' ยังไม่เคยสุ่มตัวอย่าง<br>สุ่มครั้งแรกแล้วถึงจะคาดการณ์ได้</div>';return;}
-  if(!(pdg>0)){resEl.innerHTML='<div class="fcx-warn">🦐 '+mpEsc(p.name)+' สุ่มแล้ว '+nS+' ครั้ง (ABW '+abw+' ก.)<br>ต้องสุ่มอย่างน้อย 2 ครั้ง ถึงจะรู้ว่าโตวันละเท่าไหร่ · หรือใส่ "PDG" เองใน ⚙️ ค่าที่ใช้คิด</div>';return;}
+  if(!(pdg>0)){resEl.innerHTML='<div class="fcx-warn">🦐 '+mpEsc(p.name)+' สุ่มแล้ว '+nS+' ครั้ง (ABW '+abw+' ก.)<br>ต้องสุ่มอย่างน้อย 2 ครั้ง ถึงจะรู้ว่าโตวันละเท่าไหร่ · หรือใส่ PDG เองในช่องด้านบน</div>';return;}
   // DOC ณ วันสุ่ม — fcSnap คิด doc = _fcDOC0 + d (d นับจากวันสุ่ม) · ⚠️ ต้องเซ็ต 2 ตัวนี้ก่อนเรียก fcSnap/fcEcon
   const DOC0=docAge(p.startDate,fcAnchor())||0;
   const dNow=Math.max(0,dDiff(fcAnchor(),today()));
