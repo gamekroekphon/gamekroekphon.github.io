@@ -258,6 +258,46 @@ body.role-admin .side-nav .sn-link.admin-only{display:block!important}
 /* ═══ หน้า "คำนวณ & คาดการณ์" ═══ */
 .fc-auto{background:var(--ib);border-color:#bfdbfe;color:#0369a1;font-weight:700}
 .fc-res3{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px}
+/* ── หน้าคาดการณ์แบบใหม่ (entry #360) ── */
+.fcx-chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px;margin-bottom:6px;scrollbar-width:none}
+.fcx-chips::-webkit-scrollbar{display:none}
+.fcx-chip{position:relative;flex:0 0 auto;border:1.5px solid var(--bd);background:var(--sf);border-radius:99px;padding:8px 14px;font:inherit;font-weight:700;font-size:calc(14.5px * var(--ui-scale));cursor:pointer;color:var(--tx);min-height:44px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.fcx-chip small{font-weight:600;font-size:calc(12.5px * var(--ui-scale))}
+.fcx-chip.on{background:var(--tx);border-color:var(--tx);color:var(--sf)}
+.fcx-chip.dim{opacity:.55}
+.fcx-cal input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.fcx-cal .date-hint{display:none}   /* ป้าย พ.ศ. อัตโนมัติของช่องวันที่ — ปุ่มนี้โชว์วันที่เองใน #fc-cal-t แล้ว */
+.fcx-lbl{font-size:calc(13px * var(--ui-scale));font-weight:800;margin:2px 2px 4px}
+.fcx-hero{background:linear-gradient(135deg,#1f3d2b,#14532d);color:#fff;border-radius:18px;padding:16px;margin-bottom:12px}
+.fcx-hero .d{font-size:calc(14px * var(--ui-scale));font-weight:700}
+.fcx-hero .big{display:flex;align-items:baseline;gap:8px;margin:6px 0 2px}
+.fcx-hero .big b{font-size:calc(46px * var(--ui-scale));line-height:1;font-weight:900}
+.fcx-hero .big span{font-size:calc(16px * var(--ui-scale));font-weight:700}
+.fcx-hero .row{display:flex;gap:10px;margin-top:12px}
+.fcx-hero .box{flex:1;min-width:0;background:rgba(255,255,255,.12);border-radius:12px;padding:9px 10px}
+.fcx-hero .box b{display:block;font-size:calc(21px * var(--ui-scale));font-weight:900;white-space:nowrap}
+.fcx-hero .box span{font-size:calc(12.5px * var(--ui-scale));font-weight:700}
+.fcx-hero .tag{display:inline-block;margin-top:10px;background:#BBF7D0;color:#14532D;font-weight:800;font-size:calc(13px * var(--ui-scale));border-radius:99px;padding:3px 10px}
+.fcx-hero .tag.no{background:rgba(255,255,255,.18);color:#fff}
+.fcx-hero .small{font-size:calc(13px * var(--ui-scale));margin-top:8px}
+.fcx-card{margin-bottom:12px}
+.fcx-tgt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.fcx-ans{font-size:calc(15px * var(--ui-scale));font-weight:700}.fcx-ans b{font-size:calc(18px * var(--ui-scale))}
+.card table.fcx-tbl{display:table;width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.fcx-tbl th{font-size:calc(12.5px * var(--ui-scale));text-align:right;padding:6px 4px;border-bottom:1px solid var(--bd);color:var(--tx)}
+.fcx-tbl th:first-child,.fcx-tbl td:first-child{text-align:left}
+.fcx-tbl td{text-align:right;padding:9px 4px;border-bottom:1px solid var(--sf2);font-size:calc(14.5px * var(--ui-scale));white-space:nowrap}
+.fcx-tbl tr{cursor:pointer}
+table.fcx-tbl tbody tr.sel td{background:var(--pl);font-weight:800}
+table.fcx-tbl tbody tr td.hit{color:var(--ok);font-weight:800}
+table.fcx-tbl tbody tr td.over{color:var(--w);font-weight:800}
+.fcx-warn{background:var(--wb);color:var(--tx);border-radius:14px;padding:12px 14px;font-weight:700;margin-bottom:12px}
+.fcx-asm,.fcx-more{margin-bottom:12px}
+.fcx-asm>summary,.fcx-more>summary{list-style:none;cursor:pointer;font-weight:800;display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:28px}
+.fcx-asm>summary::-webkit-details-marker,.fcx-more>summary::-webkit-details-marker{display:none}
+.fcx-asm>summary small{display:block;font-weight:600;font-size:calc(13px * var(--ui-scale));margin-top:3px}
+.fcx-arr{transition:transform .15s;font-size:calc(18px * var(--ui-scale))}
+details[open]>summary .fcx-arr{transform:rotate(90deg)}
 .fc-res{background:var(--sf2);border:1px solid var(--bd);border-radius:12px;padding:14px}
 .fc-res.hi{border-color:var(--p)}
 .fc-res .h{font-size:calc(11.5px * var(--ui-scale));color:var(--tx2);font-weight:600;margin-bottom:8px}
@@ -2337,7 +2377,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <button class="mob-sheet-item admin-only clerk-mine" data-t="labor" onclick="mobMenuGo(this)"><span class="ic">👷</span>ค่าแรง</button>
     <button class="mob-sheet-item admin-only clerk-mine" data-t="elec" onclick="mobMenuGo(this)"><span class="ic">⚡</span>ค่าไฟฟ้า</button>
     <div class="mob-sheet-grp">🔧 เครื่องมือ</div>
-    <button class="mob-sheet-item" data-t="forecast" onclick="mobMenuGo(this)"><span class="ic">🔮</span>คำนวณ &amp; คาดการณ์</button>
+    <button class="mob-sheet-item owner-mine" data-t="forecast" onclick="mobMenuGo(this)"><span class="ic">🔮</span>คำนวณ &amp; คาดการณ์</button>
     <button class="mob-sheet-item" data-t="medproto" onclick="mobMenuGo(this)"><span class="ic">💊</span>Protocol เวชภัณฑ์</button>
     <button class="mob-sheet-item admin-only" data-t="kan" onclick="mobMenuGo(this)"><span class="ic">📋</span>กัน</button>
     <div class="mob-sheet-grp">🌳 สวนปาล์ม</div>
@@ -2353,13 +2393,17 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
      ยกเว้นตารางราคาตามไซส์ (D.forecastPrices) ที่บันทึกถาวรเพราะใช้ร่วมทุกบ่อ -->
 <div id="sec-forecast" class="sec">
   <div class="sec-hdr"><div class="sec-title">🔮 คำนวณ &amp; คาดการณ์</div></div>
-
-  <div class="card" style="margin-bottom:14px">
-    <div class="card-t">⚙️ ตัวแปรที่ใช้คำนวณ</div>
-    <div class="card-sub">ช่องฟ้า = ดึงจากบ่อ · แก้ได้ ไม่กระทบข้อมูลจริง</div>
-    <div class="fgrid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
-      <div class="fg"><label class="fl" for="fc-pond">บ่อ</label><select class="fi" id="fc-pond" onchange="fcLoadPond()"></select></div>
-      <div style="grid-column:1/-1;font-size:calc(12.5px * var(--ui-scale));font-weight:800;color:var(--pd);margin:6px 0 -2px;padding-bottom:5px;border-bottom:1px solid var(--bd)">🦐 สภาพกุ้งตอนนี้ <span style="font-weight:400;color:var(--tx3)">— ดึงจากข้อมูลจริงของบ่อ แก้ทับได้ถ้าไม่ตรง</span></div>
+  <!-- หน้าใหม่ (พี่สั่ง entry #360 "ทำให้ใช้งานง่ายกว่านี้" — ใช้ดูไซส์/น้ำหนัก ณ วันจับเป็นหลัก)
+       คำตอบอยู่บนสุด · เลือกบ่อ/วันด้วยปุ่ม · ช่องตัวแปรพับเก็บใน ⚙️ (ไม่เคยถูก re-render — ห้ามย้ายช่องกรอกเข้าไปใน #fc-res entry #185) -->
+  <select id="fc-pond" onchange="fcLoadPond()" hidden aria-hidden="true"></select>
+  <div class="fcx-chips" id="fc-ponds"></div>
+  <div class="fcx-lbl">ดูวันที่</div>
+  <div class="fcx-chips"><span id="fc-days" style="display:contents"></span>
+    <label class="fcx-chip fcx-cal" id="fc-cal" title="เลือกวัน">📅<span id="fc-cal-t"></span><input type="date" id="fc-pickd" onchange="fcCalc()" onclick="try{this.showPicker()}catch(e){}" aria-label="เลือกวันที่"></label></div>
+  <div id="fc-res"></div>
+  <details class="card fcx-asm">
+    <summary><span>⚙️ ค่าที่ใช้คิด<small id="fc-asm-s"></small></span><span class="fcx-arr">›</span></summary>
+    <div class="fgrid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-top:10px">
       <div class="fg"><label class="fl" for="fc-abw">ABW ตอนนี้ (ก./ตัว)</label><input type="number" step="any" class="fi fc-auto" id="fc-abw" oninput="fcCalc()"><span class="hint" id="fc-abw-hint"></span></div>
       <div class="fg"><label class="fl" for="fc-pdg">PDG อัตราโต (ก./วัน)</label>
         <div style="display:flex;gap:6px"><input type="number" step="any" class="fi fc-auto" id="fc-pdg" oninput="fcCalc()"><button class="btn btn-s" type="button" onclick="fcResetField('pdg')" title="คืนค่าอัตโนมัติ">↺</button></div>
@@ -2377,39 +2421,19 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
         </label>
         <span class="hint" id="fc-fd100k-hint"></span>
       </div>
-      <div style="grid-column:1/-1;font-size:calc(12.5px * var(--ui-scale));font-weight:800;color:var(--pd);margin:6px 0 -2px;padding-bottom:5px;border-bottom:1px solid var(--bd)">📋 อยากรู้อะไร</div>
       <div class="fg"><label class="fl" for="fc-ytgt">เกณฑ์พาเชียล (กก./ไร่)</label><input type="number" step="any" class="fi" id="fc-ytgt" oninput="fcCalc()"><span class="hint">ถึงเกณฑ์แล้ว กก./ไร่ ในผลคำนวณจะขึ้นสีเขียว ✓</span></div>
-      <!-- ⚠️ 2 ช่องนี้ต้องอยู่ในการ์ดตั้งค่า (ที่ไม่เคยถูก re-render) ห้ามย้ายกลับเข้าไปใน #fc-res
-           เพราะ fcCalc() ล้าง innerHTML ของ #fc-res ทิ้งทุกครั้ง ถ้าช่องกรอกอยู่ในนั้น ตัว input จะถูกทำลาย
-           ระหว่างพิมพ์ → เคอร์เซอร์หลุด พิมพ์ได้ทีละตัว (บั๊กที่พี่เจอ entry #185) -->
-      <div class="fg"><label class="fl" for="fc-pickd">📅 วันที่อยากดู</label>
-        <input type="date" class="fi" id="fc-pickd" onchange="fcCalc()">
-        <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap">
-          <button class="btn btn-s" type="button" onclick="fcQuick(7)">+7 วัน</button>
-          <button class="btn btn-s" type="button" onclick="fcQuick(14)">+14 วัน</button>
-          <button class="btn btn-s" type="button" onclick="fcQuick(30)">+30 วัน</button>
-        </div>
-      </div>
-      <div class="fg"><label class="fl" for="fc-tgtsize">🎯 ไซส์เป้าหมาย (ตัว/กก.)</label><input type="number" step="any" class="fi" id="fc-tgtsize" value="40" oninput="fcCalc()"><span class="hint">ใช้คำนวณว่าอีกกี่วันจะถึงไซส์นี้</span></div>
+      <input type="hidden" id="fc-tgtsize" value="40">
     </div>
     <div id="fc-warn" style="margin-top:12px"></div>
-  </div>
-
-  <div class="card" style="margin-bottom:14px">
-    <div class="card-t">📐 ผลคำนวณ</div>
-    <div class="fc-res3" id="fc-res"></div>
-  </div>
-
-  <!-- ══ ต้นทุนเดินเครื่องต่อวัน รายบ่อ (admin เท่านั้น — มีจำนวนเงิน) ══ -->
-  <div class="card admin-only" style="margin-top:14px">
-    <div class="card-t">💸 ต้นทุนเฉลี่ยต่อวัน — ทุกบ่อที่กำลังเลี้ยง <span class="pd-admin-tag">ADMIN</span></div>
-    
-    <div id="hv-daily"></div>
-  </div>
-
-  <!-- ══ จับวันนี้ หรือ ลากต่อ (admin เท่านั้น) ══ -->
-  <div class="card admin-only" style="margin-top:14px">
-    <div class="card-t">⚖️ จับวันนี้ หรือ ลากต่อ <span class="pd-admin-tag">ADMIN</span></div>
+  </details>
+  <!-- ══ ต้นทุนเดินเครื่องต่อวัน รายบ่อ + จับวันนี้/ลากต่อ (admin เท่านั้น — มีจำนวนเงิน) · พับไว้ล่างสุด (#360) ══ -->
+  <details class="card fcx-more admin-only">
+    <summary><span>💸 ต้นทุนเฉลี่ยต่อวัน — ทุกบ่อ <span class="pd-admin-tag">ADMIN</span></span><span class="fcx-arr">›</span></summary>
+    <div id="hv-daily" style="margin-top:10px"></div>
+  </details>
+  <details class="card fcx-more admin-only">
+    <summary><span>⚖️ จับวันนี้ หรือ ลากต่อ <span class="pd-admin-tag">ADMIN</span></span><span class="fcx-arr">›</span></summary>
+    <div style="margin-top:10px">
     <div class="card-sub" style="font-size:var(--fs115);color:var(--tx3);margin-bottom:10px">ใส่ราคาแพแต่ละไซส์ → ดูกำไรที่เพิ่มถ้าลากต่อ</div>
     <div class="fgrid" style="margin-bottom:12px">
       <div class="fg"><label class="fl" for="hv-price-now">ราคาถ้าจับวันนี้ (บ./กก.)</label>
@@ -2421,8 +2445,8 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <div id="hv-rows"></div>
     <div style="margin-top:10px"><button class="btn btn-s" type="button" onclick="hvAddRow()">+ เพิ่มไซส์ที่อยากเทียบ</button></div>
     <div id="hv-res" style="margin-top:14px"></div>
-  </div>
-
+    </div>
+  </details>
 </div>
 <!-- MED PROTOCOL (Protocol เวชภัณฑ์ — แยกเป็นหัวข้อ เพิ่ม/แก้/ลบเองได้ · staff เห็นแต่แก้ไม่ได้) -->
 <div id="sec-medproto" class="sec">
@@ -11958,6 +11982,7 @@ function initForecast(){
     ?list.map(p=>'<option value="'+p.id+'">บ่อ '+p.name+' — DOC '+pondCurAge(p)+' วัน</option>').join('')
     :'<option value="">— ยังไม่มีบ่อที่กำลังเลี้ยง —</option>';
   if(cur&&list.some(p=>p.id===cur))sel.value=cur;
+  fcRenderPonds();
   // ── ตั้งค่าเริ่มต้นช่องปฏิทิน (ตอนนี้เป็น input ถาวรในการ์ดตั้งค่า ไม่ได้ถูกสร้างใหม่ทุก render แล้ว จึงต้องเซ็ตค่าเองตอนเปิดหน้า) ──
   const dEl=document.getElementById('fc-pickd');
   if(dEl&&!dEl.value){dEl.value=_fcPickVal||addDays(today(),14);_fcPickVal=dEl.value;}
@@ -11966,6 +11991,7 @@ function initForecast(){
 }
 // ── ดึงค่าอัตโนมัติของบ่อที่เลือกมาเติมลงฟอร์ม (เขียนทับค่าที่เคยแก้ไว้ — ตั้งใจ เพราะเปลี่ยนบ่อแล้วค่าเดิมใช้ไม่ได้) ──
 function fcLoadPond(){
+  fcRenderPonds();
   const pid=document.getElementById('fc-pond')?.value;
   const p=pid?pond(pid):null;
   const warn=document.getElementById('fc-warn');
@@ -12104,62 +12130,90 @@ function _fcPickedDays(){
   return Math.max(0,dDiff(fcAnchor(),v));   // นับจากวันสุ่ม ไม่ใช่วันนี้ — ABW ตั้งต้นคือค่าของวันสุ่ม
 }
 function fcQuick(n){_fcPickVal=addDays(today(),n);const e=document.getElementById('fc-pickd');if(e)e.value=_fcPickVal;fcCalc();}
+// ══ หน้าคาดการณ์แบบใหม่ (พี่สั่ง entry #360) — สูตรเดิมทั้งหมด (fcSnap/fcEcon) เปลี่ยนแค่วิธีแสดง ══
+const FC_DAYS=[0,7,14,21,28];
+function fcRenderPonds(){
+  const el=document.getElementById('fc-ponds');if(!el)return;
+  const cur=document.getElementById('fc-pond')?.value;
+  const list=sortPondsByAge(wqfeedActivePonds());
+  el.innerHTML=list.map(p=>{
+    const ns=sortedSamples(p).filter(s=>s.abw!=null&&s.abw!=='').length;   // สุ่มไม่ถึง 2 ครั้ง = คาดการณ์ไม่ได้ → จางไว้
+    return '<button type="button" class="fcx-chip'+(p.id===cur?' on':'')+(ns<2?' dim':'')+'" onclick="fcPickPond(\''+p.id+'\')">'+mpEsc(p.name)+'<small>'+(pondCurAge(p)||0)+' วัน</small></button>';
+  }).join('')||'<span>ยังไม่มีบ่อที่กำลังเลี้ยง</span>';
+}
+function fcPickPond(id){const s=document.getElementById('fc-pond');if(!s)return;s.value=id;fcLoadPond();}
+function fcRenderDays(){
+  const el=document.getElementById('fc-days');if(!el)return;
+  const pe=document.getElementById('fc-pickd');   // อ่านจากช่องปฏิทินก่อน — _fcPickVal อัปเดตทีหลังใน _fcPickedDays()
+  const pick=(pe&&pe.value)||_fcPickVal||addDays(today(),14);
+  const hit=FC_DAYS.find(n=>addDays(today(),n)===pick);
+  el.innerHTML=FC_DAYS.map(n=>'<button type="button" class="fcx-chip'+(hit===n?' on':'')+'" onclick="fcQuick('+n+')">'+(n?'+'+n:'วันนี้')+'</button>').join('');
+  const cal=document.getElementById('fc-cal'),ct=document.getElementById('fc-cal-t');
+  if(cal)cal.classList.toggle('on',hit===undefined);
+  if(ct)ct.textContent=hit===undefined?fD(pick):'';
+}
+// FCR สะสมทั้งรอบ ณ วัน pd (นับจากวันสุ่ม) = (อาหารถึงวันสุ่ม + อาหารที่คาดหลังวันสุ่ม) ÷ (เนื้อกุ้ง ณ วันสุ่ม รวมพาเชียล + ที่โตเพิ่ม)
+//   ตั้งต้นจาก fcrAtSample() เลขเดียวกับทั้งแอป (#322) · ⚠️ เดิมโชว์ "FCR ที่จะได้จริง" = เฉพาะช่วงหลังวันสุ่ม (A.18 2.05 ขณะที่ทั้งแอป 1.10)
+function fcCumFcr(p,pd){
+  const fs=p?fcrAtSample(p):null;if(!fs||fs.date!==_fcAnchor||!(fs.produced>0))return null;
+  const e=pd>0?fcEcon(pd,0):{feedKg:0,gain:0};
+  return(fs.feed+e.feedKg)/(fs.produced+e.gain);
+}
+function fcSetTgt(t){const e=document.getElementById('fc-tgtsize');if(e)e.value=t;fcCalc();}
+function fcAsmLine(){
+  const el=document.getElementById('fc-asm-s');if(!el)return;
+  const parts=[];if(_fcAnchor)parts.push('สุ่ม '+fD(_fcAnchor));
+  const a=_fcG('fc-abw'),g=_fcG('fc-pdg'),s=_fcG('fc-surv');
+  if(a>0)parts.push('ABW '+a.toFixed(1)+' ก.');if(g>0)parts.push('โต '+g.toFixed(2)+' ก./วัน');if(s>0)parts.push('รอด '+Math.round(s)+'%');
+  const edited=['abw','pdg','surv','rel','rai','fcr','fd100k'].some(k=>{const e=document.getElementById('fc-'+k);return e&&_fcAuto[k]!=null&&String(e.value)!==String(_fcAuto[k]||'');});
+  el.textContent=(parts.join(' · ')||'ยังไม่มีผลสุ่ม')+(edited?' · แก้เองอยู่':'');
+}
 function fcCalc(){
   const resEl=document.getElementById('fc-res');if(!resEl)return;
-  const abw=_fcG('fc-abw'),pdg=_fcG('fc-pdg');
-  if(!(abw>0)){
-    resEl.innerHTML='<div style="color:var(--tx3);font-size:calc(13px * var(--ui-scale));padding:8px 0">กรอก ABW ก่อน จึงจะคำนวณได้</div>';
-    return;
-  }
+  fcRenderDays();fcAsmLine();
   const pid=document.getElementById('fc-pond')?.value,p=pid?pond(pid):null;
-  // DOC ณ วันสุ่ม (ไม่ใช่ ณ วันนี้) — เพราะ fcSnap คิด doc = _fcDOC0 + d ที่ d นับจากวันสุ่ม
-  const DOC0=(p&&docAge(p.startDate,fcAnchor()))||0;
-  const dNow=Math.max(0,dDiff(fcAnchor(),today()));   // จากวันสุ่มถึงวันนี้กี่วัน
-  _fcDOC0=DOC0;                 // ⚠️ ต้องเซ็ตก่อนเรียก fcSnap/fcEcon ด้านล่าง
-  _fcPhCount=p?partialTotals(p.partialHarvests).count:0;   // ⚠️ เช่นกัน — กุ้งที่พาเชียลไปแล้วต้องไม่ถูกนับว่ายังอยู่ในบ่อ
+  if(!p){resEl.innerHTML='';return;}
+  const abw=_fcG('fc-abw'),pdg=_fcG('fc-pdg');
+  const nS=sortedSamples(p).filter(s=>s.abw!=null&&s.abw!=='').length;
+  // ── ข้อมูลไม่พอ = บอกตรงๆ (เดิมสุ่มครั้งเดียว ไซส์ไม่โตเลย น้ำหนักลดลงเรื่อยๆ · ไม่เคยสุ่ม = ช่องว่างเปล่า)
+  if(!(abw>0)){resEl.innerHTML='<div class="fcx-warn">🦐 '+mpEsc(p.name)+' ยังไม่เคยสุ่มตัวอย่าง<br>สุ่มครั้งแรกแล้วถึงจะคาดการณ์ได้</div>';return;}
+  if(!(pdg>0)){resEl.innerHTML='<div class="fcx-warn">🦐 '+mpEsc(p.name)+' สุ่มแล้ว '+nS+' ครั้ง (ABW '+abw+' ก.)<br>ต้องสุ่มอย่างน้อย 2 ครั้ง ถึงจะรู้ว่าโตวันละเท่าไหร่ · หรือใส่ "PDG" เองใน ⚙️ ค่าที่ใช้คิด</div>';return;}
+  // DOC ณ วันสุ่ม — fcSnap คิด doc = _fcDOC0 + d (d นับจากวันสุ่ม) · ⚠️ ต้องเซ็ต 2 ตัวนี้ก่อนเรียก fcSnap/fcEcon
+  const DOC0=docAge(p.startDate,fcAnchor())||0;
+  const dNow=Math.max(0,dDiff(fcAnchor(),today()));
+  _fcDOC0=DOC0;
+  _fcPhCount=partialTotals(p.partialHarvests).count;   // กุ้งที่พาเชียลไปแล้วต้องไม่ถูกนับว่ายังอยู่ในบ่อ
   const pd=_fcPickedDays();
-  const sP=fcSnap(pd,0),now=fcSnap(dNow,0);   // now = วันนี้จริง (โตจากวันสุ่มมาแล้ว dNow วัน)
-  const ePick=pd>0?fcEcon(pd,0):null;   // ใช้ดึงอาหารสะสม + FCR ที่จะได้จริง ณ วันที่เลือก
-  const ytgt=_fcG('fc-ytgt');
-  const tgtSize=_fcG('fc-tgtsize')||40;
-  const tgtAbw=tgtSize>0?1000/tgtSize:0;
-  const days=pdg>0?Math.max(0,Math.ceil((tgtAbw-abw)/pdg)):null;
-  const sT=days!=null?fcSnap(days,0):null;
-  const kg=n=>Math.round(n).toLocaleString();
-  const yMark=v=>(v>=ytgt&&ytgt>0);
-  resEl.innerHTML=
-   '<div class="fc-res hi">'+
-     '<div class="h">📅 วันที่เลือก · '+fD(_fcPickVal||addDays(today(),14))+'</div>'+
-     '<div class="v">'+(sP.size>0?Math.round(sP.size):'—')+'</div>'+
-     '<div class="u">ตัว/กก.</div>'+
-     '<div class="sub"><span>ABW</span><span>'+sP.abw.toFixed(1)+' ก.</span></div>'+
-     '<div class="sub nb"><span>อีก</span><span>'+((pd-dNow)<=0?'วันนี้':(pd-dNow)+' วัน')+' (DOC '+(DOC0+pd)+')</span></div>'+
-     '<div class="sub nb"><span>คิดจากผลสุ่ม</span><span>'+fD(fcAnchor())+(_fcAnchor?' (DOC '+DOC0+')':' — ยังไม่เคยสุ่ม')+'</span></div>'+
-     '<div class="sub nb"><span>โตจากวันสุ่ม</span><span>'+pd+' วัน</span></div>'+
-     '<div class="sub nb"><span>น้ำหนักในบ่อ</span><span>'+kg(sP.bio)+' กก.</span></div>'+
-     '<div class="sub nb"><span>กก./ไร่</span><span'+(yMark(sP.yr)?' style="color:var(--ok);font-weight:700"':'')+'>'+kg(sP.yr)+(yMark(sP.yr)?' ✓':'')+'</span></div>'+
-     '<div class="sub nb"><span>อาหาร/วัน</span><span>'+(sP.fdDay!=null?kg(sP.fdDay)+' กก.':'—')+'</span></div>'+
-     '<div class="sub nb"><span>อาหาร กก./แสนตัว</span><span style="font-weight:700;color:var(--p)">'+(sP.fd100k!=null?sP.fd100k.toFixed(1):'—')+'</span></div>'+
-     '<div class="sub nb"><span>อาหารรวมถึงวันนั้น</span><span>'+(ePick?kg(ePick.feedKg)+' กก.':'—')+'</span></div>'+
-     (ePick&&ePick.impFcr!=null&&ePick.feedSrc==='sum'
-       ?'<div class="sub nb"><span>FCR ที่จะได้จริง</span><span'+(Math.abs(ePick.impFcr-_fcG('fc-fcr'))>0.25?' style="color:var(--w);font-weight:700"':'')+'>'+ePick.impFcr.toFixed(2)+'</span></div>'
-       :'')+
-   '</div>'+
-   '<div class="fc-res">'+
-     '<div class="h">🎯 ถึงไซส์ '+tgtSize+' ตัว/กก. ใช้กี่วัน</div>'+
-     '<div class="v">'+(days==null?'—':(days>0?days:'ถึงแล้ว'))+'</div>'+
-     '<div class="u">'+(days!=null&&days>0?'วัน':'&nbsp;')+'</div>'+
-     '<div class="sub"><span>จะถึงวันที่</span><span>'+(days!=null&&days>0?fD(addDays(fcAnchor(),days))+' (DOC '+(DOC0+days)+')':'—')+'</span></div>'+
-     (days==null?'<div class="sub nb" style="color:var(--w)">ต้องมีค่า PDG ก่อน</div>':'')+
-   '</div>'+
-   '<div class="fc-res">'+
-     '<div class="h">⚖️ น้ำหนักในบ่อ ณ วันนั้น</div>'+
-     '<div class="v">'+(sT?kg(sT.bio):'—')+'</div>'+
-     '<div class="u">กก. (ที่ไซส์เป้าหมาย)</div>'+
-     '<div class="sub"><span>ตอนนี้</span><span>'+kg(now.bio)+' กก.</span></div>'+
-     '<div class="sub nb"><span>เพิ่มขึ้น</span><span>'+(sT?'+'+kg(sT.bio-now.bio)+' กก.':'—')+'</span></div>'+
-     '<div class="sub nb"><span>กก./ไร่</span><span'+(sT&&yMark(sT.yr)?' style="color:var(--ok);font-weight:700"':'')+'>'+(sT?kg(sT.yr):'—')+(sT&&yMark(sT.yr)?' ✓':'')+'</span></div>'+
-   '</div>';
+  const sP=fcSnap(pd,0),now=fcSnap(dNow,0);
+  const ytgt=_fcG('fc-ytgt')||PARTIAL_YIELD_TARGET;
+  const tgt=_fcG('fc-tgtsize')||40;
+  const kg=n=>Math.round(n).toLocaleString(),ton=n=>(n/1000).toFixed(1);
+  const fcrAt=(d)=>{const f=fcCumFcr(p,d);if(f==null)return null;const t=fcrTargetFor(p,DOC0+d);return{f,t,ok:t==null||f<=t+1e-9};};
+  const ahead=pd-dNow,F=fcrAt(pd),fs=fcrAtSample(p);
+  let h='<div class="fcx-hero"><div class="d">'+fD(_fcPickVal)+' · DOC '+(DOC0+pd)+' · '+(ahead>0?'อีก '+ahead+' วัน':ahead===0?'วันนี้':'ย้อนหลัง '+(-ahead)+' วัน')+'</div>'
+    +'<div class="big"><b>'+(sP.size>0?Math.round(sP.size):'—')+'</b><span>ตัว/กก.</span></div>'
+    +'<div class="row"><div class="box"><b>'+ton(sP.bio)+'</b><span>ตันในบ่อ</span></div><div class="box"><b>'+kg(sP.yr)+'</b><span>กก./ไร่</span></div>'
+    +(F?'<div class="box"><b>'+F.f.toFixed(2)+'</b><span>FCR '+(F.ok?'✓':'⚠️')+(F.t!=null?' เกณฑ์ '+F.t.toFixed(1):'')+'</span></div>':'')+'</div>'
+    +(sP.yr>=ytgt?'<span class="tag">✓ ถึงเกณฑ์พาเชียล '+kg(ytgt)+' กก./ไร่</span>':'<span class="tag no">ยังไม่ถึงเกณฑ์พาเชียล (ขาด '+kg(ytgt-sP.yr)+')</span>')
+    +'<div class="small">อาหาร ~'+(sP.fdDay!=null?kg(sP.fdDay):'—')+' กก./วัน'+(fs&&fs.date===_fcAnchor?' · FCR วันสุ่ม '+fD(fs.date)+' = '+fs.fcr.toFixed(2):'')+'</div></div>';
+  // ── ไซส์เป้า — ถึงแล้วบอกไซส์ตอนนี้ (เดิมโชว์ "เพิ่มขึ้น +-1,344 กก." เทียบน้ำหนักคนละวัน)
+  let ans;
+  if(now.size>0&&now.size<=tgt)ans='ถึงแล้ว — ตอนนี้ <b>'+Math.round(now.size)+'</b> ตัว/กก.';
+  else{
+    const days=Math.max(0,Math.ceil((1000/tgt-abw)/pdg)),sT=fcSnap(days,0),tf=fcCumFcr(p,days);
+    ans='≈ <b>'+fD(addDays(fcAnchor(),days))+'</b> (อีก '+Math.max(0,days-dNow)+' วัน · DOC '+(DOC0+days)+') · '+ton(sT.bio)+' ตัน'+(tf!=null?' · FCR '+tf.toFixed(2):'');
+  }
+  h+='<div class="card fcx-card"><div class="card-t">🎯 ไซส์เป้า</div><div class="fcx-tgt">'
+    +[50,40,30,25].map(t=>'<button type="button" class="fcx-chip'+(t===tgt?' on':'')+'" onclick="fcSetTgt('+t+')">'+t+'</button>').join('')
+    +'</div><div class="fcx-ans">'+ans+'</div></div>';
+  // ── ทุกสัปดาห์ 4 สัปดาห์ข้างหน้า — แตะแถว = ดูวันนั้น
+  h+='<div class="card fcx-card"><div class="card-t">📅 ทุกสัปดาห์</div><div style="overflow-x:auto"><table class="fcx-tbl"><thead><tr><th>วันที่</th><th>DOC</th><th>ตัว/กก.</th><th>ตัน</th><th>กก./ไร่</th><th>FCR</th></tr></thead><tbody>'
+    +FC_DAYS.map(n=>{const d=dNow+n,s=fcSnap(d,0),r=fcrAt(d),dt=addDays(today(),n);
+      return '<tr'+(dt===_fcPickVal?' class="sel"':'')+' onclick="fcQuick('+n+')"><td>'+(n?fD(dt):'วันนี้')+'</td><td>'+(DOC0+d)+'</td>'
+        +'<td class="'+(s.size>0&&s.size<=tgt?'hit':'')+'">'+(s.size>0?Math.round(s.size):'—')+'</td><td>'+ton(s.bio)+'</td><td>'+kg(s.yr)+(s.yr>=ytgt?' ✓':'')+'</td>'
+        +'<td class="'+(r?(r.ok?'hit':'over'):'')+'">'+(r?r.f.toFixed(2):'—')+'</td></tr>';}).join('')
+    +'</tbody></table></div></div>';
+  resEl.innerHTML=h;
 }
 // ═════ ต้นทุนต่อวันรายบ่อ + จับวันนี้/ลากต่อ (admin เท่านั้น) ═════
 let _hvSizes=null;   // ไซส์+ราคาที่ผู้ใช้ใส่ — เก็บในหน่วยความจำอย่างเดียว ไม่เขียนลง Firebase (ราคาเปลี่ยนทุกรอบ)
