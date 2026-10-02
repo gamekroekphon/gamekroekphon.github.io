@@ -4367,12 +4367,13 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <!-- pane: ประวัติ -->
   <div class="stock-pane" id="skp-log">
     <div class="card">
+      <!-- ชื่อโหมดประวัติ (พี่สั่ง entry #358 — คำเดิมกำกวม · บุญชู = ชื่อหน้าร้าน) -->
       <div class="skl-modes" style="display:flex;gap:0;background:var(--sf2);border-radius:8px;padding:3px;margin-bottom:14px;width:fit-content;max-width:100%;flex-wrap:wrap">
-        <button id="skl-mode-out" class="stock-mode-btn on-out" onclick="setStockLogMode('out')">📤 เบิกออก</button>
-        <button id="skl-mode-in" class="stock-mode-btn" onclick="setStockLogMode('in')">📥 รับเข้าฟาร์ม</button>
-        <button id="skl-mode-shopin" class="stock-mode-btn admin-only" onclick="setStockLogMode('shopin')">🏬 รับเข้าหน้าร้าน</button>
+        <button id="skl-mode-out" class="stock-mode-btn on-out" onclick="setStockLogMode('out')">📤 ลงบ่อ</button>
+        <button id="skl-mode-in" class="stock-mode-btn" onclick="setStockLogMode('in')">📥 บุญชูเข้าฟาร์ม</button>
+        <button id="skl-mode-shopin" class="stock-mode-btn admin-only" onclick="setStockLogMode('shopin')">🏬 ขนส่งเข้าบุญชู</button>
         <button id="skl-mode-shared" class="stock-mode-btn" onclick="setStockLogMode('shared')">🔧 อุปกรณ์นอก</button>
-        <button id="skl-mode-toshop" class="stock-mode-btn" onclick="setStockLogMode('toshop')">🏪 กลับร้าน</button>
+        <button id="skl-mode-toshop" class="stock-mode-btn" onclick="setStockLogMode('toshop')">🏪 ฟาร์มกลับบุญชู</button>
         <button id="skl-mode-count" class="stock-mode-btn" onclick="setStockLogMode('count')">🧮 นับสต็อก</button>
       </div>
       <div id="skl-pane-out">
@@ -11307,7 +11308,7 @@ function renderStockShopInLog(){
   if(APP_ROLE!=='admin'){tbl.innerHTML='';return;}
   let logs=shopLogArr().filter(l=>l&&l.type==='in').sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.id).localeCompare(String(a.id)));
   const mo=histMonthFill(document.getElementById('skl-shopin-month'),logs.map(l=>l.date));if(mo)logs=logs.filter(l=>String(l.date||'').startsWith(mo));
-  if(!logs.length){tbl.innerHTML='<p style="padding:10px;text-align:center">ยังไม่มีประวัติรับเข้าหน้าร้าน</p>';return;}
+  if(!logs.length){tbl.innerHTML='<p style="padding:10px;text-align:center">ยังไม่มีประวัติขนส่งเข้าบุญชู</p>';return;}
   tbl.innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>รายการ</th><th style="text-align:right">จำนวน</th><th>หน่วย</th><th>บริษัท</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>'
     +logs.map((l,i)=>{const it=(D.inventoryItems||[]).find(x=>x&&x.id===l.itemId);
       return '<tr><td'+(i>0&&logs[i-1].date===l.date?' style="color:transparent"':'')+'>'+fD(l.date)+'</td><td>'+mpEsc(l.itemName||'-')+'</td>'
@@ -11323,7 +11324,7 @@ function renderStockToShopLog(){
   const tbl=document.getElementById('sk-log-toshop-table');if(!tbl)return;
   let logs=(D.inventoryLog||[]).filter(l=>l&&l.type==='toShop').sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.id).localeCompare(String(a.id)));
   const mo=histMonthFill(document.getElementById('skl-toshop-month'),logs.map(l=>l.date));if(mo)logs=logs.filter(l=>String(l.date||'').startsWith(mo));
-  if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีของกลับร้าน</p>';return;}
+  if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีประวัติฟาร์มกลับบุญชู</p>';return;}
   tbl.innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>รายการ</th><th style="text-align:right">จำนวน</th><th>หน่วย</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>'
     +logs.map((l,i)=>'<tr><td'+(i>0&&logs[i-1].date===l.date?' style="color:transparent"':'')+'>'+fD(l.date)+'</td><td>'+mpEsc(l.itemName||'-')+'</td>'
       +'<td style="text-align:right">'+l.qty+'</td><td style="color:var(--tx2)">'+mpEsc(l.unit||'')+'</td>'
@@ -11336,7 +11337,7 @@ function renderStockInLog(){
   const tbl=document.getElementById('sk-log-in-table');if(!tbl)return;
   let logs=[...(D.inventoryLog||[])].filter(l=>l.type==='in').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   const mo=histMonthFill(document.getElementById('skl-in-month'),logs.map(l=>l.date));if(mo)logs=logs.filter(l=>String(l.date||'').startsWith(mo));
-  if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีประวัติรับเข้าส่วนกลาง — บันทึกได้ที่ปุ่ม "+ รับเข้า สต็อกกลาง" ด้านบน</p>';return;}
+  if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ยังไม่มีประวัติบุญชูเข้าฟาร์ม</p>';return;}
   const byDate={};
   logs.forEach(l=>{if(!byDate[l.date])byDate[l.date]=[];byDate[l.date].push(l);});
   tbl.innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>รายการ</th><th style="text-align:right">จำนวน</th><th>หน่วย</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>'+
@@ -11389,7 +11390,7 @@ function renderStockOutLog(resetLimit){
   const month=histMonthFill(document.getElementById('skl-out-month'),logs.map(l=>l.date));
   if(month)logs=logs.filter(l=>l.date&&l.date.startsWith(month));
   logs=logs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ไม่มีประวัติเบิกออกไปบ่อ'+(pid||cat||month?'ตามตัวกรองนี้':'')+'</p>';return;}
+  if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ไม่มีประวัติลงบ่อ'+(pid||cat||month?'ตามตัวกรองนี้':'')+'</p>';return;}
   const total=logs.length;
   const shown=_skOutAll?logs:logs.slice(0,SK_OUT_PAGE);
   tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>บ่อ</th><th>หมวด</th><th>รายการ</th><th style="text-align:right">จำนวน</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
