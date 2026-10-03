@@ -554,6 +554,31 @@ body.role-admin .mp-actions{display:flex!important;gap:2px;flex-wrap:wrap}
 .pd-fg-r .tag{grid-column:2/-1;font-size:var(--fs11);font-weight:700;color:var(--d)}
 /* ── เฟส 4 (พี่แพรว): ปรับสีหน้า P&L ให้ตรงธีมเขียว-มะนาวใหม่ ── */
 #sec-pl .kpi-card{border-top:3px solid var(--sn-green)}
+/* หน้า P&L แบบการ์ด (#368) — สรุปปีใช้ .crx-sum/.crx-chips/.crx-pf ของหน้าประวัติรอบเลี้ยง */
+.plx-hint{margin-left:auto;font-weight:500;font-size:calc(12px * var(--ui-scale))}
+.crx-sum .plx-ln{margin-top:10px;font-size:calc(13px * var(--ui-scale));font-weight:500;display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap}
+.crx-sum .plx-ln b{display:inline;font-size:calc(14px * var(--ui-scale));font-weight:700}
+.crx-sum .plx-warn{margin-top:6px;font-size:calc(12.5px * var(--ui-scale));font-weight:600;color:#FDE68A}
+.plx-cat{padding:7px 0;border-top:1px solid var(--sf2)}.plx-cat.has{cursor:pointer}
+.plx-cat .l{display:flex;justify-content:space-between;gap:8px;font-size:calc(14px * var(--ui-scale))}
+.plx-cat .l>span:first-child{min-width:0}.plx-cat .l>span:last-child{white-space:nowrap;text-align:right}.plx-cat .l b{font-weight:700}.plx-cat .l small{font-size:calc(12.5px * var(--ui-scale));white-space:nowrap}
+.plx-bar{height:8px;border-radius:99px;background:var(--sf2);margin-top:4px;overflow:hidden}.plx-bar i{display:block;height:100%;border-radius:99px}
+.plx-det{background:var(--sf2);border-radius:10px;margin:2px 0 6px;overflow-x:auto}
+.plx-det td:nth-child(2),.plx-det td:nth-child(3),.plx-det td:nth-child(4),.plx-det th{white-space:nowrap}
+.plx-more{width:100%;margin-top:6px;border:1.5px dashed var(--bd);background:none;border-radius:10px;min-height:42px;font-weight:600;cursor:pointer;color:var(--tx)}
+.plx-tot{display:flex;justify-content:space-between;gap:8px;border-top:2px solid var(--bd);margin-top:6px;padding-top:7px;font-weight:700}
+.plx-rc{border-top:1px solid var(--sf2);padding:9px 0;cursor:pointer}
+.plx-rc .a{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.plx-rc .nm{font-weight:700;font-size:calc(15px * var(--ui-scale))}.plx-rc .nm small{font-weight:500;font-size:calc(12.5px * var(--ui-scale));margin-left:5px}
+.plx-rc .pw{display:flex;align-items:center;gap:6px;flex-shrink:0}.plx-rc .pw>b{font-size:calc(18px * var(--ui-scale))}
+.plx-rc .b{font-size:calc(13px * var(--ui-scale));margin-top:2px}
+.plx-rc .c{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap}
+.plx-rc .c span{background:var(--sf2);border-radius:8px;padding:2px 8px;font-size:calc(12.5px * var(--ui-scale))}.plx-rc .c b{font-weight:700}
+.plx-rc .c span.hi{background:var(--db);color:var(--d)}
+.plx-rc .w{font-size:calc(12.5px * var(--ui-scale));font-weight:600;margin-top:4px}
+.plx-rc.nodata{opacity:.55}
+.plx-csv{width:auto!important}
+@media(min-width:900px){#pl-table-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));column-gap:18px}}
 #sec-pl .kpi-card.pl-kpi-dark{background:var(--sn-bg);border-color:var(--sn-bg);border-top-color:var(--sn-lime)}
 #sec-pl .kpi-card.pl-kpi-dark .kpi-lbl{color:#a9c9b3}
 #sec-pl .kpi-card.pl-kpi-dark .kpi-val{color:#eafbe7}
@@ -4598,30 +4623,20 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 </div>
 <div id="sec-pl" class="sec">
   <div class="sec-hdr"><div class="sec-title">📊 สรุปกำไร-ขาดทุน (P&amp;L) รายบ่อ รายรอบ</div></div>
-  <div class="g4" id="pl-kpi" style="margin-bottom:16px"></div>
-  <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
-    <label class="fl" for="pl-year">ปี:</label>
-    <select class="fi" id="pl-year" onchange="renderPL()" style="width:110px"></select>
-    <span id="pl-badge" style="font-size:calc(12px * var(--ui-scale));color:var(--tx3)"></span>
-    <button class="btn btn-s" style="margin-left:auto" onclick="exportPLCSV()">⬇️ Export CSV</button>
+  <!-- หน้า P&L แบบการ์ด (#368) — ปุ่มปี · สรุปปี · เงินไปไหน (แถบรายหมวด) · รายรอบ · #pl-year ซ่อนไว้เป็นตัวเก็บค่าปี (initPL/exportPLCSV อ่าน) -->
+  <div class="crx-chips" id="pl-yr-chips"></div>
+  <select id="pl-year" hidden onchange="renderPL()"></select>
+  <div id="pl-kpi"></div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-t">💸 เงินไปไหน <span class="plx-hint">แตะดูรายการ</span></div>
+    <div id="pl-cost-tbl"></div>
   </div>
   <div class="card" style="margin-bottom:14px">
-    <div class="card-t">📋 กำไร-ขาดทุนรายบ่อ รายรอบ</div>
-    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch" id="pl-table-wrap">
-      <p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลรอบที่ปิดแล้ว — จะแสดงที่นี่หลังปิดรอบเลี้ยงครั้งแรก</p>
-    </div>
+    <div class="card-t">📋 รายรอบ <span class="plx-hint" id="pl-badge"></span></div>
+    <div class="crx-chips" id="pl-sort-chips"></div>
+    <div id="pl-table-wrap"></div>
   </div>
-  <div class="g2">
-    <div class="card">
-      <div class="card-t">🍩 สัดส่วนต้นทุนเฉลี่ย</div>
-      <div style="max-width:240px;margin:0 auto;padding:8px 0"><canvas id="pl-donut" height="240"></canvas></div>
-      <div id="pl-donut-legend" style="margin-top:8px;display:flex;flex-direction:column;gap:5px"></div>
-    </div>
-    <div class="card">
-      <div class="card-t">💰 ต้นทุน/กก. รายบ่อ (เฉลี่ยทุกรอบ)</div>
-      <div id="pl-cost-tbl"></div>
-    </div>
-  </div>
+  <button class="btn btn-s plx-csv" onclick="exportPLCSV()">⬇️ Export CSV</button>
 </div>
 </div>
 <!-- MODAL -->
@@ -21255,7 +21270,6 @@ function getStockCostGroupsForPond(pondId,startDate,closeDate){
   });
   return g;
 }
-let _plDonutChart=null;
 function initPL(){
   if(APP_ROLE!=='admin')return;   // กันเรียกตรง — หน้านี้คือกำไร-ขาดทุน
   const years=new Set();
@@ -21283,8 +21297,23 @@ function renderPL(){
   });
   rows.sort((a,b)=>(b.closeDate||'').localeCompare(a.closeDate||''));
   const badge=document.getElementById('pl-badge');
-  if(badge)badge.textContent=rows.length+' รอบ · '+rows.filter(r=>r.netProfit>0).length+' กำไร / '+rows.filter(r=>r.netProfit<0).length+' ขาดทุน';
+  if(badge)badge.textContent=rows.length+' รอบ';
+  // ปุ่มปี (#368) — ตัวเลือกมาจาก #pl-year ที่ initPL สร้าง · ปีล่าสุดก่อน ทุกปีท้ายสุด
+  const sel=document.getElementById('pl-year'),chips=document.getElementById('pl-yr-chips');
+  if(sel&&chips){
+    const cnt={};let all=0;
+    D.ponds.forEach(p=>(p.cropHistory||[]).forEach(c=>{if(c.harvestResult&&c.closeDate){all++;const y=c.closeDate.slice(0,4);cnt[y]=(cnt[y]||0)+1;}}));
+    const opts=[...sel.options].filter(o=>o.value).concat([...sel.options].filter(o=>!o.value));
+    chips.innerHTML=opts.map(o=>`<button class="crx-chip${o.value===yr?' on':''}" aria-pressed="${o.value===yr}" onclick="plSetYear('${o.value}')">${o.text} (${o.value?cnt[o.value]||0:all})</button>`).join('');
+  }
   renderPLKPI(rows);renderPLTable(rows);renderPLCostChart(rows);
+}
+let _plSort='new';
+function plSetYear(y){const s=document.getElementById('pl-year');if(s)s.value=y;renderPL();}
+function plSetSort(k){_plSort=k;renderPL();}
+function plToggleSmall(){
+  const s=document.getElementById('plc-small'),b=document.getElementById('plc-small-btn');if(!s)return;
+  s.hidden=!s.hidden;if(b)b.textContent=s.hidden?b.dataset.l:'▴ ซ่อนหมวดเล็ก';
 }
 function renderPLKPI(rows){
   const el=document.getElementById('pl-kpi');if(!el)return;
@@ -21299,54 +21328,51 @@ function renderPLKPI(rows){
   const avgCostPerKg=totWeight?totCost/totWeight:0;
   const withRevCount=rows.filter(r=>r.revenue>0).length;
   const coverage=rows.length?withRevCount/rows.length:0;
-  const marginNote=coverage<0.5?`<span style="font-size:var(--fs10);color:var(--w)"> ⚠️ข้อมูลครบ ${withRevCount}/${rows.length} รอบ</span>`:``;
-  el.innerHTML=`
-    <div class="kpi-card pl-kpi-dark"><div class="kpi-lbl">รายได้รวม</div><div class="kpi-val">${(totRev/1e6).toFixed(2)}<span class="kpi-unit"> ล้าน฿</span></div><div class="kpi-sub">${rows.length} รอบ · ${totWeight.toLocaleString()} กก.<br><span style="color:${coverage>=0.8?'#c2e66e':coverage>=0.5?'var(--w)':'var(--d)'}">ข้อมูลการเงินครบ ${withRevCount}/${rows.length} รอบ</span></div></div>
-    <div class="kpi-card"><div class="kpi-lbl">ต้นทุนรวม</div><div class="kpi-val">${(totCost/1e6).toFixed(2)}<span class="kpi-unit"> ล้าน฿</span></div><div class="kpi-sub">${avgCostPerKg.toFixed(1)} บาท/กก. เฉลี่ย</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">กำไรสุทธิรวม</div><div class="kpi-val" style="color:${totProfit>=0?'var(--ok)':'var(--d)'}">${(totProfit/1e6).toFixed(2)}<span class="kpi-unit"> ล้าน฿</span></div><div class="kpi-sub" style="color:${margin>=0?'var(--ok)':'var(--d)'}">Margin ${margin.toFixed(1)}%${marginNote}</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">FCR เฉลี่ย</div><div class="kpi-val" style="color:${avgFcr&&avgFcr<1.3?'var(--ok)':avgFcr&&avgFcr<1.5?'var(--w)':'var(--d)'}">${avgFcr?avgFcr.toFixed(2):'-'}</div><div class="kpi-sub">เป้า &lt; 1.3</div></div>`;
+  // สรุปปีแบบกล่องเขียว (#368) — ตัวเลขชุดเดิมทุกตัว · กำไรติดลบ = กล่องแดง เหมือนหน้าประวัติรอบเลี้ยง
+  const yr=document.getElementById('pl-year')?.value||'';
+  const nWin=rows.filter(r=>r.netProfit>0).length,nLoss=rows.filter(r=>r.netProfit<0).length;
+  const M=v=>(v/1e6).toFixed(2);
+  el.innerHTML=`<div class="crx-sum"><div class="t">${yr?'ปี '+yearBE(parseInt(yr)):'ทุกปี'} · ปิด ${rows.length} รอบ · ${Math.round(totWeight).toLocaleString()} กก.</div><div class="g">
+    <div><b>${M(totRev)}</b><span>ล้าน รายได้</span></div>
+    <div><b>${M(totCost)}</b><span>ล้าน ต้นทุน</span></div>
+    <div class="${totProfit<0?'neg':''}"><b>${totProfit>=0?'+':''}${M(totProfit)}</b><span>ล้าน กำไร · ${margin.toFixed(1)}%</span></div>
+    <div><b>${nWin} / ${nLoss}</b><span>รอบกำไร / ขาดทุน</span></div></div>
+    <div class="plx-ln"><span>ขาย <b>฿${totWeight?(totRev/totWeight).toFixed(0):'-'}</b>/กก. · ทุน <b>฿${avgCostPerKg.toFixed(0)}</b>/กก.</span><span>FCR <b>${avgFcr?avgFcr.toFixed(2):'-'}</b></span></div>
+    ${coverage<1?'<div class="plx-warn">⚠️ ข้อมูลการเงินครบ '+withRevCount+'/'+rows.length+' รอบ</div>':''}</div>`;
+
 }
+// รายรอบแบบการ์ด (#368) — แทนตาราง 12 คอลัมน์ · ตัวเลข/ป้ายเตือนชุดเดิม · แตะ = ไปประวัติรอบเลี้ยง (goCropHistoryFor เดิม)
 function renderPLTable(rows){
   const wrap=document.getElementById('pl-table-wrap');if(!wrap)return;
+  const sc=document.getElementById('pl-sort-chips');
+  if(sc)sc.innerHTML=[['new','ล่าสุด'],['win','กำไรมาก'],['loss','ขาดทุนมาก'],['cpk','ทุน/กก. สูง']]
+    .map(([k,l])=>`<button class="crx-chip${k===_plSort?' on':''}" aria-pressed="${k===_plSort}" onclick="plSetSort('${k}')">${l}</button>`).join('');
   if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลรอบที่ปิดแล้วในช่วงที่เลือก — ลองเลือกปีอื่น</p>';return;}
-  wrap.innerHTML=`<div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:4px;text-align:right">← เลื่อนซ้าย-ขวา →</div><table class="tbl" style="white-space:nowrap;min-width:700px">
-  <thead><tr>
-    <th>บ่อ</th><th>รอบ/ปี</th><th>วันปิด</th>
-    <th style="text-align:right">ผลผลิต(กก.)</th><th style="text-align:right">ราคา(฿/กก.)</th>
-    <th style="text-align:right">รายได้(฿)</th><th style="text-align:right">ต้นทุน(฿)</th>
-    <th style="text-align:right">กำไร(฿)</th><th style="text-align:right">Margin</th>
-    <th style="text-align:right">฿/กก.</th><th style="text-align:right">FCR</th><th></th>
-  </tr></thead><tbody>${rows.map(r=>{
-    const cost=(r.costFry||0)+(r.costTransport||0)+(r.costFeed||0)+(r.costMed||0)+(r.costLime||0)+(r.costLabor||0)+(r.costElec||0)+(r.costFuel||0)+(r.costEquip||0)+(r.costEquipOut||0)+(r.costCatch||0)+(r.amtCaretaker||0)+(r.amtManager||0)+(r.costChem||0)+(r.costOther||0);
-    const margin=r.revenue&&r.netProfit!=null?r.netProfit/r.revenue*100:null;
-    // ── ผลผลิต/ต้นทุนต่อ กก. ใช้ "ผลผลิตรวมทั้งรอบ" (ปิดบ่อ+พาเชียล) ถ้ารอบนั้นมีพาเชียล ──
-    const wAll=r.totalWeightAll||r.totalWeight;
-    const cpk=wAll&&cost?cost/wAll:null;
-    const prof=r.netProfit;
-    const cl=prof>0?'var(--ok)':prof<0?'var(--d)':'var(--tx)';
+  const costOf=r=>(r.costFry||0)+(r.costTransport||0)+(r.costFeed||0)+(r.costMed||0)+(r.costLime||0)+(r.costLabor||0)+(r.costElec||0)+(r.costFuel||0)+(r.costEquip||0)+(r.costEquipOut||0)+(r.costCatch||0)+(r.amtCaretaker||0)+(r.amtManager||0)+(r.costChem||0)+(r.costOther||0);
+  const wOf=r=>r.totalWeightAll||r.totalWeight;   // ผลผลิตรวมทั้งรอบ (ปิดบ่อ+พาเชียล)
+  const cpkOf=r=>{const w=wOf(r),c=costOf(r);return w&&c?c/w:null;};
+  const L=rows.slice();
+  if(_plSort==='win')L.sort((a,b)=>(b.netProfit||0)-(a.netProfit||0));
+  else if(_plSort==='loss')L.sort((a,b)=>(a.netProfit||0)-(b.netProfit||0));
+  else if(_plSort==='cpk')L.sort((a,b)=>(cpkOf(b)??-1)-(cpkOf(a)??-1));
+  const M=v=>(v/1e6).toFixed(2);
+  wrap.innerHTML=L.map(r=>{
+    const cost=costOf(r),wAll=wOf(r),cpk=cpkOf(r),prof=r.netProfit;
     const noData=!r.revenue;
-    // ข้อ 3: ตรวจว่าต้นทุนหลัก (ลูกกุ้ง+อาหาร+ค่าแรง+ค่าไฟ) ยังไม่ได้ลง
+    // ต้นทุนหลัก (ลูกกุ้ง+อาหาร+ค่าแรง+ค่าไฟ) ยังไม่ได้ลง
     const costMain=(r.costFry||0)+(r.costTransport||0)+(r.costFeed||0)+(r.costLabor||0)+(r.costElec||0);
     const costIncomplete=r.revenue>0&&costMain===0;
-    const rowStyle=noData?'opacity:0.45':'';
     const cropYearBE=r.cropYear?yearBE(r.cropYear):'';
-    const dataBadge=noData
-      ?`<div style="font-size:var(--fs10);color:var(--d);margin-top:2px;font-weight:600">⚠️ ยังไม่มีข้อมูลการเงิน</div>`
-      :costIncomplete
-      ?`<div style="font-size:var(--fs10);color:var(--w);margin-top:2px;font-weight:600">⚠️ ต้นทุนยังไม่ครบ</div>`
-      :'';
-    return`<tr style="${rowStyle}">
-      <td style="font-weight:700">${r.pondName||r.pondId}</td><td style="text-align:center">รอบ ${r.cropNum||'-'}${cropYearBE?'/'+cropYearBE:''}${dataBadge}</td><td>${fD(r.closeDate)}</td>
-      <td style="text-align:right">${wAll?Math.round(wAll).toLocaleString():'-'}${r._phAdj?`<div style="font-size:var(--fs10);color:var(--tx3)">รวมพาเชียล ${Math.round(r._phKg).toLocaleString()}</div>`:''}</td>
-      <td style="text-align:right">${r.price?r.price.toLocaleString():'-'}</td>
-      <td style="text-align:right">${r.revenue?Math.round(r.revenue).toLocaleString():'-'}</td>
-      <td style="text-align:right">${cost?Math.round(cost).toLocaleString():'-'}</td>
-      <td style="text-align:right;font-weight:700;color:${cl}">${prof!=null?Math.round(prof).toLocaleString():'-'}</td>
-      <td style="text-align:right;color:${cl}">${margin!=null?margin.toFixed(1)+'%':'-'}</td>
-      <td style="text-align:right">${cpk!=null?cpk.toFixed(1):'-'}</td>
-      <td style="text-align:right">${r.fcr||'-'}</td>
-      <td><button onclick="goCropHistoryFor('${r.pondId}','${histRecYear(r)}')" style="background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:3px 9px;font-size:var(--fs11);cursor:pointer;white-space:nowrap" title="ไปดูรอบนี้ในประวัติรอบเลี้ยง (หมายเหตุ/พาเชียล/สาเหตุปิดบ่อ)">ดูรายละเอียดรอบ →</button></td>
-    </tr>`;}).join('')}</tbody></table>`;
+    const go=`goCropHistoryFor('${r.pondId}','${histRecYear(r)}')`;
+    const pill=noData?'<span class="crx-pf r">ไม่มีข้อมูลเงิน</span>'
+      :prof!=null?`<span class="crx-pf ${prof>=0?'g':'r'}">${prof>=0?'+':''}${M(prof)} ล.</span>`:'';
+    return`<div class="plx-rc${noData?' nodata':''}" role="button" tabindex="0" onclick="${go}" onkeydown="if(event.key==='Enter')${go}">
+      <div class="a"><span class="nm">${r.pondName||r.pondId}<small>รอบ ${r.cropNum||'-'}${cropYearBE?'/'+cropYearBE:''} · ปิด ${fD(r.closeDate)}</small></span><span class="pw">${pill}<b>›</b></span></div>
+      <div class="b">รายได้ ${r.revenue?M(r.revenue)+' ล.':'-'} · ทุน ${cost?M(cost)+' ล.':'-'} · ${wAll?Math.round(wAll).toLocaleString()+' กก.':'-'}${r._phAdj?' (รวมพาเชียล '+Math.round(r._phKg).toLocaleString()+')':''}</div>
+      <div class="c"><span>ขาย <b>฿${r.price?r.price.toLocaleString():'-'}</b>/กก.</span>${cpk!=null?`<span class="${r.price&&cpk>r.price?'hi':''}">ทุน <b>฿${cpk.toFixed(0)}</b>/กก.</span>`:''}${r.fcr?`<span>FCR <b>${r.fcr}</b></span>`:''}</div>
+      ${costIncomplete?'<div class="w" style="color:var(--w)">⚠️ ต้นทุนยังไม่ครบ</div>':''}
+    </div>`;
+  }).join('');
 }
 // ── เจาะจาก P&L ไปประวัติรอบเลี้ยงปีนั้นๆ — เห็นรอบขาดทุนแล้วกดเดียวไปดูสาเหตุ (หมายเหตุ/FCR/พาเชียล) ──
 // ── ไปที่การ์ดประวัติรอบเลี้ยง พร้อมตั้ง "ปี" และ "บ่อ" ให้เลย ──
@@ -21553,8 +21579,6 @@ function togglePLCostDetail(i){
 }
 function renderPLCostChart(rows){
   if(!rows.length){
-    const c=document.getElementById('pl-donut');if(c&&_plDonutChart){_plDonutChart.destroy();_plDonutChart=null;}
-    const l=document.getElementById('pl-donut-legend');if(l)l.innerHTML='';
     const t=document.getElementById('pl-cost-tbl');if(t)t.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px">ยังไม่มีข้อมูลรอบที่ปิดแล้วในช่วงที่เลือก</p>';
     return;
   }
@@ -21581,7 +21605,7 @@ function renderPLCostChart(rows){
   //    ทำแบบนี้ยอดรวมทั้งตารางยังเท่ากับที่บันทึกไว้เป๊ะเสมอ ไม่มีเงินหายหรืองอกจากการแยกหมวด
   const _med=plMedSubtotals(rows);
   const medRest=Math.max(0,totMed-_med.matched);
-  const medLabels=MED_SUBCATS.map(sc=>sc.label).concat(medRest>0?['เวชภัณฑ์ (ปรับมือ/ไม่ระบุหมวด)']:[]);
+  const medLabels=MED_SUBCATS.map(sc=>sc.label).concat(medRest>0?['เวชภัณฑ์ ไม่ระบุหมวด']:[]);
   const medVals=MED_SUBCATS.map(sc=>_med.out[sc.key]||0).concat(medRest>0?[medRest]:[]);
   const medColors=MED_SUBCATS.map(sc=>sc.color).concat(medRest>0?['#9ca3af']:[]);
   const labels=['ลูกกุ้ง','ค่าขนส่งลูกกุ้ง','อาหารกุ้ง',...medLabels,'ปูน','ค่าแรง','ค่าไฟฟ้า','น้ำมัน','อุปกรณ์','อุปกรณ์นอก','ค่าจับกุ้ง','ส่วนแบ่งคนเลี้ยง','ส่วนแบ่งผู้จัดการ','สารเคมี(เดิม)','อื่นๆ(เดิม)'];
@@ -21602,31 +21626,24 @@ function renderPLCostChart(rows){
     plDetailHTML(plSharedItems(rows,false),totEquipOut),    // อุปกรณ์นอก (ของแชร์)
     null,null,null,null,null];                              // ค่าจับ · คนเลี้ยง · ผู้จัดการ · สารเคมี(เดิม) · อื่นๆ(เดิม)
   if(details.length!==labels.length)console.warn('[PL] details ไม่ตรงกับ labels',details.length,labels.length);
-  const canvas=document.getElementById('pl-donut');
-  if(canvas){
-    if(_plDonutChart){_plDonutChart.destroy();_plDonutChart=null;}
-    _plDonutChart=new Chart(canvas,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:colors,borderWidth:2}]},options:{plugins:{legend:{display:false}},cutout:'65%'}});
-  }
-  const leg=document.getElementById('pl-donut-legend');
-  if(leg)leg.innerHTML=labels.map((l,i)=>vals[i]>0?`<div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:${colors[i]};flex-shrink:0"></span><span style="font-size:var(--fs115);color:var(--tx2);flex:1">${l}</span><span style="font-size:calc(12px * var(--ui-scale));font-weight:500;color:var(--tx)">${total?Math.round(vals[i]/total*100)+'%':'-'}</span></div>`:'').join('');
+  // แถบรายหมวด เรียงแพงสุดก่อน (#368) — แทนโดนัท+ตาราง · หมวด < 2% พับไว้ · รายการย่อย = plDetailHTML เดิม (togglePLCostDetail)
   const tbl=document.getElementById('pl-cost-tbl');
   if(tbl){
-    const hasKg=totWeight>0, ncol=hasKg?4:3;
-    const body=labels.map((l,i)=>{
-      if(!(vals[i]>0))return'';
-      const dot=`<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${colors[i]};margin-right:5px"></span>`;
-      const cells=`<td style="text-align:right">${Math.round(vals[i]).toLocaleString()}</td>`
-        +(hasKg?`<td style="text-align:right">${(vals[i]/totWeight).toFixed(1)}</td>`:'')
-        +`<td style="text-align:right">${total?Math.round(vals[i]/total*100)+'%':'-'}</td>`;
-      const d=details[i];
-      if(!d)return`<tr><td style="padding-left:18px">${dot}${l}</td>${cells}</tr>`;
-      return`<tr onclick="togglePLCostDetail(${i})" style="cursor:pointer"><td><span id="plc-car-${i}" style="display:inline-block;width:13px;color:var(--tx3)">▸</span>${dot}${l}</td>${cells}</tr>`
-        +`<tr id="plc-det-${i}" style="display:none"><td colspan="${ncol}" style="padding:0;background:var(--sf2)">${d}</td></tr>`;
-    }).join('');
-    tbl.innerHTML=`<table class="tbl"><thead><tr><th>รายการ</th><th style="text-align:right">รวม (฿)</th>${hasKg?'<th style="text-align:right">฿/กก.</th>':''}<th style="text-align:right">%</th></tr></thead><tbody>${body}`
-      +`<tr style="border-top:2px solid var(--bd);font-weight:700"><td style="padding-left:18px">รวม</td><td style="text-align:right">${Math.round(total).toLocaleString()}</td>`
-      +`${hasKg?`<td style="text-align:right">${(total/totWeight).toFixed(1)}</td>`:''}<td style="text-align:right">100%</td></tr></tbody></table>`
-      +`<p style="font-size:var(--fs105);color:var(--tx3);margin:6px 2px 0">กดแถวที่มี ▸ เพื่อดูรายการสินค้าย่อย</p>`;
+    const idx=labels.map((_,i)=>i).filter(i=>vals[i]>0).sort((a,b)=>vals[b]-vals[a]);
+    const mx=idx.length?vals[idx[0]]:1;
+    const row=i=>{
+      const d=details[i],pct=total?vals[i]/total*100:0;
+      return`<div class="plx-cat${d?' has':''}"${d?` onclick="togglePLCostDetail(${i})"`:''}>
+        <div class="l"><span>${labels[i]}${d?' <span id="plc-car-'+i+'">▸</span>':''}</span><span><b>฿${Math.round(vals[i]).toLocaleString()}</b> <small>· ${totWeight>0?(vals[i]/totWeight).toFixed(1)+'/กก. · ':''}${Math.round(pct)}%</small></span></div>
+        <div class="plx-bar"><i style="width:${(vals[i]/mx*100).toFixed(1)}%;background:${colors[i]}"></i></div></div>`
+        +(d?`<div class="plx-det" id="plc-det-${i}" style="display:none">${d}</div>`:'');
+    };
+    const big=idx.filter(i=>!total||vals[i]/total>=0.02),small=idx.filter(i=>total&&vals[i]/total<0.02);
+    const sSum=small.reduce((s,i)=>s+vals[i],0);
+    const lbl='▾ หมวดเล็ก '+small.length+' หมวด · ฿'+Math.round(sSum).toLocaleString();
+    tbl.innerHTML=big.map(row).join('')
+      +(small.length?`<div id="plc-small" hidden>${small.map(row).join('')}</div><button class="plx-more" id="plc-small-btn" data-l="${lbl}" onclick="plToggleSmall()">${lbl}</button>`:'')
+      +`<div class="plx-tot"><span>รวม</span><span>฿${Math.round(total).toLocaleString()}${totWeight>0?' · '+(total/totWeight).toFixed(1)+'/กก.':''}</span></div>`;
   }
 }
 function exportPLCSV(){
