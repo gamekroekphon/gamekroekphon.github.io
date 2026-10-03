@@ -1128,6 +1128,8 @@ button.pr-it:hover,button.pr-it:active{background:var(--sf2)}
 .hsy-chip.c-wait{background:var(--wb);color:var(--w);border:1px solid var(--w)}
 .hsy-kpi span.hsy-waitn{color:var(--w);font-weight:700}
 .hsy-kpi span.hsy-yoy{font-weight:700;margin-top:4px}
+.pd-nc-tag{display:inline-block;font-size:calc(11px * var(--ui-scale));font-weight:800;color:#9A3412;background:#FFEDD5;border-radius:99px;padding:0 7px;vertical-align:1px}
+.pd-nc-row .ceo-item-val{text-decoration:none;color:#9A3412}
 .hsy-kpi span.hsy-yoy.up{color:var(--ok)}.hsy-kpi span.hsy-yoy.dn{color:var(--d)}
 .hsy-yoyn{grid-column:1/-1;font-size:calc(12.5px * var(--ui-scale));font-weight:700;color:var(--tx);margin-top:-2px}
 .hsy-miss{color:var(--tx3);font-style:italic}
@@ -8044,7 +8046,8 @@ function renderPondDetail(id){
     costCardHtml=pdPrepCostCard(p);
   }else if(APP_ROLE==='admin'&&!clsNoShrimp(cls)){
     const pdCostFrom=pondCostStartDate(p);
-    const pdStockItems=getStockItemsForPond(p.id,pdCostFrom,today()).filter(i=>!i.noCost);   // อุปกรณ์คิดในอุปกรณ์นอกแล้ว (#362)
+    const pdStockAll=getStockItemsForPond(p.id,pdCostFrom,today());
+    const pdStockItems=pdStockAll.filter(i=>!i.noCost);   // อุปกรณ์คิดในอุปกรณ์นอกแล้ว (#362)
     const pdFeedCost=pondFeedCost(p);
     const pdFryCost=p.costFry||0;
     const pdTransportCost=p.costTransport||0;   // แยกจากค่าลูกกุ้ง (entry #241)
@@ -8129,7 +8132,12 @@ function renderPondDetail(id){
     };
     const pdCatOrder=['chemOral','chemWater','probioOral','probioWater','lime','equip'];
     const pdCatRowsHtml=pdCostCatRow('feed','อาหารกุ้ง',pdFeedCost,pdFeedDetail)
-      +pdCatOrder.map(k=>pdCostCatRow(k,STOCK_CAT_LABEL[k],pdCatSums[k]||0)).join('')
+      +pdCatOrder.map(k=>{
+        // อุปกรณ์ที่ไม่นับต้นทุน (#366): โชว์รายการ+ยอดแยกแถว · ถ้าไม่มีอุปกรณ์ที่นับเงินเลย ไม่ต้องมีแถว "อุปกรณ์ ฿0"
+        if(k!=='equip')return pdCostCatRow(k,STOCK_CAT_LABEL[k],pdCatSums[k]||0);
+        const nc=pdEquipNoCostRow(pdStockAll,'nc');
+        return(nc&&!(pdCatSums.equip>0)?'':pdCostCatRow(k,STOCK_CAT_LABEL[k],pdCatSums[k]||0))+nc;
+      }).join('')
       +(pdCatSums.other?pdCostCatRow('other','อื่นๆ (เดิม)',pdCatSums.other):'')
       +pdCostCatRow('shared','อุปกรณ์นอก (แชร์)',pdSharedCost)
       +pdCostCatRow('fuel','น้ำมัน (แชร์)',pdFuelCost)
@@ -8248,6 +8256,27 @@ function pondPrevPrepCost(p){
   if(to<from)return 0;
   return getStockItemsForPond(p.id,from,to).reduce((s,i)=>s+(i.qty||0)*(i.unitPrice||0),0);
 }
+// ── อุปกรณ์ที่เบิกลงบ่อแต่ไม่นับต้นทุนบ่อ (#362) — พี่สั่ง #366 ให้เห็นในหน้าบ่อว่าเบิกอะไรไป ยอดเท่าไร แต่ไม่บวกในรวม
+//    ยอด = จำนวน × ราคาอ้างอิง (refPrice: ราคาล็อกตอนเบิก หรือราคาปัจจุบัน) · ใช้ id แถว pd-cat-items-<key> เดียวกับ pdToggleCatItems
+function pdEquipNoCostRow(items,key){
+  const m={};let tot=0;
+  (items||[]).forEach(i=>{
+    if(i.category!=='equip'||!i.noCost)return;
+    const k=i.name+'|'+(i.unit||'');
+    const o=m[k]=m[k]||{name:i.name,unit:i.unit||'',qty:0,amt:0};
+    const a=(i.qty||0)*(i.refPrice||0);
+    o.qty+=(i.qty||0);o.amt+=a;tot+=a;
+  });
+  const list=Object.values(m).sort((a,b)=>b.amt-a.amt);
+  if(!list.length)return'';
+  return`<div class="ceo-item-row ceo-cat-row pd-nc-row" onclick="pdToggleCatItems('${key}')">
+      <span class="ceo-cat-dot" style="background:${CEO_CAT_DOT.equip||'var(--tx3)'}"></span>
+      <div class="ceo-item-main"><div class="ceo-item-name">อุปกรณ์ที่เบิกใช้ <span class="pd-nc-tag">ไม่รวม</span> <span class="ceo-cat-caret" id="pd-cat-caret-${key}">▾</span></div></div>
+      <span class="ceo-item-val">${ceoMoney(tot)}</span>
+    </div><div class="ceo-cat-items" id="pd-cat-items-${key}">${list.map(it=>
+      `<div class="ceo-cat-item-row"><span>${it.name}</span><span>${+it.qty.toFixed(2)} ${it.unit} · ${ceoMoney(it.amt)}</span></div>`
+    ).join('')}<div class="ceo-cat-item-row" style="border-bottom:none"><span><b>รวม ${list.length} รายการ</b></span><span><b>${ceoMoney(tot)}</b> · ไม่รวมในต้นทุนบ่อ</span></div></div>`;
+}
 function pdPrepCostCard(p){
   if(!p)return '';
   const from=pondCostStartDate(p,today());
@@ -8265,6 +8294,7 @@ function pdPrepCostCard(p){
   });
   const total=Object.values(sums).reduce((a,b)=>a+b,0);
   const order=['chemOral','chemWater','probioOral','probioWater','lime','equip','fuel','other'];
+  const ncRow=pdEquipNoCostRow(items,'prepnc');   // อุปกรณ์ไม่นับต้นทุน (#366)
   const rows=order.filter(k=>sums[k]>0).map(k=>{
     const list=Object.values(byCat[k]||{});
     return`<div class="ceo-item-row ceo-cat-row" onclick="pdToggleCatItems('prep-${k}')">
@@ -8274,11 +8304,11 @@ function pdPrepCostCard(p){
     </div><div class="ceo-cat-items" id="pd-cat-items-prep-${k}">${list.map(it=>
       `<div class="ceo-cat-item-row"><span>${it.name}</span><span>${it.qty} ${it.unit} · ${ceoMoney(it.total)}</span></div>`
     ).join('')}</div>`;
-  }).join('');
+  }).join('')+ncRow;
   // ⚠️ ซ่อนบรรทัดเทียบเมื่อได้ 0 หรือ null — "฿0" แยกไม่ออกว่าคือ "รอบก่อนไม่ได้เบิกอะไรเลย" หรือ "คำนวณไม่ได้"
   //    ปล่อยให้โชว์จะอ่านผิดว่ารอบนี้แพงขึ้นจากศูนย์
   const prev=pondPrevPrepCost(p);
-  const body=total>0
+  const body=(total>0||ncRow)
     ?`${rows}
       <div class="ceo-cost-total-row"><span class="lbl">รวมต้นทุนเตรียมบ่อ</span><span class="val">${ceoMoney(total)}</span></div>
       ${prev?`<div class="pd-water-row" style="border-top:1px dashed var(--bd)"><span style="color:var(--tx2)">รอบก่อนเตรียมไป</span><span style="font-weight:700">${ceoMoney(prev)}</span></div>`:''}
