@@ -1657,6 +1657,20 @@ table.wqg tr.sel td.wqg-pc{background:var(--pl);box-shadow:inset 3px 0 0 var(--p
 .wqg-pn small{display:block;font-size:calc(10.5px * var(--ui-scale));font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wqg-note{border:none;background:none;min-width:36px;min-height:36px;font-size:calc(15px * var(--ui-scale));cursor:pointer;opacity:.35;padding:0}
 .wqg-note.has{opacity:1}
+/* ติ๊กสีน้ำ (#371) — ปุ่มหมายเหตุโชว์จุดสี · แผ่นล่างเลือกสี */
+.wqg-note .wqc-dots{display:flex;gap:3px;justify-content:center}
+.wqc-dots i{width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.25);display:block}
+.wqc-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:flex-end;justify-content:center}
+.wqc-sh{background:var(--sf);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:16px 16px max(20px,env(safe-area-inset-bottom));max-height:90vh;overflow-y:auto}
+.wqc-t{font-weight:700;font-size:calc(16px * var(--ui-scale))}.wqc-s{font-size:calc(13px * var(--ui-scale));margin-bottom:12px}
+.wqc-l{font-weight:600;font-size:calc(14px * var(--ui-scale));margin:4px 0 8px}
+.wqc-g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.wqc-ck{display:flex;align-items:center;gap:10px;border:2px solid var(--bd);border-radius:14px;padding:10px 12px;min-height:52px;cursor:pointer;font-size:calc(15px * var(--ui-scale));font-weight:600;background:var(--sf);color:var(--tx);text-align:left}
+.wqc-ck>i{width:22px;height:22px;border-radius:50%;border:1px solid rgba(0,0,0,.25);flex-shrink:0}
+.wqc-ck .bx{margin-left:auto;width:22px;height:22px;border:2px solid var(--bd);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff}
+.wqc-ck.on{border-color:var(--p);background:var(--pl)}.wqc-ck.on .bx{background:var(--p);border-color:var(--p)}
+.wqc-res{margin:12px 0 4px;font-size:calc(14px * var(--ui-scale))}
+.wqc-btns{display:flex;gap:8px;margin-top:14px}.wqc-btns .btn{flex:1;min-height:46px;justify-content:center;font-size:calc(15px * var(--ui-scale));width:auto!important}
 .wqg-in{width:100%;min-width:58px;height:44px;border:2px solid var(--bd);border-radius:9px;text-align:center;font-family:inherit;font-size:16px;font-weight:800;background:#fff;color:var(--tx);font-variant-numeric:tabular-nums;padding:0 2px}
 .wqg-in:focus{outline:none;border:3px solid #2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
 .wqg-in.wqg-ok{border-color:#86EFAC;color:var(--ok)}
@@ -13820,7 +13834,7 @@ function renderWqGrid(){
     return '<tr data-pid="'+p.id+'"'+(p.id===sel?' class="sel"':'')+'><td class="wqg-pc"><div class="wqg-pcw"><div class="wqg-pn" onclick="wqgPick(\''+p.id+'\')"><b>'+mpEsc(p.name)+'</b>'
         +(pdFilledNightBefore(p,d)?' <span title="เติมน้ำคืนก่อน">💧</span>':'')
         +'<small>'+(age>0?age+' วัน':'')+'</small>'+(ref?'<small>'+ref+'</small>':'')+'</div>'
-        +'<button type="button" class="wqg-note'+(rec&&rec.notes?' has':'')+'" onclick="wqgNote(\''+p.id+'\')" aria-label="หมายเหตุ บ่อ '+mpEsc(p.name)+'">📝</button></div></td>'
+        +'<button type="button" class="wqg-note'+(rec&&rec.notes?' has':'')+'" onclick="wqgNote(\''+p.id+'\')" aria-label="หมายเหตุ บ่อ '+mpEsc(p.name)+'"'+(rec&&rec.notes?' title="'+mpEsc(rec.notes)+'"':'')+'>'+wqcBtnFace(rec&&rec.notes)+'</button></div></td>'
       +WQG_KEYS.map(k=>{const raw=k in dr?dr[k]:(rec&&rec[k]!=null?String(rec[k]):'');
         return '<td class="'+grpOf(k)+'"><input class="wqg-in'+wqgCls(k,raw,rec,wqgSalOf(p.id,rec))+'" data-k="'+k+'" value="'+mpEsc(raw)+'" inputmode="decimal" enterkeyhint="next" autocomplete="off" aria-label="'+mpEsc(p.name)+' '+mpEsc((P(k)||{}).lbl||k)+'"></td>';}).join('')
       +'<td class="wqg-ck">'+(dr&&Object.keys(dr).length?'<span class="wqg-dirty">●</span>':rec?'✓':'')+'</td></tr>';
@@ -13852,10 +13866,68 @@ function wqgPick(pid){
   document.querySelector('#wqg-table tr[data-pid="'+pid+'"]')?.classList.add('sel');
   renderWQTable();
 }
+// ══════ ติ๊กสีน้ำ (#371 พี่สั่ง 5 ต.ค. 69) — หมายเหตุ 33/35 รายการคือสีน้ำที่ดูด้วยตา ══════
+//    เก็บเป็น "คำเดิม" ใน rec.notes (เช่น "เขียวน้ำตาล · ปูนอน 10 กระสอบ") — ทุกหน้าที่โชว์หมายเหตุเห็นเหมือนเดิม ไม่มีช่องข้อมูลใหม่
+//    ติ๊กได้ 2 สี เรียงตามลำดับใน WQ_COLORS · เปิดหมายเหตุเก่าที่ขึ้นต้นด้วยคำสี (ลำดับไหนก็ได้) จะติ๊กให้เอง
+const WQ_COLORS=[['ใส','#E0F2FE'],['เริ่มเขียว','#BBF7D0'],['เขียว','#22C55E'],['เริ่มน้ำตาล','#E9C79A'],['น้ำตาล','#A16207']];
+function wqcParse(notes){
+  const s=String(notes||'').trim();
+  const byLen=WQ_COLORS.map(c=>c[0]).sort((a,b)=>b.length-a.length);
+  let i=0;const cols=[];
+  while(cols.length<2){const m=byLen.find(n=>s.startsWith(n,i)&&!cols.includes(n));if(!m)break;cols.push(m);i+=m.length;}
+  const rest=s.slice(i);
+  // คำสีต้องจบตรงขอบ (ท้ายข้อความ / เว้นวรรค / ·) — "เขียวขุ่น" ไม่ถือเป็นสีที่ติ๊ก
+  if(!cols.length||(rest&&!/^[\s·,]/.test(rest)))return{cols:[],rest:s};
+  return{cols,rest:rest.replace(/^[\s·,]+/,'').trim()};
+}
+function wqcCompose(cols,rest){
+  const c=WQ_COLORS.map(x=>x[0]).filter(n=>cols.includes(n)).join('');
+  rest=String(rest||'').trim();
+  return c&&rest?c+' · '+rest:(c||rest);
+}
+function wqcBtnFace(notes){
+  const {cols}=wqcParse(notes);
+  if(!cols.length)return'📝';
+  return'<span class="wqc-dots">'+cols.map(n=>'<i style="background:'+WQ_COLORS.find(c=>c[0]===n)[1]+'"></i>').join('')+'</span>';
+}
+let _wqc=null;
+function wqcDraw(){
+  if(!_wqc)return;
+  const g=document.getElementById('wqc-g');
+  if(g)g.innerHTML=WQ_COLORS.map(([n,c])=>{const on=_wqc.cols.includes(n);
+    return'<button type="button" class="wqc-ck'+(on?' on':'')+'" aria-pressed="'+on+'" onclick="wqcTog(\''+n+'\')"><i style="background:'+c+'"></i>'+n+'<span class="bx">'+(on?'✓':'')+'</span></button>';}).join('');
+  const r=document.getElementById('wqc-res');
+  if(r){const t=wqcCompose(_wqc.cols,'');r.innerHTML=t?'บันทึกเป็น: <b>'+t+'</b>':'ยังไม่ได้ติ๊กสีน้ำ';}
+}
+function wqcTog(n){
+  if(!_wqc)return;const k=_wqc.cols.indexOf(n);
+  if(k>=0)_wqc.cols.splice(k,1);else{if(_wqc.cols.length>=2)_wqc.cols.shift();_wqc.cols.push(n);}
+  wqcDraw();
+}
+function wqcClose(){document.getElementById('wqc-bg')?.remove();_wqc=null;}
+function wqcSave(){
+  if(!_wqc)return;const {pid}=_wqc;
+  const t=wqcCompose(_wqc.cols,document.getElementById('wqc-txt')?.value||'');
+  wqcClose();wqgNoteSet(pid,t);
+}
 function wqgNote(pid){
   const p=pond(pid);if(!p)return;const d=wqgDate();
   const rec=(p.records||[]).find(r=>r.date===d);
-  const t=prompt('หมายเหตุ บ่อ '+p.name+' · '+fD(d),rec&&rec.notes||'');if(t===null)return;
+  const ps=wqcParse(rec&&rec.notes);
+  _wqc={pid,cols:ps.cols.slice()};
+  document.getElementById('wqc-bg')?.remove();
+  const bg=document.createElement('div');bg.id='wqc-bg';bg.className='wqc-bg';
+  bg.onclick=e=>{if(e.target===bg)wqcClose();};
+  bg.innerHTML='<div class="wqc-sh" role="dialog" aria-label="หมายเหตุ บ่อ '+mpEsc(p.name)+'">'
+    +'<div class="wqc-t">หมายเหตุ บ่อ '+mpEsc(p.name)+'</div><div class="wqc-s">'+fD(d)+'</div>'
+    +'<div class="wqc-l">สีน้ำ (ติ๊กได้ 2 ช่อง)</div><div class="wqc-g" id="wqc-g"></div><div class="wqc-res" id="wqc-res"></div>'
+    +'<div class="wqc-l" style="margin-top:12px">หมายเหตุอื่น</div><input class="fi" id="wqc-txt" placeholder="เช่น ปูนอน 10 กระสอบ" value="'+mpEsc(ps.rest)+'">'
+    +'<div class="wqc-btns"><button type="button" class="btn btn-s" onclick="wqcClose()">ยกเลิก</button><button type="button" class="btn btn-p" onclick="wqcSave()">💾 บันทึก</button></div></div>';
+  document.body.appendChild(bg);wqcDraw();
+}
+function wqgNoteSet(pid,t){
+  const p=pond(pid);if(!p)return;const d=wqgDate();
+  const rec=(p.records||[]).find(r=>r.date===d);
   if(rec)rec.notes=t.trim();
   else{if(!t.trim())return;const r={id:'wq_'+pid+'_'+d,date:d,age:docAge(p.startDate,d),notes:t.trim()};PARAMS.forEach(pm=>r[pm.key]=null);p.records.push(r);p.records.sort((a,b)=>new Date(a.date)-new Date(b.date));}
   save();renderWqGrid();if(document.getElementById('ep-pond').value===pid)renderWQTable();
