@@ -14162,10 +14162,13 @@ function renderPdFeedHistory(p){
   let rec=sortLogArr('feedLog',p.feedLog||[]).reverse();   // เรียงตามวันที่ก่อนเสมอ ห้ามสมมติว่า array เรียงมาแล้ว
   if(_pdFeedPeriod!=='all')rec=rec.slice(0,_pdFeedPeriod);
   if(!rec.length){tbl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูลอาหารของบ่อนี้ — บันทึกได้ที่หน้า "อาหาร & FCR"</p>';return;}
-  const tableHtml=`<div class="pd-hist-tblwrap"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ยี่ห้อ/เบอร์</th><th style="text-align:right">อาหาร (กก.)</th><th>หมายเหตุ</th></tr></thead><tbody>${
+  // กก./แสน ของวันนั้น (#369) — อาหารรวมทั้งวัน ÷ ฐานกุ้งวันนั้น (สูตรเดียวกับแท่ง 14 วันใน renderPdFeedSummary)
+  const dayKg={};(p.feedLog||[]).forEach(f=>{if(f&&f.date)dayKg[f.date]=(dayKg[f.date]||0)+(parseFloat(f.totalFeed)||0);});
+  const kplTxt=d=>{const v=feedPer100k(dayKg[d],pondFeedBaseOnDate(p,d));return v!=null?v.toFixed(1):'-';};
+  const tableHtml=`<div class="pd-hist-tblwrap"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>ยี่ห้อ/เบอร์</th><th style="text-align:right">อาหาร (กก.)</th><th style="text-align:right">กก./แสน</th><th>หมายเหตุ</th></tr></thead><tbody>${
     rec.map((r,i)=>{
       const ageCalc=docAge(p.startDate,r.date)??r.age;
-      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdEditFeed('${p.id}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdDeleteFeedEntry('${p.id}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc}</td><td>${feedRecLabel(r)}</td><td style="text-align:right">${(r.totalFeed||0).toLocaleString()}</td><td style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">${r.notes||'-'}</td></tr>`;
+      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdEditFeed('${p.id}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="pdDeleteFeedEntry('${p.id}','${r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${ageCalc}</td><td>${feedRecLabel(r)}</td><td style="text-align:right">${(r.totalFeed||0).toLocaleString()}</td><td style="text-align:right;font-weight:700">${kplTxt(r.date)}</td><td style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">${r.notes||'-'}</td></tr>`;
     }).join('')}</tbody></table></div></div>`;
   // ── มือถือ (≤600px): แสดงเป็นการ์ดแยกทีละวันแทนตารางเลื่อน (entry #146) ──
   const cardsHtml=`<div class="pd-hist-cards">${rec.map((r,i)=>{
@@ -14175,7 +14178,7 @@ function renderPdFeedHistory(p){
         <div class="pd-rec-date"><b>${fD(r.date)}</b><span>${ageCalc!=null?'อายุ '+ageCalc+' วัน':''}</span></div>
         <div class="pd-rec-actions"><button onclick="pdEditFeed('${p.id}','${r.date}')" title="แก้ไข">✏️</button><button class="del" onclick="pdDeleteFeedEntry('${p.id}','${r.date}')" title="ลบ">🗑️</button></div>
       </div>
-      <div class="pd-rec-feedrow"><span>ยี่ห้อ/เบอร์: ${feedRecLabel(r)}</span><b>${(r.totalFeed||0).toLocaleString()} กก.</b></div>
+      <div class="pd-rec-feedrow"><span>ยี่ห้อ/เบอร์: ${feedRecLabel(r)}</span><b>${(r.totalFeed||0).toLocaleString()} กก. · ${kplTxt(r.date)} กก./แสน</b></div>
       ${r.notes?`<div class="pd-rec-note">📝 ${r.notes}</div>`:''}
     </div>`;
   }).join('')}</div>`;
