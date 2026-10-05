@@ -8563,7 +8563,8 @@ function renderPdGauges(p,last){
 // ══════ อาหาร vs การเติบโต "ต่อช่วงสุ่ม" (entry #324 พี่สั่ง 26 ก.ย. 69) ══════
 //    พี่ใช้การ์ดนี้หา "อาทิตไหนให้อาหารน้อยไป กุ้งโตช้า" · ฟาร์มขึ้นอาหารเป็น กก./แสน (เช่น ขึ้นครั้งละ 3 กก./แสน) จึงใช้ กก./แสน เป็นหน่วยหลัก
 //    เดิมแบ่งสัปดาห์ตามปฏิทินนับจากวันลงกุ้ง แต่ ADG คิดจากวันสุ่ม → อาหารกับการโตคนละช่วงกัน · ตอนนี้ใช้ช่วงระหว่าง 2 ครั้งสุ่ม (ฟาร์มสุ่มทุก 7 วัน)
-//    อาหารในช่วง = วันที่ > สุ่มครั้งก่อน และ ≤ สุ่มครั้งนี้ · ÷ จำนวนวันจริงของช่วง
+//    อาหารในช่วง = วันที่ > สุ่มครั้งก่อน และ ≤ สุ่มครั้งนี้ · ÷ จำนวนวันที่ "กรอกอาหาร" (#370 — เดิม ÷ วันปฏิทิน วันที่ยังไม่กรอกนับเป็น 0
+//    ตัวเลขต่ำกว่าหน้าอื่น ~15% เช่น สุ่มวันนี้แต่ยังไม่กรอกอาหารวันนี้) · kplEnd = กก./แสน ของวันสุดท้ายที่กรอกในช่วง (ตรงกับหน้าบ่อ/ประวัติรายวัน)
 //    กก./แสน = อาหารต่อวัน ÷ ฐานจำนวนกุ้ง (pondFeedBaseOnDate — ยอดปล่อย หักตัวที่พาเชียลไปแล้ว) × 1 แสน — สูตรเดียวกับทุกที่ในแอป
 //    ธงแดง = กก./แสน ไม่เพิ่มจากช่วงก่อน และ โตช้าลงเกิน 20% จากช่วงก่อน
 function pdFeedGrowthRows(p){
@@ -8574,15 +8575,17 @@ function pdFeedGrowthRows(p){
     const fl=(p.feedLog||[]).filter(f=>f&&f.date&&f.date>a.date&&f.date<=b.date);
     const feed=fl.reduce((s,f)=>s+(parseFloat(f.totalFeed)||0),0);
     const fedDays=new Set(fl.map(f=>f.date)).size;
-    const fpd=feed/days;
+    const fpd=fedDays?feed/fedDays:0;
     const base=pondFeedBaseOnDate(p,b.date);
     const kpl=feedPer100k(fpd,base);
+    const endD=fl.reduce((m,f)=>f.date>m?f.date:m,'');
+    const kplEnd=endD?feedPer100k(fl.filter(f=>f.date===endD).reduce((s,f)=>s+(parseFloat(f.totalFeed)||0),0),pondFeedBaseOnDate(p,endD)):null;
     const adg=(parseFloat(b.abw)-parseFloat(a.abw))/days;
     const bA=sampleInPondBiomass(p,a),bB=sampleInPondBiomass(p,b);
     const fr=(bA!=null&&bB!=null&&(bA+bB)>0)?fpd/((bA+bB)/2)*100:null;
     const ph=(p.partialHarvests||[]).filter(x=>x&&x.date&&x.date>a.date&&x.date<=b.date);
     rows.push({from:a.date,to:b.date,days,age:recAge(p,b)!=null?recAge(p,b):b.age,abw:parseFloat(b.abw),
-      feed,fedDays,fpd,kpl:kpl!=null?Math.round(kpl*10)/10:null,adg,fr,phN:ph.length,phKg:partialTotals(ph).kg});
+      feed,fedDays,fpd,kpl:kpl!=null?Math.round(kpl*10)/10:null,kplEnd,endD,adg,fr,phN:ph.length,phKg:partialTotals(ph).kg});
   }
   rows.forEach((r,i)=>{const pv=rows[i-1];
     r.kplUp=(pv&&r.kpl!=null&&pv.kpl!=null)?Math.round((r.kpl-pv.kpl)*10)/10:null;
@@ -8604,6 +8607,7 @@ function renderPdFeedGrowth(p){
     const ach=r.adgCh==null?'':r.adgCh>=0?'<span class="up">▲</span>':'<span class="'+(r.adgCh<-0.2?'dn':'fl')+'">▼ '+Math.round(-r.adgCh*100)+'%</span>';
     return '<div class="pd-fg-r'+(r.flag?' flag':'')+'"><div class="wk"><b>'+fD(r.to)+'</b>อายุ '+r.age+' วัน</div>'
       +'<div class="v">อาหาร <b>'+(r.kpl!=null?f1(r.kpl):'-')+'</b> กก./แสน '+up+'</div>'
+      +(r.kplEnd!=null?'<div class="v sub">เฉลี่ยในช่วง · '+fD(r.endD)+' = <b>'+f1(r.kplEnd)+'</b></div>':'')
       +'<div class="v">โต <b>'+r.adg.toFixed(2)+'</b> ก./วัน '+ach+'</div>'
       +'<div class="v sub">'+Math.round(r.fpd).toLocaleString()+' กก./วัน'+(r.fr!=null?' · '+r.fr.toFixed(1)+'% ของน้ำหนักกุ้ง':'')+' · ABW '+r.abw+' ก.'
         +(r.fedDays<r.days?' · <span style="color:var(--w)">กรอกอาหาร '+r.fedDays+'/'+r.days+' วัน</span>':'')
