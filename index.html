@@ -1262,6 +1262,19 @@ body:not(.role-admin) .staff-only{display:revert}
 .pm-cut-hint{font-size:calc(12.5px * var(--ui-scale));color:var(--tx);margin-top:5px;line-height:1.6}
 .pm-cut-sug{border:none;background:var(--pl);color:var(--pd);font-family:inherit;font-weight:700;font-size:inherit;border-radius:99px;padding:3px 10px;cursor:pointer}
 .pm-to-fund{width:100%;margin-top:8px;border:1.5px solid #2F7A3E;background:#EAF5EC;color:#1F5A2B;border-radius:11px;padding:11px;font-family:inherit;font-weight:800;font-size:calc(14px * var(--ui-scale));cursor:pointer}
+/* หน้า PDF ปิดบ่อ: ข้อสรุป + สรุปทั้งปี (#374) */
+#ex-mode[hidden],#ex-crop-view[hidden],#ex-year-view[hidden]{display:none!important}
+.exi-card{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.exi-t{font-weight:700;font-size:calc(14px * var(--ui-scale));margin-bottom:6px}
+.exi{display:flex;gap:8px;padding:7px 10px;border-radius:10px;font-size:calc(13.5px * var(--ui-scale));line-height:1.5}
+.exi.g{background:var(--ob)}.exi.r{background:var(--db)}.exi.y{background:var(--wb)}.exi.n{background:var(--sf2)}
+.exy-wrap{display:flex;flex-direction:column;gap:12px;max-width:520px}
+.exy-ins{display:flex;flex-direction:column;gap:6px}
+.exy-btns{display:flex;flex-direction:column;gap:8px;max-width:520px;margin-top:12px}
+.exy-btns .btn{justify-content:center;padding:12px;font-size:calc(14px * var(--ui-scale))}
+table.exy-t td,table.exy-t th{font-variant-numeric:tabular-nums}
+.exy-pdf .exy-box{border:1px solid #e6efe9;border-radius:6px;padding:8px 10px}
+.exy-pdf .crx-sum{margin-bottom:0}
 .pv-bar{display:flex;gap:6px;background:var(--sf2);padding:4px;border-radius:12px;margin-bottom:12px}
 .pv-bar button{flex:1;border:none;background:none;border-radius:9px;min-height:44px;font-family:inherit;font-weight:700;font-size:calc(14px * var(--ui-scale));color:var(--tx);cursor:pointer}
 .pv-bar button.on{background:var(--sf);color:var(--pd);box-shadow:0 1px 3px rgba(0,0,0,.12)}
@@ -2182,7 +2195,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       <button class="sn-link tab-item" onclick="goTab('crops',this)">📚 ประวัติรอบเลี้ยง</button>
       <button class="sn-link tab-item" onclick="goTab('harveststat',this)">📊 สถิติจับกุ้ง</button>
       <button class="sn-link tab-item admin-only" onclick="goTab('pl',this)">💵 P&amp;L สรุป</button>
-      <button class="sn-link tab-item" onclick="goTab('export',this)">📄 PDF ปิดบ่อ</button>
+      <button class="sn-link tab-item admin-only" onclick="goTab('export',this)">📄 PDF ปิดบ่อ</button>
       <button class="sn-link tab-item" onclick="goTab('harvest',this)">🦐 จับกุ้ง</button>
     </div>
 
@@ -2266,7 +2279,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       <button class="tab-item" id="tab-crops" onclick="goTab('crops',this)">📚 ประวัติรอบเลี้ยง</button>
       <button class="tab-item" id="tab-harveststat" onclick="goTab('harveststat',this)">📊 สถิติจับกุ้ง</button>
       <button class="tab-item admin-only" id="tab-pl" onclick="goTab('pl',this)">💵 P&amp;L สรุป</button>
-      <button class="tab-item" id="tab-export" onclick="goTab('export',this)">📄 PDF ปิดบ่อ</button>
+      <button class="tab-item admin-only" id="tab-export" onclick="goTab('export',this)">📄 PDF ปิดบ่อ</button>
       <button class="tab-item" id="tab-harvest" onclick="goTab('harvest',this)">🦐 จับกุ้ง</button>
     </div>
   </div>
@@ -2348,7 +2361,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <button class="mob-sheet-item owner-mine" data-t="crops" onclick="mobMenuGo(this)"><span class="ic">📚</span>ประวัติรอบเลี้ยง</button>
     <button class="mob-sheet-item" data-t="harveststat" onclick="mobMenuGo(this)"><span class="ic">📊</span>สถิติจับกุ้ง</button>
     <button class="mob-sheet-item admin-only owner-mine" data-t="pl" onclick="mobMenuGo(this)"><span class="ic">💵</span>P&amp;L สรุป</button>
-    <button class="mob-sheet-item" data-t="export" onclick="mobMenuGo(this)"><span class="ic">📄</span>PDF ปิดบ่อ</button>
+    <button class="mob-sheet-item admin-only" data-t="export" onclick="mobMenuGo(this)"><span class="ic">📄</span>PDF ปิดบ่อ</button>
     <button class="mob-sheet-item" data-t="harvest" onclick="mobMenuGo(this)"><span class="ic">🦐</span>จับกุ้ง</button>
     <div class="mob-sheet-grp">🔍 วิเคราะห์</div>
     <button class="mob-sheet-item" data-t="lab" onclick="mobMenuGo(this)"><span class="ic">🔬</span>ผลแล็บ</button>
@@ -3857,6 +3870,9 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 <!-- EXPORT -->
 <div id="sec-export" class="sec">
   <div class="sec-hdr"><div class="sec-title">📄 สรุปปิดบ่อ (PDF)</div></div>
+  <!-- รายรอบ / สรุปทั้งปี (#374) — ปุ่มสลับโชว์เฉพาะ admin (ข้อสรุปมีตัวเงิน) -->
+  <div class="pv-bar" id="ex-mode" style="max-width:520px" hidden></div>
+  <div id="ex-crop-view">
   <div class="card" style="max-width:520px">
     <div class="card-t">📋 สร้างรายงานสรุปปิดบ่อ</div>
     
@@ -3888,12 +3904,15 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <button class="btn btn-p" id="ex-pdf-btn" onclick="genPDF()" style="width:100%;justify-content:center;padding:13px;font-size:calc(14px * var(--ui-scale))">
       📄 สร้าง PDF สรุปปิดบ่อ
     </button>
+    <button class="btn btn-s" id="ex-share-btn" onclick="genPDF({share:true})" style="width:100%;justify-content:center;padding:12px;margin-top:8px;font-size:calc(14px * var(--ui-scale))">📤 ส่ง LINE / แชร์</button>
     <div id="ex-info" style="margin-top:12px"></div>
   </div>
   <div class="card" id="ex-chart-wrap" style="max-width:520px;margin-top:16px;display:none">
     <div class="card-t">📊 เปรียบเทียบรอบเลี้ยงที่ปิดแล้ว</div>
     <canvas id="ex-chart" height="200"></canvas>
   </div>
+  </div>
+  <div id="ex-year-view" hidden></div>
 </div>
 <!-- MANAGE -->
 <div id="sec-manage" class="sec">
@@ -7138,7 +7157,7 @@ function initUiSize(){
   applyUiSize(v);
 }
 initUiSize();
-const ADMIN_ONLY_TABS=['palm','users','labor','elec','pl','kan','hatchery'];   // hatchery มีกำไร (#316) — เพิ่ม entry #357
+const ADMIN_ONLY_TABS=['palm','users','labor','elec','pl','kan','hatchery','export'];   // hatchery มีกำไร (#316) — เพิ่ม entry #357 · export = PDF ปิดบ่อ มีรายได้/ต้นทุน/กำไร (พี่สั่ง #374)
 function goTab(t,btn){
   if(ADMIN_ONLY_TABS.includes(t)&&APP_ROLE!=='admin')return;
   document.querySelectorAll('.tab,.tab-item,.sn-top,.sn-link').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
@@ -17547,9 +17566,174 @@ function renderRisk(d){
 // ===== EXPORT =====
 // ── ปีเก่าสุด (พ.ศ.) ที่ dropdown "เลือกรอบที่ปิด" ในหน้า PDF ปิดบ่อจะแสดง — ข้อมูลจริงอัปเดตแค่ถึงปีนี้ ถ้าอัปเดตย้อนหลังเพิ่มค่อยขยับเลขนี้ลง ──
 const EX_HIST_MIN_YEAR_BE=2568;
+// ══════ หน้า PDF ปิดบ่อ: ข้อสรุปอัตโนมัติ · ปุ่มแชร์ · สรุปทั้งปี (entry #374 พี่สั่ง 6 ต.ค. 69 — "ทำทั้ง 2 แบบ") ══════
+//    mockup: Mockup และ Prototype/mockup_สรุปปิดบ่อ.html
+//    ⚠️ ข้อสรุป/สรุปทั้งปีมีตัวเงิน → admin เท่านั้น (หน้านี้ staff เปิดได้)
+//    ⚠️ สาเหตุที่ปิดบ่อ = ช่อง notes ของรอบ (ที่กรอกตอนปิดรอบ) จัดกลุ่มด้วยคำ: ขี้ขาว · แดง/แตง (พิมพ์ผิดในข้อมูลจริง) · ที่เหลือ = ปกติ/ครบรอบ
+let _exMode='crop',_exYear=null;
+function closeReason(c){
+  const n=String((c&&c.notes)||'');
+  return /ขี้ขาว/.test(n)?'ขี้ขาว':/แดง|แตง/.test(n)?'ตัวแดง':'ปกติ / ครบรอบ';
+}
+const EX_M=v=>(v/1e6).toFixed(2);
+const EX_B=v=>'฿'+Math.round(v).toLocaleString();
+// รอบที่ปิดในปี ค.ศ. y (สตริง 'YYYY') — ตัวเลขชุดเดียวกับหน้า P&L (cropHarvestResult + ต้นทุนครบทุกหมวด)
+function exYearRows(y){
+  const out=[];
+  D.ponds.forEach(p=>(p.cropHistory||[]).forEach((c,i)=>{
+    if(!c||!c.harvestResult||!c.closeDate||(y&&!c.closeDate.startsWith(y)))return;
+    const r=cropHarvestResult(c)||{};
+    const cost=['costFry','costTransport','costFeed','costMed','costLime','costLabor','costElec','costFuel','costEquip','costEquipOut','costCatch','amtCaretaker','amtManager','costChem','costOther'].reduce((s,k)=>s+(r[k]||0),0);
+    out.push({p,c,i,kg:r.totalWeightAll||r.totalWeight||0,rev:r.revenue||0,cost,pf:r.netProfit||0,age:docAge(c.startDate,c.closeDate),reason:closeReason(c),m:+c.closeDate.slice(5,7),surv:(parseFloat(c.stock)||0)>0&&r.survivalRate!=null?parseFloat(r.survivalRate):null});
+  }));
+  return out;
+}
+// ── ข้อสรุปของรอบเดียว: [ชนิด, ไอคอน, ข้อความ HTML] · ชนิด g=ดี r=ปัญหา y=ระวัง n=ข้อมูล ──
+function closeInsights(p,s){
+  if(!s||!s._crop)return[];
+  const c=s._crop,out=[],age=s.ageDays||0;
+  const pf=s.netProfit,price=parseFloat(s.price)||null,cpk=s.costPerKg;
+  if(pf!=null){
+    if(pf<0)out.push(['r','❌','<b>ขาดทุน '+EX_B(-pf)+'</b>']);
+    else if(s.marginPct!=null&&s.marginPct<5)out.push(['y','⚠️','<b>กำไรแค่ '+EX_B(pf)+'</b> ('+s.marginPct+'% ของรายได้)']);
+    else out.push(['g','✅','<b>กำไร '+EX_B(pf)+'</b>'+(s.marginPct!=null?' ('+Math.round(s.marginPct)+'% ของรายได้)':'')]);
+  }
+  const why=closeReason(c);
+  if(age&&age<60&&pf!=null&&pf<0){
+    out.push(['r','⏱️','<b>ปิดเร็วที่อายุ '+age+' วัน'+(why!=='ปกติ / ครบรอบ'?' ('+why+')':'')+'</b>'+(s.closeSize?' ไซส์ '+s.closeSize:'')+(price?' ขายได้ ฿'+price:'')+(cpk!=null?' · ทุน ฿'+Math.round(cpk)+'/กก.':'')]);
+  }else if(price&&cpk!=null){
+    out.push([cpk>price?'r':'g',cpk>price?'💸':'💰',(s.closeSize?'ปิดไซส์ '+s.closeSize+' ':'')+'ขาย ฿'+price+' · ทุน ฿'+Math.round(cpk)+'/กก.'+(cpk>price?' <b>สูงกว่าราคาขาย</b>':'')]);
+  }
+  const tgt=crFcrTarget(c,age),fcr=parseFloat(s.fcr);
+  if(fcr>0&&tgt){
+    if(fcr>tgt+0.1){
+      const overKg=(fcr-tgt)*(s.totalWeight||0);
+      const perKg=(s.costFeed&&s.totalFeed)?s.costFeed/s.totalFeed:null;
+      out.push(['r','🍚','<b>FCR '+fcr+' สูงกว่าเกณฑ์ '+tgt+'</b> ที่อายุ '+age+' วัน'+(overKg>0?' → อาหารเกินราว '+Math.round(overKg).toLocaleString()+' กก.'+(perKg?' ≈ '+EX_B(overKg*perKg):''):'')]);
+    }else out.push(['g','🍚','FCR '+fcr+' ตามเกณฑ์ '+tgt+(why!=='ปกติ / ครบรอบ'&&pf<0?' — ไม่ใช่ปัญหาอาหาร':'')]);
+  }
+  const sv=parseFloat(s.survivalRate);
+  if(sv>0&&(parseFloat(c.stock)||0)>0){
+    const ys=exYearRows(c.closeDate?c.closeDate.slice(0,4):'').map(r=>r.surv).filter(v=>v!=null).sort((a,b)=>a-b);
+    const med=ys.length>=5?ys[Math.floor(ys.length/2)]:null;
+    if(med!=null&&sv<med-15)out.push(['r','🦐','<b>อัตรารอด '+sv+'%</b> ต่ำกว่าค่ากลางปีนี้ ('+Math.round(med)+'%)']);
+    else if(s.partialCount)out.push(['g','🦐','พาเชียล '+s.partialCount+' ครั้ง + ปิดบ่อ'+(s.yieldPerRai?' · '+s.yieldPerRai.toLocaleString()+' กก./ไร่':'')+' · รอด '+sv+'%']);
+  }
+  if(why!=='ปกติ / ครบรอบ'&&c.closeDate){
+    const yr=exYearRows(c.closeDate.slice(0,4)).filter(r=>r.reason===why);
+    if(yr.length>=3)out.push(['n','📝','ปิดเพราะ'+why+'ปีนี้ '+yr.length+' รอบ ขาดทุน '+yr.filter(r=>r.pf<0).length+' รอบ']);
+  }
+  return out;
+}
+function closeInsightsHtml(p,s,pdf){
+  const L=closeInsights(p,s);if(!L.length)return'';
+  if(pdf){
+    const bg={g:'#dcfce7',r:'#fee2e2',y:'#fef3c7',n:'#f1f3f5'};
+    return '<div style="margin:10px 0 0;display:flex;flex-direction:column;gap:4px"><div style="font-size:var(--fs105);font-weight:700;color:#0f6e56;letter-spacing:.03em">💡 ข้อสรุป</div>'
+      +L.map(([t,i,h])=>'<div style="background:'+bg[t]+';border-radius:5px;padding:5px 9px;font-size:var(--fs115);line-height:1.5">'+i+' '+h+'</div>').join('')+'</div>';
+  }
+  return '<div class="exi-card"><div class="exi-t">💡 ข้อสรุป</div>'+L.map(([t,i,h])=>'<div class="exi '+t+'"><span>'+i+'</span><span>'+h+'</span></div>').join('')+'</div>';
+}
+// ── ปุ่มสลับ รายรอบ / สรุปทั้งปี (admin เท่านั้น) ──
+function exModeBar(){
+  const bar=document.getElementById('ex-mode'),cv=document.getElementById('ex-crop-view'),yv=document.getElementById('ex-year-view');
+  if(!bar||!cv||!yv)return;
+  if(APP_ROLE!=='admin')_exMode='crop';
+  bar.hidden=APP_ROLE!=='admin';
+  bar.innerHTML=[['crop','📄 รายรอบ'],['year','📅 สรุปทั้งปี']].map(([k,l])=>'<button type="button" class="'+(_exMode===k?'on':'')+'" aria-pressed="'+(_exMode===k)+'" onclick="exSetMode(\''+k+'\')">'+l+'</button>').join('');
+  cv.hidden=_exMode!=='crop';yv.hidden=_exMode!=='year';
+}
+function exSetMode(m){_exMode=m;exModeBar();if(m==='year')renderExYear();}
+function exSetYear(y){_exYear=y;renderExYear();}
+// ── เนื้อหาสรุปทั้งปี (ใช้ทั้งบนจอและใน PDF) ──
+function exYearData(y){
+  const rows=exYearRows(y);
+  const t=rows.reduce((a,r)=>({kg:a.kg+r.kg,rev:a.rev+r.rev,cost:a.cost+r.cost,pf:a.pf+r.pf}),{kg:0,rev:0,cost:0,pf:0});
+  const grp={};rows.forEach(r=>{const g=grp[r.reason]=grp[r.reason]||{n:0,kg:0,pf:0,age:0,loss:0,win:0};g.n++;g.kg+=r.kg;g.pf+=r.pf;g.age+=r.age;if(r.pf<0)g.loss++;else if(r.pf>0)g.win++;});
+  const mon={};rows.forEach(r=>{mon[r.m]=(mon[r.m]||0)+r.pf;});
+  const sorted=rows.slice().sort((a,b)=>b.pf-a.pf);
+  return{rows,t,grp,mon,top:sorted.slice(0,3),bot:sorted.slice(-3),win:rows.filter(r=>r.pf>0).length,loss:rows.filter(r=>r.pf<0).length};
+}
+function exYearInsights(d){
+  const L=[];const order=['ปกติ / ครบรอบ','ขี้ขาว','ตัวแดง'];
+  order.forEach(k=>{const g=d.grp[k];if(!g)return;
+    if(k==='ปกติ / ครบรอบ')L.push([g.pf>=0?'g':'r',g.pf>=0?'✅':'❌','<b>เลี้ยงครบรอบ '+g.n+' รอบ'+(g.win===g.n?' กำไรทุกรอบ':' กำไร '+g.win+' รอบ')+'</b> รวม '+(g.pf>=0?'+':'−')+'฿'+EX_M(Math.abs(g.pf))+' ล้าน · อายุเฉลี่ย '+Math.round(g.age/g.n)+' วัน']);
+    else L.push([g.pf>=0?'g':'r',g.pf>=0?'✅':'❌','<b>ปิดเพราะ'+k+' '+g.n+' รอบ</b> ขาดทุน '+g.loss+' รอบ รวม '+(g.pf>=0?'+':'−')+'฿'+EX_M(Math.abs(g.pf))+' ล้าน · อายุเฉลี่ย '+Math.round(g.age/g.n)+' วัน']);
+  });
+  const ms=Object.entries(d.mon).sort((a,b)=>a[1]-b[1]);
+  if(ms.length>=2){const lo=ms[0],hi=ms[ms.length-1];
+    L.push(['n','📅','ขาดทุนมากสุดเดือน '+HV_MONTHS_S[lo[0]-1]+' '+(lo[1]>=0?'+':'−')+'฿'+EX_M(Math.abs(lo[1]))+' ล้าน · กำไรมากสุดเดือน '+HV_MONTHS_S[hi[0]-1]+' '+(hi[1]>=0?'+':'−')+'฿'+EX_M(Math.abs(hi[1]))+' ล้าน']);}
+  return L;
+}
+function exYearBodyHtml(y,d,pdf){
+  const yBE=yearBE(parseInt(y));
+  const sg=v=>(v>=0?'+':'−')+EX_M(Math.abs(v));
+  const L=exYearInsights(d);
+  const bg={g:'#dcfce7',r:'#fee2e2',y:'#fef3c7',n:'#f1f3f5'};
+  const ins=L.map(([t,i,h])=>pdf?'<div style="background:'+bg[t]+';border-radius:5px;padding:6px 10px;font-size:var(--fs115);line-height:1.5">'+i+' '+h+'</div>':'<div class="exi '+t+'"><span>'+i+'</span><span>'+h+'</span></div>').join('');
+  const tbl=(head,rows)=>'<table class="tbl exy-t"><thead><tr>'+head.map((h,i)=>'<th'+(i?' style="text-align:right"':'')+'>'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map((c,i)=>'<td'+(i?' style="text-align:right"':'')+'>'+c+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
+  const pc=v=>'<b style="color:'+(v>=0?'var(--ok)':'var(--d)')+'">'+sg(v)+'</b>';
+  const reasons=['ปกติ / ครบรอบ','ขี้ขาว','ตัวแดง'].filter(k=>d.grp[k]).map(k=>{const g=d.grp[k];return[k,g.n,(g.kg/1000).toFixed(1),pc(g.pf)];});
+  const rk=r=>[r.p.name+' · '+(r.c.cropNum||'-'),fD(r.c.closeDate),pc(r.pf)];
+  const kpi='<div class="crx-sum"><div class="t">ปี '+yBE+' · ปิด '+d.rows.length+' รอบ · '+Math.round(d.t.kg).toLocaleString()+' กก.</div><div class="g">'
+    +'<div><b>'+EX_M(d.t.rev)+'</b><span>ล้าน รายได้</span></div><div><b>'+EX_M(d.t.cost)+'</b><span>ล้าน ต้นทุน</span></div>'
+    +'<div class="'+(d.t.pf<0?'neg':'')+'"><b>'+sg(d.t.pf)+'</b><span>ล้าน กำไร</span></div><div><b>'+d.win+' / '+d.loss+'</b><span>รอบกำไร / ขาดทุน</span></div></div></div>';
+  return kpi
+    +'<div class="'+(pdf?'':'card ')+'exy-box"><div class="exi-t">💡 ข้อสรุปปีนี้</div><div class="exy-ins">'+ins+'</div></div>'
+    +'<div class="'+(pdf?'':'card ')+'exy-box"><div class="exi-t">ตามสาเหตุที่ปิดบ่อ</div>'+tbl(['สาเหตุ','รอบ','ตัน','กำไร (ล้าน)'],reasons)+'</div>'
+    +'<div class="'+(pdf?'':'card ')+'exy-box"><div class="exi-t">กำไรมากสุด / ขาดทุนมากสุด</div>'+tbl(['บ่อ · รอบ','ปิด','กำไร (ล้าน)'],d.top.map(rk).concat([['⋯','','']]).concat(d.bot.map(rk)))+'</div>';
+}
+function renderExYear(){
+  const box=document.getElementById('ex-year-view');if(!box)return;
+  const ys=[...new Set(exYearRows('').map(r=>r.c.closeDate.slice(0,4)))].sort().reverse();
+  if(!ys.length){box.innerHTML='<p style="padding:20px;text-align:center">ยังไม่มีรอบที่ปิดแล้ว</p>';return;}
+  if(!_exYear||!ys.includes(_exYear))_exYear=ys[0];
+  const cnt=y=>exYearRows(y).length;
+  const d=exYearData(_exYear);
+  box.innerHTML='<div class="crx-chips">'+ys.map(y=>'<button class="crx-chip'+(y===_exYear?' on':'')+'" aria-pressed="'+(y===_exYear)+'" onclick="exSetYear(\''+y+'\')">ปี '+yearBE(parseInt(y))+' ('+cnt(y)+')</button>').join('')+'</div>'
+    +'<div class="exy-wrap">'+exYearBodyHtml(_exYear,d,false)+'</div>'
+    +'<div class="exy-btns"><button class="btn btn-p" id="ex-ypdf-btn" onclick="genYearPDF()">📄 PDF ทั้งปี (1 หน้า)</button><button class="btn btn-s" onclick="genYearPDF({share:true})">📤 ส่ง LINE / แชร์</button></div>';
+}
+// ── แปลง element เป็น PDF แล้ว "บันทึก" หรือ "แชร์" (Web Share API — มือถือส่งเข้า LINE ได้) ──
+//    แชร์ไม่ได้ (คอม/เบราว์เซอร์เก่า) = บันทึกไฟล์แทน
+async function exPdfOut(doc,name,share){
+  if(share){
+    try{
+      const file=new File([doc.output('blob')],name,{type:'application/pdf'});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return;}
+    }catch(e){if(e&&e.name==='AbortError')return;}
+  }
+  doc.save(name);
+}
+async function genYearPDF(opt){
+  const share=!!(opt&&opt.share);
+  const y=_exYear;if(!y)return;
+  const btn=document.getElementById('ex-ypdf-btn');const bt=btn?btn.innerHTML:'';
+  if(btn){btn.disabled=true;btn.innerHTML='⏳ กำลังสร้าง PDF...';}
+  const wrap=document.createElement('div');
+  try{
+    if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+    wrap.className='pdf-wrap exy-pdf';
+    wrap.innerHTML='<div style="background:#0f6e56;color:#fff;padding:12px 16px;text-align:center"><div style="font-size:calc(19px * var(--ui-scale));font-weight:700">ตะวันฟาร์ม — สรุปทั้งปี '+yearBE(parseInt(y))+'</div>'
+      +'<div style="font-size:var(--fs11);opacity:.85;margin-top:3px">สร้างเมื่อ: '+new Date().toLocaleDateString('th-TH')+'</div></div><div style="padding:14px;display:flex;flex-direction:column;gap:10px">'+exYearBodyHtml(y,exYearData(y),true)+'</div>';
+    wrap.style.cssText='position:fixed;left:-10000px;top:0;width:800px;background:#fff;color:#1e1e1e';
+    document.body.appendChild(wrap);
+    await new Promise(r=>setTimeout(r,60));
+    const canvas=await html2canvas(wrap,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+    const{jsPDF}=window.jspdf;const doc=new jsPDF({unit:'pt',format:'a4'});
+    const pw=doc.internal.pageSize.getWidth(),ph=doc.internal.pageSize.getHeight(),m=20;
+    let w=pw-m*2,h=canvas.height*(w/canvas.width);
+    if(h>ph-m*2){const k=(ph-m*2)/h;w*=k;h*=k;}   // หน้าเดียวเสมอ — ยาวเกินย่อให้พอดี
+    doc.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',(pw-w)/2,m,w,h);
+    await exPdfOut(doc,'TawanFarm_สรุปปี'+yearBE(parseInt(y))+'_'+today()+'.pdf',share);
+  }catch(e){alert('สร้าง PDF ไม่สำเร็จ: '+(e&&e.message||e));}
+  finally{wrap.remove();if(btn){btn.disabled=false;btn.innerHTML=bt;}}
+}
 function initExport(){
   populateAll();
   onExPondChange();
+  exModeBar();
+  if(_exMode==='year')renderExYear();
 }
 // เมื่อเปลี่ยนบ่อในการ์ด PDF ปิดบ่อ — โชว์ dropdown ประวัติรอบที่ปิดแล้ว (ถ้ามี) + preview
 function onExPondChange(){
@@ -17623,7 +17807,7 @@ function renderExPreview(){
   const idx=cropSel&&cropSel.value!==''?parseInt(cropSel.value):null;
   const s=getCloseSummary(p,idx);
   if(!s){if(exInfo)exInfo.innerHTML='';return;}
-  if(exInfo)exInfo.innerHTML=closeSummaryHtml(p,s,{compact:true});
+  if(exInfo)exInfo.innerHTML=(APP_ROLE==='admin'?closeInsightsHtml(p,s,false):'')+closeSummaryHtml(p,s,{compact:true});
   renderExChart(p);
 }
 // ══════ กางดูรายการสินค้าย่อยในการ์ดสรุปปิดบ่อ (พี่สั่งต่อจาก entry #264) ══════
@@ -17973,7 +18157,7 @@ function pdfCostBreakdownHtml(s){
     </div>
   </div>`;
 }
-async function genPDF(){
+async function genPDF(opt){
   const pid=document.getElementById('ex-pond').value;
   const ponds=pid==='all'?D.ponds:D.ponds.filter(p=>p.id===pid);
   if(!ponds.length){alert('ไม่มีข้อมูลบ่อ');return}
@@ -18029,6 +18213,7 @@ async function genPDF(){
           </div>
           <div style="padding:12px 20px">
             ${pdfKpiHtml(s)}
+            ${APP_ROLE==='admin'?closeInsightsHtml(p,s,true):''}
             ${pdfProdTradeGridHtml(s)}
             ${chartsHtml}
             ${pdfCostBreakdownHtml(s)}
@@ -18191,7 +18376,7 @@ async function genPDF(){
         first=false;
       }
     }
-    doc.save(`TawanFarm_ปิดบ่อ_${today()}.pdf`);
+    await exPdfOut(doc,`TawanFarm_ปิดบ่อ_${today()}.pdf`,!!(opt&&opt.share));   // แชร์ (#374) ไม่ได้ = บันทึกไฟล์
     pdfCharts.forEach(c=>c.destroy());
     wrap.remove();
     if(btn){btn.disabled=false;btn.innerHTML=btnTxt}
@@ -18482,7 +18667,7 @@ function renderCrops(){
         +'<div class="crx-note"><input type="text" class="fi" id="cnote-'+p.id+'-'+(c.id||i)+'" value="'+mpEsc(c.notes||'')+'" placeholder="สาเหตุปิดบ่อ / หมายเหตุ" aria-label="หมายเหตุรอบนี้">'
         +'<button type="button" class="btn" onclick="editCycleNote(\''+p.id+'\',\''+(c.id||'')+'\','+i+')">บันทึก</button></div>'
         +'<div class="crx-btns"><button type="button" class="btn btn-p" onclick="goCropDetail(\''+p.id+'\','+i+')">📊 ดูละเอียด</button>'
-        +'<button type="button" class="btn" onclick="goPdfForCrop(\''+p.id+'\','+i+')">📄 PDF</button>'
+        +(isAdmin?'<button type="button" class="btn" onclick="goPdfForCrop(\''+p.id+'\','+i+')">📄 PDF</button>':'')   // หน้า PDF = admin เท่านั้น (#374)
         +(isAdmin?'<button type="button" class="btn" onclick="openEditCropModal(\''+p.id+'\',\''+(c.id||'')+'\','+i+')">✏️ แก้ไข</button>'
           +'<button type="button" class="btn" onclick="deleteCropRecord(\''+p.id+'\',\''+(c.id||'')+'\','+i+')" aria-label="ลบรอบนี้">🗑️</button>':'')+'</div></div>';
     }
