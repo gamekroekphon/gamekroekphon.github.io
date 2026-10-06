@@ -1275,6 +1275,18 @@ body:not(.role-admin) .staff-only{display:revert}
 table.exy-t td,table.exy-t th{font-variant-numeric:tabular-nums}
 .exy-pdf .exy-box{border:1px solid #e6efe9;border-radius:6px;padding:8px 10px}
 .exy-pdf .crx-sum{margin-bottom:0}
+/* หน้าจับกุ้ง: ปุ่มลักษณะการจับ · ปุ่มแพ · ราคาอ้างอิง (#375) */
+#hv-live[hidden],#hv-buyer[hidden]{display:none!important}
+.hv-live-bar{margin-bottom:0}
+.hv-buyers{flex-wrap:wrap;overflow:visible;padding-bottom:0;margin-bottom:6px}
+.hv-buyers .crx-chip small{font-weight:400;font-size:calc(12px * var(--ui-scale));margin-left:3px}
+.hv-buyers .crx-chip.add{border-style:dashed}
+.hv-ref{background:var(--sf2);border-radius:12px;padding:9px 11px;display:flex;flex-direction:column;gap:5px}
+.hv-ref .t{font-weight:700;font-size:calc(13.5px * var(--ui-scale))}
+.hv-ref .r{display:flex;justify-content:space-between;gap:8px;font-size:calc(13.5px * var(--ui-scale))}
+.hv-cmp{border-radius:10px;padding:8px 11px;font-size:calc(13.5px * var(--ui-scale));font-weight:600}
+.hv-cmp.lo{background:var(--wb);color:var(--w)}.hv-cmp.ok{background:var(--ob);color:var(--ok)}
+.hv-diff.cut{color:var(--w);font-weight:700}
 .pv-bar{display:flex;gap:6px;background:var(--sf2);padding:4px;border-radius:12px;margin-bottom:12px}
 .pv-bar button{flex:1;border:none;background:none;border-radius:9px;min-height:44px;font-family:inherit;font-weight:700;font-size:calc(14px * var(--ui-scale));color:var(--tx);cursor:pointer}
 .pv-bar button.on{background:var(--sf);color:var(--pd);box-shadow:0 1px 3px rgba(0,0,0,.12)}
@@ -3796,17 +3808,22 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       <div id="hv-mode-note" style="display:none"></div>
       <div class="fgrid" style="grid-template-columns:1fr 1fr">
         <div class="fg"><label class="fl" for="hv-date">วันที่จับ</label><input type="date" class="fi" id="hv-date"></div>
-        <div class="fg"><label class="fl" for="hv-buyer">แพที่ทำการจับ</label><input type="text" class="fi" id="hv-buyer" placeholder="ชื่อแพ / บริษัท"></div>
-        <div class="fg"><label class="fl" for="hv-live">ลักษณะการจับ</label>
-          <select class="fi" id="hv-live">
+        <!-- ลักษณะการจับ = 2 ปุ่ม (#375) · select ซ่อนไว้เป็นตัวเก็บค่า (โค้ดบันทึก/แก้ไขอ่าน .value เหมือนเดิม) -->
+        <div class="fg"><label class="fl">ลักษณะการจับ</label><div class="pv-bar hv-live-bar" id="hv-live-btns"></div>
+          <select class="fi" id="hv-live" hidden>
             <option value="">-- เลือก --</option>
             <option value="กุ้งเป็น">จับกุ้งเป็น</option>
             <option value="กุ้งตาย">จับกุ้งตาย</option>
           </select>
         </div>
-        <div class="fg"><label class="fl" for="hv-size">ไซส์ (ตัว/กก.) <span style="color:var(--d)">*</span></label><input type="number" class="fi" id="hv-size" placeholder="60" step="1"><span class="hint">ใช้แปลง กก. → จำนวนตัว ถ้าไม่กรอก biomass/FCR/อัตรารอด จะเพี้ยน</span></div>
-        <div class="fg"><label class="fl" for="hv-weight">น้ำหนักรวม (กก.) <span style="color:var(--d)">*</span></label><input type="number" class="fi" id="hv-weight" placeholder="1000" step="0.1"></div>
+        <!-- แพ = ปุ่มเลือกจากที่เคยจับ (#375) · + แพใหม่ = ช่องพิมพ์ -->
+        <div class="fg" style="grid-column:1/-1"><label class="fl" for="hv-buyer">แพที่ทำการจับ</label><div class="crx-chips hv-buyers" id="hv-buyer-chips"></div>
+          <input type="text" class="fi" id="hv-buyer" placeholder="ชื่อแพใหม่" oninput="hvSyncPick(true)"></div>
+        <div class="fg"><label class="fl" for="hv-size">ไซส์ (ตัว/กก.) <span style="color:var(--d)">*</span></label><input type="number" class="fi" id="hv-size" placeholder="60" step="1" oninput="hvRef()"><span class="hint">ใช้แปลง กก. → จำนวนตัว ถ้าไม่กรอก biomass/FCR/อัตรารอด จะเพี้ยน</span></div>
+        <div class="fg"><label class="fl" for="hv-weight">น้ำหนักรวม (กก.) <span style="color:var(--d)">*</span></label><input type="number" class="fi" id="hv-weight" placeholder="1000" step="0.1" oninput="hvCalcSum()"></div>
+        <div id="hv-ref" style="grid-column:1/-1"></div>
         <div class="fg"><label class="fl" for="hv-price">ราคากุ้งปกติ (บาท/กก.)</label><input type="number" class="fi" id="hv-price" placeholder="120" step="0.5" oninput="hvCalcSum()"><span class="hint">ใช้เป็นตัวช่วยบวกเฉยๆ — ยอดจริงกรอกในช่องด้านล่าง</span></div>
+        <div id="hv-cmp" style="grid-column:1/-1"></div>
       </div>
       <div style="margin-top:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:4px">
@@ -6958,7 +6975,7 @@ function hsHarvestRows(){
     const y=parseInt(String(date).slice(0,4));if(isNaN(y))return false;
     rows.push({pondId:p.id,pond:p.name||'',date:String(date).slice(0,10),y:yearBE(y)-2500,m:parseInt(String(date).slice(5,7))||0,type,
       age:start?docAge(start,date):null,size:parseFloat(r.size)||0,price:parseFloat(r.price)||0,
-      buyer:String(r.buyer||'').trim(),kg,baht:baht||0});
+      buyer:buyerName(r.buyer),kg,baht:baht||0});   // ชื่อสะกดต่างรวมเป็นชื่อเดียว (#375)
     return true;
   };
   (D.ponds||[]).forEach(p=>{
@@ -20071,6 +20088,7 @@ function initHarvest(){
   const dEl=document.getElementById('hv-date');if(dEl&&!dEl.value)dEl.value=today();
   renderHvJobs();
   renderPartialList();renderHvRoundStrip();
+  hvSyncPick();hvRef();   // ปุ่มลักษณะการจับ/แพ + ราคาอ้างอิง (#375)
 }
 function onHvPondChange(){renderPartialList();renderHvRoundStrip();hvApplyMode(hvMode()==='ปิดรอบ');}
 // ── แถบสรุปรอบปัจจุบันของบ่อที่เลือก — เห็นก่อนตัดสินใจจับ ไม่ต้องสลับหน้า (ต้นทุนสะสมโชว์เฉพาะ admin) ──
@@ -20173,6 +20191,49 @@ function openCropModalFromHarvest(){
 // ══════ กุ้งเกรดพิเศษ + ยอดเงินกรอกเอง (ใช้ทั้งพาเชียลและปิดบ่อ) ══════
 const HV_GRADE_PRESET=['กุ้งนิ่ม','กุ้งเสีย','กุ้งผอม','กุ้ง 9 ซม.','กุ้งแตกไซส์'];
 let _hvGrades=[];   // แถวเกรดพิเศษที่กำลังกรอกอยู่ในฟอร์มพาเชียล
+// ══════ หน้าจับกุ้ง: ปุ่มลักษณะการจับ · ปุ่มแพ · ราคาอ้างอิงตามไซส์ (entry #375 พี่สั่ง 6 ต.ค. 69) ══════
+//    ⚠️ ค่าจริงยังอยู่ใน #hv-live (select ซ่อน) และ #hv-buyer (input) — ทุกทางที่เซ็ต/ล้างค่าเรียก hvRenderGrades() → hvSyncPick() ตามมาเอง
+//    ⚠️ ชื่อแพสะกดต่างในข้อมูลเก่า รวมด้วย BUYER_ALIAS ตอนแสดง/สรุป (hsHarvestRows) — ห้ามแก้ข้อมูลเดิม
+const BUYER_ALIAS={'สุทธิ์รัตน์':'สุทธิรัตน์'};
+function buyerName(b){const s=String(b||'').trim();return BUYER_ALIAS[s]||s;}
+let _hvNewBuyer=false;
+function hvBuyerList(){
+  const c={};hsHarvestRows().forEach(r=>{if(r.buyer)c[r.buyer]=(c[r.buyer]||0)+1;});
+  return Object.entries(c).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'th'));
+}
+function hvSyncPick(typing){
+  const live=document.getElementById('hv-live'),lb=document.getElementById('hv-live-btns');
+  if(live&&lb)lb.innerHTML=[['กุ้งเป็น','🦐 กุ้งเป็น'],['กุ้งตาย','❄️ กุ้งตาย']].map(([k,l])=>
+    '<button type="button" class="'+(live.value===k?'on':'')+'" aria-pressed="'+(live.value===k)+'" onclick="hvPickLive(\''+k+'\')">'+l+'</button>').join('');
+  const inp=document.getElementById('hv-buyer'),bc=document.getElementById('hv-buyer-chips');
+  if(!inp||!bc)return;
+  const list=hvBuyerList(),v=buyerName(inp.value);
+  const known=list.some(([b])=>b===v);
+  if(!typing&&v&&!known)_hvNewBuyer=true;
+  bc.innerHTML=list.map(([b,n])=>'<button type="button" class="crx-chip'+(v===b&&!_hvNewBuyer?' on':'')+'" onclick="hvPickBuyer('+list.findIndex(x=>x[0]===b)+')">'+mpEsc(b)+'<small>'+n+'</small></button>').join('')
+    +'<button type="button" class="crx-chip add'+(_hvNewBuyer?' on':'')+'" onclick="hvPickBuyer(-1)">+ แพใหม่</button>';
+  inp.hidden=!_hvNewBuyer;
+}
+function hvPickLive(k){const s=document.getElementById('hv-live');if(!s)return;s.value=s.value===k?'':k;hvSyncPick();}
+function hvPickBuyer(i){
+  const inp=document.getElementById('hv-buyer');if(!inp)return;
+  if(i<0){_hvNewBuyer=true;if(hvBuyerList().some(([b])=>b===buyerName(inp.value)))inp.value='';hvSyncPick(true);inp.focus();return;}
+  const b=hvBuyerList()[i];if(!b)return;
+  _hvNewBuyer=false;inp.value=inp.value===b[0]?'':b[0];hvSyncPick(true);
+}
+// ราคาอ้างอิง: 3 ครั้งล่าสุดที่ไซส์ใกล้กัน (±2) · เทียบราคาที่กรอก (ต่ำกว่าเกิน 5% = ส้ม · เตือนเฉยๆ ไม่บล็อก) · admin เท่านั้น
+function hvRef(){
+  const ref=document.getElementById('hv-ref'),cmp=document.getElementById('hv-cmp');if(!ref||!cmp)return;
+  const s=parseFloat(document.getElementById('hv-size')?.value),p=parseFloat(document.getElementById('hv-price')?.value);
+  if(APP_ROLE!=='admin'||!(s>0)){ref.innerHTML='';cmp.innerHTML='';return;}
+  const near=hsHarvestRows().filter(r=>r.size>0&&r.price>0&&Math.abs(r.size-s)<=2).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,3);
+  if(!near.length){ref.innerHTML='<div class="hv-ref"><div class="t">ยังไม่เคยขายไซส์ '+s+' ±2</div></div>';cmp.innerHTML='';return;}
+  ref.innerHTML='<div class="hv-ref"><div class="t">💲 ราคาล่าสุด ไซส์ใกล้ '+s+'</div>'+near.map(r=>'<div class="r"><span>'+fD(r.date)+' · ไซส์ '+r.size+'</span><span><b>฿'+r.price+'</b> · '+mpEsc(r.buyer||'-')+'</span></div>').join('')+'</div>';
+  if(!(p>0)){cmp.innerHTML='';return;}
+  const last=near[0].price,diff=(p-last)/last*100;
+  cmp.innerHTML=diff<-5?'<div class="hv-cmp lo">⚠️ ต่ำกว่าล่าสุด ฿'+last+' อยู่ '+Math.abs(diff).toFixed(0)+'% (฿'+(+(last-p).toFixed(2))+'/กก.)</div>'
+    :'<div class="hv-cmp ok">✓ '+(diff>=0?'สูงกว่า':'ใกล้')+'ล่าสุด ฿'+last+' ('+(diff>=0?'+':'')+diff.toFixed(0)+'%)</div>';
+}
 function hvRenderGrades(){
   const el=document.getElementById('hv-grades');if(!el)return;
   el.innerHTML=_hvGrades.map((g,i)=>
@@ -20184,6 +20245,7 @@ function hvRenderGrades(){
     '</div>').join('')+
     '<datalist id="hv-gr-preset">'+HV_GRADE_PRESET.map(p=>'<option value="'+p+'">').join('')+'</datalist>';
   hvCalcSum();
+  _hvNewBuyer=false;hvSyncPick();   // ทุกทางที่ตั้ง/ล้างค่าฟอร์มผ่านตรงนี้ (#375)
 }
 // fieldIdx: 0=ชนิด 1=น้ำหนัก 2=ราคา — ใช้เลขแทนชื่อ field เพราะ inline onclick ที่ต้องใส่ quote ซ้อนในสตริงพังง่าย
 function hvSetGrade(i,fieldIdx,v){
@@ -20196,6 +20258,7 @@ function hvAddGrade(){_hvGrades.push({n:'',kg:0,pr:0});hvRenderGrades();}
 function hvCleanGrades(){return _hvGrades.filter(g=>(parseFloat(g.kg)||0)>0).map(g=>({n:(g.n||'').trim()||'ไม่ระบุ',kg:parseFloat(g.kg)||0,pr:parseFloat(g.pr)||0}));}
 // ── ตัวช่วยบวก: โชว์ผลรวมให้เทียบ แต่ไม่เขียนทับช่องยอดเงินที่ผู้ใช้กรอกเอง ──
 function hvCalcSum(){
+  hvRef();
   const gv=id=>parseFloat(document.getElementById(id)?.value)||0;
   const grKg=_hvGrades.reduce((s,g)=>s+(parseFloat(g.kg)||0),0);
   const grBaht=_hvGrades.reduce((s,g)=>s+((parseFloat(g.kg)||0)*(parseFloat(g.pr)||0)),0);
@@ -20208,8 +20271,12 @@ function hvCalcSum(){
   if(!dEl)return;
   if(!amtEl||!amtEl.value.trim()){dEl.innerHTML='<span class="hv-diff no">ยังไม่กรอกยอดเงิน</span>';return;}
   const amt=parseFloat(amtEl.value)||0,diff=amt-all;
+  const kgAll=gv('hv-weight')+grKg;
+  // หน้างานแพหัก % ต่างๆ — ไม่ต้องกรอกรายละเอียด บอกแค่ว่าหักไปเท่าไร (#375)
   dEl.innerHTML=Math.abs(diff)<1
     ?'<span class="hv-diff ok">✓ ตรงกับที่คำนวณ</span>'
+    :diff<0&&all>0
+    ?'<span class="hv-diff cut">หักไป '+Math.round(-diff).toLocaleString()+' บ. ('+(-diff/all*100).toFixed(1)+'%)'+(kgAll>0?' · เฉลี่ยได้ ฿'+(amt/kgAll).toFixed(2)+'/กก.':'')+'</span>'
     :'<span class="hv-diff no">ต่างจากที่คำนวณ '+(diff>0?'+':'')+Math.round(diff).toLocaleString()+' บ.</span>';
 }
 function hvUseCalc(){
