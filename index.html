@@ -1266,6 +1266,7 @@ body:not(.role-admin) .staff-only{display:revert}
 .pv-bar button{flex:1;border:none;background:none;border-radius:9px;min-height:44px;font-family:inherit;font-weight:700;font-size:calc(14px * var(--ui-scale));color:var(--tx);cursor:pointer}
 .pv-bar button.on{background:var(--sf);color:var(--pd);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .pv-badge{font-size:calc(11px * var(--ui-scale));background:var(--wb);color:var(--w);border-radius:99px;padding:1px 6px}
+#palmp-fund[data-fhv="buy"]>[data-fh="sell"],#palmp-fund[data-fhv="sell"]>[data-fh="buy"]{display:none!important}
 .stock-pane[data-pvv="form"]>[data-pv]:not([data-pv="form"]),.stock-pane[data-pvv="hist"]>[data-pv]:not([data-pv="hist"]),.stock-pane[data-pvv="ov"]>[data-pv]:not([data-pv="ov"]){display:none!important}
 .fund-pend-card{border:1.5px solid #F5C99B;background:var(--wb)}
 .fund-pend-row{display:grid;grid-template-columns:minmax(0,1fr) 110px auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid #F5C99B}
@@ -3002,11 +3003,13 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
         <div id="sk-msg-fundnav"></div>
       </div>
     </div>
-    <div class="card" style="margin-bottom:12px" data-pv="hist">
+    <!-- ปุ่มสลับ ซื้อ/ขาย (#372) — เดิมสองการ์ดเรียงกัน ต้องเลื่อนผ่านประวัติซื้อทั้งหมดถึงจะเห็นขาย -->
+    <div class="pv-bar" id="fh-bar" data-pv="hist" style="margin-bottom:12px"></div>
+    <div class="card" style="margin-bottom:12px" data-pv="hist" data-fh="buy">
       <div class="card-t">📋 ประวัติการซื้อ</div>
       <div id="fund-buy-table"></div>
     </div>
-    <div class="card" style="margin-bottom:12px" data-pv="hist">
+    <div class="card" style="margin-bottom:12px" data-pv="hist" data-fh="sell">
       <div class="card-t">📋 ประวัติการขาย</div>
       <div id="fund-sell-table"></div>
     </div>
@@ -12602,6 +12605,19 @@ function initPalm(){
 const PALM_PV={money:[['form','📝 บันทึก'],['hist','📋 ประวัติ']],fert:[['form','📝 บันทึก'],['hist','📋 ประวัติ']],
   fund:[['ov','📊 ภาพรวม'],['form','📝 บันทึก'],['hist','📋 ประวัติ']]};
 const _palmPv={money:'form',fert:'form',fund:'ov'};
+// ── ประวัติกองทุน: ดูทีละอย่าง ซื้อ/ขาย (#372) · จำต่อเครื่อง ──
+let _fundHist=(()=>{try{return localStorage.getItem('tf_fund_hist')==='sell'?'sell':'buy';}catch(e){return'buy';}})();
+function fundHistBar(nBuy,nSell){
+  const pane=document.getElementById('palmp-fund'),bar=document.getElementById('fh-bar');if(!pane||!bar)return;
+  pane.dataset.fhv=_fundHist;
+  bar.innerHTML=[['buy','🛒 ซื้อ',nBuy],['sell','💰 ขาย',nSell]].map(([k,l,n])=>
+    '<button type="button" class="'+(_fundHist===k?'on':'')+'" aria-pressed="'+(_fundHist===k)+'" onclick="fundHistSet(\''+k+'\')">'+l+' ('+n+')</button>').join('');
+}
+function fundHistSet(k){
+  _fundHist=k;try{localStorage.setItem('tf_fund_hist',k);}catch(e){}
+  const pane=document.getElementById('palmp-fund');if(pane)pane.dataset.fhv=k;
+  document.querySelectorAll('#fh-bar button').forEach((b,i)=>{const on=(i===0)===(k==='buy');b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);});
+}
 function palmPv(pane,v){
   if(v)_palmPv[pane]=v;
   const p=document.getElementById('palmp-'+pane),bar=document.getElementById('pvb-'+pane);if(!p||!bar)return;
@@ -13720,6 +13736,7 @@ function renderFundPane(){
       rs=>'<b class="nt">'+B(rs.reduce((s,b)=>s+(b.amount||0),0))+'</b>','fbuy'+_fundSel,8);
   }
 
+  fundHistBar(buys.length,sells.length);
   const sellTbl=document.getElementById('fund-sell-table');
   if(!sells.length){sellTbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ยังไม่มีประวัติการขาย — บันทึกได้ที่ฟอร์ม "บันทึกการขายกองทุน" ด้านบน</p>';}
   else{
