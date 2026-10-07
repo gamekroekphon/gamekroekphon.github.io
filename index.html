@@ -9993,9 +9993,12 @@ function shopUseRate(){
   Object.keys(su).forEach(id=>u[id]=(u[id]||0)+su[id]/SHOP_RATE_DAYS);
   return u;
 }
+// อาหารกุ้งไม่ขึ้นในหน้าบุญชู (entry #380 พี่สั่ง) — คนฟาร์มนับ/เบิกเอง และเบอร์เปลี่ยนตามกุ้งโต (เบอร์เล็กหยุดกิน ย้ายไปเบอร์ใหญ่) เตือนสั่งตามอัตราใช้ 14 วันจะผิด
+//    ยังเตือนที่หน้าสต็อกฟาร์ม + แจ้ง LINE ตอนหมดเหมือนเดิม
+function shopSkip(i){return i.category==='feed'&&!(shopQ(i)>=1);}
 function shopRows(){
   const rate=shopUseRate();
-  return(D.inventoryItems||[]).filter(i=>i&&i.id).map(i=>{
+  return(D.inventoryItems||[]).filter(i=>i&&i.id&&!shopSkip(i)).map(i=>{
     const r=rate[i.id]||0,farm=parseFloat(i.qty)||0,shop=shopQ(i),lead=shopLead(i);
     const fd=r>0?farm/r:null,td=r>0?(farm+shop)/r:null;
     const need=r>0&&td<=lead+SHOP_SAFETY,move=r>0&&fd<=SHOP_FARM_LOW&&shop>=1;
@@ -10069,7 +10072,7 @@ function renderShop(){
       +'</tbody></table></div></div>';
   }else if(_shopView==='count'){
     const q=_shopQ.trim().toLowerCase();
-    const items=(D.inventoryItems||[]).filter(i=>i&&i.id&&(!q||String(i.name).toLowerCase().includes(q)));
+    const items=(D.inventoryItems||[]).filter(i=>i&&i.id&&!shopSkip(i)&&(!q||String(i.name).toLowerCase().includes(q)));
     const by={};items.forEach(i=>{(by[i.companyId||'']=by[i.companyId||'']||[]).push(i);});
     const nChg=Object.keys(_shopCount).length;
     s+='<div class="card"><input class="fi" placeholder="🔍 ค้นหาสินค้า" value="'+mpEsc(_shopQ)+'" oninput="_shopQ=this.value;renderShopCountList()" style="margin-bottom:8px"><div id="shop-count-list"></div>'
@@ -10094,7 +10097,7 @@ function renderShop(){
 function renderShopCountList(){
   const el=document.getElementById('shop-count-list');if(!el)return;
   const q=_shopQ.trim().toLowerCase();
-  const items=(D.inventoryItems||[]).filter(i=>i&&i.id&&(!q||String(i.name).toLowerCase().includes(q)));
+  const items=(D.inventoryItems||[]).filter(i=>i&&i.id&&!shopSkip(i)&&(!q||String(i.name).toLowerCase().includes(q)));
   const by={};items.forEach(i=>{(by[i.companyId||'']=by[i.companyId||'']||[]).push(i);});
   const order=prCompanies().map(c=>c.id).concat(['']);
   el.innerHTML=order.filter(k=>by[k]).map(k=>'<div class="shp-co"><span>'+mpEsc(prCoName(k)||'ยังไม่ระบุบริษัท')+'</span></div>'
