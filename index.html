@@ -6218,9 +6218,20 @@ function wqRuleStd(key){
   if(r.hi!=null)a.push('เกิน '+r.hi+' = สูงมาก');
   return a.join(' · ');
 }
+// ── Ca:Mg (entry #387 พี่สั่ง 7 ต.ค. 69): ความเค็ม ≥20 และมีทั้ง Ca + Mg → ดูสัดส่วน Mg÷Ca แทนช่วงตามความเค็ม
+//    1:2.5–1:3.5 = เขียว · หลุดช่วง = เหลือง (ไม่แดง) · ขาดค่าใดค่าหนึ่ง/เค็ม <20 = ช่วงตามความเค็มเดิม
+//    (ช่วงเดิมคิดจากน้ำทะเลตามสัดส่วน — ข้อมูลจริง 619/620 ช่องเป็นแดง ทั้งที่สัดส่วนกลาง 1:3.26)
+const CAMG_SAL_MIN=20,CAMG_LO=2.5,CAMG_HI=3.5;
+function camgRatio(rec){
+  if(!rec)return null;const s=parseFloat(rec.sal),ca=parseFloat(rec.ca),mg=parseFloat(rec.mg_);
+  if(!(s>=CAMG_SAL_MIN)||!(ca>0)||!(mg>0))return null;
+  return Math.round(mg/ca*100)/100;
+}
+function camgOk(r){return r>=CAMG_LO&&r<=CAMG_HI;}
 function st(key,v,rec){
   if(v===null||v===undefined||v==='')return'na';
   if(WQ_RULE[key])return wqRule(key,v);
+  if(key==='mg_'||key==='ca'){const r=camgRatio(rec);if(r!=null)return camgOk(r)?'ok':'warn';}
   if((key==='mg_'||key==='ca')&&rec&&rec.sal!=null&&rec.sal!==''){
     const mr=mineralRangeAtSalinity(rec.sal);
     if(mr){
@@ -13957,14 +13968,19 @@ function wqgSetDate(d){
   const ep=document.getElementById('ep-date');if(ep){ep.value=d;syncDateHint(ep);}
   renderWqGrid();renderEpChips();checkExistingWQ();
 }
-function wqgRange(p){if(!p)return'';if(WQ_RULE[p.key]){const r=WQ_RULE[p.key];return r.lo!=null?'≥ '+r.lo:r.hiD!=null?'≤ '+r.hiD:'≤ '+r.hi;}const n=v=>String(v).replace(/\.0+$/,'');return p.inv?'< '+n(p.max):n(p.min)+'–'+n(p.max);}
+function wqgRange(p){if(!p)return'';if(p.key==='ca')return'คู่กับ Mg';if(p.key==='mg_')return'Ca 1:2.5–3.5';if(WQ_RULE[p.key]){const r=WQ_RULE[p.key];return r.lo!=null?'≥ '+r.lo:r.hiD!=null?'≤ '+r.hiD:'≤ '+r.hi;}const n=v=>String(v).replace(/\.0+$/,'');return p.inv?'< '+n(p.max):n(p.min)+'–'+n(p.max);}
 // sal = ความเค็มของแถวนี้ (ที่พิมพ์ค้างใน _wqDraft ก่อน ไม่มีค่อยใช้ที่บันทึกไว้) — เกณฑ์ Mg/Ca ขึ้นกับความเค็ม
 //   เดิมอ่านแค่ rec.sal → ตอนพิมพ์สีคิดแบบไม่รู้ความเค็ม กดบันทึกแล้วสีเปลี่ยนเอง (แก้ entry #357)
 function wqgSalOf(pid,rec){const dr=_wqDraft[pid];const s=dr&&'sal' in dr?String(dr.sal).trim().replace(',','.'):'';if(s!==''){const v=parseFloat(s);return isNaN(v)?null:v;}return rec&&rec.sal!=null?rec.sal:null;}
-function wqgCls(k,raw,rec,sal){
+function wqgCls(k,raw,rec,sal,pid){
   if(raw===''||raw==null)return'';
   const v=parseFloat(raw);if(isNaN(v))return' wqg-bad';
-  const s=(k==='mg_'||k==='ca')?st(k,v,{sal:sal!==undefined?sal:(rec&&rec.sal)}):st(k,v);
+  let s;
+  if(k==='mg_'||k==='ca'){   // Ca:Mg ต้องรู้ค่าอีกตัวในแถวเดียวกัน (พิมพ์ค้างใน draft ก่อน ไม่มีค่อยใช้ที่บันทึก) — #387
+    const o={sal:sal!==undefined?sal:(rec&&rec.sal)},dr=(pid&&_wqDraft[pid])||{};
+    ['ca','mg_'].forEach(x=>{const r=x===k?raw:(x in dr?dr[x]:(rec&&rec[x]!=null?rec[x]:''));o[x]=r===''||r==null?null:parseFloat(String(r).replace(',','.'));});
+    s=st(k,v,o);
+  }else s=st(k,v);
   return s==='danger'?' wqg-bad':s==='warn'?' wqg-warn':' wqg-ok';
 }
 function renderWqGrid(){
@@ -13987,7 +14003,7 @@ function renderWqGrid(){
         +'<small>'+(age>0?age+' วัน':'')+'</small>'+(ref?'<small>'+ref+'</small>':'')+'</div>'
         +'<button type="button" class="wqg-note'+(rec&&rec.notes?' has':'')+'" onclick="wqgNote(\''+p.id+'\')" aria-label="หมายเหตุ บ่อ '+mpEsc(p.name)+'"'+(rec&&rec.notes?' title="'+mpEsc(rec.notes)+'"':'')+'>'+wqcBtnFace(rec&&rec.notes)+'</button></div></td>'
       +WQG_KEYS.map(k=>{const raw=k in dr?dr[k]:(rec&&rec[k]!=null?String(rec[k]):'');
-        return '<td class="'+grpOf(k)+'"><input class="wqg-in'+wqgCls(k,raw,rec,wqgSalOf(p.id,rec))+'" data-k="'+k+'" value="'+mpEsc(raw)+'" inputmode="decimal" enterkeyhint="next" autocomplete="off" aria-label="'+mpEsc(p.name)+' '+mpEsc((P(k)||{}).lbl||k)+'"></td>';}).join('')
+        return '<td class="'+grpOf(k)+'"><input class="wqg-in'+wqgCls(k,raw,rec,wqgSalOf(p.id,rec),p.id)+'" data-k="'+k+'" value="'+mpEsc(raw)+'" inputmode="decimal" enterkeyhint="next" autocomplete="off" aria-label="'+mpEsc(p.name)+' '+mpEsc((P(k)||{}).lbl||k)+'"></td>';}).join('')
       +'<td class="wqg-ck">'+(dr&&Object.keys(dr).length?'<span class="wqg-dirty">●</span>':rec?'✓':'')+'</td></tr>';
   }).join('')+'</tbody>';
   tbl.innerHTML=html;
@@ -14106,8 +14122,8 @@ document.addEventListener('input',e=>{
   (_wqDraft[pid]=_wqDraft[pid]||{})[k]=i.value;_wqDraftDate=wqgDate();
   const p=pond(pid),rec=p&&(p.records||[]).find(r=>r.date===_wqDraftDate);
   const sal=wqgSalOf(pid,rec);
-  i.className='wqg-in'+wqgCls(k,i.value,rec,sal);
-  if(k==='sal')tr.querySelectorAll('.wqg-in[data-k="mg_"],.wqg-in[data-k="ca"]').forEach(x=>{x.className='wqg-in'+wqgCls(x.dataset.k,x.value,rec,sal);});   // ความเค็มเปลี่ยน → Mg/Ca ระบายสีใหม่ทันที
+  i.className='wqg-in'+wqgCls(k,i.value,rec,sal,pid);
+  if(k==='sal'||k==='ca'||k==='mg_')tr.querySelectorAll('.wqg-in[data-k="mg_"],.wqg-in[data-k="ca"]').forEach(x=>{x.className='wqg-in'+wqgCls(x.dataset.k,x.value,rec,sal,pid);});   // ความเค็ม/Ca/Mg เปลี่ยน → ระบายสีคู่ใหม่ทันที   // ความเค็มเปลี่ยน → Mg/Ca ระบายสีใหม่ทันที
   const ck=tr.querySelector('.wqg-ck');if(ck)ck.innerHTML='<span class="wqg-dirty">●</span>';
   wqgProg();
 });
@@ -14236,9 +14252,12 @@ function onFI(key,inp){
   const mr=sal!=null?mineralRangeAtSalinity(sal):null;
   const dyn=mr?(key==='mg_'?mr.mg:mr.ca):null;
   if(v===null){inp.className='fi';if(std){std.textContent=stdText(p,dyn);std.className='lbl-std'}return}
-  const s=isMineral?st(key,v,{sal}):st(key,v);
+  const fv=k=>{const e=document.getElementById('ef-'+k);const x=e&&e.value!==''?parseFloat(e.value):null;return x!=null&&!isNaN(x)?x:null;};
+  const mrec=isMineral?{sal,ca:fv('ca'),mg_:fv('mg_')}:null,cr=isMineral?camgRatio(mrec):null;
+  const s=isMineral?st(key,v,mrec):st(key,v);
   inp.className='fi'+(s!=='na'?' fi-'+s:'');
-  if(std){
+  if(std&&cr!=null){std.textContent='ดี Ca:Mg 1:'+CAMG_LO+'–1:'+CAMG_HI+' · ตอนนี้ 1:'+cr;std.className=camgOk(cr)?'lbl-std':'lbl-std-warn';}
+  else if(std){
     // ข้อ3: คงป้ายช่วงเกณฑ์ปกติให้เห็นเสมอ ต่อท้ายด้วยคำเตือนถ้ามี — ไม่ให้ป้ายเกณฑ์หายไปตอนเตือน
     if(s==='warn'||s==='danger'){std.textContent=`${stdText(p,dyn)} · ${fiWarnMsg(p,v,dyn)}`;std.className='lbl-std-'+s}
     else{std.textContent=stdText(p,dyn);std.className='lbl-std'}
@@ -14247,6 +14266,7 @@ function onFI(key,inp){
   if(key==='sal'){
     ['mg_','ca'].forEach(k=>{const e=document.getElementById('ef-'+k);if(e&&e.value!=='')onFI(k,e);});
   }
+  if(isMineral){const o=key==='ca'?'mg_':'ca',e=document.getElementById('ef-'+o);if(e&&e.value!==''&&!onFI._in){onFI._in=1;try{onFI(o,e);}finally{onFI._in=0;}}}   // #387 คู่ Ca/Mg ระบายสีตามกัน
 }
 function saveWQ(){
   const pid=document.getElementById('ep-pond').value,d=document.getElementById('ep-date').value;
