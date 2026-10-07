@@ -1313,6 +1313,11 @@ table.exy-t td,table.exy-t th{font-variant-numeric:tabular-nums}
 .stk-dead summary{font-weight:700;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:8px}
 .stk-dead .r{display:flex;justify-content:space-between;gap:8px;font-size:calc(13.5px * var(--ui-scale));padding:6px 0;border-top:1px solid var(--sf2)}
 .stk-dead small{display:block;font-size:calc(12px * var(--ui-scale))}
+.sk-useon{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--bd);border-radius:12px;padding:10px;cursor:pointer;margin:4px 0}
+.sk-useon input{width:22px;height:22px;flex:none;margin-top:2px}
+.sk-useon small{font-size:calc(12.5px * var(--ui-scale))}
+.sk-cart-name .sk-useon-tag{display:block;width:fit-content;margin-top:2px}
+.sk-useon-tag{display:inline-block;background:var(--wb);color:var(--w);border-radius:99px;padding:0 8px;font-size:calc(11.5px * var(--ui-scale));font-weight:700}
 .pv-bar{display:flex;gap:6px;background:var(--sf2);padding:4px;border-radius:12px;margin-bottom:12px}
 .pv-bar button{flex:1;border:none;background:none;border-radius:9px;min-height:44px;font-family:inherit;font-weight:700;font-size:calc(14px * var(--ui-scale));color:var(--tx);cursor:pointer}
 .pv-bar button.on{background:var(--sf);color:var(--pd);box-shadow:0 1px 3px rgba(0,0,0,.12)}
@@ -4457,6 +4462,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
         <span class="lbl-std">โชว์ตอนเบิก</span></div>
       <div class="fg"><label class="fl" for="sk-potency">ความเข้มข้น <span style="font-weight:400;color:var(--tx3)">(จุลินทรีย์/ยา)</span></label><input class="fi" id="sk-potency" placeholder="เช่น 1x10^9 CFU/g · 5x10^8 CFU/mL"><span class="lbl-std">พิมพ์ <code>10^9</code> ระบบจะแสดงเป็น 10⁹ ให้เอง</span></div>
       <div class="fg"><label class="fl" for="sk-note-item">ผู้จำหน่าย/หมายเหตุ</label><input class="fi" id="sk-note-item" placeholder="—"></div>
+      <label class="sk-useon" for="sk-use-arrival"><input type="checkbox" id="sk-use-arrival"><span><b>เข้าฟาร์มแล้วใช้เลย</b><br><small>ไม่เก็บสต็อกฟาร์ม · นับเป็นของใช้รวมทุกบ่อ</small></span></label>
       <div style="display:flex;gap:8px;margin-top:4px">
         <button onclick="saveStockItem()">💾 บันทึกรายการ</button>
         <button onclick="clearStockItem()" style="background:var(--sf2);color:var(--tx2)">ล้างฟอร์ม</button>
@@ -7982,6 +7988,7 @@ function renderPondDetail(id){
     let pdSharedCost=0,pdFuelCost=0;
     const pdSharedCatItems={},pdFuelCatItems={};
     pdSharedItems.forEach(l=>{
+      if(l.noCost)return;   // อุปกรณ์จากสต็อกที่ไม่คิดเงิน (#377) — 0 บาท ไม่ต้องขึ้นแถว
       const ac=activePondCountOnDate(l.date)||1;
       const share=((l.qty||0)*(l.unitCost||0))/ac;
       const isFuel=l.category==='fuel';
@@ -10967,7 +10974,8 @@ function saveStockItem(){
     minQty:parseFloat(document.getElementById('sk-min').value)||0,
     note:document.getElementById('sk-note-item').value.trim(),
     props:((document.getElementById('sk-props')||{}).value||'').trim(),
-    potency:((document.getElementById('sk-potency')||{}).value||'').trim()
+    potency:((document.getElementById('sk-potency')||{}).value||'').trim(),
+    useOnArrival:!!document.getElementById('sk-use-arrival')?.checked   // #377 — เก็บค่าที่ติ๊กจริง (true/false) ทับค่าเริ่มต้นตามชื่อ
   };
   if(!D.inventoryItems)D.inventoryItems=[];
   const idx=D.inventoryItems.findIndex(i=>i.id===id);
@@ -10982,6 +10990,7 @@ function saveStockItem(){
 
 function clearStockItem(){
   ['sk-name','sk-unit','sk-price','sk-qty','sk-min','sk-note-item','sk-props','sk-potency'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';delete el.dataset.editId;}});
+  {const e=document.getElementById('sk-use-arrival');if(e)e.checked=false;}
   document.getElementById('sk-cat').value='feed';
   showStockMsg('item','','');
 }
@@ -10998,6 +11007,7 @@ function editStockItem(id){
   document.getElementById('sk-note-item').value=item.note||'';
   {const e=document.getElementById('sk-props');if(e)e.value=item.props||'';}
   {const e=document.getElementById('sk-potency');if(e)e.value=item.potency||'';}
+  {const e=document.getElementById('sk-use-arrival');if(e)e.checked=itemUseOnArrival(item);}
   stockTab('newitem',document.getElementById('skb-newitem'));   // ฟอร์มย้ายมาแท็บนี้แล้ว (entry #307)
   document.getElementById('sk-name').focus();
   document.getElementById('sk-name').scrollIntoView({behavior:'smooth',block:'center'});
@@ -11194,7 +11204,7 @@ function renderExtHist(){
         return '<div class="ext-hi"><div class="dt"><b>'+d.getDate()+'</b>'+d.toLocaleDateString('th-TH',{month:'short'})+'</div>'+
           '<div class="bd"><div class="nm">'+escHtml(l.itemName||'-')+'</div><div class="mt"><span class="ext-src '+(st?'s':'b')+'">'+(st?'สต็อก':'ซื้อข้างนอก')+'</span>'+
           (st?escHtml(l.qty+' '+(l.unit||''))+' · ':'')+'โดย '+escHtml(l.by||'-')+(l.note?' · '+escHtml(l.note):'')+'</div></div>'+
-          '<div class="am">'+(showV?'฿'+v.toLocaleString():'')+'</div>'+
+          '<div class="am">'+(l.noCost?'<span style="font-size:calc(11.5px * var(--ui-scale))">ไม่คิดเงิน<br>(บิลปุ๊ก)</span>':showV?'฿'+v.toLocaleString():'')+'</div>'+
           '<button type="button" class="del" title="ลบรายการนี้" aria-label="ลบ '+escHtml(l.itemName||'')+'" onclick="deleteStockLog(\''+l.id+'\');renderExtHist()">🗑️</button></div>';
       }).join('');
   }).join('');
@@ -11215,6 +11225,16 @@ function updateCartPrice(cartId,val){
   if(c)c.sellPrice=val!==''?parseFloat(val):null;
 }
 
+// ══════ "เข้าฟาร์มแล้วใช้เลย" (entry #377 พี่สั่ง 7 ต.ค. 69 — ชุดเทส/กาว PE เอาจากบุญชูเข้าฟาร์มแล้วใช้ทันที ไม่ได้เก็บสต็อก) ══════
+//    item.useOnArrival = ค่าที่ติ๊กในฟอร์ม · ยังไม่เคยตั้ง = ค่าเริ่มต้นตามชื่อ (USE_ON_ARRIVAL_DEFAULT) — ไม่เขียนข้อมูลเองตอนโหลด
+//    บุญชูเข้าฟาร์ม → บันทึก 'in' from:'shop' ตามปกติ + 'shared' อัตโนมัติ (autoUseOf = id ของ 'in') → ยอดฟาร์มไม่เพิ่ม
+//    เงิน: หมวด equip = ไม่คิด (ค่าอยู่ในบิลเบิกของปุ๊ก — กฎ #362) · ลบ 'in' = ลบ 'shared' คู่ให้ด้วย
+const USE_ON_ARRIVAL_DEFAULT=[/^ชุดเทส/,/^กาวต่อ PE/];
+function itemUseOnArrival(i){
+  if(!i)return false;
+  if(typeof i.useOnArrival==='boolean')return i.useOnArrival;
+  return USE_ON_ARRIVAL_DEFAULT.some(re=>re.test(String(i.name||'')));
+}
 function renderStockCart(){
   const wrap=document.getElementById('sk-cart-wrap');
   const list=document.getElementById('sk-cart-list');
@@ -11226,7 +11246,7 @@ function renderStockCart(){
   list.innerHTML=_stockCart.map(c=>`
     <div class="sk-cart-item">
       ${isShared?`<span class="ceo-cat-dot" style="background:${CEO_CAT_DOT[c.category]||'var(--tx3)'}"></span>`:''}
-      <span class="sk-cart-name">${c.itemName}${c.manual?' <span style="font-size:var(--fs10);font-weight:700;color:var(--p)">(ซื้อข้างนอก)</span>':''}${(()=>{const it=(D.inventoryItems||[]).find(x=>x.id===c.itemId);const pl=itemPropsLine(it,70);return pl?`<div style="font-size:var(--fs10);color:var(--tx3);font-weight:400;line-height:1.5;margin-top:1px">${pl}</div>`:'';})()}</span>
+      <span class="sk-cart-name">${c.itemName}${(_stockMode==='xfer'&&_xferDir!=='toShop'&&APP_ROLE==='admin'&&itemUseOnArrival((D.inventoryItems||[]).find(x=>x.id===c.itemId)))?' <span class="sk-useon-tag">🧪 ใช้เลย ไม่เข้าสต็อก</span>':''}${c.manual?' <span style="font-size:var(--fs10);font-weight:700;color:var(--p)">(ซื้อข้างนอก)</span>':''}${(()=>{const it=(D.inventoryItems||[]).find(x=>x.id===c.itemId);const pl=itemPropsLine(it,70);return pl?`<div style="font-size:var(--fs10);color:var(--tx3);font-weight:400;line-height:1.5;margin-top:1px">${pl}</div>`:'';})()}</span>
       ${c.manual?`<span class="sk-cart-price-lbl" style="font-weight:700;color:var(--tx)">฿${(c.unitCost||0).toLocaleString()}</span>`:`<span class="sk-cart-unit">${c.unit}</span>
       <input type="number" id="sk-cart-qty-${c.cartId}" class="fi sk-cart-qty" min="0.01" step="any" value="${c.qty}" inputmode="decimal" onchange="updateCartQty('${c.cartId}',this.value)">`}
       ${isSale?`<input type="number" id="sk-cart-price-${c.cartId}" class="fi sk-cart-price" min="0" step="any" value="${c.sellPrice!=null?c.sellPrice:''}" placeholder="ราคา" inputmode="decimal" title="ราคาขาย/หน่วย" onchange="updateCartPrice('${c.cartId}',this.value)"><span class="sk-cart-price-lbl">฿/${c.unit}</span>`:''}
@@ -11263,10 +11283,13 @@ function saveStockTxBatch(){
       const before=item?parseFloat(item.qty)||0:0;
       if(item)item.qty=Math.round(Math.max(0,item.qty-c.qty)*100)/100;
       markEmpty(item,before);
+      // อุปกรณ์ (หมวด equip) จากสต็อก เช่น ชุดเทสน้ำ = ตัดจำนวนอย่างเดียว ไม่คิดเงิน (#377 พี่ยืนยัน: ค่าอุปกรณ์อยู่ในบิลเบิกของปุ๊กแล้ว — กฎเดียวกับ #362)
+      const eqNc=!!item&&item.category==='equip';
       const entry={id:'sl'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
         itemId:c.itemId||null,itemName:c.itemName,type:'shared',qty:c.qty,date,note,pondId:'',
         balanceAfter:item?item.qty:null,unit:c.unit,by:curUserLabel(),
-        category:c.category||item?.category||'',unitCost:c.unitCost||0};
+        category:c.category||item?.category||'',unitCost:eqNc?0:(c.unitCost||0)};
+      if(eqNc){entry.noCost=true;entry.refPrice=c.unitCost||0;}
       D.inventoryLog.push(entry);
       saved.push(c.itemName);
       continue;
@@ -11300,6 +11323,14 @@ function saveStockTxBatch(){
         balanceAfter:item.qty,unit:c.unit,by:curUserLabel()});
       shopLogArr().push({id:'sh'+Date.now()+'_'+Math.random().toString(36).slice(2,6),itemId:item.id,itemName:item.name,type:'xfer',
         qty:c.qty,date,note,unit:c.unit,by:curUserLabel(),balanceAfter:item.shopQty,linkedLogId:lid});
+      if(itemUseOnArrival(item)){   // เข้าฟาร์มแล้วใช้เลย (#377) — ตัดออกทันทีเป็นของใช้รวมทุกบ่อ
+        item.qty=Math.round(Math.max(0,(parseFloat(item.qty)||0)-c.qty)*100)/100;
+        const nc=item.category==='equip',pr=parseFloat(item.unitPrice)||0;
+        const se={id:'sl'+Date.now()+'_'+Math.random().toString(36).slice(2,6)+'u',itemId:item.id,itemName:item.name,type:'shared',qty:c.qty,date,
+          note:'เข้าฟาร์มแล้วใช้เลย',pondId:'',balanceAfter:item.qty,unit:c.unit,by:curUserLabel(),category:item.category||'',unitCost:nc?0:pr,autoUseOf:lid};
+        if(nc){se.noCost=true;se.refPrice=pr;}
+        D.inventoryLog.push(se);
+      }
       saved.push(c.itemName);continue;
     }
     let newQty=item.qty;const before=parseFloat(item.qty)||0;
@@ -11754,6 +11785,14 @@ function deleteStockLog(id){
   if(log.type==='toShop'){shopLogArr().filter(s=>s.linkedLogId===id).forEach(s=>D.deletedIds=(D.deletedIds||[]).concat(s.id));D.shopLog=shopLogArr().filter(s=>s.linkedLogId!==id);}
   D.inventoryLog=(D.inventoryLog||[]).filter(l=>l.id!==id);
   D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
+  // เข้าฟาร์มแล้วใช้เลย (#377): ลบ 'in' จากบุญชู = ลบ 'shared' อัตโนมัติที่คู่กัน (คืนยอดฟาร์มที่ตัดไป)
+  if(log.from==='shop'){
+    (D.inventoryLog||[]).filter(l=>l.autoUseOf===id).forEach(u=>{
+      if(item)item.qty=Math.round(((item.qty||0)+(parseFloat(u.qty)||0))*100)/100;
+      D.deletedIds.push(u.id);
+    });
+    D.inventoryLog=D.inventoryLog.filter(l=>l.autoUseOf!==id);
+  }
   // โอนจากหน้าร้าน (#332) — ลบแล้วของต้องกลับไปอยู่หน้าร้าน + ลบรายการคู่ใน shopLog
   if(log.from==='shop'){
     if(item)item.shopQty=Math.round((shopQ(item)+(parseFloat(log.qty)||0))*100)/100;
@@ -21175,6 +21214,7 @@ function plSharedItems(rows,fuelOnly){
     if(!r||!r._pond||!r._crop)return;
     const w=closedCropSharedWindow(r._pond,r._crop);if(!w)return;
     getSharedItemsInRange(w.from,w.to).forEach(l=>{
+      if(l.noCost)return;   // #377
       const isFuel=(l.category==='fuel');
       if(fuelOnly?!isFuel:isFuel)return;
       const n=activePondCountOnDate(l.date)||1;
