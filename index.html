@@ -1322,6 +1322,12 @@ table.exy-t td,table.exy-t th{font-variant-numeric:tabular-nums}
 .fdg-sum td{border-top:2px solid var(--bd);background:var(--sf2);position:sticky;bottom:0;z-index:1}
 .fdg-sum .fdg-miss{color:var(--w)}
 .fdg-sack{font-size:calc(12px * var(--ui-scale))}
+.el-miss{background:var(--wb);border:1.5px solid var(--w);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:calc(13.5px * var(--ui-scale))}
+.el-miss .h{display:block;color:var(--w);font-size:calc(15px * var(--ui-scale))}
+.el-miss button{margin-top:8px;background:var(--w);color:#fff;border:none;border-radius:9px;min-height:40px;padding:0 14px;font-weight:700;font-family:inherit;font-size:calc(14px * var(--ui-scale));cursor:pointer}
+.el-est{color:var(--w);font-weight:700}
+#sec-elec .fi.el-rate-hi{background:var(--wb)!important;color:var(--w);border-color:var(--w);font-weight:700}
+.el-r{font-size:var(--fs11)}.el-r.hi{display:inline-block;background:var(--wb);color:var(--w);border-radius:6px;padding:0 5px;font-weight:700}
 .pv-bar{display:flex;gap:6px;background:var(--sf2);padding:4px;border-radius:12px;margin-bottom:12px}
 .pv-bar button{flex:1;border:none;background:none;border-radius:9px;min-height:44px;font-family:inherit;font-weight:700;font-size:calc(14px * var(--ui-scale));color:var(--tx);cursor:pointer}
 .pv-bar button.on{background:var(--sf);color:var(--pd);box-shadow:0 1px 3px rgba(0,0,0,.12)}
@@ -4176,6 +4182,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 <div id="sec-elec" class="sec">
   <div class="sec-hdr"><div class="sec-title">⚡ ค่าไฟฟ้า</div></div>
   <!-- auto-fit แทน repeat(4,1fr) — พอเพิ่มการ์ดที่ 5 (ค่าไฟรวมปีนี้) จะได้ไหลเองไม่เหลือช่องโหว่ -->
+  <div id="el-miss"></div>
   <div class="g4" id="el-kpi" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px;margin-bottom:18px"></div>
   <div class="elec-sub">
     <button class="elec-sub-btn on" onclick="elecTab('ep-bill',this)">📝 บันทึกบิล</button>
@@ -9393,11 +9400,41 @@ function initElec(){
   if(el&&!el.value){const now=new Date();el.value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');}
   loadElecBill();renderElecKPI();renderElecHistory();renderElecActiveSection();renderElecTrendChart();renderElecCropSummary();
 }
+// ══════ เตือนค่าไฟ (entry #383 พี่สั่ง 7 ต.ค. 69) ══════
+//    ① ลืมกรอกบิล: เลยวันที่ ELEC_DUE_DAY ของเดือนแล้ว ยังไม่มีบิลเดือนก่อน — _dailyElecRate ใช้บิลล่าสุดแทนแบบเงียบ ต้นทุนบ่อช่วงนั้นเป็นค่าประมาณ
+//    ② อัตราหม้อสูง: บาท/หน่วยของหม้อไหนเกิน ELEC_RATE_HI = ส้ม (ปกติฟาร์ม 3.7–4.1 · หม้อที่แทบไม่ใช้จ่ายขั้นต่ำ ~16,500/เดือน = 7–19 บาท/หน่วย)
+const ELEC_DUE_DAY=10,ELEC_RATE_HI=5;
+function elecMissingMonths(){
+  const t=today(),[y,m,d]=t.split('-').map(Number);
+  const back=+d>ELEC_DUE_DAY?1:2,ex=new Date(y,m-1-back,1);   // เดือนที่บิลควรมีแล้ว
+  const exp=ex.getFullYear()+'-'+String(ex.getMonth()+1).padStart(2,'0');
+  const bills=(D.electricityBills||[]).map(b=>b.month).filter(Boolean).sort();
+  if(!bills.length)return[];
+  const out=[];let [cy,cm]=bills[bills.length-1].split('-').map(Number);
+  for(let i=0;i<24;i++){cm++;if(cm>12){cm=1;cy++;}const k=cy+'-'+String(cm).padStart(2,'0');if(k>exp)break;out.push(k);}
+  return out;
+}
+function renderElecMiss(){
+  const el=document.getElementById('el-miss');if(!el)return;
+  const miss=elecMissingMonths();
+  if(!miss.length){el.innerHTML='';return;}
+  const last=[...(D.electricityBills||[])].sort((a,b)=>b.month.localeCompare(a.month))[0];
+  el.innerHTML='<div class="el-miss"><b class="h">⚠️ ยังไม่ได้กรอกบิล '+miss.map(fmtMonth).join(' · ')+'</b>'
+    +'<div>ต้นทุนบ่อ'+(miss.length>1?'ช่วงนั้น':'เดือนนั้น')+'ใช้ยอดบิล '+fmtMonth(last.month)+' <b>'+Math.round(last.totalBaht).toLocaleString()+'</b> แทนไปก่อน</div>'
+    +'<button type="button" onclick="elecGoMonth(\''+miss[0]+'\')">📝 กรอกบิล '+fmtMonth(miss[0])+'</button></div>';
+}
+function elecGoMonth(ym){
+  const b=document.querySelector('.elec-sub-btn');if(b)elecTab('ep-bill',b);
+  const el=document.getElementById('el-month');if(el)el.value=ym;
+  loadElecBill();
+  const k=document.getElementById('el-m1-kwh');if(k){k.scrollIntoView({block:'center',behavior:'smooth'});k.focus();}
+}
+function elecRateHi(kwh,baht){return kwh>0&&baht>0&&baht/kwh>ELEC_RATE_HI;}
 function calcElecRate(n){
   const kwh=parseFloat(document.getElementById('el-m'+n+'-kwh').value)||0;
   const baht=parseFloat(document.getElementById('el-m'+n+'-baht').value)||0;
   const rate=document.getElementById('el-m'+n+'-rate');
-  if(rate)rate.value=(kwh&&baht)?(baht/kwh).toFixed(2):'';
+  if(rate){rate.value=(kwh&&baht)?(baht/kwh).toFixed(2):'';rate.classList.toggle('el-rate-hi',elecRateHi(kwh,baht));rate.title=elecRateHi(kwh,baht)?'เกิน '+ELEC_RATE_HI+' บาท/หน่วย — หม้อนี้ใช้น้อย จ่ายขั้นต่ำ':'';}
   calcElecTotal();
 }
 function calcElecTotal(){
@@ -9523,6 +9560,7 @@ function elecDataStartDate(){
   return earliestMonth+'-01';
 }
 function renderElecKPI(){
+  renderElecMiss();
   const el=document.getElementById('el-kpi');if(!el)return;
   const bills=D.electricityBills||[];
   const sorted=[...bills].sort((a,b)=>b.month.localeCompare(a.month));
@@ -9557,7 +9595,7 @@ function renderElecKPI(){
     <div class="kpi-card"><div class="kpi-label">บิลเดือนล่าสุด</div><div class="kpi-val">${latest?latest.totalBaht.toLocaleString():'-'} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">${latest?fmtMonth(latest.month):'ยังไม่มีข้อมูล'}</div></div>
     <div class="kpi-card" style="border-top:3px solid var(--w)"><div class="kpi-label">ค่าไฟรวมปี ${curYearBE}</div><div class="kpi-val">${yrTotal?Math.round(yrTotal).toLocaleString():'-'} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">${yrBills.length?yrBills.length+' เดือน'+(yrKwh>0?' · '+Math.round(yrKwh).toLocaleString()+' kWh':''):'ยังไม่มีบิลปีนี้'}</div></div>
     <div class="kpi-card"><div class="kpi-label">บ่อที่กำลังเลี้ยงตอนนี้</div><div class="kpi-val">${activePonds.length} <span class="kpi-unit">บ่อ</span></div><div class="kpi-sub">ใช้ตรวจสอบว่าตรงหน้างานไหม</div></div>
-    <div class="kpi-card"><div class="kpi-label">ค่าไฟ/บ่อ/วัน (ตอนนี้)</div><div class="kpi-val">${Math.round(perPondDay).toLocaleString()} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">จากบิลล่าสุด ÷ บ่อที่เลี้ยงอยู่</div></div>
+    <div class="kpi-card"><div class="kpi-label">ค่าไฟ/บ่อ/วัน (ตอนนี้)</div><div class="kpi-val">${Math.round(perPondDay).toLocaleString()} <span class="kpi-unit">บาท</span></div><div class="kpi-sub">${elecMissingMonths().length&&latest?'<span class="el-est">ประมาณ (ใช้บิล '+fmtMonth(latest.month)+')</span>':'จากบิลล่าสุด ÷ บ่อที่เลี้ยงอยู่'}</div></div>
     <div class="kpi-card" style="border-top:3px solid var(--p)"><div class="kpi-label">ค่าไฟ/กก. เฉลี่ย (รอบที่ปิดปีนี้)</div><div class="kpi-val">${avgPerKg!==null?avgPerKg.toFixed(2):'-'} <span class="kpi-unit">บาท/กก.</span></div><div class="kpi-sub">${closed.length} รอบ · ปี ${curYearBE}</div></div>`;
 }
 // ── แถบตรวจสอบบ่อ active วันนี้ — เช็คตาเปล่าว่าตรงกับที่ใช้หารค่าไฟ/บ่อ/วันไหม (แพทเทิร์นเดียวกับ renderLaborActiveSection) ──
@@ -9713,9 +9751,7 @@ function renderElecHistory(){
       const ratePerPondDay=activePonds?ratePerDay/activePonds:null;
       return `<tr>
       <td>${fmtMonth(b.month)}</td>
-      <td>${b.m1kwh?b.m1kwh+' / '+b.m1baht.toLocaleString():'-'}</td>
-      <td>${b.m2kwh?b.m2kwh+' / '+b.m2baht.toLocaleString():'-'}</td>
-      <td>${b.m3kwh?b.m3kwh+' / '+b.m3baht.toLocaleString():'-'}</td>
+      ${[1,2,3].map(n=>{const k=b['m'+n+'kwh'],v=b['m'+n+'baht'];return'<td>'+(k?k+' / '+v.toLocaleString()+'<br><span class="el-r'+(elecRateHi(k,v)?' hi':'')+'">'+(v/k).toFixed(2)+' บ./หน่วย</span>':'-')+'</td>';}).join('')}
       <td><strong>${b.totalBaht.toLocaleString()}</strong></td>
       <td>${Math.round(ratePerDay).toLocaleString()}</td>
       <td>${activePonds} บ่อ</td>
