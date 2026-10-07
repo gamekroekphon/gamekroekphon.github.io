@@ -6174,8 +6174,38 @@ function fN(v,d){return v!==null&&v!==undefined&&v!==''?parseFloat(v).toFixed(d)
 function pRelease(p){return(p.stock||0)+(p.stockBonus||0)}
 function dens(p){return p.size>0?Math.round(pRelease(p)/(p.size*1600)):0}
 // ── rec (ถ้ามี) คือ record/ค่าที่กำลังกรอกอยู่ทั้งชุด ใช้แค่กับ mg_/ca เพื่อดึง .sal มาคำนวณช่วงยอมรับที่ปรับตามความเค็ม — ไม่ได้ใส่ rec หรือไม่มี sal ในนั้น จะ fallback ไปใช้เกณฑ์คงที่ของ PARAMS เหมือนเดิมทุกประการ ──
+// ══════ เกณฑ์เตือนค่าน้ำของฟาร์ม (entry #384 พี่สั่ง 7 ต.ค. 69) — ใช้ทั้งแอป: สีบ่อ · สีช่องตารางน้ำ · หน้าบ่อ · บอท LINE (functions/index.js WQ_RULE ต้องตรงกัน) ══════
+//    ฟาร์ม focus 6 ข้อ = แดง: ALK <136 · DO <5 · pH <7.4 · pH เช้า–บ่ายต่าง >0.3 · อุณหภูมิ <25 · NH4 >4
+//    ค่าอื่นเตือนเฉพาะ "สูงมาก" = เหลือง (hi) · Ca/Mg/Hard/NO3 ไม่อยู่ที่นี่ → ใช้ PARAMS เดิม
+//    lo = ต่ำกว่า → แดง · hiD = เกิน → แดง · hi = เกิน → เหลือง · PARAMS min/max ยังใช้กับเส้นช่วงในกราฟเท่านั้น
+const WQ_RULE={alk:{lo:136,hi:250},doM:{lo:5,hi:20},doA:{lo:5,hi:20},phM:{lo:7.4,hi:9.0},phA:{lo:7.4,hi:9.5},
+  tM:{lo:25,hi:33},tA:{lo:25,hi:33},nh4:{hiD:4},no2:{hi:4},sal:{hi:35}};
+const WQ_SWING_MAX=0.3;
+function wqRule(key,v){
+  const r=WQ_RULE[key];v=parseFloat(v);if(!r||isNaN(v))return'ok';
+  if(r.lo!=null&&v<r.lo)return'danger';
+  if(r.hiD!=null&&v>r.hiD)return'danger';
+  if(r.hi!=null&&v>r.hi)return'warn';
+  return'ok';
+}
+// ข้อความสั้นตามเกณฑ์ฟาร์ม เช่น "ต่ำกว่า 136" · "เกิน 4" · "สูงมาก (เกิน 250)"
+function wqRuleWhy(key,v){
+  const r=WQ_RULE[key];v=parseFloat(v);if(!r)return'';
+  if(r.lo!=null&&v<r.lo)return'ต่ำกว่า '+r.lo;
+  if(r.hiD!=null&&v>r.hiD)return'เกิน '+r.hiD;
+  if(r.hi!=null&&v>r.hi)return'สูงมาก (เกิน '+r.hi+')';
+  return'';
+}
+function wqRuleStd(key){
+  const r=WQ_RULE[key];if(!r)return'';const a=[];
+  if(r.lo!=null)a.push('ต่ำกว่า '+r.lo+' = ต้องดู');
+  if(r.hiD!=null)a.push('เกิน '+r.hiD+' = ต้องดู');
+  if(r.hi!=null)a.push('เกิน '+r.hi+' = สูงมาก');
+  return a.join(' · ');
+}
 function st(key,v,rec){
   if(v===null||v===undefined||v==='')return'na';
+  if(WQ_RULE[key])return wqRule(key,v);
   if((key==='mg_'||key==='ca')&&rec&&rec.sal!=null&&rec.sal!==''){
     const mr=mineralRangeAtSalinity(rec.sal);
     if(mr){
@@ -6194,6 +6224,7 @@ function sc(s){return s==='danger'?'var(--d)':s==='warn'?'var(--w)':s==='ok'?'va
 // ===== OVERVIEW-ONLY status engine (มาตรฐาน L. vannamei — ยืนยัน 16 มิ.ย. 69) =====
 // แยกจาก PARAMS/st() เดิมโดยตั้งใจ เพื่อไม่กระทบเกณฑ์ที่ใช้ในแท็บอื่น (บันทึกคุณภาพน้ำ/ผลแล็บ/แจ้งเตือน)
 function warnDir(key,v){
+  if(WQ_RULE[key]){const r=WQ_RULE[key];return r.lo!=null&&parseFloat(v)<r.lo?'low':'high';}
   const p=PARAMS.find(x=>x.key===key);   // ทิศทางจากช่วงเดียวกับสีช่อง (entry #357)
   if(!p||p.inv)return'high';
   return v>p.max?'high':'low';
@@ -6209,7 +6240,7 @@ function classifyOv(key,v){
     case'nh4':return v>=2.5?'warn':'ok';   // เกณฑ์ฟาร์ม (พี่สั่ง entry #347) — เดิม >0.5 แดง / ≥0.25 เตือน
     case'no2':return v>4?'danger':v>=1?'warn':'ok';
     case'phM':if(v<7.5||v>8.6)return'danger';if(v<7.8||v>8.3)return'warn';return'ok';
-    case'phSwing':return v>0.5?'danger':v>=0.3?'warn':'ok';
+    case'phSwing':return Math.round(v*100)/100>WQ_SWING_MAX?'danger':'ok';   // #384 เกิน 0.3 = แดง (ปัดทศนิยม กัน 7.9−7.6 = 0.30000001)
     case'doM':case'doA':return v<5?'danger':v>10?'warn':'ok';   // 5–10 เขียว · <5 แดง (#347)
     case'tM':case'tA':if(v>33||v<26)return'danger';if(v>32||v<28)return'warn';return'ok';
     case'alk':if(v<80||v>250)return'danger';if(v<136||v>200)return'warn';return'ok';   // ปกติ 136–200 (#347)
@@ -6341,6 +6372,14 @@ function renderDzBars(){
     return{badge:!ps.length?'':n?'<span class="dz-st done">✓ เติม '+n+' บ่อ</span>':'<span class="dz-st todo">ยังไม่มีเติมน้ำ</span>',sub:ps.length+' บ่อมีกุ้ง'};
   });
 }
+// ── ผลแล็ปเตือน 3 วัน (entry #384) — ตรวจบ่อละ ~7 วัน ผลเก่าไม่ใช่สภาพวันนี้ · นับจากวันที่ลงผล (enteredAt) ไม่มีค่อยใช้วันที่ตรวจ
+//    เกิน 3 วัน = ไม่ทำให้บ่อขึ้นสี (ยังดูผลได้ครบในหน้าแล็ป/หน้าบ่อ)
+const LAB_ALERT_DAYS=3;
+function labAlertLatest(p){
+  const lab=sortLogArr('labResults',(p&&p.labResults)||[]).slice(-1)[0];if(!lab)return null;
+  const from=lab.enteredAt&&lab.enteredAt>lab.date?lab.enteredAt:lab.date;
+  return from&&dDiff(from,today())<LAB_ALERT_DAYS?lab:null;
+}
 function pondStatusOv(p){
   if(!Array.isArray(p.records))p.records=[];
   // ── ไม่มีวันลงกุ้ง + เคยปิดรอบแล้ว = บ่อว่าง (entry #299) — ห้ามเอาอายุจาก record ที่ค้างอยู่มาทำให้ดูเหมือนมีกุ้ง
@@ -6361,7 +6400,7 @@ function pondStatusOv(p){
     if(last.phM!=null&&last.phA!=null&&last.phM!==''&&last.phA!=='')
       level=worstOv(level,classifyOv('phSwing',Math.abs(last.phM-last.phA)));
   }
-  const lab=sortLogArr('labResults',p.labResults||[]).slice(-1)[0];
+  const lab=labAlertLatest(p);
   if(lab){
     [['tcbsGreen',lab.tcbsGreen],['tcbsYellow',lab.tcbsYellow],['tvc',lab.tvc],
      ['ehp',lab.ehp],['ehpLarva',lab.ehpLarva],['hepato',lab.hepato]].forEach(([k,v])=>{
@@ -7607,13 +7646,16 @@ function allReasonsOv(p,last,age){
   const lbl={nh4:'แอมโมเนีย',no2:'ไนไตรท์',phM:'pH เช้า',phA:'pH บ่าย',phSwing:'สวิง pH',doM:'DO เช้า',doA:'DO บ่าย',tM:'อุณหภูมิเช้า',tA:'อุณหภูมิบ่าย',alk:'อัลคาไลน์',sal:'ความเค็ม',tcbsGreen:'TCBS เขียว',tcbsYellow:'TCBS เหลือง',tvc:'TVC',ehp:'EHP',ehpLarva:'EHP ตัวอ่อน',hepato:'ตับอ่อน'};
   const hepatoTx={swollen:'บวม/อักเสบ',black:'ซีด/ฝ่อ/ดำ'};
   const rk={ok:0,warn:1,danger:2};
-  const out=[];
+  const out=[];let _labTag='';
   const consider=(k,v)=>{
     if(v===null||v===undefined||v==='')return;
     const s=classifyOv(k,v);
     if(s==='ok')return;
     let text;
-    if(k==='hepato')text=`${lbl.hepato} ${hepatoTx[v]||v}`;
+    if(k==='hepato')text=`${_labTag}${lbl.hepato} ${hepatoTx[v]||v}`;
+    else if(k==='phSwing')text=`pH เช้า–บ่าย ต่าง ${(+v).toFixed(2)} (เกิน ${WQ_SWING_MAX})`;
+    else if(WQ_RULE[k])text=`${lbl[k]} ${v} ${wqRuleWhy(k,v)}`;
+    else if(_labTag)text=`${_labTag}${lbl[k]} ${v}`;
     else{
       const dir=warnDir(k,v);const sfx=dir==='low'?(s==='danger'?'ต่ำกว่าเกณฑ์อันตราย':'ต่ำกว่าเกณฑ์'):(s==='danger'?'เกินเกณฑ์อันตราย':'เกินเกณฑ์');
       text=`${lbl[k]} ${v} ${sfx}`;
@@ -7625,10 +7667,12 @@ function allReasonsOv(p,last,age){
     consider('tM',last.tM);consider('tA',last.tA);consider('alk',last.alk);consider('sal',last.sal);consider('phM',last.phM);consider('phA',last.phA);
     if(last.phM!=null&&last.phA!=null&&last.phM!==''&&last.phA!=='')consider('phSwing',Math.abs(last.phM-last.phA));
   }
-  const lab=sortLogArr('labResults',p.labResults||[]).slice(-1)[0];
+  const lab=labAlertLatest(p);
   if(lab){
+    _labTag='แล็ป '+fD(lab.date)+': ';
     consider('tcbsGreen',lab.tcbsGreen);consider('tcbsYellow',lab.tcbsYellow);consider('tvc',lab.tvc);
     consider('ehp',lab.ehp);consider('ehpLarva',lab.ehpLarva);consider('hepato',lab.hepato);
+    _labTag='';
   }
   if(age>120)out.push({k:'age',level:'danger',text:`อายุ ${age} วัน เกินเป้า 90–120`});
   else if(age>=110&&age<=120)out.push({k:'age',level:'warn',text:`อายุ ${age} วัน เกินเป้า 90–120`});
@@ -13838,7 +13882,7 @@ function wqgSetDate(d){
   const ep=document.getElementById('ep-date');if(ep){ep.value=d;syncDateHint(ep);}
   renderWqGrid();renderEpChips();checkExistingWQ();
 }
-function wqgRange(p){if(!p)return'';const n=v=>String(v).replace(/\.0+$/,'');return p.inv?'< '+n(p.max):n(p.min)+'–'+n(p.max);}
+function wqgRange(p){if(!p)return'';if(WQ_RULE[p.key]){const r=WQ_RULE[p.key];return r.lo!=null?'≥ '+r.lo:r.hiD!=null?'≤ '+r.hiD:'≤ '+r.hi;}const n=v=>String(v).replace(/\.0+$/,'');return p.inv?'< '+n(p.max):n(p.min)+'–'+n(p.max);}
 // sal = ความเค็มของแถวนี้ (ที่พิมพ์ค้างใน _wqDraft ก่อน ไม่มีค่อยใช้ที่บันทึกไว้) — เกณฑ์ Mg/Ca ขึ้นกับความเค็ม
 //   เดิมอ่านแค่ rec.sal → ตอนพิมพ์สีคิดแบบไม่รู้ความเค็ม กดบันทึกแล้วสีเปลี่ยนเอง (แก้ entry #357)
 function wqgSalOf(pid,rec){const dr=_wqDraft[pid];const s=dr&&'sal' in dr?String(dr.sal).trim().replace(',','.'):'';if(s!==''){const v=parseFloat(s);return isNaN(v)?null:v;}return rec&&rec.sal!=null?rec.sal:null;}
@@ -14093,10 +14137,12 @@ function prefillWQ(){
 }
 // ── dyn (ถ้ามี) คือช่วง {min,max} ที่คำนวณจากความเค็มสำหรับ mg_/ca แทนที่ p.min/p.max คงที่ ──
 function stdText(p,dyn){
+  if(!dyn&&WQ_RULE[p.key])return wqRuleStd(p.key);
   if(dyn)return`${dyn.min}–${dyn.max} ${p.unit||''} (ตามความเค็มที่กรอก)`.trim();
   return(p.inv?'ต่ำกว่า '+p.max:p.min+'–'+p.max)+(p.unit?' '+p.unit:'')
 }
 function fiWarnMsg(p,v,dyn){
+  if(!dyn&&WQ_RULE[p.key])return v+' — '+wqRuleWhy(p.key,v);
   const min=dyn?dyn.min:p.min,max=dyn?dyn.max:p.max;
   if(p.inv){return v>=p.dMax?`${v} — เกินเกณฑ์อันตราย (>${p.dMax})`:`${v} — เกินเกณฑ์ (>${max})`}
   if(!dyn&&v<p.dMin)return`${v} — ต่ำกว่าเกณฑ์อันตราย (<${p.dMin})`;
@@ -16947,6 +16993,7 @@ function saveLab(){
     hepato:document.getElementById('lb-hepato').value||null,
     notes:document.getElementById('lb-notes').value};
   const idx=p.labResults.findIndex(r=>r.id===rec.id||r.date===d);
+  rec.enteredAt=(idx>=0&&p.labResults[idx].enteredAt)||today();   // วันที่ลงผล (#384) — เตือน 3 วันนับจากวันนี้ · แก้ผลทีหลังไม่เลื่อนวัน
   const sg=tg!==null?(tg>1000?'danger':tg>100?'warn':'ok'):'ok';
   if(idx>=0){p.labResults[idx]=rec;showMsg('lb-msg','warn',`อัปเดต ${fD(d)}`)}
   else{p.labResults.push(rec);p.labResults.sort((a,b)=>new Date(a.date)-new Date(b.date));showMsg('lb-msg',sg==='danger'?'danger':sg==='warn'?'warn':'ok',`✅ บันทึกผลแล็บ บ่อ ${p.name} 🟢${tg||'-'} 🟡${ty||'-'} CFU/mL`)}

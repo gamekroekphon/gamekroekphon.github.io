@@ -55,8 +55,30 @@ const OV_PARAMS = {
   alk: [136, 200, 80, 250], sal: [10, 30, 5, 35],
   nh4: [0, 2.5, 0, Infinity, true], no2: [0, 0.5, 0, 1.0, true],
 };
+// ── เกณฑ์ฟาร์ม (entry #384) = WQ_RULE ในแอป — แก้ที่แอปต้องแก้ตรงนี้ด้วย
+//    lo ต่ำกว่า = แดง · hiD เกิน = แดง · hi เกิน = เหลือง (สูงมาก)
+const WQ_RULE = {
+  alk: {lo: 136, hi: 250}, doM: {lo: 5, hi: 20}, doA: {lo: 5, hi: 20},
+  phM: {lo: 7.4, hi: 9.0}, phA: {lo: 7.4, hi: 9.5}, tM: {lo: 25, hi: 33}, tA: {lo: 25, hi: 33},
+  nh4: {hiD: 4}, no2: {hi: 4}, sal: {hi: 35},
+};
+const LAB_ALERT_DAYS = 3;   // ผลแล็ปเตือน 3 วันนับจากวันที่ลงผล (enteredAt) ไม่มีค่อยใช้วันที่ตรวจ
+function labAlertLatest(p) {
+  const lab = (p.labResults || []).slice().sort((a, b) => String(a.date).localeCompare(String(b.date))).slice(-1)[0];
+  if (!lab) return null;
+  const from = lab.enteredAt && lab.enteredAt > lab.date ? lab.enteredAt : lab.date;
+  return from && dDiff(from, today()) < LAB_ALERT_DAYS ? lab : null;
+}
 function classifyOv(key, v) {
   if (v === null || v === undefined || v === "") return "na";
+  const r = WQ_RULE[key];
+  if (r) {
+    const x = parseFloat(v);
+    if (r.lo != null && x < r.lo) return "danger";
+    if (r.hiD != null && x > r.hiD) return "danger";
+    if (r.hi != null && x > r.hi) return "warn";
+    return "ok";
+  }
   const pr = OV_PARAMS[key];
   if (pr) {
     const [min, max, dMin, dMax, inv] = pr;
@@ -75,8 +97,8 @@ function classifyOv(key, v) {
       if (v < 7.5 || v > 8.6) return "danger";
       if (v < 7.8 || v > 8.3) return "warn";
       return "ok";
-    case "phSwing":
-      return v > 0.5 ? "danger" : v >= 0.3 ? "warn" : "ok";
+    case "phSwing":   // #384 เกิน 0.3 = แดง
+      return Math.round(v * 100) / 100 > 0.3 ? "danger" : "ok";
     case "doM":
     case "doA":   // 5–10 ปกติ · <5 แดง (#347)
       return v < 5 ? "danger" : v > 10 ? "warn" : "ok";
@@ -134,7 +156,7 @@ function pondStatusOv(p) {
     }
   }
 
-  const lab = (p.labResults || []).slice(-1)[0];
+  const lab = labAlertLatest(p);
   if (lab) {
     [
       ["tcbsGreen", lab.tcbsGreen], ["tcbsYellow", lab.tcbsYellow],
