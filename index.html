@@ -1287,6 +1287,32 @@ table.exy-t td,table.exy-t th{font-variant-numeric:tabular-nums}
 .hv-cmp{border-radius:10px;padding:8px 11px;font-size:calc(13.5px * var(--ui-scale));font-weight:600}
 .hv-cmp.lo{background:var(--wb);color:var(--w)}.hv-cmp.ok{background:var(--ob);color:var(--ok)}
 .hv-diff.cut{color:var(--w);font-weight:700}
+/* สต็อก: สีฟาร์ม/บุญชู + การ์ดพัสดุ (#376) */
+.stk-f{color:#15803D;font-weight:700}.stk-s{color:#1E40AF;font-weight:700}
+.stk-card .q .stk-f,.stk-card .q .stk-s{display:inline-block;border-radius:6px;padding:0 7px;font-size:calc(12px * var(--ui-scale))}
+.stk-card .q .stk-f{background:#DCFCE7}.stk-card .q .stk-s{background:#DBEAFE}
+.stk-fv{color:#15803D}.stk-sv{color:#1E40AF}
+.stk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px}
+.stk-card{border:1px solid var(--bd);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;background:var(--sf)}
+.stk-card .a{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.stk-card .nm{font-weight:700;font-size:calc(15px * var(--ui-scale))}
+.stk-card .co{font-size:calc(12.5px * var(--ui-scale));margin-top:2px}
+.stk-card .q{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:calc(13px * var(--ui-scale))}
+.stk-card .q b{font-size:calc(16px * var(--ui-scale))}
+.stk-card .b{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.stk-card .b .btns{margin-left:auto}
+.stk-days{border-radius:8px;padding:2px 9px;font-size:calc(12.5px * var(--ui-scale));font-weight:600}
+.stk-days.red{background:var(--db);color:var(--d)}.stk-days.org{background:var(--wb);color:var(--w)}.stk-days.ok{background:#DCFCE7;color:var(--ok)}
+.stk-min{font-size:calc(12px * var(--ui-scale))}
+.stk-alert{background:var(--wb);border:1.5px solid #F5C978;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.stk-alert .h{display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--w);font-size:calc(14.5px * var(--ui-scale))}
+.stk-alert .r{display:flex;justify-content:space-between;gap:8px;font-size:calc(13.5px * var(--ui-scale))}
+.stk-soon-btn{border:1.5px solid var(--w);background:var(--sf);color:var(--w);border-radius:99px;padding:4px 12px;font-weight:700;font-size:calc(12.5px * var(--ui-scale));min-height:36px;cursor:pointer}
+.stk-soon-btn.on{background:var(--w);color:#fff}
+.stk-dead{border:1px solid var(--bd);border-radius:14px;padding:10px 12px;margin-top:10px;background:var(--sf)}
+.stk-dead summary{font-weight:700;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:8px}
+.stk-dead .r{display:flex;justify-content:space-between;gap:8px;font-size:calc(13.5px * var(--ui-scale));padding:6px 0;border-top:1px solid var(--sf2)}
+.stk-dead small{display:block;font-size:calc(12px * var(--ui-scale))}
 .pv-bar{display:flex;gap:6px;background:var(--sf2);padding:4px;border-radius:12px;margin-bottom:12px}
 .pv-bar button{flex:1;border:none;background:none;border-radius:9px;min-height:44px;font-family:inherit;font-weight:700;font-size:calc(14px * var(--ui-scale));color:var(--tx);cursor:pointer}
 .pv-bar button.on{background:var(--sf);color:var(--pd);box-shadow:0 1px 3px rgba(0,0,0,.12)}
@@ -4859,7 +4885,7 @@ function renderOwnStock(){
     const u=mpEsc(i.unit||''),shopKnown=!stkOut(shopQ(i))||i.shopCountedAt;
     return '<div class="own-it"><div class="n"><span>'+mpEsc(i.name)+'</span>'+(out(i)?'<span class="own-chip d">หมด</span>':low(i)?'<span class="own-chip w">ใกล้หมด</span>':'')+'</div>'
       +(prCoName(i.companyId)?'<div class="co">'+mpEsc(prCoName(i.companyId))+'</div>':'')
-      +'<div class="q"><div>ฟาร์ม<b>'+stkQ(i.qty)+' <small>'+u+'</small></b></div><div class="shop">บุญชู<b>'+(shopKnown?stkQ(shopQ(i))+' <small>'+u+'</small>':'—')+'</b></div></div></div>';
+      +'<div class="q"><div class="stk-f">ฟาร์ม<b class="stk-fv">'+stkQ(i.qty)+' <small>'+u+'</small></b></div><div class="shop stk-s">บุญชู<b class="stk-sv">'+(shopKnown?stkQ(shopQ(i))+' <small>'+u+'</small>':'—')+'</b></div></div></div>';
   }).join('')||'<div class="card">ไม่พบสินค้า</div>';
 }
 function updateUserHeader(user,role){
@@ -9981,7 +10007,7 @@ function renderXferSugg(){
   if(_xferDir==='toShop'){el.innerHTML=seg;return;}
   const rows=shopRows().filter(r=>r.move&&!_stockCart.some(c=>c.itemId===r.i.id)).sort((a,b)=>a.fd-b.fd);
   el.innerHTML=seg+(rows.length?'<div class="sk-xs-h">🟠 ฟาร์มใกล้หมด · บุญชูมีของ</div>'+rows.map(r=>
-    '<div class="sk-xs"><span><b>'+mpEsc(r.i.name)+'</b><small>ฟาร์ม '+stkQ(r.farm)+' · บุญชู '+stkQ(r.shop)+' '+mpEsc(r.i.unit||'')+' · ใช้ '+shopD1(r.rate)+'/วัน</small></span>'
+    '<div class="sk-xs"><span><b>'+mpEsc(r.i.name)+'</b><small>'+stkFS(r.farm,r.shop,r.i.unit)+' · ใช้ '+shopD1(r.rate)+'/วัน</small></span>'
     +'<button type="button" onclick="xferAdd(\''+r.i.id+'\','+r.mv+')">+ '+r.mv+'</button></div>').join('')
     :'<div class="sk-xs-h" style="color:var(--ok)">✓ ไม่มีของที่ฟาร์มใกล้หมด</div>');
 }
@@ -10004,7 +10030,7 @@ function renderShop(){
   let s=(counted?'':'<div class="shp-banner">📋 ยังไม่ได้นับบุญชู — กด <b>✏️ นับของบุญชู</b> ใส่ยอดครั้งแรก</div>')
     +'<div class="shp-chips">'+V.map(([k,l])=>'<button type="button" class="'+(_shopView===k?'on':'')+'" onclick="_shopView=\''+k+'\';renderShop()">'+l+'</button>').join('')+'</div>';
   const bar=r=>'<div class="shp-bar"><div class="f" style="width:'+Math.min(100,(r.fd||0)/30*100)+'%"></div><div class="s" style="width:'+Math.min(100,(r.rate>0?r.shop/r.rate:0)/30*100)+'%"></div></div>';
-  const line=r=>'ฟาร์ม '+stkQ(r.farm)+' · บุญชู '+stkQ(r.shop)+' '+mpEsc(r.i.unit||'')+' · ใช้ '+shopD1(r.rate)+'/วัน → พอ '+shopD1(r.td)+' วัน';
+  const line=r=>stkFS(r.farm,r.shop,r.i.unit)+' · ใช้ '+shopD1(r.rate)+'/วัน → พอ '+shopD1(r.td)+' วัน';
   if(_shopView==='todo'){
     if(document.body.classList.contains('shop-clerk'))
       s+='<div class="shp-quick"><button type="button" onclick="clerkJob(\'in\')"><span class="ic">📥</span>ขนส่งเข้าบุญชู</button>'
@@ -10027,8 +10053,8 @@ function renderShop(){
     s+='<div style="font-size:var(--fs10);color:var(--tx3);margin-top:8px">แถบ: เขียว = ฟาร์มพอกี่วัน · ทอง = บุญชู (เต็ม = 30 วัน)</div></div>';
   }else if(_shopView==='stock'){
     const list=rows.filter(r=>r.rate>0||r.shop>0).sort((a,b)=>(a.td==null?1e9:a.td)-(b.td==null?1e9:b.td));
-    s+='<div class="card"><div style="overflow-x:auto"><table class="tbl shp-tbl"><thead><tr><th>สินค้า</th><th class="num">ฟาร์ม</th><th class="num">บุญชู</th><th class="num">ใช้/วัน</th><th class="num">พอ (วัน)</th><th></th></tr></thead><tbody>'
-      +list.map(r=>{const st=r.need?'r1':r.move?'r2':'r3';return'<tr><td><b>'+mpEsc(r.i.name)+'</b></td><td class="num">'+stkQ(r.farm)+'</td><td class="num">'+stkQ(r.shop)+'</td><td class="num">'+shopD1(r.rate)+'</td><td class="num">'+shopD1(r.td)+'</td><td><span class="shp-pill '+st+'">'+(st==='r1'?'สั่ง':st==='r2'?'เข้าฟาร์ม':'พอ')+'</span></td></tr>';}).join('')
+    s+='<div class="card"><div style="overflow-x:auto"><table class="tbl shp-tbl"><thead><tr><th>สินค้า</th><th class="num stk-f">ฟาร์ม</th><th class="num stk-s">บุญชู</th><th class="num">ใช้/วัน</th><th class="num">พอ (วัน)</th><th></th></tr></thead><tbody>'
+      +list.map(r=>{const st=r.need?'r1':r.move?'r2':'r3';return'<tr><td><b>'+mpEsc(r.i.name)+'</b></td><td class="num stk-f">'+stkQ(r.farm)+'</td><td class="num stk-s">'+stkQ(r.shop)+'</td><td class="num">'+shopD1(r.rate)+'</td><td class="num">'+shopD1(r.td)+'</td><td><span class="shp-pill '+st+'">'+(st==='r1'?'สั่ง':st==='r2'?'เข้าฟาร์ม':'พอ')+'</span></td></tr>';}).join('')
       +'</tbody></table></div></div>';
   }else if(_shopView==='count'){
     const q=_shopQ.trim().toLowerCase();
@@ -10851,55 +10877,74 @@ function toggleStockZero(){
   if(btn){btn.textContent=_stockShowZero?'ซ่อนยอด 0':'แสดงยอด 0';btn.style.background=_stockShowZero?'var(--p)':'var(--s1)';btn.style.color=_stockShowZero?'#fff':'var(--tx2)';}
   renderStockItems();
 }
+// ══════ รายการพัสดุแบบการ์ด: พอใช้อีกกี่วัน · ของไม่ได้เบิกเกิน 90 วัน · สีฟาร์ม/บุญชู (entry #376 พี่สั่ง 7 ต.ค. 69) ══════
+//    ⚠️ "พอใช้" ใช้ shopUseRate() ตัวเดียวกับแท็บบุญชู (เบิกจริง out+shared 14 วัน ปรับตามจำนวนบ่อที่มีกุ้ง) — ห้ามคิดอัตราใช้คู่ขนาน
+//    ⚠️ สี: ฟาร์ม = เขียว (.stk-f) · บุญชู = น้ำเงิน (.stk-s) — ใช้ stkFS() ทุกที่ที่โชว์ยอดสองฝั่งคู่กัน
+let _stockSoon=false;
+const STK_SOON_DAYS=7,STK_DEAD_DAYS=90;
+function stkFS(farm,shop,unit){
+  return '<span class="stk-f">ฟาร์ม '+stkQ(farm)+'</span> · <span class="stk-s">บุญชู '+stkQ(shop)+'</span>'+(unit?' '+mpEsc(unit):'');
+}
+function stkDaysTxt(d){return d<1?'<1':String(Math.floor(d));}
+function stockToggleSoon(){_stockSoon=!_stockSoon;renderStockItems();}
+function stockLastUse(){
+  const m={};(D.inventoryLog||[]).forEach(l=>{if(!l||!l.itemId||(l.type!=='out'&&l.type!=='shared')||!l.date)return;if(!m[l.itemId]||l.date>m[l.itemId])m[l.itemId]=l.date;});
+  return m;
+}
 function renderStockItems(){
   const el=document.getElementById('sk-item-table');if(!el)return;
   const cat=document.getElementById('sk-filter-cat')?.value||'';
   const search=(document.getElementById('sk-search')?.value||'').trim().toLowerCase();
-  const items=(D.inventoryItems||[]).filter(i=>{
+  const rate=shopUseRate();
+  const all=(D.inventoryItems||[]).filter(i=>i&&i.id).map(i=>{
+    const r=rate[i.id]||0,farm=parseFloat(i.qty)||0,shop=shopQ(i);
+    return{i,r,farm,shop,df:r>0?farm/r:null,dt:r>0?(farm+shop)/r:null};
+  });
+  const soon=all.filter(x=>x.dt!=null&&x.dt<=STK_SOON_DAYS&&(!cat||x.i.category===cat)).sort((a,b)=>a.dt-b.dt);
+  const items=all.filter(({i})=>{
     if(cat&&i.category!==cat)return false;
     if(search&&!i.name.toLowerCase().includes(search)&&!(i.note||'').toLowerCase().includes(search))return false;
     if(!_stockShowZero&&stkOut(i.qty)&&stkOut(shopQ(i)))return false;   // ฟาร์มหมดแต่หน้าร้านมี = ยังต้องเห็น (#334)
     return true;
-  });
-  if(!items.length){el.innerHTML=`<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">${(cat||search)?'ไม่พบรายการที่ตรงกับตัวกรองนี้ — ลองเปลี่ยนคำค้นหรือหมวดหมู่':'ยังไม่มีรายการพัสดุ — เพิ่มได้จากฟอร์มด้านบน'}</p>`;return;}
-  // sort: low stock first
-  const sorted=[...items].sort((a,b)=>{
-    const aLow=stkOut(a.qty)?-1:a.minQty>0&&a.qty<=a.minQty?0:1;   // หมด (<1) ขึ้นก่อน (#338)
-    const bLow=stkOut(b.qty)?-1:b.minQty>0&&b.qty<=b.minQty?0:1;
-    if(aLow!==bLow)return aLow-bLow;
-    return a.name.localeCompare(b.name,'th');
-  });
+  }).filter(x=>!_stockSoon||(x.dt!=null&&x.dt<=STK_SOON_DAYS));
   const isAdminView=APP_ROLE==='admin';
-  const priceHdr=isAdminView?'<th style="text-align:right">ราคา/หน่วย</th>':'';   // ตัดคอลัมน์มูลค่าออก (พี่สั่ง entry #355 — ไม่ได้ดู · มือถือแคบ) มูลค่ารวมยังอยู่ที่ KPI บนสุด
-  el.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>รายการ</th><th>หมวด</th>${priceHdr}<th style="text-align:right">ฟาร์ม</th><th style="text-align:right">บุญชู</th><th>ขั้นต่ำ</th><th>สถานะ</th><th></th></tr></thead><tbody>${
-    sorted.map(i=>{
-      const isLow=i.minQty>0&&i.qty<=i.minQty;
-      const isOut=stkOut(i.qty);
-      const statusBadge=isOut?'<span class="badge" style="background:var(--d);color:#fff">หมด</span>'
-        :isLow
-        ?'<span class="badge" style="background:var(--db);color:var(--d)">ใกล้หมด</span>'
-        :'<span class="badge" style="background:var(--ob);color:var(--ok)">ปกติ</span>';
-      const catCss=STOCK_CAT_CSS[i.category]||'';
-      const price=i.unitPrice||0;
-      const priceCols=isAdminView
-        ?`<td style="text-align:right">${price?price.toLocaleString()+' ฿':'—'}</td>`
-        :'';
-      // สต็อกหน้าร้าน (#334): ยังไม่เคยนับ และเป็น 0 → แสดง — (ยังไม่รู้ยอด ไม่ใช่ไม่มีของ)
-      const actionBtns=isAdminView
-        ?`<button class="btn-sm" onclick="editStockItem('${i.id}')">✏️</button> <button class="btn-sm btn-del" onclick="deleteStockItem('${i.id}')">🗑️</button>`
-        :`<button class="btn-sm" onclick="stockTab('tx',document.getElementById('skb-tx'));setTimeout(()=>addStockToCart('${i.id}'),80)">📥 รับเข้า</button>`;
-      return `<tr>
-        <td><strong>${i.name}</strong><br><span style="font-size:var(--fs11);color:var(--tx3)">${i.note||''}</span></td>
-        <td><span class="badge ${catCss}">${STOCK_CAT_LABEL[i.category]||i.category}</span></td>
-        ${priceCols}
-        <td class="${isLow||isOut?'stock-qty-low':''}" style="text-align:right;white-space:nowrap">${stkQ(i.qty)} ${i.unit}</td>
-        <td style="text-align:right;white-space:nowrap;color:${shopQ(i)>0?'var(--pd)':'var(--tx3)'}">${(shopQ(i)>0||i.shopCountedAt)?stkQ(shopQ(i))+' '+i.unit:'—'}</td>
-        <td>${i.minQty||'-'} ${i.minQty?i.unit:''}</td>
-        <td>${statusBadge}</td>
-        <td style="white-space:nowrap">${actionBtns}</td>
-      </tr>`;
-    }).join('')
-  }</tbody></table></div>`;
+  const isLow=x=>(x.i.minQty>0&&x.i.qty<=x.i.minQty)||(x.dt!=null&&x.dt<=STK_SOON_DAYS);
+  // หมดก่อน → ใกล้หมด (พอใช้น้อยสุดก่อน) → ที่เหลือตามชื่อ
+  const sorted=items.slice().sort((a,b)=>{
+    const ra=stkOut(a.i.qty)?0:isLow(a)?1:2,rb=stkOut(b.i.qty)?0:isLow(b)?1:2;
+    if(ra!==rb)return ra-rb;
+    if(ra===1)return(a.dt??1e9)-(b.dt??1e9);
+    return a.i.name.localeCompare(b.i.name,'th');
+  });
+  const comp={};(D.shopCompanies||[]).forEach(c=>{if(c&&c.id)comp[c.id]=c.name;});
+  const alertHtml=soon.length?'<div class="stk-alert"><div class="h"><b>⚠️ จะหมดใน '+STK_SOON_DAYS+' วัน · '+soon.length+' รายการ</b>'
+      +'<button type="button" class="stk-soon-btn'+(_stockSoon?' on':'')+'" onclick="stockToggleSoon()">'+(_stockSoon?'ดูทั้งหมด':'ดูเฉพาะชุดนี้')+'</button></div>'
+      +soon.slice(0,8).map(x=>'<div class="r"><span>'+mpEsc(x.i.name)+'</span><b>~'+stkDaysTxt(x.dt)+' วัน</b></div>').join('')
+      +(soon.length>8?'<div class="r"><span>… อีก '+(soon.length-8)+' รายการ</span></div>':'')+'</div>':'';
+  const card=x=>{
+    const i=x.i,out=stkOut(i.qty),low=!out&&isLow(x);
+    const shopKnown=x.shop>0||i.shopCountedAt;
+    const badge=out?'<span class="badge" style="background:var(--d);color:#fff">หมด</span>':low?'<span class="badge" style="background:var(--db);color:var(--d)">ใกล้หมด</span>':'';
+    const days=x.dt==null?'':'<span class="stk-days '+(x.dt<=3?'red':x.dt<=STK_SOON_DAYS?'org':'ok')+'">พอใช้อีก ~'+stkDaysTxt(x.dt)+' วัน'
+      +(x.shop>0?' · <span class="stk-f">ฟาร์ม '+stkDaysTxt(x.df)+'</span> + <span class="stk-s">บุญชู</span>':'')+'</span>';
+    const btns=isAdminView
+      ?`<button class="btn-sm" onclick="editStockItem('${i.id}')">✏️</button> <button class="btn-sm btn-del" onclick="deleteStockItem('${i.id}')">🗑️</button>`
+      :`<button class="btn-sm" onclick="stockTab('tx',document.getElementById('skb-tx'));setTimeout(()=>addStockToCart('${i.id}'),80)">📥 รับเข้า</button>`;
+    return '<div class="stk-card"><div class="a"><div style="min-width:0"><div class="nm">'+mpEsc(i.name)+'</div><div class="co"><span class="badge '+(STOCK_CAT_CSS[i.category]||'')+'">'+(STOCK_CAT_LABEL[i.category]||i.category)+'</span>'
+      +(comp[i.companyId]?' '+mpEsc(comp[i.companyId]):'')+(isAdminView&&i.unitPrice?' · '+(+i.unitPrice).toLocaleString()+' ฿':'')+'</div>'+(i.note?'<div class="co">'+mpEsc(i.note)+'</div>':'')+'</div>'+badge+'</div>'
+      +'<div class="q"><div><span class="stk-f">🏠 ฟาร์ม</span> <b class="stk-fv">'+stkQ(i.qty)+'</b> '+mpEsc(i.unit||'')+'</div>'
+      +'<div><span class="stk-s">🏪 บุญชู</span> <b class="stk-sv">'+(shopKnown?stkQ(x.shop):'—')+'</b> '+(shopKnown?mpEsc(i.unit||''):'')+'</div></div>'
+      +'<div class="b">'+days+(i.minQty?'<span class="stk-min">ขั้นต่ำ '+i.minQty+' '+mpEsc(i.unit||'')+'</span>':'')+'<span class="btns">'+btns+'</span></div></div>';
+  };
+  // ของไม่ได้เบิกเกิน 90 วัน (ลงบ่อ + อุปกรณ์นอก) · มูลค่าเห็นเฉพาะ admin
+  const last=stockLastUse(),td=today();
+  const dead=all.filter(x=>x.farm>=1&&(!cat||x.i.category===cat)&&(!last[x.i.id]||dDiff(last[x.i.id],td)>STK_DEAD_DAYS))
+    .sort((a,b)=>b.farm*(b.i.unitPrice||0)-a.farm*(a.i.unitPrice||0));
+  const deadVal=dead.reduce((s,x)=>s+x.farm*(x.i.unitPrice||0),0);
+  const deadHtml=dead.length?'<details class="stk-dead"><summary><span>💤 ไม่ได้เบิกเกิน '+STK_DEAD_DAYS+' วัน · '+dead.length+' รายการ</span><span>'+(isAdminView?'฿'+Math.round(deadVal).toLocaleString()+' ':'')+'▾</span></summary>'
+      +dead.map(x=>'<div class="r"><span>'+mpEsc(x.i.name)+'<small>เบิกล่าสุด '+(last[x.i.id]?fD(last[x.i.id]):'ไม่เคยเบิก')+'</small></span><span style="text-align:right">'+stkQ(x.farm)+' '+mpEsc(x.i.unit||'')+(isAdminView?'<small>฿'+Math.round(x.farm*(x.i.unitPrice||0)).toLocaleString()+'</small>':'')+'</span></div>').join('')+'</details>':'';
+  if(!sorted.length){el.innerHTML=alertHtml+`<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">${(cat||search||_stockSoon)?'ไม่พบรายการที่ตรงกับตัวกรองนี้':'ยังไม่มีพัสดุ'}</p>`+deadHtml;return;}
+  el.innerHTML=alertHtml+'<div class="stk-grid">'+sorted.map(card).join('')+'</div>'+deadHtml;
 }
 
 function saveStockItem(){
@@ -11052,7 +11097,7 @@ function filterStockSearch(){
     const pl=itemPropsLine(i,64);
     return `<div class="sk-drop-item${inCart?' sk-drop-in-cart':''}" onclick="addStockToCart('${i.id}')"${pl?' style="align-items:flex-start"':''}>
       <span style="color:var(--tx)">${i.name}${inCart?' <span style="font-size:var(--fs11);color:var(--tx3)">(เพิ่มแล้ว)</span>':''}${pl?`<div style="font-size:var(--fs10);color:var(--tx3);font-weight:400;line-height:1.5;margin-top:1px">${pl}</div>`:''}</span>
-      <span class="sk-drop-stk${isLowFn(i)?' low':''}">${(_stockMode==='in'||_stockMode==='xfer')?'ฟาร์ม '+stkQ(i.qty)+' · บุญชู '+stkQ(shopQ(i)):stkQ(i.qty)} ${i.unit}</span>
+      <span class="sk-drop-stk${isLowFn(i)?' low':''}">${(_stockMode==='in'||_stockMode==='xfer')?stkFS(i.qty,shopQ(i),''):stkQ(i.qty)} ${i.unit}</span>
     </div>`;
   }).join('');
   drop.style.display='';
