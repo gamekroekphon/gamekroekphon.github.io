@@ -60,7 +60,7 @@ const OV_PARAMS = {
 const WQ_RULE = {
   alk: {lo: 136, hi: 250}, doM: {lo: 5, hi: 20}, doA: {lo: 5, hi: 20},
   phM: {lo: 7.4, hi: 9.0}, phA: {lo: 7.4, hi: 9.5}, tM: {lo: 25, hi: 33}, tA: {lo: 25, hi: 33},
-  nh4: {hiD: 4}, no2: {hi: 4}, sal: {hi: 35},
+  nh4: {hiD: 3}, no2: {hi: 4}, sal: {hi: 35},
 };
 const LAB_ALERT_DAYS = 3;   // ผลแล็ปเตือน 3 วันนับจากวันที่ลงผล (enteredAt) ไม่มีค่อยใช้วันที่ตรวจ
 function labAlertLatest(p) {

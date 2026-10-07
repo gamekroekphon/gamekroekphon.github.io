@@ -6175,11 +6175,11 @@ function pRelease(p){return(p.stock||0)+(p.stockBonus||0)}
 function dens(p){return p.size>0?Math.round(pRelease(p)/(p.size*1600)):0}
 // ── rec (ถ้ามี) คือ record/ค่าที่กำลังกรอกอยู่ทั้งชุด ใช้แค่กับ mg_/ca เพื่อดึง .sal มาคำนวณช่วงยอมรับที่ปรับตามความเค็ม — ไม่ได้ใส่ rec หรือไม่มี sal ในนั้น จะ fallback ไปใช้เกณฑ์คงที่ของ PARAMS เหมือนเดิมทุกประการ ──
 // ══════ เกณฑ์เตือนค่าน้ำของฟาร์ม (entry #384 พี่สั่ง 7 ต.ค. 69) — ใช้ทั้งแอป: สีบ่อ · สีช่องตารางน้ำ · หน้าบ่อ · บอท LINE (functions/index.js WQ_RULE ต้องตรงกัน) ══════
-//    ฟาร์ม focus 6 ข้อ = แดง: ALK <136 · DO <5 · pH <7.4 · pH เช้า–บ่ายต่าง >0.3 · อุณหภูมิ <25 · NH4 >4
+//    ฟาร์ม focus 6 ข้อ = แดง: ALK <136 · DO <5 · pH <7.4 · pH เช้า–บ่ายต่าง >0.3 · อุณหภูมิ <25 · NH4 >3
 //    ค่าอื่นเตือนเฉพาะ "สูงมาก" = เหลือง (hi) · Ca/Mg/Hard/NO3 ไม่อยู่ที่นี่ → ใช้ PARAMS เดิม
 //    lo = ต่ำกว่า → แดง · hiD = เกิน → แดง · hi = เกิน → เหลือง · PARAMS min/max ยังใช้กับเส้นช่วงในกราฟเท่านั้น
 const WQ_RULE={alk:{lo:136,hi:250},doM:{lo:5,hi:20},doA:{lo:5,hi:20},phM:{lo:7.4,hi:9.0},phA:{lo:7.4,hi:9.5},
-  tM:{lo:25,hi:33},tA:{lo:25,hi:33},nh4:{hiD:4},no2:{hi:4},sal:{hi:35}};
+  tM:{lo:25,hi:33},tA:{lo:25,hi:33},nh4:{hiD:3},no2:{hi:4},sal:{hi:35}};
 const WQ_SWING_MAX=0.3;
 function wqRule(key,v){
   const r=WQ_RULE[key];v=parseFloat(v);if(!r||isNaN(v))return'ok';
