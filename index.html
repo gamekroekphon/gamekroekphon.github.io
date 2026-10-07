@@ -1463,6 +1463,11 @@ table.skc-tbl tbody tr.skc-det td,table.skc-tbl tbody tr.skc-det:hover td{backgr
 .shp-cnt small{display:block;color:var(--tx3);font-size:var(--fs11)}
 .shp-cnt input{text-align:right}
 .shp-cnt.chg input{border-color:var(--p);background:var(--pl)}
+.shp-ctag{display:inline-block;border-radius:99px;padding:1px 9px;font-size:var(--fs11);font-weight:700;white-space:nowrap}
+.shp-ctag.new{background:var(--db);color:var(--d)}.shp-ctag.old{background:var(--wb);color:var(--w)}
+.shp-need{border:1.5px solid #F5C978;background:var(--wb);border-radius:12px;padding:8px 10px;margin-bottom:6px}
+.shp-need .h{font-weight:700;color:var(--w);font-size:calc(14px * var(--ui-scale))}
+.shp-need .shp-cnt{border-bottom-color:#F5DFA8}.shp-need .shp-cnt:last-child{border-bottom:none}
 .shp-log{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--sf2);font-size:calc(13px * var(--ui-scale))}
 .shp-log small{display:block;color:var(--tx3);font-size:var(--fs11)}
 .shp-log b.p{color:var(--ok)}.shp-log b.m{color:var(--d)}
@@ -9996,6 +10001,15 @@ function shopUseRate(){
 // อาหารกุ้งไม่ขึ้นในหน้าบุญชู (entry #380 พี่สั่ง) — คนฟาร์มนับ/เบิกเอง และเบอร์เปลี่ยนตามกุ้งโต (เบอร์เล็กหยุดกิน ย้ายไปเบอร์ใหญ่) เตือนสั่งตามอัตราใช้ 14 วันจะผิด
 //    ยังเตือนที่หน้าสต็อกฟาร์ม + แจ้ง LINE ตอนหมดเหมือนเดิม
 function shopSkip(i){return i.category==='feed'&&!(shopQ(i)>=1);}
+// ══════ ต้องนับ (entry #382 พี่สั่ง 7 ต.ค. 69) — ของบุญชูที่ยังไม่เคยนับ หรือนับล่าสุดเกิน 30 วัน ══════
+//    เฉพาะของที่เกี่ยวกับบุญชู (มีของ ≥1 หรือเคยมีรายการใน shopLog) — ของส่งตรงฟาร์มไม่ขึ้น · อาหารตัดด้วย shopSkip (#380) · เตือนในแอปอย่างเดียว
+const SHOP_COUNT_DAYS=30;
+function shopNeedCount(){
+  const act=new Set(shopLogArr().map(l=>l.itemId)),t=today();
+  return(D.inventoryItems||[]).filter(i=>i&&i.id&&!shopSkip(i)&&(shopQ(i)>=1||act.has(i.id))
+    &&(!i.shopCountedAt||dDiff(i.shopCountedAt,t)>SHOP_COUNT_DAYS));
+}
+function shopCountTag(i){return i.shopCountedAt?'<span class="shp-ctag old">นับ '+fD(i.shopCountedAt)+' · '+dDiff(i.shopCountedAt,today())+' วัน</span>':'<span class="shp-ctag new">ยังไม่เคยนับ</span>';}
 function shopRows(){
   const rate=shopUseRate();
   return(D.inventoryItems||[]).filter(i=>i&&i.id&&!shopSkip(i)).map(i=>{
@@ -10039,7 +10053,7 @@ function renderShop(){
   if(APP_ROLE!=='admin'){el.innerHTML='';return;}
   const rows=shopRows();
   const counted=(D.inventoryItems||[]).some(i=>i&&i.shopCountedAt);
-  const buy=rows.filter(r=>r.need),mv=rows.filter(r=>r.move);
+  const buy=rows.filter(r=>r.need),mv=rows.filter(r=>r.move),nc=shopNeedCount();
   const V=[['todo','ต้องทำวันนี้'],['stock','สต็อก 2 ที่'],['count','✏️ นับของบุญชู'],['lead','⚙️ วันส่งของ'],['log','ประวัติ']];
   let s=(counted?'':'<div class="shp-banner">📋 ยังไม่ได้นับบุญชู — กด <b>✏️ นับของบุญชู</b> ใส่ยอดครั้งแรก</div>')
     +'<div class="shp-chips">'+V.map(([k,l])=>'<button type="button" class="'+(_shopView===k?'on':'')+'" onclick="_shopView=\''+k+'\';renderShop()">'+l+'</button>').join('')+'</div>';
@@ -10050,7 +10064,8 @@ function renderShop(){
       s+='<div class="shp-quick"><button type="button" onclick="clerkJob(\'in\')"><span class="ic">📥</span>รับขนส่งเข้าบุญชู</button>'
         +'<button type="button" onclick="clerkJob(\'xfer\')"><span class="ic">🔁</span>บุญชู ⇄ ฟาร์ม</button></div>';
     s+='<div class="card"><div class="shp-chips"><button type="button" class="'+(_shopTodo==='buy'?'on':'')+'" onclick="_shopTodo=\'buy\';renderShop()">🔴 สั่งบริษัท '+buy.length+'</button>'
-      +'<button type="button" class="'+(_shopTodo==='move'?'on':'')+'" onclick="_shopTodo=\'move\';renderShop()">🟠 บุญชูเข้าฟาร์ม '+mv.length+'</button></div>';
+      +'<button type="button" class="'+(_shopTodo==='move'?'on':'')+'" onclick="_shopTodo=\'move\';renderShop()">🟠 บุญชูเข้าฟาร์ม '+mv.length+'</button>'
+      +'<button type="button" class="'+(_shopTodo==='count'?'on':'')+'" onclick="_shopTodo=\'count\';renderShop()">📋 ต้องนับ '+nc.length+'</button></div>';
     if(_shopTodo==='buy'){
       if(!buy.length)s+='<div style="color:var(--ok);padding:10px 0">✓ ยังไม่มีของที่ต้องสั่ง</div>';
       const by={};buy.forEach(r=>{const k=r.i.companyId||'';(by[k]=by[k]||[]).push(r);});
@@ -10059,12 +10074,20 @@ function renderShop(){
           +by[k].sort((a,b)=>a.td-b.td).map(r=>'<div class="shp-it"><div><b>'+mpEsc(r.i.name)+'</b><small>'+line(r)+'</small></div>'
             +'<span class="shp-act r1">สั่ง ~'+r.buy.toLocaleString()+' '+mpEsc(r.i.unit||'')+'</span>'+bar(r)+'</div>').join('');
       });
+    }else if(_shopTodo==='count'){
+      if(!nc.length)s+='<div style="color:var(--ok);padding:10px 0">✓ นับครบแล้ว ไม่มีของที่เกิน '+SHOP_COUNT_DAYS+' วัน</div>';
+      const by={};nc.forEach(i=>{(by[i.companyId||'']=by[i.companyId||'']||[]).push(i);});
+      Object.keys(by).sort((a,b)=>by[b].length-by[a].length||String(prCoName(a)).localeCompare(String(prCoName(b)),'th')).forEach(k=>{
+        s+='<div class="shp-co"><span>'+mpEsc(prCoName(k)||'ยังไม่ระบุบริษัท')+'</span><span>'+by[k].length+'</span></div>'
+          +by[k].sort((a,b)=>String(a.name).localeCompare(String(b.name),'th')).map(i=>'<div class="shp-it"><div><b>'+mpEsc(i.name)+'</b><small><span class="stk-s">บุญชู '+stkQ(shopQ(i))+'</span> '+mpEsc(i.unit||'')+'</small></div>'+shopCountTag(i)+'</div>').join('');
+      });
+      if(nc.length)s+='<button type="button" class="btn btn-p" style="width:100%;margin-top:10px" onclick="_shopView=\'count\';_shopQ=\'\';renderShop()">✏️ ไปนับ '+nc.length+' รายการ</button>';
     }else{
       if(!mv.length)s+='<div style="color:var(--ok);padding:10px 0">✓ ไม่มีของที่ฟาร์มใกล้หมด</div>';
       s+=mv.sort((a,b)=>a.fd-b.fd).map(r=>'<div class="shp-it"><div><b>'+mpEsc(r.i.name)+'</b><small>'+line(r)+'</small></div>'
         +'<button type="button" class="shp-act r2" onclick="shopGoXfer()">🏪→🦐 '+r.mv+'</button>'+bar(r)+'</div>').join('');
     }
-    s+='<div style="font-size:var(--fs10);color:var(--tx3);margin-top:8px">แถบ: เขียว = ฟาร์มพอกี่วัน · ทอง = บุญชู (เต็ม = 30 วัน)</div></div>';
+    s+=(_shopTodo==='count'?'':'<div style="font-size:var(--fs10);color:var(--tx3);margin-top:8px">แถบ: เขียว = ฟาร์มพอกี่วัน · ทอง = บุญชู (เต็ม = 30 วัน)</div>')+'</div>';
   }else if(_shopView==='stock'){
     const list=rows.filter(r=>r.rate>0||r.shop>0).sort((a,b)=>(a.td==null?1e9:a.td)-(b.td==null?1e9:b.td));
     s+='<div class="card"><div style="overflow-x:auto"><table class="tbl shp-tbl"><thead><tr><th>สินค้า</th><th class="num stk-f">ฟาร์ม</th><th class="num stk-s">บุญชู</th><th class="num">ใช้/วัน</th><th class="num">พอ (วัน)</th><th></th></tr></thead><tbody>'
@@ -10100,10 +10123,14 @@ function renderShopCountList(){
   const items=(D.inventoryItems||[]).filter(i=>i&&i.id&&!shopSkip(i)&&(!q||String(i.name).toLowerCase().includes(q)));
   const by={};items.forEach(i=>{(by[i.companyId||'']=by[i.companyId||'']||[]).push(i);});
   const order=prCompanies().map(c=>c.id).concat(['']);
-  el.innerHTML=order.filter(k=>by[k]).map(k=>'<div class="shp-co"><span>'+mpEsc(prCoName(k)||'ยังไม่ระบุบริษัท')+'</span></div>'
-    +by[k].sort((a,b)=>String(a.name).localeCompare(String(b.name),'th')).map(i=>{const v=_shopCount[i.id];
-      return'<div class="shp-cnt'+(v!=null?' chg':'')+'"><span><b>'+mpEsc(i.name)+'</b><small>ตอนนี้ '+stkQ(shopQ(i))+' '+mpEsc(i.unit||'')+(i.shopCountedAt?' · นับ '+fD(i.shopCountedAt):'')+'</small></span>'
-        +'<input class="fi" type="number" inputmode="decimal" min="0" step="any" placeholder="'+shopQ(i)+'" value="'+(v!=null?v:'')+'" oninput="shopCountSet(\''+i.id+'\',this.value,this)" aria-label="ยอดนับ '+mpEsc(i.name)+'"></div>';}).join('')).join('')
+  // ต้องนับ (#382) ขึ้นกล่องบนสุด แล้วไม่ซ้ำในรายการบริษัทข้างล่าง
+  const need=new Set(shopNeedCount().map(i=>i.id)),row=i=>{const v=_shopCount[i.id];
+      return'<div class="shp-cnt'+(v!=null?' chg':'')+'"><span><b>'+mpEsc(i.name)+'</b><small>ตอนนี้ '+stkQ(shopQ(i))+' '+mpEsc(i.unit||'')+(need.has(i.id)?' · '+(i.shopCountedAt?'นับล่าสุด '+fD(i.shopCountedAt):'ยังไม่เคยนับ'):(i.shopCountedAt?' · นับ '+fD(i.shopCountedAt):''))+'</small></span>'
+        +'<input class="fi" type="number" inputmode="decimal" min="0" step="any" placeholder="'+shopQ(i)+'" value="'+(v!=null?v:'')+'" oninput="shopCountSet(\''+i.id+'\',this.value,this)" aria-label="ยอดนับ '+mpEsc(i.name)+'"></div>';};
+  const nd=items.filter(i=>need.has(i.id)).sort((a,b)=>String(a.name).localeCompare(String(b.name),'th'));
+  Object.keys(by).forEach(k=>{by[k]=by[k].filter(i=>!need.has(i.id));if(!by[k].length)delete by[k];});
+  el.innerHTML=(nd.length?'<div class="shp-need"><div class="h">📋 ต้องนับ '+nd.length+'</div>'+nd.map(row).join('')+'</div>':'')+order.filter(k=>by[k]).map(k=>'<div class="shp-co"><span>'+mpEsc(prCoName(k)||'ยังไม่ระบุบริษัท')+'</span></div>'
+    +by[k].sort((a,b)=>String(a.name).localeCompare(String(b.name),'th')).map(row).join('')).join('')
     ||'<div style="color:var(--tx3);padding:12px 0;text-align:center">ไม่พบสินค้า</div>';
 }
 function shopCountSet(id,v,inp){
