@@ -1633,7 +1633,7 @@ body.role-admin .bnav-btn.bn-staff{display:none}
 .bnav-btn.bn-keeper{display:none}
 body.zone-keeper .bnav-btn.bn-keeper{display:flex}
 body.zone-keeper .bnav-btn.bn-staff,body.zone-keeper .bnav-btn.bn-admin,body.zone-keeper #bnav-stock{display:none}
-/* คนหน้าร้าน (#337) — body.shop-clerk ตั้งจากชื่อคนล็อกอิน (SHOP_CLERK) · แถบล่าง = หน้าร้าน · สต็อก · ราคาสินค้า · อุปกรณ์นอก · เพิ่มเติม */
+/* คนหน้าร้าน (#337) — body.shop-clerk ตั้งจากชื่อคนล็อกอิน (SHOP_CLERKS) · แถบล่าง = หน้าร้าน · สต็อก · ราคาสินค้า · อุปกรณ์นอก · เพิ่มเติม */
 /* เจ้าของ (#343) — body.owner-mode จากชื่อล็อกอิน (OWNER_NAMES) · แถบล่าง = สรุป · สต็อก · ราคาสินค้า · สถิติจับกุ้ง · เพิ่มเติม */
 .bnav-btn.bn-owner{display:none}
 body.owner-mode .bnav-btn.bn-owner{display:flex}
@@ -2373,7 +2373,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <button class="bnav-btn bn-keeper" id="bnav-tide" onclick="bnavGo('tide',this)"><span class="bnav-ic">🌊</span>สภาพอากาศ</button>
   <button class="bnav-btn bn-keeper" id="bnav-watlog" onclick="bnavGo('watlog',this)"><span class="bnav-ic">💦</span>จัดการน้ำ</button>
   <button class="bnav-btn bn-keeper" id="bnav-mortality" onclick="bnavGo('mortality',this)"><span class="bnav-ic">☠️</span>กุ้งตาย</button>
-  <!-- คนหน้าร้าน (SHOP_CLERK: ปุ๊ก) — หน้าร้าน/อุปกรณ์นอก อยู่ในหน้าสต็อก กดแล้วเปิดตรงงานนั้นเลย (พี่สั่ง entry #337) -->
+  <!-- คนหน้าร้าน (SHOP_CLERKS: ปุ๊ก/ดาว) — หน้าร้าน/อุปกรณ์นอก อยู่ในหน้าสต็อก กดแล้วเปิดตรงงานนั้นเลย (พี่สั่ง entry #337) -->
   <!-- เจ้าของ (OWNER_NAMES: ก้อย/กุ้ง) — สรุป · สต็อก(ดูอย่างเดียว) · ราคาสินค้า · สถิติจับกุ้ง (พี่สั่ง entry #343) -->
   <button class="bnav-btn bn-owner" id="bnav-own-home" onclick="ownerGo('home')"><span class="bnav-ic">🏠</span>สรุป</button>
   <button class="bnav-btn bn-owner" id="bnav-own-stock" onclick="ownerGo('stock')"><span class="bnav-ic">📦</span>สต็อก</button>
@@ -4780,7 +4780,7 @@ function pruneEmptyMenus(){
 }
 // ── คนหน้าร้าน (พี่สั่ง entry #337) — ปุ๊ก: สต็อกเข้าออกร้าน/ฟาร์ม · อุปกรณ์นอก · ราคาสินค้า · ค่าแรง · ค่าไฟ · ไม่ได้ดูเรื่องกุ้ง
 //    มือถือ: เปิดแอปเจอหน้าร้าน · แถบล่างเฉพาะงานนี้ · เมนูเรื่องกุ้งพับไว้ใน ☰ (ไม่ได้ปิดสิทธิ์ — admin เหมือนเดิม) · คอมเหมือนเดิม
-const SHOP_CLERK='ปุ๊ก';
+const SHOP_CLERKS=['ปุ๊ก','ดาว'];   // ดาว เพิ่ม entry #379 — ทำงานหน้าร้านเหมือนปุ๊ก ไม่ได้เข้าฟาร์ม (บัญชีต้องเป็น admin เพราะหน้าบุญชู/ราคาสินค้าเป็นของ admin)
 let _clerkLanded=false;
 function clerkGo(which){
   const st=document.getElementById('tab-stock');if(!st)return;
@@ -4907,7 +4907,7 @@ function updateUserHeader(user,role){
   document.body.classList.toggle('owner-mode',isOwner);
   // เปิดแอปบนมือถือ → หน้าสรุปของเจ้าของ (เจอ Zone A) ครั้งเดียวต่อการเปิดแอป (#343)
   if(isOwner&&!_ownLanded&&getComputedStyle(document.getElementById('bnav')).display!=='none'){_ownLanded=true;setTimeout(()=>ownerGo('home'),0);}
-  const isClerk=String(uname).trim()===SHOP_CLERK;
+  const isClerk=SHOP_CLERKS.includes(String(uname).trim());
   document.body.classList.toggle('shop-clerk',isClerk);
   // เปิดแอปบนมือถือ (มีแถบล่าง) → หน้าร้านทันที ครั้งเดียวต่อการเปิดแอป · รอ applyRole ข้างล่างก่อน (หน้าร้านเป็นของ admin)
   if(isClerk&&!_clerkLanded&&getComputedStyle(document.getElementById('bnav')).display!=='none'){_clerkLanded=true;setTimeout(()=>clerkGo('shop'),0);}
