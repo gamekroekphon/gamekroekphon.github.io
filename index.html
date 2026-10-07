@@ -4368,7 +4368,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       <div class="skl-modes" style="display:flex;gap:0;background:var(--sf2);border-radius:8px;padding:3px;margin-bottom:14px;width:fit-content;max-width:100%;flex-wrap:wrap">
         <button id="skl-mode-out" class="stock-mode-btn on-out" onclick="setStockLogMode('out')">📤 ลงบ่อ</button>
         <button id="skl-mode-in" class="stock-mode-btn" onclick="setStockLogMode('in')">📥 บุญชูเข้าฟาร์ม</button>
-        <button id="skl-mode-shopin" class="stock-mode-btn admin-only" onclick="setStockLogMode('shopin')">🏬 ขนส่งเข้าบุญชู</button>
+        <button id="skl-mode-shopin" class="stock-mode-btn admin-only" onclick="setStockLogMode('shopin')">🏬 รับขนส่งเข้าบุญชู</button>
         <button id="skl-mode-shared" class="stock-mode-btn" onclick="setStockLogMode('shared')">🔧 อุปกรณ์นอก</button>
         <button id="skl-mode-toshop" class="stock-mode-btn" onclick="setStockLogMode('toshop')">🏪 ฟาร์มกลับบุญชู</button>
         <button id="skl-mode-count" class="stock-mode-btn" onclick="setStockLogMode('count')">🧮 นับสต็อก</button>
@@ -9954,7 +9954,7 @@ function stockJobsForRole(){
   if(APP_ROLE!=='admin')jobs.push({mode:'xfer',ic:'🏪',t:'ฟาร์มกลับบุญชู',s:'ของที่เอากลับไปขายที่บุญชู'});
   if(APP_ROLE==='admin'){
     jobs.unshift({mode:'xfer',ic:'🔁',t:'บุญชู ⇄ ฟาร์ม',s:'ย้ายของได้ 2 ทาง'});
-    jobs.unshift({mode:'in',ic:'📥',t:'ขนส่งเข้าบุญชู',s:'บริษัทมาส่งที่บุญชู'});
+    jobs.unshift({mode:'in',ic:'📥',t:'รับขนส่งเข้าบุญชู',s:'บริษัทมาส่งที่บุญชู'});
     jobs.push({mode:'sale',ic:'🛒',t:'ขายลูกค้าภายนอก',s:'ตัดสต็อก แต่ไม่เข้าต้นทุนบ่อไหนเลย'});
     jobs.push({mode:'newitem',ic:'➕',t:'เพิ่ม/แก้รายการพัสดุ',s:'สร้างสินค้าใหม่ในคลัง (เฉพาะ Admin)'});
   }
@@ -10047,7 +10047,7 @@ function renderShop(){
   const line=r=>stkFS(r.farm,r.shop,r.i.unit)+' · ใช้ '+shopD1(r.rate)+'/วัน → พอ '+shopD1(r.td)+' วัน';
   if(_shopView==='todo'){
     if(document.body.classList.contains('shop-clerk'))
-      s+='<div class="shp-quick"><button type="button" onclick="clerkJob(\'in\')"><span class="ic">📥</span>ขนส่งเข้าบุญชู</button>'
+      s+='<div class="shp-quick"><button type="button" onclick="clerkJob(\'in\')"><span class="ic">📥</span>รับขนส่งเข้าบุญชู</button>'
         +'<button type="button" onclick="clerkJob(\'xfer\')"><span class="ic">🔁</span>บุญชู ⇄ ฟาร์ม</button></div>';
     s+='<div class="card"><div class="shp-chips"><button type="button" class="'+(_shopTodo==='buy'?'on':'')+'" onclick="_shopTodo=\'buy\';renderShop()">🔴 สั่งบริษัท '+buy.length+'</button>'
       +'<button type="button" class="'+(_shopTodo==='move'?'on':'')+'" onclick="_shopTodo=\'move\';renderShop()">🟠 บุญชูเข้าฟาร์ม '+mv.length+'</button></div>';
@@ -10085,7 +10085,7 @@ function renderShop(){
     const LA=shopLogArr().slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.id).localeCompare(String(a.id)));
     const HM=histMonths(LA.map(l=>l.date),_shopMo);_shopMo=HM.val;
     const L=_shopMo?LA.filter(l=>String(l.date||'').startsWith(_shopMo)):LA.slice(0,80);
-    const T={in:'📥 ขนส่งเข้าบุญชู',xfer:'🏪→🦐 บุญชูเข้าฟาร์ม',fromFarm:'🦐→🏪 ฟาร์มกลับบุญชู',adj:'✏️ นับ'};
+    const T={in:'📥 รับขนส่งเข้าบุญชู',xfer:'🏪→🦐 บุญชูเข้าฟาร์ม',fromFarm:'🦐→🏪 ฟาร์มกลับบุญชู',adj:'✏️ นับ'};
     s+='<div class="card"><select class="fi" style="width:150px;margin-bottom:10px" onchange="_shopMo=this.value;renderShop()" aria-label="เลือกเดือน">'+HM.opts+'</select>'+(L.length?L.map(l=>{const plus=l.type==='in'||l.type==='fromFarm'||(l.type==='adj'&&l.qty>0);
       return'<div class="shp-log"><span><b>'+mpEsc(l.itemName||'-')+'</b><small>'+fD(l.date)+' · '+(T[l.type]||l.type)+' · '+mpEsc(l.by||'-')+'</small></span>'
         +'<span style="display:flex;align-items:center;gap:4px"><b class="'+(plus?'p':'m')+'">'+(plus?'+':'−')+Math.abs(l.qty)+' '+mpEsc(l.unit||'')+'</b>'
@@ -11360,7 +11360,7 @@ function saveStockTxBatch(){
   }
   const savedP=save();
   if(emptied.length)stockEmptyEmit(savedP,emptied);
-  const modeLbl=mode==='in'?'ขนส่งเข้าบุญชู':mode==='xfer'?((_xferDir==='toShop'||APP_ROLE!=='admin')?'ฟาร์มกลับบุญชู':'บุญชูเข้าฟาร์ม'):mode==='out'?'เบิกออก':mode==='shared'?'อุปกรณ์นอก':'บันทึกการขาย';
+  const modeLbl=mode==='in'?'รับขนส่งเข้าบุญชู':mode==='xfer'?((_xferDir==='toShop'||APP_ROLE!=='admin')?'ฟาร์มกลับบุญชู':'บุญชูเข้าฟาร์ม'):mode==='out'?'เบิกออก':mode==='shared'?'อุปกรณ์นอก':'บันทึกการขาย';
   showStockMsg('tx','✅ '+modeLbl+' '+saved.length+' รายการแล้ว','ok');
   showToast('บันทึกสำเร็จ',modeLbl+' '+saved.length+' รายการ — '+fD(date));
   _stockCart=[];renderStockCart();
@@ -11425,7 +11425,7 @@ function renderStockShopInLog(){
   if(APP_ROLE!=='admin'){tbl.innerHTML='';return;}
   let logs=shopLogArr().filter(l=>l&&l.type==='in').sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.id).localeCompare(String(a.id)));
   const mo=histMonthFill(document.getElementById('skl-shopin-month'),logs.map(l=>l.date));if(mo)logs=logs.filter(l=>String(l.date||'').startsWith(mo));
-  if(!logs.length){tbl.innerHTML='<p style="padding:10px;text-align:center">ยังไม่มีประวัติขนส่งเข้าบุญชู</p>';return;}
+  if(!logs.length){tbl.innerHTML='<p style="padding:10px;text-align:center">ยังไม่มีประวัติรับขนส่งเข้าบุญชู</p>';return;}
   tbl.innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>รายการ</th><th style="text-align:right">จำนวน</th><th>หน่วย</th><th>บริษัท</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>'
     +logs.map((l,i)=>{const it=(D.inventoryItems||[]).find(x=>x&&x.id===l.itemId);
       return '<tr><td'+(i>0&&logs[i-1].date===l.date?' style="color:transparent"':'')+'>'+fD(l.date)+'</td><td>'+mpEsc(l.itemName||'-')+'</td>'
