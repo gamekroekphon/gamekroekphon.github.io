@@ -1318,6 +1318,9 @@ table.exy-t td,table.exy-t th{font-variant-numeric:tabular-nums}
 .sk-useon small{font-size:calc(12.5px * var(--ui-scale))}
 .sk-cart-name .sk-useon-tag{display:block;width:fit-content;margin-top:2px}
 .sk-useon-tag{display:inline-block;background:var(--wb);color:var(--w);border-radius:99px;padding:0 8px;font-size:calc(11.5px * var(--ui-scale));font-weight:700}
+.fdg-ph{display:inline-block;margin-top:3px;background:var(--ib);color:var(--in);border-radius:7px;padding:1px 7px;font-size:calc(12px * var(--ui-scale));font-weight:700;white-space:nowrap}
+.fdg-sug{display:block;margin:4px 0 0 auto;border:1.5px dashed var(--in);background:var(--sf);color:var(--in);border-radius:8px;padding:2px 8px;font-family:inherit;font-size:calc(12.5px * var(--ui-scale));font-weight:700;cursor:pointer;white-space:nowrap;min-height:30px}
+.fdg-sug[hidden]{display:none}
 .fdg-jump{color:var(--w);font-weight:700;font-size:calc(11.5px * var(--ui-scale));margin-top:2px}
 .fdg-sum td{border-top:2px solid var(--bd);background:var(--sf2);position:sticky;bottom:0;z-index:1}
 .fdg-sum .fdg-miss{color:var(--w)}
@@ -15987,6 +15990,27 @@ function applyFeedStockDeduction(rec,pid,d,stockItemId,sacks){
   if(parseFloat(rec.unitCost)>0){const lg=D.inventoryLog.find(l=>l.id===logId);if(lg)lg.unitCost=parseFloat(rec.unitCost);}
   rec.stockItemId=item.id;rec.stockQty=sacks;rec.stockLogId=logId;
 }
+// ══════ บ่อที่เพิ่งพาเชียล (entry #388 พี่สั่ง 7 ต.ค. 69) — ป้าย "🦐 พาเชียล · กุ้งเหลือ ~X%" วันจับ + อีก 2 วัน
+//    ปุ่ม "ลดตามกุ้ง ≈ Y" = อาหารเมื่อวาน × กุ้งที่เหลือ — เฉพาะตอนอาหารเมื่อวานเป็นของ "ก่อนพาเชียล" (ถ้าลดไปแล้วไม่เสนอซ้ำ)
+//    กุ้งเหลือคิดจากจำนวนตัว: ก่อน = อัตรารอดสะสม × ยอดปล่อย − ที่จับไปก่อนหน้า · ไม่มีผลสุ่ม → ใช้ฐาน กก./แสน (ยอดปล่อย − ที่จับ)
+//    เป็นตัวช่วยคิดเท่านั้น ไม่เปลี่ยนค่าเอง · ช่องยังเติมเลขเมื่อวานเหมือนเดิม
+const FD_PH_DAYS=3;
+function fdPartialInfo(p,d){
+  const all=(p.partialHarvests||[]).filter(x=>x&&x.date&&x.date<=d);
+  const win=all.filter(x=>dDiff(x.date,d)<FD_PH_DAYS);if(!win.length)return null;
+  const first=win.map(x=>x.date).sort()[0];
+  const out=partialTotals(win).count,prevOut=partialTotals(all.filter(x=>x.date<first)).count;
+  const c=pondShrimpCount(p);let before;
+  if(c&&c.aliveAll>0)before=c.aliveAll-prevOut;else before=pondFeedBaseOnDate(p,addDaysStr(first,-1));
+  if(!(before>0)||!(out>0))return null;
+  const ratio=Math.max(0,Math.min(1,(before-out)/before));
+  const dt=new Date(first+'T00:00:00');
+  return{first,ratio,lbl:(first===d&&win.every(x=>x.date===d))?'พาเชียลวันนี้':'พาเชียล '+dt.getDate()+' '+dt.toLocaleDateString('th-TH',{month:'short'})};
+}
+function fdUseSug(pid){
+  const b=document.getElementById(`fdg-${pid}-sug`),i=document.getElementById(`fdg-${pid}-total`);if(!b||!i)return;
+  i.value=b.dataset.v;fdGridCalcRate(pid);fdMixCalc(pid);fdGridSum();i.focus();
+}
 function feedGridRow(p,d,feedItems){
   const existing=(p.feedLog||[]).find(r=>r.date===d);
   const age=docAge(p.startDate,d)||0;
@@ -15996,6 +16020,8 @@ function feedGridRow(p,d,feedItems){
   const suggestedStock=existing?(existing.stockItemId||''):(prev?(prev.stockItemId||''):'');
   const rid=p.id;
   const rateTxt=(bio&&suggestedTotal)?((suggestedTotal/bio)*100).toFixed(1)+'%':'-';
+  const phi=fdPartialInfo(p,d);
+  const sugV=phi&&prev&&prev.totalFeed>0&&prev.date<phi.first&&phi.ratio<0.98?Math.round(prev.totalFeed*phi.ratio):null;   // อาหารเมื่อวานยังเป็นของก่อนพาเชียล
   // ── โชว์เฉพาะสินค้าที่ยังมีสต็อกเหลือ (qty>0) ยกเว้นตัวที่เคยเลือกไว้แล้วให้โชว์ต่อแม้สต็อกจะหมดแล้วก็ตาม ──
   // ── ⚠️ โชว์อาหารทุกเบอร์ ไม่กรองด้วยยอดคงเหลือ (พี่สั่ง entry #262)
   //    เดิมกรอง i.qty>0 — พอลืมกรอกรับเข้าโกดัง เบอร์ที่ต้องใช้จะหายไปจากดรอปดาวน์
@@ -16008,11 +16034,11 @@ function feedGridRow(p,d,feedItems){
   //    เพราะช่องนี้บังคับ (#313) ถ้าลืมกรอกรับเข้าจนเบอร์ที่ใช้อยู่หมด พนักงานจะบันทึกไม่ได้เลย →
   //    (1) เบอร์ที่บ่อนี้ใช้อยู่ (เมื่อวาน/ที่บันทึกไว้) โชว์ต่อแม้หมด  (2) ตัวเลือกท้าย "⋯ แสดงเบอร์ที่หมด" กางครบทุกเบอร์
   return`<tr data-pond="${rid}">
-    <td><b>${p.name}</b>${existing?' <span class="badge b-ok" style="font-size:var(--fs9)">บันทึกแล้ว</span>':''}</td>
+    <td><b>${p.name}</b>${existing?' <span class="badge b-ok" style="font-size:var(--fs9)">บันทึกแล้ว</span>':''}${phi?`<br><span class="fdg-ph">🦐 ${phi.lbl} · กุ้งเหลือ ~${Math.round(phi.ratio*100)}%</span>`:''}</td>
     <td>${age>0?age+' วัน':'-'}</td>
     <td style="text-align:right">${bio?Math.round(bio).toLocaleString()+' กก.':'-'}</td>
     <td style="text-align:right">${prev&&prev.totalFeed!=null?prev.totalFeed.toFixed(1):'-'}</td>
-    <td style="text-align:right"><input type="number" step="0.1" class="fi" style="width:90px;text-align:right" id="fdg-${rid}-total" value="${suggestedTotal!=null?suggestedTotal:''}" placeholder="0.0" data-prev="${prev&&prev.totalFeed!=null?prev.totalFeed:''}" oninput="fdGridCalcRate('${rid}');fdMixCalc('${rid}');fdGridSum()"><div class="fdg-jump" id="fdg-${rid}-jump" hidden></div></td>
+    <td style="text-align:right"><input type="number" step="0.1" class="fi" style="width:90px;text-align:right" id="fdg-${rid}-total" value="${suggestedTotal!=null?suggestedTotal:''}" placeholder="0.0" data-prev="${prev&&prev.totalFeed!=null?prev.totalFeed:''}" oninput="fdGridCalcRate('${rid}');fdMixCalc('${rid}');fdGridSum()"><div class="fdg-jump" id="fdg-${rid}-jump" hidden></div>${sugV!=null?`<button type="button" class="fdg-sug" id="fdg-${rid}-sug" data-v="${sugV}" onclick="fdUseSug('${rid}')"${suggestedTotal!=null&&suggestedTotal!==prev.totalFeed?' hidden':''}>ลดตามกุ้ง ≈ ${sugV.toLocaleString()} ↵</button>`:''}</td>
     <td style="text-align:right" id="fdg-${rid}-rate">${rateTxt}</td>
     <td style="text-align:right" id="fdg-${rid}-k100" data-base="${pondFeedBaseOnDate(p,d)||''}">-</td>
     <td><select class="fi" style="width:220px${suggestedStock?'':';border-color:var(--w);background:var(--wb)'}" id="fdg-${rid}-stock" onchange="fdGridStockPick('${rid}')"><option value="">-- เลือกเบอร์อาหาร --</option>${fdFeedOpts(feedItems,suggestedStock,false)}</select><button type="button" class="fdg-mixb" id="fdg-${rid}-mixbtn" onclick="fdMixToggle('${rid}',true)" title="ผสมเบอร์ที่ 2" aria-label="ผสมเบอร์ที่ 2"${existing&&feedMixKg(existing)?' hidden':''}>＋</button></td>
@@ -16102,6 +16128,7 @@ function fdGridCalcRate(pid){
   // กก./แสน (#378) — ฐานเดียวกับหน้าบ่อ: ลูกกุ้งที่ปล่อย − ที่พาเชียลไปแล้ว ณ วันนั้น
   const k=document.getElementById(`fdg-${pid}-k100`);
   if(k){const v=feedPer100k(total,parseFloat(k.dataset.base)||0);k.textContent=v!=null?v.toFixed(1):'-';}
+  const sg=document.getElementById(`fdg-${pid}-sug`);if(sg&&inp)sg.hidden=inp.value===''||parseFloat(inp.value)!==parseFloat(inp.dataset.prev);   // #388
   // ต่างจากเมื่อวานมาก (#378) — กันพิมพ์ผิด เช่น 690 แทน 69 · เตือนอย่างเดียว ไม่บล็อก
   const j=document.getElementById(`fdg-${pid}-jump`),pc=fdJumpPct(inp);
   if(j){j.hidden=pc==null;if(pc!=null)j.textContent='⚠️ '+(pc>0?'+':'')+pc+'% จากเมื่อวาน';}
