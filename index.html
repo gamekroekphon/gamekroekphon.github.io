@@ -1367,6 +1367,13 @@ table.exy-t td,table.exy-t th{font-variant-numeric:tabular-nums}
 .ov2-more{text-align:right;font-weight:600;color:var(--p);cursor:pointer;margin-top:8px;font-size:calc(13px * var(--ui-scale))}
 .ov2-ml{font-size:calc(13.5px * var(--ui-scale));padding:10px 14px}
 .ov2-side .ov-weather{padding:10px 14px}.ov2-side .ov-weather-big{font-size:calc(20px * var(--ui-scale))}
+.lb-sum{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.lb-due{display:inline-block;border-radius:99px;padding:1px 9px;font-weight:700;font-size:calc(12.5px * var(--ui-scale));background:var(--sf2);white-space:nowrap}
+.lb-due.late{background:var(--wb);color:var(--w)}.lb-due.now{background:var(--ib);color:var(--in)}
+.lb-c{display:inline-block;min-width:46px;text-align:center;border-radius:6px;padding:1px 6px;font-weight:600}
+.lb-c.ok{background:var(--ob);color:var(--ok)}.lb-c.w{background:var(--wb);color:var(--w)}.lb-c.d{background:var(--db);color:var(--d)}
+.lb-all-t td{white-space:nowrap;font-variant-numeric:tabular-nums}.lb-all-t small{font-size:calc(12px * var(--ui-scale))}
+.lb-hint{font-size:calc(12.5px * var(--ui-scale));margin-top:8px}
 .pv-bar{display:flex;gap:6px;background:var(--sf2);padding:4px;border-radius:12px;margin-bottom:12px}
 .pv-bar button{flex:1;border:none;background:none;border-radius:9px;min-height:44px;font-family:inherit;font-weight:700;font-size:calc(14px * var(--ui-scale));color:var(--tx);cursor:pointer}
 .pv-bar button.on{background:var(--sf);color:var(--pd);box-shadow:0 1px 3px rgba(0,0,0,.12)}
@@ -3290,6 +3297,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 <!-- LAB RESULTS -->
 <div id="sec-lab" class="sec">
   <div class="sec-hdr"><div class="sec-title">🔬 ผลตรวจแล็บ</div></div>
+  <div class="card" id="lb-all" style="margin-bottom:16px"></div>
   <div class="g2" style="margin-bottom:16px;align-items:start">
     <div class="card">
       <div class="card-t">📝 บันทึกผลแล็บ</div>
@@ -3350,7 +3358,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
           <div class="lb-sect-hdr">🔬 EHP / Microsporidian</div>
           <div class="fgrid" style="grid-template-columns:1fr 1fr">
             <div class="fg"><label class="fl" for="lb-ehp">EHP (% พบเชื้อ)</label><input type="number" class="fi" id="lb-ehp" placeholder="0" min="0" max="100" step="0.1" oninput="onLabInput('hep')"><span class="lbl-std">ปลอดภัย: 0% | เฝ้าระวัง: 0–5% | อันตราย: &gt;5%</span></div>
-            <div class="fg"><label class="fl" for="lb-ehp-larva">ตัวอ่อน EHP (%)</label><input type="number" class="fi" id="lb-ehp-larva" placeholder="0" min="0" max="100" step="0.1" oninput="onLabInput('hep')"><span class="lbl-std">ปลอดภัย: 0% | เฝ้าระวัง: 0–25% | อันตราย: &gt;25%</span></div>
+            <div class="fg"><label class="fl" for="lb-ehp-larva">ตัวอ่อน EHP (%)</label><input type="number" class="fi" id="lb-ehp-larva" placeholder="0" min="0" max="100" step="0.1" oninput="onLabInput('hep')"><span class="lbl-std">ปกติ: ≤25% | เฝ้าระวัง: 30–35% | อันตราย: ≥40%</span></div>
           </div>
           <div class="lb-sect-hdr">🍽️ เนื้อเยื่อตับ-ลำไส้</div>
           <div class="fgrid" style="grid-template-columns:1fr 1fr">
@@ -6286,7 +6294,7 @@ function classifyOv(key,v){
     case'hepatoYellow':return v>=10000?'danger':v>1000?'warn':'ok';
     case'tvc':case'tvcHepato':return v>1e7?'danger':v>=1e5?'warn':'ok';
     case'ehp':return v>5?'danger':v>0?'warn':'ok';
-    case'ehpLarva':return v>25?'danger':v>0?'warn':'ok';
+    case'ehpLarva':return v>=40?'danger':v>25?'warn':'ok';   // แบบ ก (พี่เลือก #389): ≤25 เขียว · 30–35 เหลือง · ≥40 แดง — ค่ากลางฟาร์ม 25 · เดิม >0 เหลือง = เหลืองทุกผล 104/104
     case'gutInflam':return v>30?'danger':v>10?'warn':'ok';
     case'lipidDroplet':return v>=70?'ok':v>=50?'warn':'danger';
     case'hepato':return v==='normal'?'ok':v==='swollen'?'warn':(v?'danger':'ok');
@@ -17071,7 +17079,35 @@ function deleteMortality(pid,id){
   save();renderMtRows();renderMtSummary();populateMtFilter();renderMtTable();
 }
 // ===== LAB RESULTS =====
-function initLab(){populateAll();document.getElementById('lb-date').value=today();calcAge('lb');renderLabTable();updateLabSrcCount('water');updateLabSrcCount('hep');}
+// ══════ ผลล่าสุดทุกบ่อ (entry #389 พี่สั่ง 8 ต.ค. 69) — บ่อที่มีกุ้งบ่อละแถว · เรียงตรวจนานสุดก่อน · เกิน LAB_DUE_DAYS = ถึงคิว
+//    เชื้อเขียว/เหลือง ทั้งในน้ำและในตับ (พี่บอก "ที่ทำมาไม่ครบ") · ค่าเชื้อแสดงแบบยกกำลัง (sciNum ตัวเดียวกับประวัติ) · สีตาม classifyOv · ลูกศร EHP ตัวอ่อน = เทียบครั้งก่อน · กดแถว = เปิดประวัติบ่อนั้น
+const LAB_DUE_DAYS=7;
+function renderLabAll(){
+  const el=document.getElementById('lb-all');if(!el)return;
+  const t=today();
+  const rows=wqfeedActivePonds().map(p=>{const L=sortLogArr('labResults',p.labResults||[]);const l=L[L.length-1]||null,pv=L[L.length-2]||null;return{p,l,pv,ago:l?dDiff(l.date,t):null};})
+    .sort((a,b)=>(b.ago==null?1e9:b.ago)-(a.ago==null?1e9:a.ago)||String(a.p.name).localeCompare(String(b.p.name),'th',{numeric:true}));
+  if(!rows.length){el.innerHTML='';el.style.display='none';return;}el.style.display='';
+  const late=rows.filter(r=>r.ago==null||r.ago>LAB_DUE_DAYS).length,now=rows.filter(r=>r.ago===LAB_DUE_DAYS).length;
+  const C={ok:'lb-c ok',warn:'lb-c w',danger:'lb-c d'};
+  const cell=(k,v,fmt)=>v==null||v===''?'<td>-</td>':'<td><span class="'+(C[classifyOv(k,v)]||'lb-c')+'">'+fmt(v)+'</span></td>';
+  const pct=v=>v+'%';
+  const due=r=>{if(r.ago==null)return'<span class="lb-due late">ยังไม่เคยตรวจ</span>';const c=r.ago>LAB_DUE_DAYS?'late':r.ago===LAB_DUE_DAYS?'now':'';return'<span class="lb-due '+c+'">'+fD(r.l.date).replace(/ \d+$/,'')+' · '+r.ago+' วัน</span>';};
+  const arrow=r=>{if(!r.pv||typeof r.pv.ehpLarva!=='number'||typeof r.l.ehpLarva!=='number')return'';const a=r.l.ehpLarva,b=r.pv.ehpLarva;return' <small>'+(a>b?'↑ จาก '+b:a<b?'↓ จาก '+b:'= '+b)+'</small>';};
+  el.innerHTML='<div class="card-t">🗂️ ผลล่าสุดทุกบ่อ</div>'
+    +'<div class="lb-sum">'+(late?'<span class="lb-due late">⏰ เกิน '+LAB_DUE_DAYS+' วัน '+late+' บ่อ</span>':'')+(now?'<span class="lb-due now">📅 ครบ '+LAB_DUE_DAYS+' วัน '+now+' บ่อ</span>':'')+'<span class="lb-due">ตรวจแล้ว '+(rows.length-late-now)+' บ่อ</span></div>'
+    +'<div class="tbl-wrap"><table class="tbl lb-all-t"><thead><tr><th>บ่อ</th><th>ตรวจล่าสุด</th><th>อายุตอนตรวจ</th><th>🟢 เขียว (น้ำ)</th><th>🟡 เหลือง (น้ำ)</th><th>🟢 เขียว (ตับ)</th><th>🟡 เหลือง (ตับ)</th><th>EHP ตัวอ่อน</th><th>ลำไส้อักเสบ</th><th>เม็ดไขมัน</th></tr></thead><tbody>'
+    +rows.map(r=>{const l=r.l||{};return'<tr onclick="labOpenPond(\''+r.p.id+'\')" style="cursor:pointer"><td><b>'+mpEsc(r.p.name)+'</b></td><td>'+due(r)+'</td><td>'+(r.l?(recAge(r.p,l)??l.age)+' วัน':'-')+'</td>'
+      +(r.l?cell('tcbsGreen',l.tcbsGreen,sciNum)+cell('tcbsYellow',l.tcbsYellow,sciNum)+cell('hepatoGreen',l.hepatoGreen,sciNum)+cell('hepatoYellow',l.hepatoYellow,sciNum)
+        +(typeof l.ehpLarva==='number'?'<td><span class="'+C[classifyOv('ehpLarva',l.ehpLarva)]+'">'+l.ehpLarva+'%</span>'+arrow(r)+'</td>':'<td>-</td>')
+        +cell('gutInflam',l.gutInflam,pct)+cell('lipidDroplet',l.lipidDroplet,pct):'<td colspan="7"></td>')+'</tr>';}).join('')
+    +'</tbody></table></div><div class="lb-hint">เรียงบ่อที่ตรวจนานสุดก่อน · กดแถว = ดูประวัติบ่อนั้น · ลูกศร = เทียบครั้งก่อน</div>';
+}
+function labOpenPond(pid){
+  const s=document.getElementById('lb-pond');if(!s)return;s.value=pid;onLbPond();
+  document.getElementById('lb-tbl-wrap')?.closest('.card')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function initLab(){populateAll();document.getElementById('lb-date').value=today();calcAge('lb');renderLabTable();renderLabAll();updateLabSrcCount('water');updateLabSrcCount('hep');}
 function updateLabStatus(){
   const tg=parseFloat(document.getElementById('lb-tcbs-g').value)||null;
   const ty=parseFloat(document.getElementById('lb-tcbs-y').value)||null;
@@ -17119,7 +17155,7 @@ function saveLab(){
   const sg=tg!==null?(tg>1000?'danger':tg>100?'warn':'ok'):'ok';
   if(idx>=0){p.labResults[idx]=rec;showMsg('lb-msg','warn',`อัปเดต ${fD(d)}`)}
   else{p.labResults.push(rec);p.labResults.sort((a,b)=>new Date(a.date)-new Date(b.date));showMsg('lb-msg',sg==='danger'?'danger':sg==='warn'?'warn':'ok',`✅ บันทึกผลแล็บ บ่อ ${p.name} 🟢${tg||'-'} 🟡${ty||'-'} CFU/mL`)}
-  save();renderLabTable();renderOv();
+  save();renderLabTable();renderLabAll();renderOv();
   flashSaveBtn(document.getElementById('lb-save-btn'));
 }
 function clearLab(){
@@ -17159,7 +17195,7 @@ function renderLabTable(){
       const ehpDisp=(typeof r.ehp==='number')?`${r.ehp}%`:(r.ehp?(EHP_LBL[r.ehp]||r.ehp):'-');
       const ehpCls=(typeof r.ehp==='number')?(r.ehp>5?'b-danger':r.ehp>0?'b-warn':'b-ok'):(r.ehp==='nd'?'b-ok':r.ehp==='trace'?'b-na':r.ehp==='low'?'b-warn':r.ehp==='high'?'b-danger':'b-na');
       const ehpLarvaDisp=(typeof r.ehpLarva==='number')?`${r.ehpLarva}%`:'-';
-      const ehpLarvaCls=(typeof r.ehpLarva==='number')?(r.ehpLarva>25?'b-danger':r.ehpLarva>0?'b-warn':'b-ok'):'b-na';
+      const ehpLarvaCls=(typeof r.ehpLarva==='number')?({ok:'b-ok',warn:'b-warn',danger:'b-danger'}[classifyOv('ehpLarva',r.ehpLarva)]):'b-na';   // เกณฑ์เดียวกับ classifyOv (#389)
       const gutDisp=(typeof r.gutInflam==='number')?`${r.gutInflam}%`:'-';
       const gutCls=(typeof r.gutInflam==='number')?(r.gutInflam>30?'b-danger':r.gutInflam>10?'b-warn':'b-ok'):'b-na';
       const lipidDisp=(typeof r.lipidDroplet==='number')?`${r.lipidDroplet}%`:'-';
@@ -17174,7 +17210,7 @@ function deleteLab(pid,id){
   if(!confirm('ต้องการลบข้อมูลของวันที่ '+fD(target.date)+' ใช่หรือไม่?'))return;
   p.labResults=(p.labResults||[]).filter(r=>r.id!==id);
   D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
-  save();renderLabTable();renderOv();
+  save();renderLabTable();renderLabAll();renderOv();
 }
 // ===== COMPARE =====
 function setCmpCat(cat,btn){

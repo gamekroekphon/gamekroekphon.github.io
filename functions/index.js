@@ -121,8 +121,8 @@ function classifyOv(key, v) {
       return v > 1e7 ? "danger" : v >= 1e5 ? "warn" : "ok";
     case "ehp":
       return v > 5 ? "danger" : v > 0 ? "warn" : "ok";
-    case "ehpLarva":
-      return v > 25 ? "danger" : v > 0 ? "warn" : "ok";
+    case "ehpLarva":   // #389 แบบ ก: ≤25 ปกติ · 30–35 เฝ้าระวัง · ≥40 อันตราย (ตรงกับแอป)
+      return v >= 40 ? "danger" : v > 25 ? "warn" : "ok";
     case "hepato":
       return v === "normal" ? "ok" : v === "swollen" ? "warn" : v ? "danger" : "ok";
     default:
