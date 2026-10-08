@@ -1396,6 +1396,16 @@ table.exy-t td,table.exy-t th{font-variant-numeric:tabular-nums}
 .rk-fold summary::-webkit-details-marker{display:none}
 .rk-fold div{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 8px}
 .rk-fold button{border:1px solid #9AD9AE;background:var(--sf);border-radius:99px;padding:2px 10px;font-family:inherit;font-weight:600;cursor:pointer;min-height:32px}
+.crx-reason{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:11px 12px;margin-bottom:12px}
+.crx-rh{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:calc(15px * var(--ui-scale));margin-bottom:8px}.crx-rh small{font-weight:600;font-size:calc(12.5px * var(--ui-scale))}
+.crx-rbar{display:flex;height:14px;border-radius:6px;overflow:hidden;margin-bottom:10px}.crx-rbar i{display:block;height:100%}
+.crx-rs{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;width:100%;border:1.5px solid var(--bd);border-radius:12px;padding:8px 10px;margin-bottom:6px;background:var(--sf);font-family:inherit;color:var(--tx);text-align:left;cursor:pointer}
+.crx-rs.on{border-color:var(--tx);background:var(--sf2)}
+.crx-rs .dot{width:12px;height:12px;border-radius:50%}
+.crx-rs b{font-size:calc(14.5px * var(--ui-scale))}.crx-rs small{display:block;font-size:calc(12.5px * var(--ui-scale))}
+.crx-rs .m{font-weight:700;white-space:nowrap}.crx-rs .m.neg{color:var(--d)}.crx-rs .m.pos{color:var(--ok)}
+.crx-rprev{font-size:calc(12.5px * var(--ui-scale));margin-top:4px}
+.crx-rflt{display:flex;justify-content:space-between;align-items:center;width:100%;background:var(--tx);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-family:inherit;font-weight:700;margin-bottom:8px;cursor:pointer}
 .pv-bar{display:flex;gap:6px;background:var(--sf2);padding:4px;border-radius:12px;margin-bottom:12px}
 .pv-bar button{flex:1;border:none;background:none;border-radius:9px;min-height:44px;font-family:inherit;font-weight:700;font-size:calc(14px * var(--ui-scale));color:var(--tx);cursor:pointer}
 .pv-bar button.on{background:var(--sf);color:var(--pd);box-shadow:0 1px 3px rgba(0,0,0,.12)}
@@ -3559,10 +3569,12 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <select id="cr-year" onchange="renderCrops()" hidden aria-hidden="true"></select>
   <div class="crx-chips" id="cr-years"></div>
   <div id="cr-sum"></div>
+  <div id="cr-reason"></div>
   <div id="cr-act-wrap"><div class="crx-h">🦐 รอบปัจจุบัน</div><div class="crx-act" id="cr-act"></div></div>
   <div class="crx-h">✅ ปิดแล้ว</div>
   <div class="crx-row"><select class="fi" id="cr-hist-pond" onchange="_crOpen=null;renderCrops()" aria-label="เลือกบ่อ"></select><button class="btn btn-s admin-only" style="margin-left:auto;font-size:var(--fs11);padding:4px 10px;white-space:nowrap" onclick="openAddCropModal()" title="ใส่ข้อมูลรอบเลี้ยงเก่าของบ่อที่ตกหล่นไป (กรอกย้อนหลังเอง)">➕ เพิ่มข้อมูล</button></div>
   <div class="crx-chips" id="cr-sorts"></div>
+  <div id="cr-rflt"></div>
   <div id="cr-history" class="crx-list"></div>
   <div class="card" style="margin-top:16px" id="ch-card" hidden>
     <div class="card-t" style="justify-content:space-between">📊 รายละเอียดรอบ<button type="button" class="crx-x" onclick="crCloseDetail()" aria-label="ปิด">✕</button></div>
@@ -18494,8 +18506,18 @@ function pondNameById(pondId){
 // ══ หน้า 📚 ประวัติรอบเลี้ยง แบบการ์ด (พี่สั่ง entry #364) ══
 //   1 การ์ด = 1 รอบ เห็นผลทันที (ตัน · ไซส์ · FCR เทียบเกณฑ์ · รอด · กก./ไร่ · กำไร) · เรียงเทียบได้ · แตะ = สรุปย่อ + ปุ่มดูละเอียด (การ์ด #ch-card เดิม)
 //   ตัวเลขทุกตัวมาจาก getCloseSummary() ชุดเดียวกับรายละเอียด/PDF · ปีของรอบ = histRecYear() (entry #266/#267) · index ที่ส่งต่อ = index จริงใน p.cropHistory
-let _crSort='new',_crOpen=null;
-function crSetYear(v){const e=document.getElementById('cr-year');if(e)e.value=v;_crOpen=null;renderCrops();}
+let _crSort='new',_crOpen=null,_crReason=null;
+function crSetYear(v){const e=document.getElementById('cr-year');if(e)e.value=v;_crOpen=null;_crReason=null;renderCrops();}
+function crSetReason(k){_crReason=_crReason===k?null:k;_crOpen=null;renderCrops();}
+// ── สาเหตุปิดบ่อ (entry #395 พี่สั่ง 8 ต.ค. 69 · mockup_รอบเลี้ยงสาเหตุปิดบ่อ.html) — closeReason() ตัวเดียวกับ PDF สรุปทั้งปี (#374)
+const CR_REASONS=[['ขี้ขาว','#64748B'],['ตัวแดง','var(--d)'],['ปกติ / ครบรอบ','var(--ok)']];
+const CR_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function crMonthsTxt(ms){   // [1,2,3,4] → ม.ค.–เม.ย. · [1,6,7,8,9] → ม.ค. · มิ.ย.–ก.ย.
+  const u=[...new Set(ms)].sort((a,b)=>a-b),out=[];let s=null,p=null;
+  u.forEach(m=>{if(s==null){s=p=m;return;}if(m===p+1){p=m;return;}out.push(s===p?CR_MON[s-1]:CR_MON[s-1]+'–'+CR_MON[p-1]);s=p=m;});
+  if(s!=null)out.push(s===p?CR_MON[s-1]:CR_MON[s-1]+'–'+CR_MON[p-1]);
+  return out.join(' · ');
+}
 function crSetSort(k){_crSort=k;_crOpen=null;renderCrops();}
 function crToggle(key){_crOpen=_crOpen===key?null:key;renderCrops();}
 function crCloseDetail(){const c=document.getElementById('ch-card');if(c)c.hidden=true;}
@@ -18543,6 +18565,25 @@ function renderCrops(){
     +'<div><b>'+(fAvg!=null?fAvg.toFixed(2):'—')+'</b><span>FCR เฉลี่ย</span></div>'
     +(isAdmin&&npRows.length?'<div'+(npSum<0?' class="neg"':'')+'><b>'+(npSum/npRows.length>=0?'+':'−')+M(Math.abs(npSum/npRows.length))+'</b><span>ล้าน กำไร/รอบ</span></div>':'')
     +'</div></div>';
+  // ── 🩺 สาเหตุปิดบ่อ ตามปีที่เลือก · กดแถว = กรองการ์ดรอบ ──
+  const rsEl=document.getElementById('cr-reason');
+  if(rsEl){
+    const G=CR_REASONS.map(([k,col])=>{const l=rows.filter(r=>closeReason(r.c)===k),np=l.filter(r=>r.np!=null);
+      return{k,col,n:l.length,d:l.length?l.reduce((t,r)=>t+r.age,0)/l.length:0,kg:l.reduce((t,r)=>t+r.kg,0),np:np.reduce((t,r)=>t+r.np,0),hasNp:np.length>0,ms:l.map(r=>+String(r.c.closeDate||'').slice(5,7)).filter(Boolean)};}).filter(g=>g.n);
+    if(_crReason&&!G.some(g=>g.k===_crReason))_crReason=null;
+    let prevTxt='';
+    if(selYear!=='all'&&rows.length){   // เทียบปีก่อน: จำนวนรอบ (+กำไร admin) ต่อสาเหตุ
+      const pv={};D.ponds.forEach(p=>(p.cropHistory||[]).forEach((c,i)=>{if(histRecYear(c)!==selYear-1)return;const s=getCloseSummary(p,i);if(!s)return;const k=closeReason(c),x=pv[k]=pv[k]||{n:0,np:0};x.n++;if(s.hasCostData&&s.netProfit!=null)x.np+=s.netProfit;}));
+      const parts=CR_REASONS.filter(([k])=>pv[k]).map(([k])=>k.replace(' / ครบรอบ','')+' '+pv[k].n+' รอบ'+(isAdmin?' ('+(pv[k].np>=0?'+':'−')+M(Math.abs(pv[k].np))+' ล.)':''));
+      if(parts.length)prevTxt='<div class="crx-rprev">ปี '+(selYear-1)+': '+parts.join(' · ')+'</div>';
+    }
+    rsEl.innerHTML=G.length?'<div class="crx-reason"><div class="crx-rh"><span>🩺 สาเหตุปิดบ่อ</span><small>กดเพื่อกรอง</small></div>'
+      +'<div class="crx-rbar">'+G.map(g=>'<i style="width:'+(g.n/rows.length*100)+'%;background:'+g.col+'"></i>').join('')+'</div>'
+      +G.map(g=>'<button type="button" class="crx-rs'+(_crReason===g.k?' on':'')+'" onclick="crSetReason(\''+g.k+'\')"><span class="dot" style="background:'+g.col+'"></span>'
+        +'<span><b>'+g.k+' '+g.n+' รอบ</b><small>เฉลี่ย '+Math.round(g.d)+' วัน · '+(g.kg/1000).toFixed(0)+' ตัน'+(selYear!=='all'&&g.ms.length?' · ปิด '+crMonthsTxt(g.ms):'')+'</small></span>'
+        +(isAdmin&&g.hasNp?'<span class="m '+(g.np<0?'neg':'pos')+'">'+(g.np>=0?'+':'−')+M(Math.abs(g.np))+' ล.</span>':'<span></span>')+'</button>').join('')
+      +prevTxt+'</div>':'';
+  }
   // ── รอบปัจจุบัน (กำลังเลี้ยง / รอทำสรุป / เตรียมบ่อ) — โชว์เฉพาะดูปีนี้หรือทุกปี ──
   const isCurYear=selYear==='all'||selYear===yearBE(curY);
   const actWrap=document.getElementById('cr-act-wrap'),actEl=document.getElementById('cr-act');
@@ -18572,7 +18613,8 @@ function renderCrops(){
   if(!SORTS.some(x=>x[0]===_crSort))_crSort='new';
   const sEl=document.getElementById('cr-sorts');
   if(sEl)sEl.innerHTML=SORTS.map(x=>'<button type="button" class="crx-chip'+(x[0]===_crSort?' on':'')+'" onclick="crSetSort(\''+x[0]+'\')">'+x[1]+'</button>').join('');
-  let L=rows.filter(r=>pf==='all'||r.p.id===pf);
+  let L=rows.filter(r=>(pf==='all'||r.p.id===pf)&&(!_crReason||closeReason(r.c)===_crReason));
+  {const fe=document.getElementById('cr-rflt');if(fe)fe.innerHTML=_crReason?'<button type="button" class="crx-rflt" onclick="crSetReason(\''+_crReason+'\')"><span>🩺 '+_crReason+' · '+L.length+' รอบ</span><span>✕</span></button>':'';}
   const nz=(v,d)=>v==null?d:v;
   const key={new:r=>String(r.c.closeDate||''),pr:r=>nz(r.np,-1e15),fcr:r=>r.fcr!=null&&r.tgt!=null?-(r.fcr-r.tgt):-1e9,rai:r=>r.yr,days:r=>r.age}[_crSort];
   L.sort((a,b)=>{const x=key(a),y=key(b);return x<y?1:x>y?-1:0;});
