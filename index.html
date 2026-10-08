@@ -2156,6 +2156,14 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 .hat-hc .g span{color:var(--tx3)}
 .hat-hc .hat-best{color:var(--ok)}
 .hat-hc .hat-low{color:var(--d)}
+.hat-sm{font-size:var(--fs11);font-weight:400}
+.hat-na{color:var(--w);font-size:var(--fs11);font-weight:600}
+.hat-live{display:inline-block;background:var(--ib);color:var(--in);border-radius:6px;padding:0 6px;font-size:var(--fs11);font-weight:700}
+.hat-grp{border:1px solid var(--bd);border-radius:12px;padding:0 10px;margin-bottom:8px}
+.hat-grp summary{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;padding:9px 0;font-weight:800;cursor:pointer}
+.hat-grp summary small{font-weight:600;font-size:var(--fs11)}
+.hat-grp[open] summary{border-bottom:1px solid var(--sf2)}
+.hat-rt td{white-space:nowrap}
 .hat-foot{font-size:var(--fs10);color:var(--tx3);margin-top:10px;line-height:1.7}
 @media(max-width:640px){.hat-tw{display:none}.hat-cards{display:flex}}
 /* ── สุ่มตัวอย่าง: ทุกบ่อในหน้าเดียว (entry #314) ── */
@@ -3521,10 +3529,15 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       </div>
     </div>
     <div class="tbl-wrap hat-tw"><table class="tbl hat-tbl">
-      <thead><tr><th>โรงเพาะฟัก</th><th>รอบ</th><th>อัตรารอด</th><th>FCR</th><th>ผลผลิต/รอบ</th><th>วันเลี้ยง</th><th>ต้นทุน/กก.</th><th>ราคาขาย/กก.</th><th>กำไร/รอบ</th></tr></thead>
+      <thead><tr><th>โรงเพาะฟัก</th><th>รอบ</th><th>ยอดแถมเฉลี่ย</th><th>รอด (ปิดบ่อ)</th><th>รอด (กำลังเลี้ยง)</th><th>กำลังเลี้ยง</th><th>FCR</th><th>ผลผลิต/รอบ</th><th>วันเลี้ยง</th><th>ต้นทุน/กก.</th><th>ราคาขาย/กก.</th><th>กำไร/รอบ</th></tr></thead>
       <tbody id="hat-tb"></tbody></table></div>
     <div class="hat-cards" id="hat-cards"></div>
     <div class="hat-foot">เขียว = ดีที่สุด (โรงที่มี 5 รอบขึ้นไป) · แถวจาง = ไม่ถึง 5 รอบ · (วงเล็บ) = จำนวนรอบที่มียอดสั่งซื้อ</div>
+  </div>
+  <!-- ยอดสั่ง · แถม · อัตรารอด รายรอบ (entry #394 · mockup_โรงเพาะฟักแถมรอด.html) -->
+  <div class="card">
+    <div class="card-t" style="justify-content:space-between"><span>🎁 ยอดสั่ง · แถม · อัตรารอด รายรอบ</span><span style="font-weight:400;font-size:var(--fs11)">กดชื่อโรงเพื่อกาง</span></div>
+    <div id="hat-rounds"></div>
   </div>
   <div class="card">
     <div class="card-t" style="justify-content:space-between"><span>📅 วันเลี้ยงกับกำไร</span>
@@ -16603,6 +16616,7 @@ function hatRows(){
     const kg=parseFloat(sm.totalWeight)||0;
     const hasStock=(parseFloat(c.stock)||0)>0;
     out.push({h:String(c.hatchery||'').trim()||'(ไม่ระบุ)',y:histRecYear(c),d:docAge(c.startDate,c.closeDate),kg,
+      pond:p.name,start:c.startDate,close:c.closeDate,stock:parseFloat(c.stock)||0,bonus:parseFloat(c.stockBonus)||0,survO:(hasStock&&hr.survivalRateOrder!=null)?parseFloat(hr.survivalRateOrder):null,
       surv:(hasStock&&hr.survivalRate!=null)?parseFloat(hr.survivalRate):null,
       fcr:parseFloat(sm.fcr)||null,rev:parseFloat(sm.revenue)||0,cost:parseFloat(sm.totalCost)||0});
   }));
@@ -16616,6 +16630,14 @@ function initHatchery(){
   if(cur&&[...sel.options].some(o=>o.value===cur))sel.value=cur;
   renderHatchery();
 }
+// ── บ่อที่กำลังเลี้ยง (entry #394 พี่ขอ "ข้อมูลยอดแถม อัตรารอด") — รอดจากผลสุ่มล่าสุด (pondShrimpCount.survAll ฐานสั่ง+แถม) · ฐานสั่ง = aliveAll ÷ ยอดสั่ง
+//    ยอดแถมบันทึกจริงตั้งแต่รอบ พ.ค. 69 — รอบเก่า 0 = ไม่ได้กรอก (ไม่นับในค่าเฉลี่ย ขึ้นว่า "ไม่ได้บันทึก")
+function hatLiveRows(){
+  return wqfeedActivePonds().map(p=>{const c=pondShrimpCount(p),st=parseFloat(p.stock)||0;
+    return{h:String(p.hatchery||'').trim()||'(ไม่ระบุ)',pond:p.name,pid:p.id,start:p.startDate,age:pondCurAge(p),stock:st,bonus:parseFloat(p.stockBonus)||0,
+      surv:c?parseFloat(c.survAll):null,survO:c&&st>0?c.aliveAll/st*100:null,sdate:c&&c.lat?c.lat.date:null};});
+}
+function hatSurvCls(v){return v==null?'':v>=90?'lb-c ok':v>=70?'lb-c w':'lb-c d';}
 function hatBand(b){_hatBand=b;renderHatchery();}
 function hatInBand(r,b){return b==='all'?true:b==='80'?r.d>=80:b==='60'?(r.d>=60&&r.d<80):r.d<60;}
 function hatStats(list){
@@ -16646,25 +16668,55 @@ function renderHatchery(){
   const fmt=v=>Math.round(v).toLocaleString();
   const survTxt=(x,small)=>x.surv!=null?x.surv.toFixed(1)+'% <span style="font-weight:400;color:var(--tx3)">('+x.sn+')</span>':'-';
   const empty='<p style="color:var(--tx3);text-align:center;padding:18px;font-style:italic">ไม่มีรอบที่ปิดแล้วในช่วงนี้</p>';
+  // ยอดแถมเฉลี่ย (รอบที่บันทึก ทั้งปิดแล้ว+กำลังเลี้ยง) · รอดกำลังเลี้ยง — ไม่ขึ้นกับปุ่มช่วงวัน (บ่อที่เลี้ยงอยู่ยังไม่รู้วันจับ)
+  const live=hatLiveRows(),bon={},liv={};
+  [...base,...live].forEach(r=>{if(r.stock>0&&r.bonus>0)(bon[r.h]=bon[r.h]||[]).push(r.bonus/r.stock*100);});
+  live.forEach(r=>{const g=liv[r.h]=liv[r.h]||{n:0,s:[]};g.n++;if(r.surv!=null)g.s.push(r.surv);});
+  const avgA=a=>a&&a.length?a.reduce((x,v)=>x+v,0)/a.length:null;
+  const bonTxt=x=>{const a=bon[x.h];return a&&a.length?avgA(a).toFixed(1)+'% <small class="hat-sm">'+a.length+' รอบ</small>':'<span class="hat-na">ไม่ได้บันทึก</span>';};
+  const livTxt=x=>{const g=liv[x.h];if(!g||!g.s.length)return'-';const v=avgA(g.s);return'<span class="'+hatSurvCls(v)+'">'+v.toFixed(0)+'%</span> <small class="hat-sm">'+g.s.length+' บ่อ</small>';};
+  const livN=x=>liv[x.h]?liv[x.h].n+' บ่อ':'-';
   const tb=document.getElementById('hat-tb');
   if(tb)tb.innerHTML=st.length?st.map(x=>{const few=x.n<5,sDim=x.sn<3&&x.surv!=null;
     const td=(k,v,txt,extra)=>'<td class="'+(isBest(k,v,few||(k==='surv'&&x.sn<3))?'hat-best':'')+(extra||'')+'"'+(k==='surv'&&sDim?' style="color:var(--tx3)"':'')+'>'+txt+'</td>';
     return '<tr class="'+(few?'hat-few':'')+'"><td style="font-weight:800">'+mpEsc(x.h)+(few?'<span class="hat-tag">น้อยกว่า 5 รอบ</span>':'')+'</td>'
-      +'<td>'+x.n+'</td>'+td('surv',x.surv,survTxt(x))+td('fcr',x.fcr,x.fcr?x.fcr.toFixed(2):'-')
+      +'<td>'+x.n+'</td><td>'+bonTxt(x)+'</td>'+td('surv',x.surv,survTxt(x))+'<td>'+livTxt(x)+'</td><td>'+livN(x)+'</td>'+td('fcr',x.fcr,x.fcr?x.fcr.toFixed(2):'-')
       +'<td>'+fmt(x.kg)+' กก.</td><td>'+Math.round(x.d)+' วัน</td>'
       +td('ck',x.ck,x.ck!=null?'฿'+fmt(x.ck):'-')+'<td>'+(x.pk!=null?'฿'+fmt(x.pk):'-')+'</td>'
       +td('pr',x.pr,hatMoney(x.pr),x.pr<0?' hat-low':'')+'</tr>';}).join('')
-    :'<tr><td colspan="9">'+empty+'</td></tr>';
+    :'<tr><td colspan="12">'+empty+'</td></tr>';
   const cards=document.getElementById('hat-cards');
   if(cards)cards.innerHTML=st.length?st.map(x=>{const few=x.n<5,sDim=x.sn<3&&x.surv!=null;
     const b=(k,v,txt,extra)=>'<b class="'+(isBest(k,v,few||(k==='surv'&&x.sn<3))?'hat-best':'')+(extra||'')+'"'+(k==='surv'&&sDim?' style="color:var(--tx3)"':'')+'>'+txt+'</b>';
     return '<div class="hat-hc'+(few?' hat-few':'')+'"><div class="h"><b>'+mpEsc(x.h)+'</b><span style="font-size:var(--fs11);color:var(--tx3)">'+x.n+' รอบ'+(few?' · ยังตัดสินไม่ได้':'')+'</span></div>'
-      +'<div class="g"><div><span>อัตรารอด</span>'+b('surv',x.surv,survTxt(x))+'</div>'
+      +'<div class="g"><div><span>ยอดแถมเฉลี่ย</span><b>'+bonTxt(x)+'</b></div><div><span>กำลังเลี้ยง</span><b>'+livN(x)+'</b></div>'
+      +'<div><span>รอด (ปิดบ่อ)</span>'+b('surv',x.surv,survTxt(x))+'</div><div><span>รอด (กำลังเลี้ยง)</span><b>'+livTxt(x)+'</b></div>'
       +'<div><span>FCR</span>'+b('fcr',x.fcr,x.fcr?x.fcr.toFixed(2):'-')+'</div>'
       +'<div><span>ผลผลิต/รอบ</span><b>'+fmt(x.kg)+'</b></div><div><span>วันเลี้ยง</span><b>'+Math.round(x.d)+'</b></div>'
       +'<div><span>ต้นทุน/กก.</span>'+b('ck',x.ck,x.ck!=null?'฿'+fmt(x.ck):'-')+'</div><div><span>ราคาขาย/กก.</span><b>'+(x.pk!=null?'฿'+fmt(x.pk):'-')+'</b></div>'
       +'<div style="grid-column:1/-1"><span>กำไร/รอบ</span>'+b('pr',x.pr,hatMoney(x.pr),x.pr<0?' hat-low':'')+'</div></div></div>';}).join('')
     :empty;
+  // ── รายรอบ: ยอดสั่ง · แถม · ปล่อยรวม · รอด 2 ฐาน — กลุ่มตามโรง (โรงที่มีบ่อเลี้ยงอยู่มากสุดกางไว้) · ตามปีที่เลือก ไม่ขึ้นกับปุ่มช่วงวัน ──
+  const rd=document.getElementById('hat-rounds');
+  if(rd){
+    const fN=v=>Math.round(v).toLocaleString(),pc=v=>v==null?'-':(Math.round(v*10)/10)+'%';
+    const G={};[...live.map(r=>({...r,live:true})),...base.map(r=>({...r,live:false}))].forEach(r=>{(G[r.h]=G[r.h]||[]).push(r);});
+    const ord=Object.entries(G).sort((a,b)=>b[1].filter(r=>r.live).length-a[1].filter(r=>r.live).length||b[1].length-a[1].length);
+    rd.innerHTML=ord.map(([hn,L],gi)=>{
+      const lv=L.filter(r=>r.live).sort((a,b)=>b.age-a.age),cl=L.filter(r=>!r.live&&r.stock>0).sort((a,b)=>String(b.start).localeCompare(String(a.start))),noSt=L.filter(r=>!r.live&&!(r.stock>0)).length;
+      const ba=bon[hn],sv=L.filter(r=>!r.live&&r.surv!=null).map(r=>r.surv);
+      const sub=[ba&&ba.length?'แถมเฉลี่ย '+avgA(ba).toFixed(1)+'%':'ไม่ได้บันทึกยอดแถม',sv.length?'รอดปิดบ่อ '+avgA(sv).toFixed(0)+'%':'',lv.length?'กำลังเลี้ยง '+lv.length+' บ่อ':''].filter(Boolean).join(' · ');
+      const row=r=>'<tr><td><b>'+mpEsc(r.pond)+'</b></td><td>'+(r.start?fD(r.start):'-')+'</td>'
+        +'<td>'+(r.live?'<span class="hat-live">เลี้ยงอยู่ '+r.age+' วัน</span>':'ปิด '+(r.close?fD(r.close):'-')+' · '+r.d+' วัน')+'</td>'
+        +'<td>'+(r.stock>0?fN(r.stock):'-')+'</td><td>'+(r.stock>0&&r.bonus>0?fN(r.bonus)+' <small class="hat-sm">'+(r.bonus/r.stock*100).toFixed(1)+'%</small>':'<span class="hat-na">ไม่ได้บันทึก</span>')+'</td>'
+        +'<td>'+(r.stock>0?fN(r.stock+r.bonus):'-')+'</td>'
+        +'<td>'+(r.surv!=null?'<span class="'+hatSurvCls(r.surv)+'">'+pc(r.surv)+'</span>'+(r.live&&r.sdate?' <small class="hat-sm">สุ่ม '+fD(r.sdate)+'</small>':''):(r.live?'ยังไม่สุ่ม':'-'))+'</td>'
+        +'<td>'+(r.survO!=null&&r.bonus>0?pc(r.survO):'-')+'</td></tr>';
+      return'<details class="hat-grp"'+(gi===0?' open':'')+'><summary><span>'+mpEsc(hn)+'</span><small>'+sub+'</small></summary>'
+        +(lv.length||cl.length?'<div class="tbl-wrap"><table class="tbl hat-tbl hat-rt"><thead><tr><th>บ่อ</th><th>ลงกุ้ง</th><th>สถานะ</th><th>ยอดสั่ง</th><th>แถม</th><th>ปล่อยรวม</th><th>รอด (สั่ง+แถม)</th><th>รอด (ฐานสั่ง)</th></tr></thead><tbody>'+lv.map(row).join('')+cl.map(row).join('')+'</tbody></table></div>':'')
+        +(noSt?'<div class="hat-sm" style="padding:6px 2px">+ อีก '+noSt+' รอบเก่าไม่มียอดสั่ง</div>':'')+'</details>';
+    }).join('')||empty;
+  }
   // วันเลี้ยงกับกำไร — ตามปีที่เลือก ทุกโรงรวมกัน (ไม่ขึ้นกับปุ่มช่วงวัน เพราะเป็นตัวอธิบายเหตุผล)
   const B=[[0,60,'ต่ำกว่า 60 วัน'],[60,70,'60–70 วัน'],[70,80,'70–80 วัน'],[80,95,'80–95 วัน'],[95,9999,'95 วันขึ้นไป']];
   const bd=document.getElementById('hat-band');
