@@ -17182,26 +17182,39 @@ function updateLabSrcCount(src){
   if(cnt)cnt.textContent=filled+'/'+els.length;
 }
 function onLabInput(src){updateLabStatus();updateLabSrcCount(src);}
+// ── ประวัติผลแล็บรายบ่อ (แบบใหม่ entry #390 พี่สั่ง "ให้มีสีและข้อมูลเหมือนด้านบน") — คอลัมน์/สี/ยกกำลัง ชุดเดียวกับ renderLabAll
+//    ช่องค่าเป็นป้ายสีทุกช่องตาม classifyOv · EHP ตัวอ่อนมีลูกศรเทียบครั้งก่อน · ต่อท้ายด้วย TVC · EHP · ตับอ่อน · แล็บ · หมายเหตุ
+function labCell(k,v,fmt){
+  if(v==null||v==='')return'<td>-</td>';
+  const c={ok:'lb-c ok',warn:'lb-c w',danger:'lb-c d'}[classifyOv(k,v)]||'lb-c';
+  return'<td><span class="'+c+'">'+fmt(v)+'</span></td>';
+}
 function renderLabTable(){
   const pid=document.getElementById('lb-pond')?.value;
   const wrap=document.getElementById('lb-tbl-wrap');if(!wrap)return;
-  if(!pid){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อ</p>';return}
-  const p=pond(pid);const rows=sortLogArr('labResults',p?.labResults||[]).reverse();
-  if(!rows.length){wrap.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">บ่อนี้ยังไม่มีผลแล็บ — บันทึกได้จากฟอร์มด้านบน</p>';return}
-  wrap.innerHTML=`<table class="tbl"><thead><tr><th></th><th>วันที่</th><th>อายุ</th><th>แล็บ</th><th>🟢 เชื้อเขียว (น้ำ)</th><th>🟡 เชื้อเหลือง (น้ำ)</th><th>🟢 เชื้อเขียว (ตับ)</th><th>🟡 เชื้อเหลือง (ตับ)</th><th>TVC (น้ำ)</th><th>TVC (ตับ)</th><th>EHP</th><th>ตัวอ่อน EHP</th><th>ลำไส้อักเสบ</th><th>เม็ดไขมันรวม</th><th>ตับอ่อน</th><th>หมายเหตุ</th></tr></thead><tbody>${
-    rows.map((r,i)=>{
-      const sg=r.tcbsGreen!=null?(r.tcbsGreen>1000?'danger':r.tcbsGreen>100?'warn':'ok'):'ok';
-      const shg=r.hepatoGreen!=null?(r.hepatoGreen>1000?'danger':r.hepatoGreen>100?'warn':'ok'):'ok';
-      const ehpDisp=(typeof r.ehp==='number')?`${r.ehp}%`:(r.ehp?(EHP_LBL[r.ehp]||r.ehp):'-');
-      const ehpCls=(typeof r.ehp==='number')?(r.ehp>5?'b-danger':r.ehp>0?'b-warn':'b-ok'):(r.ehp==='nd'?'b-ok':r.ehp==='trace'?'b-na':r.ehp==='low'?'b-warn':r.ehp==='high'?'b-danger':'b-na');
-      const ehpLarvaDisp=(typeof r.ehpLarva==='number')?`${r.ehpLarva}%`:'-';
-      const ehpLarvaCls=(typeof r.ehpLarva==='number')?({ok:'b-ok',warn:'b-warn',danger:'b-danger'}[classifyOv('ehpLarva',r.ehpLarva)]):'b-na';   // เกณฑ์เดียวกับ classifyOv (#389)
-      const gutDisp=(typeof r.gutInflam==='number')?`${r.gutInflam}%`:'-';
-      const gutCls=(typeof r.gutInflam==='number')?(r.gutInflam>30?'b-danger':r.gutInflam>10?'b-warn':'b-ok'):'b-na';
-      const lipidDisp=(typeof r.lipidDroplet==='number')?`${r.lipidDroplet}%`:'-';
-      const lipidCls=(typeof r.lipidDroplet==='number')?(r.lipidDroplet>=70?'b-ok':r.lipidDroplet>=50?'b-warn':'b-danger'):'b-na';
-      return`<tr class="${i===0?'hi':''}"><td><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editLab('${pid}','${r.date}')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteLab('${pid}','${r.id||r.date}')">🗑️</button></td><td>${fD(r.date)}</td><td>${recAge(p,r)??r.age}</td><td>${r.labName||'-'}</td><td style="font-weight:700;color:${sc(sg)}">${r.tcbsGreen!=null?sciNum(r.tcbsGreen):'-'}</td><td>${r.tcbsYellow!=null?sciNum(r.tcbsYellow):'-'}</td><td style="font-weight:700;color:${sc(shg)}">${r.hepatoGreen!=null?sciNum(r.hepatoGreen):'-'}</td><td>${r.hepatoYellow!=null?sciNum(r.hepatoYellow):'-'}</td><td>${r.tvc?sciNum(r.tvc):'-'}</td><td>${r.tvcHepato?sciNum(r.tvcHepato):'-'}</td><td><span class="badge ${ehpCls}">${ehpDisp}</span></td><td><span class="badge ${ehpLarvaCls}">${ehpLarvaDisp}</span></td><td><span class="badge ${gutCls}">${gutDisp}</span></td><td><span class="badge ${lipidCls}">${lipidDisp}</span></td><td><span class="badge ${!r.hepato?'b-na':r.hepato==='normal'?'b-ok':r.hepato==='pale'?'b-warn':'b-danger'}">${r.hepato?(HEPATO_LBL[r.hepato]||r.hepato):'-'}</span></td><td>${r.notes||'-'}</td></tr>`;
-    }).join('')}</tbody></table>`;
+  if(!pid){wrap.innerHTML='<p style="text-align:center;padding:20px">เลือกบ่อ หรือกดแถวในตาราง "ผลล่าสุดทุกบ่อ"</p>';return}
+  const p=pond(pid);const asc=sortLogArr('labResults',p?.labResults||[]);const rows=asc.slice().reverse();
+  if(!rows.length){wrap.innerHTML='<p style="text-align:center;padding:20px">บ่อนี้ยังไม่มีผลแล็บ — บันทึกได้จากฟอร์มด้านบน</p>';return}
+  const pct=v=>v+'%';
+  const ehpTd=r=>{
+    if(typeof r.ehp==='number')return labCell('ehp',r.ehp,pct);
+    if(!r.ehp)return'<td>-</td>';
+    const c=r.ehp==='nd'?'lb-c ok':r.ehp==='low'?'lb-c w':r.ehp==='high'?'lb-c d':'lb-c';   // ข้อมูลเก่าแบบข้อความ
+    return'<td><span class="'+c+'">'+mpEsc(EHP_LBL[r.ehp]||r.ehp)+'</span></td>';
+  };
+  const hepTd=r=>{if(!r.hepato)return'<td>-</td>';const c={ok:'lb-c ok',warn:'lb-c w',danger:'lb-c d'}[classifyOv('hepato',r.hepato)];return'<td><span class="'+c+'">'+mpEsc(HEPATO_LBL[r.hepato]||r.hepato)+'</span></td>';};
+  wrap.innerHTML='<table class="tbl lb-all-t"><thead><tr><th></th><th>วันที่ตรวจ</th><th>อายุ</th><th>🟢 เขียว (น้ำ)</th><th>🟡 เหลือง (น้ำ)</th><th>🟢 เขียว (ตับ)</th><th>🟡 เหลือง (ตับ)</th><th>EHP ตัวอ่อน</th><th>ลำไส้อักเสบ</th><th>เม็ดไขมัน</th><th>TVC (น้ำ)</th><th>TVC (ตับ)</th><th>EHP</th><th>ตับอ่อน</th><th>แล็บ</th><th>หมายเหตุ</th></tr></thead><tbody>'
+    +rows.map((r,i)=>{
+      const pv=asc[asc.length-2-i];   // ครั้งก่อนหน้าของแถวนี้ (rows กลับด้านจาก asc)
+      const ar=pv&&typeof pv.ehpLarva==='number'&&typeof r.ehpLarva==='number'?' <small>'+(r.ehpLarva>pv.ehpLarva?'↑ จาก '+pv.ehpLarva:r.ehpLarva<pv.ehpLarva?'↓ จาก '+pv.ehpLarva:'= '+pv.ehpLarva)+'</small>':'';
+      const el=typeof r.ehpLarva==='number'?'<td><span class="'+({ok:'lb-c ok',warn:'lb-c w',danger:'lb-c d'}[classifyOv('ehpLarva',r.ehpLarva)])+'">'+r.ehpLarva+'%</span>'+ar+'</td>':'<td>-</td>';
+      return'<tr class="'+(i===0?'hi':'')+'"><td style="white-space:nowrap"><button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="editLab(\''+pid+'\',\''+r.date+'\')">✏️</button> <button class="btn btn-s" style="padding:2px 8px;font-size:var(--fs11)" onclick="deleteLab(\''+pid+'\',\''+(r.id||r.date)+'\')">🗑️</button></td>'
+        +'<td><b>'+fD(r.date)+'</b></td><td>'+(recAge(p,r)??r.age)+' วัน</td>'
+        +labCell('tcbsGreen',r.tcbsGreen,sciNum)+labCell('tcbsYellow',r.tcbsYellow,sciNum)+labCell('hepatoGreen',r.hepatoGreen,sciNum)+labCell('hepatoYellow',r.hepatoYellow,sciNum)
+        +el+labCell('gutInflam',r.gutInflam,pct)+labCell('lipidDroplet',r.lipidDroplet,pct)
+        +(r.tvc?labCell('tvc',r.tvc,sciNum):'<td>-</td>')+(r.tvcHepato?labCell('tvcHepato',r.tvcHepato,sciNum):'<td>-</td>')
+        +ehpTd(r)+hepTd(r)+'<td>'+mpEsc(r.labName||'-')+'</td><td style="white-space:normal;min-width:120px">'+mpEsc(r.notes||'-')+'</td></tr>';
+    }).join('')+'</tbody></table>';
 }
 function deleteLab(pid,id){
   const p=pond(pid);if(!p)return;
