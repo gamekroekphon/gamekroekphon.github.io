@@ -1363,6 +1363,8 @@ table.exy-t td,table.exy-t th{font-variant-numeric:tabular-nums}
 .lb-c.ok{background:var(--ob);color:var(--ok)}.lb-c.w{background:var(--wb);color:var(--w)}.lb-c.d{background:var(--db);color:var(--d)}
 .lb-all-t td{white-space:nowrap;font-variant-numeric:tabular-nums}.lb-all-t small{font-size:calc(12px * var(--ui-scale))}
 .lb-hint{font-size:calc(12.5px * var(--ui-scale));margin-top:8px}
+.cmpw-sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px 14px;margin-top:10px;font-size:calc(13px * var(--ui-scale))}
+.cmpw-sum div{display:flex;flex-direction:column;border-top:1px solid var(--sf2);padding-top:5px}
 .pv-bar{display:flex;gap:6px;background:var(--sf2);padding:4px;border-radius:12px;margin-bottom:12px}
 .pv-bar button{flex:1;border:none;background:none;border-radius:9px;min-height:44px;font-family:inherit;font-weight:700;font-size:calc(14px * var(--ui-scale));color:var(--tx);cursor:pointer}
 .pv-bar button.on{background:var(--sf);color:var(--pd);box-shadow:0 1px 3px rgba(0,0,0,.12)}
@@ -3450,6 +3452,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       </div>
     </div>
     <div class="chart-wrap" style="height:380px"><canvas id="cmpChart"></canvas></div>
+    <div id="cmp-extra"></div>
   </div>
 
 </div>
@@ -17131,6 +17134,7 @@ function initCompare(){
 }
 function tglCmp(id,el){cmpP.has(id)?cmpP.delete(id):cmpP.add(id);el.classList.toggle('on');renderCompare()}
 function renderCompare(){
+  {const ex=document.getElementById('cmp-extra');if(ex)ex.innerHTML='';}
   if(cmpCat==='wq')return renderWQHeatmap();
   if(cmpCat==='feed')return renderCmpFeed();
   if(cmpCat==='size')return renderCmpSize();
@@ -17158,6 +17162,13 @@ function renderCmpWQ(){
 }
 // ── เพิ่ม: ปุ่ม export หน้าเปรียบเทียบ — CSV (ข้อมูลดิบของกราฟปัจจุบัน) และ PNG (รูปกราฟ) ──
 function cmpExportCSV(){
+  if(cmpCat==='water'){
+    const action=document.getElementById('cmp-water-param')?.value||'all';
+    let csv='บ่อ,วันที่,อายุ (วัน),กิจกรรม,หมายเหตุ\n';
+    getSelPonds().forEach(p=>(p.waterLog||[]).filter(r=>r&&r.date&&(action==='all'||r.action===action)).sort((a,b)=>a.date.localeCompare(b.date)).forEach(r=>{
+      csv+=['"'+p.name+'"',r.date,recAge(p,r)??r.age,'"'+((CMP_WATER_ACT[r.action]||{}).lbl||r.action)+'"','"'+String(r.notes||'').replace(/"/g,'""')+'"'].join(',')+'\n';}));
+    const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`tawanfarm_water_${today()}.csv`;a.click();return;
+  }
   if(!cmpCh||!cmpCh.data.datasets.length){alert('ไม่มีข้อมูลให้ export');return}
   const datasets=cmpCh.data.datasets;
   const xs=[...new Set(datasets.flatMap(d=>d.data.map(p=>p.x)))].sort((a,b)=>a-b);
@@ -17205,12 +17216,31 @@ function renderCmpLab(){
   document.getElementById('cmp-title').textContent=`เปรียบเทียบ ${labLbls[metric]||metric} ระหว่างบ่อ`;
   cmpCh=new Chart(document.getElementById('cmpChart'),{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,scales:{x:{type:'linear',title:{display:true,text:'อายุ (วัน)'}},y:{title:{display:true,text:labLbls[metric]||metric}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:12}}}}});
 }
+// ── 💦 การจัดการน้ำ (entry #392 พี่สั่ง 8 ต.ค. 69) — เดิมกราฟแท่ง "ปริมาณ (ซม.)" จาก r.vol แต่ตั้งแต่ฟอร์มเติมน้ำ #308 ไม่มีปริมาณ → ว่างทุกบ่อ
+//    ตอนนี้: จุดบนแกนอายุกุ้ง บ่อละแถว = วันที่เติม/เปลี่ยนถ่าย/ระบาย · ใต้กราฟสรุป "กี่ครั้ง · ล่าสุดวันไหน" ต่อบ่อ · CSV ออกเป็นรายการวัน
+const CMP_WATER_ACT={add:{lbl:'เติมน้ำ',col:'#378ADD',st:'circle'},exchange:{lbl:'เปลี่ยนถ่ายน้ำ',col:'#1D9E75',st:'rectRot'},drain:{lbl:'ระบายน้ำ',col:'#D85A30',st:'triangle'}};
 function renderCmpWater(){
   const action=document.getElementById('cmp-water-param')?.value||'all';
   if(cmpCh){cmpCh.destroy();cmpCh=null;}
-  const datasets=getSelPonds().map((p,i)=>{const col=COLORS[i%COLORS.length];const logs=(p.waterLog||[]).filter(r=>r.vol&&r.age!=null&&(action==='all'||r.action===action)).sort((a,b)=>a.age-b.age);const pts=logs.map(r=>({x:r.age,y:r.vol}));return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'55',tension:.2,pointRadius:4,fill:false};});
-  document.getElementById('cmp-title').textContent='เปรียบเทียบการจัดการน้ำ (ซม.) ระหว่างบ่อ';
-  cmpCh=new Chart(document.getElementById('cmpChart'),{type:'bar',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,scales:{x:{type:'linear',title:{display:true,text:'อายุ (วัน)'}},y:{title:{display:true,text:'ปริมาณน้ำ (ซม.)'}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:12}}}}});
+  const ponds=getSelPonds(),names=ponds.map(p=>'บ่อ '+p.name);
+  const keys=action==='all'?Object.keys(CMP_WATER_ACT):[action];
+  const datasets=keys.map(k=>({label:CMP_WATER_ACT[k].lbl,
+    data:ponds.flatMap((p,i)=>(p.waterLog||[]).filter(r=>r&&r.action===k&&r.date).map(r=>({x:recAge(p,r)??r.age,y:i,d:r.date}))),
+    backgroundColor:CMP_WATER_ACT[k].col,borderColor:CMP_WATER_ACT[k].col,pointStyle:CMP_WATER_ACT[k].st,pointRadius:6,pointHoverRadius:8,showLine:false})).filter(d=>d.data.length);
+  const _xs=datasets.flatMap(d=>d.data.map(p=>p.x)),_xr=_xs.length?[Math.max(0,Math.min(..._xs)-2),Math.max(..._xs)+2]:[0,30];   // ตั้งช่วงแกนเอง — ค่าเริ่มต้นของกราฟตัดจุดท้ายทิ้ง (เจอ 45 ทั้งที่มีถึง 85)
+  document.getElementById('cmp-title').textContent='การจัดการน้ำ — วันไหน (ตามอายุกุ้ง)';
+  cmpCh=new Chart(document.getElementById('cmpChart'),{type:'scatter',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,
+    scales:{x:{type:'linear',min:_xr[0],max:_xr[1],title:{display:true,text:'อายุ (วัน)'}},
+      y:{type:'linear',reverse:true,min:-0.5,max:Math.max(0.5,ponds.length-0.5),afterBuildTicks:ax=>{ax.ticks=names.map((_,i)=>({value:i}));},ticks:{autoSkip:false,callback:v=>names[v]||''},grid:{color:'rgba(0,0,0,.06)'}}},
+    plugins:{tooltip:{callbacks:{label:c=>names[c.raw.y]+' · '+c.dataset.label+' · '+fD(c.raw.d)+' (อายุ '+c.raw.x+' วัน)'}}}}});
+  const ex=document.getElementById('cmp-extra');if(!ex)return;
+  const t=today();
+  ex.innerHTML='<div class="cmpw-sum">'+ponds.map(p=>{
+    const L=(p.waterLog||[]).filter(r=>r&&r.date&&keys.includes(r.action)).sort((a,b)=>a.date.localeCompare(b.date));
+    const last=L[L.length-1];
+    const cnt=keys.map(k=>{const n=L.filter(r=>r.action===k).length;return n?CMP_WATER_ACT[k].lbl+' '+n+' ครั้ง':'';}).filter(Boolean).join(' · ')||'ยังไม่มีบันทึก';
+    return'<div><b>บ่อ '+mpEsc(p.name)+'</b><span>'+cnt+(last?' · ล่าสุด '+fD(last.date)+' ('+dDiff(last.date,t)+' วันก่อน)':'')+'</span></div>';
+  }).join('')+'</div>';
 }
 // ===== WEATHER & RISK =====
 async function fetchWx(){
