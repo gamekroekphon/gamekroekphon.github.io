@@ -8728,7 +8728,7 @@ function renderOvNext(){
       +'<span><b>'+mpEsc(p.name)+'</b><small>'+Math.round(info.yr).toLocaleString()+' กก./ไร่'+(info.abw?' · '+Math.round(1000/info.abw)+' ตัว/กก.':'')+'</small></span><span class="in">'+(info.overCeil?'บ่อแน่น':'เริ่มหาราคา')+'</span></button>';
     const d=new Date(info.date+'T00:00:00');
     return '<button type="button" class="ov2-h"'+go+'><span class="dd"><b>'+d.getDate()+'</b>'+d.toLocaleDateString('th-TH',{month:'short'})+'</span>'
-      +'<span><b>'+mpEsc(p.name)+'</b><small>คาด '+Math.round(1000/info.targetAbw)+' ตัว/กก. · ตอนนี้ '+info.pct.toFixed(0)+'%</small></span><span class="in">อีก '+info.days+' วัน</span></button>';
+      +'<span><b>'+mpEsc(p.name)+'</b><small>คาด '+Math.round(1000/info.targetAbw)+' ตัว/กก. · ตอนนี้ '+info.pct.toFixed(0)+'%</small></span><span class="in">'+(info.days>0?'อีก '+info.days+' วัน':'วันนี้')+'</span></button>';
   }).join('');
 }
 // ── การ์ดใหม่: แดชบอร์ดสถานะบ่อทั้งหมด — รวมสถานะ/ไซส์/Biomass/อาหาร/เช็คลิสต์วันนี้/ค่าผิดปกติทุกบ่อไว้ตารางเดียว (เดิมกระจายอยู่การ์ดบ่อแยก+เช็คลิสต์แยก+รายการแจ้งเตือนแยก) เรียงบ่อที่ต้องดูก่อนไว้บนสุด
@@ -10892,19 +10892,19 @@ function renderOvStockWarn(){
 }
 
 // ── ปฏิทินจับกุ้ง / เตือนพาเชียล ──────────────────────────────────────────
-// เกณฑ์: ผลผลิตในบ่อถึง 4,000 กก./ไร่ = บ่อเริ่มแน่น ควรทยอยจับออก (พาเชียล) เป็นการเตือนครั้งแรก
-const PARTIAL_YIELD_TARGET=4000; // กก./ไร่ — ค่าเริ่มต้น/ค่ามาตรฐานของฟาร์ม
-// ── เพดานจริงของฟาร์ม (พี่ยืนยัน entry #254): 4,000 = "เริ่มหาราคา เตรียมตัว" ไม่ใช่ "ต้องจับเดี๋ยวนี้"
-//    บางรอบลากไปถึง 5,000 หรือรอจังหวะราคา — แต่เกิน 5,000 คือบ่อแน่นเกินมาตรฐาน ต้องเห็นชัดว่าคนละสถานการณ์
+// เกณฑ์: ผลผลิตในบ่อถึง 5,000 กก./ไร่ (เดิม 4,000 · พี่เปลี่ยน 9 ต.ค. 69 entry #399) = บ่อเริ่มแน่น ควรทยอยจับออก (พาเชียล) เป็นการเตือนครั้งแรก
+const PARTIAL_YIELD_TARGET=5000; // กก./ไร่ — ค่าเริ่มต้น/ค่ามาตรฐานของฟาร์ม
+// ── เพดานจริงของฟาร์ม (entry #254 · ขยับทั้งคู่ +1,000 ใน #399): 5,000 = "เริ่มหาราคา เตรียมตัว" ไม่ใช่ "ต้องจับเดี๋ยวนี้"
+//    บางรอบลากไปถึง 6,000 หรือรอจังหวะราคา — แต่เกิน 6,000 คือบ่อแน่นเกินมาตรฐาน ต้องเห็นชัดว่าคนละสถานการณ์
 //    เดิมบ่อ 4,050 กับบ่อ 5,800 หน้าตาเหมือนกันเป๊ะ (แถบแดงเต็ม 100% ป้ายเดียวกัน) ต่างแค่ตัวเลขเล็กๆ
 //    ⚠️ เท่ากันทุกบ่อ ไม่ขึ้นกับขนาดบ่อ/ฤดู/จำนวนเครื่องตีน้ำ — จึงเป็นค่าคงที่ ไม่ต้องมีช่องกรอกรายบ่อ
-const PARTIAL_YIELD_CEILING=5000;
+const PARTIAL_YIELD_CEILING=6000;
 const PARTIAL_CAL_DAYS=60;       // ช่วงที่ปฏิทินมองไปข้างหน้า
 // ── เกณฑ์ที่ใช้คำนวณจริง ณ ตอนนี้ — ปรับด้วยลูกศร ◀ ▶ ได้เพื่อ "ลองดู" ว่าถ้าจับที่เกณฑ์อื่นจะได้ไซส์ไหน/อีกกี่วัน
-//    ตั้งใจเก็บเป็นตัวแปรใน memory เท่านั้น ไม่บันทึกลง D/Firebase — ปิดแอปหรือรีเฟรชแล้วกลับเป็น 4,000 เสมอ
+//    ตั้งใจเก็บเป็นตัวแปรใน memory เท่านั้น ไม่บันทึกลง D/Firebase — ปิดแอปหรือรีเฟรชแล้วกลับเป็น 5,000 เสมอ
 //    (พี่ยืนยันว่าต้องการให้เป็นแค่ตัวลองดู ไม่ใช่การตั้งค่าถาวร กันเผลอปรับแล้วค้างจนคนอื่นเห็นเลขผิด) ──
 let _phTarget=PARTIAL_YIELD_TARGET;
-const PH_TARGET_MIN=2000,PH_TARGET_MAX=6000,PH_TARGET_STEP=250;
+const PH_TARGET_MIN=2000,PH_TARGET_MAX=7000,PH_TARGET_STEP=250;
 function phStepTarget(n){
   _phTarget=Math.max(PH_TARGET_MIN,Math.min(PH_TARGET_MAX,_phTarget+n));
   renderOvPartialHarvest();renderOvNext();
@@ -11001,7 +11001,7 @@ function renderOvPartialHarvest(){
     const cls=info.noProj?'var(--tx3)':info.days<=14?'var(--w)':'var(--in)';
     const badge=info.noProj
       ?'<span class="badge b-info">รอผลสุ่มครั้งที่ 2</span>'
-      :`<span class="badge ${info.days<=14?'b-warn':'b-info'}">อีก ~${info.days} วัน</span>`;
+      :`<span class="badge ${info.days<=14?'b-warn':'b-info'}">${info.days>0?`อีก ~${info.days} วัน`:`วันนี้`}</span>`;
     return`<div class="ph-row">
       <div class="ph-top"><span class="ph-nm" onclick="openPondDetail('${p.id}')">บ่อ ${p.name} ›</span>${badge}</div>
       <div class="ph-bar"><span style="width:${info.pct.toFixed(0)}%;background:${cls}"></span></div>
