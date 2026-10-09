@@ -58,7 +58,7 @@ const OV_PARAMS = {
 // ── เกณฑ์ฟาร์ม (entry #384) = WQ_RULE ในแอป — แก้ที่แอปต้องแก้ตรงนี้ด้วย
 //    lo ต่ำกว่า = แดง · hiD เกิน = แดง · hi เกิน = เหลือง (สูงมาก)
 const WQ_RULE = {
-  alk: {lo: 136, hi: 250}, doM: {lo: 5, hi: 20}, doA: {lo: 5, hi: 20},
+  alk: {lo: 136, loW: 136, hi: 250}, doM: {lo: 5, hi: 20}, doA: {lo: 5, hi: 20},
   phM: {lo: 7.4, hi: 9.0}, phA: {lo: 7.4, hi: 9.5}, tM: {lo: 25, hi: 33}, tA: {lo: 25, hi: 33},
   nh4: {hiD: 3}, no2: {hi: 4}, sal: {hi: 35},
 };
@@ -76,6 +76,7 @@ function classifyOv(key, v) {
     const x = parseFloat(v);
     if (r.lo != null && x < r.lo) return "danger";
     if (r.hiD != null && x > r.hiD) return "danger";
+    if (r.loW != null && x <= r.loW) return "warn";   // #398 ALK ถึง 136 = เฝ้าระวัง
     if (r.hi != null && x > r.hi) return "warn";
     return "ok";
   }

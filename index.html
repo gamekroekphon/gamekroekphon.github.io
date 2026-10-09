@@ -6138,13 +6138,15 @@ function dens(p){return p.size>0?Math.round(pRelease(p)/(p.size*1600)):0}
 //    ฟาร์ม focus 6 ข้อ = แดง: ALK <136 · DO <5 · pH <7.4 · pH เช้า–บ่ายต่าง >0.3 · อุณหภูมิ <25 · NH4 >3
 //    ค่าอื่นเตือนเฉพาะ "สูงมาก" = เหลือง (hi) · Ca/Mg/Hard/NO3 ไม่อยู่ที่นี่ → ใช้ PARAMS เดิม
 //    lo = ต่ำกว่า → แดง · hiD = เกิน → แดง · hi = เกิน → เหลือง · PARAMS min/max ยังใช้กับเส้นช่วงในกราฟเท่านั้น
-const WQ_RULE={alk:{lo:136,hi:250},doM:{lo:5,hi:20},doA:{lo:5,hi:20},phM:{lo:7.4,hi:9.0},phA:{lo:7.4,hi:9.5},
+// loW = ค่าที่ "ลงมาถึง" แล้วขึ้นเหลือง (เฝ้าระวัง) · lo = ต่ำกว่านี้แดง — ALK #398 (พี่สั่ง 9 ต.ค. 69): ชุดทดสอบ ALK ขึ้นทีละ 17 (136 · 153 · 170 · 187 · 204) 136 คือขั้นต่ำสุดของปกติ ถึงขั้นนี้ = เตือน ต่ำกว่า = แดง
+const WQ_RULE={alk:{lo:136,loW:136,hi:250},doM:{lo:5,hi:20},doA:{lo:5,hi:20},phM:{lo:7.4,hi:9.0},phA:{lo:7.4,hi:9.5},
   tM:{lo:25,hi:33},tA:{lo:25,hi:33},nh4:{hiD:3},no2:{hi:4},sal:{hi:35}};
 const WQ_SWING_MAX=0.3;
 function wqRule(key,v){
   const r=WQ_RULE[key];v=parseFloat(v);if(!r||isNaN(v))return'ok';
   if(r.lo!=null&&v<r.lo)return'danger';
   if(r.hiD!=null&&v>r.hiD)return'danger';
+  if(r.loW!=null&&v<=r.loW)return'warn';
   if(r.hi!=null&&v>r.hi)return'warn';
   return'ok';
 }
@@ -6153,11 +6155,13 @@ function wqRuleWhy(key,v){
   const r=WQ_RULE[key];v=parseFloat(v);if(!r)return'';
   if(r.lo!=null&&v<r.lo)return'ต่ำกว่า '+r.lo;
   if(r.hiD!=null&&v>r.hiD)return'เกิน '+r.hiD;
+  if(r.loW!=null&&v<=r.loW)return'ถึงเกณฑ์เตือน';
   if(r.hi!=null&&v>r.hi)return'สูงมาก (เกิน '+r.hi+')';
   return'';
 }
 function wqRuleStd(key){
   const r=WQ_RULE[key];if(!r)return'';const a=[];
+  if(r.loW!=null)a.push('ถึง '+r.loW+' = เฝ้าระวัง');
   if(r.lo!=null)a.push('ต่ำกว่า '+r.lo+' = ต้องดู');
   if(r.hiD!=null)a.push('เกิน '+r.hiD+' = ต้องดู');
   if(r.hi!=null)a.push('เกิน '+r.hi+' = สูงมาก');
@@ -6195,7 +6199,7 @@ function sc(s){return s==='danger'?'var(--d)':s==='warn'?'var(--w)':s==='ok'?'va
 // ===== OVERVIEW-ONLY status engine (มาตรฐาน L. vannamei — ยืนยัน 16 มิ.ย. 69) =====
 // แยกจาก PARAMS/st() เดิมโดยตั้งใจ เพื่อไม่กระทบเกณฑ์ที่ใช้ในแท็บอื่น (บันทึกคุณภาพน้ำ/ผลแล็บ/แจ้งเตือน)
 function warnDir(key,v){
-  if(WQ_RULE[key]){const r=WQ_RULE[key];return r.lo!=null&&parseFloat(v)<r.lo?'low':'high';}
+  if(WQ_RULE[key]){const r=WQ_RULE[key];const x=parseFloat(v);return (r.lo!=null&&x<r.lo)||(r.loW!=null&&x<=r.loW)?'low':'high';}
   const p=PARAMS.find(x=>x.key===key);   // ทิศทางจากช่วงเดียวกับสีช่อง (entry #357)
   if(!p||p.inv)return'high';
   return v>p.max?'high':'low';
@@ -13913,7 +13917,7 @@ function wqgSetDate(d){
   const ep=document.getElementById('ep-date');if(ep){ep.value=d;syncDateHint(ep);}
   renderWqGrid();renderEpChips();checkExistingWQ();
 }
-function wqgRange(p){if(!p)return'';if(p.key==='ca')return'คู่กับ Mg';if(p.key==='mg_')return'Ca 1:2.5–3.5';if(WQ_RULE[p.key]){const r=WQ_RULE[p.key];return r.lo!=null?'≥ '+r.lo:r.hiD!=null?'≤ '+r.hiD:'≤ '+r.hi;}const n=v=>String(v).replace(/\.0+$/,'');return p.inv?'< '+n(p.max):n(p.min)+'–'+n(p.max);}
+function wqgRange(p){if(!p)return'';if(p.key==='ca')return'คู่กับ Mg';if(p.key==='mg_')return'Ca 1:2.5–3.5';if(WQ_RULE[p.key]){const r=WQ_RULE[p.key];return r.loW!=null?'> '+r.loW:r.lo!=null?'≥ '+r.lo:r.hiD!=null?'≤ '+r.hiD:'≤ '+r.hi;}const n=v=>String(v).replace(/\.0+$/,'');return p.inv?'< '+n(p.max):n(p.min)+'–'+n(p.max);}
 // sal = ความเค็มของแถวนี้ (ที่พิมพ์ค้างใน _wqDraft ก่อน ไม่มีค่อยใช้ที่บันทึกไว้) — เกณฑ์ Mg/Ca ขึ้นกับความเค็ม
 //   เดิมอ่านแค่ rec.sal → ตอนพิมพ์สีคิดแบบไม่รู้ความเค็ม กดบันทึกแล้วสีเปลี่ยนเอง (แก้ entry #357)
 function wqgSalOf(pid,rec){const dr=_wqDraft[pid];const s=dr&&'sal' in dr?String(dr.sal).trim().replace(',','.'):'';if(s!==''){const v=parseFloat(s);return isNaN(v)?null:v;}return rec&&rec.sal!=null?rec.sal:null;}
@@ -17445,7 +17449,7 @@ function calcRisk(d,ix,p){
   const pondReasons=allReasonsOv(p,last,pondCurAge(p)).map(r=>({l:r.level,m:r.text}));
   const num=k=>last&&last[k]!=null&&last[k]!==''?parseFloat(last[k]):null;
   const alk=num('alk'),dos=[num('doM'),num('doA')].filter(v=>v!=null),doMin=dos.length?Math.min(...dos):null,tw=[num('tM'),num('tA')].filter(v=>v!=null),twMin=tw.length?Math.min(...tw):null;
-  if(w.rain>RISK_RAIN_HEAVY&&alk!=null&&alk>=WQ_RULE.alk.lo&&alk<150)pondReasons.push({l:'warn',m:'ฝน '+w.rain.toFixed(0)+' มม. + ALK '+alk+' ใกล้ '+WQ_RULE.alk.lo});
+  if(w.rain>RISK_RAIN_HEAVY&&alk!=null&&alk>WQ_RULE.alk.loW&&alk<150)pondReasons.push({l:'warn',m:'ฝน '+w.rain.toFixed(0)+' มม. + ALK '+alk+' ใกล้ '+WQ_RULE.alk.lo});
   if((w.tMax>33||(w.wind<5&&w.tMax>31))&&doMin!=null&&doMin>=WQ_RULE.doM.lo&&doMin<6)pondReasons.push({l:'warn',m:'ร้อน/ลมสงบ + DO '+doMin+' ใกล้ '+WQ_RULE.doM.lo});
   if(w.tMin<RISK_COLD_NIGHT&&twMin!=null&&twMin>=WQ_RULE.tM.lo&&twMin<26)pondReasons.push({l:'warn',m:'คืนเย็น + อุณหภูมิน้ำ '+twMin+' ใกล้ '+WQ_RULE.tM.lo});
   const nD=pondReasons.filter(r=>r.l==='danger').length,nW=pondReasons.filter(r=>r.l==='warn').length;
