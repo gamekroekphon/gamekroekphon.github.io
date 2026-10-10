@@ -1396,6 +1396,36 @@ table.exy-t td,table.exy-t th{font-variant-numeric:tabular-nums}
 .rk-fold summary::-webkit-details-marker{display:none}
 .rk-fold div{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 8px}
 .rk-fold button{border:1px solid #9AD9AE;background:var(--sf);border-radius:99px;padding:2px 10px;font-family:inherit;font-weight:600;cursor:pointer;min-height:32px}
+/* หน้าจับกุ้ง (entry #401): เหลือในบ่อ · ตัวโชว์ก่อนบันทึก · การ์ดรายการบนมือถือ */
+.hv-chips{display:flex;gap:8px;flex-wrap:wrap}
+#hv-round-strip{margin-bottom:12px}
+.hv-left{margin-top:10px;background:var(--ib);border:1.5px solid #BFDBFE;border-radius:12px;padding:9px 12px}
+.hv-left .t{font-weight:700;color:var(--in);font-size:calc(13px * var(--ui-scale))}
+.hv-left .big{display:flex;gap:14px;flex-wrap:wrap;margin-top:2px;font-size:calc(13px * var(--ui-scale));color:var(--tx)}
+.hv-left .big b{font-size:calc(17px * var(--ui-scale))}
+.hv-left .m{font-size:calc(12.5px * var(--ui-scale));margin-top:3px;color:var(--tx)}
+.hv-prev{border-radius:12px;padding:9px 12px;background:var(--ob);border:1.5px solid #86EFAC;color:var(--tx)}
+.hv-prev .t{font-weight:700;color:var(--ok);font-size:calc(13px * var(--ui-scale))}
+.hv-prev .r{font-size:calc(14px * var(--ui-scale));margin-top:2px}.hv-prev .r b{font-size:calc(16px * var(--ui-scale))}
+.hv-prev.bad{background:var(--db);border-color:#FCA5A5}.hv-prev.bad .t{color:var(--d)}
+.hv-cards{display:none}
+.hv-card{border:1.5px solid var(--bd);border-radius:12px;padding:9px 11px;margin-bottom:8px;background:var(--sf)}
+.hv-card.close{background:var(--ob);border-color:#86EFAC}.hv-card.bad{background:var(--wb)}
+.hv-card .top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.hv-card .top b{font-size:calc(15px * var(--ui-scale))}
+.hv-card .cl{font-weight:700;color:var(--ok);font-size:calc(12.5px * var(--ui-scale))}
+.hv-tag{flex:none;border-radius:6px;padding:0 7px;font-size:calc(12px * var(--ui-scale));font-weight:700}
+.hv-tag.dead{background:#E0F2FE;color:#075985}.hv-tag.live{background:var(--ob);color:var(--ok)}.hv-tag.miss{background:var(--wb);color:var(--w)}
+.hv-card .mid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:6px;text-align:center;font-size:calc(12.5px * var(--ui-scale))}
+.hv-card .mid b{display:block;font-size:calc(15px * var(--ui-scale))}
+.hv-card .gr,.hv-card .nt{font-size:calc(12.5px * var(--ui-scale));margin-top:4px}
+.hv-card .bot{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:6px}
+.hv-card .baht{font-weight:700;color:var(--ok);font-size:calc(16px * var(--ui-scale))}
+.hv-card .act{display:flex;gap:6px}
+.hv-card .act button{border:1.5px solid var(--bd);background:var(--sf);color:var(--tx);border-radius:9px;min-height:36px;padding:0 12px;font-family:inherit;font-size:calc(13px * var(--ui-scale));cursor:pointer}
+.hv-card .act button.del{color:var(--d)}
+.hv-csum{display:flex;justify-content:space-between;gap:8px;font-weight:700;border-top:2px solid var(--bd);padding-top:8px;font-size:calc(14px * var(--ui-scale))}
+@media (max-width:640px){.hv-tbl-wrap{display:none}.hv-cards{display:block}}
 .crx-reason{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:11px 12px;margin-bottom:12px}
 .crx-rh{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:calc(15px * var(--ui-scale));margin-bottom:8px}.crx-rh small{font-weight:600;font-size:calc(12.5px * var(--ui-scale))}
 .crx-rbar{display:flex;height:14px;border-radius:6px;overflow:hidden;margin-bottom:10px}.crx-rbar i{display:block;height:100%}
@@ -3861,7 +3891,8 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
           <input type="text" class="fi" id="hv-buyer" placeholder="ชื่อแพใหม่" oninput="hvSyncPick(true)"></div>
         <div class="fg"><label class="fl" for="hv-size">ไซส์ (ตัว/กก.) <span style="color:var(--d)">*</span></label><input type="number" class="fi" id="hv-size" placeholder="60" step="1" oninput="hvRef()"><span class="hint">ใช้แปลง กก. → จำนวนตัว ถ้าไม่กรอก biomass/FCR/อัตรารอด จะเพี้ยน</span></div>
         <div class="fg"><label class="fl" for="hv-weight">น้ำหนักรวม (กก.) <span style="color:var(--d)">*</span></label><input type="number" class="fi" id="hv-weight" placeholder="1000" step="0.1" oninput="hvCalcSum()"></div>
-        <div id="hv-ref" style="grid-column:1/-1"></div>
+        <div id="hv-left-prev" style="grid-column:1/-1"></div>
+<div id="hv-ref" style="grid-column:1/-1"></div>
         <div class="fg"><label class="fl" for="hv-price">ราคากุ้งปกติ (บาท/กก.)</label><input type="number" class="fi" id="hv-price" placeholder="120" step="0.5" oninput="hvCalcSum()"><span class="hint">ใช้เป็นตัวช่วยบวกเฉยๆ — ยอดจริงกรอกในช่องด้านล่าง</span></div>
         <div id="hv-cmp" style="grid-column:1/-1"></div>
       </div>
@@ -5993,6 +6024,13 @@ function pondOptionsHtml(){
     return '<option value="'+p.id+'">บ่อ '+p.name+(p.harvestDate?' — รอทำสรุป':age>0?' — DOC '+age:' — เตรียมบ่อ')+'</option>';
   }).join('');
 }
+function hvPondOptionsHtml(){
+  return sortPondsByAge(D.ponds).filter(p=>p.harvestDate||pondCurAge(p)>0).map(p=>{
+    if(p.harvestDate)return '<option value="'+p.id+'">บ่อ '+p.name+' — รอทำสรุป</option>';
+    const i=partialHarvestInfo(p);
+    return '<option value="'+p.id+'">บ่อ '+p.name+' — DOC '+pondCurAge(p)+(i&&i.yr>0?' · '+Math.round(i.yr).toLocaleString()+' กก./ไร่':'')+'</option>';
+  }).join('');
+}
 // ── จำบ่อที่เลือกล่าสุด แล้วเติมให้หน้าอื่นอัตโนมัติ
 //    พนักงานเดินตรวจทีละบ่อ แล้วบันทึกหลายอย่างของบ่อเดียวกัน (ค่าน้ำ → กุ้งตาย → จัดการน้ำ)
 //    เดิมทุกหน้าเริ่มจากว่าง ต้องเลือกบ่อเดิมซ้ำทุกหน้า
@@ -6794,10 +6832,10 @@ function populateAll(){
     el.innerHTML='<option value="all">ทุกบ่อ</option>'+pondOptionsHtml();
     if(cur)el.value=cur;
   });
-  // harvest pond selectors
+  // harvest pond selectors — เฉพาะบ่อที่มีกุ้ง + บ่อรอทำสรุป (ต้องเลือกได้เพื่อแก้ผลจับ/ไปขั้นที่ 2) · บ่อเตรียมไม่ต้องโชว์ (entry #401)
   ['hv-pond'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;const cur=el.value;
-    el.innerHTML='<option value="">-- เลือกบ่อ --</option>'+pondOptionsHtml();
+    el.innerHTML='<option value="">-- เลือกบ่อ --</option>'+hvPondOptionsHtml();
     if(cur)el.value=cur;
   });
 }
@@ -20164,6 +20202,7 @@ function renderHvRoundStrip(){
   const pid=document.getElementById('hv-pond')?.value||'';
   const p=pond(pid);
   if(!p){el.style.display='none';el.innerHTML='';return;}
+  {const o=[...(document.getElementById('hv-pond')||{options:[]}).options].find(x=>x.value===pid);if(o){const t=document.createElement('div');t.innerHTML=hvPondOptionsHtml();const n=[...t.querySelectorAll('option')].find(x=>x.value===pid);if(n)o.textContent=n.textContent;}}   // กก./ไร่ ในชื่อบ่อ อัปเดตทันทีหลังบันทึก
   const chip=t=>`<span style="display:inline-flex;align-items:center;gap:5px;background:var(--sf2);border:1px solid var(--bd);border-radius:16px;padding:3px 11px;font-size:calc(12px * var(--ui-scale))">${t}</span>`;
   const chips=[];
   chips.push(chip(`📅 รอบ ${p.cropNum||1}/${yearBE(p.cropYear)||'-'}${p.startDate?` · เลี้ยงมา ${pondCurAge(p)} วัน`:' · ยังไม่ลงกุ้ง'}`));
@@ -20176,8 +20215,39 @@ function renderHvRoundStrip(){
     const c=pondRunningCost(p);
     if(c)chips.push(chip(`💰 ต้นทุนสะสม ~${Math.round(c.total).toLocaleString()} บ.`));
   }
-  el.innerHTML=chips.join('');
-  el.style.display='flex';
+  // ── 🦐 เหลือในบ่อตอนนี้ (entry #401) — ตัวเลขชุดเดียวกับหน้าภาพรวม/หน้าบ่อ: pondShrimpCount (หักพาเชียลแล้ว · น้ำหนักตัวจากสุ่มล่าสุด)
+  //    ไม่โชว์จำนวนวันถึงเกณฑ์ (พี่สั่ง) · บ่อรอทำสรุป = จับหมดแล้ว ไม่ต้องโชว์
+  let left='';
+  const sc=!p.harvestDate&&pondCurAge(p)>0?pondShrimpCount(p):null;
+  if(sc){
+    const yr=p.size>0?sc.biomass/p.size:null;
+    const pt=partialTotals(ph);
+    left='<div class="hv-left"><div class="t">🦐 เหลือในบ่อตอนนี้</div><div class="big">'
+      +'<span><b>~'+(sc.biomass/1000).toFixed(1)+'</b> ตัน</span>'
+      +(yr!=null?'<span><b>'+Math.round(yr).toLocaleString()+'</b> กก./ไร่</span>':'')
+      +'<span><b>~'+(Math.round(sc.inPond/1000)*1000).toLocaleString()+'</b> ตัว</span></div>'
+      +(APP_ROLE==='admin'&&pt.baht>0&&pt.kg>0?'<div class="m">ขายแล้ว ฿'+(pt.baht/1e6).toFixed(2)+' ล. · เฉลี่ย ฿'+Math.round(pt.baht/pt.kg).toLocaleString()+'/กก.</div>':'')
+      +'</div>';
+  }
+  el.innerHTML='<div class="hv-chips">'+chips.join('')+'</div>'+left;
+  el.style.display='block';
+  hvLeftPreview();
+}
+// ── ③ ระหว่างพิมพ์ไซส์/น้ำหนัก: จับครั้งนี้แล้วเหลือในบ่อเท่าไร (entry #401) — เห็นตัวเลขพิมพ์ผิดก่อนกดบันทึก
+//    สูตรเดียวกับตัวเตือน "จับเกินจำนวนกุ้งในบ่อ" ใน savePartialHarvest (ไม่บล็อก แค่โชว์) · โหมดปิดรอบไม่โชว์ (จับหมดอยู่แล้ว)
+function hvLeftPreview(){
+  const el=document.getElementById('hv-left-prev');if(!el)return;
+  const p=pond((document.getElementById('hv-pond')||{}).value||'');
+  const size=parseFloat((document.getElementById('hv-size')||{}).value)||0;
+  const kg=(parseFloat((document.getElementById('hv-weight')||{}).value)||0)+_hvGrades.reduce((s,g)=>s+(parseFloat(g.kg)||0),0);
+  const sc=p&&!p.harvestDate?pondShrimpCount(p):null;
+  if(!sc||hvMode()!=='พาเชียล'||!(size>0)||!(kg>0)){el.innerHTML='';return;}
+  const other=partialTotals((p.partialHarvests||[]).filter(x=>x.id!==_phEditId)).count;
+  const before=Math.max(0,sc.aliveAll-other),cnt=kg*size,rem=before-cnt;
+  if(rem<0){el.innerHTML='<div class="hv-prev bad"><div class="t">⚠️ มากกว่ากุ้งที่มีในบ่อ (~'+(before*sc.abw/1e6).toFixed(1)+' ตัน)</div><div class="r">ตรวจน้ำหนัก/ไซส์อีกครั้ง</div></div>';return;}
+  const bio=rem*sc.abw/1000,yr=p.size>0?bio/p.size:null;
+  el.innerHTML='<div class="hv-prev"><div class="t">✓ จับครั้งนี้ ~'+(Math.round(cnt/1000)*1000).toLocaleString()+' ตัว → เหลือในบ่อ</div>'
+    +'<div class="r"><b>~'+(bio/1000).toFixed(1)+'</b> ตัน'+(yr!=null?' · <b>'+Math.round(yr).toLocaleString()+'</b> กก./ไร่':'')+' · <b>~'+(Math.round(rem/1000)*1000).toLocaleString()+'</b> ตัว</div></div>';
 }
 // ── ปุ่มเลือก "รูปแบบการจับ" (รูปแบบเดียวกับปุ่มเลือกงานหน้าสต็อก)
 //    ⚠️ "ปิดรอบ" เป็นงานทำลายข้อมูล (ล้างรอบทิ้ง) จึงย้อมสีแดงและเขียนเตือนไว้ใต้ชื่อ ไม่ให้หน้าตาเหมือนพาเชียล
@@ -20234,6 +20304,7 @@ function hvApplyMode(isClose){
     }else noteEl.style.display='none';
   }
   hvRenderCloseShortcut(p,isClose);
+  hvLeftPreview();
 }
 // ── ทางลัด "ไปกรอกต้นทุน" — โชว์เฉพาะบ่อที่บันทึกผลจับไว้แล้ว (สถานะรอทำสรุป) ──
 function hvRenderCloseShortcut(p,isClose){
@@ -20290,6 +20361,7 @@ function hvPickBuyer(i){
 }
 // ราคาอ้างอิง: 3 ครั้งล่าสุดที่ไซส์ใกล้กัน (±2) · เทียบราคาที่กรอก (ต่ำกว่าเกิน 5% = ส้ม · เตือนเฉยๆ ไม่บล็อก) · admin เท่านั้น
 function hvRef(){
+  hvLeftPreview();
   const ref=document.getElementById('hv-ref'),cmp=document.getElementById('hv-cmp');if(!ref||!cmp)return;
   const s=parseFloat(document.getElementById('hv-size')?.value),p=parseFloat(document.getElementById('hv-price')?.value);
   if(APP_ROLE!=='admin'||!(s>0)){ref.innerHTML='';cmp.innerHTML='';return;}
@@ -20531,6 +20603,7 @@ function editPartialHarvest(pid,id){
   _hvGrades=((r.grades)||[]).map(g=>({n:g.n,kg:g.kg,pr:g.pr}));hvRenderGrades();
   syncDateHint(document.getElementById('hv-date'));
   _phEditId=id;
+  hvLeftPreview();   // คิดใหม่หลังตั้ง _phEditId — ไม่งั้นนับรายการที่กำลังแก้ซ้ำ 2 รอบ
   const btn=document.getElementById('hv-save-btn');if(btn)btn.textContent='💾 อัปเดตรายการ';
   const cx=document.getElementById('hv-cancel-edit');if(cx)cx.style.display='';
   showMsg('hv-msg','warn','✏️ กำลังแก้ไขรายการวันที่ '+fD(r.date)+' — แก้ค่าแล้วกด "อัปเดตรายการ"');
@@ -20598,7 +20671,7 @@ function renderPartialList(){
   }:null;
   if(closeRow)rows.unshift(closeRow);   // จับปิดบ่อเป็นครั้งล่าสุดเสมอ อยู่บนสุด
   if(!rows.length){listEl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีรายการจับกุ้งในรอบนี้ — บันทึกได้จากฟอร์มด้านบน</p>';return;}
-  listEl.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:calc(13px * var(--ui-scale))"><thead><tr style="background:var(--sf2);border-bottom:2px solid var(--bd)">
+  listEl.innerHTML=`<div class="hv-tbl-wrap" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:calc(13px * var(--ui-scale))"><thead><tr style="background:var(--sf2);border-bottom:2px solid var(--bd)">
     <th style="text-align:left;padding:8px 10px;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">วันที่</th>
     <th style="text-align:left;padding:8px 10px;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">แพ</th>
     <th style="text-align:left;padding:8px 10px;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">ลักษณะ</th>
@@ -20628,7 +20701,30 @@ function renderPartialList(){
         ?`<button onclick="editCloseHarvest('${pid}')" style="background:none;border:none;cursor:pointer;font-size:calc(14px * var(--ui-scale))" title="แก้ไขผลจับปิดบ่อ">✏️</button><button onclick="cancelHarvestPending('${pid}')" style="background:none;border:none;cursor:pointer;color:var(--d);font-size:calc(14px * var(--ui-scale))" title="ยกเลิกการจับปิดบ่อ — บ่อกลับไปเป็นกำลังเลี้ยง">🗑️</button>`
         :`<button onclick="editPartialHarvest('${pid}','${r.id}')" style="background:none;border:none;cursor:pointer;font-size:calc(14px * var(--ui-scale))" title="แก้ไข">✏️</button><button onclick="deletePartialHarvest('${pid}','${r.id}')" style="background:none;border:none;cursor:pointer;color:var(--d);font-size:calc(14px * var(--ui-scale))" title="ลบ">🗑️</button>`}</td>
     </tr>`;
-  }).join('')}</tbody></table></div>`;
+  }).join('')}</tbody></table></div>`+hvPartialCards(rows,pid);
+}
+// ── ① มือถือ: รายการจับเป็นการ์ดทีละครั้ง (entry #401) — ตาราง 9 ช่องล้นจอต้องเลื่อนข้าง · คอมยังเป็นตารางเดิม (CSS .hv-tbl-wrap/.hv-cards สลับกัน)
+function hvPartialCards(rows,pid){
+  const q=String.fromCharCode(39);
+  let sk=0,sb=0;
+  const cards=rows.map(r=>{
+    const kg=harvestRowKg(r),baht=Math.round(harvestRowBaht(r))||0;sk+=kg;sb+=baht;
+    const gr=(r.grades||[]).filter(g=>(g.kg||0)>0);
+    const tag=r.live==='กุ้งตาย'?'<span class="hv-tag dead">❄️ กุ้งตาย</span>':r.live==='กุ้งเป็น'?'<span class="hv-tag live">🦐 กุ้งเป็น</span>':'<span class="hv-tag miss">เป็น/ตาย ?</span>';
+    const act=r.isClose
+      ?'<button type="button" onclick="editCloseHarvest('+q+pid+q+')">✏️ แก้</button><button type="button" class="del" onclick="cancelHarvestPending('+q+pid+q+')" aria-label="ยกเลิกการจับปิดบ่อ">🗑️</button>'
+      :'<button type="button" onclick="editPartialHarvest('+q+pid+q+','+q+r.id+q+')">✏️ แก้</button><button type="button" class="del" onclick="deletePartialHarvest('+q+pid+q+','+q+r.id+q+')" aria-label="ลบ">🗑️</button>';
+    const bad=!(r.size>0)||!(baht>0);
+    return '<div class="hv-card'+(r.isClose?' close':bad?' bad':'')+'">'
+      +'<div class="top"><b>'+fD(r.date)+(r.buyer?' · '+mpEsc(r.buyer):'')+'</b>'+tag+'</div>'
+      +(r.isClose?'<div class="cl">🏁 จับปิดบ่อ</div>':'')
+      +'<div class="mid"><div><b>'+(r.size||'-')+'</b>ตัว/กก.</div><div><b>'+(kg?Math.round(kg).toLocaleString():'-')+'</b>กก.</div><div><b>'+(r.price?'฿'+r.price.toLocaleString():'-')+'</b>/กก.</div></div>'
+      +(gr.length?'<div class="gr">'+gr.map(g=>mpEsc(g.n)+' '+g.kg+' กก.').join(' · ')+'</div>':'')
+      +'<div class="bot"><span class="baht">'+(baht?'฿'+baht.toLocaleString():'ยังไม่กรอกยอดเงิน')+'</span><span class="act">'+act+'</span></div>'
+      +(r.notes?'<div class="nt">'+mpEsc(r.notes)+'</div>':'')
+      +'</div>';
+  }).join('');
+  return '<div class="hv-cards">'+cards+(rows.length>1?'<div class="hv-csum"><span>รวม '+rows.length+' ครั้ง</span><span>'+Math.round(sk).toLocaleString()+' กก.'+(sb>0?' · ฿'+(sb/1e6).toFixed(2)+' ล.':'')+'</span></div>':'')+'</div>';
 }
 // ===== ต้นทุนสะสมรายบ่อ (ใช้ร่วมกันระหว่าง Overview KPI bar / หน้ารายละเอียดบ่อ admin / หน้าสต็อก — เดิมสร้างไว้เป็นส่วนหนึ่งของ CEO Dashboard ที่ลบไปแล้ว) =====
 const ceoMoney=v=>'฿'+Math.round(v||0).toLocaleString('th-TH');
