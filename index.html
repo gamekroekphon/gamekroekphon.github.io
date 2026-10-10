@@ -2252,6 +2252,17 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 .sp-ph{font-size:var(--fs11);color:var(--in);background:var(--ib);border-radius:8px;padding:6px 9px;margin:-2px 0 9px;line-height:1.5}
 .sp-ph b{font-variant-numeric:tabular-nums}
 .sp-ph span{display:block;color:var(--tx2)}
+.sp-fd{display:flex;align-items:center;gap:8px;flex-basis:100%;font-size:calc(13.5px * var(--ui-scale));color:var(--tx)}
+.sp-fd b{font-size:calc(16px * var(--ui-scale));color:var(--in)}
+.sp-fd button{background:var(--in);color:#fff;border:none;border-radius:9px;min-height:34px;padding:0 14px;font-family:inherit;font-weight:700;font-size:calc(13.5px * var(--ui-scale));cursor:pointer}
+.sp-fd .tg{margin-left:auto;border-radius:7px;padding:1px 8px;font-size:calc(12.5px * var(--ui-scale));font-weight:700;background:var(--wb);color:var(--w)}
+.sp-sv input.wn{border-color:var(--w)!important;background:var(--wb)!important}
+.sp-fold{border:1.5px dashed var(--bd);border-radius:12px;background:var(--sf)}
+.sp-fold>summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 12px;font-weight:700;cursor:pointer}
+.sp-fold>summary::-webkit-details-marker{display:none}
+.sp-fold>summary small{display:block;font-weight:500;font-size:calc(12.5px * var(--ui-scale));color:var(--tx)}
+.sp-fold[open]>summary .ar{transform:rotate(90deg)}
+.sp-fold>.sp-list{padding:0 8px 8px}
 .sp-ins{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
 .sp-ins label{font-size:var(--fs10);color:var(--tx3);display:block;margin-bottom:3px}
 .sp-ins input{width:100%;min-width:0;text-align:center;border:1.5px solid var(--bd);border-radius:10px;background:var(--sf);
@@ -6737,29 +6748,26 @@ function pondFeedBaseOnDate(p,d){
   return Math.max(0,release-ph);
 }
 // ── FCR ประเมิน = อาหารสะสม ÷ (กุ้งที่ยังอยู่ในบ่อ + ที่พาเชียลไปแล้ว) — อาหารถูกกินโดยกุ้งทั้ง 2 ส่วน ──
-// ══════ เกณฑ์ FCR ของฟาร์ม — ไต่ตามอายุกุ้ง (พี่อธิบาย entry #256) ══════
-// วันที่ 1 → ก่อนสุ่มครั้งแรก = 1.0
-// สุ่มครั้งแรก (~วัน 30 หรือกุ้งหลุดไซส์ 100 ตัว/กก.) = 1.1
-// จากนั้น +0.1 ทุก 2 สัปดาห์ (จันทร์เว้นจันทร์) — ไม่มีเพดาน เพราะเพดานอาหารต่อวันคุมอยู่แล้ว
-// ⚠️ เดินตามปฏิทิน ไม่ต้องรอว่าสุ่มจริงหรือเปล่า — กุ้งโตต่อไม่ว่าจะสุ่มหรือไม่
-//    ถ้าเลย 40 วันแล้วยังไม่ได้สุ่มเลย ให้ถือว่าเริ่มไต่ที่วัน 40 (พี่บอก "เกิน 40 วันยังไม่ได้สุ่ม ให้ปรับเองได้เลย")
-//    จึงใช้ min(วันสุ่มครั้งแรก, 40) เป็นจุดตั้งต้น — สุ่มช้ากว่า 40 ก็ไม่ทำให้เกณฑ์ค้างต่ำเกินจริง
-const FCR_BASE=1.0, FCR_FIRST=1.1, FCR_STEP=0.1, FCR_STEP_DAYS=14, FCR_ANCHOR_MAX=40;
-function fcrAnchorDay(p){
-  const ss=(p&&p.samples||[]).filter(x=>x&&x.date).slice()
-    .sort((a,b)=>String(a.date).localeCompare(String(b.date)));
-  const firstDay=(ss.length&&p.startDate)?docAge(p.startDate,ss[0].date):null;
-  return(firstDay!=null&&firstDay>0)?Math.min(firstDay,FCR_ANCHOR_MAX):FCR_ANCHOR_MAX;
-}
+// ══════ เกณฑ์ FCR ของฟาร์ม (entry #256 → แก้เป็นนับครั้งที่สุ่มใน #402) ══════
+// ก่อนสุ่ม/สุ่มครั้งที่ 1 = 1.0 · ครั้งที่ 2–3 = 1.1 · 4–5 = 1.2 … ไม่มีเพดาน
+// ถ้าเลย 40 วันแล้วยังไม่ได้สุ่มเลย ให้ถือว่าเริ่มนับที่วัน 40 (พี่บอกใน #256) — รอบเก่าที่ไม่มีผลสุ่มใช้กฎนี้
+const FCR_BASE=1.0, FCR_STEP=0.1, FCR_ANCHOR_MAX=40;
 // เกณฑ์ FCR ที่ "ควรจะเป็น" ของบ่อนี้ ณ อายุที่กำหนด (ไม่ใส่ = วันนี้)
+// ⚠️ entry #402 (พี่ยืนยัน 10 ต.ค. 69 + ตรวจกับข้อมูลจริง 40 ครั้ง): ฟาร์มนับตาม "ครั้งที่สุ่ม" ไม่ใช่จำนวนวัน
+//    สุ่มครั้งที่ 1 ใช้ 1.0 · 2–3 = 1.1 · 4–5 = 1.2 · 6–7 = 1.3 … (= 1.0 + 0.1 × floor(k/2))
+//    เดิมนับวันจากสุ่มแรก (1.1 ตอนสุ่มแรก +0.1 ทุก 14 วัน) → เร็วกว่าฟาร์ม 1 ขั้นทุกครั้งที่สุ่มเลขคี่ (A.3 แอป 1.5 ฟาร์ม 1.4)
+//    อายุที่เลยครั้งสุ่มล่าสุด (หรือรอบที่ไม่เคยสุ่ม) → นับเหมือนสุ่มทุก 7 วัน (ฟาร์มสุ่มทุกวันจันทร์) · รอบไม่เคยสุ่มเริ่มนับที่ FCR_ANCHOR_MAX วัน
+function fcrFarmAt(k){return k>0?+(FCR_BASE+FCR_STEP*Math.floor(k/2)).toFixed(2):FCR_BASE;}
 function fcrTargetFor(p,ageOverride){
   if(!p||!p.startDate)return null;
   const age=ageOverride!=null?ageOverride:pondCurAge(p);
   if(!(age>0))return null;
-  const anchor=fcrAnchorDay(p);
-  if(age<anchor)return FCR_BASE;
-  const steps=Math.floor((age-anchor)/FCR_STEP_DAYS);
-  return +(FCR_FIRST+FCR_STEP*steps).toFixed(2);
+  const ages=(p.samples||[]).filter(x=>x&&(x.date||x.age)).map(x=>x.date?docAge(p.startDate,x.date):x.age).filter(a=>a>0&&a<=age).sort((a,b)=>a-b);
+  let k=ages.length;
+  const last=k?ages[k-1]:null;
+  if(last!=null)k+=Math.floor((age-last)/7);
+  else if(age>=FCR_ANCHOR_MAX)k=1+Math.floor((age-FCR_ANCHOR_MAX)/7);
+  return fcrFarmAt(k);
 }
 // ── FCR เกินเกณฑ์ = อาหารที่ใช้เกิน แปลงเป็นเงินด้วยราคาอาหารจริงของบ่อนี้ ──
 //    ⚠️ ราคาต่อ กก. คิดจาก ต้นทุนอาหารจริง ÷ อาหารที่ให้จริง — ไม่ได้ตั้งราคาตายตัวไว้ในโค้ด
@@ -16375,6 +16383,7 @@ function initSample(){
   const d=document.getElementById('sp-date');if(d){d.value=_spDate;syncDateHint(d);}
   renderSpRows();populateSpChartPond();populateSpFilter();renderSampleTable(true);renderSampleChart();
 }
+let _spFoldOpen=false;
 function spSetDate(v){if(!v)return;_spDate=v;_spVals={};renderSpRows();}
 function spQuickDate(back){
   const d=addDaysStr(today(),-back);_spDate=d;_spVals={};
@@ -16423,16 +16432,45 @@ function spCalc(p,v,d){
   }
   return{abw,size,bio,inPond,ph,cnt,kg,surv};
 }
+// ── อัตรารอดจากอาหาร (entry #402) = วิธีที่ฟาร์มคิดเอง: อาหารรวมถึงเมื่อวาน ÷ FCR ฟาร์ม (ตามครั้งที่สุ่ม) = น้ำหนักกุ้งที่ผลิตได้
+//    หักกุ้งพาเชียลที่จับไปแล้ว (กก.) → ÷ ABW = ตัวในบ่อ · + ตัวที่จับไปแล้ว → ÷ ลูกกุ้งที่ปล่อย (ซื้อ+แถม) = อัตรารอดสะสมทั้งรอบ
+//    ข้อความบนจอสั้นที่สุด (พี่สั่ง): "จากอาหาร X% [ใช้] ⚠️" — ไม่บังคับ แค่เตือนเมื่อ >100 หรือต่างเกิน 5
+function spFeedSurv(p,d,abw){
+  const rel=pRelease(p);if(!(abw>0)||!rel)return null;
+  const feed=(p.feedLog||[]).filter(r=>r&&r.date&&r.date<d).reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0);
+  if(!(feed>0))return null;
+  const k=(p.samples||[]).filter(r=>r&&r.date&&r.date<d).length+1;
+  const f=fcrFarmAt(k),ph=partialTotals(spPartialsOn(p,d));
+  const surv=((feed/f-ph.kg)*1000/abw+ph.count)/rel*100;
+  return surv>0&&isFinite(surv)?{surv,f,feed}:null;
+}
+function spSurvWarn(p,d,v){
+  const c=spCalc(p,v,d),fs=c.abw>0?spFeedSurv(p,d,c.abw):null,s=parseFloat(v.surv);
+  if(!(s>0))return '';
+  if(fs&&Math.abs(s-fs.surv)>5)return '⚠️ ต่าง '+Math.round(Math.abs(s-fs.surv));
+  return s>100?'⚠️ เกิน 100%':'';
+}
+function spUseFeed(pid){
+  const p=pond(pid);if(!p)return;
+  const d=_spDate||today(),v=spVals(p,d),c=spCalc(p,v,d),fs=spFeedSurv(p,d,c.abw);if(!fs)return;
+  v.surv=String(Math.round(fs.surv));
+  const card=document.querySelector('.sp-pc[data-pid="'+p.id+'"]');
+  const inp=card?card.querySelector('.sp-sv input'):null;if(inp)inp.value=v.surv;
+  spRefreshRow(p,d);
+}
 function spOutHtml(p,d,v){
   const c=spCalc(p,v,d);
   if(!(c.abw>0))return'';
+  const fs=spFeedSurv(p,d,c.abw),wn=spSurvWarn(p,d,v),q=String.fromCharCode(39);
+  const fdLine=fs?'<div class="sp-fd">จากอาหาร <b>'+fs.surv.toFixed(1)+'%</b><button type="button" onclick="spUseFeed('+q+p.id+q+')">ใช้</button>'+(wn?'<span class="tg">'+wn+'</span>':'')+'</div>'
+    :(wn?'<div class="sp-fd"><span class="tg">'+wn+'</span></div>':'');
   const prev=spPrev(p,d);
   let grow='';
   if(prev&&prev.abw){
     const days=dDiff(prev.date,d);
     if(days>0)grow='<span class="mut">โต '+((c.abw-prev.abw)/days>=0?'+':'')+(((c.abw-prev.abw)/days).toFixed(2))+' ก./วัน (จาก '+prev.abw+' ก.)</span>';
   }
-  return'<span class="sp-pill a">ABW '+c.abw.toFixed(2)+' ก.</span>'
+  return fdLine+'<span class="sp-pill a">ABW '+c.abw.toFixed(2)+' ก.</span>'
     +'<span class="sp-pill b">ไซส์ '+c.size+' ตัว/กก.</span>'
     +(c.bio!=null?'<span class="sp-pill c">Biomass '+Math.round(c.bio).toLocaleString()+' กก.</span>':'')
     +grow
@@ -16446,7 +16484,15 @@ function renderSpRows(){
   if(lbl)lbl.textContent=(dzList().length>1?dzLabel(dzCur())+' · ':'')+'บ่อที่มีกุ้ง '+list.length+' บ่อ';
   renderDzBars();
   if(!list.length){box.innerHTML='<p style="color:var(--tx3);text-align:center;padding:18px;font-style:italic">วันที่เลือกยังไม่มีบ่อที่เลี้ยงกุ้งอยู่</p>';spSyncSave();return;}
-  box.innerHTML='<div class="sp-list">'+list.map(x=>spRowHtml(x,d)).join('')+'</div>';
+  // 🐣 บ่อที่ยังไม่เคยสุ่มรอบนี้ (ถึงวันที่เลือก) พับไว้ท้าย (entry #402 พี่สั่ง) — ฟาร์มเริ่มสุ่มเมื่อตาดูว่าไซส์ต่ำกว่า 100 ตัว/กก. ไม่ได้ดูอายุ
+  //    มีค่าที่พิมพ์ค้างอยู่ = เปิดให้เอง · สุ่มครั้งแรกแล้วขึ้นไปอยู่ด้านบนเอง
+  const sampled=x=>(x.p.samples||[]).some(r=>r&&r.date&&r.date<=d);
+  const top=list.filter(sampled),fold=list.filter(x=>!sampled(x));
+  if(fold.some(x=>{const v=_spVals[x.p.id];return v&&((parseFloat(v.count)||0)>0||(parseFloat(v.weight)||0)>0);}))_spFoldOpen=true;
+  box.innerHTML='<div class="sp-list">'+top.map(x=>spRowHtml(x,d)).join('')
+    +(fold.length?'<details class="sp-fold"'+(_spFoldOpen||!top.length?' open':'')+' ontoggle="_spFoldOpen=this.open"><summary><span>🐣 ยังไม่เคยสุ่ม '+fold.length+' บ่อ<small>'+fold.map(x=>mpEsc(x.p.name)).join(' · ')+'</small></span><span class="ar">▸</span></summary>'
+      +'<div class="sp-list">'+fold.map(x=>spRowHtml(x,d)).join('')+'</div></details>':'')
+    +'</div>';
   const t=document.getElementById('sp-q-today'),y=document.getElementById('sp-q-yest');
   if(t)t.className=(d===today()?'on':'');
   if(y)y.className=(d===addDaysStr(today(),-1)?'on':'');
@@ -16484,7 +16530,7 @@ function spRowHtml(x,d){
     +'</div>'
     +'<div class="sp-sv"><span class="lb">อัตรารอด %</span>'
       +'<button type="button" onclick="spStep('+q+p.id+q+',-1)">−</button>'
-      +'<input type="number" inputmode="numeric" min="0" value="'+mpEsc(v.surv)+'" placeholder="—" oninput="spType('+q+p.id+q+','+q+'surv'+q+',this.value)">'
+      +'<input type="number" inputmode="numeric" min="0" value="'+mpEsc(v.surv)+'" placeholder="—"'+(spSurvWarn(p,d,v)?' class="wn"':'')+' oninput="spType('+q+p.id+q+','+q+'surv'+q+',this.value)">'
       +'<button type="button" onclick="spStep('+q+p.id+q+',1)">+</button></div>'
     +'<div class="sp-out" data-out="'+p.id+'">'+spOutHtml(p,d,v)+'</div>'
     +'<div class="sp-note"><input type="text" value="'+mpEsc(v.notes)+'" placeholder="หมายเหตุ — กุ้งสวย/ซีด/เปลือกนิ่ม..." oninput="spType('+q+p.id+q+','+q+'notes'+q+',this.value)"></div>'
@@ -16503,6 +16549,7 @@ function spRefreshRow(p,d){
   if(out)out.innerHTML=spOutHtml(p,d,v);
   const card=document.querySelector('.sp-pc[data-pid="'+p.id+'"]');
   if(card)card.classList.toggle('on',(parseFloat(v.count)||0)>0&&(parseFloat(v.weight)||0)>0);
+  const si=card?card.querySelector('.sp-sv input'):null;if(si)si.classList.toggle('wn',!!spSurvWarn(p,d,v));
   spSyncSave();
 }
 // ปรับอัตรารอดทีละ 1% แล้ว Biomass ขยับตามทันที (พี่สั่ง — ไว้ไล่เทียบกับกระดานที่จดมือ)
@@ -16641,7 +16688,8 @@ function spTableShowAll(){_spTblAll=true;renderSampleTable();}
 //    ⚠️ p.feedLog / p.samples คือรอบปัจจุบันเท่านั้น (ปิดรอบแล้วย้ายเข้า cropHistory) — ตารางนี้แสดงเฉพาะรอบปัจจุบันอยู่แล้ว
 function sampleFeedFcr(p,r,bio){
   if(!p||!r||!r.date)return{feed:0,fcr:null};
-  const feed=(p.feedLog||[]).reduce((s,f)=>s+(f&&f.date&&f.date<=r.date?(f.totalFeed||0):0),0);
+  // ⚠️ อาหาร 'ก่อน' วันสุ่ม (ถึงเมื่อวาน) = วิธีที่ฟาร์มคิดอัตรารอด (entry #402 ตรวจกับข้อมูลจริง) — เดิม ≤ วันสุ่ม ทำให้ FCR สูงกว่าเกณฑ์ฟาร์ม ~0.01 ทุกบ่อ ขึ้นแดงผิด
+  const feed=(p.feedLog||[]).reduce((s,f)=>s+(f&&f.date&&f.date<r.date?(f.totalFeed||0):0),0);
   const phKg=partialTotals((p.partialHarvests||[]).filter(x=>x&&(!x.date||x.date<=r.date))).kg;
   const produced=(bio!=null?bio:0)+phKg;
   return{feed,fcr:(bio!=null&&feed>0&&produced>0)?feed/produced:null};
