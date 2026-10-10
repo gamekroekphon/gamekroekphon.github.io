@@ -2117,16 +2117,37 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .bm-extra-row .vals{display:flex;gap:14px;font-weight:600}
 .bm-extra-row .vals .cur{color:var(--p)}
 .bm-extra-row .vals .ref{color:var(--tx3);font-weight:500}
-.login-screen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center}
-.login-box{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:32px 28px;width:320px;max-width:90vw}
-.login-logo{text-align:center;margin-bottom:20px}
-.login-logo .ico{font-size:calc(44px * var(--ui-scale));line-height:1}
-.login-logo .name{font-size:calc(20px * var(--ui-scale));font-weight:700;color:var(--tx);margin-top:6px}
-.login-logo .sub{font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-top:2px}
-.login-field{margin-bottom:12px}
-.login-field label{font-size:calc(12px * var(--ui-scale));color:var(--tx2);display:block;margin-bottom:4px}
-.login-field input{width:100%;box-sizing:border-box}
-.login-err{font-size:calc(12px * var(--ui-scale));color:var(--d);text-align:center;margin-top:10px;display:none}
+/* ── หน้าเข้าสู่ระบบ แบบ ก-1 (entry #400 พี่เลือก 10 ต.ค. 69 · mockup_หน้าล็อกอิน_แบบก.html) ──
+   ฟ้าเหนือบ่อวาดด้วย canvas ตามเวลาจริง (เช้า/กลางวัน/เย็น/กลางคืน) · โลโก้ขาว icons/logo_w.png · แผ่นล่างกดแล้วค่อยเลื่อนช่องกรอกขึ้น
+   ตัวหนังสือบนฉากเป็นสีขาวทั้งหมด (พื้นหลังเข้มทุกช่วงเวลา) — ช่องกรอกพื้นขาวตัวดำ */
+.login-screen{position:fixed;inset:0;z-index:9999;background:#1E1B4B;display:flex;justify-content:center;overflow:hidden;color:#fff}
+#login-bg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.lg-ui{position:relative;display:flex;flex-direction:column;width:100%;max-width:440px;height:100%;padding:max(46px,env(safe-area-inset-top)) 22px max(22px,env(safe-area-inset-bottom))}
+.lg-brand{text-align:center;margin-top:18px}
+.lg-greet{font-size:calc(16px * var(--ui-scale));font-weight:500;letter-spacing:.5px;opacity:0;animation:lgUp .8s .2s forwards}
+.lg-logo{display:block;width:270px;max-width:78vw;height:auto;margin:6px auto 2px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.28));opacity:0;animation:lgPop .9s .3s cubic-bezier(.2,1.4,.4,1) forwards}
+.lg-name{font-size:calc(26px * var(--ui-scale));font-weight:700;line-height:1.1;letter-spacing:.5px;text-shadow:0 3px 16px rgba(0,0,0,.4);opacity:0;animation:lgUp .9s .45s forwards}
+.lg-chips{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:9px;opacity:0;animation:lgUp .9s .6s forwards}
+.lg-chips span{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:99px;padding:3px 11px;font-size:calc(13px * var(--ui-scale));font-weight:600}
+.lg-sp{flex:1}
+.lg-sheet{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.38);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);border-radius:26px;padding:14px 16px;box-shadow:0 10px 40px rgba(0,0,0,.25);opacity:0;animation:lgUp 1s .8s forwards}
+.lg-grab{width:42px;height:5px;border-radius:9px;background:rgba(255,255,255,.6);margin:-4px auto 10px}
+.lg-fields{max-height:0;overflow:hidden;opacity:0;transition:max-height .5s cubic-bezier(.2,.9,.3,1),opacity .4s}
+.lg-sheet.open .lg-fields{max-height:260px;opacity:1}
+.lg-fields label{display:block;font-size:calc(13.5px * var(--ui-scale));font-weight:600;margin:0 0 4px 2px;color:#fff}
+.lg-fields input{width:100%;box-sizing:border-box;font-family:inherit;font-size:calc(16px * var(--ui-scale));border:1.5px solid rgba(255,255,255,.55);background:rgba(255,255,255,.94);color:#111827;border-radius:13px;padding:11px 13px;margin-bottom:10px;outline:none}
+.lg-fields input:focus{border-color:#F59E0B;box-shadow:0 0 0 3px rgba(245,158,11,.35)}
+@media (pointer:coarse){.lg-fields input{font-size:16px}}
+.lg-go{width:100%;font-family:inherit;font-size:calc(17px * var(--ui-scale));font-weight:700;border:none;border-radius:14px;padding:13px;color:#1a1204;background:linear-gradient(90deg,#FCD34D,#F59E0B,#FCD34D);background-size:200% 100%;animation:lgShine 3.5s linear infinite;cursor:pointer;box-shadow:0 6px 18px rgba(245,158,11,.45)}
+.lg-go:disabled{opacity:.75;cursor:wait}
+.lg-go:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.lg-hint{text-align:center;font-size:calc(13px * var(--ui-scale));font-weight:600;margin-top:9px}
+.lg-sheet.open .lg-hint{display:none}
+.login-err{font-size:calc(13px * var(--ui-scale));font-weight:600;background:#FEE2E2;color:#B91C1C;border-radius:10px;padding:7px 10px;text-align:center;margin-top:10px;display:none}
+@keyframes lgUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes lgPop{from{opacity:0;transform:scale(.6) rotate(-4deg)}to{opacity:1;transform:none}}
+@keyframes lgShine{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.login-screen *{animation:none!important;opacity:1!important}}
 .hdr-user{display:flex;align-items:center;gap:8px;font-size:calc(12px * var(--ui-scale));color:var(--tx2)}
 .hdr-user .uname{max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hdr-role-badge{font-size:var(--fs10);padding:2px 6px;border-radius:4px;font-weight:500}
@@ -2308,12 +2329,25 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 </head>
 <body>
 <div class="login-screen" id="login-screen">
-  <div class="login-box">
-    <div class="login-logo"><div class="ico">🦐</div><div class="name">ตะวันฟาร์ม</div><div class="sub">กรุณาเข้าสู่ระบบ</div></div>
-    <div class="login-field"><label for="login-email">อีเมล</label><input type="email" id="login-email" class="fi" placeholder="email@example.com" autocomplete="email"></div>
-    <div class="login-field"><label for="login-pass">รหัสผ่าน</label><input type="password" id="login-pass" class="fi" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
-    <button class="btn btn-p" style="width:100%;justify-content:center;margin-top:4px" onclick="doLogin()">เข้าสู่ระบบ</button>
-    <div class="login-err" id="login-err"></div>
+  <canvas id="login-bg" aria-hidden="true"></canvas>
+  <div class="lg-ui">
+    <div class="lg-brand">
+      <div class="lg-greet" id="lg-greet">สวัสดี</div>
+      <img class="lg-logo" src="icons/logo_w.png" alt="TAWAN FARM">
+      <div class="lg-name">ตะวันฟาร์ม</div>
+      <div class="lg-chips" id="lg-chips"></div>
+    </div>
+    <div class="lg-sp"></div>
+    <div class="lg-sheet" id="lg-sheet">
+      <div class="lg-grab"></div>
+      <div class="lg-fields">
+        <label for="login-email">อีเมล</label><input type="email" id="login-email" placeholder="email@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+        <label for="login-pass">รหัสผ่าน</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button type="button" class="lg-go" id="login-go" onclick="loginGo()">เข้าสู่ระบบ</button>
+      <div class="login-err" id="login-err"></div>
+      <div class="lg-hint">🦐 บ่อ · น้ำ · อาหาร ในมือถือเครื่องเดียว</div>
+    </div>
   </div>
 </div>
 <aside class="side-nav" id="sideNav">
@@ -4980,13 +5014,85 @@ async function addNewUser(){
     if(btn){btn.disabled=false;btn.textContent='💾 เพิ่มผู้ใช้';}
   }
 }
+// ── หน้าเข้าสู่ระบบ ก-1: กดครั้งแรก = เลื่อนแผ่นช่องกรอกขึ้น · แผ่นเปิดอยู่แล้ว = เข้าสู่ระบบ (entry #400) ──
+function loginOpenSheet(){
+  const sh=document.getElementById('lg-sheet');if(!sh||sh.classList.contains('open'))return false;
+  sh.classList.add('open');
+  const em=document.getElementById('login-email');
+  setTimeout(()=>{(em&&em.value?document.getElementById('login-pass'):em).focus();},250);
+  return true;
+}
+function loginGo(){if(!loginOpenSheet())doLogin();}
+// ── ฉากฟ้าเหนือบ่อ (canvas) — เปลี่ยนตามชั่วโมงจริง · หยุดวาดเองเมื่อหน้านี้ถูกซ่อน (เข้าแอปแล้วไม่กินแบต) ──
+const LG_SKY={6:['#1E1B4B','#7C3AED','#F97316','#FCD34D'],12:['#0369A1','#38BDF8','#7DD3FC','#E0F2FE'],18:['#312E81','#BE185D','#F97316','#FDE68A'],22:['#020617','#0B1437','#1E293B','#334155']};
+const LG_WATER={6:['#7C2D12','#1E1B4B'],12:['#0E7490','#083344'],18:['#9A3412','#1E1B4B'],22:['#0F172A','#020617']};
+let _lgRaf=0,_lgT=6,_lgV=null,_lgStars=null,_lgJ={last:0,j:[]};
+function lgSlot(hr){return hr<5?22:hr<10?6:hr<16?12:hr<19?18:22;}
+function lgFit(){const c=document.getElementById('login-bg');if(!c)return null;const r=c.getBoundingClientRect(),d=Math.min(2,window.devicePixelRatio||1);
+  c.width=Math.max(1,r.width*d);c.height=Math.max(1,r.height*d);const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return{x,w:r.width,h:r.height};}
+function lgInfo(){
+  const now=new Date(),hr=now.getHours();_lgT=lgSlot(hr);
+  const g=document.getElementById('lg-greet');
+  if(g)g.textContent=_lgT===6?'อรุณสวัสดิ์':_lgT===12?(hr<12?'สวัสดีตอนสาย':'สวัสดีตอนบ่าย'):_lgT===18?'สวัสดีตอนเย็น':'สวัสดีตอนค่ำ';
+  const ch=document.getElementById('lg-chips');if(!ch)return;
+  const parts=[now.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})];
+  try{const m=moonInfo(now);parts.push(m.ico+' '+m.txt);}catch(e){}
+  try{const w=wanphraInfo(now);if(w)parts.push(w==='phra'?'🙏 วันนี้วันพระ':w==='kon2'?'🧂 วันนี้วันโกน':'🧂 พรุ่งนี้วันโกน');}catch(e){}
+  ch.innerHTML=parts.map(t=>'<span>'+t+'</span>').join('');
+}
+function lgDraw(ms){
+  const V=_lgV;if(!V)return;const{x,w,h}=V,s=ms/1000,T=_lgT,hz=h*.58,S=LG_SKY[T],W=LG_WATER[T];
+  let g=x.createLinearGradient(0,0,0,hz);g.addColorStop(0,S[0]);g.addColorStop(.45,S[1]);g.addColorStop(.8,S[2]);g.addColorStop(1,S[3]);x.fillStyle=g;x.fillRect(0,0,w,hz);
+  if(T===22){if(!_lgStars)_lgStars=Array.from({length:90},()=>({x:Math.random(),y:Math.random()*.6,r:Math.random()*1.3+.3,p:Math.random()*6}));
+    _lgStars.forEach(t=>{x.globalAlpha=.4+.6*Math.abs(Math.sin(s*1.2+t.p));x.fillStyle='#fff';x.beginPath();x.arc(t.x*w,t.y*hz,t.r,0,7);x.fill();});x.globalAlpha=1;}
+  const sun={6:[w*.5,hz-18,46],12:[w*.84,h*.075,26],18:[w*.32,hz-10,52],22:[w*.84,h*.08,20]}[T];
+  const gc=T===22?'rgba(226,232,240,':T===12?'rgba(255,255,255,':'rgba(253,186,116,';
+  g=x.createRadialGradient(sun[0],sun[1],0,sun[0],sun[1],sun[2]*4);g.addColorStop(0,gc+'.75)');g.addColorStop(.3,gc+'.25)');g.addColorStop(1,gc+'0)');x.fillStyle=g;x.fillRect(0,0,w,hz);
+  x.save();x.beginPath();x.rect(0,0,w,hz);x.clip();
+  const sy=sun[1]+(T===6?Math.sin(s*.3)*3:0);
+  x.fillStyle=T===22?'#F1F5F9':T===12?'#FFFBEB':'#FDE68A';x.beginPath();x.arc(sun[0],sy,sun[2],0,7);x.fill();
+  if(T===22){   // เงาพระจันทร์ตามข้างขึ้น/แรมจริง (moonPhase) — ข้างขึ้นสว่างด้านขวา
+    let k=1;try{const p=moonPhase(new Date()),half=29.530588853/2;k=Math.abs(p-half)/half;const off=sun[2]*2*(1-k)*(p<half?-1:1);
+      if(k>.08){x.fillStyle=S[1];x.beginPath();x.arc(sun[0]+off,sy,sun[2]*1.02,0,7);x.fill();}}catch(e){}
+  }
+  x.restore();
+  // คันบ่อ + มะพร้าว
+  x.fillStyle=T===12?'#14532D':'rgba(10,8,30,.92)';x.beginPath();x.moveTo(0,hz);for(let i=0;i<=w;i+=6)x.lineTo(i,hz-6-Math.sin(i*.05)*2);x.lineTo(w,hz);x.fill();
+  [[.08,46],[.16,58],[.88,52],[.95,40]].forEach(([px,ht])=>{const bx=px*w;x.strokeStyle=x.fillStyle;x.lineWidth=2.5;x.beginPath();x.moveTo(bx,hz-6);x.quadraticCurveTo(bx+4,hz-ht/2,bx+2,hz-ht);x.stroke();
+    for(let k=0;k<6;k++){const a=k/6*Math.PI*2+Math.sin(s+px*9)*.08;x.beginPath();x.moveTo(bx+2,hz-ht);x.quadraticCurveTo(bx+2+Math.cos(a)*12,hz-ht+Math.sin(a)*6-6,bx+2+Math.cos(a)*20,hz-ht+Math.abs(Math.sin(a))*12);x.stroke();}});
+  // น้ำ + แสงสะท้อน + คลื่น
+  g=x.createLinearGradient(0,hz,0,h);g.addColorStop(0,W[0]);g.addColorStop(1,W[1]);x.fillStyle=g;x.fillRect(0,hz,w,h-hz);
+  for(let i=0;i<26;i++){const yy=hz+6+i*i*.55,ww=(30+i*5)*(1+.25*Math.sin(s*2+i));x.globalAlpha=Math.max(0,.55-i*.02);x.fillStyle=T===22?'#E2E8F0':'#FDE68A';x.fillRect(sun[0]-ww/2+Math.sin(s*1.6+i)*6,yy,ww,1.6);}x.globalAlpha=1;
+  x.strokeStyle='rgba(255,255,255,.12)';x.lineWidth=1;for(let r=0;r<14;r++){const yy=hz+12+r*r*1.5;x.beginPath();for(let i=0;i<=w;i+=8)x.lineTo(i,yy+Math.sin(i*.04+s*1.5+r)*1.5*(1+r*.2));x.stroke();}
+  // เครื่องตีน้ำ
+  [[.2,.64],[.76,.67]].forEach(([px,py])=>{const ax=px*w,ay=py*h;x.fillStyle='rgba(255,255,255,.85)';
+    for(let j=0;j<14;j++){const ph=(s*2.2+j/14)%1,dx=(j%2?1:-1)*(8+ph*26),dy=-Math.sin(ph*Math.PI)*16;x.globalAlpha=1-ph;x.beginPath();x.arc(ax+dx,ay+dy,1.6+ph*1.4,0,7);x.fill();}
+    x.globalAlpha=1;x.fillStyle=T===12?'#1F2937':'#0b0b18';x.fillRect(ax-14,ay-3,28,6);x.fillRect(ax-2,ay-11,4,8);});
+  // กุ้งกระโดด
+  const J=_lgJ;if(ms-J.last>1800){J.last=ms;J.j.push({x:w*(.1+Math.random()*.8),y:h*(.62+Math.random()*.08),t0:ms,dir:Math.random()<.5?-1:1});}
+  for(let i=J.j.length-1;i>=0;i--){const j=J.j[i],p=(ms-j.t0)/900;if(p>1.4){J.j.splice(i,1);continue;}
+    if(p<=1){x.save();x.translate(j.x+j.dir*p*36,j.y-Math.sin(p*Math.PI)*34);x.rotate(j.dir*(p-.5)*2);x.font='20px serif';x.textAlign='center';x.fillText('🦐',0,6);x.restore();}
+    [j.x,j.x+j.dir*36].forEach((rx,k)=>{const q=k?p-1:p;if(q<0||q>.4)return;x.strokeStyle='rgba(255,255,255,'+(.6-q*1.5)+')';x.beginPath();x.ellipse(rx,j.y,6+q*60,2+q*14,0,0,7);x.stroke();});}
+  // มืดบน/ล่างให้ตัวหนังสือ + แผ่นอ่านง่าย
+  g=x.createLinearGradient(0,h*.62,0,h);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.45)');x.fillStyle=g;x.fillRect(0,h*.62,w,h*.38);
+  g=x.createLinearGradient(0,0,0,h*.3);g.addColorStop(0,'rgba(0,0,0,.12)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,w,h*.3);
+}
+function lgStart(){
+  const ls=document.getElementById('login-screen');if(!ls)return;
+  lgInfo();_lgV=lgFit();if(!_lgV)return;
+  const still=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  cancelAnimationFrame(_lgRaf);
+  const step=ms=>{if(ls.style.display==='none'){_lgRaf=0;return;}lgDraw(ms);if(!still)_lgRaf=requestAnimationFrame(step);};
+  _lgRaf=requestAnimationFrame(step);
+}
+window.addEventListener('resize',()=>{if(_lgRaf){_lgV=lgFit();}});
 async function doLogin(){
   const email=document.getElementById('login-email').value.trim();
   const pass=document.getElementById('login-pass').value;
   const errEl=document.getElementById('login-err');
   errEl.style.display='none';
-  if(!email||!pass){errEl.textContent='กรุณากรอกอีเมลและรหัสผ่าน';errEl.style.display='block';return;}
-  const btn=document.querySelector('#login-screen .btn-p');if(btn){btn.disabled=true;btn.textContent='กำลังเข้าสู่ระบบ...';}
+  if(!email||!pass){loginOpenSheet();errEl.textContent='กรุณากรอกอีเมลและรหัสผ่าน';errEl.style.display='block';return;}
+  const btn=document.getElementById('login-go');if(btn){btn.disabled=true;btn.textContent='กำลังเข้าสู่ระบบ...';}
   try{
     const authTimeout=new Promise((_,reject)=>setTimeout(()=>reject(Object.assign(new Error('timeout'),{code:'app/timeout'})),15000));
     await Promise.race([firebase.auth().signInWithEmailAndPassword(email,pass),authTimeout]);
@@ -20657,6 +20763,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('pondModal').addEventListener('click',e=>{if(e.target===document.getElementById('pondModal'))closePond()});
   document.getElementById('mpExpandModal').addEventListener('click',e=>{if(e.target===document.getElementById('mpExpandModal'))mpExpandClose()});
   document.getElementById('costSumModal').addEventListener('click',e=>{if(e.target===document.getElementById('costSumModal'))closeCostSummary()});
+  lgStart();   // หน้า login โชว์ทันทีระหว่างรอ Firebase เช็คสิทธิ์ — หยุดวาดเองเมื่อถูกซ่อน
   fetchWx().catch(()=>{});
   if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
   firebase.auth().onAuthStateChanged(async user=>{
@@ -20672,6 +20779,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       initFirebase();
     }else{
       document.getElementById('login-screen').style.display='flex';
+      lgStart();
     }
   });
   syncAllDateHints();
