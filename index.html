@@ -8203,6 +8203,11 @@ function renderPondDetail(id){
       <div style="font-size:calc(22px * var(--ui-scale));font-weight:500;color:#15803d;line-height:1">${feedPctBio!=null?feedPctBio.toFixed(1)+'%':'—'}</div>
       <div style="font-size:var(--fs10);color:#16a34a;margin-top:3px">${feedPctBio!=null?'ต่อวัน · '+latFeed.totalFeed.toLocaleString()+' ÷ '+Math.round(biomass).toLocaleString()+' กก.':'ต่อวัน'}</div>
     </div>
+    <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px" title="อาหารรวมถึงเมื่อวานของวันสุ่ม ÷ biomass วันสุ่ม (+พาเชียล) · เกณฑ์ฟาร์มนับตามครั้งที่สุ่ม — ไม่ใช่ FCR สุดท้ายตอนปิดรอบ">
+      <div style="font-size:var(--fs10);color:#16a34a;margin-bottom:4px">FCR ประเมิน</div>
+      <div style="font-size:calc(22px * var(--ui-scale));font-weight:500;color:${fcr!=null&&pdFcrT!=null&&parseFloat(fcr)>pdFcrT+0.005?'var(--w)':'#15803d'};line-height:1">${fcr??'—'}</div>
+      <div style="font-size:var(--fs10);color:#16a34a;margin-top:3px">${pdFcrT!=null?'เกณฑ์ฟาร์ม '+pdFcrT.toFixed(1):''}${pdFcrX?' · ณ สุ่ม '+fD(pdFcrX.date):''}</div>
+    </div>
     <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px" title="${pdSC&&pdSC.hasPartial?'อัตรารอดสะสม — นับกุ้งที่จับพาเชียลไปแล้วเป็นตัวที่รอดด้วย (ไม่ได้ตาย แค่ขายออกไป) · บรรทัดล่างคือที่ยังอยู่ในบ่อจริง':'จากสุ่มตัวอย่างล่าสุด — กรอกเอง'}">
       <div style="font-size:var(--fs10);color:#16a34a;margin-bottom:4px">อัตรารอด${pdSC&&pdSC.hasPartial?' (สะสม)':''}</div>
       <div style="font-size:calc(22px * var(--ui-scale));font-weight:500;color:${lat&&lat.survivalRate!=null?survRingColor(lat.survivalRate):'#15803d'};line-height:1">${lat&&lat.survivalRate!=null?lat.survivalRate+'%':'—'}</div>
