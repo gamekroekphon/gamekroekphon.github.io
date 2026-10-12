@@ -328,6 +328,12 @@ body.role-admin .side-nav .sn-link.admin-only{display:block!important}
 .fcx-hero .box span{font-size:calc(12.5px * var(--ui-scale));font-weight:700}
 .fcx-hero .tag{display:inline-block;margin-top:10px;background:#BBF7D0;color:#14532D;font-weight:800;font-size:calc(13px * var(--ui-scale));border-radius:99px;padding:3px 10px}
 .fcx-hero .tag.no{background:rgba(255,255,255,.18);color:#fff}
+.fcx-farm{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;background:rgba(255,255,255,.14);border-radius:10px;padding:6px 10px;font-size:calc(13.5px * var(--ui-scale))}
+.fcx-tbl th.fcx-fm,.fcx-tbl td.fcx-fm{background:var(--pl)}
+.fcx-tbl td.fcx-fm b{color:var(--p)}
+.fcx-tbl small.fcx-at{display:block;font-size:calc(11px * var(--ui-scale));font-weight:500;white-space:normal}
+.pd-at{display:inline-block;margin-top:4px;background:#fff;border:1px solid #bfdbfe;border-radius:6px;padding:0 6px;font-size:calc(11px * var(--ui-scale));font-weight:700;color:var(--in)}
+.hv-at{font-size:calc(11.5px * var(--ui-scale));font-weight:600;color:var(--in)}
 .fcx-hero .small{font-size:calc(13px * var(--ui-scale));margin-top:8px}
 .fcx-card{margin-bottom:12px}
 .fcx-tgt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
@@ -2713,7 +2719,8 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <div class="card-sub" style="font-size:var(--fs115);color:var(--tx3);margin-bottom:10px">ใส่ราคาแพแต่ละไซส์ → ดูกำไรที่เพิ่มถ้าลากต่อ</div>
     <div class="fgrid" style="margin-bottom:12px">
       <div class="fg"><label class="fl" for="hv-price-now">ราคาถ้าจับวันนี้ (บ./กก.)</label>
-        <input type="number" step="any" class="fi" id="hv-price-now" placeholder="เช่น 245" oninput="hvCalc()"></div>
+        <input type="number" step="any" class="fi" id="hv-price-now" placeholder="เช่น 245" oninput="this.dataset.auto='';document.getElementById('hv-price-now-hint').textContent='';hvCalc()">
+        <span class="hint" id="hv-price-now-hint"></span></div>
       <div class="fg"><label class="fl" for="hv-feedprice">ราคาอาหาร (บ./กก.)</label>
         <input type="number" step="any" class="fi" id="hv-feedprice" oninput="hvCalc()">
         <span class="hint" id="hv-feedprice-hint"></span></div>
@@ -6097,6 +6104,8 @@ function pondOptionsHtml(){
     return '<option value="'+p.id+'">บ่อ '+p.name+(p.harvestDate?' — รอทำสรุป':age>0?' — DOC '+age:' — เตรียมบ่อ')+'</option>';
   }).join('');
 }
+// ── entry #408: ตัวเลขไซส์/น้ำหนัก/กก./ไร่ ทุกหน้าเป็นค่า ณ วันสุ่ม — บอกวันให้เห็น (หน้าคาดการณ์คาดต่อถึงวันนี้ ตัวเลขจึงต่างกัน)
+function atSmpTxt(d){return d?'ณ สุ่ม '+fD(d).replace(/\s\d{2}$/,''):'';}
 function hvPondOptionsHtml(){
   return sortPondsByAge(D.ponds).filter(p=>p.harvestDate||pondCurAge(p)>0).map(p=>{
     if(p.harvestDate)return '<option value="'+p.id+'">บ่อ '+p.name+' — รอทำสรุป</option>';
@@ -8171,17 +8180,17 @@ function renderPondDetail(id){
     <div style="background:#eff6ff;border:0.5px solid #bfdbfe;border-radius:10px;padding:10px 12px">
       <div style="font-size:var(--fs10);color:#3b82f6;margin-bottom:4px">ไซส์</div>
       <div style="font-size:calc(22px * var(--ui-scale));font-weight:500;color:#1d4ed8;line-height:1">${sizeCount??'—'}</div>
-      <div style="font-size:var(--fs10);color:#3b82f6;margin-top:3px">ตัว/กก. ${sizeArrow}</div>
+      <div style="font-size:var(--fs10);color:#3b82f6;margin-top:3px">ตัว/กก. ${sizeArrow}</div>${lat&&lat.date?'<span class="pd-at">'+atSmpTxt(lat.date)+'</span>':''}
     </div>
     <div style="background:#eff6ff;border:0.5px solid #bfdbfe;border-radius:10px;padding:10px 12px">
       <div style="font-size:var(--fs10);color:#3b82f6;margin-bottom:4px">น้ำหนักรวม</div>
       <div style="font-size:calc(22px * var(--ui-scale));font-weight:500;color:#1d4ed8;line-height:1">${biomass?Math.round(biomass).toLocaleString():'—'}</div>
-      <div style="font-size:var(--fs10);color:#3b82f6;margin-top:3px">กก. (ประเมิน)</div>
+      <div style="font-size:var(--fs10);color:#3b82f6;margin-top:3px">กก. (ประเมิน)</div>${lat&&lat.date&&biomass?'<span class="pd-at">'+atSmpTxt(lat.date)+'</span>':''}
     </div>
     <div style="background:#eff6ff;border:0.5px solid #bfdbfe;border-radius:10px;padding:10px 12px" title="${pdYr!=null?'น้ำหนักรวมในบ่อ ÷ ขนาดบ่อ '+p.size+' ไร่ — ใช้สูตรเดียวกับการ์ดพาเชียล (หักกุ้งที่จับไปแล้วออก)':'ต้องมีขนาดบ่อ (ไร่) + ผลสุ่มตัวอย่าง จึงคำนวณได้'}">
       <div style="font-size:var(--fs10);color:#3b82f6;margin-bottom:4px">กก./ไร่</div>
       <div style="font-size:calc(22px * var(--ui-scale));font-weight:500;color:${pdYrHit?'#15803d':'#1d4ed8'};line-height:1">${pdYr!=null?Math.round(pdYr).toLocaleString():'—'}</div>
-      <div style="font-size:var(--fs10);color:#3b82f6;margin-top:3px">${pdYr!=null?(pdYrHit?'✓ ถึงเกณฑ์พาเชียล '+_phTarget.toLocaleString():'เกณฑ์พาเชียล '+_phTarget.toLocaleString()):'กก./ไร่'}</div>
+      <div style="font-size:var(--fs10);color:#3b82f6;margin-top:3px">${pdYr!=null?(pdYrHit?'✓ ถึงเกณฑ์พาเชียล '+_phTarget.toLocaleString():'เกณฑ์พาเชียล '+_phTarget.toLocaleString()):'กก./ไร่'}</div>${pdYr!=null&&lat&&lat.date?'<span class="pd-at">'+atSmpTxt(lat.date)+'</span>':''}
     </div>
     <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px">
       <div style="font-size:var(--fs10);color:#16a34a;margin-bottom:4px">อาหารวันนี้</div>
@@ -8862,10 +8871,10 @@ function renderOvNext(){
   el.innerHTML='<div class="card-t">③ จะได้กุ้งเมื่อไร<span class="ov2-n">เกณฑ์ '+_phTarget.toLocaleString()+' กก./ไร่</span></div>'+top.map(({p,info})=>{
     const go=' onclick="openPondDetail(\''+p.id+'\')"';
     if(info.ready)return '<button type="button" class="ov2-h"'+go+'><span class="dd '+(info.overCeil?'hot':'now')+'"><b>'+(info.overCeil?'🚨':'🔔')+'</b>'+(info.overCeil?'เกินเพดาน':'ถึงแล้ว')+'</span>'
-      +'<span><b>'+mpEsc(p.name)+'</b><small>'+Math.round(info.yr).toLocaleString()+' กก./ไร่'+(info.abw?' · '+Math.round(1000/info.abw)+' ตัว/กก.':'')+'</small></span><span class="in">'+(info.overCeil?'บ่อแน่น':'เริ่มหาราคา')+'</span></button>';
+      +'<span><b>'+mpEsc(p.name)+'</b><small>'+Math.round(info.yr).toLocaleString()+' กก./ไร่'+(info.abw?' · '+Math.round(1000/info.abw)+' ตัว/กก.':'')+((s=>s&&s.date?' · '+atSmpTxt(s.date):'')(latestSample(p)))+'</small></span><span class="in">'+(info.overCeil?'บ่อแน่น':'เริ่มหาราคา')+'</span></button>';
     const d=new Date(info.date+'T00:00:00');
     return '<button type="button" class="ov2-h"'+go+'><span class="dd"><b>'+d.getDate()+'</b>'+d.toLocaleDateString('th-TH',{month:'short'})+'</span>'
-      +'<span><b>'+mpEsc(p.name)+'</b><small>คาด '+Math.round(1000/info.targetAbw)+' ตัว/กก. · ตอนนี้ '+info.pct.toFixed(0)+'%</small></span><span class="in">'+(info.days>0?'อีก '+info.days+' วัน':'วันนี้')+'</span></button>';
+      +'<span><b>'+mpEsc(p.name)+'</b><small>คาด '+Math.round(1000/info.targetAbw)+' ตัว/กก. · ตอนนี้ '+info.pct.toFixed(0)+'%'+((s=>s&&s.date?' · '+atSmpTxt(s.date):'')(latestSample(p)))+'</small></span><span class="in">'+(info.days>0?'อีก '+info.days+' วัน':'วันนี้')+'</span></button>';
   }).join('');
 }
 // ── การ์ดใหม่: แดชบอร์ดสถานะบ่อทั้งหมด — รวมสถานะ/ไซส์/Biomass/อาหาร/เช็คลิสต์วันนี้/ค่าผิดปกติทุกบ่อไว้ตารางเดียว (เดิมกระจายอยู่การ์ดบ่อแยก+เช็คลิสต์แยก+รายการแจ้งเตือนแยก) เรียงบ่อที่ต้องดูก่อนไว้บนสุด
@@ -12573,6 +12582,11 @@ function fcCalc(){
   const ytgt=_fcG('fc-ytgt')||PARTIAL_YIELD_TARGET;
   const tgt=_fcG('fc-tgtsize')||40;
   const kg=n=>Math.round(n).toLocaleString(),ton=n=>(n/1000).toFixed(1);
+  // ── ② ตัน (แบบฟาร์ม) entry #408 = (อาหารก่อนวันสุ่ม + อาหารที่คาดว่าจะให้ถึงวัน d) ÷ FCR เกณฑ์ฟาร์ม ณ วันนั้น − ที่พาเชียลไปแล้ว
+  //    วิธีเดียวกับที่ฟาร์มคิดอัตรารอด (#402) · คอลัมน์เดิม (อัตรารอดคงที่ × ABW) คงไว้
+  const _fb0=(p.feedLog||[]).filter(r=>r&&r.date&&r.date<fcAnchor()).reduce((s,r)=>s+(parseFloat(r.totalFeed)||0),0);
+  const _phKg=partialTotals(p.partialHarvests).kg;
+  const farmAt=d=>{const f=fcrTargetFor(p,DOC0+d);if(!(f>0)||!(_fb0>0))return null;const b=(_fb0+fcEcon(d,0).feedKg)/f-_phKg;return b>0?{bio:b,yr:p.size>0?b/p.size:null,f}:null;};
   const fcrAt=(d)=>{const f=fcCumFcr(p,d);if(f==null)return null;const t=fcrTargetFor(p,DOC0+d);return{f,t,ok:t==null||f<=t+1e-9};};
   const ahead=pd-dNow,F=fcrAt(pd),fs=fcrAtSample(p);
   let h='<div class="fcx-hero"><div class="d">'+fD(_fcPickVal)+' · DOC '+(DOC0+pd)+' · '+(ahead>0?'อีก '+ahead+' วัน':ahead===0?'วันนี้':'ย้อนหลัง '+(-ahead)+' วัน')+'</div>'
@@ -12580,6 +12594,7 @@ function fcCalc(){
     +'<div class="row"><div class="box"><b>'+ton(sP.bio)+'</b><span>ตันในบ่อ</span></div><div class="box"><b>'+kg(sP.yr)+'</b><span>กก./ไร่</span></div>'
     +(F?'<div class="box"><b>'+F.f.toFixed(2)+'</b><span>FCR '+(F.ok?'✓':'⚠️')+(F.t!=null?' เกณฑ์ '+F.t.toFixed(1):'')+'</span></div>':'')+'</div>'
     +(sP.yr>=ytgt?'<span class="tag">✓ ถึงเกณฑ์พาเชียล '+kg(ytgt)+' กก./ไร่</span>':'<span class="tag no">ยังไม่ถึงเกณฑ์พาเชียล (ขาด '+kg(ytgt-sP.yr)+')</span>')
+    +((fm=>fm?'<div class="fcx-farm"><span>แบบฟาร์ม (อาหาร ÷ FCR '+fm.f.toFixed(1)+')</span><span><b>'+ton(fm.bio)+'</b> ตัน'+(fm.yr!=null?' · <b>'+kg(fm.yr)+'</b> กก./ไร่':'')+'</span></div>':'')(farmAt(pd)))
     +'<div class="small">อาหาร ~'+(sP.fdDay!=null?kg(sP.fdDay):'—')+' กก./วัน'+(fs&&fs.date===_fcAnchor?' · FCR วันสุ่ม '+fD(fs.date)+' = '+fs.fcr.toFixed(2):'')+'</div></div>';
   // ── ไซส์เป้า — ถึงแล้วบอกไซส์ตอนนี้ (เดิมโชว์ "เพิ่มขึ้น +-1,344 กก." เทียบน้ำหนักคนละวัน)
   let ans;
@@ -12592,10 +12607,10 @@ function fcCalc(){
     +[50,40,30,25].map(t=>'<button type="button" class="fcx-chip'+(t===tgt?' on':'')+'" onclick="fcSetTgt('+t+')">'+t+'</button>').join('')
     +'</div><div class="fcx-ans">'+ans+'</div></div>';
   // ── ทุกสัปดาห์ 4 สัปดาห์ข้างหน้า — แตะแถว = ดูวันนั้น
-  h+='<div class="card fcx-card"><div class="card-t">📅 ทุกสัปดาห์</div><div style="overflow-x:auto"><table class="fcx-tbl"><thead><tr><th>วันที่</th><th>DOC</th><th>ตัว/กก.</th><th>ตัน</th><th>กก./ไร่</th><th>FCR</th></tr></thead><tbody>'
+  h+='<div class="card fcx-card"><div class="card-t">📅 ทุกสัปดาห์</div><div style="overflow-x:auto"><table class="fcx-tbl"><thead><tr><th>วันที่</th><th>DOC</th><th>ตัว/กก.</th><th>ตัน</th><th class="fcx-fm">ตัน<br>(ฟาร์ม)</th><th>กก./ไร่</th><th>FCR</th></tr></thead><tbody>'
     +FC_DAYS.map(n=>{const d=dNow+n,s=fcSnap(d,0),r=fcrAt(d),dt=addDays(today(),n);
-      return '<tr'+(dt===_fcPickVal?' class="sel"':'')+' onclick="fcQuick('+n+')"><td>'+(n?fD(dt):'วันนี้')+'</td><td>'+(DOC0+d)+'</td>'
-        +'<td class="'+(s.size>0&&s.size<=tgt?'hit':'')+'">'+(s.size>0?Math.round(s.size):'—')+'</td><td>'+ton(s.bio)+'</td><td>'+kg(s.yr)+(s.yr>=ytgt?' ✓':'')+'</td>'
+      return '<tr'+(dt===_fcPickVal?' class="sel"':'')+' onclick="fcQuick('+n+')"><td>'+(n?fD(dt):'วันนี้'+(dNow>0?'<small class="fcx-at">คาดจาก'+atSmpTxt(fcAnchor()).replace('ณ ','')+'</small>':''))+'</td><td>'+(DOC0+d)+'</td>'
+        +'<td class="'+(s.size>0&&s.size<=tgt?'hit':'')+'">'+(s.size>0?Math.round(s.size):'—')+'</td><td>'+ton(s.bio)+'</td><td class="fcx-fm">'+((fm=>fm?'<b>'+ton(fm.bio)+'</b>':'—')(farmAt(d)))+'</td><td>'+kg(s.yr)+(s.yr>=ytgt?' ✓':'')+'</td>'
         +'<td class="'+(r?(r.ok?'hit':'over'):'')+'">'+(r?r.f.toFixed(2):'—')+'</td></tr>';}).join('')
     +'</tbody></table></div></div>';
   resEl.innerHTML=h;
@@ -12643,6 +12658,13 @@ function renderHvDaily(){
     '';
 }
 
+// ── ③ entry #408: ราคาขายจริงล่าสุดของไซส์ใกล้เคียง (±1 ก่อน ไม่มีค่อย ±2) จาก hsHarvestRows — เติมให้ แก้ทับได้ · บอกที่มา
+function hvLastPrice(size){
+  if(!(size>0))return null;
+  const H=hsHarvestRows().filter(r=>r.size>0&&r.price>0&&r.date).sort((a,b)=>b.date.localeCompare(a.date));
+  return H.find(r=>Math.abs(r.size-size)<=1)||H.find(r=>Math.abs(r.size-size)<=2)||null;
+}
+function hvPriceSrc(r){return r?'ไซส์ '+r.size+' · '+fD(r.date).replace(/\s\d{2}$/,'')+(r.buyer?' · '+buyerName(r.buyer):''):'';}
 function hvDefaultSizes(p){
   const sc=pondShrimpCount(p);
   const cur=(sc&&sc.abw>0)?Math.round(1000/sc.abw):25;
@@ -12650,7 +12672,7 @@ function hvDefaultSizes(p){
   //    ต้องเป็น 72/68/60 ถึงจะเป็นทางเลือกจริง ส่วนกุ้งใหญ่ (23) จะได้ 21/20/17 ──
   const step=r=>Math.max(1,Math.round(cur*r));
   const out=[];
-  [0.9,0.85,0.75].forEach(r=>{const v=step(r);if(v<cur&&!out.some(x=>x.size===v))out.push({size:v,price:null});});
+  [0.9,0.85,0.75].forEach(r=>{const v=step(r);if(v<cur&&!out.some(x=>x.size===v)){const lp=hvLastPrice(v);out.push({size:v,price:lp?lp.price:null,src:lp});}});
   return out.length?out:[{size:Math.max(1,cur-1),price:null}];
 }
 function hvAddRow(){
@@ -12661,7 +12683,7 @@ function hvAddRow(){
 }
 function hvDelRow(i){_hvSizes.splice(i,1);hvRenderRows();hvCalc();}
 function hvSetSize(i,v){_hvSizes[i].size=parseFloat(v)||0;hvCalc();}
-function hvSetPrice(i,v){_hvSizes[i].price=v===''?null:parseFloat(v);hvCalc();}
+function hvSetPrice(i,v){_hvSizes[i].price=v===''?null:parseFloat(v);_hvSizes[i].src=null;hvCalc();}
 
 function hvRenderRows(){
   const el=document.getElementById('hv-rows');if(!el)return;
@@ -12669,7 +12691,7 @@ function hvRenderRows(){
     '<th>ไซส์เป้า (ตัว/กก.)</th><th>ราคาที่แพให้ (บ./กก.)</th><th></th></tr></thead><tbody>'+
     (_hvSizes||[]).map((r,i)=>'<tr>'+
       '<td><input type="number" step="any" class="fi" style="width:110px" value="'+(r.size||'')+'" oninput="hvSetSize('+i+',this.value)"></td>'+
-      '<td><input type="number" step="any" class="fi" style="width:130px" value="'+(r.price==null?'':r.price)+'" placeholder="ใส่ราคา" oninput="hvSetPrice('+i+',this.value)"></td>'+
+      '<td><input type="number" step="any" class="fi" style="width:130px" value="'+(r.price==null?'':r.price)+'" placeholder="ใส่ราคา" oninput="hvSetPrice('+i+',this.value)">'+(r.src?'<div class="hint">'+mpEsc(hvPriceSrc(r.src))+'</div>':'')+'</td>'+
       '<td><button class="btn btn-s" type="button" onclick="hvDelRow('+i+')" title="ลบแถวนี้">🗑️</button></td></tr>').join('')+
     '</tbody></table></div>';
 }
@@ -12733,6 +12755,9 @@ function initHarvestDecide(){
   }
   const pid=document.getElementById('fc-pond')?.value, p=pid?pond(pid):null;
   if(!_hvSizes&&p)_hvSizes=hvDefaultSizes(p);
+  {const pn=document.getElementById('hv-price-now'),ph=document.getElementById('hv-price-now-hint');
+   if(pn&&p&&(!pn.value||pn.dataset.auto==='1')){const sc=pondShrimpCount(p),cur=sc&&sc.abw>0?Math.round(1000/sc.abw):null,lp=hvLastPrice(cur);
+     pn.value=lp?lp.price:'';pn.dataset.auto=lp?'1':'';if(ph)ph.textContent=lp?'ล่าสุด '+hvPriceSrc(lp):'';}}
   const fpEl=document.getElementById('hv-feedprice');
   const fp=feedPricePerKg();
   if(fpEl&&!fpEl.value&&fp>0)fpEl.value=Math.round(fp*100)/100;
@@ -20411,7 +20436,7 @@ function renderHvRoundStrip(){
   if(sc){
     const yr=p.size>0?sc.biomass/p.size:null;
     const pt=partialTotals(ph);
-    left='<div class="hv-left"><div class="t">🦐 เหลือในบ่อตอนนี้</div><div class="big">'
+    left='<div class="hv-left"><div class="t">🦐 เหลือในบ่อตอนนี้'+(sc.lat&&sc.lat.date?' <span class="hv-at">'+atSmpTxt(sc.lat.date)+'</span>':'')+'</div><div class="big">'
       +'<span><b>~'+(sc.biomass/1000).toFixed(1)+'</b> ตัน</span>'
       +(yr!=null?'<span><b>'+Math.round(yr).toLocaleString()+'</b> กก./ไร่</span>':'')
       +'<span><b>~'+(Math.round(sc.inPond/1000)*1000).toLocaleString()+'</b> ตัว</span></div>'
