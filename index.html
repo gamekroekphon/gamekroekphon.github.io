@@ -1562,6 +1562,23 @@ table.skc-tbl tbody tr.skc-det td,table.skc-tbl tbody tr.skc-det:hover td{backgr
 .skc-chip{background:var(--sf2);border-radius:5px;padding:1px 6px;font-size:var(--fs10);color:var(--tx2);font-variant-numeric:tabular-nums}
 .skc-chip b{color:var(--in);font-weight:700}
 .skc-mr{text-align:right;flex:none}
+.skc-cin{width:72px;border:1.5px solid var(--bd);border-radius:8px;padding:5px 6px;text-align:right;font-family:inherit;font-size:calc(14px * var(--ui-scale));background:var(--sf);color:var(--tx)}
+.skc-cin:not(:placeholder-shown){border-color:var(--p);background:var(--pl)}
+@media (pointer:coarse){.skc-cin{font-size:16px}}
+.skc-mc{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px;cursor:default}
+.skc-dn{color:var(--d);font-weight:700}.skc-up{color:var(--in);font-weight:700}.skc-ok{color:var(--ok);font-weight:700}
+.skc-neg{display:block;font-size:calc(11px * var(--ui-scale));color:var(--w);font-weight:700}
+.skc-cfoot{margin-top:10px}
+.skc-chint{font-size:calc(12.5px * var(--ui-scale));padding:6px 2px}
+.skc-csum{font-weight:700;font-size:calc(13.5px * var(--ui-scale));margin-bottom:8px}
+.skc-csave{width:100%;justify-content:center}
+.skc-adj{margin-top:12px;border-top:1px solid var(--bd);padding-top:8px}
+.skc-adj .h{font-weight:700;margin-bottom:4px}
+.skc-adj .r{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--sf2);font-size:calc(13px * var(--ui-scale))}
+.skc-adj button{border:1px solid var(--bd);background:var(--sf);border-radius:8px;min-width:34px;min-height:32px;cursor:pointer}
+.stk-unused summary small{display:block;font-weight:500;font-size:calc(12px * var(--ui-scale))}
+.stk-unused-tag{display:inline-block;border-radius:6px;padding:0 7px;font-size:calc(11.5px * var(--ui-scale));font-weight:700;background:var(--sf2);color:var(--tx)}
+.stk-unused .stk-grid{margin-top:8px}
 .skc-mv{font-size:calc(16px * var(--ui-scale));font-weight:800;color:var(--tx);font-variant-numeric:tabular-nums}
 .skc-mu{font-size:var(--fs10);color:var(--tx3)}
 .skc-mdet{background:var(--sf2);border-top:1px solid var(--bd);padding:8px 12px}
@@ -11173,6 +11190,15 @@ function renderOvPartialHarvest(){
 }
 
 let _stockShowZero=false;
+// ── ② entry #409: "ไม่ได้ใช้" = ไม่มีความเคลื่อนไหวใน inventoryLog/shopLog STK_UNUSED_DAYS วัน และยอด 0 ทั้งฟาร์ม+บุญชู
+//    พับไว้ท้ายรายการตอนกด "แสดงยอด 0" (ปกติยอด 0 ซ่อนอยู่แล้ว) · ค้นหาเจอเหมือนเดิม ขึ้นป้าย · ไม่ลบ ไม่แตะข้อมูล
+const STK_UNUSED_DAYS=90;
+function stkUnusedSet(){
+  const from=addDaysStr(today(),-STK_UNUSED_DAYS),moved=new Set();
+  (D.inventoryLog||[]).forEach(l=>{if(l&&l.itemId&&l.date>=from)moved.add(l.itemId);});
+  (D.shopLog||[]).forEach(l=>{if(l&&l.itemId&&l.date>=from)moved.add(l.itemId);});
+  return new Set((D.inventoryItems||[]).filter(i=>i&&i.id&&!moved.has(i.id)&&stkOut(i.qty)&&stkOut(shopQ(i))).map(i=>i.id));
+}
 function toggleStockZero(){
   _stockShowZero=!_stockShowZero;
   const btn=document.getElementById('sk-zero-toggle');
@@ -11203,10 +11229,12 @@ function renderStockItems(){
     return{i,r,farm,shop,df:r>0?farm/r:null,dt:r>0?(farm+shop)/r:null};
   });
   const soon=all.filter(x=>x.dt!=null&&x.dt<=STK_SOON_DAYS&&(!cat||x.i.category===cat)).sort((a,b)=>a.dt-b.dt);
+  const unusedIds=stkUnusedSet(),unusedFold=[];
   const items=all.filter(({i})=>{
     if(cat&&i.category!==cat)return false;
     if(search&&!i.name.toLowerCase().includes(search)&&!(i.note||'').toLowerCase().includes(search))return false;
     if(!_stockShowZero&&stkOut(i.qty)&&stkOut(shopQ(i)))return false;   // ฟาร์มหมดแต่หน้าร้านมี = ยังต้องเห็น (#334)
+    if(!search&&unusedIds.has(i.id)){unusedFold.push({i});return false;}   // ไม่ได้ใช้ → พับไว้ท้าย (#409)
     return true;
   }).filter(x=>!_stockSoon||(x.dt!=null&&x.dt<=STK_SOON_DAYS));
   const isAdminView=APP_ROLE==='admin';
@@ -11232,7 +11260,7 @@ function renderStockItems(){
     const btns=isAdminView
       ?`<button class="btn-sm" onclick="editStockItem('${i.id}')">✏️</button> <button class="btn-sm btn-del" onclick="deleteStockItem('${i.id}')">🗑️</button>`
       :`<button class="btn-sm" onclick="stockTab('tx',document.getElementById('skb-tx'));setTimeout(()=>addStockToCart('${i.id}'),80)">📥 รับเข้า</button>`;
-    return '<div class="stk-card"><div class="a"><div style="min-width:0"><div class="nm">'+mpEsc(i.name)+'</div><div class="co"><span class="badge '+(STOCK_CAT_CSS[i.category]||'')+'">'+(STOCK_CAT_LABEL[i.category]||i.category)+'</span>'
+    return '<div class="stk-card'+(unusedIds.has(i.id)?' stk-unused-c':'')+'"><div class="a"><div style="min-width:0"><div class="nm">'+mpEsc(i.name)+(unusedIds.has(i.id)?' <span class="stk-unused-tag">ไม่ได้ใช้</span>':'')+'</div><div class="co"><span class="badge '+(STOCK_CAT_CSS[i.category]||'')+'">'+(STOCK_CAT_LABEL[i.category]||i.category)+'</span>'
       +(comp[i.companyId]?' '+mpEsc(comp[i.companyId]):'')+(isAdminView&&i.unitPrice?' · '+(+i.unitPrice).toLocaleString()+' ฿':'')+'</div>'+(i.note?'<div class="co">'+mpEsc(i.note)+'</div>':'')+'</div>'+badge+'</div>'
       +'<div class="q"><div><span class="stk-f">🏠 ฟาร์ม</span> <b class="stk-fv">'+stkQ(i.qty)+'</b> '+mpEsc(i.unit||'')+'</div>'
       +'<div><span class="stk-s">🏪 บุญชู</span> <b class="stk-sv">'+(shopKnown?stkQ(x.shop):'—')+'</b> '+(shopKnown?mpEsc(i.unit||''):'')+'</div></div>'
@@ -11246,7 +11274,9 @@ function renderStockItems(){
   const deadHtml=dead.length?'<details class="stk-dead"><summary><span>💤 ไม่ได้เบิกเกิน '+STK_DEAD_DAYS+' วัน · '+dead.length+' รายการ</span><span>'+(isAdminView?'฿'+Math.round(deadVal).toLocaleString()+' ':'')+'▾</span></summary>'
       +dead.map(x=>'<div class="r"><span>'+mpEsc(x.i.name)+'<small>เบิกล่าสุด '+(last[x.i.id]?fD(last[x.i.id]):'ไม่เคยเบิก')+'</small></span><span style="text-align:right">'+stkQ(x.farm)+' '+mpEsc(x.i.unit||'')+(isAdminView?'<small>฿'+Math.round(x.farm*(x.i.unitPrice||0)).toLocaleString()+'</small>':'')+'</span></div>').join('')+'</details>':'';
   if(!sorted.length){el.innerHTML=alertHtml+`<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">${(cat||search||_stockSoon)?'ไม่พบรายการที่ตรงกับตัวกรองนี้':'ยังไม่มีพัสดุ'}</p>`+deadHtml;return;}
-  el.innerHTML=alertHtml+'<div class="stk-grid">'+sorted.map(card).join('')+'</div>'+deadHtml;
+  const unusedHtml=unusedFold.length?'<details class="stk-dead stk-unused"><summary><span>🗄️ ไม่ได้ใช้ '+STK_UNUSED_DAYS+' วัน · '+unusedFold.length+' รายการ<small>ยอด 0 ทั้งฟาร์มและบุญชู · ไม่มีเบิก/รับ/ขาย</small></span><span>▾</span></summary>'
+    +'<div class="stk-grid">'+unusedFold.sort((a,b)=>a.i.name.localeCompare(b.i.name,'th')).map(x=>card(Object.assign(x,{farm:0,shop:0,r:0,df:null,dt:null}))).join('')+'</div></details>':'';
+  el.innerHTML=alertHtml+'<div class="stk-grid">'+sorted.map(card).join('')+'</div>'+deadHtml+unusedHtml;
 }
 
 function saveStockItem(){
@@ -11952,8 +11982,10 @@ function skcAllRows(start,end){
   (D.inventoryLog||[]).forEach(l=>{
     const r=agg[l.itemId];if(!r||!l.date)return;
     const q=parseFloat(l.qty)||0;
-    if(l.date>=start&&l.date<=end){if(l.type==='in')r.inQ+=q;else r.outQ+=q;r.logs.push(l);}
-    else if(l.date>end)r.after+=(l.type==='in'?q:-q);
+    // ⚠️ 'adj' = ปรับยอดจากการนับ (#409) เก็บค่ามีเครื่องหมาย (+ เกิน / − ขาด) — ห้ามนับเป็นการตัดสต็อกแบบ type อื่น
+    const sg=l.type==='in'||l.type==='adj'?q:-q;
+    if(l.date>=start&&l.date<=end){if(sg>=0)r.inQ+=sg;else r.outQ+=-sg;r.logs.push(l);}
+    else if(l.date>end)r.after+=sg;
   });
   return Object.values(agg).map(r=>{
     const closing=skcR((parseFloat(r.item.qty)||0)-r.after);
@@ -12017,25 +12049,84 @@ function renderSkcAll(box,sub,start,end,isCur){
         '<td class="num">'+stkQ(r.opening)+'</td>'+
         '<td class="num skc-in">'+(r.inQ?'+'+skcN(r.inQ):'—')+'</td>'+
         '<td class="num skc-out">'+(r.outQ?'−'+skcN(r.outQ):'—')+'</td>'+
-        '<td class="num skc-sys">'+stkQ(r.closing)+'</td>'+
-        '<td class="skc-box"></td><td class="skc-box"></td></tr>';
+        '<td class="num skc-sys">'+(isCur?skcN(r.closing):stkQ(r.closing))+'</td>'+   // รอบปัจจุบัน = ใบนับ ต้องเห็นเศษ (#409) ไม่งั้นนับ 7 แต่ระบบ 7.2 ขึ้นต่าง −0.2
+        (isCur?skcCntTd(r.item):'<td class="skc-box"></td><td class="skc-box"></td>')+'</tr>';
       if(open)tb+='<tr class="skc-det"><td colspan="8">'+skcDetailHtml(r)+'</td></tr>';
       mc+='<div class="skc-mit'+(r.n?'':' quiet')+'"'+(r.n?' onclick="skcToggleItem(\''+id+'\')"':'')+'>'+
         '<div><div class="skc-mn">'+(r.item.name||'-')+'</div><div class="skc-mm">'+
         (r.n?'<b>'+stkQ(r.opening)+'</b>'+(r.inQ?'<i class="in">+'+skcN(r.inQ)+'</i>':'')+(r.outQ?'<i class="out">−'+skcN(r.outQ)+'</i>':'')+' <span style="color:var(--in)">· '+r.n+' ครั้ง '+(open?'▴':'▾')+'</span>':'ไม่มีความเคลื่อนไหว')+
-        '</div></div><div class="skc-mr"><div class="skc-mv">'+stkQ(r.closing)+'</div><div class="skc-mu">'+(r.item.unit||'')+'</div></div></div>'+
+        '</div></div><div class="skc-mr"><div class="skc-mv">'+(isCur?skcN(r.closing):stkQ(r.closing))+'</div><div class="skc-mu">'+(r.item.unit||'')+'</div></div>'+(isCur?skcCntCard(r.item):'')+'</div>'+
         (open?'<div class="skc-mdet">'+skcDetailHtml(r)+'</div>':'');
     });
     mc+='</div>';
   });
+  _skcCntShown=shown.map(r=>r.item.id);
   box.innerHTML='<div class="skc-tblwrap"><table class="tbl skc-tbl"><thead><tr><th>รายการ</th><th>หน่วย</th><th class="num">ยกมา</th><th class="num">รับเข้า</th><th class="num">เบิก / ใช้</th><th class="num skc-sys">คงเหลือ (ระบบ)</th><th class="num skc-box">นับจริง</th><th class="num skc-box">ต่าง</th></tr></thead><tbody>'+tb+'</tbody></table></div>'+
-    '<div class="skc-cards">'+mc+'</div>';
+    '<div class="skc-cards">'+mc+'</div>'+(isCur?skcCntFootHtml(start,end):'');
+  if(isCur)skcCntFoot();
+}
+// ══════ ③ บันทึกยอดนับสต็อกฟาร์ม (entry #409 พี่สั่ง 12 ต.ค. 69 · mockup_สต็อกนับยอด.html) ══════
+//   กรอกได้เฉพาะรอบปัจจุบัน · ต่าง = นับจริง − ยอดคงเหลือตอนนี้ (item.qty) · เว้นว่าง = ไม่ได้นับ ไม่แตะ
+//   บันทึก = item.qty ← ยอดนับ + inventoryLog type 'adj' qty มีเครื่องหมาย (ลบได้ด้วย deleteStockLog → ย้อนยอด)
+//   ส่วนต่างไม่ผูก pondId = ไม่เข้าต้นทุนบ่อไหน · ตัวเงินเห็นเฉพาะ admin · ค่าที่พิมพ์ค้างอยู่ใน _skcCnt แยกจาก D
+let _skcCnt={},_skcCntShown=[];
+function skcCntDiff(id){
+  const v=_skcCnt[id];if(v==null||v==='')return null;
+  const n=parseFloat(String(v).replace(',','.'));if(!isFinite(n)||n<0)return null;
+  const it=(D.inventoryItems||[]).find(i=>i&&i.id===id);if(!it)return null;
+  return{n,cur:parseFloat(it.qty)||0,d:Math.round((n-(parseFloat(it.qty)||0))*100)/100,it};
+}
+function skcDfHtml(id){const x=skcCntDiff(id);if(!x)return'';return x.d===0?'<span class="skc-ok">✓</span>':'<span class="'+(x.d<0?'skc-dn':'skc-up')+'">'+(x.d>0?'+':'−')+skcN(Math.abs(x.d))+'</span>';}
+function skcCntInput(it){const q=String.fromCharCode(39);return '<input type="number" inputmode="decimal" min="0" step="any" class="skc-cin" data-skcid="'+mpEsc(it.id)+'" value="'+mpEsc(_skcCnt[it.id]??'')+'" placeholder="—" aria-label="นับจริง '+mpEsc(it.name||'')+'" oninput="skcCntSet('+q+it.id+q+',this.value)">';}
+function skcCntTd(it){return '<td class="num skc-cnt">'+skcCntInput(it)+((parseFloat(it.qty)||0)<0?'<small class="skc-neg">ติดลบ = ค้างรับเข้า</small>':'')+'</td><td class="num" data-skcdf="'+it.id+'">'+skcDfHtml(it.id)+'</td>';}
+function skcCntCard(it){return '<div class="skc-mc" onclick="event.stopPropagation()">'+skcCntInput(it)+'<div data-skcdf="'+it.id+'">'+skcDfHtml(it.id)+'</div>'+((parseFloat(it.qty)||0)<0?'<small class="skc-neg">ค้างรับเข้า</small>':'')+'</div>';}
+function skcCntSet(id,v){
+  if(v===''||v==null)delete _skcCnt[id];else _skcCnt[id]=v;
+  document.querySelectorAll('[data-skcdf="'+id+'"]').forEach(e=>{e.innerHTML=skcDfHtml(id);});
+  // ช่องเดียวกันมี 2 ที่ (ตารางคอม + การ์ดมือถือ) — ให้ค่าตรงกัน
+  document.querySelectorAll('.skc-cin').forEach(e=>{if(e!==document.activeElement&&e.dataset.skcid===id)e.value=v;});
+  skcCntFoot();
+}
+function skcCntFootHtml(start,end){
+  const adj=(D.inventoryLog||[]).filter(l=>l&&l.type==='adj'&&l.date>=start&&l.date<=end).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  const q=String.fromCharCode(39);
+  return '<div class="skc-cfoot" id="skc-cfoot"></div>'
+    +(adj.length?'<div class="skc-adj"><div class="h">ปรับยอดจากการนับ · '+adj.length+' รายการ</div>'+adj.map(l=>{const v=parseFloat(l.qty)||0;
+      return '<div class="r"><span>'+fD(l.date)+' · '+mpEsc(l.itemName||'')+'</span><span><b class="'+(v<0?'skc-dn':'skc-up')+'">'+(v>0?'+':'−')+skcN(Math.abs(v))+' '+mpEsc(l.unit||'')+'</b>'
+        +' <button type="button" onclick="deleteStockLog('+q+l.id+q+')" aria-label="ลบ">🗑️</button></span></div>';}).join('')+'</div>':'');
+}
+function skcCntFoot(){
+  const el=document.getElementById('skc-cfoot');if(!el)return;
+  const L=Object.keys(_skcCnt).map(skcCntDiff).filter(Boolean);
+  if(!L.length){el.innerHTML='<div class="skc-chint">กรอก "นับจริง" แล้วกดบันทึก — ยอดฟาร์มจะถูกปรับให้เท่ากับที่นับ</div>';return;}
+  const nd=L.filter(x=>x.d!==0).length;
+  let money='';
+  if(APP_ROLE==='admin'){const lo=L.filter(x=>x.d<0).reduce((s,x)=>s+(-x.d)*(+x.it.unitPrice||0),0),hi=L.filter(x=>x.d>0).reduce((s,x)=>s+x.d*(+x.it.unitPrice||0),0);
+    money=' · <span class="pd-admin-tag">ADMIN</span> ขาด ฿'+Math.round(lo).toLocaleString()+' · เกิน ฿'+Math.round(hi).toLocaleString();}
+  el.innerHTML='<div class="skc-csum">นับแล้ว '+L.length+' รายการ · ต่าง '+nd+money+'</div>'
+    +'<button type="button" class="btn btn-p skc-csave" onclick="skcSaveCount()">💾 บันทึกยอดนับ '+L.length+' รายการ</button>';
+}
+function skcSaveCount(){
+  const L=Object.keys(_skcCnt).map(skcCntDiff).filter(Boolean);if(!L.length)return;
+  const nd=L.filter(x=>x.d!==0);
+  if(!confirm('บันทึกยอดนับ '+L.length+' รายการ?\nยอดฟาร์มจะถูกปรับให้เท่ากับที่นับ ('+nd.length+' รายการมีส่วนต่าง)'))return;
+  const d=today(),by=curUserLabel();
+  L.forEach(x=>{
+    x.it.qty=x.n;x.it.countedAt=d;
+    if(x.d!==0)(D.inventoryLog=D.inventoryLog||[]).push({id:'adj'+Date.now()+'_'+Math.random().toString(36).slice(2,6),itemId:x.it.id,itemName:x.it.name,type:'adj',qty:x.d,
+      date:d,unit:x.it.unit||'',by,balanceAfter:x.n,note:'ปรับยอดจากการนับ'});
+  });
+  _skcCnt={};
+  if(typeof tickMemoClear==='function')tickMemoClear();
+  save();renderStockCount();if(typeof renderStockKPI==='function')renderStockKPI();renderStockItems();
+  showToast('บันทึกยอดนับ',L.length+' รายการ · ปรับยอด '+nd.length+' รายการ');
 }
 function skcDetailHtml(r){
   return '<div class="skc-det-in">'+r.logs.map(l=>{
-    const where=l.type==='in'?(l.from==='shop'?'บุญชูเข้าฟาร์ม':'รับเข้าสต็อกกลาง'):l.type==='toShop'?'ฟาร์มกลับบุญชู':l.type==='shared'?'อุปกรณ์นอก':l.type==='sale'?('ขาย '+(l.custName||'ลูกค้านอก')):
+    const where=l.type==='adj'?'ปรับยอดจากการนับ':l.type==='in'?(l.from==='shop'?'บุญชูเข้าฟาร์ม':'รับเข้าสต็อกกลาง'):l.type==='toShop'?'ฟาร์มกลับบุญชู':l.type==='shared'?'อุปกรณ์นอก':l.type==='sale'?('ขาย '+(l.custName||'ลูกค้านอก')):
       (l.pondId?'เบิกลงบ่อ '+pondNameById(l.pondId):'เบิกออก')+(String(l.id||'').startsWith('sl_fd_')?' <span class="skc-auto">อัตโนมัติ</span>':'');
-    return '<div class="r"><span>'+fD(l.date)+' · '+where+'</span><b>'+(l.type==='in'?'+':'−')+skcN(l.qty)+' '+(l.unit||'')+'</b></div>';
+    const pos=l.type==='in'||(l.type==='adj'&&(parseFloat(l.qty)||0)>0);
+    return '<div class="r"><span>'+fD(l.date)+' · '+where+'</span><b>'+(pos?'+':'−')+skcN(Math.abs(parseFloat(l.qty)||0))+' '+(l.unit||'')+'</b></div>';
   }).join('')+'</div>';
 }
 function renderSkcPond(box,sub,start,end,key){
