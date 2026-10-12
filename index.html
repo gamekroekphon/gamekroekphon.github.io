@@ -439,6 +439,15 @@ body.role-admin .mp-actions{display:flex!important;gap:2px;flex-wrap:wrap}
 .pd-surv-trend{display:inline-flex;align-items:center;gap:4px;font-size:calc(11px * var(--ui-scale));font-weight:600;padding:2px 8px;border-radius:99px;margin-top:6px}
 .pd-surv-trend.down{color:var(--d);background:var(--db)}
 .pd-surv-trend.up{color:var(--ok);background:var(--ob)}
+.pd-surv-tag{display:inline-block;font-size:calc(11.5px * var(--ui-scale));font-weight:700;padding:1px 8px;border-radius:99px;margin-left:4px}
+.pd-surv-tag.ok{color:var(--ok);background:var(--ob)}.pd-surv-tag.w{color:var(--w);background:var(--wb)}
+.card table.pd-surv-tb{display:table;overflow:visible}
+table.pd-surv-tb{width:100%;border-collapse:collapse;font-size:calc(13.5px * var(--ui-scale));font-variant-numeric:tabular-nums;margin-top:6px}
+table.pd-surv-tb th{font-size:calc(12px * var(--ui-scale));font-weight:600;text-align:right;padding:3px 4px;border-bottom:2px solid var(--bd);color:var(--tx)}
+table.pd-surv-tb td{padding:5px 4px;text-align:right;border-bottom:1px solid var(--sf2);color:var(--tx)}
+table.pd-surv-tb th:first-child,table.pd-surv-tb td:first-child{text-align:left}
+table.pd-surv-tb tr.cur td{font-weight:700}
+table.pd-surv-tb td.w{color:var(--w);font-weight:700}
 .pd-surv-cmp-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--sf2);font-size:calc(13px * var(--ui-scale))}
 .pd-surv-cmp-row:last-child{border-bottom:none}
 .pd-surv-cmp-lbl b{color:var(--tx);display:block;font-size:calc(13px * var(--ui-scale))}
@@ -8154,8 +8163,10 @@ function renderPondDetail(id){
   const cumFeed=getCumFeed(p);
   const prevSizeCount=latPrev&&latPrev.abw&&latPrev.abw>0?Math.round(1000/latPrev.abw):null;
   const sizeArrow=sizeCount&&prevSizeCount?(sizeCount<prevSizeCount?`<span style="color:#64748b">▼ จาก ${prevSizeCount}</span>`:sizeCount>prevSizeCount?`<span style="color:#64748b">▲ จาก ${prevSizeCount}</span>`:''):'';
-  const fcrNum=fcr?parseFloat(fcr):null;
-  const fcrValColor=fcrNum?(fcrNum<1.3?'#15803d':fcrNum<1.6?'#92400e':'#b91c1c'):'#15803d';
+  // ── ② (entry #406 พี่เลือกแบบ ก) ช่อง FCR → อาหาร % ของน้ำหนักกุ้งต่อวัน — FCR ระหว่างเลี้ยงเท่าเกณฑ์เสมอเพราะอัตรารอดคิดจากอาหาร (#402)
+  const feedPctBio=latFeed&&latFeed.totalFeed>0&&biomass>0?latFeed.totalFeed/biomass*100:null;
+  // ── ③ รอดเกิน 100% → จำนวนตัวเกินยอดปล่อย (ตัวเลขไม่ตัด แค่บอก)
+  const pdOverRel=!!(pdSC&&pdSC.release>0&&pdSC.aliveAll>pdSC.release);
   const kpiHero=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
     <div style="background:#eff6ff;border:0.5px solid #bfdbfe;border-radius:10px;padding:10px 12px">
       <div style="font-size:var(--fs10);color:#3b82f6;margin-bottom:4px">ไซส์</div>
@@ -8187,20 +8198,21 @@ function renderPondDetail(id){
       <div style="font-size:calc(22px * var(--ui-scale));font-weight:500;color:#15803d;line-height:1">${cumFeed?cumFeed.toLocaleString():'—'}</div>
       <div style="font-size:var(--fs10);color:#16a34a;margin-top:3px">กก. ตลอดรอบ</div>
     </div>
-    <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px" title="อาหารสะสมถึงวันสุ่ม ÷ biomass วันสุ่ม (+พาเชียล) — ไม่ใช่ FCR สุดท้ายตอนปิดรอบ">
-      <div style="font-size:var(--fs10);color:#16a34a;margin-bottom:4px">FCR ประเมิน</div>
-      <div style="font-size:calc(22px * var(--ui-scale));font-weight:500;color:${fcrValColor};line-height:1">${fcr??'—'}</div>
-      <div style="font-size:var(--fs10);color:#16a34a;margin-top:3px">${pdFcrX?'ณ สุ่ม '+fD(pdFcrX.date)+(pdFcrT!=null?' · เกณฑ์ '+pdFcrT.toFixed(1):''):'เป้าตามอายุกุ้ง'}</div>
+    <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px" title="อาหารล่าสุด ÷ น้ำหนักกุ้งในบ่อ">
+      <div style="font-size:var(--fs10);color:#16a34a;margin-bottom:4px">อาหาร / น้ำหนักกุ้ง</div>
+      <div style="font-size:calc(22px * var(--ui-scale));font-weight:500;color:#15803d;line-height:1">${feedPctBio!=null?feedPctBio.toFixed(1)+'%':'—'}</div>
+      <div style="font-size:var(--fs10);color:#16a34a;margin-top:3px">${feedPctBio!=null?'ต่อวัน · '+latFeed.totalFeed.toLocaleString()+' ÷ '+Math.round(biomass).toLocaleString()+' กก.':'ต่อวัน'}</div>
     </div>
     <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px" title="${pdSC&&pdSC.hasPartial?'อัตรารอดสะสม — นับกุ้งที่จับพาเชียลไปแล้วเป็นตัวที่รอดด้วย (ไม่ได้ตาย แค่ขายออกไป) · บรรทัดล่างคือที่ยังอยู่ในบ่อจริง':'จากสุ่มตัวอย่างล่าสุด — กรอกเอง'}">
       <div style="font-size:var(--fs10);color:#16a34a;margin-bottom:4px">อัตรารอด${pdSC&&pdSC.hasPartial?' (สะสม)':''}</div>
       <div style="font-size:calc(22px * var(--ui-scale));font-weight:500;color:${lat&&lat.survivalRate!=null?survRingColor(lat.survivalRate):'#15803d'};line-height:1">${lat&&lat.survivalRate!=null?lat.survivalRate+'%':'—'}</div>
       <div style="font-size:var(--fs10);color:#16a34a;margin-top:3px">${pdSC&&pdSC.hasPartial?`ในบ่อ ${pdSC.inPondPct.toFixed(1)}% · จับไป ${Math.round(pdSC.phCount).toLocaleString()} ตัว`:'ล่าสุด'+(lat&&lat.date?' '+fD(lat.date):'')}</div>
     </div>
-    <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px" title="ประเมินจาก ยอดปล่อย × อัตรารอดที่สุ่มได้ล่าสุด${pdSC&&pdSC.hasPartial?' แล้วหักจำนวนตัวที่จับพาเชียลไปแล้วออก':''} — เป็นค่าประเมิน ไม่ใช่การนับจริง">
+    <div style="background:${pdOverRel?'var(--wb)':'#f0fdf4'};border:${pdOverRel?'1.5px solid #F5C978':'0.5px solid #bbf7d0'};border-radius:10px;padding:10px 12px" title="ประเมินจาก ยอดปล่อย × อัตรารอดที่สุ่มได้ล่าสุด${pdSC&&pdSC.hasPartial?' แล้วหักจำนวนตัวที่จับพาเชียลไปแล้วออก':''} — เป็นค่าประเมิน ไม่ใช่การนับจริง">
       <div style="font-size:var(--fs10);color:#16a34a;margin-bottom:4px">กุ้งคงเหลือในบ่อ</div>
       <div style="font-size:calc(22px * var(--ui-scale));font-weight:500;color:#15803d;line-height:1">${pdSC?Math.round(pdSC.inPond).toLocaleString():'—'}</div>
       <div style="font-size:var(--fs10);color:#16a34a;margin-top:3px">${pdSC?(pdSC.hasPartial?`ตัว · จากรอด ${Math.round(pdSC.aliveAll).toLocaleString()} − จับ ${Math.round(pdSC.phCount).toLocaleString()}`:'ตัว (ประเมิน)'):'ตัว'}</div>
+      ${pdOverRel?`<div style="font-size:var(--fs10);color:var(--w);font-weight:700;margin-top:3px">⚠️ เกินยอดปล่อย ${pdSC.release.toLocaleString()}</div>`:''}
     </div>
   </div>`;
 
@@ -8371,7 +8383,6 @@ ${String(p.cropNote).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`:''}
     ${pdCard('lab',`🔬 ผลแล็บ${(p.labResults||[]).length?` · ${p.labResults.length} ครั้ง`:''}`,'<div id="pd-lab-card"></div>')}
     ${pdCard('mort',`🦐 บันทึกกุ้งตาย${cropMortalityLog(p).length?` · ${cropMortalityLog(p).length} วัน`:''}`,'<div id="pd-mort-card"></div>')}
     ${pdCard('crophist',`📚 ประวัติรอบเลี้ยงบ่อนี้${(p.cropHistory||[]).length?` · ${p.cropHistory.length} รอบ`:''}`,'<div id="pd-crophist-card"></div>')}
-    ${pdCard('bio','⚖️ เปรียบเทียบ Biomass 2 วิธี','<div id="pd-biocompare-card"></div>')}
     <div class="pd-actions">
       <button class="btn btn-p" onclick="jumpEntry('${p.id}')">📝 กรอกข้อมูลใหม่</button>
       <button class="btn" onclick="jumpFeed('${p.id}')">🍖 กรอกอาหาร</button>
@@ -8386,7 +8397,6 @@ ${String(p.cropNote).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`:''}
   renderPdLabCard(p);
   renderPdMortCard(p);
   renderPdCropHistCard(p);
-  renderBioCompare(p);
   renderPdWqHistory(p);
   renderPdFeedHistory(p);renderPdFeedSummary(p);
   renderPdMedHistory(p);renderPdMedSummary(p);
@@ -8508,8 +8518,6 @@ function pdToggleCard(key){
   // ── กราฟ Chart.js ที่ถูกสร้างตอนการ์ดยังปิดอยู่จะได้ขนาด 0 (canvas อยู่ใน display:none) ต้องสั่ง resize ใหม่ตอนกาง ──
   if(nowOpen)setTimeout(()=>{Object.values(_pdCharts||{}).forEach(c=>{try{c&&c.resize();}catch(e){}});},0);
 }
-// ══════ เปรียบเทียบ Biomass 2 วิธี: แบบฟาร์ม (อัตรารอดกรอกเอง) vs แบบเอกสาร (ไขว้ตรวจจากอาหารที่ให้จริง) ══════
-const _bcFeedRateOverride={}; // เก็บค่าที่ผู้ใช้แก้เอง ต่อบ่อ ระหว่างอยู่ในหน้านี้ (ไม่บันทึกลง DB — เป็นแค่เครื่องมือช่วยตัดสินใจ)
 // ── สูตร Feeding Rate จริงจากเอกสาร "Precision Feeding ในการเลี้ยงกุ้งขาว" (ดร.พุทธ ส่องแสงจินดา หน้า 16) — regression จากข้อมูลภาคสนาม ขึ้นกับทั้งอายุ+น้ำหนักกุ้ง ไม่ใช่น้ำหนักอย่างเดียว
 //    Feeding rate(%) = e^(4.055 - 0.799×ln(อายุ วัน) + 0.129×ln(น้ำหนักกุ้ง กรัม)) — ตรวจสอบสูตรกับตัวอย่างในเอกสารแล้วตรง (DOC60/ABW15.4g → 3.09%)
 function bcFeedRateFormula(age,abw){
@@ -8517,78 +8525,11 @@ function bcFeedRateFormula(age,abw){
   const rate=Math.exp(4.055-0.799*Math.log(age)+0.129*Math.log(abw));
   return Math.round(rate*10)/10;
 }
-// ── ⚠️ single source of truth ของการคำนวณเปรียบเทียบ biomass/อัตรารอด 2 แบบ — ใช้ร่วมกันทั้งการ์ด "เปรียบเทียบ Biomass 2 วิธี" และการ์ด "อัตรารอด" ห้ามคำนวณคู่ขนานแยกกัน ──
-function getBioCompareCalc(p){
-  const sc=pondShrimpCount(p);
-  const feedLog=sortLogArr('feedLog',p.feedLog||[]);const latFeed=feedLog.length?feedLog[feedLog.length-1]:null;
-  if(!sc||!latFeed||!latFeed.totalFeed)return null;
-  const lat=sc.lat,abw=sc.abw,todayFeed=latFeed.totalFeed,release=sc.release;
-  const age=docAge(p.startDate,lat.date||today())??lat.age??null;
-  const docRate=bcFeedRateFormula(age,abw);
-  const auto=!(p.id in _bcFeedRateOverride);
-  const feedRate=auto?(docRate!=null?docRate:2.5):_bcFeedRateOverride[p.id];
-  // ── ⚠️ ทั้ง 2 ฝั่งต้องเทียบ "กุ้งที่ยังอยู่ในบ่อ" เหมือนกัน ไม่งั้นพอพาเชียลปุ๊บตัวเลขจะเพี้ยนทันที
-  //    ฝั่งฟาร์ม: อัตรารอดสะสมที่กรอกเอง แล้วหักตัวที่จับออกไป (ผ่าน pondShrimpCount)
-  //    ฝั่งเอกสาร: ย้อนกลับจากอาหารวันนี้ → เป็น biomass ในบ่ออยู่แล้วโดยธรรมชาติ (กุ้งที่จับไปแล้วไม่ได้กินอาหารวันนี้)
-  //    เดิมฝั่งฟาร์มไม่หักพาเชียล → biomass ค้างเป็นค่าก่อนพาเชียล และ delta พุ่งทั้งที่ข้อมูลถูกต้อง ──
-  const farmSurvival=sc.survAll;
-  const farmBiomass=sc.biomass;
-  const farmCount=sc.inPond;
-  const farmImpliedRate=farmBiomass>0?(todayFeed/farmBiomass*100):0;
-  const docBiomass=feedRate>0?(todayFeed/(feedRate/100)):0;
-  const docCount=abw>0?(docBiomass*1000/abw):0;
-  // อัตรารอดฝั่งเอกสารต้องบวกตัวที่จับไปแล้วกลับเข้าไป จึงจะเป็น "อัตรารอดสะสม" เทียบกับฝั่งฟาร์มได้ตรงนิยาม
-  const docImpliedSurvival=release>0?((docCount+sc.phCount)/release*100):0;
-  const delta=farmBiomass>0?Math.abs(farmBiomass-docBiomass)/farmBiomass*100:0;
-  let bannerCls='ok',bannerIcon='✅',bannerTxt=`ตัวเลข 2 แบบใกล้เคียงกัน (ต่างกัน ${delta.toFixed(1)}%) — อัตรารอดที่กรอกเองน่าเชื่อถือได้`;
-  if(delta>=25){bannerCls='danger';bannerIcon='🔴';bannerTxt=`ตัวเลข 2 แบบต่างกันมาก (${delta.toFixed(1)}%) — ควรตรวจสอบทั้งอัตรารอดที่กรอกและยอดอาหารที่บันทึกโดยด่วน อาจมีข้อผิดพลาดในการกรอกข้อมูล`;}
-  else if(delta>=10){bannerCls='warn';bannerIcon='⚠️';bannerTxt=`ตัวเลข 2 แบบต่างกันพอสมควร (${delta.toFixed(1)}%) — ${farmBiomass>docBiomass?'อัตรารอดที่กรอกเองอาจสูงเกินจริง (feeding rate ที่ได้จริงต่ำผิดปกติ)':'อัตรารอดที่กรอกเองอาจต่ำเกินจริง (feeding rate ที่ได้จริงสูงผิดปกติ)'} — แนะนำสุ่มตัวอย่างเช็คซ้ำ`;}
-  return{lat,abw,age,docRate,auto,feedRate,farmSurvival,farmBiomass,farmCount,farmImpliedRate,docBiomass,docCount,docImpliedSurvival,delta,bannerCls,bannerIcon,bannerTxt,sc};
-}
-function renderBioCompare(p){
-  const card=document.getElementById('pd-biocompare-card');if(!card)return;
-  const bc=getBioCompareCalc(p);
-  if(!bc){
-    card.innerHTML=`<div style="color:var(--tx3);font-size:calc(13px * var(--ui-scale));padding:7px 0">ต้องมีข้อมูล ABW + อัตรารอด (จากสุ่มตัวอย่าง) และอาหารที่ให้ล่าสุด ก่อนเปรียบเทียบได้</div>`;
-    return;
-  }
-  const{abw,age,docRate,auto,feedRate,farmSurvival,farmBiomass,farmCount,farmImpliedRate,docBiomass,docCount,docImpliedSurvival,bannerCls,bannerIcon,bannerTxt}=bc;
-  card.innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
-      <div class="fg"><label class="fl" for="bc-survival-${p.id}">อัตรารอด (%) — กรอกเอง (แบบฟาร์ม)</label><input type="text" class="fi" id="bc-survival-${p.id}" value="${farmSurvival}" readonly style="background:var(--sf2)"></div>
-      <div class="fg">
-        <label class="fl" for="bc-feedrate-${p.id}">Feeding Rate (%) ที่ควรจะเป็น <span style="color:${auto?'var(--ok)':'var(--w)'};font-weight:400">— ${auto?'auto':'แก้ไขเองแล้ว'}</span></label>
-        <div style="display:flex;gap:6px">
-          <input type="number" class="fi" id="bc-feedrate-${p.id}" step="0.1" value="${feedRate}" onchange="bcEditFeedRate('${p.id}',this.value)">
-          <button type="button" class="btn btn-s" style="white-space:nowrap" onclick="bcResetFeedRate('${p.id}')">↺ ค่าแนะนำ</button>
-        </div>
-      </div>
-    </div>
-    <div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:10px">${docRate!=null?`สูตร ดร.พุทธ: อายุ ${age} วัน + ABW ${abw} ก. → ${docRate}%/วัน`:'ไม่มีข้อมูลอายุกุ้ง (age) ของการสุ่มครั้งล่าสุด คำนวณสูตรอัตโนมัติไม่ได้ ใช้ค่าประมาณ 2.5% ไปก่อน — กรอกอายุกุ้งตอนสุ่มตัวอย่างเพื่อให้คำนวณได้แม่นยำขึ้น'}</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-      <div style="border-radius:10px;padding:14px;border:1.5px solid var(--bd);background:var(--sf2)">
-        <div style="font-size:calc(12.5px * var(--ui-scale));font-weight:700;color:var(--tx2);margin-bottom:10px">🏠 แบบฟาร์ม (อัตรารอดกรอกเอง)</div>
-        <div style="font-size:calc(26px * var(--ui-scale));font-weight:700;color:var(--p);line-height:1.1">${farmBiomass.toFixed(0)}</div>
-        <div style="font-size:var(--fs11);color:var(--tx3)">กก. ${bc.sc.hasPartial?'(ในบ่อ หักพาเชียลแล้ว)':''}</div>
-        <div style="font-size:calc(12px * var(--ui-scale));color:var(--tx2);margin-top:8px;display:flex;justify-content:space-between"><span>กุ้งในบ่อโดยประมาณ</span><span>${Math.round(farmCount).toLocaleString()} ตัว</span></div>
-        ${bc.sc.hasPartial?`<div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-top:4px;display:flex;justify-content:space-between"><span>จับพาเชียลไปแล้ว</span><span>− ${Math.round(bc.sc.phCount).toLocaleString()} ตัว</span></div>`:''}
-        <div style="font-size:calc(12px * var(--ui-scale));color:var(--tx2);margin-top:4px;display:flex;justify-content:space-between"><span>Feeding Rate ที่ได้จริง</span><span>${farmImpliedRate.toFixed(2)}%</span></div>
-      </div>
-      <div style="border-radius:10px;padding:14px;border:1.5px solid var(--bd);background:var(--sf2)">
-        <div style="font-size:calc(12.5px * var(--ui-scale));font-weight:700;color:var(--tx2);margin-bottom:10px">📄 แบบเอกสาร (ไขว้ตรวจจากอาหาร)</div>
-        <div style="font-size:calc(26px * var(--ui-scale));font-weight:700;color:var(--p);line-height:1.1">${docBiomass.toFixed(0)}</div>
-        <div style="font-size:var(--fs11);color:var(--tx3)">กก.</div>
-        <div style="font-size:calc(12px * var(--ui-scale));color:var(--tx2);margin-top:8px;display:flex;justify-content:space-between"><span>จำนวนกุ้งโดยประมาณ</span><span>${Math.round(docCount).toLocaleString()} ตัว</span></div>
-        <div style="font-size:calc(12px * var(--ui-scale));color:var(--tx2);margin-top:4px;display:flex;justify-content:space-between"><span>อัตรารอดที่ควรจะเป็น</span><span>${docImpliedSurvival.toFixed(1)}%</span></div>
-      </div>
-    </div>
-    <div class="ai ${bannerCls}" style="margin-top:12px"><span>${bannerIcon}</span><div>${bannerTxt}</div></div>
-  `;
-}
-function bcEditFeedRate(pid,v){_bcFeedRateOverride[pid]=parseFloat(v)||0;renderBioCompare(pond(pid));}
-function bcResetFeedRate(pid){delete _bcFeedRateOverride[pid];renderBioCompare(pond(pid));}
-// ══════ การ์ด "อัตรารอด" — วงกลมโชว์ค่ากรอกเองล่าสุด + เทียบกับตัวประมาณจากอาหารจริง (getBioCompareCalc) + แนวโน้มย้อนหลังในรอบนี้ ══════
+// ══════ การ์ด "อัตรารอด" — วงกลมโชว์ค่ากรอกเองล่าสุด + เทียบกับอัตรารอดจากอาหาร (spFeedSurv · #406) + ตาราง 5 ครั้งล่าสุด ══════
 function survRingColor(pct){return pct>=70?'var(--ok)':pct>=50?'var(--w)':'var(--d)';}
+// ── entry #406: "จากอาหาร" = อาหารรวมถึงเมื่อวานของวันสุ่ม ÷ FCR ฟาร์ม (spFeedSurv ตัวเดียวกับหน้าสุ่ม #402)
+//    เดิมเทียบกับสูตร Feeding Rate (ดร.พุทธ) ได้ 125.9% แล้วเตือนว่าที่กรอกต่ำเกิน — ผิดทาง ฟาร์มคิดอัตรารอดจาก FCR ไม่ใช่ feeding rate
+//    การ์ด "เปรียบเทียบ Biomass 2 วิธี" ลบแล้ว · bcFeedRateFormula ยังใช้ที่หน้าคาดการณ์/ความเสี่ยง ห้ามลบ
 function renderSurvivalCard(p){
   const card=document.getElementById('pd-survival-card');if(!card)return;
   const samples=(p.samples||[]).filter(s=>s.survivalRate!=null&&s.survivalRate!=='').slice().sort((a,b)=>new Date(a.date)-new Date(b.date));
@@ -8632,33 +8573,19 @@ function renderSurvivalCard(p){
     </div>
     ${sc.phCount>sc.aliveAll?`<div class="ai danger" style="margin-top:10px"><span>🔴</span><div><b>จับไปแล้วมากกว่าที่ประเมินว่ามีในบ่อ</b> — จับสะสม ${Math.round(sc.phCount).toLocaleString()} ตัว แต่อัตรารอด ${sc.survAll}% คิดเป็นแค่ ${Math.round(sc.aliveAll).toLocaleString()} ตัว<br>แปลว่า<b>อัตรารอดที่กรอกไว้ต่ำกว่าความจริง</b> — ตอนนี้ Biomass / กก.ไร่ / กุ้งคงเหลือ จะขึ้น 0 ทั้งที่ยังมีกุ้งอยู่ ควรสุ่มตัวอย่างใหม่แล้วแก้อัตรารอดให้ตรง</div></div>`:''}`;
   }
-  const bc=getBioCompareCalc(p);
+  const fsL=lat.abw?spFeedSurv(p,lat.date,parseFloat(lat.abw)):null;
   let cmpHtml='';
-  if(bc){
-    cmpHtml=`
-    <div class="pd-surv-cmp-row">
-      <div class="pd-surv-cmp-lbl"><b>อัตรารอดโดยประมาณ (จากอาหารจริง)</b></div>
-      <div style="text-align:right">
-        <span class="pd-surv-cmp-val" style="color:${bc.delta>=10?'var(--w)':'var(--ok)'}">${bc.docImpliedSurvival.toFixed(1)}%</span>
-        <div style="font-size:calc(10.5px * var(--ui-scale));font-weight:700;padding:2px 8px;border-radius:99px;margin-top:3px;display:inline-block;color:${bc.delta>=10?'var(--w)':'var(--ok)'};background:${bc.delta>=10?'var(--wb)':'var(--ob)'}">ต่างกัน ${bc.delta.toFixed(1)}%</div>
-      </div>
-    </div>
-    <div class="pd-surv-cmp-row">
-      <div class="pd-surv-cmp-lbl"><b>Biomass ในบ่อล่าสุด (ประเมิน)</b><span class="sub">ABW × ยอดปล่อย × อัตรารอด${bc.sc&&bc.sc.hasPartial?' − ที่จับพาเชียลไปแล้ว':''}</span></div>
-      <div class="pd-surv-cmp-val">${Math.round(bc.farmBiomass).toLocaleString()} กก.</div>
-    </div>
-    ${bc.delta>=10?`<div class="ai ${bc.bannerCls}" style="margin-top:10px"><span>${bc.bannerIcon}</span><div>${bc.bannerTxt}</div></div>`:''}`;
-  }else{
-    cmpHtml=`<div style="color:var(--tx3);font-size:calc(12px * var(--ui-scale));padding:6px 0">ยังไม่มีข้อมูลอาหารล่าสุด — กรอกอาหารวันนี้เพื่อเทียบกับตัวประมาณจากอาหารจริง</div>`;
+  if(fsL){
+    const df=Math.abs(pct-fsL.surv),cls=df>5?'w':'ok',tag=df<=1?'✓ ตรงกัน':df<=5?'ใกล้เคียง':'ต่าง '+Math.round(df);
+    cmpHtml+='<div class="pd-surv-cmp-row"><div class="pd-surv-cmp-lbl"><b>จากอาหาร</b><span class="sub">FCR '+fsL.f.toFixed(1)+'</span></div>'
+      +'<div style="text-align:right"><span class="pd-surv-cmp-val" style="color:'+(cls==='w'?'var(--w)':'var(--ok)')+'">'+fsL.surv.toFixed(1)+'%</span> <span class="pd-surv-tag '+cls+'">'+tag+'</span></div></div>';
   }
-  const chartSamples=samples.slice(-6);
-  const maxV=Math.max(...chartSamples.map(s=>parseFloat(s.survivalRate)));
-  const chartHtml=chartSamples.length>1?`<div class="pd-surv-chart">${chartSamples.map(s=>{
-    const v=parseFloat(s.survivalRate);
-    const h=maxV>0?Math.max(8,v/maxV*100):8;
-    const sAge=docAge(p.startDate,s.date)??s.age??null;
-    return`<div class="pd-surv-bar" style="height:${h}%;background:${s===lat?'linear-gradient(180deg,var(--p),var(--pd))':'linear-gradient(180deg,var(--in),#7DB4EA)'}"><span class="v">${v}%</span><span class="lbl">${sAge!=null?'DOC '+sAge:fD(s.date)}</span></div>`;
-  }).join('')}</div>`:'';
+  if(sc&&!sc.hasPartial)cmpHtml+='<div class="pd-surv-cmp-row"><div class="pd-surv-cmp-lbl"><b>Biomass ในบ่อ</b></div><div class="pd-surv-cmp-val">'+Math.round(sc.biomass).toLocaleString()+' กก.</div></div>';
+  const chartSamples=samples.slice(-5);
+  const chartHtml=chartSamples.length>1?'<table class="pd-surv-tb"><thead><tr><th>อายุ</th><th>กรอก</th><th>จากอาหาร</th><th>FCR</th></tr></thead><tbody>'
+    +chartSamples.map(s=>{const a=docAge(p.startDate,s.date)??s.age??null,v=parseFloat(s.survivalRate),f=s.abw?spFeedSurv(p,s.date,parseFloat(s.abw)):null,bad=f&&Math.abs(v-f.surv)>5;
+      return '<tr'+(s===lat?' class="cur"':'')+'><td>'+(a!=null?a+' วัน':'-')+'</td><td>'+v+'%</td><td'+(bad?' class="w"':'')+'>'+(f?f.surv.toFixed(1)+'%':'-')+'</td><td>'+(f?f.f.toFixed(1):'-')+'</td></tr>';}).join('')
+    +'</tbody></table>':'';
   card.innerHTML=`
     <div class="pd-surv-hero">
       <div class="pd-surv-ring">
