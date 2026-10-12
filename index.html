@@ -1844,6 +1844,21 @@ table.wqg{border-collapse:separate;border-spacing:0 3px;width:100%;min-width:106
 table.wqg th{font-size:calc(12px * var(--ui-scale));font-weight:800;text-align:center;padding:2px 2px;line-height:1.2;color:var(--tx)}
 table.wqg th small{display:block;font-size:calc(10.5px * var(--ui-scale));font-weight:600}
 table.wqg th.wqg-gh{border-radius:8px 8px 0 0;padding:3px}
+table.wqg th.wqg-gh.wqh-pH{background:#DBEAFE}table.wqg th.wqg-gh.wqh-Temp{background:#FFEDD5}table.wqg th.wqg-gh.wqh-DO{background:#D1FAE5}table.wqg th.wqg-gh.wqh-x{background:transparent}
+table.wqg th.wqg-sep,table.wqg td.wqg-sep{border-left:2px solid var(--bd)}
+table.wqg .wqg-in.wqg-odd{border:2.5px solid #7C3AED!important;background:#F3E8FF!important;color:#6D28D9!important;font-weight:700}
+table.wqg td.wqg-oddc{position:relative}
+table.wqg td.wqg-oddc::after{content:'?';position:absolute;top:0;right:0;width:16px;height:16px;line-height:16px;border-radius:99px;background:#7C3AED;color:#fff;font-size:11px;font-weight:700;text-align:center;pointer-events:none}
+table.wqg .wqg-in.wqg-flash{animation:wqgFlash .6s ease-in-out 4}
+@keyframes wqgFlash{50%{box-shadow:0 0 0 4px rgba(124,58,237,.45)}}
+.wqo-ask{margin:6px 0 2px}.wqo-ask div{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--sf2);font-size:calc(14px * var(--ui-scale))}.wqo-ask b{color:#6D28D9}
+.wqo-card{border:1.5px solid #D8B4FE}
+.wqo>summary{list-style:none;display:flex;justify-content:space-between;align-items:center;font-weight:700;cursor:pointer;font-size:calc(14.5px * var(--ui-scale))}
+.wqo>summary::-webkit-details-marker{display:none}
+.wqo>summary b{color:#6D28D9}
+.wqo-r{display:grid;grid-template-columns:76px 50px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:7px 2px;border-bottom:1px solid var(--sf2);font-size:calc(13.5px * var(--ui-scale))}
+.wqo-r .v{font-weight:700;color:#6D28D9}
+.wqo-r button{border:1.5px solid var(--bd);background:var(--sf);color:var(--tx);border-radius:8px;min-height:34px;padding:0 12px;font-family:inherit;font-weight:600;cursor:pointer}
 table.wqg th.wq1,table.wqg th.wqg-gh.wq1{background:#FEF3C7}table.wqg th.wq2,table.wqg th.wqg-gh.wq2{background:#E0E7FF}
 table.wqg th.wq3,table.wqg th.wqg-gh.wq3{background:#DCFCE7}table.wqg th.wq4,table.wqg th.wqg-gh.wq4{background:#F1F5F9}
 table.wqg td{background:var(--sf);padding:2px;vertical-align:middle;border-top:1px solid var(--sf2);border-bottom:1px solid var(--sf2)}
@@ -3310,6 +3325,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     </div>
     <div class="tbl-wrap" id="tbl-wrap"><p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">เลือกบ่อเพื่อดูข้อมูล</p></div>
   </div>
+  <div class="card wqo-card" id="wq-odd-card" style="display:none"></div>
 </div>
 <!-- FEEDING -->
 <div id="sec-feed" class="sec">
@@ -14092,7 +14108,11 @@ function initEntry(){
 //    ค่าเดิมของวันนั้นเติมให้ในช่อง → แก้ในตารางได้เลย · บันทึกเฉพาะแถวที่แตะ (draft) — แถวที่แตะ: ช่องว่าง = ลบค่านั้น (เหมือน saveWQ เดิม)
 //    ⚠️ ค่าที่พิมพ์ค้างเก็บใน _wqDraft แยกจาก D — ข้อมูลจากอีกเครื่องเข้ามา D ถูกแทนทั้งก้อน แต่ค่าที่พิมพ์ไม่หาย
 //    Enter/ถัดไป: เดินตาม "ชุด" (เช้า+ALK/NH4 · บ่าย · ค่าอื่น) สุดชุดลงแถวถัดไป — ตอนเช้าไม่ต้องข้ามช่องบ่ายเอง
-const WQG_KEYS=['phM','tM','doM','phA','tA','doA','alk','nh4','no2','no3','sal','ca','mg_','hard'];   // NH4 NO2 NO3 เรียงติดกัน · Sal ไปอยู่หน้า Ca (พี่สั่ง entry #354)
+// ⚠️ entry #405: เรียงตามใบจดของฟาร์ม pH เช้า · pH บ่าย · Temp เช้า · Temp บ่าย · DO เช้า · DO บ่าย — เดิมเช้าทั้งชุด→บ่ายทั้งชุด ไม่ตรงกระดาษ
+//    พิมพ์สลับช่อง 9 ครั้งใน ก.ย. 69 (DO ไปอยู่ช่อง Temp บ่าย) · Enter ยังเดินตามช่วงเวลา (WQG_FLOWS) เหมือนเดิม
+const WQG_KEYS=['phM','phA','tM','tA','doM','doA','alk','nh4','no2','no3','sal','ca','mg_','hard'];
+const WQG_HG={phM:'pH',phA:'pH',tM:'Temp',tA:'Temp',doM:'DO',doA:'DO'};   // หัวแถวบน = ชื่อค่า · แถวล่าง = เช้า/บ่าย
+const WQG_SEP=new Set(['tM','doM','alk']);   // NH4 NO2 NO3 เรียงติดกัน · Sal ไปอยู่หน้า Ca (พี่สั่ง entry #354)
 const WQG_GRP={phM:'wq1',tM:'wq1',doM:'wq1',phA:'wq2',tA:'wq2',doA:'wq2',alk:'wq3',nh4:'wq3'};
 // Enter: ชุดเช้าเดินต่อจาก NH4 ไป NO2 → … → Hard แล้วค่อยขึ้นบ่อถัดไป (พี่สั่ง entry #354 — เดิมหลัง NH4 ขึ้นบ่อใหม่เลย) · ชุดบ่ายแยกเหมือนเดิม
 const WQG_FLOWS=[['phM','tM','doM','alk','nh4','no2','no3','sal','ca','mg_','hard'],['phA','tA','doA']];
@@ -14110,9 +14130,17 @@ function wqgRange(p){if(!p)return'';if(p.key==='ca')return'คู่กับ Mg
 // sal = ความเค็มของแถวนี้ (ที่พิมพ์ค้างใน _wqDraft ก่อน ไม่มีค่อยใช้ที่บันทึกไว้) — เกณฑ์ Mg/Ca ขึ้นกับความเค็ม
 //   เดิมอ่านแค่ rec.sal → ตอนพิมพ์สีคิดแบบไม่รู้ความเค็ม กดบันทึกแล้วสีเปลี่ยนเอง (แก้ entry #357)
 function wqgSalOf(pid,rec){const dr=_wqDraft[pid];const s=dr&&'sal' in dr?String(dr.sal).trim().replace(',','.'):'';if(s!==''){const v=parseFloat(s);return isNaN(v)?null:v;}return rec&&rec.sal!=null?rec.sal:null;}
+// ── ค่าที่เป็นไปไม่ได้ (entry #405) — ช่วงกว้างกว่าเกณฑ์มาก เอาไว้จับพิมพ์ผิด/สลับช่อง/ลืมจุด ไม่ใช่เกณฑ์ค่าน้ำ ──
+//    ข้อมูลจริง ส.ค.–ก.ย. 69 เจอ 21 รายการ: Temp บ่าย 6.x (= DO) · 307 (= 30.7) · 61.x · ALK 13/453 · DO 27–31 (= Temp)
+//    กรอบม่วงแยกจากสีเกณฑ์ · กดบันทึกถามก่อน ไม่บล็อก (กฎ #262/#270)
+const WQ_ODD={phM:[6,10.5],phA:[6,10.5],tM:[18,40],tA:[18,40],doM:[0.5,25],doA:[0.5,25],alk:[40,400],sal:[3,50],nh4:[0,15],no2:[0,15],no3:[0,300],ca:[50,800],mg_:[100,2500],hard:[500,10000]};
+const WQ_ODD_DAYS=60;
+function wqOdd(k,v){const r=WQ_ODD[k];return!!r&&typeof v==='number'&&isFinite(v)&&(v<r[0]||v>r[1]);}
+function wqOddLbl(k){return(WQG_HG[k]||WQG_SHORT[k])+(['phM','tM','doM'].includes(k)?' เช้า':['phA','tA','doA'].includes(k)?' บ่าย':'');}
 function wqgCls(k,raw,rec,sal,pid){
   if(raw===''||raw==null)return'';
   const v=parseFloat(raw);if(isNaN(v))return' wqg-bad';
+  if(wqOdd(k,v))return' wqg-odd';
   let s;
   if(k==='mg_'||k==='ca'){   // Ca:Mg ต้องรู้ค่าอีกตัวในแถวเดียวกัน (พิมพ์ค้างใน draft ก่อน ไม่มีค่อยใช้ที่บันทึก) — #387
     const o={sal:sal!==undefined?sal:(rec&&rec.sal)},dr=(pid&&_wqDraft[pid])||{};
@@ -14127,11 +14155,12 @@ function renderWqGrid(){
   if(_wqDraftDate!==d){_wqDraft={};_wqDraftDate=d;}
   const ponds=sortPondsByAge(wqEntryPonds()),sel=document.getElementById('ep-pond')?.value,y=addDaysStr(d,-1);
   const P=k=>PARAMS.find(x=>x.key===k);
-  const gh=g=>({wq1:'☀️ เช้า',wq2:'🌇 บ่าย',wq3:'',wq4:''})[g];
+  const hgOf=k=>WQG_HG[k]||'';
+  const subLbl=k=>WQG_HG[k]?(['phM','tM','doM'].includes(k)?'☀️ เช้า':'🌇 บ่าย'):WQG_SHORT[k];
   const grpOf=k=>WQG_GRP[k]||'wq4';
-  const spans=[];WQG_KEYS.forEach(k=>{const g=grpOf(k);const l=spans[spans.length-1];if(l&&l.g===g)l.n++;else spans.push({g,n:1});});
-  let html='<thead><tr><th class="wqg-pc"></th>'+spans.map(s=>'<th class="wqg-gh '+s.g+'" colspan="'+s.n+'">'+gh(s.g)+'</th>').join('')+'<th></th></tr>'
-    +'<tr><th class="wqg-pc">บ่อ</th>'+WQG_KEYS.map(k=>'<th class="'+grpOf(k)+'">'+WQG_SHORT[k]+'<small>'+wqgRange(P(k))+'</small></th>').join('')+'<th></th></tr></thead><tbody>';
+  const spans=[];WQG_KEYS.forEach(k=>{const g=hgOf(k);const l=spans[spans.length-1];if(l&&l.g===g)l.n++;else spans.push({g,n:1});});
+  let html='<thead><tr><th class="wqg-pc"></th>'+spans.map(s=>'<th class="wqg-gh wqh-'+(s.g||'x')+'" colspan="'+s.n+'">'+s.g+'</th>').join('')+'<th></th></tr>'
+    +'<tr><th class="wqg-pc">บ่อ</th>'+WQG_KEYS.map(k=>'<th class="'+grpOf(k)+(WQG_SEP.has(k)?' wqg-sep':'')+'">'+subLbl(k)+'<small>'+wqgRange(P(k))+'</small></th>').join('')+'<th></th></tr></thead><tbody>';
   html+=ponds.map(p=>{
     const rec=(p.records||[]).find(r=>r.date===d),yr=(p.records||[]).find(r=>r.date===y),dr=_wqDraft[p.id]||{};
     const age=docAge(p.startDate,d);
@@ -14141,11 +14170,34 @@ function renderWqGrid(){
         +'<small>'+(age>0?age+' วัน':'')+'</small>'+(ref?'<small>'+ref+'</small>':'')+'</div>'
         +'<button type="button" class="wqg-note'+(rec&&rec.notes?' has':'')+'" onclick="wqgNote(\''+p.id+'\')" aria-label="หมายเหตุ บ่อ '+mpEsc(p.name)+'"'+(rec&&rec.notes?' title="'+mpEsc(rec.notes)+'"':'')+'>'+wqcBtnFace(rec&&rec.notes)+'</button></div></td>'
       +WQG_KEYS.map(k=>{const raw=k in dr?dr[k]:(rec&&rec[k]!=null?String(rec[k]):'');
-        return '<td class="'+grpOf(k)+'"><input class="wqg-in'+wqgCls(k,raw,rec,wqgSalOf(p.id,rec),p.id)+'" data-k="'+k+'" value="'+mpEsc(raw)+'" inputmode="decimal" enterkeyhint="next" autocomplete="off" aria-label="'+mpEsc(p.name)+' '+mpEsc((P(k)||{}).lbl||k)+'"></td>';}).join('')
+        return '<td class="'+grpOf(k)+(WQG_SEP.has(k)?' wqg-sep':'')+(wqOdd(k,parseFloat(raw))?' wqg-oddc':'')+'"><input class="wqg-in'+wqgCls(k,raw,rec,wqgSalOf(p.id,rec),p.id)+'" data-k="'+k+'" value="'+mpEsc(raw)+'" inputmode="decimal" enterkeyhint="next" autocomplete="off" aria-label="'+mpEsc(p.name)+' '+mpEsc((P(k)||{}).lbl||k)+'"></td>';}).join('')
       +'<td class="wqg-ck">'+(dr&&Object.keys(dr).length?'<span class="wqg-dirty">●</span>':rec?'✓':'')+'</td></tr>';
   }).join('')+'</tbody>';
   tbl.innerHTML=html;
-  wqgProg();wqgFit();
+  wqgProg();wqgFit();renderWqOdd();
+}
+// การ์ดท้ายหน้า (admin) รวมค่าที่เป็นไปไม่ได้ย้อนหลัง WQ_ODD_DAYS วัน — แตะ "แก้" = เปิดวัน/บ่อนั้นในตาราง ช่องกระพริบ
+let _wqoOpen=false;
+function renderWqOdd(){
+  const el=document.getElementById('wq-odd-card');if(!el)return;
+  if(APP_ROLE!=='admin'){el.style.display='none';el.innerHTML='';return;}
+  const from=addDaysStr(today(),-WQ_ODD_DAYS),inGrid=new Set(wqEntryPonds().map(p=>p.id)),L=[];
+  (D.ponds||[]).forEach(p=>{if(!inGrid.has(p.id))return;(p.records||[]).forEach(r=>{if(!r||!r.date||r.date<from)return;
+    Object.keys(WQ_ODD).forEach(k=>{const v=r[k];if(v!=null&&v!==''&&wqOdd(k,+v))L.push({p,d:r.date,k,v});});});});
+  if(!L.length){el.style.display='none';el.innerHTML='';return;}
+  L.sort((a,b)=>b.d.localeCompare(a.d)||String(a.p.name).localeCompare(String(b.p.name),'th',{numeric:true}));
+  const q=String.fromCharCode(39);
+  el.style.display='';
+  el.innerHTML='<details class="wqo"'+(_wqoOpen?' open':'')+' ontoggle="_wqoOpen=this.open"><summary><span>⚠️ ค่าที่น่าจะพิมพ์ผิด</span><b>'+L.length+'</b></summary>'
+    +L.map(x=>'<div class="wqo-r"><span>'+fD(x.d)+'</span><b>'+mpEsc(x.p.name)+'</b><span>'+mpEsc(wqOddLbl(x.k))+'</span><span class="v">'+mpEsc(String(x.v))+'</span>'
+      +'<button type="button" onclick="wqoGo('+q+x.p.id+q+','+q+x.d+q+','+q+x.k+q+')">แก้</button></div>').join('')+'</details>';
+}
+function wqoGo(pid,d,k){
+  if(wqgDate()!==d){wqgSetDate(d);if(wqgDate()!==d)return;}   // ผู้ใช้กดยกเลิกตอนถามว่ามีค่าค้าง
+  wqgPick(pid);
+  const inp=document.querySelector('#wqg-table tr[data-pid="'+pid+'"] .wqg-in[data-k="'+k+'"]');if(!inp)return;
+  requestAnimationFrame(()=>{inp.scrollIntoView({block:'nearest',inline:'center'});document.getElementById('wqg-table')?.closest('.card')?.scrollIntoView({block:'start'});
+    inp.classList.add('wqg-flash');setTimeout(()=>inp.classList.remove('wqg-flash'),2400);inp.focus();inp.select&&inp.select();});
 }
 // ── ความสูงกรอบตาราง = จอ − หัวเว็บที่ตรึง − แถบวันที่/บันทึก − แถบล่าง (entry #354) — วัดใหม่ทุกครั้งที่วาด/หมุนจอ
 //    ⚠️ ห้ามวัด sticky ด้วย offsetTop (#294) — ใช้ top ใน CSS + ความสูง เหมือน prStickyTop()
@@ -14237,8 +14289,24 @@ function wqgNoteSet(pid,t){
   else{if(!t.trim())return;const r={id:'wq_'+pid+'_'+d,date:d,age:docAge(p.startDate,d),notes:t.trim()};PARAMS.forEach(pm=>r[pm.key]=null);p.records.push(r);p.records.sort((a,b)=>new Date(a.date)-new Date(b.date));}
   save();renderWqGrid();if(document.getElementById('ep-pond').value===pid)renderWQTable();
 }
-function saveWqGrid(){
+function wqOddAsk(list){
+  document.getElementById('wqo-bg')?.remove();
+  const bg=document.createElement('div');bg.id='wqo-bg';bg.className='wqc-bg';
+  bg.onclick=e=>{if(e.target===bg)bg.remove();};
+  bg.innerHTML='<div class="wqc-sh" role="dialog" aria-label="ค่าแปลก"><div class="wqc-t">⚠️ ค่าแปลก '+list.length+' ช่อง</div>'
+    +'<div class="wqo-ask">'+list.map(x=>'<div><span>'+mpEsc(x.n)+' · '+mpEsc(wqOddLbl(x.k))+'</span><b>'+mpEsc(String(x.v))+'</b></div>').join('')+'</div>'
+    +'<div class="wqc-btns"><button type="button" class="btn btn-s" onclick="document.getElementById(\'wqo-bg\').remove()">กลับไปแก้</button>'
+    +'<button type="button" class="btn btn-p" onclick="document.getElementById(\'wqo-bg\').remove();saveWqGrid(true)">บันทึกเลย</button></div></div>';
+  document.body.appendChild(bg);
+}
+function saveWqGrid(force){
   const d=wqgDate(),ids=Object.keys(_wqDraft);if(!ids.length)return;
+  if(force!==true){
+    const odd=[];
+    ids.forEach(pid=>{const p=pond(pid);if(!p)return;const dr=_wqDraft[pid];
+      Object.keys(dr).forEach(k=>{const s=String(dr[k]).trim().replace(',','.');if(s==='')return;const v=parseFloat(s);if(wqOdd(k,v))odd.push({n:p.name,k,v});});});
+    if(odd.length){wqOddAsk(odd);return;}
+  }
   const bad=[];let n=0;
   ids.forEach(pid=>{
     const p=pond(pid);if(!p)return;const dr=_wqDraft[pid];
@@ -14261,6 +14329,7 @@ document.addEventListener('input',e=>{
   const p=pond(pid),rec=p&&(p.records||[]).find(r=>r.date===_wqDraftDate);
   const sal=wqgSalOf(pid,rec);
   i.className='wqg-in'+wqgCls(k,i.value,rec,sal,pid);
+  if(i.parentElement)i.parentElement.classList.toggle('wqg-oddc',wqOdd(k,parseFloat(String(i.value).replace(',','.'))));
   if(k==='sal'||k==='ca'||k==='mg_')tr.querySelectorAll('.wqg-in[data-k="mg_"],.wqg-in[data-k="ca"]').forEach(x=>{x.className='wqg-in'+wqgCls(x.dataset.k,x.value,rec,sal,pid);});   // ความเค็ม/Ca/Mg เปลี่ยน → ระบายสีคู่ใหม่ทันที   // ความเค็มเปลี่ยน → Mg/Ca ระบายสีใหม่ทันที
   const ck=tr.querySelector('.wqg-ck');if(ck)ck.innerHTML='<span class="wqg-dirty">●</span>';
   wqgProg();
