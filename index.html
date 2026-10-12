@@ -713,6 +713,27 @@ button,input,select,textarea{font-family:inherit}
 .lb-sect-hdr{font-size:var(--fs11);font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.03em;margin:12px 0 8px;padding-top:8px;border-top:1px solid var(--bd)}
 .lb-sect-hdr:first-child{margin-top:0;padding-top:0;border-top:none}
 .pond-chk{display:flex;align-items:center;gap:6px;padding:5px 12px;border:1.5px solid var(--bd);border-radius:20px;cursor:pointer;font-size:calc(13px * var(--ui-scale));user-select:none;transition:all .15s}
+.cmp-bt-l{font-weight:700;font-size:calc(13.5px * var(--ui-scale));margin:0 0 5px}
+.cmp-bt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.cmp-bt button{border:1.5px solid var(--bd);border-radius:12px;padding:5px 11px;font-family:inherit;font-weight:700;font-size:calc(13.5px * var(--ui-scale));background:var(--sf);color:var(--tx);cursor:pointer;text-align:left}
+.cmp-bt button small{display:block;font-weight:500;font-size:calc(12px * var(--ui-scale))}
+.cmp-bt button.on{background:var(--pl);border-color:var(--p);color:#7A5403}
+.cmp-dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex:none}
+.pond-chk.on .cmp-dot{box-shadow:0 0 0 2px #fff}
+.cmp-sd{font-weight:500;font-size:calc(12.5px * var(--ui-scale));color:var(--tx)}
+.cmp-sort{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0 8px}
+.cmp-sort button{border:1.5px solid var(--bd);border-radius:99px;padding:2px 11px;font-family:inherit;font-weight:600;font-size:calc(12.5px * var(--ui-scale));background:var(--sf);color:var(--tx);cursor:pointer}
+.cmp-sort button.on{background:var(--tx);color:#fff;border-color:var(--tx)}
+table.cmp-sum{width:100%;border-collapse:collapse;font-size:calc(13px * var(--ui-scale));font-variant-numeric:tabular-nums}
+table.cmp-sum th{font-size:calc(12px * var(--ui-scale));font-weight:600;text-align:right;padding:4px 4px;border-bottom:2px solid var(--bd);color:var(--tx)}
+table.cmp-sum td{padding:7px 4px;border-bottom:1px solid var(--sf2);text-align:right;color:var(--tx)}
+table.cmp-sum th:first-child,table.cmp-sum td:first-child{text-align:left}
+table.cmp-sum .nm{font-weight:700;font-size:calc(14px * var(--ui-scale));display:flex;align-items:center;gap:5px}
+table.cmp-sum .hn{font-size:calc(11.5px * var(--ui-scale))}
+table.cmp-sum b.best{color:var(--ok)}
+.cmp-no{font-size:calc(12.5px * var(--ui-scale));margin-top:6px}
+.cmp-hlg{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:calc(13px * var(--ui-scale));margin-top:8px}
+.cmp-hlg span{display:inline-flex;align-items:center;gap:5px}
 .pond-chk input{display:none}.pond-chk.on{background:var(--p);color:#fff;border-color:var(--p)}
 .pond-chk.wq-done{background:var(--ob);border-color:#bfe3cc;color:var(--ok)}
 .pond-chk.wq-done.on{background:var(--p);border-color:var(--p);color:#fff}
@@ -3541,14 +3562,16 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       <button class="cmp-cat-btn" id="cmp-cat-lab" onclick="setCmpCat('lab',this)">🔬 แล็บ</button>
       <button class="cmp-cat-btn" id="cmp-cat-water" onclick="setCmpCat('water',this)">💦 น้ำ</button>
     </div>
-    <div id="cmp-sel" style="display:none;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
+    <div id="cmp-batch"></div>
+<div id="cmp-sel" style="display:none;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
     <div id="cmp-param-row" style="display:none" class="fg" style="max-width:250px"><label class="fl" for="cmp-param">พารามิเตอร์</label><select class="fi" id="cmp-param" onchange="renderCompare()"></select></div>
     <div id="cmp-feed-row" class="fg" style="max-width:280px;display:none"><label class="fl" for="cmp-feed-param">ชนิดข้อมูล</label><select class="fi" id="cmp-feed-param" onchange="renderCompare()"><option value="per100k">การกิน (กก./แสน)</option><option value="daily">อาหารต่อวัน (กก.)</option><option value="cumulative">อาหารสะสม (กก.)</option></select></div>
     <div id="cmp-lab-row" class="fg" style="max-width:280px;display:none"><label class="fl" for="cmp-lab-param">ผลตรวจ</label><select class="fi" id="cmp-lab-param" onchange="renderCompare()"><option value="tcbsGreen">🟢 เชื้อเขียว - น้ำ (CFU/mL)</option><option value="tcbsYellow">🟡 เชื้อเหลือง - น้ำ (CFU/mL)</option><option value="hepatoGreen">🟢 เชื้อเขียว - ตับ (CFU/g)</option><option value="hepatoYellow">🟡 เชื้อเหลือง - ตับ (CFU/g)</option><option value="tvc">TVC - น้ำ (CFU/mL)</option><option value="tvcHepato">TVC - ตับ (CFU/g)</option></select></div>
     <div id="cmp-water-row" class="fg" style="max-width:280px;display:none"><label class="fl" for="cmp-water-param">ชนิดกิจกรรม</label><select class="fi" id="cmp-water-param" onchange="renderCompare()"><option value="all">ทุกกิจกรรม</option><option value="exchange">เปลี่ยนถ่ายน้ำ</option><option value="add">เติมน้ำ</option><option value="drain">ระบายน้ำ</option></select></div>
   </div>
 
-  <!-- WQ Heatmap (default shown, hidden for other cats) -->
+  <div class="card" id="cmp-sum-card" style="display:none;margin-bottom:12px"></div>
+<!-- WQ Heatmap (default shown, hidden for other cats) -->
   <div id="cmp-wq-heatmap">
     <!-- Date nav -->
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
@@ -17439,7 +17462,7 @@ function setCmpCat(cat,btn){
   const isWq=cat==='wq';
   const hmEl=document.getElementById('cmp-wq-heatmap');if(hmEl)hmEl.style.display=isWq?'':'none';
   const chEl=document.getElementById('cmp-chart-card');if(chEl)chEl.style.display=!isWq?'':'none';
-  const selEl=document.getElementById('cmp-sel');if(selEl)selEl.style.display=isWq?'none':'flex';
+  const selEl=document.getElementById('cmp-sel');if(selEl)selEl.style.display='flex';   // รุ่นลง/เลือกบ่อใช้ได้ทุกหมวด รวมตารางค่าน้ำ (#404)
   renderCompare();
 }
 function initCompare(){
@@ -17450,9 +17473,9 @@ function initCompare(){
   cmpP.forEach(id=>{if(!cmpPonds.some(p=>p.id===id))cmpP.delete(id);});   // ล้างบ่อที่เคยเลือกไว้แล้วตอนนี้ไม่มีกุ้งแล้ว กันกราฟค้างข้อมูลบ่อที่หายไปจากลิสต์
   if(selEl){
     selEl.innerHTML=cmpPonds.length
-      ?cmpPonds.map(p=>`<span class="pond-chk${cmpP.has(p.id)?' on':''}" onclick="tglCmp('${p.id}',this)"><input type="checkbox"${cmpP.has(p.id)?' checked':''}>บ่อ ${p.name}</span>`).join('')
+      ?cmpPonds.map(p=>`<span class="pond-chk${cmpP.has(p.id)?' on':''}" onclick="tglCmp('${p.id}',this)"><input type="checkbox"${cmpP.has(p.id)?' checked':''}><i class="cmp-dot" style="background:${cmpStyle(p,cmpPonds).col}"></i>บ่อ ${p.name}</span>`).join('')
       :'<span style="font-size:calc(13px * var(--ui-scale));color:var(--tx3);font-style:italic">ยังไม่มีบ่อที่กำลังเลี้ยงอยู่</span>';
-    selEl.style.display=cmpCat==='wq'?'none':'flex';
+    selEl.style.display='flex';
   }
   const pmEl=document.getElementById('cmp-param');if(pmEl)pmEl.innerHTML=PARAMS.map(p=>`<option value="${p.key}">${p.lbl}</option>`).join('');
   const isWq=cmpCat==='wq';
@@ -17461,12 +17484,91 @@ function initCompare(){
   renderCompare();
 }
 function tglCmp(id,el){cmpP.has(id)?cmpP.delete(id):cmpP.add(id);el.classList.toggle('on');renderCompare()}
+// ══════ หน้าเปรียบเทียบ (entry #404 พี่สั่ง 12 ต.ค. 69 · mockup_เปรียบเทียบรุ่น.html) ══════
+//  ① รุ่นลง = บ่อที่ลงห่างจากบ่อก่อนหน้า ≤ 3 วัน (ไล่ต่อกัน) · แตะครั้งเดียวเลือกทั้งรุ่น
+//  ② ตารางสรุปเทียบจากผลสุ่มล่าสุด — ไม่ใส่ FCR เพราะระหว่างเลี้ยงทุกบ่อได้เท่าเกณฑ์ (อัตรารอดคิดจากอาหาร #402)
+//  ③ สีเส้นตามโรงเพาะฟัก · บ่อที่ 2 ของโรงเดียวกัน = เส้นประ
+const CMP_BATCH_GAP=3;
+const CMP_HCOL=['#EA580C','#2563EB','#16A34A','#9333EA','#DB2777','#0891B2','#CA8A04','#64748B'];
+const CMP_DASH=[[],[6,4],[2,3],[10,3,2,3]];
+function cmpHName(p){return String((p&&p.hatchery)||'').trim().replace(/^CP\s*/i,'')||'ไม่ระบุ';}
+function cmpHatchOrder(){const c={};wqfeedActivePonds().forEach(p=>{const k=cmpHName(p);c[k]=(c[k]||0)+1;});return Object.keys(c).sort((a,b)=>c[b]-c[a]||a.localeCompare(b,'th'));}
+function cmpStyle(p,list){
+  const ord=cmpHatchOrder(),k=cmpHName(p);
+  const col=CMP_HCOL[Math.max(0,ord.indexOf(k))%CMP_HCOL.length];
+  const same=(list||[p]).filter(x=>cmpHName(x)===k),i=Math.max(0,same.indexOf(p));
+  return{col,dash:CMP_DASH[i%CMP_DASH.length]};
+}
+// สีเส้น + เรียงจุดตามอายุ (อาเรย์จาก Firebase ไม่การันตีลำดับ — เส้นจะซิกแซก) · datasets[i] ↔ getSelPonds()[i]
+function cmpApplyStyle(ds){
+  const ps=getSelPonds();
+  ps.forEach((p,i)=>{const d=ds[i];if(!d)return;const st=cmpStyle(p,ps);d.borderColor=st.col;d.backgroundColor=st.col;d.borderDash=st.dash;d.borderWidth=2.5;if(Array.isArray(d.data))d.data.sort((a,b)=>a.x-b.x);});
+}
+function cmpHatchLegend(){
+  const ex=document.getElementById('cmp-extra');if(!ex)return;
+  const ps=getSelPonds(),ord=cmpHatchOrder(),G={};
+  ps.forEach(p=>{const k=cmpHName(p);(G[k]=G[k]||[]).push(p);});
+  const ks=Object.keys(G).sort((a,b)=>ord.indexOf(a)-ord.indexOf(b));
+  ex.innerHTML=ks.length?'<div class="cmp-hlg">'+ks.map(k=>'<span><i class="cmp-dot" style="background:'+cmpStyle(G[k][0],ps).col+'"></i>'+mpEsc(k)+' · '+G[k].map(p=>mpEsc(p.name)).join(' ')+'</span>').join('')
+    +'<span>บ่อที่ 2 ของโรงเดียวกัน = เส้นประ</span></div>':'';
+}
+function cmpBatches(){
+  const L=wqfeedActivePonds().filter(p=>p.startDate).slice().sort((a,b)=>a.startDate.localeCompare(b.startDate));
+  const G=[];
+  L.forEach(p=>{const g=G[G.length-1];if(g&&dDiff(g[g.length-1].startDate,p.startDate)<=CMP_BATCH_GAP)g.push(p);else G.push([p]);});
+  return G.filter(g=>g.length>=2);
+}
+function cmpBatchLbl(g){
+  const a=g[0].startDate,b=g[g.length-1].startDate;
+  const m=d=>new Date(d+'T00:00:00').toLocaleDateString('th-TH',{month:'short'}),dd=d=>+d.slice(8,10);
+  if(a===b)return dd(a)+' '+m(a);
+  return a.slice(0,7)===b.slice(0,7)?dd(a)+'–'+dd(b)+' '+m(a):dd(a)+' '+m(a)+'–'+dd(b)+' '+m(b);
+}
+function renderCmpBatch(){
+  const el=document.getElementById('cmp-batch');if(!el)return;
+  const G=cmpBatches();
+  if(!G.length){el.innerHTML='';return;}
+  const cur=[...cmpP].sort().join(',');
+  el.innerHTML='<div class="cmp-bt-l">รุ่นลง</div><div class="cmp-bt">'
+    +G.map((g,i)=>'<button type="button" class="'+(g.map(p=>p.id).sort().join(',')===cur?'on':'')+'" onclick="cmpPickBatch('+i+')">'+cmpBatchLbl(g)+'<small>'+g.length+' บ่อ</small></button>').join('')
+    +'<button type="button" class="'+(cmpP.size?'':'on')+'" onclick="cmpPickBatch(-1)">ทุกบ่อ<small>'+wqfeedActivePonds().length+' บ่อ</small></button></div>';
+}
+function cmpPickBatch(i){const G=cmpBatches();cmpP=new Set(i<0||!G[i]?[]:G[i].map(p=>p.id));initCompare();}
+let _cmpSort='abw';
+function cmpSetSort(k){_cmpSort=k;renderCmpSum();}
+function renderCmpSum(){
+  const el=document.getElementById('cmp-sum-card');if(!el)return;
+  if(cmpCat==='wq'){el.style.display='none';el.innerHTML='';return;}
+  const ps=getSelPonds();
+  const R=ps.map(p=>{
+    const s=sortedSamples(p),l=s[s.length-1],pv=s[s.length-2],sc=pondShrimpCount(p);
+    const g=l&&pv&&l.abw&&pv.abw&&l.date&&pv.date?(l.abw-pv.abw)/Math.max(1,dDiff(pv.date,l.date)):null;
+    return{p,l,age:l?(recAge(p,l)??l.age):null,abw:l&&l.abw?+l.abw:null,pdg:g,surv:l&&l.survivalRate!=null&&l.survivalRate!==''?+l.survivalRate:null,yr:sc&&p.size>0?sc.biomass/p.size:null};
+  });
+  const has=R.filter(r=>r.abw!=null),no=R.filter(r=>r.abw==null);
+  if(!has.length){el.style.display='none';el.innerHTML='';return;}
+  const K={abw:'ABW',pdg:'โต/วัน',surv:'รอด',yr:'กก./ไร่'};
+  has.sort((a,b)=>(b[_cmpSort]??-1e9)-(a[_cmpSort]??-1e9));
+  const best={};Object.keys(K).forEach(k=>{const v=has.map(r=>r[k]).filter(x=>x!=null);best[k]=v.length>1?Math.max(...v):null;});
+  const dates=[...new Set(has.map(r=>r.l.date))];
+  const cell=(r,k,txt)=>'<td>'+(r[k]==null?'-':(best[k]!=null&&r[k]===best[k]?'<b class="best">'+txt+'</b>':txt))+'</td>';
+  const q=String.fromCharCode(39);
+  el.style.display='';
+  el.innerHTML='<div class="card-t" style="justify-content:space-between"><span>📊 สรุปเทียบ</span><small class="cmp-sd">'+(dates.length===1?'สุ่ม '+fD(dates[0]):'ผลสุ่มล่าสุด')+'</small></div>'
+    +'<div class="cmp-sort">'+Object.entries(K).map(([k,l])=>'<button type="button" class="'+(k===_cmpSort?'on':'')+'" onclick="cmpSetSort('+q+k+q+')">'+l+'</button>').join('')+'</div>'
+    +'<div style="overflow-x:auto"><table class="cmp-sum"><thead><tr><th>บ่อ</th><th>อายุ</th><th>ABW ก.</th><th>โต/วัน</th><th>รอด %</th><th>กก./ไร่</th></tr></thead><tbody>'
+    +has.map(r=>'<tr><td><span class="nm"><i class="cmp-dot" style="background:'+cmpStyle(r.p,ps).col+'"></i>'+mpEsc(r.p.name)+'</span><span class="hn">'+mpEsc(cmpHName(r.p))+'</span></td><td>'+(r.age??'-')+'</td>'
+      +cell(r,'abw',r.abw!=null?r.abw.toFixed(2):'')+cell(r,'pdg',r.pdg!=null?r.pdg.toFixed(2):'')+cell(r,'surv',r.surv!=null?String(Math.round(r.surv)):'')+cell(r,'yr',r.yr!=null?Math.round(r.yr).toLocaleString():'')+'</tr>').join('')
+    +'</tbody></table></div>'
+    +(no.length?'<div class="cmp-no">ยังไม่สุ่ม: '+no.map(r=>mpEsc(r.p.name)).join(' · ')+'</div>':'');
+}
 function renderCompare(){
   {const ex=document.getElementById('cmp-extra');if(ex)ex.innerHTML='';}
+  renderCmpBatch();renderCmpSum();
   if(cmpCat==='wq')return renderWQHeatmap();
-  if(cmpCat==='feed')return renderCmpFeed();
-  if(cmpCat==='size')return renderCmpSize();
-  if(cmpCat==='lab')return renderCmpLab();
+  if(cmpCat==='feed'){renderCmpFeed();return cmpHatchLegend();}
+  if(cmpCat==='size'){renderCmpSize();return cmpHatchLegend();}
+  if(cmpCat==='lab'){renderCmpLab();return cmpHatchLegend();}
   if(cmpCat==='water')return renderCmpWater();
 }
 // ── ไม่ได้ติ๊กเลย = แสดงทุกบ่อที่มีกุ้งอยู่ตอนนี้ (ไม่ใช่ทุกบ่อใน D.ponds ที่รวมบ่อว่าง/ปิดแล้วซึ่งไม่มีข้อมูลให้เทียบ) ──
@@ -17486,6 +17588,7 @@ function renderCmpWQ(){
     if(pm.min!=null)datasets.push({label:`เกณฑ์ต่ำสุด (${pm.min})`,data:[{x:xMin,y:pm.min},{x:xMax,y:pm.min}],borderColor:'#94a3b8',borderDash:[6,4],pointRadius:0,borderWidth:1.5,fill:false});
     if(pm.max!=null)datasets.push({label:`เกณฑ์สูงสุด (${pm.max})`,data:[{x:xMin,y:pm.max},{x:xMax,y:pm.max}],borderColor:'#94a3b8',borderDash:[6,4],pointRadius:0,borderWidth:1.5,fill:false});
   }
+  cmpApplyStyle(datasets);
   cmpCh=new Chart(document.getElementById('cmpChart'),{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,scales:{x:{type:'linear',title:{display:true,text:'อายุ (วัน)'}},y:{title:{display:true,text:pm.lbl+(pm.unit?' ('+pm.unit+')':'')}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:12}}}}});
 }
 // ── เพิ่ม: ปุ่ม export หน้าเปรียบเทียบ — CSV (ข้อมูลดิบของกราฟปัจจุบัน) และ PNG (รูปกราฟ) ──
@@ -17528,20 +17631,23 @@ function renderCmpFeed(){
     return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'33',tension:.3,pointRadius:3,fill:false};
   });
   document.getElementById('cmp-title').textContent=`เปรียบเทียบ${lblMap[metric]} ระหว่างบ่อ`;
+  cmpApplyStyle(datasets);
   cmpCh=new Chart(document.getElementById('cmpChart'),{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,scales:{x:{type:'linear',title:{display:true,text:'อายุ (วัน)'}},y:{title:{display:true,text:lblMap[metric]}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:12}}}}});
 }
 function renderCmpSize(){
   if(cmpCh){cmpCh.destroy();cmpCh=null;}
-  const datasets=getSelPonds().map((p,i)=>{const col=COLORS[i%COLORS.length];const pts=(p.samples||[]).filter(r=>r.plCount&&r.age!=null).map(r=>({x:r.age,y:r.plCount}));return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'33',tension:.3,pointRadius:4,fill:false};});
+  const datasets=getSelPonds().map((p,i)=>{const col=COLORS[i%COLORS.length];const pts=(p.samples||[]).filter(r=>r.plCount&&(recAge(p,r)??r.age)!=null).map(r=>({x:recAge(p,r)??r.age,y:r.plCount}));return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'33',tension:.3,pointRadius:4,fill:false};});
   document.getElementById('cmp-title').textContent='เปรียบเทียบไซส์ (ตัว/กก.) ระหว่างบ่อ';
+  cmpApplyStyle(datasets);
   cmpCh=new Chart(document.getElementById('cmpChart'),{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,scales:{x:{type:'linear',title:{display:true,text:'อายุ (วัน)'}},y:{title:{display:true,text:'ตัว/กก.'},reverse:true}},plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:12}}}}});
 }
 function renderCmpLab(){
   const metric=document.getElementById('cmp-lab-param')?.value||'tcbsGreen';
   if(cmpCh){cmpCh.destroy();cmpCh=null;}
   const labLbls={tcbsGreen:'🟢 เชื้อเขียว - น้ำ (CFU/mL)',tcbsYellow:'🟡 เชื้อเหลือง - น้ำ (CFU/mL)',hepatoGreen:'🟢 เชื้อเขียว - ตับ (CFU/g)',hepatoYellow:'🟡 เชื้อเหลือง - ตับ (CFU/g)',tvc:'TVC - น้ำ (CFU/mL)',tvcHepato:'TVC - ตับ (CFU/g)'};
-  const datasets=getSelPonds().map((p,i)=>{const col=COLORS[i%COLORS.length];const pts=(p.labResults||[]).filter(r=>r[metric]!=null&&r.age!=null).map(r=>({x:r.age,y:r[metric]}));return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'33',tension:.3,pointRadius:4,fill:false};});
+  const datasets=getSelPonds().map((p,i)=>{const col=COLORS[i%COLORS.length];const pts=(p.labResults||[]).filter(r=>r[metric]!=null&&(recAge(p,r)??r.age)!=null).map(r=>({x:recAge(p,r)??r.age,y:r[metric]}));return{label:`บ่อ ${p.name}`,data:pts,borderColor:col,backgroundColor:col+'33',tension:.3,pointRadius:4,fill:false};});
   document.getElementById('cmp-title').textContent=`เปรียบเทียบ ${labLbls[metric]||metric} ระหว่างบ่อ`;
+  cmpApplyStyle(datasets);
   cmpCh=new Chart(document.getElementById('cmpChart'),{type:'line',data:{datasets},options:{responsive:true,maintainAspectRatio:false,parsing:false,scales:{x:{type:'linear',title:{display:true,text:'อายุ (วัน)'}},y:{title:{display:true,text:labLbls[metric]||metric}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:12}}}}});
 }
 // ── 💦 การจัดการน้ำ (entry #392 พี่สั่ง 8 ต.ค. 69) — เดิมกราฟแท่ง "ปริมาณ (ซม.)" จาก r.vol แต่ตั้งแต่ฟอร์มเติมน้ำ #308 ไม่มีปริมาณ → ว่างทุกบ่อ
@@ -21057,7 +21163,7 @@ function renderWQHeatmap(){
   }).join('');
 
   // Collect pond data for selected date
-  const activePonds=sortPondsByAge(sortedPonds().filter(p=>p.startDate&&!p.closed));
+  const activePonds=sortPondsByAge(sortedPonds().filter(p=>p.startDate&&!p.closed&&(!cmpP.size||cmpP.has(p.id))));   // เลือกรุ่น/บ่อแล้วกรองตาม (#404)
   const rows=activePonds.map(p=>{
     const recs=(p.records||[]).sort((a,b)=>a.date.localeCompare(b.date));
     const rec=recs.find(r=>r.date===date)||null;
