@@ -21451,9 +21451,9 @@ function renderPLLive(yr){
   const box='<div class="crx-sum plx-live"><div class="t">🦐 กำลังเลี้ยง '+R.length+' บ่อ <small>ถ้าจับวันนี้</small></div><div class="g">'
     +'<div><b>'+M(cost)+'</b><span>ล้าน ทุนจ่ายแล้ว</span></div>'
     +'<div><b>'+M(ph)+'</b><span>ล้าน ขายพาเชียลแล้ว</span></div>'
-    +'<div><b>'+M(val)+'</b><span>ล้าน กุ้งในบ่อ '+Math.round(kg/1000)+' ตัน</span></div>'
+    +'<div><b>'+M(val)+'</b><span>ล้าน กุ้งในบ่อ '+(sum(R,'bio')/1000).toFixed(1)+' ตัน</span></div>'
     +'<div class="'+(profit<0?'neg':'pos')+'"><b>'+S(profit)+'</b><span>ล้าน กำไรถ้าจับวันนี้</span></div></div>'
-    +(na?'<div class="plx-warn">⚠️ ยังตีราคาไม่ได้ '+na+' บ่อ'+(noPrice.length?' ('+noPrice.map(r=>mpEsc(r.p.name)+' '+Math.round(r.bio/1000)+' ตัน').join(' · ')+')':'')+' · ทุนนับแล้ว</div>':'')
+    +(na?'<div class="plx-warn">⚠️ ยังตีราคาไม่ได้ '+na+' บ่อ'+(noPrice.length?' ('+noPrice.map(r=>mpEsc(r.p.name)+' '+T(r.bio)+' ตัน').join(' · ')+')':'')+' · ทุนนับแล้ว</div>':'')
     +'<button class="plx-ltog" aria-expanded="'+_plLiveOpen+'" onclick="plLiveToggle()">'+(_plLiveOpen?'▴ ซ่อนรายบ่อ':'▸ ดูรายบ่อ')+'</button></div>';
   if(!_plLiveOpen){el.innerHTML=box;return;}
   const go=r=>' onclick="openPondDetail('+q+mpEsc(r.p.id)+q+')"';
