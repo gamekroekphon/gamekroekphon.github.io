@@ -6890,6 +6890,14 @@ function getPDG(samples){
   const days=dDiff(a.date,b.date);   // คิดจากวันที่ ไม่ใช้ b.age-a.age — สุ่มเก่า/ใหม่เก็บอายุคนละฐาน ผลต่างจะเพี้ยน 1 วัน
   if(days<=0||!a.abw||!b.abw)return null;return((b.abw-a.abw)/days).toFixed(2);
 }
+// PDG ของสุ่มครั้ง r = เทียบกับครั้งก่อนหน้า (ตามวันที่) — คิดสดทุกครั้ง ไม่อ่าน r.pdg ที่เก็บไว้
+// เพราะ saveSample เดิมส่งสุ่มใหม่เข้า getPDG แบบไม่มีวันที่ → ค่าที่เก็บเลื่อนไป 1 ครั้ง (= PDG ของอาทิตย์ก่อน) (#410)
+function samplePdg(list,r){
+  if(!r||!r.date||!(+r.abw>0))return null;
+  const prev=(list||[]).filter(x=>x&&x.date&&x.date<r.date&&+x.abw>0).sort((a,b)=>b.date.localeCompare(a.date))[0];
+  if(!prev)return null;const d=dDiff(prev.date,r.date);if(!(d>0))return null;
+  return Math.round((r.abw-prev.abw)/d*100)/100;
+}
 function secchiSt(cm){
   if(!cm)return{s:'na',lbl:'-'};
   if(cm<20)return{s:'danger',lbl:'น้ำข้นมาก'};if(cm<30)return{s:'warn',lbl:'ค่อนข้างข้น'};
@@ -16735,12 +16743,12 @@ function saveSample(){
   rows.forEach(x=>{
     const p=x.p,v=spVals(p,d),c=spCalc(p,v,d);
     if(!p.samples)p.samples=[];
-    const pdg=p.samples.length>0?parseFloat(getPDG([].concat(p.samples,[{age:x.age,abw:c.abw}]))):null;
+    const abw=Math.round(c.abw*100)/100,pdg=samplePdg(p.samples,{date:d,abw});
     const rec={id:'sp_'+p.id+'_'+d,date:d,age:x.age,
       sampleCount:c.cnt||null,sampleWeight:c.kg||null,
-      abw:Math.round(c.abw*100)/100,plCount:c.size||null,
+      abw,plCount:c.size||null,
       survivalRate:c.surv||null,biomass:c.bio!=null?Math.round(c.bio):null,
-      pdg:isNaN(pdg)?null:pdg,notes:v.notes||''};
+      pdg,notes:v.notes||''};
     const idx=p.samples.findIndex(r=>r.id===rec.id||r.date===d);
     if(idx>=0)p.samples[idx]=rec; else{p.samples.push(rec);p.samples.sort((a,b)=>new Date(a.date)-new Date(b.date));}
     done.push({p,rec});
@@ -16877,7 +16885,7 @@ function renderSampleTable(reset){
         +'<td>'+(b!=null?Math.round(b).toLocaleString():'-')+'</td>'
         +'<td>'+(sf.feed>0?Math.round(sf.feed).toLocaleString():'-')+'</td>'
         +'<td'+(over?' style="color:var(--d);font-weight:700" title="เกินเกณฑ์ตามอายุ ('+tg+')"':'')+'>'+(sf.fcr!=null?sf.fcr.toFixed(2):'-')+'</td>'
-        +'<td>'+(r.pdg||'-')+'</td><td>'+mpEsc(r.notes||'-')+'</td></tr>';
+        +'<td>'+(()=>{const g=samplePdg(p.samples,r);return g!=null?g.toFixed(2):'-';})()+'</td><td>'+mpEsc(r.notes||'-')+'</td></tr>';
     }).join('')
     +'</tbody></table>'
     +(rows.length<all.length?'<div style="text-align:center;padding:10px"><button class="btn btn-s" onclick="spTableShowAll()">แสดงทั้งหมด '+all.length.toLocaleString()+' รายการ</button></div>':'');
@@ -19800,7 +19808,7 @@ function renderChSampleTable(c){
   const rows=(c.samples||[]).slice().sort((a,b)=>(a.age||0)-(b.age||0));
   if(!rows.length)return '<p style="color:var(--tx3);text-align:center;padding:14px;font-style:italic">ไม่มีข้อมูล</p>';
   return `<table class="tbl"><thead><tr><th>วันที่</th><th>อายุ</th><th>ABW (ก.)</th><th>ไซส์</th><th>อัตรารอด(%)</th><th>Biomass ในบ่อ</th><th>PDG</th><th>หมายเหตุ</th></tr></thead><tbody>${
-    rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.abw||'-'}</td><td>${r.plCount||'-'}</td><td>${r.survivalRate||'-'}</td><td>${(()=>{const b=sampleInPondBiomass(c,r);return b!=null?Math.round(b).toLocaleString():'-';})()}</td><td>${r.pdg||'-'}</td><td>${r.notes||'-'}</td></tr>`).join('')
+    rows.map(r=>`<tr><td>${fD(r.date)}</td><td>${r.age}</td><td>${r.abw||'-'}</td><td>${r.plCount||'-'}</td><td>${r.survivalRate||'-'}</td><td>${(()=>{const b=sampleInPondBiomass(c,r);return b!=null?Math.round(b).toLocaleString():'-';})()}</td><td>${(()=>{const g=samplePdg(c.samples,r);return g!=null?g.toFixed(2):'-';})()}</td><td>${r.notes||'-'}</td></tr>`).join('')
   }</tbody></table>`;
 }
 function renderChWqTable(c){
