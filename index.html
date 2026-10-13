@@ -1869,6 +1869,11 @@ body.owner-mode #mobMenuBody.clerk-search>.owner-g9{display:none!important}
 .tx-bar i.past{background:#CBD5E1}
 .tx-bar b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--d)}
 .tx-dt{font-size:calc(12.5px * var(--ui-scale))}
+.tx-now{background:var(--sf2);border-radius:10px;padding:8px 12px;margin:2px 0 6px;font-size:calc(13.5px * var(--ui-scale));line-height:1.5}
+.tx-alk{background:var(--sf);color:var(--tx);border-radius:10px;padding:8px 10px;margin-top:6px}
+.tx-alk .h{font-weight:800;font-size:calc(13px * var(--ui-scale))}
+.tx-alk .r{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-top:1px solid var(--sf2);font-size:calc(13.5px * var(--ui-scale))}
+.tx-alk .h+.r{border-top:none}.tx-alk .y{color:var(--w);font-weight:700}
 .tx-axis{display:flex;justify-content:space-between;font-size:calc(11px * var(--ui-scale));font-weight:600;padding:2px 0 0}
 .menu-empty{display:none!important}   /* หัวกลุ่มเมนูที่ไม่มีเมนูให้กด (#349) */
 /* ตารางคุณภาพน้ำ (#348) */
@@ -3311,18 +3316,14 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <div class="card-t">📅 พยากรณ์อากาศล่วงหน้า 3 วัน</div>
     <div class="g3" id="tide-forecast"><div style="text-align:center;padding:20px;grid-column:1/-1;color:var(--tx3)">กำลังโหลด...</div></div>
   </div>
-  <div class="g2" style="margin-bottom:16px;align-items:start">
+  <div style="margin-bottom:16px">
     <div class="card">
       <div class="card-t" style="display:flex;justify-content:space-between;align-items:center">
-        <span>🌊 ระดับน้ำตอนนี้</span>
+        <span>🌊 กราฟคลื่นน้ำวันนี้</span>
         <button class="btn btn-p btn-sm" onclick="renderTide()">🔄</button>
       </div>
       <div style="font-size:var(--fs11);color:var(--tx3);margin:-8px 0 12px">📍 เกาะมัตโพน จ.ชุมพร</div>
       <div id="tide-now"><p style="color:var(--tx3);padding:12px 0;text-align:center">กำลังโหลด...</p></div>
-    </div>
-    <div class="card">
-      <div class="card-t">📅 น้ำขึ้นน้ำลง 7 วัน</div>
-      <div id="tide-card"></div>
     </div>
   </div>
 </div>
@@ -7552,6 +7553,22 @@ function updateTabsArrows(){
 // ── ตารางน้ำขึ้นน้ำลงจริงที่พี่ให้ไว้ (มิ.ย.–ธ.ค. 2569, 1 ขึ้น + 1 ลง/วัน) — ใช้แทนค่าประมาณ Harmonic ทุกจุดที่มีข้อมูลจริง
 //    นอกช่วงนี้ (ก่อน 1 มิ.ย. 69 หรือหลัง 31 ธ.ค. 69) ยัง fallback ไปใช้โมเดล Harmonic ด้านล่างเหมือนเดิม ──
 const TIDE_TABLE={"2026-06-01":{"hiT":"23:00","hiV":2.4,"loT":"09:00","loV":0.8},"2026-06-02":{"hiT":"00:00","hiV":2.4,"loT":"10:00","loV":0.8},"2026-06-03":{"hiT":"00:00","hiV":2.4,"loT":"11:00","loV":0.7},"2026-06-04":{"hiT":"01:00","hiV":2.4,"loT":"11:00","loV":0.7},"2026-06-05":{"hiT":"02:00","hiV":2.4,"loT":"11:00","loV":0.8},"2026-06-06":{"hiT":"02:00","hiV":2.3,"loT":"12:00","loV":0.8},"2026-06-07":{"hiT":"03:00","hiV":2.3,"loT":"12:00","loV":0.8},"2026-06-08":{"hiT":"03:00","hiV":2.1,"loT":"13:00","loV":0.9},"2026-06-09":{"hiT":"03:00","hiV":2,"loT":"13:00","loV":1},"2026-06-10":{"hiT":"03:00","hiV":1.9,"loT":"12:00","loV":1},"2026-06-11":{"hiT":"19:00","hiV":1.9,"loT":"09:00","loV":1.1},"2026-06-12":{"hiT":"19:00","hiV":2,"loT":"09:00","loV":0.8},"2026-06-13":{"hiT":"20:00","hiV":2.3,"loT":"08:00","loV":0.8},"2026-06-14":{"hiT":"20:00","hiV":2.5,"loT":"08:00","loV":0.7},"2026-06-15":{"hiT":"20:00","hiV":2.6,"loT":"08:00","loV":0.5},"2026-06-16":{"hiT":"21:00","hiV":2.6,"loT":"09:00","loV":0.4},"2026-06-17":{"hiT":"00:00","hiV":2.6,"loT":"11:00","loV":0.4},"2026-06-18":{"hiT":"01:00","hiV":2.6,"loT":"11:00","loV":0.5},"2026-06-19":{"hiT":"01:00","hiV":2.5,"loT":"12:00","loV":0.6},"2026-06-20":{"hiT":"02:00","hiV":2.4,"loT":"12:00","loV":0.7},"2026-06-21":{"hiT":"03:00","hiV":2.2,"loT":"12:00","loV":0.9},"2026-06-22":{"hiT":"03:00","hiV":2,"loT":"12:00","loV":1},"2026-06-23":{"hiT":"18:00","hiV":1.9,"loT":"10:00","loV":1},"2026-06-24":{"hiT":"17:00","hiV":2,"loT":"08:00","loV":0.9},"2026-06-25":{"hiT":"18:00","hiV":2,"loT":"09:00","loV":0.9},"2026-06-26":{"hiT":"18:00","hiV":2.1,"loT":"08:00","loV":0.8},"2026-06-27":{"hiT":"18:00","hiV":2.2,"loT":"08:00","loV":0.7},"2026-06-28":{"hiT":"18:00","hiV":2.3,"loT":"07:00","loV":0.7},"2026-06-29":{"hiT":"18:00","hiV":2.4,"loT":"08:00","loV":0.6},"2026-06-30":{"hiT":"18:00","hiV":2.4,"loT":"08:00","loV":0.6},"2026-07-01":{"hiT":"23:00","hiV":2.3,"loT":"10:00","loV":0.6},"2026-07-02":{"hiT":"01:00","hiV":2.3,"loT":"10:00","loV":0.6},"2026-07-03":{"hiT":"01:00","hiV":2.3,"loT":"10:00","loV":0.6},"2026-07-04":{"hiT":"01:00","hiV":2.3,"loT":"11:00","loV":0.6},"2026-07-05":{"hiT":"02:00","hiV":2.2,"loT":"11:00","loV":0.7},"2026-07-06":{"hiT":"02:00","hiV":2,"loT":"12:00","loV":0.8},"2026-07-07":{"hiT":"02:00","hiV":1.9,"loT":"12:00","loV":0.9},"2026-07-08":{"hiT":"02:00","hiV":1.7,"loT":"12:00","loV":1},"2026-07-09":{"hiT":"18:00","hiV":1.8,"loT":"09:00","loV":1},"2026-07-10":{"hiT":"17:00","hiV":2,"loT":"08:00","loV":0.9},"2026-07-11":{"hiT":"18:00","hiV":2.2,"loT":"07:00","loV":0.6},"2026-07-12":{"hiT":"18:00","hiV":2.4,"loT":"08:00","loV":0.6},"2026-07-13":{"hiT":"18:00","hiV":2.5,"loT":"07:00","loV":0.5},"2026-07-14":{"hiT":"19:00","hiV":2.5,"loT":"08:00","loV":0.4},"2026-07-15":{"hiT":"20:00","hiV":2.5,"loT":"09:00","loV":0.4},"2026-07-16":{"hiT":"00:00","hiV":2.5,"loT":"10:00","loV":0.5},"2026-07-17":{"hiT":"01:00","hiV":2.4,"loT":"11:00","loV":0.6},"2026-07-18":{"hiT":"01:00","hiV":2.3,"loT":"11:00","loV":0.7},"2026-07-19":{"hiT":"02:00","hiV":2.1,"loT":"10:00","loV":0.8},"2026-07-20":{"hiT":"02:00","hiV":1.9,"loT":"09:00","loV":0.9},"2026-07-21":{"hiT":"02:00","hiV":1.7,"loT":"09:00","loV":0.9},"2026-07-22":{"hiT":"02:00","hiV":1.7,"loT":"09:00","loV":1},"2026-07-23":{"hiT":"18:00","hiV":1.9,"loT":"06:00","loV":0.9},"2026-07-24":{"hiT":"18:00","hiV":2,"loT":"07:00","loV":0.8},"2026-07-25":{"hiT":"20:00","hiV":2.1,"loT":"08:00","loV":0.7},"2026-07-26":{"hiT":"20:00","hiV":2.2,"loT":"08:00","loV":0.7},"2026-07-27":{"hiT":"19:00","hiV":2.2,"loT":"07:00","loV":0.7},"2026-07-28":{"hiT":"19:00","hiV":2.2,"loT":"07:00","loV":0.7},"2026-07-29":{"hiT":"19:00","hiV":2.2,"loT":"08:00","loV":0.7},"2026-07-30":{"hiT":"19:00","hiV":2.2,"loT":"08:00","loV":0.8},"2026-07-31":{"hiT":"01:00","hiV":2.2,"loT":"09:00","loV":0.7},"2026-08-01":{"hiT":"00:00","hiV":2.2,"loT":"10:00","loV":0.8},"2026-08-02":{"hiT":"01:00","hiV":2.1,"loT":"09:00","loV":0.9},"2026-08-03":{"hiT":"01:00","hiV":1.9,"loT":"09:00","loV":1},"2026-08-04":{"hiT":"02:00","hiV":1.7,"loT":"10:00","loV":1.1},"2026-08-05":{"hiT":"17:00","hiV":1.7,"loT":"10:00","loV":1.2},"2026-08-06":{"hiT":"18:00","hiV":2,"loT":"08:00","loV":1.1},"2026-08-07":{"hiT":"18:00","hiV":2.1,"loT":"08:00","loV":1},"2026-08-08":{"hiT":"18:00","hiV":2.2,"loT":"07:00","loV":0.7},"2026-08-09":{"hiT":"19:00","hiV":2.3,"loT":"07:00","loV":0.6},"2026-08-10":{"hiT":"19:00","hiV":2.4,"loT":"07:00","loV":0.5},"2026-08-11":{"hiT":"19:00","hiV":2.4,"loT":"07:00","loV":0.5},"2026-08-12":{"hiT":"19:00","hiV":2.4,"loT":"08:00","loV":0.5},"2026-08-13":{"hiT":"19:00","hiV":2.3,"loT":"08:00","loV":0.6},"2026-08-14":{"hiT":"00:00","hiV":2.3,"loT":"08:00","loV":0.7},"2026-08-15":{"hiT":"00:00","hiV":2.2,"loT":"07:00","loV":0.9},"2026-08-16":{"hiT":"01:00","hiV":2,"loT":"08:00","loV":1},"2026-08-17":{"hiT":"01:00","hiV":1.8,"loT":"08:00","loV":1},"2026-08-18":{"hiT":"14:00","hiV":1.7,"loT":"08:00","loV":1},"2026-08-19":{"hiT":"15:00","hiV":2,"loT":"07:00","loV":0.9},"2026-08-20":{"hiT":"15:00","hiV":2.1,"loT":"06:00","loV":0.8},"2026-08-21":{"hiT":"16:00","hiV":2.1,"loT":"06:00","loV":0.8},"2026-08-22":{"hiT":"16:00","hiV":2.2,"loT":"06:00","loV":0.7},"2026-08-23":{"hiT":"17:00","hiV":2.2,"loT":"06:00","loV":0.8},"2026-08-24":{"hiT":"17:00","hiV":2.2,"loT":"06:00","loV":0.8},"2026-08-25":{"hiT":"19:00","hiV":2.2,"loT":"07:00","loV":0.8},"2026-08-26":{"hiT":"18:00","hiV":2.2,"loT":"07:00","loV":0.8},"2026-08-27":{"hiT":"19:00","hiV":2.1,"loT":"07:00","loV":0.8},"2026-08-28":{"hiT":"00:00","hiV":2.1,"loT":"08:00","loV":0.9},"2026-08-29":{"hiT":"01:00","hiV":2,"loT":"08:00","loV":1},"2026-08-30":{"hiT":"01:00","hiV":1.9,"loT":"08:00","loV":1.1},"2026-08-31":{"hiT":"01:00","hiV":1.8,"loT":"08:00","loV":1.1},"2026-09-01":{"hiT":"13:00","hiV":1.7,"loT":"07:00","loV":1.2},"2026-09-02":{"hiT":"14:00","hiV":2,"loT":"07:00","loV":1.2},"2026-09-03":{"hiT":"15:00","hiV":2.1,"loT":"07:00","loV":1},"2026-09-04":{"hiT":"15:00","hiV":2.3,"loT":"05:00","loV":0.9},"2026-09-05":{"hiT":"15:00","hiV":2.4,"loT":"05:00","loV":0.8},"2026-09-06":{"hiT":"16:00","hiV":2.4,"loT":"06:00","loV":0.7},"2026-09-07":{"hiT":"16:00","hiV":2.4,"loT":"06:00","loV":0.7},"2026-09-08":{"hiT":"17:00","hiV":2.3,"loT":"06:00","loV":0.7},"2026-09-09":{"hiT":"20:00","hiV":2.3,"loT":"06:00","loV":0.8},"2026-09-10":{"hiT":"20:00","hiV":2.2,"loT":"07:00","loV":0.9},"2026-09-11":{"hiT":"00:00","hiV":2.1,"loT":"07:00","loV":1},"2026-09-12":{"hiT":"00:00","hiV":2,"loT":"07:00","loV":1.1},"2026-09-13":{"hiT":"01:00","hiV":1.8,"loT":"07:00","loV":1.2},"2026-09-14":{"hiT":"13:00","hiV":1.8,"loT":"07:00","loV":1.3},"2026-09-15":{"hiT":"14:00","hiV":2,"loT":"07:00","loV":1.2},"2026-09-16":{"hiT":"13:00","hiV":2.2,"loT":"06:00","loV":1.1},"2026-09-17":{"hiT":"14:00","hiV":2.2,"loT":"05:00","loV":1.1},"2026-09-18":{"hiT":"13:00","hiV":2.3,"loT":"04:00","loV":1.1},"2026-09-19":{"hiT":"14:00","hiV":2.3,"loT":"04:00","loV":1},"2026-09-20":{"hiT":"13:00","hiV":2.2,"loT":"05:00","loV":0.9},"2026-09-21":{"hiT":"15:00","hiV":2.2,"loT":"05:00","loV":1},"2026-09-22":{"hiT":"16:00","hiV":2.2,"loT":"05:00","loV":1.1},"2026-09-23":{"hiT":"17:00","hiV":2.1,"loT":"06:00","loV":1},"2026-09-24":{"hiT":"18:00","hiV":2.1,"loT":"06:00","loV":1},"2026-09-25":{"hiT":"21:00","hiV":2,"loT":"06:00","loV":1.1},"2026-09-26":{"hiT":"00:00","hiV":1.9,"loT":"06:00","loV":1.2},"2026-09-27":{"hiT":"20:00","hiV":1.8,"loT":"06:00","loV":1.1},"2026-09-28":{"hiT":"12:00","hiV":1.9,"loT":"20:00","loV":1.3},"2026-09-29":{"hiT":"11:00","hiV":2.1,"loT":"20:00","loV":1.2},"2026-09-30":{"hiT":"12:00","hiV":2.3,"loT":"20:00","loV":1.2},"2026-10-01":{"hiT":"13:00","hiV":2.5,"loT":"01:00","loV":1.2},"2026-10-02":{"hiT":"13:00","hiV":2.6,"loT":"01:00","loV":1.1},"2026-10-03":{"hiT":"13:00","hiV":2.6,"loT":"02:00","loV":1},"2026-10-04":{"hiT":"13:00","hiV":2.6,"loT":"03:00","loV":0.9},"2026-10-05":{"hiT":"14:00","hiV":2.6,"loT":"03:00","loV":0.9},"2026-10-06":{"hiT":"14:00","hiV":2.5,"loT":"04:00","loV":1},"2026-10-07":{"hiT":"14:00","hiV":2.5,"loT":"04:00","loV":1},"2026-10-08":{"hiT":"14:00","hiV":2.4,"loT":"05:00","loV":1},"2026-10-09":{"hiT":"21:00","hiV":1.9,"loT":"05:00","loV":1.3},"2026-10-10":{"hiT":"10:00","hiV":1.9,"loT":"04:00","loV":1.4},"2026-10-11":{"hiT":"10:00","hiV":2.1,"loT":"04:00","loV":1.4},"2026-10-12":{"hiT":"10:00","hiV":2.3,"loT":"18:00","loV":1.3},"2026-10-13":{"hiT":"10:00","hiV":2.4,"loT":"19:00","loV":1.2},"2026-10-14":{"hiT":"11:00","hiV":2.5,"loT":"19:00","loV":1.1},"2026-10-15":{"hiT":"10:00","hiV":2.6,"loT":"20:00","loV":1},"2026-10-16":{"hiT":"10:00","hiV":2.6,"loT":"20:00","loV":1.1},"2026-10-17":{"hiT":"12:00","hiV":2.6,"loT":"01:00","loV":1.2},"2026-10-18":{"hiT":"12:00","hiV":2.5,"loT":"02:00","loV":1.2},"2026-10-19":{"hiT":"12:00","hiV":2.5,"loT":"03:00","loV":1.2},"2026-10-20":{"hiT":"13:00","hiV":2.4,"loT":"03:00","loV":1.2},"2026-10-21":{"hiT":"13:00","hiV":2.2,"loT":"03:00","loV":1.3},"2026-10-22":{"hiT":"12:00","hiV":2.1,"loT":"03:00","loV":1.3},"2026-10-23":{"hiT":"13:00","hiV":2,"loT":"04:00","loV":1.4},"2026-10-24":{"hiT":"15:00","hiV":2,"loT":"04:00","loV":1.4},"2026-10-25":{"hiT":"11:00","hiV":2.1,"loT":"18:00","loV":1.5},"2026-10-26":{"hiT":"10:00","hiV":2.3,"loT":"17:00","loV":1.4},"2026-10-27":{"hiT":"10:00","hiV":2.6,"loT":"18:00","loV":1.3},"2026-10-28":{"hiT":"10:00","hiV":2.7,"loT":"19:00","loV":1.2},"2026-10-29":{"hiT":"11:00","hiV":2.7,"loT":"19:00","loV":1.1},"2026-10-30":{"hiT":"10:00","hiV":2.9,"loT":"19:00","loV":1},"2026-10-31":{"hiT":"11:00","hiV":2.9,"loT":"01:00","loV":1},"2026-11-01":{"hiT":"13:00","hiV":2.9,"loT":"02:00","loV":1},"2026-11-02":{"hiT":"13:00","hiV":2.7,"loT":"02:00","loV":1.1},"2026-11-03":{"hiT":"13:00","hiV":2.6,"loT":"03:00","loV":1.2},"2026-11-04":{"hiT":"14:00","hiV":2.4,"loT":"03:00","loV":1.2},"2026-11-05":{"hiT":"14:00","hiV":2.2,"loT":"04:00","loV":1.3},"2026-11-06":{"hiT":"14:00","hiV":2.1,"loT":"04:00","loV":1.4},"2026-11-07":{"hiT":"14:00","hiV":2.1,"loT":"05:00","loV":1.5},"2026-11-08":{"hiT":"14:00","hiV":2,"loT":"05:00","loV":1.5},"2026-11-09":{"hiT":"10:00","hiV":2.6,"loT":"20:00","loV":1.3},"2026-11-10":{"hiT":"11:00","hiV":2.7,"loT":"20:00","loV":1.3},"2026-11-11":{"hiT":"10:00","hiV":2.8,"loT":"19:00","loV":1.3},"2026-11-12":{"hiT":"11:00","hiV":2.8,"loT":"20:00","loV":1.2},"2026-11-13":{"hiT":"11:00","hiV":2.8,"loT":"19:00","loV":1.3},"2026-11-14":{"hiT":"10:00","hiV":2.7,"loT":"19:00","loV":1.3},"2026-11-15":{"hiT":"10:00","hiV":2.5,"loT":"01:00","loV":1.3},"2026-11-16":{"hiT":"11:00","hiV":2.7,"loT":"01:00","loV":1.3},"2026-11-17":{"hiT":"14:00","hiV":2.6,"loT":"02:00","loV":1.3},"2026-11-18":{"hiT":"14:00","hiV":2.5,"loT":"03:00","loV":1.3},"2026-11-19":{"hiT":"14:00","hiV":2.4,"loT":"03:00","loV":1.5},"2026-11-20":{"hiT":"13:00","hiV":2.2,"loT":"02:00","loV":1.6},"2026-11-21":{"hiT":"09:00","hiV":2.2,"loT":"01:00","loV":1.6},"2026-11-22":{"hiT":"08:00","hiV":2.4,"loT":"18:00","loV":1.4},"2026-11-23":{"hiT":"09:00","hiV":2.6,"loT":"19:00","loV":1.3},"2026-11-24":{"hiT":"09:00","hiV":2.8,"loT":"17:00","loV":1.3},"2026-11-25":{"hiT":"10:00","hiV":3,"loT":"22:00","loV":1.1},"2026-11-26":{"hiT":"11:00","hiV":3.1,"loT":"20:00","loV":1.1},"2026-11-27":{"hiT":"11:00","hiV":3.2,"loT":"00:00","loV":1},"2026-11-28":{"hiT":"11:00","hiV":3.2,"loT":"00:00","loV":1},"2026-11-29":{"hiT":"10:00","hiV":3,"loT":"01:00","loV":1.1},"2026-11-30":{"hiT":"11:00","hiV":2.9,"loT":"01:00","loV":1.2},"2026-12-01":{"hiT":"14:00","hiV":2.7,"loT":"01:00","loV":1.3},"2026-12-02":{"hiT":"14:00","hiV":2.5,"loT":"02:00","loV":1.4},"2026-12-03":{"hiT":"14:00","hiV":2.4,"loT":"02:00","loV":1.6},"2026-12-04":{"hiT":"13:00","hiV":2.3,"loT":"00:00","loV":1.6},"2026-12-05":{"hiT":"09:00","hiV":2.5,"loT":"18:00","loV":1.5},"2026-12-06":{"hiT":"08:00","hiV":2.6,"loT":"18:00","loV":1.3},"2026-12-07":{"hiT":"09:00","hiV":2.8,"loT":"18:00","loV":1.3},"2026-12-08":{"hiT":"09:00","hiV":2.9,"loT":"18:00","loV":1.2},"2026-12-09":{"hiT":"10:00","hiV":2.9,"loT":"21:00","loV":1.3},"2026-12-10":{"hiT":"10:00","hiV":3,"loT":"19:00","loV":1.3},"2026-12-11":{"hiT":"11:00","hiV":3,"loT":"20:00","loV":1.3},"2026-12-12":{"hiT":"11:00","hiV":2.9,"loT":"01:00","loV":1.3},"2026-12-13":{"hiT":"11:00","hiV":2.8,"loT":"00:00","loV":1.3},"2026-12-14":{"hiT":"11:00","hiV":2.7,"loT":"01:00","loV":1.4},"2026-12-15":{"hiT":"11:00","hiV":2.5,"loT":"01:00","loV":1.4},"2026-12-16":{"hiT":"12:00","hiV":2.5,"loT":"00:00","loV":1.4},"2026-12-17":{"hiT":"14:00","hiV":2.5,"loT":"01:00","loV":1.5},"2026-12-18":{"hiT":"13:00","hiV":2.4,"loT":"01:00","loV":1.6},"2026-12-19":{"hiT":"08:00","hiV":2.4,"loT":"18:00","loV":1.5},"2026-12-20":{"hiT":"07:00","hiV":2.4,"loT":"17:00","loV":1.5},"2026-12-21":{"hiT":"08:00","hiV":2.8,"loT":"17:00","loV":1.3},"2026-12-22":{"hiT":"08:00","hiV":2.9,"loT":"17:00","loV":1.2},"2026-12-23":{"hiT":"09:00","hiV":3,"loT":"18:00","loV":1.1},"2026-12-24":{"hiT":"09:00","hiV":3.2,"loT":"17:00","loV":1.1},"2026-12-25":{"hiT":"11:00","hiV":3.2,"loT":"20:00","loV":1},"2026-12-26":{"hiT":"11:00","hiV":3.2,"loT":"00:00","loV":1},"2026-12-27":{"hiT":"11:00","hiV":3.1,"loT":"00:00","loV":1},"2026-12-28":{"hiT":"11:00","hiV":2.9,"loT":"01:00","loV":1.1},"2026-12-29":{"hiT":"12:00","hiV":2.8,"loT":"01:00","loV":1.3},"2026-12-30":{"hiT":"12:00","hiV":2.5,"loT":"01:00","loV":1.5},"2026-12-31":{"hiT":"11:00","hiV":2.3,"loT":"01:00","loV":1.6}};
+// ตารางรายชั่วโมงจากหนังสือตารางน้ำกรมอุทกศาสตร์ (หน้า 214–216 · สูง ม. × 10 · 24 ค่า/วัน 00–23 น.) (#413)
+// TIDE_TABLE ข้างบนพิมพ์มือจากรูปเดียวกันแต่คลาด (เวลา ±1–4 ชม. สูง ±0.3 ม.) → วันที่มีรายชั่วโมง ทับ hi/lo ด้วยค่าที่คิดจากรายชั่วโมง
+//   และ _tAt2 ใช้รายชั่วโมงก่อน (ลากเส้นตรงระหว่างชั่วโมง) — เดิมลากโค้งระหว่าง hi/lo วันละคู่ ช่วงสูบน้ำคลาด ~5 ชม.
+const TIDE_HOURLY={"2026-10-01":"12 12 12 12 13 13 14 14 16 18 20 22 24 25 25 24 22 20 18 15 14 12 12 12","2026-10-02":"11 11 11 11 11 12 13 14 15 17 19 22 24 25 26 25 24 22 20 18 16 14 13 12","2026-10-03":"11 11 10 10 10 11 11 13 14 16 18 20 23 25 26 26 26 24 22 20 18 16 15 13","2026-10-04":"12 11 10 10 9 10 10 11 13 15 16 19 21 23 25 26 26 25 24 22 21 19 17 15","2026-10-05":"13 12 11 10 9 9 10 11 12 13 15 17 19 21 23 24 25 25 25 24 22 21 19 17","2026-10-06":"15 13 12 11 10 10 10 11 12 13 14 16 17 19 20 21 23 23 24 24 23 22 20 19","2026-10-07":"17 15 13 12 11 11 11 11 12 13 14 15 16 17 18 19 20 21 22 22 22 22 21 20","2026-10-08":"18 16 15 13 12 12 12 13 14 14 15 16 16 17 17 17 18 18 19 20 21 21 20 20","2026-10-09":"19 17 16 14 13 13 13 14 15 16 17 17 17 17 17 17 16 16 17 17 18 19 19 19","2026-10-10":"18 17 16 15 14 14 14 15 16 18 19 19 19 18 18 17 16 15 15 15 16 16 17 17","2026-10-11":"17 17 16 15 15 14 15 16 18 19 20 21 21 20 19 18 16 15 14 14 14 15 15 15","2026-10-12":"15 15 15 15 15 15 15 16 18 20 22 22 23 22 21 19 17 16 14 13 13 13 14 14","2026-10-13":"14 14 14 15 15 15 15 16 18 20 22 24 24 24 22 21 19 17 15 14 13 13 13 13","2026-10-14":"13 13 14 14 14 15 15 16 18 20 22 24 25 25 24 22 20 18 16 14 13 13 12 12","2026-10-15":"12 13 13 13 14 14 15 16 17 19 21 24 25 26 25 24 22 20 18 16 14 13 13 12","2026-10-16":"12 12 12 13 13 14 14 16 17 19 21 23 25 26 26 25 23 21 19 17 16 14 13 13","2026-10-17":"12 12 12 12 12 13 14 15 16 18 20 22 24 25 26 26 25 23 21 19 17 16 14 13","2026-10-18":"13 12 12 12 12 12 13 14 16 17 19 21 23 24 25 26 25 24 22 21 19 17 16 14","2026-10-19":"13 13 12 12 12 12 13 14 15 16 18 20 21 23 24 25 25 24 23 22 20 19 17 16","2026-10-20":"14 13 13 12 12 12 12 13 15 16 17 19 20 22 23 23 24 24 23 22 21 20 18 17","2026-10-21":"16 14 13 13 12 12 13 14 15 16 17 18 20 21 21 22 22 22 22 22 21 20 19 18","2026-10-22":"16 15 14 13 13 13 13 14 15 16 17 18 19 20 20 20 20 21 21 21 21 20 19 18","2026-10-23":"17 16 15 14 14 14 14 15 16 17 18 19 19 19 19 19 19 19 19 19 19 19 19 18","2026-10-24":"17 16 16 15 15 15 16 17 18 19 19 20 20 19 19 18 17 17 17 17 18 18 18 17","2026-10-25":"17 17 16 16 16 16 17 18 19 20 21 21 21 20 19 18 17 16 15 16 16 16 16 16","2026-10-26":"16 16 16 16 16 17 18 19 21 22 23 23 23 22 20 19 17 15 14 14 14 14 14 15","2026-10-27":"15 15 16 16 16 17 18 20 22 24 25 26 25 24 22 20 18 16 14 13 13 13 13 13","2026-10-28":"13 14 14 15 16 17 18 20 22 24 26 27 27 26 24 22 20 17 15 13 13 12 12 12","2026-10-29":"12 12 13 14 15 16 17 19 21 24 26 28 29 28 27 25 22 19 17 15 13 12 12 11","2026-10-30":"11 11 12 12 13 15 16 18 20 23 25 27 29 29 29 27 25 22 19 17 15 13 12 11","2026-10-31":"11 10 11 11 12 13 15 17 18 21 23 26 28 29 29 28 27 24 22 20 17 15 14 12","2026-11-01":"11 11 10 11 11 12 14 15 17 19 21 24 26 28 29 28 28 26 24 22 19 17 16 14","2026-11-02":"13 12 11 11 11 12 13 14 16 18 20 22 24 26 27 27 27 26 25 23 21 19 17 16","2026-11-03":"14 13 12 12 12 12 13 14 16 17 19 20 22 23 24 25 25 25 25 23 22 20 19 17","2026-11-04":"16 14 14 13 13 14 14 15 16 17 19 20 21 21 22 23 23 23 23 22 21 20 19 18","2026-11-05":"16 15 15 14 15 15 16 17 18 19 19 20 20 20 21 21 21 21 21 21 20 19 19 18","2026-11-06":"17 16 16 15 16 16 17 19 20 20 21 21 21 20 20 19 19 19 18 18 18 18 18 17","2026-11-07":"17 16 16 16 16 17 19 20 21 22 23 23 22 21 20 19 18 17 17 16 16 16 16 16","2026-11-08":"16 16 16 16 17 18 19 21 23 24 25 24 24 22 21 19 17 16 15 15 15 15 15 15","2026-11-09":"15 16 16 16 17 18 19 21 23 25 26 26 25 24 22 20 18 16 15 14 14 14 13 14","2026-11-10":"14 15 15 16 17 18 19 21 23 25 27 27 27 25 23 21 19 17 15 14 13 13 13 13","2026-11-11":"13 14 15 16 17 18 19 21 23 25 27 28 28 27 25 23 20 18 16 14 13 13 13 13","2026-11-12":"13 13 14 15 16 17 19 20 22 24 26 28 28 28 26 24 22 19 17 15 14 13 13 13","2026-11-13":"13 13 14 14 15 17 18 20 21 23 26 27 28 28 27 25 23 21 19 17 15 14 13 13","2026-11-14":"13 13 13 14 15 16 17 19 20 22 24 26 28 28 28 27 25 22 20 18 16 15 14 13","2026-11-15":"13 13 13 13 14 15 16 18 19 21 23 25 27 28 28 27 26 24 22 20 18 16 15 14","2026-11-16":"13 13 13 13 14 15 16 17 19 20 22 24 26 27 27 27 26 25 23 21 19 17 16 15","2026-11-17":"14 13 13 13 14 15 16 17 18 20 21 23 24 25 26 26 26 25 23 21 20 18 17 16","2026-11-18":"15 14 14 14 14 15 16 17 18 20 21 22 23 24 25 25 25 24 23 22 20 19 17 16","2026-11-19":"16 15 15 15 15 16 16 18 19 20 21 22 22 23 23 23 23 23 22 21 20 19 18 17","2026-11-20":"16 16 16 16 16 17 18 19 20 21 21 22 22 22 22 22 21 21 20 20 19 18 17 17","2026-11-21":"16 16 16 17 18 18 19 20 21 22 22 22 22 22 21 20 19 19 18 18 18 17 17 17","2026-11-22":"16 17 17 18 19 20 21 22 23 24 24 24 23 22 20 19 18 17 17 16 16 16 16 16","2026-11-23":"16 16 17 18 19 21 22 24 25 26 26 26 24 23 21 19 17 16 15 15 14 14 14 14","2026-11-24":"15 16 17 18 19 21 23 25 26 28 28 28 27 25 22 20 18 16 15 14 13 13 13 13","2026-11-25":"14 15 16 17 18 20 22 25 27 29 30 30 29 27 25 22 19 17 15 14 13 12 11 11","2026-11-26":"12 13 14 16 17 19 21 24 26 29 30 31 31 29 27 24 22 19 16 14 13 12 11 11","2026-11-27":"11 12 13 14 16 18 20 22 24 27 30 31 32 31 29 27 24 21 18 16 14 13 12 11","2026-11-28":"10 11 11 13 14 16 18 20 22 25 28 30 31 32 31 29 26 24 21 18 16 14 13 12","2026-11-29":"11 11 11 12 13 15 17 18 21 23 25 28 30 31 31 30 28 26 23 20 18 16 14 13","2026-11-30":"12 12 12 12 13 14 16 17 19 21 23 25 27 29 29 29 28 26 24 22 20 18 16 14","2026-12-01":"13 13 13 13 14 15 16 17 19 20 22 24 25 27 27 27 27 25 24 22 20 18 17 16","2026-12-02":"15 14 14 15 15 16 17 18 19 20 21 22 23 24 25 25 25 24 23 21 20 18 17 16","2026-12-03":"16 16 16 16 17 18 19 20 20 21 22 22 23 23 23 23 22 22 21 20 19 18 17 16","2026-12-04":"16 16 17 17 18 20 21 22 22 23 23 23 22 22 22 21 20 20 19 18 17 17 16 16","2026-12-05":"16 16 17 18 19 21 22 23 24 25 25 24 23 22 21 20 19 18 17 16 16 15 15 15","2026-12-06":"16 16 17 18 20 21 23 25 26 26 26 26 24 23 21 20 18 17 16 15 14 14 14 15","2026-12-07":"15 16 17 18 20 21 23 25 27 28 28 27 26 24 22 20 18 16 15 14 14 13 13 14","2026-12-08":"15 16 17 18 19 21 23 25 27 28 29 28 27 25 23 21 18 17 15 14 13 13 13 13","2026-12-09":"14 15 16 18 19 20 22 24 26 28 29 29 28 27 24 22 20 17 16 14 14 13 13 13","2026-12-10":"13 14 16 17 18 20 21 23 25 27 29 30 29 28 26 23 21 19 17 15 14 13 13 13","2026-12-11":"13 14 15 16 17 19 20 22 24 26 28 30 30 29 27 25 22 20 18 16 15 14 13 13","2026-12-12":"13 13 14 15 16 18 19 21 23 25 27 29 30 29 28 26 24 21 19 17 16 14 13 13","2026-12-13":"13 13 14 15 16 17 18 20 22 24 26 28 29 29 29 27 25 23 20 18 16 15 14 13","2026-12-14":"13 13 14 14 15 16 18 19 21 23 25 26 28 29 29 27 26 23 21 19 17 16 15 14","2026-12-15":"14 14 14 15 15 16 17 19 20 22 23 25 27 28 28 27 26 24 22 20 18 16 15 15","2026-12-16":"14 14 15 15 16 17 18 19 20 21 23 24 25 26 26 26 25 23 22 20 18 17 16 15","2026-12-17":"15 15 16 16 17 18 19 19 20 21 22 23 24 24 25 24 24 22 21 20 18 17 16 16","2026-12-18":"16 16 17 18 18 19 20 21 21 22 22 23 23 23 23 23 22 21 20 19 18 17 16 16","2026-12-19":"17 17 18 19 20 21 21 22 23 23 23 23 23 22 22 21 20 19 18 17 16 16 16 16","2026-12-20":"17 18 19 20 22 23 23 24 24 24 24 23 23 22 21 19 19 18 17 16 15 15 15 15","2026-12-21":"16 17 19 20 22 24 25 26 27 27 26 25 24 22 20 19 17 16 15 14 14 13 14 14","2026-12-22":"15 17 18 20 22 24 26 27 28 29 28 27 26 23 21 19 17 16 14 13 12 12 12 13","2026-12-23":"14 16 17 19 21 23 25 28 29 30 30 30 28 26 23 21 18 16 14 13 12 11 11 11","2026-12-24":"12 14 16 18 20 22 24 27 29 31 32 31 30 28 26 23 20 17 15 13 12 11 10 10","2026-12-25":"11 12 14 16 18 20 22 25 27 30 32 32 32 30 28 26 22 20 17 15 13 12 10 10","2026-12-26":"10 11 12 14 16 18 20 22 25 28 30 32 32 32 30 28 25 22 19 17 14 13 11 11","2026-12-27":"10 11 12 13 15 16 18 20 23 25 28 30 31 31 31 29 26 24 21 18 16 14 13 12","2026-12-28":"11 12 12 13 14 16 17 19 21 23 25 28 29 30 30 29 27 24 22 19 17 16 14 13","2026-12-29":"13 13 13 14 15 16 17 18 20 21 23 25 27 28 28 27 26 24 22 20 18 16 15 15","2026-12-30":"15 15 15 16 17 17 18 19 20 21 22 23 25 25 26 25 24 23 21 19 18 16 16 15","2026-12-31":"16 16 17 18 19 19 20 20 21 21 22 23 23 23 23 23 22 21 19 18 17 16 16 16"};
+const _TH={};Object.keys(TIDE_HOURLY).forEach(k=>{_TH[k]=TIDE_HOURLY[k].split(" ").map(n=>n/10);TIDE_TABLE[k]=_tHrExt(_TH[k]);});
+// hi/lo ของวัน = ค่าสูงสุด/ต่ำสุด · เวลา = กลางช่วงที่ค่าเท่ากันติดกัน (เช่น 2.4 ที่ 11–13 น. → 12:00)
+function _tHrExt(a){
+  const at=v=>{let i=a.indexOf(v),j=i;while(j<23&&a[j+1]===v)j++;const m=(i+j)/2;return String(Math.floor(m)).padStart(2,"0")+(m%1?":30":":00");};
+  const hi=Math.max(...a),lo=Math.min(...a);return{hiT:at(hi),hiV:hi,loT:at(lo),loV:lo};
+}
+function _tHrAt(ms){
+  const a=_TH[_tDateKey(ms)];if(!a)return null;
+  const d=new Date(ms+7*3600000),h=d.getUTCHours()+d.getUTCMinutes()/60+d.getUTCSeconds()/3600,i=Math.floor(h),f=h-i;
+  const nx=i<23?a[i+1]:((_TH[_tDateKey(ms+3600000)]||[a[23]])[0]);
+  return a[i]+(nx-a[i])*f;
+}
 // Harmonic constituent model — ใช้เป็น fallback นอกช่วงตารางจริงด้านบนเท่านั้น
 // ประมาณ ±30–60 นาทีสำหรับเวลาน้ำขึ้น/ลง และ ±0.15ม. สำหรับระดับ
 const _TJ=Date.UTC(2000,0,1);
@@ -7597,6 +7614,7 @@ function _tTimeToMs(dateKey,hhmm){
 }
 // ระดับน้ำ ณ เวลา ms — ใช้ตารางจริงถ้าวันนั้นมีข้อมูล (interpolate แบบ cosine ระหว่างจุดขึ้น/ลงจริงของวันก่อน/วันนี้/วันถัดไป) ไม่งั้น fallback ไป Harmonic
 function _tAt2(ms){
+  const hv=_tHrAt(ms);if(hv!=null)return hv;
   const key=_tDateKey(ms);
   if(!TIDE_TABLE[key])return _tAt(ms);
   const pts=[];
@@ -7682,6 +7700,7 @@ function renderTideForecast(){
 //    ② สูบน้ำเข้าบ่อพัก: ฟาร์มสูบเมื่อน้ำขึ้นถึง 2.00 ม. (พี่บอก) เก็บไว้ในบ่อพักใหญ่ ไม่ได้ใช้ทันที · ระดับน้ำจาก _tAt2 (ตารางจริง)
 //    ③ บ่อที่ต้องจับตา = 3 อันดับแรกของ _riskPondMaxCache (หน้าความเสี่ยง) ห้ามคิดคะแนนใหม่
 const TIDE_PUMP_M=2.0;
+const RAIN_ALK_WATCH=153;   // ALK วัดทีละ 17 → 153 = เหนือเกณฑ์ 136 ขั้นเดียว (#413)
 function tidePumpWindows(dayStr){
   const t0=new Date(dayStr+'T00:00:00').getTime(),STEP=600000,out=[];let cur=null;
   for(let t=t0;t<=t0+86400000;t+=STEP){
@@ -7707,19 +7726,33 @@ function renderTideTodo(){
     ];
     const warns=rules.map(r=>{const ds=[0,1,2,3].filter(i=>d.time[i]!=null&&r.t(i));
       return ds.length?'<div class="tx-warn"><span class="ic">'+r.ic+'</span><div><b>'+ds.map(i=>lbl(i)+r.v(i)).join(' · ')+'</b><div>'+r.a+'</div></div></div>':'';}).join('');
+    // ฝน > 20 มม. หรือพายุ ใน 4 วัน → บ่อที่ ALK ล่าสุด (≤7 วัน) ≤ RAIN_ALK_WATCH = เตรียมปูน (#413)
+    const rainy=[0,1,2,3].some(i=>d.time[i]!=null&&(d.precipitation_sum[i]>20||d.weathercode[i]>=95));
+    const alkRows=rainy?wqfeedActivePonds().map(p=>{const r=(p.records||[]).filter(x=>x.alk!=null&&x.alk!==''&&x.date>=addDaysStr(today(),-7)).sort((a,b)=>b.date.localeCompare(a.date))[0];return r?{p,alk:+r.alk,ph:r.phM!=null&&r.phM!==''?+r.phM:null}:null;})
+      .filter(x=>x&&x.alk<=RAIN_ALK_WATCH).sort((a,b)=>a.alk-b.alk):[];
+    const alkBox=alkRows.length?'<div class="tx-alk"><div class="h">🪨 ALK ใกล้เกณฑ์ → เตรียมปูน</div>'+alkRows.map(x=>'<div class="r"><span><b>'+mpEsc(x.p.name)+'</b>'+(x.p.zone?' · โซน '+mpEsc(x.p.zone):'')+'</span><span'+(x.alk<=WQ_RULE.alk.loW?' class="y"':'')+'>ALK '+x.alk+(x.ph!=null?' · pH '+x.ph.toFixed(2):'')+'</span></div>').join('')+'</div>':'';
     const wc=d.weathercode[0],theme=wc>=95?'storm':wc>=51?'rain':wc>=2?'cloud':'sun';
     const hum=d.relative_humidity_2m_max?d.relative_humidity_2m_max[0]:null;
     html+='<div class="tx-hero tx-'+theme+'"><div class="tx-top"><div><div class="tx-lbl">วันนี้ · '+new Date(d.time[0]).toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'short'})+'</div>'
       +'<div class="tx-temp">'+Math.round(d.temperature_2m_max[0])+'°<small> / '+Math.round(d.temperature_2m_min[0])+'°</small></div><div class="tx-desc">'+wmoDesc(wc)+'</div></div>'
       +'<div class="tx-ico">'+wmoIco(wc)+'</div></div>'
       +'<div class="tx-stats"><span>🌧️ '+d.precipitation_sum[0].toFixed(0)+' มม.</span><span>💨 '+Math.round(d.wind_speed_10m_max[0])+' กม./ชม.</span>'+(hum!=null?'<span>💧 '+Math.round(hum)+'%</span>':'')+'</div>'
-      +'<div class="tx-warns"><div class="tx-wt">🧭 ต้องระวัง 4 วันนี้</div>'+(warns||'<div class="tx-warn"><span class="ic">✅</span><div><b>อากาศปกติ</b><div>ไม่มีเรื่องต้องระวังเป็นพิเศษ</div></div></div>')+'</div></div>';
+      +'<div class="tx-warns"><div class="tx-wt">🧭 ต้องระวัง 4 วันนี้</div>'+(warns||'<div class="tx-warn"><span class="ic">✅</span><div><b>อากาศปกติ</b><div>ไม่มีเรื่องต้องระวังเป็นพิเศษ</div></div></div>')+alkBox+'</div></div>';
   }
   // ② สูบน้ำเข้าบ่อพัก — แถบเวลา 00–24 น. แรเงาช่วงที่น้ำ ≥ 2 ม. · เส้นแดง = ตอนนี้
   const now=Date.now();
-  html+='<div class="card tx-pump"><div class="card-t">💧 สูบน้ำเข้าบ่อพัก <span class="tx-sub">น้ำขึ้น ≥ '+TIDE_PUMP_M.toFixed(1)+' ม.</span></div>'
-    +[0,1,2].map(k=>{
+  // "สูบได้อีกที" = เวลาที่น้ำเริ่มถึง 2 ม. (ตัวเดียวกับแถบ) ไม่ใช่เวลาน้ำสูงสุด (#413) · การ์ดระดับน้ำ/รายการ 7 วันเดิมเอาออก (ตอบคำถามเดียวกัน)
+  const hasTide=ds=>!!(_TH[ds]||TIDE_TABLE[ds]);
+  const DAYS=[0,1,2,3,4,5,6],allW=[];
+  DAYS.forEach(k=>{const ds=addDaysStr(today(),k);if(hasTide(ds))tidePumpWindows(ds).forEach(w=>allW.push(w));});
+  const dayNm=ms=>{const ds=_tDateKey(ms);return ds===today()?'วันนี้':ds===addDaysStr(today(),1)?'พรุ่งนี้':new Date(ds+'T00:00:00').toLocaleDateString('th-TH',{weekday:'short',day:'numeric'});};
+  const nowLv=_tAt2(now),up=nowLv>=_tAt2(now-600000),liveW=allW.find(w=>w.s<=now&&now<=w.e),nextW=allW.find(w=>w.s>now);
+  const nowLine=hasTide(today())?'<div class="tx-now">🌊 ตอนนี้ <b>'+nowLv.toFixed(2)+' ม.</b> '+(up?'↑ น้ำขึ้น':'↓ น้ำลง')+'<br>'
+    +(liveW?'🟢 <b>สูบได้ตอนนี้</b> ถึง '+tideHM(liveW.e)+' น.':nextW?'สูบได้อีกที <b>'+dayNm(nextW.s)+' '+tideHM(nextW.s)+' น.</b>':'7 วันนี้น้ำไม่ถึง '+TIDE_PUMP_M.toFixed(1)+' ม.')+'</div>':'';
+  html+='<div class="card tx-pump"><div class="card-t">💧 สูบน้ำเข้าบ่อพัก <span class="tx-sub">น้ำขึ้น ≥ '+TIDE_PUMP_M.toFixed(1)+' ม.</span></div>'+nowLine
+    +DAYS.map(k=>{
       const ds=addDaysStr(today(),k),t0=new Date(ds+'T00:00:00').getTime();
+      if(!hasTide(ds))return '<div class="tx-day"><div class="tx-dh"><b>'+(k===0?'วันนี้':k===1?'พรุ่งนี้':new Date(ds+'T00:00:00').toLocaleDateString('th-TH',{weekday:'short',day:'numeric'}))+'</b></div><div class="tx-bar"></div><div class="tx-dt">ไม่มีตารางน้ำ</div></div>';
       const ws=tidePumpWindows(ds),past=w=>k===0&&w.e<now,live=k===0&&ws.some(w=>w.s<=now&&now<=w.e);
       const nm=k===0?'วันนี้':k===1?'พรุ่งนี้':new Date(ds+'T00:00:00').toLocaleDateString('th-TH',{weekday:'short',day:'numeric'});
       const pct=t=>Math.max(0,Math.min(100,(t-t0)/864e5*100));
@@ -7735,7 +7768,7 @@ function renderTide(){
   renderTideTodo();
   renderTideWeatherCard();
   renderTideForecast();
-  const el=document.getElementById('tide-card');const nowEl=document.getElementById('tide-now');if(!el||!nowEl)return;
+  const nowEl=document.getElementById('tide-now');if(!nowEl)return;
   const now=Date.now(),TZ=7*3600000,D7=7*24*3600*1000;
   const nowH=_tAt2(now),prevH=_tAt2(now-600000);
   const rising=nowH>=prevH;
@@ -7752,30 +7785,6 @@ function renderTide(){
   const THM=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   const fT=ms=>{const d=new Date(ms+TZ);return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0');};
   const todayKey=new Date(now+TZ).toISOString().slice(0,10);
-  let cards='';
-  for(const k of Object.keys(dm).sort()){
-    const{date:d,ev}=dm[k];
-    const hi=ev.filter(e=>e.type==='high').sort((a,b)=>a.ms-b.ms);
-    const lo=ev.filter(e=>e.type==='low').sort((a,b)=>a.ms-b.ms);
-    const isToday=k===todayKey;
-    const chip=(e,col,bg,arrow)=>`<div style="background:${bg};border-radius:9px;padding:7px 11px;flex:1;min-width:78px">
-        <div style="font-size:var(--fs10);font-weight:500;color:${col}">${arrow}</div>
-        <div style="font-size:calc(15px * var(--ui-scale));font-weight:500;color:var(--tx)">${fT(e.ms)}</div>
-        <div style="font-size:var(--fs11);color:var(--tx2)">${e.h.toFixed(2)} ม.</div>
-      </div>`;
-    const empty='<span style="font-size:var(--fs11);color:var(--tx3)">—</span>';
-    cards+=`<div style="padding:11px 0;border-top:1px solid var(--bd);${isToday?'background:rgba(33,150,243,0.06);border-radius:10px;padding:11px 8px;margin:2px 0':''}">
-      <div style="font-size:calc(13px * var(--ui-scale));font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:6px">
-        <span style="${isToday?'color:var(--p)':''}">${THD[d.getUTCDay()]} ${d.getUTCDate()} ${THM[d.getUTCMonth()]}</span>
-        ${isToday?'<span style="background:var(--p);color:#fff;font-size:var(--fs10);font-weight:500;padding:2px 8px;border-radius:10px">วันนี้</span>':''}
-      </div>
-      <div style="display:flex;gap:7px;flex-wrap:wrap">
-        ${hi.length?hi.slice(0,2).map(e=>chip(e,'#1565C0','rgba(33,150,243,0.12)','⬆ น้ำขึ้น')).join(''):''}
-        ${lo.length?lo.slice(0,2).map(e=>chip(e,'#9A4E06','rgba(230,126,34,0.12)','⬇ น้ำลง')).join(''):''}
-        ${!hi.length&&!lo.length?empty:''}
-      </div>
-    </div>`;
-  }
   // ---- wave chart (today) ----
   const dayStart=new Date(now+TZ);dayStart.setUTCHours(0,0,0,0);
   const dayStartMs=dayStart.getTime()-TZ;
@@ -7811,7 +7820,6 @@ function renderTide(){
     </g>`;
   }).join('');
   const waveSvg=`
-    <div style="font-size:var(--fs11);font-weight:500;color:var(--tx2);margin:14px 0 2px;text-align:center">🌊 กราฟคลื่นน้ำวันนี้</div>
     <svg viewBox="0 0 ${WW} ${WH}" style="width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="waveGrad" x1="0" y1="0" x2="0" y2="1">
@@ -7826,57 +7834,9 @@ function renderTide(){
       <text x="${nowX.toFixed(1)}" y="${(padT-10).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="500" fill="var(--tx2)">ตอนนี้</text>
       ${markers}
     </svg>`;
-  const TIDE_ALERT_M=2.0;
-  const nextBigHigh=ex.filter(e=>e.type==='high'&&e.ms>now&&e.h>=TIDE_ALERT_M).sort((a,b)=>a.ms-b.ms)[0];
-  const tideAlert=nextBigHigh?(()=>{
-    const bd=new Date(nextBigHigh.ms+TZ);
-    const dateLbl=`${THD[bd.getUTCDay()]} ${bd.getUTCDate()} ${THM[bd.getUTCMonth()]}`;
-    return`<div style="margin-top:8px;padding:8px 14px;background:rgba(244,67,54,0.12);border:1px solid rgba(244,67,54,0.3);border-radius:10px;display:inline-flex;align-items:center;gap:8px;text-align:left">
-      <span style="font-size:calc(16px * var(--ui-scale))">⚠️</span>
-      <div>
-        <div style="font-size:calc(12px * var(--ui-scale));font-weight:500;color:#f44336">น้ำขึ้นสูง ${nextBigHigh.h.toFixed(2)} ม. วัน${dateLbl}</div>
-        <div style="font-size:var(--fs11);color:var(--tx2)">เวลา ${fT(nextBigHigh.ms)} น. — เตรียมแผนสูบน้ำ</div>
-      </div>
-    </div>`;
-  })():'';
-  const tideNextField=(()=>{
-    if(nextBigHigh){
-      const bd=new Date(nextBigHigh.ms+TZ);
-      const dateLbl=`${THD[bd.getUTCDay()]} ${bd.getUTCDate()} ${THM[bd.getUTCMonth()]}`;
-      return`<div style="margin-top:8px;padding:8px 14px;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;display:inline-flex;align-items:center;gap:8px;text-align:left">
-        <span style="font-size:calc(16px * var(--ui-scale))">📌</span>
-        <div>
-          <div style="font-size:var(--fs11);color:var(--tx3)">น้ำขึ้นถึง ${TIDE_ALERT_M.toFixed(2)} ม. ครั้งต่อไป</div>
-          <div style="font-size:calc(13px * var(--ui-scale));font-weight:500;color:var(--tx)">วัน${dateLbl} เวลา ${fT(nextBigHigh.ms)} น. (${nextBigHigh.h.toFixed(2)} ม.)</div>
-        </div>
-      </div>`;
-    }
-    return`<div style="margin-top:8px;padding:8px 14px;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;display:inline-flex;align-items:center;gap:8px;text-align:left">
-      <span style="font-size:calc(16px * var(--ui-scale))">📌</span>
-      <div>
-        <div style="font-size:var(--fs11);color:var(--tx3)">น้ำขึ้นถึง ${TIDE_ALERT_M.toFixed(2)} ม. ครั้งต่อไป</div>
-        <div style="font-size:calc(13px * var(--ui-scale));font-weight:500;color:var(--tx2)">ไม่มีในช่วง 7 วันนี้</div>
-      </div>
-    </div>`;
-  })();
-  nowEl.innerHTML=`
-    <div style="text-align:center">
-      <div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3)">ระดับน้ำตอนนี้</div>
-      <div style="font-size:calc(34px * var(--ui-scale));font-weight:500;color:var(--p);line-height:1.15">${nowH.toFixed(2)}<span style="font-size:calc(14px * var(--ui-scale));font-weight:500"> ม.</span></div>
-      <div style="display:inline-block;margin-top:4px;font-size:calc(12px * var(--ui-scale));font-weight:500;padding:3px 12px;border-radius:14px;background:${rising?'rgba(33,150,243,0.12)':'rgba(230,126,34,0.12)'};color:${rising?'#2196f3':'#e67e22'}">${rising?'↑ น้ำขึ้น':'↓ น้ำลง'}</div>
-      <div>${tideNextField}</div>
-    </div>
-    ${waveSvg}`;
   const allInTable=Object.keys(dm).every(k=>TIDE_TABLE[k]);
-  const someInTable=Object.keys(dm).some(k=>TIDE_TABLE[k]);
-  const disclaimer=allInTable
-    ?'✅ ข้อมูลจริงจากตารางน้ำขึ้นน้ำลง (มิ.ย.–ธ.ค. 2569)'
-    :someInTable
-      ?'✅ บางวันเป็นข้อมูลจริงจากตาราง · นอกช่วง มิ.ย.–ธ.ค. 2569 เป็นค่าประมาณจากการคำนวณ Harmonic Tide'
-      :'⚠️ นอกช่วงตารางจริง (มิ.ย.–ธ.ค. 2569) — ค่าโดยประมาณจากการคำนวณ Harmonic Tide';
-  el.innerHTML=`
-    <div style="max-height:440px;overflow-y:auto">${cards}</div>
-    <div style="font-size:var(--fs10);color:var(--tx3);margin-top:10px;text-align:center">${disclaimer}</div>`;
+  const disclaimer=allInTable?'✅ ตารางน้ำกรมอุทกศาสตร์ · ถึง 31 ธ.ค. 2569':'⚠️ บางวันไม่มีตารางน้ำ (ตารางถึง 31 ธ.ค. 2569)';
+  nowEl.innerHTML=waveSvg+'<div style="font-size:var(--fs10);color:var(--tx3);margin-top:10px;text-align:center">'+disclaimer+'</div>';
 }
 // ── รวบรวม "ค่าผิดปกติทั้งหมด" ของบ่อ (ไม่ใช่แค่ตัวที่แย่สุด) เรียงแย่สุดก่อน — ใช้เป็นฐานให้ทั้ง reasonOv() (โชว์ตัวแย่สุด) และตาราง "สถานะบ่อทั้งหมด" (โชว่ตัวแย่สุด + ปุ่ม "+N อื่นๆ" ขยายดูที่เหลือ) กันเขียนเกณฑ์ซ้ำ 2 ที่ ──
 function allReasonsOv(p,last,age){
