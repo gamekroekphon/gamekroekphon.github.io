@@ -2257,6 +2257,29 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .lg-go{width:100%;font-family:inherit;font-size:calc(17px * var(--ui-scale));font-weight:700;border:none;border-radius:14px;padding:13px;color:#1a1204;background:linear-gradient(90deg,#FCD34D,#F59E0B,#FCD34D);background-size:200% 100%;animation:lgShine 3.5s linear infinite;cursor:pointer;box-shadow:0 6px 18px rgba(245,158,11,.45)}
 .lg-go:disabled{opacity:.75;cursor:wait}
 .lg-go:focus-visible{outline:3px solid #fff;outline-offset:2px}
+/* ช่วงรอเข้าแอป (#414) — แผ่นล่างโหมดรอ (.waiting) · กล่อง "วันนี้" = สูบน้ำ/อากาศเท่านั้น (ยังไม่ล็อกอิน ห้ามข้อมูลฟาร์ม) */
+.lg-today{max-width:290px;margin:12px auto 0;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.32);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:14px;padding:7px 12px;font-size:calc(13.5px * var(--ui-scale));text-align:left;opacity:0;animation:lgUp .9s .7s forwards}
+.lg-today[hidden]{display:none!important}
+.lg-today .r{display:flex;justify-content:space-between;gap:10px;padding:2px 0}.lg-today b{font-weight:800;white-space:nowrap}
+.lg-wait{display:none}
+.lg-sheet.waiting .lg-wait{display:block}
+.lg-sheet.waiting .lg-fields,.lg-sheet.waiting #login-go,.lg-sheet.waiting .lg-hint,.lg-sheet.waiting .login-err{display:none!important}
+.lg-hi{text-align:center;font-size:calc(18px * var(--ui-scale));font-weight:700}
+.lg-wt{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;font-size:calc(14.5px * var(--ui-scale))}
+.lg-spin{display:inline-block;flex-shrink:0;width:16px;height:16px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#FCD34D;border-radius:50%;animation:lgSpin 1s linear infinite}
+@keyframes lgSpin{to{transform:rotate(360deg)}}
+.lg-steps{display:flex;flex-direction:column;gap:6px;font-size:calc(15px * var(--ui-scale))}
+.lg-steps div{display:flex;align-items:center;gap:8px}.lg-steps b{color:#86EFAC;width:16px;text-align:center}
+.lg-bar{height:6px;border-radius:99px;background:rgba(255,255,255,.2);overflow:hidden;margin-top:9px}
+.lg-bar i{display:block;height:100%;width:40%;border-radius:99px;background:#FCD34D;animation:lgBar 1.4s ease-in-out infinite}
+@keyframes lgBar{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+.lg-wait .lg-go{margin-top:10px}
+.sync-bar{position:absolute;left:0;right:0;top:100%;z-index:1;display:flex;align-items:center;gap:8px;background:#FEF3C7;color:#78350F;border-bottom:1px solid #FDE68A;padding:5px 14px;font-size:calc(13px * var(--ui-scale));font-weight:600}
+.sync-bar[hidden]{display:none!important}
+.sync-bar.ok{background:#DCFCE7;color:#14532D;border-bottom-color:#BBF7D0}
+.sync-bar.err{background:#FEE2E2;color:#7F1D1D;border-bottom-color:#FECACA}
+.sync-bar .lg-spin{width:14px;height:14px;border-color:rgba(120,53,15,.25);border-top-color:#B45309}
+@media (prefers-reduced-motion:reduce){.lg-spin,.lg-bar i{animation:none}}
 .lg-hint{text-align:center;font-size:calc(13px * var(--ui-scale));font-weight:600;margin-top:9px}
 .lg-sheet.open .lg-hint{display:none}
 .login-err{font-size:calc(13px * var(--ui-scale));font-weight:600;background:#FEE2E2;color:#B91C1C;border-radius:10px;padding:7px 10px;text-align:center;margin-top:10px;display:none}
@@ -2477,10 +2500,12 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       <img class="lg-logo" src="icons/logo_w.png" alt="TAWAN FARM">
       <div class="lg-name">ตะวันฟาร์ม</div>
       <div class="lg-chips" id="lg-chips"></div>
+      <div class="lg-today" id="lg-today" hidden></div>
     </div>
     <div class="lg-sp"></div>
     <div class="lg-sheet" id="lg-sheet">
       <div class="lg-grab"></div>
+      <div class="lg-wait" id="lg-wait" aria-live="polite"></div>
       <div class="lg-fields">
         <label for="login-email">อีเมล</label><input type="email" id="login-email" placeholder="email@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
         <label for="login-pass">รหัสผ่าน</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
@@ -2573,6 +2598,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       <button class="btn btn-sm hdr-logout-btn" onclick="doLogout()" style="padding:4px 10px;font-size:var(--fs11)">ออกจากระบบ</button>
     </div>
   </div>
+  <div class="sync-bar" id="sync-bar" hidden aria-live="polite"></div>
 </div>
 <div class="tabs-wrap">
 <button class="tabs-arrow left" id="tabs-arrow-l" onclick="document.getElementById('mainTabs').scrollBy({left:-200,behavior:'smooth'})">‹</button>
@@ -4796,7 +4822,7 @@ async function writeRemote(json){
   const rec={json,updated};
   if(CAN_Z){try{rec.z={u:updated,d:await zPack(json)};}catch(e){console.warn('zPack failed → เขียน json อย่างเดียว',e);}}
   await firebase.database().ref(RTDB_PATH).set(rec);
-  _lastUpdated=updated;
+  _lastUpdated=updated;lsDataAt(updated);
   return updated;
 }
 
@@ -5182,6 +5208,7 @@ function lgInfo(){
   try{const m=moonInfo(now);parts.push(m.ico+' '+m.txt);}catch(e){}
   try{const w=wanphraInfo(now);if(w)parts.push(w==='phra'?'🙏 วันนี้วันพระ':w==='kon2'?'🧂 วันนี้วันโกน':'🧂 พรุ่งนี้วันโกน');}catch(e){}
   ch.innerHTML=parts.map(t=>'<span>'+t+'</span>').join('');
+  lgToday();
 }
 function lgDraw(ms){
   const V=_lgV;if(!V)return;const{x,w,h}=V,s=ms/1000,T=_lgT,hz=h*.58,S=LG_SKY[T],W=LG_WATER[T];
@@ -5247,8 +5274,61 @@ async function doLogin(){
     if(btn){btn.disabled=false;btn.textContent='เข้าสู่ระบบ';}
   }
 }
+// ══ ช่วงรอเข้าแอป (#414) ══
+//   ① จำชื่อคนล่าสุด (LG_USER_K) ตอนล็อกอินผ่าน → เปิดครั้งต่อไปขึ้น "สวัสดี X · กำลังเปิดแอป…" แทนปุ่ม · เกิน LG_WAIT_MS หรือไม่ได้ล็อกอิน = ปุ่มเดิม
+//   ② เครื่องไม่มีข้อมูลเก่า → ค้างฉากนี้ "โหลดข้อมูลฟาร์ม…" จน initFirebase โหลดครั้งแรกเสร็จ (lgLoaded) · พัง = ปุ่มลองใหม่
+//   ③ มีข้อมูลเก่า → แถบ #sync-bar ใต้หัวจอ "กำลังอัปเดต · ข้อมูลเมื่อ X" (X = tw_dataAt ที่จดทุกครั้งที่ได้/ส่งข้อมูล cloud)
+const LG_USER_K='tw_lastUser',LG_DATA_K='tw_dataAt',LG_WAIT_MS=6000;let _lgWaitT=0,_sbT=0;
+function lsGet(k){try{return localStorage.getItem(k)||'';}catch(e){return'';}}
+function lsDataAt(u){try{if(u)localStorage.setItem(LG_DATA_K,u);}catch(e){}}
+function lgSetWait(mode){
+  const sh=document.getElementById('lg-sheet'),w=document.getElementById('lg-wait');if(!sh||!w)return;
+  sh.classList.toggle('waiting',!!mode);if(!mode){w.innerHTML='';return;}
+  const ok='<div><b>✓</b>เข้าสู่ระบบ</div>';
+  w.innerHTML=mode==='open'?'<div class="lg-hi">สวัสดี '+mpEsc(lsGet(LG_USER_K))+' 👋</div><div class="lg-wt"><span class="lg-spin"></span>กำลังเปิดแอป…</div>'
+    :mode==='load'?'<div class="lg-steps">'+ok+'<div><span class="lg-spin"></span>โหลดข้อมูลฟาร์ม…</div></div><div class="lg-bar"><i></i></div>'
+    :'<div class="lg-steps">'+ok+'<div>⚠️ โหลดข้อมูลไม่ได้</div></div><button type="button" class="lg-go" onclick="lgRetry()">ลองใหม่</button>';
+}
+function lgBootWait(){
+  if(!lsGet(LG_USER_K))return;
+  lgSetWait('open');
+  _lgWaitT=setTimeout(()=>{const sh=document.getElementById('lg-sheet');if(sh&&sh.classList.contains('waiting')&&!firebase.auth().currentUser)lgSetWait(null);},LG_WAIT_MS);
+}
+function lgLoaded(ok){
+  const ls=document.getElementById('login-screen');
+  if(ls&&ls.style.display!=='none'&&firebase.auth().currentUser){if(ok){ls.style.display='none';lgSetWait(null);}else lgSetWait('err');}
+  syncBar(ok?'done':'err');
+}
+function lgRetry(){lgSetWait('load');initFirebase();}
+function lgDataAtTxt(){
+  const t=lsGet(LG_DATA_K);if(!t)return'';const d=new Date(t);if(isNaN(d))return'';
+  return ' · ข้อมูลเมื่อ '+d.toLocaleDateString('th-TH',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+}
+function syncBar(st){
+  const b=document.getElementById('sync-bar');if(!b)return;clearTimeout(_sbT);
+  if(st==='load'){if(!_hadCache){b.hidden=true;return;}b.className='sync-bar';b.innerHTML='<span class="lg-spin"></span>กำลังอัปเดต'+lgDataAtTxt();b.hidden=false;return;}
+  if(b.hidden)return;
+  if(st==='done'){b.className='sync-bar ok';b.textContent='✅ อัปเดตแล้ว '+new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});_sbT=setTimeout(()=>{b.hidden=true;},2000);}
+  else{b.className='sync-bar err';b.textContent='⚠️ อัปเดตไม่ได้'+lgDataAtTxt();}
+}
+// ④ กล่อง "วันนี้" บนฉากล็อกอิน — เวลาสูบน้ำ (ตารางน้ำในโค้ด) + อากาศ (open-meteo) เท่านั้น · ช่วงสูบวันนี้ผ่านหมดแล้ว = โชว์ของพรุ่งนี้
+function lgToday(){
+  const el=document.getElementById('lg-today');if(!el)return;
+  const rows=[];
+  try{
+    const td=today(),tm=addDaysStr(td,1),now=Date.now(),has=ds=>!!(_TH[ds]||TIDE_TABLE[ds]);
+    let ws=has(td)?tidePumpWindows(td).filter(w=>w.e>now):[],lbl='วันนี้';
+    if(!ws.length&&has(tm)){ws=tidePumpWindows(tm);lbl='พรุ่งนี้';}
+    if(ws.length)rows.push(['💧 สูบน้ำ'+lbl,ws.map(w=>tideHM(w.s)+'–'+tideHM(w.e)).join(' · ')]);
+  }catch(e){}
+  const d=_wxDaily;
+  if(d&&d.time&&d.weathercode)rows.push([wmoIco(d.weathercode[0])+' '+wmoDesc(d.weathercode[0]),'ฝน '+Math.round(d.precipitation_sum[0])+' มม.']);
+  el.hidden=!rows.length;
+  el.innerHTML=rows.map(r=>'<div class="r"><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('');
+}
 function doLogout(){
   if(!confirm('ต้องการออกจากระบบหรือไม่?'))return;
+  try{localStorage.removeItem(LG_USER_K);}catch(e){}
   firebase.auth().signOut();
   location.reload();
 }
@@ -5258,13 +5338,13 @@ async function initFirebase() {
     const dbRef = firebase.database().ref(RTDB_PATH);
 
     // ── โหลดข้อมูลจาก Cloud (บีบอัด ถ้ามี) ─────────────────
-    setSyncStatus('sync-load', 'กำลังโหลดข้อมูลจาก Cloud...');
+    setSyncStatus('sync-load', 'กำลังโหลดข้อมูลจาก Cloud...');syncBar('load');
     const first = await fetchRemoteJson();
 
     if (first) {
       const remote = normalizeD(JSON.parse(first.json));
       D = remote;tickMemoClear();
-      _lastUpdated = first.updated;
+      _lastUpdated = first.updated;lsDataAt(first.updated);
       seedPonds();
       const json_loaded = JSON.stringify(D);
       localStorage.setItem(SK, json_loaded);
@@ -5303,6 +5383,7 @@ async function initFirebase() {
       }
     }
 
+    lgLoaded(true);
     // ── Real-time listener — ฟังแค่ updated (ไม่กี่ไบต์) พอเปลี่ยนค่อยดึงตัวบีบอัด (entry #297)
     //    เดิมฟังทั้ง node → ทุกครั้งที่ใครบันทึก ทุกเครื่องที่เปิดอยู่โหลด 2 MB ──
     if (_unsubscribe) _unsubscribe();
@@ -5320,7 +5401,7 @@ async function initFirebase() {
         if (Date.now() < _remoteIgnoreUntil) { setTimeout(pullRemote, _remoteIgnoreUntil - Date.now() + 50); return; }   // กำลังบันทึกของเราเองอยู่ — กลับมาดูใหม่พอพ้นช่วง
         const remote = normalizeD(JSON.parse(r.json));
         D = remote;tickMemoClear();
-        _lastUpdated = r.updated;
+        _lastUpdated = r.updated;lsDataAt(r.updated);
         localStorage.setItem(SK, r.json);
         if (isEditingField()) {
           _pendingRerender = true;
@@ -5360,6 +5441,7 @@ async function initFirebase() {
   } catch(e) {
     console.error('Firebase init error:', e);
     setSyncStatus('sync-err', '⚠️ เชื่อมต่อ Firebase ไม่ได้: ' + e.message);
+    lgLoaded(false);
   }
 }
 const LAT=9.97,LON=99.08;
@@ -5834,6 +5916,8 @@ const A23rec=[
   toAdd.forEach(np=>{if(!D.ponds.find(p=>p.id===np.id)){D.ponds.push(np);changed=true;}});
   if(changed){save();if(typeof fbSave==='function')fbSave();}
 }
+// เครื่องนี้มีข้อมูลเก่าไหม (อ่านก่อน loadData) — ไม่มี = ค้างฉากล็อกอินจนโหลดเสร็จ · มี = เข้าแอปทันที + แถบ "กำลังอัปเดต" (#414)
+const _hadCache=(()=>{try{return !!localStorage.getItem(SK);}catch(e){return false;}})();
 let D=loadData();
 seedPonds();
 let cmpCh=null,fdCh=null,spCh=null,secCh=null;
@@ -17840,6 +17924,7 @@ function renderWx(data){
   _wxDaily=d;
   renderOv();
   renderTideTodo();
+  lgToday();
   renderTideWeatherCard();
   renderTideForecast();
   // ── อากาศตอนนี้ = ข้อความเล็กในหัวการ์ดอากาศ (#393) ──
@@ -21147,6 +21232,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('mpExpandModal').addEventListener('click',e=>{if(e.target===document.getElementById('mpExpandModal'))mpExpandClose()});
   document.getElementById('costSumModal').addEventListener('click',e=>{if(e.target===document.getElementById('costSumModal'))closeCostSummary()});
   lgStart();   // หน้า login โชว์ทันทีระหว่างรอ Firebase เช็คสิทธิ์ — หยุดวาดเองเมื่อถูกซ่อน
+  lgBootWait();   // คนเคยล็อกอิน → "สวัสดี X · กำลังเปิดแอป…" แทนปุ่ม (#414)
   fetchWx().catch(()=>{});
   if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
   firebase.auth().onAuthStateChanged(async user=>{
@@ -21158,9 +21244,13 @@ document.addEventListener('DOMContentLoaded',()=>{
       // ── สร้าง/อัปเดตรายการผู้ใช้อัตโนมัติทุกครั้งที่ login (ไว้ให้หน้า จัดการผู้ใช้ เห็นรายชื่อ) ──
       uref.update({email:user.email||existing.email||'',displayName:user.displayName||existing.displayName||'',role,lastLogin:new Date().toISOString()}).catch(()=>{});
       updateUserHeader(user,role);
-      document.getElementById('login-screen').style.display='none';
+      clearTimeout(_lgWaitT);
+      try{localStorage.setItem(LG_USER_K,user.displayName||(user.email||'').split('@')[0]);}catch(e){}
+      if(_hadCache)document.getElementById('login-screen').style.display='none';
+      else lgSetWait('load');   // เครื่องไม่มีข้อมูลเก่า → ค้างฉากจนโหลดเสร็จ (lgLoaded)
       initFirebase();
     }else{
+      clearTimeout(_lgWaitT);lgSetWait(null);
       document.getElementById('login-screen').style.display='flex';
       lgStart();
     }
