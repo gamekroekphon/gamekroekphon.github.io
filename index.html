@@ -590,6 +590,19 @@ table.pd-surv-tb td.w{color:var(--w);font-weight:700}
 .plx-rc .c{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap}
 .plx-rc .c span{background:var(--sf2);border-radius:8px;padding:2px 8px;font-size:calc(12.5px * var(--ui-scale))}.plx-rc .c b{font-weight:700}
 .plx-rc .c span.hi{background:var(--db);color:var(--d)}
+/* การ์ดกำลังเลี้ยง (#411) — น้ำเงิน = ประเมินถ้าจับวันนี้ แยกจากสรุปปี (เขียว = รอบที่ปิดแล้ว) */
+.crx-sum.plx-live{background:linear-gradient(135deg,#17324d,#1e3a5f)}
+.crx-sum.plx-live .t{display:flex;justify-content:space-between;gap:6px}.crx-sum.plx-live .t small{font-weight:500;font-size:calc(12px * var(--ui-scale));white-space:nowrap}
+.crx-sum .g div.pos{background:#15803D}
+.plx-ltog{margin-top:10px;width:100%;min-height:42px;background:rgba(255,255,255,.14);border:none;color:#fff;border-radius:10px;font:inherit;font-weight:700;cursor:pointer}
+.plx-lr{border-top:1px solid var(--sf2);padding:9px 0}.plx-lr[onclick]{cursor:pointer}
+.plx-lr .a{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.plx-lr .nm{font-weight:700;font-size:calc(15px * var(--ui-scale))}.plx-lr .nm small{font-weight:500;font-size:calc(12.5px * var(--ui-scale));margin-left:5px}
+.plx-lr .pf{font-weight:800;font-size:calc(17px * var(--ui-scale));white-space:nowrap}.plx-lr .pf.up{color:var(--ok)}.plx-lr .pf.dn{color:var(--d)}.plx-lr .pf.na{font-size:calc(14px * var(--ui-scale));font-weight:600}
+.plx-lr .c{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
+.plx-lr .c span{background:var(--sf2);border-radius:8px;padding:2px 7px;font-size:calc(12.5px * var(--ui-scale))}.plx-lr .c b{font-weight:700}
+.plx-lr .c span.old{background:var(--wb);color:var(--w);font-weight:600}.plx-lr .c span.ph{background:var(--ib);color:var(--in)}
+.plx-lsec{font-size:calc(13px * var(--ui-scale));font-weight:700;margin-top:6px;padding-top:8px;border-top:2px solid var(--bd)}
 .plx-rc .w{font-size:calc(12.5px * var(--ui-scale));font-weight:600;margin-top:4px}
 .plx-rc.nodata{opacity:.55}
 .plx-csv{width:auto!important}
@@ -4675,6 +4688,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <div class="crx-chips" id="pl-yr-chips"></div>
   <select id="pl-year" hidden onchange="renderPL()"></select>
   <div id="pl-kpi"></div>
+  <div id="pl-live"></div>
   <div class="card" style="margin-bottom:14px">
     <div class="card-t">💸 เงินไปไหน <span class="plx-hint">แตะดูรายการ</span></div>
     <div id="pl-cost-tbl"></div>
@@ -21410,7 +21424,50 @@ function renderPL(){
     const opts=[...sel.options].filter(o=>o.value).concat([...sel.options].filter(o=>!o.value));
     chips.innerHTML=opts.map(o=>`<button class="crx-chip${o.value===yr?' on':''}" aria-pressed="${o.value===yr}" onclick="plSetYear('${o.value}')">${o.text} (${o.value?cnt[o.value]||0:all})</button>`).join('');
   }
-  renderPLKPI(rows);renderPLTable(rows);renderPLCostChart(rows);
+  renderPLKPI(rows);renderPLLive(yr);renderPLTable(rows);renderPLCostChart(rows);
+}
+// การ์ด "กำลังเลี้ยง" (#411) — บ่อที่ยังไม่ปิดรอบไม่อยู่ในสรุปปี จึงแยกกล่องน้ำเงิน "ถ้าจับวันนี้" · โชว์เฉพาะปีนี้/ทุกปี
+//   ทุน = pondRunningCost (ตัวเดียวกับหน้าบ่อ) · ในบ่อ = biomass ณ วันสุ่ม × hvLastPrice(ไซส์) (±1 แล้ว ±2 เหมือนหน้าจับกุ้ง)
+//   กำไร = ขายพาเชียลแล้ว + ในบ่อ − ทุน · บ่อที่ยังไม่สุ่ม/ไม่มีราคาไซส์ใกล้กัน: ทุนนับ มูลค่า = 0 (ต่ำกว่าจริง ไม่เกินจริง)
+//   ราคาเก่ากว่า PL_OLD_PRICE_DAYS วัน = ป้ายส้ม (ใช้ราคาเก่าไปก่อน ยังไม่มีช่องกรอกราคาตลาด)
+const PL_OLD_PRICE_DAYS=90;let _plLiveOpen=false;
+function plLiveRows(){
+  return (D.ponds||[]).filter(p=>p.startDate&&!p.harvestDate&&pondCurAge(p)>0).map(p=>{
+    const rc=pondRunningCost(p),sc=pondShrimpCount(p),ph=partialTotals(p.partialHarvests).baht;
+    const bio=sc&&sc.abw>0&&sc.biomass>0?sc.biomass:0,size=bio?Math.round(1000/sc.abw):null,lp=size?hvLastPrice(size):null;
+    const cost=rc&&rc.total||0,val=lp?bio*lp.price:null;
+    return{p,age:pondCurAge(p),cost,ph,bio,size,lp,val,profit:val!=null?ph+val-cost:null,old:!!lp&&dDiff(lp.date,today())>PL_OLD_PRICE_DAYS};
+  });
+}
+function plLiveToggle(){_plLiveOpen=!_plLiveOpen;renderPLLive(document.getElementById('pl-year')?.value||'');}
+function renderPLLive(yr){
+  const el=document.getElementById('pl-live');if(!el)return;
+  const R=yr&&yr!==today().slice(0,4)?[]:plLiveRows();
+  if(!R.length){el.innerHTML='';return;}
+  const M=v=>(v/1e6).toFixed(2),S=v=>(v>=0?'+':'')+M(v),T=kg=>(kg/1000).toFixed(1),q=String.fromCharCode(39);
+  const sum=(a,k)=>a.reduce((s,r)=>s+(r[k]||0),0);
+  const ok=R.filter(r=>r.val!=null).sort((a,b)=>b.profit-a.profit),noPrice=R.filter(r=>r.val==null&&r.bio>0),noSmp=R.filter(r=>!r.bio);
+  const cost=sum(R,'cost'),ph=sum(R,'ph'),val=sum(ok,'val'),kg=sum(ok,'bio'),profit=ph+val-cost,na=noPrice.length+noSmp.length;
+  const box='<div class="crx-sum plx-live"><div class="t">🦐 กำลังเลี้ยง '+R.length+' บ่อ <small>ถ้าจับวันนี้</small></div><div class="g">'
+    +'<div><b>'+M(cost)+'</b><span>ล้าน ทุนจ่ายแล้ว</span></div>'
+    +'<div><b>'+M(ph)+'</b><span>ล้าน ขายพาเชียลแล้ว</span></div>'
+    +'<div><b>'+M(val)+'</b><span>ล้าน กุ้งในบ่อ '+Math.round(kg/1000)+' ตัน</span></div>'
+    +'<div class="'+(profit<0?'neg':'pos')+'"><b>'+S(profit)+'</b><span>ล้าน กำไรถ้าจับวันนี้</span></div></div>'
+    +(na?'<div class="plx-warn">⚠️ ยังตีราคาไม่ได้ '+na+' บ่อ'+(noPrice.length?' ('+noPrice.map(r=>mpEsc(r.p.name)+' '+Math.round(r.bio/1000)+' ตัน').join(' · ')+')':'')+' · ทุนนับแล้ว</div>':'')
+    +'<button class="plx-ltog" aria-expanded="'+_plLiveOpen+'" onclick="plLiveToggle()">'+(_plLiveOpen?'▴ ซ่อนรายบ่อ':'▸ ดูรายบ่อ')+'</button></div>';
+  if(!_plLiveOpen){el.innerHTML=box;return;}
+  const go=r=>' onclick="openPondDetail('+q+mpEsc(r.p.id)+q+')"';
+  const nm=r=>'<span class="nm">'+mpEsc(r.p.name)+'<small>'+r.age+' วัน · '+T(r.bio)+' ตัน · ไซส์ '+r.size+'</small></span>';
+  const list=ok.map(r=>'<div class="plx-lr"'+go(r)+'><div class="a">'+nm(r)+'<span class="pf '+(r.profit>=0?'up':'dn')+'">'+S(r.profit)+'</span></div>'
+      +'<div class="c"><span>ทุน <b>'+M(r.cost)+'</b></span>'+(r.ph>0?'<span class="ph">ขายแล้ว <b>'+M(r.ph)+'</b></span>':'')
+      +'<span>ในบ่อ <b>'+M(r.val)+'</b>'+(r.old?'':' · ฿'+r.lp.price)+'</span>'
+      +(r.old?'<span class="old">฿'+r.lp.price+' ราคา '+fD(r.lp.date).replace(/^\d+\s/,'')+'</span>':'')+'</div></div>').join('')
+    +(na?'<div class="plx-lsec">ยังตีราคาไม่ได้</div>':'')
+    +noPrice.map(r=>'<div class="plx-lr"'+go(r)+'><div class="a">'+nm(r)+'<span class="pf na">ไม่มีราคาไซส์นี้</span></div><div class="c"><span>ทุน <b>'+M(r.cost)+'</b></span>'+(r.ph>0?'<span class="ph">ขายแล้ว <b>'+M(r.ph)+'</b></span>':'')+'</div></div>').join('')
+    +(noSmp.length?'<div class="plx-lr"><div class="a"><span class="nm">'+noSmp.map(r=>mpEsc(r.p.name)).join(' · ')+'<small>'
+      +(()=>{const a=noSmp.map(r=>r.age),lo=Math.min(...a),hi=Math.max(...a);return lo===hi?lo:lo+'–'+hi;})()+' วัน</small></span><span class="pf na">ยังไม่สุ่ม</span></div>'
+      +'<div class="c"><span>ทุน <b>'+M(sum(noSmp,'cost'))+'</b></span></div></div>':'');
+  el.innerHTML=box+'<div class="card" style="margin-bottom:14px"><div class="card-t">🦐 รายบ่อ ถ้าจับวันนี้ <span class="plx-hint">ล้านบาท</span></div>'+list+'</div>';
 }
 let _plSort='new';
 function plSetYear(y){const s=document.getElementById('pl-year');if(s)s.value=y;renderPL();}
