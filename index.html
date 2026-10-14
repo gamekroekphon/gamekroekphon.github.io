@@ -428,6 +428,28 @@ body.role-admin .mp-actions{display:flex!important;gap:2px;flex-wrap:wrap}
 .mpx-hd{font-weight:800;font-size:calc(16px * var(--ui-scale));margin:10px 0 2px}
 .mpx-note{margin:6px 0;font-size:calc(16px * var(--ui-scale));font-weight:600;line-height:1.45;background:var(--sf2);border-radius:10px;padding:6px 10px}
 .mpx-upd{margin-top:12px;font-size:calc(13px * var(--ui-scale))}
+/* จัดการบ่อ (#416) — มือถือเป็นการ์ด · คอมเป็นตาราง */
+#mg-cards{display:none}
+@media(max-width:640px){#mg-tbl-card{display:none}#mg-cards{display:flex;flex-direction:column;gap:8px}}
+.mgc-st{font-weight:800;font-size:calc(15px * var(--ui-scale));margin:6px 2px 0}.mgc-st small{font-weight:500;font-size:calc(12.5px * var(--ui-scale))}
+.mgc{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:10px 12px}
+.mgc.miss{border:2px solid #F59E0B}
+.mgc .a{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.mgc .nm{font-weight:800;font-size:calc(17px * var(--ui-scale))}.mgc .nm small{font-weight:500;font-size:calc(13px * var(--ui-scale));margin-left:6px}
+.mgc .when{font-weight:800;font-size:calc(14.5px * var(--ui-scale));white-space:nowrap}.mgc .when.soon{color:var(--w)}
+.mgc .b{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:calc(13.5px * var(--ui-scale));margin-top:2px}
+.mgc-ed{flex-shrink:0;border:1.5px solid var(--bd);background:var(--sf);color:var(--tx);border-radius:10px;min-width:44px;min-height:38px;font-size:calc(14px * var(--ui-scale));cursor:pointer}
+.mgc-tag{display:inline-block;margin-top:6px;background:var(--wb);color:var(--w);border-radius:8px;padding:2px 8px;font-size:calc(12.5px * var(--ui-scale));font-weight:700}
+.mgc-chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.mgc-chip{background:var(--sf);border:1.5px dashed var(--bd);border-radius:12px;padding:6px 4px;min-height:48px;font-family:inherit;color:var(--tx);cursor:pointer;text-align:center}
+.mgc-chip b{display:block;font-size:calc(15px * var(--ui-scale))}.mgc-chip span{font-size:calc(12px * var(--ui-scale))}
+.mgc-fold{display:flex;justify-content:space-between;width:100%;background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:11px 12px;min-height:46px;font-family:inherit;font-weight:700;font-size:calc(14.5px * var(--ui-scale));color:var(--tx);cursor:pointer;margin-top:4px}
+.fi.mg-need{border-color:#F59E0B;background:var(--wb)}
+.mg-del{margin-top:4px;border-top:2px dashed var(--db);padding-top:8px}
+.mg-del[hidden]{display:none!important}
+.mg-del summary{font-weight:700;color:var(--d);cursor:pointer;min-height:40px;display:flex;align-items:center}
+.mg-dz{background:var(--db);border-radius:12px;padding:10px;margin-top:6px;display:flex;flex-direction:column;gap:8px;font-size:calc(14px * var(--ui-scale))}
+.mg-dz .btn:disabled{opacity:.5;cursor:not-allowed}
 .mp-mini{border:none;background:none;color:var(--tx3);cursor:pointer;font-size:calc(12px * var(--ui-scale));padding:3px 6px;border-radius:5px;font-family:inherit}
 .mp-mini:hover{background:var(--sf2);color:var(--tx)}
 .mp-mini.danger:hover{background:var(--db);color:var(--d)}
@@ -4142,7 +4164,8 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 <!-- MANAGE -->
 <div id="sec-manage" class="sec">
   <div class="sec-hdr"><div class="sec-title">🗺️ จัดการบ่อ</div><button class="btn btn-p" onclick="openAddPond()">+ เพิ่มบ่อใหม่</button></div>
-  <div class="card">
+  <div id="mg-cards"></div>
+  <div class="card" id="mg-tbl-card">
     <div class="tbl-wrap">
       <table class="tbl"><thead><tr><th>ชื่อบ่อ</th><th>ยอดปล่อย</th><th>ขนาด (ไร่)</th><th>ความหนาแน่น</th><th>วันปล่อย</th><th>อายุ</th><th>น้ำ</th><th>อาหาร</th><th>สุ่ม</th><th>แล็บ</th><th>อัตราโต (ก./วัน)</th><th>จัดการ</th></tr></thead><tbody id="mg-tbody"></tbody></table>
     </div>
@@ -4750,6 +4773,11 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
         <textarea class="fi" id="mdl-note" rows="3" placeholder="เช่น ลูกกุ้งชุดนี้ลดราคา 50% · ลดค่าขนส่งจากยอดปกติ · เปลี่ยนโรงเพาะกลางรอบ" style="resize:vertical;min-height:70px;font-family:inherit"></textarea>
         <span class="lbl-std">ติดไปกับรอบนี้ — เห็นที่หน้ารายละเอียดบ่อ ฟอร์มปิดบ่อ และเก็บเข้าประวัติตอนปิดรอบให้เอง</span></div>
       <div style="display:flex;gap:10px"><button class="btn btn-p" onclick="savePond()">💾 บันทึก</button><button class="btn btn-s" onclick="closePond()">ยกเลิก</button></div>
+      <details class="mg-del" id="mdl-del" hidden><summary>🗑️ ลบบ่อนี้</summary>
+        <div class="mg-dz"><b id="mdl-del-warn"></b><span>พิมพ์ <b id="mdl-del-name"></b> เพื่อยืนยัน</span>
+          <input type="text" class="fi" id="mdl-del-in" oninput="mgDelCheck()" autocomplete="off" aria-label="พิมพ์ชื่อบ่อเพื่อยืนยันการลบ">
+          <button type="button" class="btn btn-d" id="mdl-del-btn" onclick="mgDelGo()" disabled>ลบบ่อ</button></div>
+      </details>
     </div>
   </div>
 </div>
@@ -18877,6 +18905,68 @@ function importJSON(inp){
 }
 // ===== POND MANAGEMENT =====
 // ── เพิ่ม: ขึ้นสีแดง/หนา ถ้าบ่อที่ลงกุ้งแล้ว (อายุ>=0) ยังไม่มีบันทึกประเภทนี้เลย เพื่อให้ผู้บริหารเห็นช่องว่างข้อมูลได้ทันที ──
+// ══ จัดการบ่อ (#416) — หน้านี้ใช้ตอนวางแผนลงกุ้ง (พี่บอก) → มือถือเป็นการ์ด: กรอกให้ครบ · จะลง (ใกล้สุดก่อน) · บ่อว่าง · กำลังเลี้ยง (พับ)
+//    "กรอกให้ครบ" = ลงแล้วไม่เกิน MG_FILL_DAYS วัน และยังขาด แถม/น้ำหนัก PL/ค่าลูกกุ้ง/ค่าขนส่ง (ต้นทุนลูกกุ้งใน P&L + อัตรารอดใช้ช่องพวกนี้)
+//    จำกัดวันเพราะแถม 0 อาจเป็นของจริง — เตือนแค่ช่วงแรกหลังลง ไม่ค้างทั้งรอบ
+const MG_FILL_DAYS=14,MG_SOON_DAYS=7;let _mgFoldOpen=false;
+function mgMissing(p){
+  if(!p||!p.startDate||p.harvestDate)return[];
+  const a=docAge(p.startDate,today());if(!(a>=1&&a<=MG_FILL_DAYS))return[];
+  const m=[];
+  if(!(+p.stockBonus>0))m.push('แถม');
+  if(!(+p.plWeight>0))m.push('น้ำหนัก PL');
+  if(!(+p.costFry>0))m.push('ค่าลูกกุ้ง');
+  if(!(+p.costTransport>0))m.push('ค่าขนส่ง');
+  return m;
+}
+function mgFoldToggle(){_mgFoldOpen=!_mgFoldOpen;renderMgCards();}
+function renderMgCards(){
+  const el=document.getElementById('mg-cards');if(!el)return;
+  const td=today(),q=String.fromCharCode(39),P=sortedPonds();
+  const ed=p=>'<button type="button" class="mgc-ed" onclick="editPond('+q+p.id+q+')" aria-label="แก้ไขบ่อ '+mpEsc(p.name)+'">✏️</button>';
+  const sub=p=>'<small>'+(p.zone?'โซน '+mpEsc(p.zone)+' · ':'')+(p.size||'-')+' ไร่</small>';
+  const miss=P.filter(p=>mgMissing(p).length);
+  const up=P.filter(p=>p.startDate&&!p.harvestDate&&p.startDate>td).sort((a,b)=>a.startDate.localeCompare(b.startDate));
+  const empty=P.filter(p=>!p.startDate&&!p.harvestDate);
+  const live=P.filter(p=>p.harvestDate||(p.startDate&&p.startDate<=td&&!mgMissing(p).length));
+  const card=(p,when,soon,extra)=>'<div class="mgc'+(extra?' miss':'')+'"><div class="a"><span class="nm">'+mpEsc(p.name)+sub(p)+'</span><span class="when'+(soon?' soon':'')+'">'+when+'</span></div>'
+    +'<div class="b"><span>'+(p.stock>0?'สั่ง '+(+p.stock).toLocaleString():'ยังไม่ระบุยอดสั่ง')+(p.hatchery?' · '+mpEsc(p.hatchery):'')+'</span>'+ed(p)+'</div>'+(extra||'')+'</div>';
+  const st=(t,n)=>'<div class="mgc-st">'+t+' <small>'+n+' บ่อ</small></div>';
+  let h='';
+  if(miss.length)h+=st('⚠️ กรอกให้ครบ',miss.length)+miss.map(p=>{const a=docAge(p.startDate,td);
+    return card(p,a===1?'ลงวันนี้':'ลง '+a+' วัน',false,'<span class="mgc-tag">ยังไม่กรอก: '+mgMissing(p).join(' · ')+'</span>');}).join('');
+  if(up.length)h+=st('🗓️ จะลง',up.length)+up.map(p=>{const n=dDiff(td,p.startDate);
+    return card(p,fD(p.startDate).replace(/\s\d{2}$/,'')+' · '+(n===1?'พรุ่งนี้':'อีก '+n+' วัน'),n<=MG_SOON_DAYS,'');}).join('');
+  h+=st('⬜ บ่อว่าง',empty.length)+(empty.length?'<div class="mgc-chips">'+empty.map(p=>'<button type="button" class="mgc-chip" onclick="editPond('+q+p.id+q+')"><b>'+mpEsc(p.name)+'</b><span>'+(p.zone?mpEsc(p.zone)+' · ':'')+(p.size||'-')+'</span></button>').join('')+'</div>':'');
+  h+='<button type="button" class="mgc-fold" onclick="mgFoldToggle()" aria-expanded="'+_mgFoldOpen+'"><span>🦐 กำลังเลี้ยง '+live.length+' บ่อ</span><span>'+(_mgFoldOpen?'▾':'▸')+'</span></button>';
+  if(_mgFoldOpen)h+=live.map(p=>card(p,p.harvestDate?'📋 รอทำสรุป':docAge(p.startDate,td)+' วัน',false,'')).join('');
+  el.innerHTML=h;
+}
+// ── ช่องที่ยังขาดในหน้าต่างแก้ → สีส้ม (หายเมื่อพิมพ์) ──
+function mgMarkNeed(p){
+  const miss=mgMissing(p),map={'แถม':'mdl-stockbonus','น้ำหนัก PL':'mdl-plWeight','ค่าลูกกุ้ง':'mdl-costfry','ค่าขนส่ง':'mdl-costtransport'};
+  Object.values(map).forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('mg-need');});
+  miss.forEach(k=>{const e=document.getElementById(map[k]);if(e)e.classList.add('mg-need');});
+}
+// ── ลบบ่อ (#416): ท้ายหน้าต่างแก้ · admin เท่านั้น · ต้องพิมพ์ชื่อบ่อตรง — ลบแล้วประวัติรอบเลี้ยงทั้งหมดหาย ──
+function mgDelSetup(p){
+  const box=document.getElementById('mdl-del');if(!box)return;
+  box.hidden=!p||APP_ROLE!=='admin';box.open=false;if(box.hidden)return;
+  const n=(p.cropHistory||[]).length;
+  document.getElementById('mdl-del-warn').textContent='ลบแล้วข้อมูลบ่อนี้'+(n?' และประวัติ '+n+' รอบ':'')+'หายถาวร';
+  document.getElementById('mdl-del-name').textContent=p.name;
+  const inp=document.getElementById('mdl-del-in');inp.value='';
+  document.getElementById('mdl-del-btn').disabled=true;
+}
+function mgDelCheck(){
+  const id=document.getElementById('mdl-id').value,p=pond(id);
+  document.getElementById('mdl-del-btn').disabled=!(p&&document.getElementById('mdl-del-in').value.trim()===p.name);
+}
+function mgDelGo(){
+  const id=document.getElementById('mdl-id').value,p=pond(id);
+  if(!p||APP_ROLE!=='admin'||document.getElementById('mdl-del-in').value.trim()!==p.name)return;
+  closePond();delPond(id,true);
+}
 function mgCountCell(n,active){
   if(active&&n===0)return`<strong style="color:var(--d)">${n}</strong>`;
   return n;
@@ -18894,8 +18984,9 @@ function renderManage(){
     // ── บ่อที่ "ยังไม่ลงกุ้ง" (startDate ว่าง) แต่ log ยังไม่ว่างจริง — ข้อมูลรอบเก่าค้างจากปิดรอบ (เช่น sync ดันกลับ) ไม่ได้ตั้งใจ ──
     const orphaned=!active&&!p.startDate&&[p.records.length,(p.feedLog||[]).length,(p.samples||[]).length,(p.labResults||[]).length,(p.waterLog||[]).length,(p.chemLog||[]).length,(p.partialHarvests||[]).length].some(n=>n>0);
     const cleanupBtn=orphaned?`<button class="btn btn-d btn-sm" title="ล้างข้อมูลค้างจากรอบก่อน" onclick="cleanupOrphanData('${p.id}')">🧹</button>`:'';
-    return`<tr><td><strong style="color:var(--p)">${p.name}</strong></td><td>${!p.startDate?'<span style="color:var(--tx3)">-</span>':pRelease(p).toLocaleString()}${p.startDate&&p.stockBonus?`<div style="font-size:var(--fs10);color:var(--tx3)">สั่ง ${p.stock.toLocaleString()} + แถม ${p.stockBonus.toLocaleString()}</div>`:''}</td><td>${p.size}</td><td>${p.startDate?dens(p)+' ตัว/ตรม.':'<span style="color:var(--tx3)">-</span>'}</td><td>${p.startDate?fD(p.startDate):'-'}</td><td>${ageCell}</td><td>${mgCountCell(p.records.length,active)}</td><td>${mgCountCell((p.feedLog||[]).length,active)}</td><td>${mgCountCell((p.samples||[]).length,active)}</td><td>${mgCountCell((p.labResults||[]).length,active)}</td><td>${adgCell}</td><td><div class="tbl-act">${cleanupBtn}<button class="btn btn-s btn-sm" onclick="editPond('${p.id}')">✏️</button><button class="btn btn-d btn-sm" onclick="delPond('${p.id}')">🗑️</button></div></td></tr>`;
+    return`<tr><td><strong style="color:var(--p)">${p.name}</strong>${(()=>{const m=mgMissing(p);return m.length?'<div class="mgc-tag">ยังไม่กรอก: '+m.join(' · ')+'</div>':'';})()}</td><td>${!p.startDate?'<span style="color:var(--tx3)">-</span>':pRelease(p).toLocaleString()}${p.startDate&&p.stockBonus?`<div style="font-size:var(--fs10);color:var(--tx3)">สั่ง ${p.stock.toLocaleString()} + แถม ${p.stockBonus.toLocaleString()}</div>`:''}</td><td>${p.size}</td><td>${p.startDate?dens(p)+' ตัว/ตรม.':'<span style="color:var(--tx3)">-</span>'}</td><td>${p.startDate?fD(p.startDate):'-'}</td><td>${ageCell}</td><td>${mgCountCell(p.records.length,active)}</td><td>${mgCountCell((p.feedLog||[]).length,active)}</td><td>${mgCountCell((p.samples||[]).length,active)}</td><td>${mgCountCell((p.labResults||[]).length,active)}</td><td>${adgCell}</td><td><div class="tbl-act">${cleanupBtn}<button class="btn btn-s btn-sm" onclick="editPond('${p.id}')">✏️</button></div></td></tr>`;
   }).join('');
+  renderMgCards();
 }
 // ── ล้างข้อมูลค้าง (feedLog/samples/labResults ฯลฯ) ของบ่อที่ปิดรอบไปแล้วแต่ log ไม่ถูกเคลียร์ตาม (เช่น sync ดันข้อมูลรอบเก่ากลับมา) — ใช้ path เดียวกับตอนปิดรอบจริง (tombstone แล้วล้าง array) ──
 function cleanupOrphanData(id){
@@ -18926,6 +19017,7 @@ function openAddPond(){
   document.getElementById('mdl-plType').value='';
   document.getElementById('mdl-start').value=today();
   {const e=document.getElementById('mdl-note');if(e)e.value='';}
+  mgMarkNeed(null);mgDelSetup(null);
   document.getElementById('pondModal').classList.add('on');
   syncDateHint(document.getElementById('mdl-start'));
   syncMdlTotal();
@@ -18944,6 +19036,7 @@ function editPond(id){
   {const e=document.getElementById('mdl-note');if(e)e.value=p.cropNote||'';}
   {const e=document.getElementById('mdl-zone');if(e)e.value=p.zone||'';}
   refreshZoneDatalist();
+  mgMarkNeed(p);mgDelSetup(p);
   document.getElementById('pondModal').classList.add('on');
   syncDateHint(document.getElementById('mdl-start'));
   syncMdlTotal();
@@ -19022,8 +19115,8 @@ function computeNextCrop(p,baseDate){
   const closedThisYear=(p.cropHistory||[]).filter(c=>histRecYear(c)===yBE).length;
   return{cropNum:closedThisYear+1,cropYear:yCE};
 }
-function delPond(id){
-  const p=pond(id);if(!confirm(`ลบบ่อ ${p.name} และข้อมูลทั้งหมด?`))return;
+function delPond(id,skip){
+  const p=pond(id);if(!p)return;if(!skip&&!confirm(`ลบบ่อ ${p.name} และข้อมูลทั้งหมด?`))return;
   D.deletedPondNames=D.deletedPondNames||{};D.deletedPondNames[id]=p.name;
   D.ponds=D.ponds.filter(x=>x.id!==id);
   D.deletedIds=D.deletedIds||[];D.deletedIds.push(id);
