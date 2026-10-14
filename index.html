@@ -404,6 +404,30 @@ details[open]>summary .fcx-arr{transform:rotate(90deg)}
       ที่ specificity เท่ากันแต่ประกาศทีหลัง ทำให้ admin ได้ display:block แทน flex (ปุ่มเรียงเพี้ยน) */
 .mp-actions{display:none}
 body.role-admin .mp-actions{display:flex!important;gap:2px;flex-wrap:wrap}
+/* Protocol แบบอ่านง่าย (#415) */
+.mpx-grp{background:var(--sf);border:1px solid var(--bd);border-radius:16px;overflow:hidden;margin-bottom:12px}
+.mpx-gt{font-weight:800;font-size:calc(16px * var(--ui-scale));padding:10px 14px;background:var(--pl)}
+.mpx-gt.mpx-water,.mpx-gtag.mpx-water{background:var(--ib)}
+.mpx-it{display:flex;width:100%;justify-content:space-between;align-items:center;gap:10px;text-align:left;background:none;border:none;border-top:1px solid var(--sf2);padding:11px 14px;min-height:46px;font-family:inherit;font-size:calc(15.5px * var(--ui-scale));color:var(--tx);cursor:pointer}
+.mpx-it:hover{background:var(--sf2)}
+.mpx-it .ar{font-size:calc(19px * var(--ui-scale));flex-shrink:0}
+.mpx-empty{padding:10px 14px;border-top:1px solid var(--sf2);font-size:calc(14px * var(--ui-scale))}
+.mpx-back{background:none;border:none;font-family:inherit;font-weight:700;color:var(--p);font-size:calc(15.5px * var(--ui-scale));padding:6px 0;margin-bottom:4px;min-height:44px;cursor:pointer}
+.mpx-card{background:var(--sf);border:1px solid var(--bd);border-radius:16px;padding:16px}
+.mpx-ttl{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;font-size:calc(19px * var(--ui-scale));font-weight:800;line-height:1.3}
+.mpx-ed{flex-shrink:0;font-family:inherit;font-size:calc(13.5px * var(--ui-scale));font-weight:600;border:1.5px solid var(--bd);background:var(--sf);color:var(--tx);border-radius:10px;padding:4px 12px;min-height:40px;cursor:pointer}
+.mpx-ed.on{border-color:var(--p);background:var(--pl)}
+.mpx-gtag{display:inline-block;margin-top:6px;font-size:calc(13px * var(--ui-scale));font-weight:600;background:var(--pl);border-radius:99px;padding:0 10px}
+.mpx-tools{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding:10px;background:var(--sf2);border-radius:12px}
+.mpx-tools button{font-family:inherit;font-size:calc(13.5px * var(--ui-scale));font-weight:600;border:1.5px solid var(--bd);background:var(--sf);color:var(--tx);border-radius:10px;padding:4px 10px;min-height:40px;cursor:pointer}
+.mpx-tools button.danger{color:var(--d)}.mpx-tools button:disabled{cursor:default;opacity:.7}
+.mpx-body{margin-top:12px}
+.mpx-r{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 0;border-bottom:1px solid var(--sf2);font-size:calc(17px * var(--ui-scale));line-height:1.4}
+.mpx-r i{font-style:normal;font-weight:700;display:inline-block;min-width:24px}
+.mpx-r>b{font-weight:800;white-space:nowrap}
+.mpx-hd{font-weight:800;font-size:calc(16px * var(--ui-scale));margin:10px 0 2px}
+.mpx-note{margin:6px 0;font-size:calc(16px * var(--ui-scale));font-weight:600;line-height:1.45;background:var(--sf2);border-radius:10px;padding:6px 10px}
+.mpx-upd{margin-top:12px;font-size:calc(13px * var(--ui-scale))}
 .mp-mini{border:none;background:none;color:var(--tx3);cursor:pointer;font-size:calc(12px * var(--ui-scale));padding:3px 6px;border-radius:5px;font-family:inherit}
 .mp-mini:hover{background:var(--sf2);color:var(--tx)}
 .mp-mini.danger:hover{background:var(--db);color:var(--d)}
@@ -2795,32 +2819,8 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 <!-- MED PROTOCOL (Protocol เวชภัณฑ์ — แยกเป็นหัวข้อ เพิ่ม/แก้/ลบเองได้ · staff เห็นแต่แก้ไม่ได้) -->
 <div id="sec-medproto" class="sec">
   <div class="sec-hdr"><div class="sec-title">💊 Protocol เวชภัณฑ์ล่าสุด</div></div>
-  <div class="card">
-    <div class="card-sub" style="margin-bottom:14px">จุดเขียวบนแท็บ = กรอกแล้ว</div>
-    <div class="mp-grps" id="mp-grps"></div>
-    <div class="mp-tabs" id="mp-tabs"></div>
-    <div class="mp-ttl-row">
-      <span class="t" id="mp-cur-ttl">—</span>
-      <span id="mp-pin-badge"></span>
-      <span class="mp-actions">
-        <button class="mp-mini" type="button" onclick="mpRename()" title="เปลี่ยนชื่อหัวข้อ">✏️ เปลี่ยนชื่อ</button>
-        <button class="mp-mini" type="button" onclick="mpTogglePin()" title="ตั้งเป็นหัวข้อที่โชว์ในหน้าภาพรวม">📌 ตั้งเป็นหัวข้อหลัก</button>
-        <button class="mp-mini" type="button" onclick="mpMove(-1)" title="เลื่อนขึ้น">↑</button>
-        <button class="mp-mini" type="button" onclick="mpMove(1)" title="เลื่อนลง">↓</button>
-        <button class="mp-mini" type="button" onclick="mpMoveGroup()" title="ย้ายไปอีกกลุ่ม">🔀 ย้ายกลุ่ม</button>
-        <button class="mp-mini danger" type="button" onclick="mpDel()" title="ลบหัวข้อนี้">🗑️ ลบ</button>
-      </span>
-    </div>
-    <textarea class="fi mp-ta" id="mp-ta" readonly onclick="mpExpand()" placeholder="แตะที่นี่เพื่อเปิดหน้าเต็มจอสำหรับอ่าน/พิมพ์..."></textarea>
-    <div class="mp-ta-tap-hint">👆 แตะเพื่อขยายเต็มจอ</div>
-    <div class="mp-foot">
-      <span id="mp-upd" style="font-size:var(--fs105);color:var(--tx3)"></span>
-      <div style="display:flex;gap:7px;flex-wrap:wrap">
-        <button class="btn btn-s admin-only" type="button" onclick="mpAdd()">+ เพิ่มหัวข้อ</button>
-      </div>
-    </div>
-    <div id="mp-msg" style="margin-top:10px"></div>
-  </div>
+  <div id="mp-view"></div>
+  <div id="mp-msg" style="margin-top:10px"></div>
 </div>
 <div id="sec-kan" class="sec">
   <div class="sec-hdr"><div class="sec-title">📋 กัน</div></div>
@@ -16043,42 +16043,57 @@ function initKan(){
   kanBindKeys();
   renderKanGrid();
 }
-function initMedProto(){_mpDirty=false;mpRender();}
+function initMedProto(){_mpDirty=false;_mpView='list';_mpTools=false;mpRender();}
+// ── หน้า Protocol แบบอ่านง่าย (#415) — เปิดดูนานๆ ครั้งตอนมีคนถาม/นึกไม่ออก (พี่บอก) จึงเน้นอ่าน:
+//    list = รายชื่อหัวข้อทั้งหมดแบ่งกลุ่ม · read = หัวข้อเดียว ชื่อซ้าย ปริมาณขวา (mpFmt จัดจากข้อความเดิม ไม่แก้ข้อมูล)
+//    ปุ่มจัดการ (แก้ข้อความ/ชื่อ/ปักหมุด/เลื่อน/ย้ายกลุ่ม/ลบ) ซ่อนหลัง ✏️ แก้ ของ admin
+let _mpView='list',_mpTools=false;
+function mpFmt(t){
+  const b=s=>mpEsc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+  const row=(n,a,v)=>'<div class="mpx-r"><span>'+(n?'<i>'+n+'.</i>':'')+b(a)+'</span>'+(v?'<b>'+b(v)+'</b>':'')+'</div>';
+  return String(t||'').split('\n').map(s=>s.trim()).filter(Boolean).map(s=>{
+    let m;
+    if(/^\*\*.+\*\*$/.test(s))return '<div class="mpx-hd">'+mpEsc(s.slice(2,-2))+'</div>';
+    if((m=s.match(/^(\d+)\.\s*(.+?)\s{2,}(\d.*)$/)))return row(m[1],m[2],m[3]);   // 1. In-Out      5 กรัม
+    if((m=s.match(/^(\d+)\.\s*(.+)$/)))return row(m[1],m[2],'');                   // 1. I Bac x 2
+    if((m=s.match(/^(.+?)\s{2,}(\d.*)$/))&&m[1].length<=24)return row('',m[1],m[2]); // อมิโน     5 กรัม (ชื่อสั้นเท่านั้น — ประโยคยาวที่เผลอเว้น 2 ช่องไม่ต้องแยก)
+    return '<div class="mpx-note">'+b(s)+'</div>';                                  // วิธีใช้ / หมายเหตุ
+  }).join('');
+}
 function mpRender(){
   const list=mpList(),groups=medProtoGroups();
   if(_mpCur>=list.length)_mpCur=Math.max(0,list.length-1);
-  const cur=list[_mpCur]||{};
-  // ยึดกลุ่มที่ผู้ใช้กดเลือกเป็นหลัก — ถ้ายึด cur.grp อย่างเดียว พอกดกลุ่มที่ยังไม่มีหัวข้อ จะเด้งกลับกลุ่มเดิมทันที
-  const curGrp=(_mpGrpSel&&groups.some(g=>g.key===_mpGrpSel))?_mpGrpSel:(cur.grp||groups[0].key);
-  // ── ชั้น 1: กลุ่มหลัก (ผสมกิน / ลงน้ำ) พร้อมตัวนับ "กรอกแล้ว/ทั้งหมด" ของกลุ่มนั้น ──
-  const grpsEl=document.getElementById('mp-grps');
-  if(grpsEl)grpsEl.innerHTML=groups.map(g=>{
-    const inG=list.filter(x=>x.grp===g.key);
-    const done=inG.filter(x=>(x.text||'').trim()).length;
-    const q=String.fromCharCode(39);   // ' — เลี่ยงปัญหา escape ซ้อนชั้นตอน build string ใน onclick
-    return '<button type="button" class="mp-grp'+(g.key===curGrp?' on':'')+'" onclick="mpGoGroup('+q+g.key+q+')">'+
-      mpEsc(g.title)+'<span class="n">'+done+'/'+inG.length+'</span></button>';
-  }).join('');
-  // ── ชั้น 2: หัวข้อย่อยเฉพาะในกลุ่มที่เลือก ──
-  const tabsEl=document.getElementById('mp-tabs');if(!tabsEl)return;
-  const sub=list.map((x,i)=>({x,i})).filter(o=>o.x.grp===curGrp);
-  tabsEl.innerHTML=sub.length
-    ?sub.map((o,n)=>
-      '<button type="button" class="mp-tb'+(o.i===_mpCur?' on':'')+'" onclick="mpGo('+o.i+')">'+
-        '<span class="dot'+((o.x.text||'').trim()?'':' empty')+'"></span>'+(n+1)+'. '+mpEsc(o.x.title||'(ไม่มีชื่อ)')+
-      '</button>').join('')
-    :'<span style="font-size:calc(13px * var(--ui-scale));color:var(--tx3);font-style:italic">กลุ่มนี้ยังไม่มีหัวข้อ — กด "+ เพิ่มหัวข้อ" เพื่อเริ่ม</span>';
-  const ttl=document.getElementById('mp-cur-ttl');if(ttl)ttl.textContent=cur.title||'—';
-  const pb=document.getElementById('mp-pin-badge');
-  if(pb)pb.innerHTML=cur.pinned?'<span class="mp-pin">📌 โชว์ในหน้าภาพรวม</span>':'';
-  const ta=document.getElementById('mp-ta');
-  if(ta&&document.activeElement!==ta)ta.value=cur.text||'';
+  const el=document.getElementById('mp-view');if(!el)return;
   const canEdit=mpCanEdit();
-  if(ta){ta.readOnly=!canEdit;ta.style.background=canEdit?'':'var(--sf2)';}
-  const upd=document.getElementById('mp-upd');
-  if(upd)upd.innerHTML=cur.updatedAt?('🕒 อัปเดตล่าสุด <b style="color:var(--tx2)">'+mpEsc(cur.updatedAt)+'</b> โดย '+mpEsc(cur.updatedBy||'-')):'ยังไม่เคยบันทึกหัวข้อนี้';
   _mpDirty=false;
+  if(_mpView!=='read'||!list[_mpCur]){
+    el.innerHTML=groups.map(g=>{
+      const items=list.map((x,i)=>({x,i})).filter(o=>o.x.grp===g.key);
+      return '<div class="mpx-grp"><div class="mpx-gt mpx-'+mpEsc(g.key)+'">'+mpEsc(g.title)+'</div>'
+        +(items.length?items.map(o=>'<button type="button" class="mpx-it" onclick="mpGo('+o.i+')"><span>'+mpEsc(o.x.title||'(ไม่มีชื่อ)')+'</span><span class="ar">›</span></button>').join('')
+          :'<div class="mpx-empty">ยังไม่มีหัวข้อ</div>')+'</div>';
+    }).join('')+(canEdit?'<button class="btn btn-s" type="button" onclick="mpAdd()">+ เพิ่มหัวข้อ</button>':'');
+    return;
+  }
+  const cur=list[_mpCur],g=groups.find(x=>x.key===cur.grp)||groups[0];
+  const tools=canEdit&&_mpTools?'<div class="mpx-tools">'
+    +'<button type="button" onclick="mpExpand()">📝 แก้ข้อความ</button>'
+    +'<button type="button" onclick="mpRename()">✏️ เปลี่ยนชื่อ</button>'
+    +(cur.pinned?'<button type="button" disabled>📌 ปักหมุดในภาพรวมอยู่</button>':'<button type="button" onclick="mpTogglePin()">📌 ปักหมุดในภาพรวม</button>')
+    +'<button type="button" onclick="mpMove(-1)" aria-label="เลื่อนขึ้น">↑</button>'
+    +'<button type="button" onclick="mpMove(1)" aria-label="เลื่อนลง">↓</button>'
+    +'<button type="button" onclick="mpMoveGroup()">🔀 ย้ายกลุ่ม</button>'
+    +'<button type="button" class="danger" onclick="mpDel()">🗑️ ลบ</button></div>':'';
+  el.innerHTML='<button type="button" class="mpx-back" onclick="mpBack()">‹ กลับ</button>'
+    +'<div class="mpx-card"><div class="mpx-ttl"><span>'+mpEsc(cur.title||'—')+'</span>'
+    +(canEdit?'<button type="button" class="mpx-ed'+(_mpTools?' on':'')+'" onclick="mpToolsToggle()">✏️ แก้</button>':'')+'</div>'
+    +'<span class="mpx-gtag mpx-'+mpEsc(g.key)+'">'+mpEsc(g.title)+'</span>'+tools
+    +'<div class="mpx-body">'+(mpFmt(cur.text)||'<div class="mpx-note">ยังไม่มีข้อความ</div>')+'</div>'
+    +(cur.updatedAt?'<div class="mpx-upd">แก้ล่าสุด '+mpEsc(cur.updatedAt)+' · '+mpEsc(cur.updatedBy||'-')+'</div>':'')
+    +'</div>';
 }
+function mpBack(){_mpView='list';_mpTools=false;mpRender();window.scrollTo(0,0);}
+function mpToolsToggle(){_mpTools=!_mpTools;mpRender();}
 // ── กดกลุ่มหลัก → เด้งไปหัวข้อแรกของกลุ่มนั้น (ถ้ากลุ่มว่างให้จำกลุ่มไว้เฉยๆ) ──
 let _mpGrpSel=null;
 function mpGoGroup(key){
@@ -16092,9 +16107,9 @@ function mpGoGroup(key){
 function mpGo(i){
   // เตือนก่อนสลับแท็บถ้ายังไม่บันทึก — textarea ถูกเขียนทับตอน render ข้อความที่พิมพ์จะหายเงียบๆ
   if(_mpDirty&&mpCanEdit()&&!confirm('หัวข้อนี้ยังไม่ได้บันทึก — ออกไปแล้วข้อความที่พิมพ์จะหาย ยืนยันหรือไม่?'))return;
-  _mpCur=i;
+  _mpCur=i;_mpView='read';_mpTools=false;
   const t=mpList()[i];if(t&&t.grp)_mpGrpSel=t.grp;
-  mpRender();
+  mpRender();window.scrollTo(0,0);
 }
 // ── หน้าต่างขยายเต็มจอ: กดที่กล่อง mp-ta เล็ก → เปิดหน้าใหญ่สำหรับอ่าน/พิมพ์ (แก้ปัญหากล่องเล็กอ่าน/พิมพ์ลำบากบนมือถือ) ──
 function mpExpand(){
@@ -16139,7 +16154,7 @@ function mpAdd(){
   const groups=medProtoGroups();
   const g=(_mpGrpSel&&groups.some(x=>x.key===_mpGrpSel))?_mpGrpSel:((list[_mpCur]||{}).grp||groups[0].key);
   list.push({id:'mp'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),grp:g,title:n.trim(),text:'',updatedAt:'',updatedBy:'',pinned:false});
-  _mpCur=list.length-1;save();mpRender();
+  _mpCur=list.length-1;_mpView='read';_mpTools=true;save();mpRender();
   showMsg('mp-msg','ok','✅ เพิ่มหัวข้อแล้ว');
 }
 function mpRename(){
@@ -16162,7 +16177,7 @@ function mpDel(){
   if(cur.id){D.deletedIds=D.deletedIds||[];D.deletedIds.push(cur.id);}
   list.splice(_mpCur,1);
   if(wasPinned&&list.length)list[0].pinned=true;   // ลบหัวข้อหลักไป ต้องมีตัวแทนเสมอ ไม่งั้นหน้าภาพรวมว่าง
-  _mpCur=Math.max(0,_mpCur-1);
+  _mpCur=Math.max(0,_mpCur-1);_mpView='list';_mpTools=false;
   save();mpRender();renderOvMedProtocol();
   showMsg('mp-msg','ok','🗑️ ลบหัวข้อแล้ว');
 }
