@@ -6379,6 +6379,22 @@ function histRecYear(c){
   if(c&&c.closeDate){const y=parseInt(String(c.closeDate).slice(0,4));if(!isNaN(y))return yearBE(y);}
   return yearBE(c&&(c.cropYear||c.year)||new Date().getFullYear());
 }
+// ── ป้ายรอบ "รอบที่ N/ปี" (#418 พี่เลือกแบบ ก) — ปี = ปีที่ลงกุ้ง · N = ลำดับวันลงกุ้งในปีนั้น คิดสดทุกครั้ง
+//    ไม่อ่าน c.cropNum ตรงๆ — ข้อมูลนำเข้าเก่ามีเลขซ้ำ 9 บ่อ (เช่น A.4 ปี 68 = #1 #2 #2) · ไม่แก้ข้อมูลที่เก็บ
+//    การแบ่งปีของสรุปปี/P&L/สถิติ ยังใช้ histRecYear (ปีที่ปิด) เหมือนเดิม — อันนี้เป็นแค่ป้ายชื่อรอบ
+function cropStockYearBE(c){return c&&c.startDate?yearBE(String(c.startDate).slice(0,4)):histRecYear(c);}
+function cropRoundNo(p,c){
+  const y=cropStockYearBE(c);
+  const same=((p&&p.cropHistory)||[]).filter(x=>x&&cropStockYearBE(x)===y).sort((a,b)=>String(a.startDate||'').localeCompare(String(b.startDate||''))||String(a.closeDate||'').localeCompare(String(b.closeDate||'')));
+  const i=same.indexOf(c);return i>=0?i+1:(c&&c.cropNum)||1;
+}
+function cropLbl(p,c){return cropRoundNo(p,c)+'/'+cropStockYearBE(c);}
+// รอบที่กำลังเลี้ยง = รอบในประวัติที่ลงกุ้งปีเดียวกันและลงก่อน + 1
+function pondRoundLbl(p){
+  if(!p||!p.startDate)return (p&&p.cropNum||1)+'/'+(yearBE(p&&p.cropYear)||'-');
+  const y=yearBE(String(p.startDate).slice(0,4));
+  return ((p.cropHistory||[]).filter(x=>x&&cropStockYearBE(x)===y&&String(x.startDate||'')<p.startDate).length+1)+'/'+y;
+}
 // ── ต้นทุนสะสม realtime ของรอบปัจจุบัน — สูตรชุดเดียวกับ auto-fill ในฟอร์มปิดรอบ (openCropModal) เพื่อให้เลขตรงกันเสมอ ──
 // ══════ ⚠️ single source of truth ของ "ต้นทุนสะสมของบ่อ ณ วันนี้" ══════
 // ทุกจุดในแอปที่โชว์ตัวเลขนี้ต้องเรียกฟังก์ชันนี้เท่านั้น ห้ามรวมยอดเองซ้ำ — จุดที่ใช้อยู่:
@@ -9205,7 +9221,7 @@ function careCheckRows(){
       const rows=caretakerShareRows(c,hr.size,closeKg);
       const calc=rows.reduce((a,r)=>a+r.amt,0);
       const noSize=rows.some(r=>r.noSize&&r.kg>0);
-      out.push({pond:p.name,cropNum:c.cropNum||1,cropYear:c.cropYear||c.year,
+      out.push({pond:p.name,cropNum:cropRoundNo(p,c),cropYear:c.cropYear||c.year,stockYearBE:cropStockYearBE(c),
         closeDate:c.closeDate||'',recorded:isNaN(recorded)?null:recorded,calc,
         diff:isNaN(recorded)?null:calc-recorded,noSize,rows,
         phCount:rows.filter(r=>r.label!=='ปิดบ่อ').length});
@@ -9245,7 +9261,7 @@ function renderCareCheck(){
     <th>บ่อ</th><th>รอบ</th><th>ปิดเมื่อ</th><th style="text-align:right">พาเชียล</th>
     <th style="text-align:right">บันทึกไว้</th><th style="text-align:right">กฎใหม่</th><th style="text-align:right">ส่วนต่าง</th>
   </tr></thead><tbody>${shown.map(r=>`<tr${r.noSize?' style="background:var(--wb)"':''}>
-    <td>${r.pond}</td><td>${r.cropNum}/${histRecYear(r)||'-'}</td><td>${r.closeDate?fD(r.closeDate):'-'}</td>
+    <td>${r.pond}</td><td>${r.cropNum}/${r.stockYearBE||'-'}</td><td>${r.closeDate?fD(r.closeDate):'-'}</td>
     <td style="text-align:right">${r.phCount?r.phCount+' ครั้ง':'<span style="color:var(--tx3)">—</span>'}</td>
     <td style="text-align:right;font-variant-numeric:tabular-nums">${r.recorded!=null?money(r.recorded):'<span style="color:var(--tx3)">ไม่ได้บันทึก</span>'}</td>
     <td style="text-align:right;font-variant-numeric:tabular-nums">${money(r.calc)}${r.noSize?' <span style="color:var(--w)" title="มีรายการจับที่ไม่ได้กรอกไซส์">⚠️</span>':''}</td>
@@ -9736,7 +9752,7 @@ function renderLaborCropSummary(){
     if(laborStart&&c.closeDate<laborStart)return; // ตัดรอบที่ปิดก่อนมีข้อมูลรายสัปดาห์จริง (ค่าแรง/กก. จะต่ำเกินจริงเพราะไม่มีข้อมูลพนักงานรายวันของช่วงนั้น)
     const lc=getLaborCostForPond(p.id,c.startDate,c.closeDate);
     const days=docAge(c.startDate,c.closeDate);
-    allRows.push({name:p.name,cropNum:c.cropNum,closeDate:c.closeDate,weight:w,labor:lc,perKg:lc&&w?lc/w:null,days,yearBE:yearBE(parseInt(c.closeDate.split('-')[0],10))});
+    allRows.push({name:p.name,cropNum:cropLbl(p,c),closeDate:c.closeDate,weight:w,labor:lc,perKg:lc&&w?lc/w:null,days,yearBE:yearBE(parseInt(c.closeDate.split('-')[0],10))});
   }));
   if(!allRows.length){el.innerHTML=`<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีรอบที่ปิดแล้วตั้งแต่มีข้อมูลรายสัปดาห์จริง${laborStart?' ('+fD(laborStart)+' เป็นต้นไป)':''}</p>`;return;}
   const yearCounts={};
@@ -10034,7 +10050,7 @@ function renderElecCropSummary(){
     if(elecStart&&c.closeDate<elecStart)return;
     const days=docAge(c.startDate,c.closeDate);
     const ec=getElecCostForPeriod(c.startDate,c.closeDate);
-    allRows.push({name:p.name,cropNum:c.cropNum,closeDate:c.closeDate,weight:w,elec:ec,perKg:ec&&w?ec/w:null,days,yearBE:yearBE(parseInt(c.closeDate.split('-')[0],10))});
+    allRows.push({name:p.name,cropNum:cropLbl(p,c),closeDate:c.closeDate,weight:w,elec:ec,perKg:ec&&w?ec/w:null,days,yearBE:yearBE(parseInt(c.closeDate.split('-')[0],10))});
   }));
   if(!allRows.length){el.innerHTML=`<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีรอบที่ปิดแล้วตั้งแต่มีข้อมูลบิลค่าไฟจริง${elecStart?' ('+fD(elecStart)+' เป็นต้นไป)':''}</p>`;return;}
   const yearCounts={};
@@ -15134,7 +15150,7 @@ function renderPdCropHistCard(p){
       const kg=hr.totalWeightAll||hr.totalWeight;
       const days=c.closeDate?docAge(c.startDate,c.closeDate):null;
       const prof=hr.netProfit;
-      return '<tr><td>รอบ '+(c.cropNum||'-')+'/'+(histRecYear(c)||'-')+(days!=null?'<div style="font-size:var(--fs10);color:var(--tx3)">'+days+' วัน</div>':'')+'</td>'+
+      return '<tr><td>รอบ '+cropLbl(p,c)+(days!=null?'<div style="font-size:var(--fs10);color:var(--tx3)">'+days+' วัน</div>':'')+'</td>'+
         '<td>'+(c.closeDate?fD(c.closeDate):'-')+'</td>'+
         '<td>'+(c.hatchery?mpEsc(c.hatchery):'<span style="color:var(--tx3)">-</span>')+(c.plType?'<div style="font-size:var(--fs10);color:var(--tx3)">'+mpEsc(c.plType)+'</div>':'')+'</td>'+
         '<td style="text-align:right;font-weight:700">'+n(kg)+(hr._phAdj?'<div style="font-size:var(--fs10);color:var(--tx3)">รวมพาเชียล</div>':'')+'</td>'+
@@ -18231,7 +18247,7 @@ function exYearBodyHtml(y,d,pdf){
   const tbl=(head,rows)=>'<table class="tbl exy-t"><thead><tr>'+head.map((h,i)=>'<th'+(i?' style="text-align:right"':'')+'>'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map((c,i)=>'<td'+(i?' style="text-align:right"':'')+'>'+c+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
   const pc=v=>'<b style="color:'+(v>=0?'var(--ok)':'var(--d)')+'">'+sg(v)+'</b>';
   const reasons=['ปกติ / ครบรอบ','ขี้ขาว','ตัวแดง'].filter(k=>d.grp[k]).map(k=>{const g=d.grp[k];return[k,g.n,(g.kg/1000).toFixed(1),pc(g.pf)];});
-  const rk=r=>[r.p.name+' · '+(r.c.cropNum||'-'),fD(r.c.closeDate),pc(r.pf)];
+  const rk=r=>[r.p.name+' · '+cropLbl(r.p,r.c),fD(r.c.closeDate),pc(r.pf)];
   const kpi='<div class="crx-sum"><div class="t">ปี '+yBE+' · ปิด '+d.rows.length+' รอบ · '+Math.round(d.t.kg).toLocaleString()+' กก.</div><div class="g">'
     +'<div><b>'+EX_M(d.t.rev)+'</b><span>ล้าน รายได้</span></div><div><b>'+EX_M(d.t.cost)+'</b><span>ล้าน ต้นทุน</span></div>'
     +'<div class="'+(d.t.pf<0?'neg':'')+'"><b>'+sg(d.t.pf)+'</b><span>ล้าน กำไร</span></div><div><b>'+d.win+' / '+d.loss+'</b><span>รอบกำไร / ขาดทุน</span></div></div></div>';
@@ -18323,7 +18339,7 @@ function onExPondChange(){
   }
   if(cropWrap)cropWrap.style.display='';
   if(cropSel){
-    cropSel.innerHTML=visIdx.map(({c,i})=>`<option value="${i}">รอบที่ ${c.cropNum}/${histRecYear(c)} (ปิด ${c.closeDate?fD(c.closeDate):'-'})</option>`).join('');
+    cropSel.innerHTML=visIdx.map(({c,i})=>`<option value="${i}">รอบที่ ${cropLbl(p,c)} · ปิด ${c.closeDate?fD(c.closeDate):'-'}</option>`).join('');
     cropSel.value=String(visIdx[visIdx.length-1].i);
   }
   renderExPreview();
@@ -18543,7 +18559,7 @@ function renderExChart(p){
   const hist=(p.cropHistory||[]).filter(c=>c.harvestResult);
   if(hist.length<1){wrap.style.display='none';return;}
   wrap.style.display='';
-  const labels=hist.map(c=>`รอบ ${c.cropNum}/${histRecYear(c)}`);
+  const labels=hist.map(c=>'รอบ '+cropLbl(p,c));
   const fcrData=hist.map(c=>{const h=cropHarvestResult(c);return h&&h.fcr!=null?h.fcr:null;});
   const survData=hist.map(c=>{const h=cropHarvestResult(c);return h&&h.survivalRate!=null?h.survivalRate:null;});
   const yieldData=hist.map(c=>{
@@ -18638,7 +18654,7 @@ function getCloseSummary(p,cropIdx){
   const netProfit=(harvestResult&&harvestResult.netProfit!=null)?harvestResult.netProfit:((revenue!=null&&totalCost!=null)?revenue-totalCost:null);
   const marginPct=(revenue&&netProfit!=null)?+((netProfit/revenue)*100).toFixed(1):null;
   const costPerKg=(totalWeight&&totalCost!=null)?+(totalCost/totalWeight).toFixed(1):null;
-  return{_crop:lastCrop,pondName:p.name,cropLabel:lastCrop?`รอบที่ ${lastCrop.cropNum}/${histRecYear(lastCrop)}`:'(รอบปัจจุบัน ยังไม่ปิด)',hatchery,stock,buyer,price,totalWeight,totalBaht,partialCount,ageDays,totalFeed,fcr,closeSize,adg,survivalRate,survivalRateOrder,yieldPerRai,notesAll,closeDate,startDate,rows,feedLog,samples,
+  return{_crop:lastCrop,pondName:p.name,cropLabel:lastCrop?`รอบที่ ${cropLbl(p,lastCrop)}`:'(รอบปัจจุบัน ยังไม่ปิด)',hatchery,stock,buyer,price,totalWeight,totalBaht,partialCount,ageDays,totalFeed,fcr,closeSize,adg,survivalRate,survivalRateOrder,yieldPerRai,notesAll,closeDate,startDate,rows,feedLog,samples,
     costFry,costTransport,costFeed,costMed,costLime,costLabor,costElec,costFuel,costEquip,costEquipOut,costCatch,pctCaretaker,pctManager,amtCaretaker,amtManager,costChemLegacy,costOtherLegacy,hasCostData,totalCost,revenue,netProfit,marginPct,costPerKg};
 }
 // ===== PDF หน้าเดียว (ใช้เมื่อเลือกบ่อเดียว) — 4 KPI + ข้อมูลย่อ 3 คอลัมน์ + 2 กราฟผู้บริหาร + ต้นทุนต่อกิโล =====
@@ -18750,12 +18766,12 @@ async function genPDF(opt){
           let boxes='';
           if(wantProfit){
             const gChartId=`pdf-profit-${pIdx}`;
-            chartJobs.push({canvasId:gChartId,kind:'profit',hist:histClosed});
+            chartJobs.push({canvasId:gChartId,kind:'profit',hist:histClosed,p});
             boxes+=`<div style="border:1px solid #e6efe9;border-radius:6px;padding:8px"><canvas id="${gChartId}" width="330" height="190"></canvas></div>`;
           }
           if(wantCompare){
             const cChartId=`pdf-fcr-${pIdx}`;
-            chartJobs.push({canvasId:cChartId,kind:'compare',hist:histClosed});
+            chartJobs.push({canvasId:cChartId,kind:'compare',hist:histClosed,p});
             boxes+=`<div style="border:1px solid #e6efe9;border-radius:6px;padding:8px"><canvas id="${cChartId}" width="330" height="190"></canvas></div>`;
           }
           if(boxes){
@@ -18816,7 +18832,7 @@ async function genPDF(opt){
       }
       const histClosed=(p.cropHistory||[]).filter(c=>c.harvestResult);
       if(histClosed.length>=2&&chartWant('compare')){
-        chartJobs.push({canvasId:cChartId,kind:'compare',hist:histClosed});
+        chartJobs.push({canvasId:cChartId,kind:'compare',hist:histClosed,p});
         chartsHtml+=`<div style="margin-top:10px"><canvas id="${cChartId}" width="680" height="200"></canvas></div>`;
       }
       html+=`<div style="margin-bottom:16px;border:1px solid #e0e0e0;border-radius:6px;overflow:hidden;page-break-inside:avoid">
@@ -18863,7 +18879,7 @@ async function genPDF(opt){
             scales:{y:{title:{display:true,text:'กก.'}}}}
         }));
       }else if(job.kind==='profit'){
-        const labels=job.hist.map(c=>`รอบ ${c.cropNum}/${histRecYear(c)}`);
+        const labels=job.hist.map(c=>'รอบ '+cropLbl(job.p,c));
         const revData=job.hist.map(c=>cropHarvestResult(c)?.revenue??null);
         const costData=job.hist.map(c=>{
           const hr=c.harvestResult;if(!hr)return null;
@@ -18883,7 +18899,7 @@ async function genPDF(opt){
             scales:{y:{ticks:{font:{size:9}}},x:{ticks:{font:{size:9}}}}}
         }));
       }else if(job.kind==='compare'){
-        const labels=job.hist.map(c=>`รอบ ${c.cropNum}/${histRecYear(c)}`);
+        const labels=job.hist.map(c=>'รอบ '+cropLbl(job.p,c));
         const fcrData=job.hist.map(c=>cropHarvestResult(c)?.fcr??null);
         const survData=job.hist.map(c=>cropHarvestResult(c)?.survivalRate??null);
         pdfCharts.push(new Chart(cv.getContext('2d'),{
@@ -19162,7 +19178,7 @@ function savePond(){
 function computeNextCrop(p,baseDate){
   const yCE=parseInt(String(baseDate||today()).slice(0,4))||new Date().getFullYear();
   const yBE=yearBE(yCE);
-  const closedThisYear=(p.cropHistory||[]).filter(c=>histRecYear(c)===yBE).length;
+  const closedThisYear=(p.cropHistory||[]).filter(c=>cropStockYearBE(c)===yBE).length;   // รอบที่ลงกุ้งในปีเดียวกัน (#418)
   return{cropNum:closedThisYear+1,cropYear:yCE};
 }
 function delPond(id,skip){
@@ -19545,7 +19561,7 @@ function onChPondChange(){
   //    เดิมใช้ลำดับดิบ และ default เป็น "ตัวสุดท้ายในอาเรย์" ซึ่งไม่ใช่รอบล่าสุดจริง
   const ordered=p.cropHistory.map((c,i)=>({c,i}))
     .sort((a,b)=>String(b.c.closeDate||b.c.startDate||'').localeCompare(String(a.c.closeDate||a.c.startDate||'')));
-  cycleSel.innerHTML=ordered.map(({c,i})=>`<option value="${i}">รอบที่ ${c.cropNum||i+1}/${histRecYear(c)||''} (ปิด ${c.closeDate?fD(c.closeDate):'-'})</option>`).join('');
+  cycleSel.innerHTML=ordered.map(({c,i})=>`<option value="${i}">รอบที่ ${cropLbl(p,c)} · ปิด ${c.closeDate?fD(c.closeDate):'-'}</option>`).join('');
   cycleSel.value=String(ordered[0].i);
   onChCycleChange();
 }
@@ -19921,9 +19937,9 @@ function setChCompareMode(mode){
   let options=[];
   if(mode==='same'){
     const p=pond(pid);
-    options=(p?.cropHistory||[]).map((c,i)=>({pondId:pid,idx:i,label:`รอบ ${c.cropNum||i+1}/${yearBE(c.cropYear||c.year)||''}`}));
+    options=(p?.cropHistory||[]).map((c,i)=>({pondId:pid,idx:i,label:`รอบ ${cropLbl(p,c)}`}));
   }else{
-    D.ponds.forEach(p=>(p.cropHistory||[]).forEach((c,i)=>{options.push({pondId:p.id,idx:i,label:`บ่อ${p.name} รอบ${c.cropNum||i+1}/${yearBE(c.cropYear||c.year)||''}`})}));
+    D.ponds.forEach(p=>(p.cropHistory||[]).forEach((c,i)=>{options.push({pondId:p.id,idx:i,label:`บ่อ${p.name} รอบ${cropLbl(p,c)}`})}));
   }
   _chCompareSel=_chCompareSel.filter(sl=>options.some(o=>o.pondId===sl.pondId&&o.idx===sl.idx));
   if(!_chCompareSel.length&&pid&&!isNaN(curIdx))_chCompareSel=[{pondId:pid,idx:curIdx}];
@@ -19947,7 +19963,7 @@ function renderChCompareChart(){
   const items=_chCompareSel.map(sl=>{
     const p=pond(sl.pondId);const c=p&&p.cropHistory?p.cropHistory[sl.idx]:null;if(!c)return null;
     const hr=cropHarvestResult(c)||{};   // นับพาเชียลรวมแล้ว
-    return{label:`บ่อ${p.name} รอบ${c.cropNum||sl.idx+1}/${yearBE(c.cropYear||c.year)||''}`,fcr:hr.fcr!=null?hr.fcr:null,surv:hr.survivalRate!=null?hr.survivalRate:null,size:hr.size!=null?hr.size:null};
+    return{label:`บ่อ${p.name} รอบ${cropLbl(p,c)}`,fcr:hr.fcr!=null?hr.fcr:null,surv:hr.survivalRate!=null?hr.survivalRate:null,size:hr.size!=null?hr.size:null};
   }).filter(Boolean);
   if(_chCompareChart){_chCompareChart.destroy();_chCompareChart=null;}
   if(!items.length)return;
@@ -20735,7 +20751,7 @@ function renderHvRoundStrip(){
   {const o=[...(document.getElementById('hv-pond')||{options:[]}).options].find(x=>x.value===pid);if(o){const t=document.createElement('div');t.innerHTML=hvPondOptionsHtml();const n=[...t.querySelectorAll('option')].find(x=>x.value===pid);if(n)o.textContent=n.textContent;}}   // กก./ไร่ ในชื่อบ่อ อัปเดตทันทีหลังบันทึก
   const chip=t=>`<span style="display:inline-flex;align-items:center;gap:5px;background:var(--sf2);border:1px solid var(--bd);border-radius:16px;padding:3px 11px;font-size:calc(12px * var(--ui-scale))">${t}</span>`;
   const chips=[];
-  chips.push(chip(`📅 รอบ ${p.cropNum||1}/${yearBE(p.cropYear)||'-'}${p.startDate?` · เลี้ยงมา ${pondCurAge(p)} วัน`:' · ยังไม่ลงกุ้ง'}`));
+  chips.push(chip(`📅 รอบ ${pondRoundLbl(p)}${p.startDate?` · เลี้ยงมา ${pondCurAge(p)} วัน`:' · ยังไม่ลงกุ้ง'}`));
   const ph=p.partialHarvests||[];
   const phKg=ph.reduce((s,r)=>s+(r.weight||0),0);
   chips.push(chip(ph.length?`📦 พาเชียลแล้ว ${ph.length} ครั้ง · ${phKg.toLocaleString()} กก.`:'📦 ยังไม่มีพาเชียลรอบนี้'));
@@ -21618,7 +21634,7 @@ function renderPL(){
       if(!c.harvestResult||!c.closeDate)return;
       if(yr&&!c.closeDate.startsWith(yr))return;
       // _pond/_crop แนบไว้ให้ renderPLCostChart ย้อนไปอ่านรายการเบิกจริงของรอบนั้น (entry #263)
-      rows.push({...cropHarvestResult(c),pondName:p.name,pondId:p.id,cropNum:c.cropNum,cropYear:c.cropYear,startDate:c.startDate,closeDate:c.closeDate,stock:c.stock,_pond:p,_crop:c});
+      rows.push({...cropHarvestResult(c),pondName:p.name,pondId:p.id,cropNum:cropRoundNo(p,c),cropYear:c.cropYear,startDate:c.startDate,closeDate:c.closeDate,stock:c.stock,_pond:p,_crop:c});
     });
   });
   rows.sort((a,b)=>(b.closeDate||'').localeCompare(a.closeDate||''));
@@ -22023,7 +22039,7 @@ function exportPLCSV(){
     if(!c.harvestResult||!c.closeDate)return;
     if(yr&&!c.closeDate.startsWith(yr))return;
     const r=cropHarvestResult(c);   // นับพาเชียลรวมแล้ว
-    rows.push([p.name,c.cropNum||'',c.closeDate,(r.totalWeightAll||r.totalWeight)||'',r.price||'',r.revenue||'',
+    rows.push([p.name,cropLbl(p,c),c.closeDate,(r.totalWeightAll||r.totalWeight)||'',r.price||'',r.revenue||'',
       r.costFry||'',r.costTransport||'',r.costFeed||'',r.costMed||'',r.costLime||'',r.costLabor||'',r.costElec||'',
       r.costFuel||'',r.costEquip||'',r.costEquipOut||'',r.costCatch||'',
       r.pctCaretaker||'',r.amtCaretaker||'',r.pctManager||'',r.amtManager||'',
