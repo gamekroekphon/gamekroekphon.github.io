@@ -5389,9 +5389,9 @@ async function initFirebase() {
     if (first) {
       const remote = normalizeD(JSON.parse(first.json));
       await _lsZReady;   // iPhone: รอแตกสำเนาบีบอัดในเครื่องก่อน (#420)
-      const _hasLocal = (()=>{try{return !!(localStorage.getItem(SK)||localStorage.getItem(SKZ));}catch(e){return false;}})();
-      if (unsynced() && _hasLocal) { D = mergeRemote(D, remote); _pushAfter = true; }   // มีของบันทึกแล้วยังไม่ถึง cloud — ห้ามโหลดทับ
-      else D = remote;
+      if (unsynced() && _dReal) { D = mergeRemote(D, remote); _pushAfter = true; }   // มีของบันทึกแล้วยังไม่ถึง cloud — ห้ามโหลดทับ (เฉพาะ D จริง #421)
+      else { D = remote; lsPut(LS_UNSYNC_K,null); }
+      _dReal = true;
       tickMemoClear();
       _lastUpdated = first.updated;lsDataAt(first.updated);
       seedPonds();
@@ -5426,7 +5426,8 @@ async function initFirebase() {
       populateAll(); renderOv();
       setSyncStatus('sync-ok', '✅ Migrate สำเร็จ — ' + (D.ponds||[]).length + ' บ่อ');
       } else {
-      // ── ยังไม่มีข้อมูลบน Cloud → push local ──
+      // ── ยังไม่มีข้อมูลบน Cloud → push local ── (#421 เฉพาะเมื่อเครื่องมีข้อมูลจริง กันข้อมูลตั้งต้นทับ cloud)
+      if (!_dReal) throw new Error('อ่านข้อมูลจาก cloud ไม่ได้ และเครื่องนี้ไม่มีข้อมูลจริง — ไม่เขียนทับ');
       await writeRemote(JSON.stringify(D));
       setSyncStatus('sync-ok', '✅ สร้างข้อมูลใหม่บน Cloud');
       }
@@ -5450,8 +5451,9 @@ async function initFirebase() {
         if (!r || r.updated === _lastUpdated) return;
         if (Date.now() < _remoteIgnoreUntil) { setTimeout(pullRemote, _remoteIgnoreUntil - Date.now() + 50); return; }   // กำลังบันทึกของเราเองอยู่ — กลับมาดูใหม่พอพ้นช่วง
         const remote = normalizeD(JSON.parse(r.json));
-        if (unsynced()) { D = mergeRemote(D, remote); setTimeout(save, 0); }   // มีของค้างส่ง — รวม ไม่ทับ (#420)
+        if (unsynced() && _dReal) { D = mergeRemote(D, remote); setTimeout(save, 0); }   // มีของค้างส่ง — รวม ไม่ทับ (#420)
         else D = remote;
+        _dReal = true;
         tickMemoClear();
         _lastUpdated = r.updated;lsDataAt(r.updated);
         lsSetD(r.json);
@@ -6179,24 +6181,32 @@ function mergeByMonth(localArr, remoteArr, dead) {
 //       ตั้งอยู่ → เปิดแอป/มีเครื่องอื่นอัปเดต ให้ "รวม" (mergeRemote ฝั่งเครื่องชนะ) แทนการโหลดทับ แล้วส่งซ้ำเอง
 //       เดิมโหลดทับ = ของที่บันทึกตอนเน็ตหลุดหายเงียบ (บิล CPF 15 ต.ค. 69)
 //    ③ เหตุการณ์แจ้งไลน์ (บิล) ค้างไว้ใน LS_PEND_EV ส่งหลัง save สำเร็จจริงเท่านั้น · บิลที่ยังไม่ถึง = LS_PEND_BILL
-const SKZ='tawan_v3_z',LS_UNSYNC_K='tw_unsynced',LS_PEND_EV='tw_pendEv',LS_PEND_BILL='tw_pendBills';
+const SKZ='tawan_v3_z',LS_UNSYNC_K='tw_unsynced2',LS_PEND_EV='tw_pendEv',LS_PEND_BILL='tw_pendBills',LS_BASE_K='tw_skBase2';
+// 🔴 #421: _dReal = D เป็นข้อมูลจริงแล้ว (โหลดจาก cloud หรือสำเนาในเครื่องที่ #421 เขียนเอง มี tw_skBase2) — ยังไม่จริง = ห้าม save/merge เด็ดขาด
+//    15 ต.ค. 69 iPhone ที่ไม่มีสำเนา เปิดแอปด้วยข้อมูลตั้งต้น (DEFAULT+seedPonds) แล้วมีการ save ก่อน cloud มา → ตั้งธงค้างส่ง
+//    → #420 เอาข้อมูลตั้งต้นไป merge ทับ cloud: harvestLog 659 หาย · Protocol 19→5 · บ่อปลอม A.12 · record ปลอม 343
+//    ธงเก่า tw_unsynced และสำเนาเก่าที่ไม่มี tw_skBase2 ไม่นับ
 let _lsFull=false,_lsZSeq=0,_saveInflight=false,_lsZReady=Promise.resolve(),_unsyncShown=false;
+let _dReal=(()=>{try{return !!(localStorage.getItem(SK)&&localStorage.getItem('tw_skBase2'));}catch(e){return false;}})();
+try{localStorage.removeItem('tw_unsynced');}catch(e){}
 function lsSetD(json){
-  try{localStorage.setItem(SK,json);_lsFull=false;try{localStorage.removeItem(SKZ);}catch(e){}return true;}
+  if(!_dReal)return false;   // #421 ข้อมูลตั้งต้นห้ามทับสำเนาจริงในเครื่อง
+  const base=_lastUpdated||'local';
+  try{localStorage.setItem(SK,json);_lsFull=false;try{localStorage.removeItem(SKZ);localStorage.setItem(LS_BASE_K,base);}catch(e){}return true;}
   catch(e){
     if(!_lsFull)console.warn('เก็บข้อมูลแบบดิบลงเครื่องไม่ได้ (เครื่องเต็ม) — เก็บแบบบีบอัดแทน',e&&e.name);
     _lsFull=true;try{localStorage.removeItem(SK);}catch(e2){}
-    if(CAN_Z){const my=++_lsZSeq;zPack(json).then(z=>{if(my!==_lsZSeq)return;try{localStorage.setItem(SKZ,z);}catch(e3){try{localStorage.removeItem(SKZ);}catch(e4){}}}).catch(()=>{});}
+    if(CAN_Z){const my=++_lsZSeq;zPack(json).then(z=>{if(my!==_lsZSeq)return;try{localStorage.setItem(SKZ,z);localStorage.setItem(LS_BASE_K,base);}catch(e3){try{localStorage.removeItem(SKZ);}catch(e4){}}}).catch(()=>{});}
     return false;
   }
 }
 // เปิดแอปบน iPhone: ไม่มีแบบดิบ แต่มีแบบบีบอัด → แตกมาใช้ก่อน cloud มาถึง
 function lsZBoot(){
-  let z='';try{if(localStorage.getItem(SK))return;z=localStorage.getItem(SKZ)||'';}catch(e){return;}
+  let z='';try{if(localStorage.getItem(SK))return;if(!localStorage.getItem(LS_BASE_K))return;z=localStorage.getItem(SKZ)||'';}catch(e){return;}
   if(!z||!CAN_Z)return;
   _lsZReady=zUnpack(z).then(json=>{
     if(_lastUpdated)return;   // cloud มาก่อนแล้ว ไม่ต้องใช้
-    D=loadData(json);tickMemoClear();populateAll();renderOv();
+    D=loadData(json);_dReal=true;tickMemoClear();populateAll();renderOv();
   }).catch(e=>console.warn('แตกสำเนาในเครื่องไม่ได้',e));
 }
 function lsJson(k){try{return JSON.parse(localStorage.getItem(k)||'[]')||[];}catch(e){return[];}}
@@ -6229,6 +6239,7 @@ window.addEventListener('online',()=>{if(unsynced()&&firebase.apps.length&&fireb
 setInterval(()=>{if(unsynced()&&!_saveInflight&&navigator.onLine!==false&&firebase.apps.length&&firebase.auth().currentUser)save();},60000);
 async function save() {
   tickMemoClear();   // ข้อมูลเพิ่งเปลี่ยน — แคชระหว่างวาด (#363) ต้องล้าง
+  if (!_dReal) { console.warn('ยังไม่ได้โหลดข้อมูลจริง — ไม่บันทึก (#421)'); return false; }
   lsSetD(JSON.stringify(D));
   lsPut(LS_UNSYNC_K,'1');   // ยังไม่ถึง cloud จนกว่า writeRemote จะสำเร็จ (#420)
   if (!firebase.apps.length) return false;
@@ -6264,6 +6275,7 @@ function fbSave(){} // save() ซิงค์ Firebase อยู่แล้ว 
 async function saveForce(){
   tickMemoClear();
   // เขียน D ลง Firebase โดยไม่ merge กับ remote — ใช้สำหรับ delete operations ที่ต้องการให้ local ชนะ
+  if(!_dReal){console.warn('ยังไม่ได้โหลดข้อมูลจริง — ไม่บันทึก (#421)');return false;}
   lsSetD(JSON.stringify(D));
   lsPut(LS_UNSYNC_K,'1');
   if(!firebase.apps.length)return false;
