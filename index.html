@@ -2337,6 +2337,7 @@ body.role-admin .mob-sheet-item.admin-only{display:flex!important}
 .lg-wait .lg-go{margin-top:10px}
 .sync-bar{position:absolute;left:0;right:0;top:100%;z-index:1;display:flex;align-items:center;gap:8px;background:#FEF3C7;color:#78350F;border-bottom:1px solid #FDE68A;padding:5px 14px;font-size:calc(13px * var(--ui-scale));font-weight:600}
 .sync-bar[hidden]{display:none!important}
+.sync-retry{margin-left:auto;border:1.5px solid currentColor;background:transparent;color:inherit;border-radius:8px;padding:2px 10px;min-height:32px;font-family:inherit;font-weight:700;font-size:calc(13px * var(--ui-scale));cursor:pointer}
 .sync-bar.ok{background:#DCFCE7;color:#14532D;border-bottom-color:#BBF7D0}
 .sync-bar.err{background:#FEE2E2;color:#7F1D1D;border-bottom-color:#FECACA}
 .sync-bar .lg-spin{width:14px;height:14px;border-color:rgba(120,53,15,.25);border-top-color:#B45309}
@@ -5383,10 +5384,15 @@ async function initFirebase() {
     // ── โหลดข้อมูลจาก Cloud (บีบอัด ถ้ามี) ─────────────────
     setSyncStatus('sync-load', 'กำลังโหลดข้อมูลจาก Cloud...');syncBar('load');
     const first = await fetchRemoteJson();
+    let _pushAfter = false;
 
     if (first) {
       const remote = normalizeD(JSON.parse(first.json));
-      D = remote;tickMemoClear();
+      await _lsZReady;   // iPhone: รอแตกสำเนาบีบอัดในเครื่องก่อน (#420)
+      const _hasLocal = (()=>{try{return !!(localStorage.getItem(SK)||localStorage.getItem(SKZ));}catch(e){return false;}})();
+      if (unsynced() && _hasLocal) { D = mergeRemote(D, remote); _pushAfter = true; }   // มีของบันทึกแล้วยังไม่ถึง cloud — ห้ามโหลดทับ
+      else D = remote;
+      tickMemoClear();
       _lastUpdated = first.updated;lsDataAt(first.updated);
       seedPonds();
       const json_loaded = JSON.stringify(D);
@@ -5427,6 +5433,7 @@ async function initFirebase() {
     }
 
     lgLoaded(true);
+    if (_pushAfter) setTimeout(save, 0);
     // ── Real-time listener — ฟังแค่ updated (ไม่กี่ไบต์) พอเปลี่ยนค่อยดึงตัวบีบอัด (entry #297)
     //    เดิมฟังทั้ง node → ทุกครั้งที่ใครบันทึก ทุกเครื่องที่เปิดอยู่โหลด 2 MB ──
     if (_unsubscribe) _unsubscribe();
@@ -5443,7 +5450,9 @@ async function initFirebase() {
         if (!r || r.updated === _lastUpdated) return;
         if (Date.now() < _remoteIgnoreUntil) { setTimeout(pullRemote, _remoteIgnoreUntil - Date.now() + 50); return; }   // กำลังบันทึกของเราเองอยู่ — กลับมาดูใหม่พอพ้นช่วง
         const remote = normalizeD(JSON.parse(r.json));
-        D = remote;tickMemoClear();
+        if (unsynced()) { D = mergeRemote(D, remote); setTimeout(save, 0); }   // มีของค้างส่ง — รวม ไม่ทับ (#420)
+        else D = remote;
+        tickMemoClear();
         _lastUpdated = r.updated;lsDataAt(r.updated);
         lsSetD(r.json);
         if (isEditingField()) {
@@ -5960,7 +5969,7 @@ const A23rec=[
   if(changed){save();if(typeof fbSave==='function')fbSave();}
 }
 // เครื่องนี้มีข้อมูลเก่าไหม (อ่านก่อน loadData) — ไม่มี = ค้างฉากล็อกอินจนโหลดเสร็จ · มี = เข้าแอปทันที + แถบ "กำลังอัปเดต" (#414)
-const _hadCache=(()=>{try{return !!localStorage.getItem(SK);}catch(e){return false;}})();
+const _hadCache=(()=>{try{return !!(localStorage.getItem(SK)||localStorage.getItem('tawan_v3_z'));}catch(e){return false;}})();
 let D=loadData();
 seedPonds();
 let cmpCh=null,fdCh=null,spCh=null,secCh=null;
@@ -6003,8 +6012,8 @@ function migrateMedProtocols(d){
     pinned:i===MEDPROTO_FEED_IDX        // หัวข้อที่โชว์สรุปในหน้าภาพรวม
   }));
 }
-function loadData(){
-  try{const s=localStorage.getItem(SK);if(s){
+function loadData(sOverride){
+  try{const s=sOverride||localStorage.getItem(SK);if(s){
     const d=JSON.parse(s);
     const _cy=new Date().getFullYear();
     d.ponds.forEach(p=>{['feedLog','samples','waterLog','chemLog','labResults','records','partialHarvests'].forEach(k=>{if(!p[k])p[k]=[]});if(!p.cropHistory)p.cropHistory=[];if(!p.cropNum)p.cropNum=1;if(!p.cropYear)p.cropYear=_cy;if(p.prepChecklist===undefined)p.prepChecklist=null;});
@@ -6161,24 +6170,69 @@ function mergeByMonth(localArr, remoteArr, dead) {
   localArr.forEach(l => { if (l && l.month && !(dead&&dead.has('elec_'+l.month))) map[l.month] = l; }); // local wins
   return Object.values(map);
 }
-// ══ เก็บสำเนาข้อมูลลงเครื่อง (#419) — ห้ามให้ "เครื่องเต็ม" หยุดการบันทึก/โหลด ══
-//    iPhone (Safari) ให้ localStorage ราว 5 MB = 2.62 ล้านตัวอักษร · ข้อมูลฟาร์มโตเกินเส้นนี้ 15 ต.ค. 69 (2.63 ล้าน)
-//    เดิม setItem อยู่บรรทัดแรกของ save() และกลาง initFirebase → throw QuotaExceededError
-//    = iPhone บันทึกไม่ขึ้น cloud (บิลหาย) + เปิดแอปขึ้น "อัปเดตไม่ได้" · Android/คอมไม่โดน (เพดาน ~10 MB)
-//    → เขียนไม่ได้ = ข้ามสำเนาในเครื่อง (ลบสำเนาเก่าทิ้ง กันโชว์ข้อมูลค้าง) แล้วทำงานกับ cloud ต่อ
-let _lsFull=false;
+// ══ เก็บสำเนาข้อมูลลงเครื่อง (#419) — iPhone (Safari) ให้ localStorage ราว 5 MB = 2.62 ล้านตัวอักษร · ข้อมูลฟาร์มเกินเส้นนี้ 15 ต.ค. 69
+//    เดิม setItem throw QuotaExceededError → iPhone บันทึกไม่ขึ้น cloud + เปิดแอปขึ้น "อัปเดตไม่ได้" ══
+// ══ สำเนาในเครื่อง + ข้อมูลค้างส่ง (#419 → #420) ══
+//    ① lsSetD: เก็บแบบดิบก่อน (เร็ว · Android/คอม) — ไม่พอ (iPhone ~5 MB) = เก็บแบบบีบอัด gzip ที่ SKZ แทน (~1/6 ขนาด)
+//       ตอนเปิดแอปถ้าไม่มีแบบดิบแต่มีแบบบีบอัด → แตกแล้วใช้ (lsZBoot) · initFirebase รอ _lsZReady ก่อน merge
+//    ② LS_UNSYNC_K = มีของที่บันทึกแล้วยังไม่ถึง cloud (ตั้งทุกครั้งที่ save · ล้างเมื่อ writeRemote สำเร็จ)
+//       ตั้งอยู่ → เปิดแอป/มีเครื่องอื่นอัปเดต ให้ "รวม" (mergeRemote ฝั่งเครื่องชนะ) แทนการโหลดทับ แล้วส่งซ้ำเอง
+//       เดิมโหลดทับ = ของที่บันทึกตอนเน็ตหลุดหายเงียบ (บิล CPF 15 ต.ค. 69)
+//    ③ เหตุการณ์แจ้งไลน์ (บิล) ค้างไว้ใน LS_PEND_EV ส่งหลัง save สำเร็จจริงเท่านั้น · บิลที่ยังไม่ถึง = LS_PEND_BILL
+const SKZ='tawan_v3_z',LS_UNSYNC_K='tw_unsynced',LS_PEND_EV='tw_pendEv',LS_PEND_BILL='tw_pendBills';
+let _lsFull=false,_lsZSeq=0,_saveInflight=false,_lsZReady=Promise.resolve(),_unsyncShown=false;
 function lsSetD(json){
-  try{localStorage.setItem(SK,json);_lsFull=false;return true;}
+  try{localStorage.setItem(SK,json);_lsFull=false;try{localStorage.removeItem(SKZ);}catch(e){}return true;}
   catch(e){
-    if(!_lsFull)console.warn('เก็บข้อมูลลงเครื่องไม่ได้ (เครื่องเต็ม) — ใช้ข้อมูลจาก cloud แทน',e&&e.name);
+    if(!_lsFull)console.warn('เก็บข้อมูลแบบดิบลงเครื่องไม่ได้ (เครื่องเต็ม) — เก็บแบบบีบอัดแทน',e&&e.name);
     _lsFull=true;try{localStorage.removeItem(SK);}catch(e2){}
+    if(CAN_Z){const my=++_lsZSeq;zPack(json).then(z=>{if(my!==_lsZSeq)return;try{localStorage.setItem(SKZ,z);}catch(e3){try{localStorage.removeItem(SKZ);}catch(e4){}}}).catch(()=>{});}
     return false;
   }
 }
+// เปิดแอปบน iPhone: ไม่มีแบบดิบ แต่มีแบบบีบอัด → แตกมาใช้ก่อน cloud มาถึง
+function lsZBoot(){
+  let z='';try{if(localStorage.getItem(SK))return;z=localStorage.getItem(SKZ)||'';}catch(e){return;}
+  if(!z||!CAN_Z)return;
+  _lsZReady=zUnpack(z).then(json=>{
+    if(_lastUpdated)return;   // cloud มาก่อนแล้ว ไม่ต้องใช้
+    D=loadData(json);tickMemoClear();populateAll();renderOv();
+  }).catch(e=>console.warn('แตกสำเนาในเครื่องไม่ได้',e));
+}
+function lsJson(k){try{return JSON.parse(localStorage.getItem(k)||'[]')||[];}catch(e){return[];}}
+function lsPut(k,v){try{if(v&&(!Array.isArray(v)||v.length))localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v));else localStorage.removeItem(k);}catch(e){}}
+function unsynced(){return !!lsGet(LS_UNSYNC_K);}
+// แถบใต้หัวจอเมื่อมีของค้างส่ง — staff เห็นว่าข้อมูลยังไม่ขึ้น (เดิมมีแค่จุดสีเล็กๆ)
+function unsyncBar(st){
+  const b=document.getElementById('sync-bar');if(!b)return;
+  if(st==='err'){_unsyncShown=true;b.className='sync-bar err';b.innerHTML='⚠️ ยังส่งข้อมูลไม่ได้ · ส่งให้เองเมื่อมีเน็ต <button type="button" class="sync-retry" onclick="saveRetry()">ส่งเลย</button>';b.hidden=false;return;}
+  if(st==='ok'&&_unsyncShown){_unsyncShown=false;b.className='sync-bar ok';b.textContent='✅ ส่งข้อมูลขึ้นระบบแล้ว';clearTimeout(_sbT);_sbT=setTimeout(()=>{b.hidden=true;},2500);}
+}
+function saveRetry(){if(_saveInflight)return;const b=document.getElementById('sync-bar');if(b&&!b.hidden){b.className='sync-bar';b.innerHTML='<span class="lg-spin"></span>กำลังส่ง…';}save();}
+// หลังบันทึกขึ้น cloud สำเร็จ: ล้างธงค้าง · ส่งเหตุการณ์แจ้งไลน์ที่ค้าง · บิลค้างถือว่าถึงแล้ว
+function syncedOk(){
+  lsPut(LS_UNSYNC_K,null);
+  const ev=lsJson(LS_PEND_EV);lsPut(LS_PEND_EV,null);ev.forEach(e=>billEmit(e.type,e.billId));
+  const hadBill=lsJson(LS_PEND_BILL).length;lsPut(LS_PEND_BILL,null);
+  unsyncBar('ok');
+  if(hadBill){if(typeof billRefreshUI==='function')billRefreshUI();billBar('ok');}
+}
+// แถบสถานะตอนส่งบิล (staff)
+function billBar(st){
+  const b=document.getElementById('sync-bar');if(!b)return;clearTimeout(_sbT);
+  if(st==='wait'){b.className='sync-bar';b.innerHTML='<span class="lg-spin"></span>กำลังส่งบิล… อย่าเพิ่งปิดแอป';b.hidden=false;return;}
+  if(st==='ok'){_unsyncShown=false;b.className='sync-bar ok';b.textContent='✅ บิลถึงออฟฟิศแล้ว';b.hidden=false;_sbT=setTimeout(()=>{b.hidden=true;},3000);return;}
+  _unsyncShown=true;b.className='sync-bar err';b.innerHTML='⚠️ ส่งบิลไม่สำเร็จ <button type="button" class="sync-retry" onclick="saveRetry()">แตะเพื่อส่งอีกครั้ง</button>';b.hidden=false;
+}
+// ส่งซ้ำเองเมื่อเน็ตกลับมา + ทุก 60 วิ ระหว่างมีของค้าง
+window.addEventListener('online',()=>{if(unsynced()&&firebase.apps.length&&firebase.auth().currentUser)save();});
+setInterval(()=>{if(unsynced()&&!_saveInflight&&navigator.onLine!==false&&firebase.apps.length&&firebase.auth().currentUser)save();},60000);
 async function save() {
   tickMemoClear();   // ข้อมูลเพิ่งเปลี่ยน — แคชระหว่างวาด (#363) ต้องล้าง
   lsSetD(JSON.stringify(D));
-  if (!firebase.apps.length) return;
+  lsPut(LS_UNSYNC_K,'1');   // ยังไม่ถึง cloud จนกว่า writeRemote จะสำเร็จ (#420)
+  if (!firebase.apps.length) return false;
+  _saveInflight = true;
   _remoteIgnoreUntil = Date.now() + 4000;
   setSyncStatus('sync-load', 'กำลังบันทึก...');
   try {
@@ -6196,8 +6250,14 @@ async function save() {
     lsSetD(json);
     await writeRemote(json);
     setSyncStatus('sync-ok', '✅ บันทึกสำเร็จ');
+    syncedOk();
+    return true;
   } catch(e) {
     setSyncStatus('sync-err', '⚠️ บันทึกไม่ได้: ' + e.message);
+    unsyncBar('err');
+    return false;
+  } finally {
+    _saveInflight = false;
   }
 }
 function fbSave(){} // save() ซิงค์ Firebase อยู่แล้ว — ฟังก์ชันนี้กันพังจาก legacy calls
@@ -6205,14 +6265,16 @@ async function saveForce(){
   tickMemoClear();
   // เขียน D ลง Firebase โดยไม่ merge กับ remote — ใช้สำหรับ delete operations ที่ต้องการให้ local ชนะ
   lsSetD(JSON.stringify(D));
-  if(!firebase.apps.length)return;
+  lsPut(LS_UNSYNC_K,'1');
+  if(!firebase.apps.length)return false;
   _remoteIgnoreUntil=Date.now()+4000;
   setSyncStatus('sync-load','กำลังบันทึก...');
   try{
     const json=JSON.stringify(D);
     await writeRemote(json);
     setSyncStatus('sync-ok','✅ บันทึกสำเร็จ');
-  }catch(e){setSyncStatus('sync-err','⚠️ บันทึกไม่ได้: '+e.message);}
+    syncedOk();return true;
+  }catch(e){setSyncStatus('sync-err','⚠️ บันทึกไม่ได้: '+e.message);unsyncBar('err');return false;}
 }
 function cln(x){return JSON.parse(JSON.stringify(x))}
 function pond(id){return D.ponds.find(p=>p.id===id)}
@@ -10667,7 +10729,8 @@ function billEmit(type,billId){
 // ต้องรอ save() ให้ข้อมูลถึงเซิร์ฟเวอร์ก่อนค่อยส่งเหตุการณ์ ไม่งั้นเซิร์ฟเวอร์หาบิลไม่เจอ
 // แต่ไม่บล็อกหน้าจอ — ถ้าเซฟไม่สำเร็จก็แค่ไม่มีแจ้งเตือน ข้อมูลยังอยู่ในเครื่อง
 function billSaveThenEmit(type,billId){
-  Promise.resolve(save()).then(()=>billEmit(type,billId)).catch(()=>{});
+  const ev=lsJson(LS_PEND_EV);ev.push({type,billId});lsPut(LS_PEND_EV,ev);   // ส่งใน syncedOk หลังบิลถึง cloud จริง (#420)
+  return Promise.resolve(save()).catch(()=>false);
 }
 // แจ้งไลน์ทันทีเมื่อเบิกจนฟาร์มเหลือ 0 (พี่สั่ง entry #336) — บางทีหน้าร้านเอาของเข้าฟาร์มแล้วลืมบันทึก
 // ส่งแค่ itemId แบบเดียวกับบิล — เซิร์ฟเวอร์อ่านยอดจริงแล้วเช็คว่าหมดจริงก่อนส่ง (functions/billNotify.js stockEmptyText)
@@ -10874,7 +10937,7 @@ function renderBillMineList(){
     const canEdit=b.status!=='ok';
     return '<div class="bill-mine'+(canEdit?' edit':'')+'"'+(canEdit?' role="button" tabindex="0" onclick="openBillCapture('+Q+b.id+Q+')"':'')+'>'+
       '<span><b>'+billEsc(billWhen(b.createdAt))+'</b> · '+billEsc(names.length>60?names.slice(0,60)+'…':names)+
-      (b.status==='back'&&b.reason?'<br><small class="bill-bad">↩️ '+billEsc(b.reason)+'</small>':'')+'</span>'+billStatusChip(b)+'</div>';
+      (b.status==='back'&&b.reason?'<br><small class="bill-bad">↩️ '+billEsc(b.reason)+'</small>':'')+'</span>'+(lsJson(LS_PEND_BILL).includes(b.id)?'<span class="bill-chip back">ยังไม่ถึงออฟฟิศ</span>':billStatusChip(b))+'</div>';
   }).join('')+'<div class="bill-hint">บิลที่ "รอตรวจ" หรือ "ตีกลับ" แตะเพื่อแก้ได้ · อนุมัติแล้วแก้ไม่ได้</div>';
 }
 async function submitBillCapture(){
@@ -10912,7 +10975,11 @@ async function submitBillCapture(){
   }
   _billCap.sent=true;
   // ⚠️ ห้าม await save() — สัญญาณอ่อนแล้ว staff จะค้างที่ "กำลังส่ง…" · save() เขียนลงเครื่องก่อนเสมอ แล้วค่อยซิงก์เบื้องหลัง
-  if(APP_ROLE==='admin')save();else billSaveThenEmit('bill_wait',id);
+  if(APP_ROLE==='admin')save();
+  else{   // staff: แถบบอกสถานะจริง (#420) — เดิมขึ้น "ส่งแล้ว" ก่อนข้อมูลถึง
+    const pb=lsJson(LS_PEND_BILL);if(!pb.includes(id))pb.push(id);lsPut(LS_PEND_BILL,pb);
+    billBar('wait');billSaveThenEmit('bill_wait',id).then(ok=>{if(!ok)billBar('err');});
+  }
   billRefreshUI();
   document.getElementById('billCapModal').classList.remove('on');
   _billCap=null;
@@ -10920,7 +10987,7 @@ async function submitBillCapture(){
     // admin ไม่ต้องรอใครตรวจ — เปิดบิลที่เพิ่งส่งให้ใส่ราคาแล้วอนุมัติต่อเลย (บิลยังผ่านหน้าตรวจเหมือนเดิม ไม่ข้ามขั้น)
     billToast('✅ บันทึกบิลแล้ว — ใส่ราคาแล้วกดอนุมัติ');
     openBillReview(id);
-  }else billToast('✅ ส่งบิลให้ออฟฟิศตรวจแล้ว');
+  }else billToast('📤 กำลังส่งบิล… ดูสถานะที่แถบบนจอ');
 }
 
 // ════════ admin: ตรวจบิล ════════
@@ -21419,6 +21486,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('pondModal').addEventListener('click',e=>{if(e.target===document.getElementById('pondModal'))closePond()});
   document.getElementById('mpExpandModal').addEventListener('click',e=>{if(e.target===document.getElementById('mpExpandModal'))mpExpandClose()});
   document.getElementById('costSumModal').addEventListener('click',e=>{if(e.target===document.getElementById('costSumModal'))closeCostSummary()});
+  lsZBoot();   // iPhone: แตกสำเนาบีบอัดในเครื่องมาใช้ก่อน cloud (#420)
   lgStart();   // หน้า login โชว์ทันทีระหว่างรอ Firebase เช็คสิทธิ์ — หยุดวาดเองเมื่อถูกซ่อน
   lgBootWait();   // คนเคยล็อกอิน → "สวัสดี X · กำลังเปิดแอป…" แทนปุ่ม (#414)
   fetchWx().catch(()=>{});
