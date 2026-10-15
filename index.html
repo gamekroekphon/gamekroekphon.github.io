@@ -5390,7 +5390,7 @@ async function initFirebase() {
       _lastUpdated = first.updated;lsDataAt(first.updated);
       seedPonds();
       const json_loaded = JSON.stringify(D);
-      localStorage.setItem(SK, json_loaded);
+      lsSetD(json_loaded);
       populateAll(); renderOv();
       if(document.getElementById('skp-shop')?.classList.contains('on'))renderShop();   // คนหน้าร้านเปิดแอปมาที่หน้าร้าน (#337)
       if(document.getElementById('sec-owner')?.classList.contains('on'))ownerGo(_ownView,true);   // เจ้าของ (#343)
@@ -5416,7 +5416,7 @@ async function initFirebase() {
       seedPonds();
       const json = JSON.stringify(D);
       await writeRemote(json);
-      localStorage.setItem(SK, json);
+      lsSetD(json);
       populateAll(); renderOv();
       setSyncStatus('sync-ok', '✅ Migrate สำเร็จ — ' + (D.ponds||[]).length + ' บ่อ');
       } else {
@@ -5445,7 +5445,7 @@ async function initFirebase() {
         const remote = normalizeD(JSON.parse(r.json));
         D = remote;tickMemoClear();
         _lastUpdated = r.updated;lsDataAt(r.updated);
-        localStorage.setItem(SK, r.json);
+        lsSetD(r.json);
         if (isEditingField()) {
           _pendingRerender = true;
         } else {
@@ -6161,9 +6161,23 @@ function mergeByMonth(localArr, remoteArr, dead) {
   localArr.forEach(l => { if (l && l.month && !(dead&&dead.has('elec_'+l.month))) map[l.month] = l; }); // local wins
   return Object.values(map);
 }
+// ══ เก็บสำเนาข้อมูลลงเครื่อง (#419) — ห้ามให้ "เครื่องเต็ม" หยุดการบันทึก/โหลด ══
+//    iPhone (Safari) ให้ localStorage ราว 5 MB = 2.62 ล้านตัวอักษร · ข้อมูลฟาร์มโตเกินเส้นนี้ 15 ต.ค. 69 (2.63 ล้าน)
+//    เดิม setItem อยู่บรรทัดแรกของ save() และกลาง initFirebase → throw QuotaExceededError
+//    = iPhone บันทึกไม่ขึ้น cloud (บิลหาย) + เปิดแอปขึ้น "อัปเดตไม่ได้" · Android/คอมไม่โดน (เพดาน ~10 MB)
+//    → เขียนไม่ได้ = ข้ามสำเนาในเครื่อง (ลบสำเนาเก่าทิ้ง กันโชว์ข้อมูลค้าง) แล้วทำงานกับ cloud ต่อ
+let _lsFull=false;
+function lsSetD(json){
+  try{localStorage.setItem(SK,json);_lsFull=false;return true;}
+  catch(e){
+    if(!_lsFull)console.warn('เก็บข้อมูลลงเครื่องไม่ได้ (เครื่องเต็ม) — ใช้ข้อมูลจาก cloud แทน',e&&e.name);
+    _lsFull=true;try{localStorage.removeItem(SK);}catch(e2){}
+    return false;
+  }
+}
 async function save() {
   tickMemoClear();   // ข้อมูลเพิ่งเปลี่ยน — แคชระหว่างวาด (#363) ต้องล้าง
-  localStorage.setItem(SK, JSON.stringify(D));
+  lsSetD(JSON.stringify(D));
   if (!firebase.apps.length) return;
   _remoteIgnoreUntil = Date.now() + 4000;
   setSyncStatus('sync-load', 'กำลังบันทึก...');
@@ -6179,7 +6193,7 @@ async function save() {
       }
     }
     const json = JSON.stringify(D);
-    localStorage.setItem(SK, json);
+    lsSetD(json);
     await writeRemote(json);
     setSyncStatus('sync-ok', '✅ บันทึกสำเร็จ');
   } catch(e) {
@@ -6190,7 +6204,7 @@ function fbSave(){} // save() ซิงค์ Firebase อยู่แล้ว 
 async function saveForce(){
   tickMemoClear();
   // เขียน D ลง Firebase โดยไม่ merge กับ remote — ใช้สำหรับ delete operations ที่ต้องการให้ local ชนะ
-  localStorage.setItem(SK,JSON.stringify(D));
+  lsSetD(JSON.stringify(D));
   if(!firebase.apps.length)return;
   _remoteIgnoreUntil=Date.now()+4000;
   setSyncStatus('sync-load','กำลังบันทึก...');
