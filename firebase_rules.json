@@ -1,37 +1,37 @@
 {
   "rules": {
     "users": {
-      ".read": "auth != null",
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').exists()",
       "$uid": {
         ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
         "email": {
-          ".write": "auth != null && ($uid === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+          ".write": "auth != null && (($uid === auth.uid && root.child('users').child($uid).child('role').exists()) || root.child('users').child(auth.uid).child('role').val() === 'admin')"
         },
         "displayName": {
-          ".write": "auth != null && ($uid === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+          ".write": "auth != null && (($uid === auth.uid && root.child('users').child($uid).child('role').exists()) || root.child('users').child(auth.uid).child('role').val() === 'admin')"
         },
         "createdAt": {
-          ".write": "auth != null && ($uid === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+          ".write": "auth != null && (($uid === auth.uid && root.child('users').child($uid).child('role').exists()) || root.child('users').child(auth.uid).child('role').val() === 'admin')"
         },
         "lastLogin": {
-          ".write": "auth != null && $uid === auth.uid"
+          ".write": "auth != null && $uid === auth.uid && root.child('users').child($uid).child('role').exists()"
         },
         "role": {
-          ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || ($uid === auth.uid && !data.exists() && newData.val() === 'staff'))"
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
         }
       }
     },
     "tawan_app": {
-      ".read": "auth != null && root.child('users').child(auth.uid).exists()",
-      ".write": "auth != null && root.child('users').child(auth.uid).exists()"
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').exists()",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').exists()"
     },
     "tawan_bill_photos": {
-      ".read": "auth != null && root.child('users').child(auth.uid).exists()",
-      ".write": "auth != null && root.child('users').child(auth.uid).exists()"
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').exists()",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').exists()"
     },
     "tawan_events": {
       "$eventId": {
-        ".write": "auth != null && root.child('users').child(auth.uid).exists() && !data.exists() && newData.child('actorUid').val() === auth.uid",
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').exists() && !data.exists() && newData.child('actorUid').val() === auth.uid",
         ".validate": "newData.hasChildren(['type','actorUid','at']) && (newData.hasChild('billId') || newData.hasChild('itemId'))"
       }
     }

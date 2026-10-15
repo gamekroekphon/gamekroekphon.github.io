@@ -4265,7 +4265,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       </table>
     </div>
     <div style="display:flex;gap:10px;background:var(--wb);border:1px solid #F5D98B;color:var(--w-tx);border-radius:8px;padding:10px 14px;font-size:calc(12.5px * var(--ui-scale));margin-top:12px">⚠️ เปลี่ยนสิทธิ์มีผลทันทีแบบเรียลไทม์ — staff จะไม่เห็นข้อมูลกำไร/ต้นทุน/ค่าแรงและแท็บการเงินอื่นๆ ทันที (ถ้ากำลังเปิดแอปอยู่ ต้อง refresh หน้าจอ 1 ครั้ง)</div>
-    <div style="font-size:var(--fs115);color:var(--tx3);margin-top:8px">* ลบ = ตัดสิทธิ์ในแอป ไม่ได้ลบบัญชีใน Firebase</div>
+    <div style="font-size:var(--fs115);color:var(--tx3);margin-top:8px">* ลบ = เข้าแอปไม่ได้ทันที (บัญชีใน Firebase ยังอยู่) · เข้าได้เฉพาะคนที่เพิ่มจากหน้านี้</div>
   </div>
 </div>
 <!-- ราคาวันนี้ -->
@@ -5172,13 +5172,15 @@ function renderUsers(){
     let rows=Object.entries(val).map(([uid,u])=>({uid,...u}));
     if(q)rows=rows.filter(r=>(r.email||'').toLowerCase().includes(q)||(r.displayName||'').toLowerCase().includes(q));
     rows.sort((a,b)=>(a.email||'').localeCompare(b.email||''));
-    if(!rows.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--tx3)">ยังไม่มีผู้ใช้ในระบบ (จะเพิ่มอัตโนมัติเมื่อ login ครั้งแรก หรือกด เพิ่มผู้ใช้ใหม่ ด้านบน)</td></tr>';return;}
+    if(!rows.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--tx3)">ยังไม่มีผู้ใช้ในระบบ — กด เพิ่มผู้ใช้ใหม่ ด้านบน</td></tr>';return;}
     const meUid=firebase.auth().currentUser?.uid;
     const esc=s=>String(s||'').replace(/'/g,'').replace(/</g,'');
     tbody.innerHTML=rows.map(r=>{
       const initial=(r.displayName||r.email||'?').trim().charAt(0).toUpperCase()||'?';
       const isMe=r.uid===meUid;
-      const roleBadge=r.role==='admin'
+      const roleBadge=!r.role
+        ?'<span style="display:inline-flex;padding:3px 10px;border-radius:20px;font-size:var(--fs115);font-weight:700;background:var(--db);color:var(--d)">ไม่มีสิทธิ์</span>'
+        :r.role==='admin'
         ?'<span style="display:inline-flex;padding:3px 10px;border-radius:20px;font-size:var(--fs115);font-weight:700;background:var(--pl);color:var(--p)">Admin</span>'
         :'<span style="display:inline-flex;padding:3px 10px;border-radius:20px;font-size:var(--fs115);font-weight:700;background:var(--sf2);color:var(--tx3)">พนักงาน (staff)</span>';
       const lastLogin=r.lastLogin?(fD(r.lastLogin.slice(0,10))+' '+(r.lastLogin.slice(11,16)||'')):'-';
@@ -21522,11 +21524,21 @@ document.addEventListener('DOMContentLoaded',()=>{
   firebase.auth().onAuthStateChanged(async user=>{
     if(user){
       const uref=firebase.database().ref('users/'+user.uid);
-      const snap=await uref.once('value');
-      const existing=snap.val()||{};
-      const role=existing.role||'staff';
-      // ── สร้าง/อัปเดตรายการผู้ใช้อัตโนมัติทุกครั้งที่ login (ไว้ให้หน้า จัดการผู้ใช้ เห็นรายชื่อ) ──
-      uref.update({email:user.email||existing.email||'',displayName:user.displayName||existing.displayName||'',role,lastLogin:new Date().toISOString()}).catch(()=>{});
+      // ── #424: เข้าได้เฉพาะบัญชีที่ admin เพิ่มในหน้าจัดการผู้ใช้ (มี role) — เดิมล็อกอินครั้งแรกถูกเพิ่มเป็น staff เอง
+      //    = ใครสมัครบัญชีเองด้วยคีย์ในหน้าเว็บก็อ่านข้อมูลฟาร์มได้ · ปุ่มลบไม่มีผล (ล็อกอินใหม่ก็กลับมา)
+      //    ไม่มี role → กฎ Firebase ไม่ให้อ่าน users (permission_denied) → ออกจากระบบ + บอกให้ติดต่อ admin
+      let existing=null;
+      try{existing=(await uref.once('value')).val();}catch(e){existing=null;}
+      if(!existing||!existing.role){
+        try{localStorage.removeItem(LG_USER_K);}catch(e){}
+        await firebase.auth().signOut().catch(()=>{});
+        const er=document.getElementById('login-err');
+        if(er){er.textContent='บัญชีนี้ยังไม่มีสิทธิ์ใช้แอป — ให้ admin เพิ่มในหน้าจัดการผู้ใช้';er.style.display='block';}
+        return;
+      }
+      const role=existing.role;
+      // ── อัปเดตรายชื่อทุกครั้งที่ login — ห้ามใส่ role (staff เขียน role ตัวเองไม่ได้ ทั้งก้อนจะพลาด = lastLogin ค้าง #424) ──
+      uref.update({email:user.email||existing.email||'',displayName:user.displayName||existing.displayName||'',lastLogin:new Date().toISOString()}).catch(()=>{});
       updateUserHeader(user,role);
       clearTimeout(_lgWaitT);
       try{localStorage.setItem(LG_USER_K,user.displayName||(user.email||'').split('@')[0]);}catch(e){}
