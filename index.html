@@ -4827,44 +4827,60 @@ let _lastSaveTime = 0;
 let _remoteIgnoreUntil = 0;  // ms — ignore remote update right after local save
 // ══════ ซิงก์แบบบีบอัด (entry #297) — ลดดาวน์โหลด Realtime Database ~85% ══════
 //    /tawan_app = { json, z:{u,d}, updated }
-//      json    = ข้อมูลเต็ม (รูปแบบเดิม ยังเขียนทุกครั้ง) — แอปเวอร์ชันเก่า · ฟังก์ชันแจ้งเตือนไลน์ · สคริปต์ทั้งหมด อ่านตัวนี้
-//      z.d     = gzip ของ json "ตัวเดียวกันทุกตัวอักษร" เป็น base64 (2 MB → ~280 KB) — แอปเวอร์ชันนี้ดาวน์โหลดตัวนี้แทน
-//      z.u     = updated ตอนที่บีบ z · ถ้าไม่ตรงกับ updated = z ค้างเก่า (มีใครเขียน json อย่างเดียว) → ห้ามใช้ อ่าน json แทน
+//      z.d     = gzip ของข้อมูลทั้งก้อน (JSON) เป็น base64 (2.8 MB → ~450 KB) — **ตั้งแต่ #422 เก็บตัวนี้ตัวเดียว**
+//      z.u     = updated ตอนที่บีบ z · ถ้าไม่ตรงกับ updated = z ค้างเก่า (มีใครเขียน json จากนอกแอป) → ห้ามใช้ อ่าน json แทน
+//      json    = ข้อมูลเต็มแบบไม่บีบ — เลิกเขียนแล้ว (#422 · เพดาน Firebase 10 MB ต่อสตริง ข้อมูลโต ~1 MB/เดือน)
+//                ยังอ่านได้ถ้ามี: ข้อมูลก่อน #422 · สคริปต์กู้ข้อมูลจากนอกแอป (ส่ง {json,updated,z:null}) · zPack พัง
 //      updated = เวลาเขียนล่าสุด — ฟังตัวนี้ (ไม่กี่ไบต์) แทนการฟังทั้งก้อน
-//    ⚠️ ห้ามแปลง/ลบ json · ⚠️ ใครเขียน /tawan_app จากนอกแอป (สคริปต์แก้ข้อมูล) ด้วย update({json,updated}) z จะค้าง —
-//       ปลอดภัยเพราะ z.u ไม่ตรง แต่ทุกเครื่องจะกลับไปโหลด json เต็มจนกว่าจะมีคนกดบันทึกในแอป → สคริปต์ควรส่ง z:null ไปด้วย
-//    เครื่องที่ไม่มี CompressionStream (Safari < 16.4) ใช้ json เหมือนเดิมทุกอย่าง
-const CAN_Z = typeof CompressionStream==='function' && typeof DecompressionStream==='function';
+//    บอท LINE (functions/index.js readAppJson) อ่าน z ก่อนเหมือนกัน — แก้รูปแบบนี้ต้องแก้บอทด้วย
+//    เครื่องที่ไม่มี CompressionStream (Safari < 16.4) โหลด pako จาก cdnjs มาบีบ/แตกแทน (zLib)
+const Z_NATIVE = typeof CompressionStream==='function' && typeof DecompressionStream==='function';
 let _lastUpdated = null;   // updated ของเวอร์ชัน cloud ที่ D มีครบแล้ว — null = ไม่แน่ใจ ต้องดึงมา merge ก่อนเขียนเสมอ
+let _pakoP=null;
+function zLib(){
+  if(window.pako)return Promise.resolve(window.pako);
+  return _pakoP||(_pakoP=new Promise((res,rej)=>{
+    const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js';
+    s.onload=()=>window.pako?res(window.pako):rej(new Error('โหลดตัวแตกข้อมูลไม่ได้'));
+    s.onerror=()=>{_pakoP=null;rej(new Error('โหลดตัวแตกข้อมูลไม่ได้'));};
+    document.head.appendChild(s);
+  }));
+}
+function zB64(buf){let bin='';for(let i=0;i<buf.length;i+=0x8000)bin+=String.fromCharCode.apply(null,buf.subarray(i,i+0x8000));return btoa(bin);}
 async function zPack(str){
-  const buf=new Uint8Array(await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());
-  let bin='';for(let i=0;i<buf.length;i+=0x8000)bin+=String.fromCharCode.apply(null,buf.subarray(i,i+0x8000));
-  return btoa(bin);
+  if(!Z_NATIVE)return zB64((await zLib()).gzip(str));
+  return zB64(new Uint8Array(await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer()));
 }
 async function zUnpack(b64){
   const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+  if(!Z_NATIVE)return (await zLib()).ungzip(u,{to:'string'});
   return await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
 }
 // ── ดึงข้อมูลล่าสุดจาก cloud → {json, updated} หรือ null (ยังไม่มีข้อมูลรูปแบบนี้)
 //    ⚠️ อ่าน updated "ก่อน" z/json เสมอ — ถ้ามีคนเขียนแทรกระหว่างสองจังหวะ เราจะได้ข้อมูลใหม่กว่า updated ที่จำไว้
-//       ซึ่งปลอดภัย (ครั้งหน้าแค่ดึงมา merge ซ้ำ) · ถ้ากลับลำดับ จะจำ updated ใหม่ทั้งที่ข้อมูลเก่า → บันทึกครั้งถัดไปข้าม merge แล้วทับของคนอื่น ──
+//       ซึ่งปลอดภัย (ครั้งหน้าแค่ดึงมา merge ซ้ำ) · ถ้ากลับลำดับ จะจำ updated ใหม่ทั้งที่ข้อมูลเก่า → บันทึกครั้งถัดไปข้าม merge แล้วทับของคนอื่น
+//    🔴 คืน null ได้เฉพาะ cloud ว่างจริง (ไม่มีทั้ง updated/z/json) — มีข้อมูลแต่แตกไม่ได้ ต้อง throw
+//       null = initFirebase เขียนข้อมูลเครื่องนี้ขึ้นไปแทน · save() ข้าม merge → ทับของคนอื่นหมด ──
 async function fetchRemoteJson(){
   const root=firebase.database().ref(RTDB_PATH);
   const updated=(await root.child('updated').once('value')).val();
-  if(CAN_Z){
-    const z=(await root.child('z').once('value')).val();
-    if(z&&z.d&&z.u&&z.u===updated){
-      try{return{json:await zUnpack(z.d),updated,via:'z'};}catch(e){console.warn('zUnpack failed → ใช้ json',e);}
-    }
+  const z=(await root.child('z').once('value')).val();
+  let zErr=null;
+  if(z&&z.d&&z.u&&z.u===updated){
+    try{return{json:await zUnpack(z.d),updated,via:'z'};}catch(e){zErr=e;console.warn('zUnpack failed → ลอง json',e);}
   }
   const json=(await root.child('json').once('value')).val();
-  return json?{json,updated,via:'json'}:null;
+  if(json)return{json,updated,via:'json'};
+  if(zErr)throw zErr;
+  if(updated||(z&&z.d))throw new Error('ข้อมูลบน cloud ไม่ครบ (z ไม่ตรงเวลา และไม่มี json)');
+  return null;
 }
-// ── เขียนทั้งก้อน: json เดิม + z + updated ในครั้งเดียว (set = แทนทั้ง node ไม่มีทาง z ค้าง) ──
+// ── เขียนทั้งก้อน: z + updated ในครั้งเดียว (set = แทนทั้ง node · json เต็มรูปแบบเก่าถูกลบไปด้วย #422) ──
+//    บีบไม่ได้ (โหลด pako ไม่ได้ ฯลฯ) → เขียน json แบบไม่บีบแทน อ่านกลับได้เหมือนเดิม
 async function writeRemote(json){
   const updated=new Date().toISOString();
-  const rec={json,updated};
-  if(CAN_Z){try{rec.z={u:updated,d:await zPack(json)};}catch(e){console.warn('zPack failed → เขียน json อย่างเดียว',e);}}
+  const rec={updated};
+  try{rec.z={u:updated,d:await zPack(json)};}catch(e){console.warn('zPack failed → เขียน json แบบไม่บีบ',e);rec.json=json;}
   await firebase.database().ref(RTDB_PATH).set(rec);
   _lastUpdated=updated;lsDataAt(updated);
   return updated;
@@ -6196,14 +6212,14 @@ function lsSetD(json){
   catch(e){
     if(!_lsFull)console.warn('เก็บข้อมูลแบบดิบลงเครื่องไม่ได้ (เครื่องเต็ม) — เก็บแบบบีบอัดแทน',e&&e.name);
     _lsFull=true;try{localStorage.removeItem(SK);}catch(e2){}
-    if(CAN_Z){const my=++_lsZSeq;zPack(json).then(z=>{if(my!==_lsZSeq)return;try{localStorage.setItem(SKZ,z);localStorage.setItem(LS_BASE_K,base);}catch(e3){try{localStorage.removeItem(SKZ);}catch(e4){}}}).catch(()=>{});}
+    {const my=++_lsZSeq;zPack(json).then(z=>{if(my!==_lsZSeq)return;try{localStorage.setItem(SKZ,z);localStorage.setItem(LS_BASE_K,base);}catch(e3){try{localStorage.removeItem(SKZ);}catch(e4){}}}).catch(()=>{});}
     return false;
   }
 }
 // เปิดแอปบน iPhone: ไม่มีแบบดิบ แต่มีแบบบีบอัด → แตกมาใช้ก่อน cloud มาถึง
 function lsZBoot(){
   let z='';try{if(localStorage.getItem(SK))return;if(!localStorage.getItem(LS_BASE_K))return;z=localStorage.getItem(SKZ)||'';}catch(e){return;}
-  if(!z||!CAN_Z)return;
+  if(!z)return;
   _lsZReady=zUnpack(z).then(json=>{
     if(_lastUpdated)return;   // cloud มาก่อนแล้ว ไม่ต้องใช้
     D=loadData(json);_dReal=true;tickMemoClear();populateAll();renderOv();

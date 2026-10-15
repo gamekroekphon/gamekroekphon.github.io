@@ -2,6 +2,7 @@
  * Cloud Functions: ตะวันฟาร์ม LINE Bot
  * - lineWebhook  : ตอบคำถามพนักงานผ่าน LINE (อ่านข้อมูลจริงจาก Firebase RTDB)
  * - billNotify   : แจ้งเตือนบิลรับของเข้ากลุ่มไลน์ (staff ส่งบิล / ตีกลับ / อนุมัติเข้าสต็อก)
+ * - nightlyBackup: สำรองข้อมูลแอปทุกคืน 03:00 → /tawan_backups (#423)
  *
  * ตรรกะการคำนวณสถานะบ่อ/วันเตรียมบ่อ/ความเสี่ยงอากาศ ถูก "พอร์ต" มาจาก index.html
  * ของแอปจริง (classifyOv, worstOv, pondStatusOv, PREP_STEPS, renderWx) ไม่ใช่ค่าที่เดาขึ้นมาเอง
@@ -12,10 +13,13 @@
 
 const {onRequest} = require("firebase-functions/v2/https");
 const {onValueCreated} = require("firebase-functions/v2/database");
+const {onSchedule} = require("firebase-functions/v2/scheduler");
 const {billEventText, stockEmptyText} = require("./billNotify");
+const {backupRecord, pruneKeys} = require("./backup");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
+const zlib = require("zlib");
 
 admin.initializeApp();
 
@@ -189,12 +193,26 @@ const PREP_STEPS = [
 ];
 
 // ---------------------------------------------------------------------------
-// RTDB access — ข้อมูลทั้งหมดเก็บเป็น JSON string ตัวเดียวที่ tawan_app/json
+// RTDB access — ข้อมูลทั้งหมดเก็บเป็น JSON string ตัวเดียว
+// ตั้งแต่ #422 แอปเก็บเฉพาะ tawan_app/z = {u, d: gzip base64} (json เต็มเลิกเขียน — เพดาน 10 MB ต่อสตริง)
+// อ่าน z ก่อน (ต้อง z.u === updated) · ไม่มี/แตกไม่ได้ ค่อยใช้ json (ข้อมูลรูปแบบเก่า)
 // ---------------------------------------------------------------------------
 
+async function readAppJson() {
+  const snap = await admin.database().ref(RTDB_PATH).get();
+  const v = snap.val() || {};
+  if (v.z && v.z.d && (!v.updated || v.z.u === v.updated)) {
+    try {
+      return zlib.gunzipSync(Buffer.from(v.z.d, "base64")).toString("utf8");
+    } catch (e) {
+      logger.error("z decode failed", e);
+    }
+  }
+  return v.json || null;
+}
+
 async function loadPonds() {
-  const snap = await admin.database().ref(`${RTDB_PATH}/json`).get();
-  const json = snap.val();
+  const json = await readAppJson();
   if (!json) return [];
   const data = JSON.parse(json);
   return data.ponds || [];
@@ -673,8 +691,7 @@ exports.lineWebhook = onRequest({region: "asia-southeast1"}, async (req, res) =>
 // ฟังก์ชันนี้อ่านบิลจริงจาก tawan_app แล้วประกอบข้อความเอง (ดูเหตุผลใน billNotify.js)
 // ---------------------------------------------------------------------------
 async function loadAppData() {
-  const snap = await admin.database().ref(`${RTDB_PATH}/json`).get();
-  const json = snap.val();
+  const json = await readAppJson();
   return json ? JSON.parse(json) : null;
 }
 async function loadBill(billId) {
@@ -735,5 +752,31 @@ exports.billNotify = onValueCreated(
       });
       await event.data.ref.update(ok ? {sentAt: Date.now()} : {failedAt: Date.now()});
       logger.info("bill event", ev.type, ev.billId, ok ? "sent" : "failed");
+    },
+);
+
+// ---------------------------------------------------------------------------
+// สำรองข้อมูลทุกคืน 03:00 (#423) — ดู backup.js · รายวัน 90 วัน + วันที่ 1 ของทุกเดือนเก็บตลอด
+// สำเนารายเดือนนอก Firebase = Google Apps Script ในบัญชีพี่ (โค้ดอยู่ ../backup_drive/)
+// ---------------------------------------------------------------------------
+
+exports.nightlyBackup = onSchedule(
+    {schedule: "0 3 * * *", timeZone: "Asia/Bangkok", region: "asia-southeast1"},
+    async () => {
+      const json = await readAppJson();
+      if (!json) {
+        logger.error("backup: อ่าน tawan_app ไม่ได้ — ไม่ได้สำรองคืนนี้");
+        return;
+      }
+      const updated = (await admin.database().ref(`${RTDB_PATH}/updated`).get()).val();
+      const day = today();
+      const rec = backupRecord(json, updated);
+      await admin.database().ref(`tawan_backups/${day}`).set(rec);
+      const del = {};
+      pruneKeys(day).forEach((k) => {
+        del[k] = null;
+      });
+      await admin.database().ref("tawan_backups").update(del);
+      logger.info("backup ok", day, "ponds", rec.ponds, "z", rec.z.length);
     },
 );
