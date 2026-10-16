@@ -1487,7 +1487,11 @@ table.exy-t td,table.exy-t th{font-variant-numeric:tabular-nums}
 .ov2-allok{color:var(--ok);font-weight:700;padding:6px 0}
 .ov2-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .ov2-t{border:1.5px solid;border-radius:11px;padding:7px 8px;text-align:left;display:flex;flex-direction:column;font-family:inherit;cursor:pointer;line-height:1.3;color:var(--tx);min-width:0}
-.ov2-t b{font-size:calc(15px * var(--ui-scale))}.ov2-t span{font-size:calc(12.5px * var(--ui-scale));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ov2-t b{font-size:calc(14px * var(--ui-scale))}.ov2-t span{font-size:calc(11.5px * var(--ui-scale));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* #426 สีน้ำวันนี้ = จุดมุมขวาบนของช่องบ่อ (สีชุดเดียวกับหน้าคุณภาพน้ำ) */
+.ov2-t .nm{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.ov2-t .nm .wqc-dots{display:flex;gap:2px;flex-shrink:0;overflow:visible}
+.ov2-t .nm .wqc-dots i{width:calc(12px * var(--ui-scale));height:calc(12px * var(--ui-scale))}
 .ov2-t.d{background:var(--db);border-color:#F3A9A9}.ov2-t.w{background:var(--wb);border-color:#F5C978}.ov2-t.o{background:var(--ob);border-color:#9AD9AE}
 .ov2-lg{display:flex;gap:10px;flex-wrap:wrap;font-size:calc(12px * var(--ui-scale));margin-top:8px}
 .ov2-lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}.ov2-lg i.d{background:var(--d)}.ov2-lg i.w{background:#E8A33A}.ov2-lg i.o{background:var(--ok)}
@@ -9183,10 +9187,14 @@ function renderOvTodo(list){
 }
 function renderOvTiles(list){
   const el=document.getElementById('ov-tiles');if(!el)return;
+  const td=today();
   el.innerHTML=list.map(m=>{const p=m.p,smp=latestSample(p),c=pondShrimpCount(p);
     const size=smp&&smp.abw?Math.round(1000/smp.abw):null,kr=c&&c.biomass>0&&p.size>0?Math.round(c.biomass/p.size):null;
     const cl=m.cls==='danger'?'d':m.cls==='warn'?'w':'o';
-    return '<button type="button" class="ov2-t '+cl+'" onclick="openPondDetail(\''+p.id+'\')"><b>'+mpEsc(p.name)+'</b><span>'+(m.age>0?m.age+' วัน':'-')+(size?' · '+size+' ตัว':'')+'</span><span>'+(kr?kr.toLocaleString()+' กก./ไร่':'ยังไม่สุ่ม')+'</span></button>';
+    // #426 สีน้ำที่ติ๊กวันนี้ (wqcParse จากหมายเหตุค่าน้ำ) = จุดมุมขวาบน · ยังไม่จดวันนี้ = ไม่มีจุด ห้ามดึงของเมื่อวานมาโชว์
+    const wr=(p.records||[]).find(r=>r.date===td),wc=wr?wqcParse(wr.notes).cols:[];
+    const dots=wc.length?'<span class="wqc-dots" title="'+mpEsc(wc.join(' '))+'">'+wc.map(n=>'<i style="background:'+WQ_COLORS.find(x=>x[0]===n)[1]+'"></i>').join('')+'</span>':'';
+    return '<button type="button" class="ov2-t '+cl+'" onclick="openPondDetail(\''+p.id+'\')"><span class="nm"><b>'+mpEsc(p.name)+'</b>'+dots+'</span><span>'+(m.age>0?m.age+' วัน':'-')+(size?' · '+size+' ตัว':'')+'</span><span>'+(kr?kr.toLocaleString()+' กก./ไร่':'ยังไม่สุ่ม')+'</span></button>';
   }).join('')||'<p class="ov2-allok">ยังไม่มีบ่อที่เลี้ยงอยู่</p>';
 }
 function renderOvNext(){
