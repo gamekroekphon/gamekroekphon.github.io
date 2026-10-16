@@ -1352,6 +1352,42 @@ body:not(.role-admin) .staff-only{display:revert}
 .stock-mode-btn.on-sale{background:#7c3aed;color:#fff}
 .stock-mode-btn.on-count{background:#1D4ED8;color:#fff}
 /* ตะวันปาล์ม #340 */
+/* #425 ตะวันปาล์ม */
+#palm-ov-kpi{grid-template-columns:repeat(4,minmax(0,1fr))}
+#palm-ov-kpi .kpi-val small{font-size:calc(12px * var(--ui-scale));font-weight:600}
+@media(max-width:640px){#palm-ov-kpi{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#palm-ov-kpi .kpi-card{padding:9px 11px}}
+.palm-rem{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 11px;border:1px solid var(--bd);border-radius:9px;margin-top:7px;font-size:calc(13.5px * var(--ui-scale))}
+.palm-dike{display:flex;gap:8px;align-items:center;background:var(--ob);border-radius:10px;padding:8px 11px;margin:6px 0 4px;font-size:calc(13.5px * var(--ui-scale));cursor:pointer}
+.palm-dike input{width:20px;height:20px;accent-color:var(--ok)}
+.palm-dtag{display:inline-block;border-radius:7px;padding:0 7px;font-size:calc(12px * var(--ui-scale));font-weight:700;background:var(--ob);color:var(--ok)}
+.palm-cg{font-size:calc(12px * var(--ui-scale));font-weight:700;margin:6px 0 3px}
+.palm-cats{display:flex;flex-wrap:wrap;gap:6px}
+.palm-cats button{border:1.5px solid var(--bd);border-radius:10px;padding:6px 11px;font:inherit;font-size:calc(14px * var(--ui-scale));font-weight:600;background:var(--sf);color:var(--tx);cursor:pointer;min-height:40px}
+.palm-cats button.on{border-color:var(--ok);background:var(--ob);color:var(--ok);font-weight:800}
+.palm-csel{display:inline-block;border:1.5px solid var(--ok);border-radius:7px;padding:0 5px;font:inherit;font-size:calc(12px * var(--ui-scale));font-weight:700;background:var(--ob);color:var(--ok);max-width:170px}
+.palm-csel.g{border-style:dashed;background:var(--sf)}
+.palm-ex-tot{text-align:right;font-size:calc(13px * var(--ui-scale));margin-top:-4px}
+.palm-ex-bar{display:grid;grid-template-columns:minmax(0,118px) minmax(0,1fr) auto;gap:8px;align-items:center;font-size:calc(13.5px * var(--ui-scale));margin-top:6px;font-variant-numeric:tabular-nums}
+.palm-ex-bar .t{height:10px;border-radius:9px;background:var(--sf2);overflow:hidden}
+.palm-ex-bar .t i{display:block;height:100%;background:var(--ok);border-radius:9px}
+.palm-ex-bar .t i.inv{background:var(--w)}
+.palm-ex-bar b{text-align:right;font-weight:800}
+.palm-ex-split{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.palm-ex-split>div{border-radius:10px;padding:8px 10px;font-size:calc(12.5px * var(--ui-scale))}
+.palm-ex-split .a{background:var(--ob)}.palm-ex-split .b{background:var(--wb)}
+.palm-ex-split b{display:block;font-size:calc(17px * var(--ui-scale));font-weight:800}
+.palm-ex-g{font-size:calc(12.5px * var(--ui-scale));margin-top:7px}
+.palm-eq{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:calc(14px * var(--ui-scale));margin-top:5px}
+.palm-eq b{font-weight:800}
+.palm-eq.tot{border-top:2px solid var(--bd);padding-top:5px}
+.palm-self{border-radius:11px;padding:9px 12px;margin-top:9px}
+.palm-self.ok{background:var(--ob);color:var(--ok)}.palm-self.no{background:var(--wb);color:var(--w)}
+.palm-self b{display:block;font-size:calc(19px * var(--ui-scale));font-weight:800}
+.palm-self .s,.palm-pay .s{font-size:calc(12.5px * var(--ui-scale))}
+.palm-pay{margin-top:12px}
+.palm-prog{height:11px;border-radius:9px;background:var(--wb);overflow:hidden;margin-top:5px}
+.palm-prog i{display:block;height:100%;background:var(--w);border-radius:9px}
+.palm-more{display:inline}.palm-more summary{display:inline;cursor:pointer;color:var(--in,#185FA5);font-weight:600}
 .palm-quick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
 .palm-quick button{background:var(--sf);border:1.5px solid var(--bd);border-radius:12px;padding:10px 4px;font-family:inherit;font-weight:700;font-size:calc(13px * var(--ui-scale));color:var(--tx);cursor:pointer;min-height:64px}
 .palm-quick .ic{display:block;font-size:calc(21px * var(--ui-scale));line-height:1.2}
@@ -3051,11 +3087,23 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       <button type="button" onclick="palmQuick('fert')"><span class="ic">🧪</span>ใส่ปุ๋ย</button>
       <button type="button" onclick="palmQuick('nav')"><span class="ic">📈</span>อัปเดต NAV</button>
     </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-t">⏰ ใส่ปุ๋ยรอบถัดไป</div>
+      <div id="palm-ov-reminders"></div>
+    </div>
     <div class="g4" id="palm-ov-kpi" style="margin-bottom:14px"></div>
     <div class="card" style="margin-bottom:12px">
       <div class="card-t">💼 สรุปธุรกิจปีนี้ (สำหรับเจ้าของ/ผู้จัดการ)</div>
       
       <div id="palm-ov-biz"></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-t">💸 รายจ่ายปีนี้</div>
+      <div id="palm-ov-exp"></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-t">🧾 สวนจ่ายค่าคนดูแลเองได้ไหม</div>
+      <div id="palm-ov-self"></div>
     </div>
     <div class="card" style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:4px">
@@ -3073,11 +3121,6 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       </div>
       <div class="card-sub">นับเฉพาะปีนี้</div>
       <div id="palm-ov-plots"></div>
-    </div>
-    <div class="card">
-      <div class="card-t">⏰ แปลงที่ใกล้/เลยกำหนดใส่ปุ๋ยรอบถัดไป</div>
-      
-      <div id="palm-ov-reminders"></div>
     </div>
   </div>
 
@@ -3098,9 +3141,11 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
         <div class="fg"><label class="fl" for="pf-name">ชื่อแปลง</label><input class="fi" id="pf-name" placeholder="เช่น แปลง A — หน้าบ้าน"></div>
         <div class="fg"><label class="fl" for="pf-variety">พันธุ์</label><input class="fi" id="pf-variety" placeholder="เช่น ลูกผสมเทเนอรา"></div>
       </div>
+      <label class="palm-dike"><input type="checkbox" id="pf-dike" onchange="palmDikeToggle()"> <span><b>ปลูกตามคันบ่อ</b> · ไม่นับไร่</span></label>
       <div class="fgrid">
-        <div class="fg"><label class="fl" for="pf-area">พื้นที่ (ไร่)</label><input class="fi" id="pf-area" inputmode="decimal" placeholder="เช่น 12"></div>
-        <div class="fg"><label class="fl" for="pf-trees">จำนวนต้น</label><input class="fi" id="pf-trees" inputmode="numeric" placeholder="เช่น 264"></div>
+        <div class="fg" id="pf-area-wrap"><label class="fl" for="pf-area">พื้นที่ (ไร่)</label><input class="fi" id="pf-area" inputmode="decimal" placeholder="เช่น 12"></div>
+        <div class="fg" id="pf-old-wrap" hidden><label class="fl" for="pf-oldtrees">ต้นเก่า (ว่าง = ยังไม่นับ)</label><input class="fi" id="pf-oldtrees" inputmode="numeric"></div>
+        <div class="fg"><label class="fl" for="pf-trees" id="pf-trees-lbl">จำนวนต้น</label><input class="fi" id="pf-trees" inputmode="numeric" placeholder="เช่น 264"></div>
       </div>
       <div class="fgrid">
         <div class="fg"><label class="fl" for="pf-plantyear">ปีที่ปลูก (พ.ศ.)</label><input class="fi" id="pf-plantyear" inputmode="numeric" placeholder="เช่น 2558"></div>
@@ -3119,13 +3164,14 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <div class="pv-bar" id="pvb-money"></div>
     <div class="card" style="margin-bottom:12px" data-pv="form">
       <div class="card-t">💰 บันทึกรายรับ-รายจ่าย</div>
-      <div class="card-sub">แยกบัญชีเป็นของสวนปาล์มเองทั้งหมด — <b>ไม่นำไปรวม/คำนวณกับข้อมูลการเงินฝั่งตะวันฟาร์ม (กุ้ง) เลย</b> เพราะรายได้จากขายปาล์มนำไปลงทุนกองทุนต่อ ไม่ได้เข้ากองกลางฟาร์มกุ้ง</div>
+      <div class="card-sub">💰 บัญชีปาล์ม แยกจากกุ้ง <details class="palm-more"><summary>อ่านเพิ่ม</summary>รายได้ปาล์มนำไปลงกองทุนต่อ ไม่เข้ากองกลางฟาร์มกุ้ง</details></div>
       <div class="sk-jobs" id="pm-jobs"></div>
       <div style="display:none"><button id="pm-mode-income"></button><button id="pm-mode-expense"></button></div>
       <div class="fgrid">
         <div class="fg"><label class="fl" for="pm-plot">แปลง</label><select class="fi" id="pm-plot"><option value="">ไม่ระบุ / รวมทั้งสวน</option></select></div>
         <div class="fg"><label class="fl" for="pm-date">วันที่</label><input type="date" class="fi" id="pm-date"></div>
       </div>
+      <div id="pm-cat-wrap" class="fg" style="margin-top:10px" hidden><span class="fl">หมวด <span style="color:var(--d)">*</span></span><div id="pm-cat"></div></div>
       <div id="pm-income-fields" class="fgrid">
         <div class="fg"><label class="fl" for="pm-weight">น้ำหนัก (กก.)</label><input class="fi" id="pm-weight" inputmode="decimal" placeholder="เช่น 2,400" oninput="palmMoneyPreview()"></div>
         <div class="fg"><label class="fl" for="pm-price">ราคา/กก. (บาท)</label><input class="fi" id="pm-price" inputmode="decimal" placeholder="เช่น 6.20" oninput="palmMoneyPreview()"></div>
@@ -3187,7 +3233,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
       <div class="fg"><label class="fl" for="pfl-note">หมายเหตุ</label><input class="fi" id="pfl-note" placeholder="เช่น ใส่รอบฝนแรก, ผู้ใส่: ลุงสมชาย"></div>
       <button class="btn btn-p" style="width:100%" onclick="savePalmFert()">💾 บันทึก</button>
       <div id="sk-msg-palmfert"></div>
-      <div class="hint" style="margin-top:12px">💡 บันทึกที่ผูก "ค่าใช้จ่าย" ไว้ จะไปรวมกับหมวดรายจ่ายในแท็บ "รายรับ-รายจ่าย" ของตะวันปาล์มเองให้อัตโนมัติ (ไม่ต้องกรอกซ้ำสองที่) — <b>ไม่ยุ่งกับข้อมูลการเงินของฝั่งตะวันฟาร์ม (กุ้ง) เลย แยกกันเด็ดขาด</b></div>
+      <div class="hint" style="margin-top:12px">🧪 ใส่ค่าปุ๋ย = ลงรายจ่ายปาล์มให้เอง (หมวดปุ๋ย)</div>
     </div>
 
     <div class="card" style="margin-bottom:12px" data-pv="hist">
@@ -3216,7 +3262,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
         <div class="card-t" style="margin-bottom:0">📊 ราคาเฉลี่ย/กก. แยกตามเดือน (รวมทุกปี)</div>
         <div class="chip-row" id="palm-harvest-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
       </div>
-      <div class="card-sub">ดึงจากบันทึก "รายรับ (ขายปาล์ม)" ที่มีน้ำหนัก+ราคา/กก. ในแท็บ "รายรับ-รายจ่าย" — ใช้ราคา/กก. ที่กรอกไว้ตรงๆ (ไม่คำนวณจากยอดเงิน เพราะยอดเงินคือรายรับสุทธิหลังหักค่าจ้างทีมตัดซึ่งแต่ละเจ้าคิดราคาไม่เท่ากัน) รวมข้อมูลทุกปีที่มี แล้วเฉลี่ยตามเดือนปฏิทิน ให้เห็นว่าเดือนไหนราคาดีที่สุด ยิ่งสะสมข้อมูลหลายปีกราฟยิ่งแม่นขึ้น</div>
+      <div class="card-sub">🌾 ราคาเฉลี่ยตามเดือน (ทุกปี) · จากราคา/กก. ที่กรอก <details class="palm-more"><summary>อ่านเพิ่ม</summary>ไม่คิดจากยอดเงิน เพราะยอดเงินหักค่าจ้างทีมตัดแล้ว · ยิ่งเก็บหลายปียิ่งแม่น</details></div>
       <div style="position:relative;height:200px"><canvas id="palm-harvest-chart"></canvas></div>
       <div id="palm-harvest-best" style="text-align:center;margin-top:8px"></div>
     </div>
@@ -12709,6 +12755,35 @@ function palmPlots(){return D.palmPlots||[];}
 function palmMoneyList(){return D.palmMoney||[];}
 function palmFertList(){return D.palmFertilizer||[];}
 function palmPlotName(id){if(!id)return'ไม่ระบุ / รวมทั้งสวน';const p=palmPlots().find(x=>x.id===id);return p?p.name:'(แปลงที่ถูกลบ)';}
+// ── #425 แปลงปลูกตามคันบ่อ (p.dike — แปลงบ้านใหญ่: ต้นเก่า 5–10 ปีตามคันบ่อตะวันฟาร์ม + ต้นใหม่)
+//    ไม่นับไร่ (พื้นที่รวม / กก.ต่อไร่) · p.trees = ต้นใหม่ · p.oldTrees = ต้นเก่า (ว่าง = ยังไม่นับ → ปุ๋ย/ต้น ขึ้น "—")
+function palmArea(p){return p&&!p.dike?(p.area||0):0;}
+function palmTreeTotal(p){if(!p)return null;if(!p.dike)return p.trees||0;return p.oldTrees>0?(p.trees||0)+p.oldTrees:null;}
+function palmTreeLbl(p){return p.dike?'ใหม่ '+(p.trees||0).toLocaleString()+' · เก่า '+(p.oldTrees>0?p.oldTrees.toLocaleString():'ยังไม่นับ'):(p.trees||0).toLocaleString()+' ต้น';}
+// ── #425 หมวดรายจ่ายปาล์ม — r.cat · ไม่มี = เดาจากหมายเหตุตอนแสดงผล (ไม่เขียนกลับ) · ใส่ปุ๋ยจากแท็บปุ๋ย (linkedFertId) = ปุ๋ยเสมอ
+//    g:'care' = ค่าดูแล (คิดต้นทุน/กก.) · g:'inv' = ลงทุน (ต้นปาล์ม/แบคโฮ — แยกออก ไม่งั้นปีที่ซื้อต้นใหม่ต้นทุน/กก. พุ่ง)
+//    ค่าจ้างทีมตัดปาล์มไม่อยู่ในนี้ — หักจากเงินขายตอนบันทึกรายรับแล้ว (cutFee) · ค่าคนดูแลสวน ตะวันฟาร์มออกให้ (ถึงปี 70 พี่บอก 16 ต.ค. 69)
+const PALM_CATS=[
+  {v:'fert',ic:'🧪',t:'ปุ๋ย',g:'care'},{v:'chem',ic:'💊',t:'ยา',g:'care'},{v:'labor',ic:'👷',t:'ค่าจ้าง',g:'care'},
+  {v:'equip',ic:'🔧',t:'อุปกรณ์/น้ำมัน',g:'care'},{v:'other',ic:'⋯',t:'อื่นๆ',g:'care'},
+  {v:'tree',ic:'🌱',t:'ต้นปาล์ม',g:'inv'},{v:'land',ic:'🚜',t:'แบคโฮ/เตรียมที่',g:'inv'}];
+// ลำดับสำคัญ: อุปกรณ์ก่อน ("ใบมีดรถตัดหญ้า" / "ขันตักปุ๋ย") · ปุ๋ยก่อนยา ("ยาร่า" = ยี่ห้อปุ๋ย)
+const PALM_CAT_GUESS=[
+  ['equip',/ใบมีด|ขัน|น้ำมัน|เครื่อง|สาย|ท่อ|อุปกรณ์|ซ่อม/],['land',/แม็คโค|แมคโค|แบคโฮ|ปรับที่|ราง/],
+  ['fert',/ปุ๋ย|\d+-\d+-\d+|โบรอน|ยาร่า|ม้าบิน|ฟูลาดาล|โดโลไมท์|ขี้ไก่|มูลไก่/],['chem',/ยา|แมลง/],
+  ['labor',/แรง|จ้าง|ตัดหญ้า|ค่าคน|ข้าว/],['tree',/ต้น|กล้า|ปาล์มใหม่|มัดจำปาล์ม/]];
+function palmExpCat(r){
+  if(r.cat&&PALM_CATS.some(c=>c.v===r.cat))return{v:r.cat,guess:false};
+  if(r.linkedFertId)return{v:'fert',guess:false};
+  const n=r.note||'';for(const [k,re] of PALM_CAT_GUESS)if(re.test(n))return{v:k,guess:true};
+  return{v:'other',guess:true};
+}
+function palmCatMeta(v){return PALM_CATS.find(c=>c.v===v)||PALM_CATS[4];}
+function palmIsInvest(r){return palmCatMeta(palmExpCat(r).v).g==='inv';}
+function palmSetCat(id,v){
+  const r=(D.palmMoney||[]).find(x=>x.id===id);if(!r||r.linkedFertId)return;
+  r.cat=v;save();renderPalmMoney();renderPalmOverview();
+}
 let _palmActiveTab='ov';
 /* ══════════ หน้า "คำนวณ & คาดการณ์" (admin เท่านั้น) ══════════
    ⚠️ อ่านอย่างเดียว — ไม่เขียนข้อมูลบ่อใดๆ ค่าที่แก้ในฟอร์มเป็นการลองสมมติชั่วคราว
@@ -13284,32 +13359,91 @@ function populatePalmPlotSelects(){
 function renderPalmOverview(){
   const kpiEl=document.getElementById('palm-ov-kpi');if(!kpiEl)return;
   const plots=palmPlots();
-  const totalArea=plots.reduce((s,p)=>s+(p.area||0),0);
   const thisYear=today().slice(0,4);
-  const moneyThisYear=palmMoneyList().filter(r=>(r.date||'').startsWith(thisYear));
-  const totalIn=moneyThisYear.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
-  const totalOut=moneyThisYear.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
-  kpiEl.innerHTML=`<div class="kpi-card"><div class="kpi-lbl">จำนวนแปลง</div><div class="kpi-val">${plots.length}</div><div class="kpi-sub">แปลง</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">พื้นที่รวม</div><div class="kpi-val">${totalArea.toLocaleString()}</div><div class="kpi-sub">ไร่</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">รายได้สะสม (ตั้งแต่ต้นปี)</div><div class="kpi-val" style="color:var(--ok)">฿${Math.round(totalIn).toLocaleString()}</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">กำไรสุทธิสะสม (ตั้งแต่ต้นปี)</div><div class="kpi-val">฿${Math.round(totalIn-totalOut).toLocaleString()}</div></div>`;
+  const st=palmYearStats(thisYear);
+  // #425 ตัวเลขบน 2×2 (มือถือ) · พื้นที่/ต้น ไม่นับแปลงคันบ่อ — บอกท้ายแทน
+  const area=plots.reduce((s,p)=>s+palmArea(p),0),hasDike=plots.some(p=>p.dike);
+  const trees=plots.reduce((s,p)=>s+(p.trees||0)+(p.dike&&p.oldTrees>0?p.oldTrees:0),0);
+  const oldUnk=plots.some(p=>p.dike&&!(p.oldTrees>0));
+  const k=(l,v,sub,c)=>'<div class="kpi-card"><div class="kpi-lbl">'+l+'</div><div class="kpi-val"'+(c?' style="color:'+c+'"':'')+'>'+v+'</div>'+(sub?'<div class="kpi-sub">'+sub+'</div>':'')+'</div>';
+  kpiEl.innerHTML=k('รายได้ปีนี้','฿'+Math.round(st.revenue).toLocaleString(),'','var(--ok)')
+    +k('กำไรปีนี้','฿'+Math.round(st.net).toLocaleString())
+    +k('พื้นที่',area.toLocaleString()+' <small>ไร่'+(hasDike?' + คันบ่อ':'')+'</small>')
+    +k('ต้นปาล์ม',trees.toLocaleString()+(oldUnk?' <small>+ ต้นเก่าคันบ่อ</small>':' <small>ต้น</small>'));
   renderPalmOvBiz(thisYear);
+  renderPalmOvExp(thisYear);
+  renderPalmOvSelf(thisYear);
   renderPalmOvPlots(thisYear);
   const remEl=document.getElementById('palm-ov-reminders');if(!remEl)return;
   const today0=today();
+  // #425 ใช้ใบใส่ปุ๋ย "ล่าสุดตามวันที่" ที่มีกำหนดรอบถัดไป — เดิมเอากำหนดที่ไกลสุด แปลง B ได้ 61 วัน (จากใบ 6 ส.ค.) แทน 40 วัน (ใบ 24 ก.ย.)
+  //    ใส่ครั้งใหม่หลังถึงกำหนดแล้ว (ไม่ได้กรอกรอบถัดไป) = รอบนั้นใส่ไปแล้ว ไม่ต้องเตือน
   const rows=plots.map(p=>{
-    const fertRecs=palmFertList().filter(r=>r.plotId===p.id&&r.next).sort((a,b)=>b.next.localeCompare(a.next));
-    return{p,latest:fertRecs[0]};
-  }).filter(x=>x.latest);
-  if(!rows.length){remEl.innerHTML='<p style="color:var(--tx3);padding:12px;font-style:italic;text-align:center">ยังไม่มีข้อมูลกำหนดใส่ปุ๋ยรอบถัดไป — กรอกช่อง "กำหนดใส่รอบถัดไป" ได้ที่แท็บ "ประวัติใส่ปุ๋ย"</p>';return;}
+    const recs=palmFertList().filter(r=>r.plotId===p.id).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const latest=recs.find(r=>r.next);
+    if(!latest||recs.some(r=>r.date>latest.date&&r.date>=latest.next))return null;
+    return{p,latest};
+  }).filter(Boolean);
+  if(!rows.length){remEl.innerHTML='<p style="padding:8px 4px">ยังไม่มีกำหนดรอบถัดไป · กรอกตอนบันทึกใส่ปุ๋ย</p>';return;}
   rows.sort((a,b)=>dDiff(today0,a.latest.next)-dDiff(today0,b.latest.next));
   remEl.innerHTML=rows.map(({p,latest})=>{
     const daysLeft=dDiff(today0,latest.next);
-    let icon='🟢',badge='<span class="badge b-ok">ปกติ</span>',txt='ครบกำหนดในอีก '+daysLeft+' วัน';
-    if(daysLeft<0){icon='🔴';badge='<span class="badge b-danger">เลยกำหนด</span>';txt='เลยกำหนดมาแล้ว '+Math.abs(daysLeft)+' วัน';}
+    let icon='🟢',badge='<span class="badge b-ok">ปกติ</span>',txt='อีก '+daysLeft+' วัน · '+fD(latest.next);
+    if(daysLeft<0){icon='🔴';badge='<span class="badge b-danger">เลยกำหนด</span>';txt='เลยมา '+Math.abs(daysLeft)+' วัน · '+fD(latest.next);}
     else if(daysLeft<=7){icon='🟡';badge='<span class="badge b-warn">ใกล้ถึง</span>';}
-    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border:1px solid var(--bd);border-radius:8px;margin-bottom:8px;font-size:calc(12.5px * var(--ui-scale))"><span>${icon} <b>${p.name}</b> ${txt}</span>${badge}</div>`;
+    return '<div class="palm-rem"><span>'+icon+' <b>'+mpEsc(p.name)+'</b> '+txt+'</span>'+badge+'</div>';
   }).join('');
+}
+// ── #425 การ์ด "รายจ่ายปีนี้" แยกหมวด · ค่าดูแล / ลงทุน ──
+function palmExpByCat(list){
+  const by={};list.forEach(r=>{const v=palmExpCat(r).v;by[v]=(by[v]||0)+(r.amount||0);});return by;
+}
+function renderPalmOvExp(year){
+  const el=document.getElementById('palm-ov-exp');if(!el)return;
+  const exp=palmMoneyList().filter(r=>r.type==='expense'&&(r.date||'').startsWith(year));
+  const card=el.closest('.card');if(card)card.style.display=exp.length?'':'none';
+  if(!exp.length)return;
+  const by=palmExpByCat(exp),tot=exp.reduce((s,r)=>s+(r.amount||0),0);
+  const B=v=>'฿'+Math.round(v).toLocaleString();
+  const guessN=exp.filter(r=>palmExpCat(r).guess).length;
+  const cats=PALM_CATS.filter(c=>by[c.v]).sort((a,b)=>(a.g===b.g?0:a.g==='care'?-1:1)||by[b.v]-by[a.v]);
+  const care=PALM_CATS.filter(c=>c.g==='care').reduce((s,c)=>s+(by[c.v]||0),0),inv=tot-care;
+  el.innerHTML='<div class="palm-ex-tot">รวม <b>'+B(tot)+'</b></div>'
+    +cats.map(c=>'<div class="palm-ex-bar"><span>'+c.ic+' '+c.t+'</span><span class="t"><i class="'+(c.g==='inv'?'inv':'')+'" style="width:'+Math.max(1,Math.round(by[c.v]/tot*100))+'%"></i></span><b>'+B(by[c.v])+'</b></div>').join('')
+    +'<div class="palm-ex-split"><div class="a"><div>ค่าดูแล</div><b>'+B(care)+'</b></div><div class="b"><div>ลงทุน (ต้น/แบคโฮ)</div><b>'+B(inv)+'</b></div></div>'
+    +(guessN?'<div class="palm-ex-g">'+guessN+' รายการ แอปเดาหมวดจากหมายเหตุ · แก้ได้ในประวัติรายจ่าย</div>':'');
+}
+// ── #425 สวนจ่ายค่าคนดูแลเองได้ไหม (ตอนนี้ตะวันฟาร์มออก) + คืนทุนรายแปลง ──
+function renderPalmOvSelf(year){
+  const el=document.getElementById('palm-ov-self');if(!el)return;
+  const st=palmYearStats(year),B=v=>'฿'+Math.round(v).toLocaleString();
+  const left=st.revenue-st.careSpend;
+  const cy=year===today().slice(0,4);
+  const months=cy?Math.max(1,(dDiff(year+'-01-01',today())+1)/30.44):12;
+  let html='';
+  if(st.revenue>0){
+    html+='<div class="palm-eq"><span>รายได้ปีนี้</span><b>'+B(st.revenue)+'</b></div>'
+      +'<div class="palm-eq"><span>− ค่าดูแล (ไม่รวมคนดูแล)</span><b>'+B(st.careSpend)+'</b></div>'
+      +'<div class="palm-eq tot"><span>= เหลือ</span><b>'+B(left)+'</b></div>'
+      +(left>0?'<div class="palm-self ok"><div>จ่ายค่าคนดูแลได้ถึง</div><b>~'+B(Math.floor(left/months/100)*100)+' / เดือน</b><div class="s">'+B(left)+' ÷ '+months.toFixed(1)+' เดือน · ตอนนี้ตะวันฟาร์มออกให้</div></div>'
+        :'<div class="palm-self no"><b>ยังจ่ายเองไม่ได้</b><div class="s">รายได้ไม่พอค่าดูแล</div></div>');
+  }
+  // คืนทุนรายแปลง (ตั้งแต่เริ่ม) = (รายได้ − ค่าดูแล) ÷ ลงทุน · เฉพาะแปลงที่มีรายจ่ายลงทุน
+  const money=palmMoneyList();
+  const pay=palmPlots().map(p=>{
+    const ms=money.filter(r=>r.plotId===p.id);
+    const inc=ms.filter(r=>r.type==='income').reduce((s,r)=>s+(r.amount||0),0);
+    const ex=ms.filter(r=>r.type==='expense');
+    const inv=ex.filter(palmIsInvest).reduce((s,r)=>s+(r.amount||0),0);
+    const care=ex.filter(r=>!palmIsInvest(r)).reduce((s,r)=>s+(r.amount||0),0);
+    return{p,inc,inv,back:inc-care};
+  }).filter(x=>x.inv>0&&x.inc>0);
+  html+=pay.map(x=>{const pct=Math.max(0,x.back/x.inv*100);
+    return '<div class="palm-pay"><div class="palm-eq"><span>🌴 <b>'+mpEsc(x.p.name)+'</b> คืนทุน</span><b>'+(pct>=100?'คืนครบแล้ว':pct.toFixed(0)+'%')+'</b></div>'
+      +'<div class="palm-prog"><i style="width:'+Math.min(100,pct).toFixed(1)+'%"></i></div>'
+      +'<div class="s">ลงทุน '+B(x.inv)+' · รายได้ − ค่าดูแล '+B(x.back)+'</div></div>';}).join('');
+  const card=el.closest('.card');if(card)card.style.display=html?'':'none';
+  el.innerHTML=html;
 }
 // ══════ ⚠️ single source of truth ของ "ตัวเลขธุรกิจปาล์มรายปี" — ใช้ร่วมทั้ง KPI / การ์ดเทียบปี / แถบรวมรายแปลง ══════
 //    ⚠️ รายจ่ายที่เลือก "ไม่ระบุ / รวมทั้งสวน" (plotId ว่าง) ต้องนับเข้ายอดรวมเสมอ
@@ -13324,12 +13458,14 @@ function palmYearStats(year){
   const kg=inc.reduce((s,r)=>s+(r.weightKg||0),0);
   const revenue=inc.reduce((s,r)=>s+(r.amount||0),0);
   const spend=exp.reduce((s,r)=>s+(r.amount||0),0);
+  const investSpend=exp.filter(palmIsInvest).reduce((s,r)=>s+(r.amount||0),0),careSpend=spend-investSpend;   // #425
   const sharedSpend=exp.filter(r=>!r.plotId).reduce((s,r)=>s+(r.amount||0),0);
   let psum=0,pkg=0;
   inc.forEach(r=>{if(r.pricePerKg>0&&r.weightKg>0){psum+=r.pricePerKg*r.weightKg;pkg+=r.weightKg;}});
   const fertKg=palmFertList().filter(r=>(r.date||'').startsWith(y)).reduce((s,r)=>s+(r.kg||0),0);
   const net=revenue-spend;
-  return{year:y,kg,revenue,spend,sharedSpend,net,cuts:inc.length,fertKg,
+  return{year:y,kg,revenue,spend,sharedSpend,net,cuts:inc.length,fertKg,investSpend,careSpend,
+    careCostPerKg:kg>0?careSpend/kg:null,profitCarePerKg:kg>0?(revenue-careSpend)/kg:null,
     avgPrice:pkg>0?psum/pkg:null,
     costPerKg:kg>0?spend/kg:null,
     revPerKg:kg>0?revenue/kg:null,
@@ -13386,20 +13522,20 @@ function renderPalmOvBiz(year){
     '</div>';
   // ── กำไรต่อกิโล: ตัวเลขที่บอกว่า "ขายกิโลละเท่าไร ต้นทุนกิโลละเท่าไร เหลือเท่าไร" ──
   if(cur.kg>0){
-    const pk=cur.profitPerKg,margin=cur.revPerKg>0?pk/cur.revPerKg*100:0;
+    const pk=cur.profitCarePerKg,margin=cur.revPerKg>0?pk/cur.revPerKg*100:0;
     html+='<div style="margin-top:12px;padding:12px 14px;border:1.5px solid '+(pk>=0?'var(--ok)':'var(--d)')+';border-radius:11px;background:'+(pk>=0?'var(--ob)':'var(--db)')+'">'+
       '<div style="font-size:calc(12.5px * var(--ui-scale));font-weight:700;color:var(--tx);margin-bottom:8px">💵 กำไรต่อกิโล (ปีนี้)</div>'+
       '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:calc(14px * var(--ui-scale))">'+
         '<span>เงินเข้าจริง <b>฿'+cur.revPerKg.toFixed(2)+'</b></span>'+
         '<span style="color:var(--tx3)">−</span>'+
-        '<span>ต้นทุน <b>฿'+cur.costPerKg.toFixed(2)+'</b></span>'+
+        '<span>ค่าดูแล <b>฿'+cur.careCostPerKg.toFixed(2)+'</b></span>'+
         '<span style="color:var(--tx3)">=</span>'+
         '<span style="font-size:calc(19px * var(--ui-scale));font-weight:700;color:'+(pk>=0?'var(--ok)':'var(--d)')+'">฿'+pk.toFixed(2)+'/กก.</span>'+
         '<span style="font-size:calc(11.5px * var(--ui-scale));color:var(--tx2)">(อัตรากำไร '+margin.toFixed(0)+'%)</span>'+
       '</div>'+
       // ⚠️ ต้องอธิบายว่าทำไม "เงินเข้าจริง/กก." ไม่เท่ากับ "ราคาเฉลี่ย" ด้านบน — ไม่งั้นดูเหมือนตัวเลขขัดกันเองในการ์ดเดียว
       '<div style="font-size:calc(11px * var(--ui-scale));color:var(--tx3);margin-top:6px">'+
-        'เงินเข้าจริงหักค่าจ้างทีมตัดแล้ว'+(cur.avgPrice!=null?' จึงต่ำกว่าราคาเฉลี่ย ฿'+cur.avgPrice.toFixed(2):'')+
+        'เงินเข้าจริงหักค่าทีมตัดแล้ว · ค่าดูแลไม่รวมค่าต้น/แบคโฮ'+
       '</div>'+
     '</div>';
   }
@@ -13467,7 +13603,7 @@ function renderPalmOvPlots(year){
     const p=r.p;
     return '<div class="plot-card">'+
       '<div class="pn">'+mpEsc(p.name)+'</div>'+
-      '<div class="pa">'+(p.area?p.area.toLocaleString()+' ไร่':'')+(p.trees?' · '+p.trees.toLocaleString()+' ต้น':'')+'</div>'+
+      '<div class="pa">'+(p.dike?'🌿 ตามคันบ่อ · '+palmTreeLbl(p):(p.area?p.area.toLocaleString()+' ไร่':'')+(p.trees?' · '+p.trees.toLocaleString()+' ต้น':''))+'</div>'+
       row('⏱️ ตัดล่าสุด',cutBadge(r.daysSince)+(r.lastCut?' <span style="color:var(--tx3);font-weight:400">('+fD(r.lastCut)+')</span>':''))+
       row('🌴 ตัดไปแล้ว',r.kg?r.kg.toLocaleString()+' กก.':'— ยังไม่ได้ตัด')+
       row('💰 รายรับสุทธิ',r.baht?B(r.baht):'-','var(--ok)')+
@@ -13475,7 +13611,7 @@ function renderPalmOvPlots(year){
       row('🧪 ใส่ปุ๋ยไปแล้ว',r.fertKg?r.fertKg.toLocaleString()+' กก. ('+r.fertTimes+' ครั้ง)':'— ยังไม่ได้ใส่')+
       row('💸 รายจ่ายของแปลงนี้',r.spend?B(r.spend):'-','var(--d)')+
       row('📊 กำไรของแปลงนี้',B(r.net),r.net>=0?'var(--ok)':'var(--d)')+
-      (p.area?row('⚖️ ผลผลิต/ไร่',r.kg?(r.kg/p.area).toFixed(0)+' กก./ไร่':'-'):'')+
+      (palmArea(p)?row('⚖️ ผลผลิต/ไร่',r.kg?(r.kg/palmArea(p)).toFixed(0)+' กก./ไร่':'-'):'')+
       row('✂️ จำนวนครั้งที่ตัด',r.cuts+' ครั้ง')+
     '</div>';
   }).join('')+'</div>'+
@@ -13577,12 +13713,21 @@ function openPalmPlotForm(plotId){
     document.getElementById('pf-trees').value=p.trees||'';
     document.getElementById('pf-plantyear').value=p.plantYear||'';
     document.getElementById('pf-status').value=p.status||'producing';
+    document.getElementById('pf-dike').checked=!!p.dike;
+    document.getElementById('pf-oldtrees').value=p.oldTrees>0?p.oldTrees:'';
   }else{
     titleEl.textContent='➕ เพิ่มแปลงใหม่';
-    ['pf-id','pf-name','pf-variety','pf-area','pf-trees','pf-plantyear'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    ['pf-id','pf-name','pf-variety','pf-area','pf-trees','pf-plantyear','pf-oldtrees'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
     document.getElementById('pf-status').value='producing';
+    document.getElementById('pf-dike').checked=false;
   }
+  palmDikeToggle();
   card.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function palmDikeToggle(){
+  const on=document.getElementById('pf-dike')?.checked;
+  const a=document.getElementById('pf-area-wrap'),o=document.getElementById('pf-old-wrap'),l=document.getElementById('pf-trees-lbl');
+  if(a)a.hidden=!!on;if(o)o.hidden=!on;if(l)l.textContent=on?'ต้นใหม่':'จำนวนต้น';
 }
 function closePalmPlotForm(){
   const card=document.getElementById('palm-plot-form-card');if(card)card.style.display='none';
@@ -13593,9 +13738,12 @@ function savePalmPlot(){
   const area=parseFloat(document.getElementById('pf-area').value)||0;
   const trees=parseInt(document.getElementById('pf-trees').value)||0;
   if(!name){showStockMsg('palmplot','กรุณากรอกชื่อแปลง','err');return;}
-  if(!trees){showStockMsg('palmplot','กรุณากรอกจำนวนต้น','err');return;}
+  const dike=!!document.getElementById('pf-dike')?.checked;
+  const oldTrees=parseInt(document.getElementById('pf-oldtrees')?.value)||0;
+  if(!trees&&!(dike&&oldTrees)){showStockMsg('palmplot','กรุณากรอกจำนวนต้น','err');return;}
   if(!D.palmPlots)D.palmPlots=[];
-  const rec={
+  const old=D.palmPlots.find(p=>p.id===id)||{};   // เก็บช่องอื่นของแปลงไว้ (#293)
+  const rec={...old,dike,oldTrees:dike&&oldTrees?oldTrees:null,
     id:id||('pp'+Date.now()+'_'+Math.random().toString(36).slice(2,6)),
     name,variety:document.getElementById('pf-variety').value.trim(),area,trees,
     plantYear:document.getElementById('pf-plantyear').value.trim(),
@@ -13623,10 +13771,10 @@ function renderPalmPlots(){
   const curYear=new Date().getFullYear().toString();
   el.innerHTML=list.map(p=>{
     const kgThisYear=palmFertList().filter(r=>r.plotId===p.id&&(r.date||'').startsWith(curYear)).reduce((s,r)=>s+(r.kg||0),0);
-    const perTree=p.trees?kgThisYear/p.trees:0;
+    const tt=palmTreeTotal(p),perTree=tt?kgThisYear/tt:0;
     const plotMoney=palmMoneyList().filter(r=>r.plotId===p.id);
     const yieldThisYear=plotMoney.filter(r=>r.type==='income'&&(r.date||'').startsWith(curYear)).reduce((s,r)=>s+(r.weightKg||0),0);
-    const yieldPerRai=p.area?yieldThisYear/p.area:0;
+    const yieldPerRai=palmArea(p)?yieldThisYear/palmArea(p):0;
     const lifetimeIncome=plotMoney.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
     const lifetimeExpense=plotMoney.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
     const lifetimeNet=lifetimeIncome-lifetimeExpense;
@@ -13636,11 +13784,11 @@ function renderPalmPlots(){
         <button class="btn-sm btn-del" onclick="deletePalmPlot('${p.id}')">🗑️</button>
       </div>
       <div class="pn">${p.name}</div>
-      <div class="pa">${p.variety?p.variety+' · ':''}${p.plantYear?'ปลูก '+p.plantYear:''}</div>
-      <div class="plot-stat"><span>พื้นที่</span><b>${p.area?p.area.toLocaleString():'-'} ไร่</b></div>
-      <div class="plot-stat"><span>จำนวนต้น</span><b>${p.trees.toLocaleString()} ต้น</b></div>
-      <div class="plot-stat"><span>ปุ๋ยปีนี้ (สะสม)</span><b>${p.trees?perTree.toFixed(2)+' กก./ต้น':'-'}</b></div>
-      <div class="plot-stat"><span>ผลผลิตปีนี้ (สะสม)</span><b>${p.area?yieldPerRai.toFixed(1)+' กก./ไร่':'-'}</b></div>
+      <div class="pa">${p.dike?'<span class="palm-dtag">🌿 ตามคันบ่อ</span> ':''}${p.variety?p.variety+' · ':''}${p.plantYear?'ปลูก '+p.plantYear:''}</div>
+      <div class="plot-stat"><span>พื้นที่</span><b>${p.dike?'คันบ่อตะวันฟาร์ม':(p.area?p.area.toLocaleString():'-')+' ไร่'}</b></div>
+      <div class="plot-stat"><span>จำนวนต้น</span><b>${palmTreeLbl(p)}</b></div>
+      <div class="plot-stat"><span>ปุ๋ยปีนี้ (สะสม)</span><b>${tt?perTree.toFixed(2)+' กก./ต้น':(p.dike?'— รอนับต้นเก่า':'-')}</b></div>
+      <div class="plot-stat"><span>ผลผลิตปีนี้ (สะสม)</span><b>${palmArea(p)?yieldPerRai.toFixed(1)+' กก./ไร่':(p.dike?yieldThisYear.toLocaleString()+' กก.':'-')}</b></div>
       <div class="plot-stat"><span>รายรับรวม (ตั้งแต่เริ่ม)</span><b style="color:var(--ok)">฿${Math.round(lifetimeIncome).toLocaleString()}</b></div>
       <div class="plot-stat"><span>รายจ่ายรวม (ตั้งแต่เริ่ม)</span><b style="color:var(--d)">฿${Math.round(lifetimeExpense).toLocaleString()}</b></div>
       <div class="plot-stat"><span>กำไรสุทธิสะสม (ตั้งแต่เริ่ม)</span><b style="color:${lifetimeNet>=0?'var(--ok)':'var(--d)'}">฿${Math.round(lifetimeNet).toLocaleString()}</b></div>
@@ -13659,7 +13807,18 @@ function setPalmMoneyMode(mode){
   const incFields=document.getElementById('pm-income-fields');if(incFields)incFields.style.display=mode==='income'?'':'none';
   const cutW=document.getElementById('pm-cut-wrap');if(cutW)cutW.style.display=mode==='income'?'':'none';
   const amtLbl=document.getElementById('pm-amount-lbl');if(amtLbl)amtLbl.textContent=mode==='income'?'ยอดรวม (บาท)':'จำนวนเงิน (บาท)';
+  const cw=document.getElementById('pm-cat-wrap');if(cw)cw.hidden=mode!=='expense';
+  renderPalmCatChips();
   renderPalmMoneyJobs();
+}
+// #425 หมวดรายจ่าย — บังคับเลือก (ของใหม่) · แบ่ง ค่าดูแล / ลงทุน
+let _palmCat='';
+function renderPalmCatChips(){
+  const el=document.getElementById('pm-cat');if(!el)return;
+  const q=String.fromCharCode(39);
+  const grp=(g,lbl)=>'<div class="palm-cg">'+lbl+'</div><div class="palm-cats">'+PALM_CATS.filter(x=>x.g===g).map(x=>
+    '<button type="button" class="'+(_palmCat===x.v?'on':'')+'" onclick="_palmCat='+q+x.v+q+';renderPalmCatChips()">'+x.ic+' '+x.t+'</button>').join('')+'</div>';
+  el.innerHTML=grp('care','ค่าดูแล')+grp('inv','ลงทุน');
 }
 // ── ปุ่มเลือกงานหน้ารายรับ-รายจ่ายปาล์ม (รูปแบบเดียวกับหน้าสต็อก/จับกุ้ง/เสมียน) ──
 const PM_JOBS=[
@@ -13702,6 +13861,7 @@ function savePalmMoney(){
   const amount=parseFloat(document.getElementById('pm-amount').value)||0;
   const note=document.getElementById('pm-note').value.trim();
   if(!(amount>0)){showStockMsg('palmmoney','กรุณากรอกจำนวนเงินให้ถูกต้อง','err');return;}
+  if(_palmMoneyMode==='expense'&&!_palmCat){showStockMsg('palmmoney','กรุณาเลือกหมวด','err');return;}
   if(!D.palmMoney)D.palmMoney=[];
   const rec={id:'pm'+Date.now()+'_'+Math.random().toString(36).slice(2,6),type:_palmMoneyMode,plotId,date,amount,note,by:curUserLabel()};
   if(_palmMoneyMode==='income'){
@@ -13711,7 +13871,7 @@ function savePalmMoney(){
     if(pr)rec.pricePerKg=pr;
     const cut=parseFloat(document.getElementById('pm-cut').value)||0;
     if(cut>0)rec.cutFee=cut;   // ยอด amount ยังเป็นเงินเข้าจริง (หักค่าตัดแล้ว) เหมือนเดิม — cutFee เก็บไว้ดูเฉยๆ
-  }
+  }else{rec.cat=_palmCat;_palmCat='';renderPalmCatChips();}
   D.palmMoney.push(rec);
   save();
   showStockMsg('palmmoney','✅ บันทึก'+(_palmMoneyMode==='income'?'รายรับ':'รายจ่าย')+'เรียบร้อย','ok');
@@ -13812,6 +13972,13 @@ function pmhRender(rows,monthSum,key,limit){
       }).join('');
   }).join('')+(all?'':'<button type="button" class="pmh-more" onclick="_pmhAll[\''+key+'\']=true;renderFundPane()">ดูทั้งหมด '+rows.length+' รายการ ▾</button>');
 }
+// ป้ายหมวดในประวัติรายจ่าย = ช่องเลือก (แตะแก้ได้) · เดา = กรอบประ · ผูกใบปุ๋ย = ปุ๋ยตายตัว
+function palmCatSel(r){
+  const k=palmExpCat(r),m=palmCatMeta(k.v);
+  if(r.linkedFertId)return '<span class="palm-csel">'+m.ic+' '+m.t+'</span>';
+  return '<select class="palm-csel'+(k.guess?' g':'')+'" aria-label="หมวด" onchange="palmSetCat(\''+r.id+'\',this.value)">'
+    +PALM_CATS.map(x=>'<option value="'+x.v+'"'+(x.v===k.v?' selected':'')+'>'+x.ic+' '+x.t+(x.v===k.v&&k.guess?' · เดา':'')+'</option>').join('')+'</select>';
+}
 function renderPalmMoney(){
   const tbl=document.getElementById('pm-table');if(!tbl)return;
   let list=palmMoneyList().slice();
@@ -13847,7 +14014,7 @@ function renderPalmMoney(){
         const d=new Date(r.date+'T00:00:00');
         const main=inc&&r.weightKg?r.weightKg.toLocaleString()+' กก.'+(r.pricePerKg?' × ฿'+(+r.pricePerKg).toFixed(2):''):billEsc(r.note||'-');
         const note=inc&&r.weightKg&&r.note?'<div class="pmh-note">'+billEsc(r.note)+'</div>':'';
-        const chips=(r.cutFee?'<span class="pm-cut-tag">หักค่าตัด '+B(r.cutFee)+'</span>':'')
+        const chips=(inc?'':palmCatSel(r))+(r.cutFee?'<span class="pm-cut-tag">หักค่าตัด '+B(r.cutFee)+'</span>':'')
           +(fundMap[r.id]?'<span class="fsl-chip fund">💰 เงินกองทุน '+fD(fundMap[r.id].date)+'</span>':'');
         return '<div class="pmh-r"><div class="pmh-d"><b>'+d.getDate()+'</b><small>'+MO_TH_SHORT[d.getMonth()]+'</small></div>'
           +'<div class="pmh-b"><div class="pmh-t"><span>'+main+'</span><b class="'+(inc?'in':'out')+'">'+(inc?'+':'−')+B(r.amount)+'</b></div>'
@@ -13880,7 +14047,7 @@ function savePalmFert(){
   if(cost>0){
     if(!D.palmMoney)D.palmMoney=[];
     const moneyId='pm'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-    D.palmMoney.push({id:moneyId,type:'expense',plotId,date,amount:cost,note:(rec.type||'ปุ๋ย')+(rec.brand?' ('+rec.brand+')':''),by:curUserLabel(),linkedFertId:id});
+    D.palmMoney.push({id:moneyId,type:'expense',cat:'fert',plotId,date,amount:cost,note:(rec.type||'ปุ๋ย')+(rec.brand?' ('+rec.brand+')':''),by:curUserLabel(),linkedFertId:id});
     rec.linkedMoneyId=moneyId;
   }
   D.palmFertilizer.push(rec);
@@ -13926,11 +14093,11 @@ function renderPalmFertSummary(){
   if(!list.length){el.innerHTML='<p style="color:var(--tx3);padding:12px;font-style:italic;text-align:center">ยังไม่มีแปลงปาล์ม เพิ่มแปลงก่อนในแท็บ "แปลงปาล์ม"</p>';return;}
   const rows=list.map(p=>{
     const kg=palmFertList().filter(r=>r.plotId===p.id&&(r.date||'').startsWith(year)).reduce((s,r)=>s+(r.kg||0),0);
-    const perTree=p.trees?kg/p.trees:0;
-    return{...p,kg,perTree};
+    const tt=palmTreeTotal(p),perTree=tt?kg/tt:null;
+    return{...p,kg,perTree,treeLbl:palmTreeLbl(p)};
   });
   el.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>แปลง</th><th style="text-align:right">จำนวนต้น</th><th style="text-align:right">ปุ๋ยรวมปีนี้ (กก.)</th><th style="text-align:right">เฉลี่ย (กก./ต้น/ปี)</th></tr></thead><tbody>${
-    rows.map(r=>`<tr><td>${r.name}</td><td style="text-align:right">${r.trees.toLocaleString()}</td><td style="text-align:right">${r.kg.toLocaleString()}</td><td style="text-align:right"><b>${r.perTree.toFixed(2)}</b></td></tr>`).join('')
+    rows.map(r=>`<tr><td>${r.name}</td><td style="text-align:right">${r.treeLbl}</td><td style="text-align:right">${r.kg.toLocaleString()}</td><td style="text-align:right"><b>${r.perTree!=null?r.perTree.toFixed(2):'—'}</b></td></tr>`).join('')
   }</tbody></table></div>`;
 }
 let _palmFertFilterPlot='';
@@ -14042,7 +14209,7 @@ function renderPalmHarvestTable(){
 /* ── ตะวันปาล์ม: กองทุน (D.fundBuys/D.fundNav — บันทึกแยก 2 กองทุน ผูก field เดียวกันแต่กรองด้วย fund:'palm'|'shrimp', ไม่แตะ D.palmMoney/D.inventoryLog เลย) ── */
 const FUND_META={
   palm:{icon:'🌴',color:'#2F7D4F',
-    note:'💡 <b>บัญชีนี้แยกอิสระอีกชั้น</b> — เงินที่นำไปซื้อกองทุนถือเป็นการ "ย้ายสินทรัพย์" จากเงินสดของสวน (ขายปาล์ม ขายขยะ ขายกุ้งเสีย ฯลฯ) ไปเป็นหน่วยลงทุน <b>ไม่ใช่รายจ่าย</b> จึงไม่ไปหักลบกับ "กำไรสุทธิ" ในหน้ารายรับ-รายจ่ายปาล์ม',
+    note:'📈 ซื้อกองทุน = ย้ายเงิน ไม่ใช่รายจ่าย',
     noteCls:'',buySub:'กรอกทุกครั้งที่ซื้อหน่วยลงทุน — เลือกด้วยว่าเงินก้อนนี้มาจากไหน'},
   shrimp:{icon:'🦐',color:'#1D6FA5',
     note:'💡 <b>เก็บข้อมูลแยกไว้เฉยๆ ไม่เกี่ยวกับต้นทุนตะวันฟาร์ม</b> — เงินจากการขายใบลูกกุ้งที่นำมาซื้อกองทุนนี้ <b>ไม่ถูกนำไปคำนวณรวมกับต้นทุน/กำไรของฟาร์มกุ้งเลย</b> เป็นแค่บันทึกส่วนตัวติดตามผลตอบแทนของเงินก้อนนี้เท่านั้น',
