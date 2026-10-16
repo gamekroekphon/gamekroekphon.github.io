@@ -2055,6 +2055,8 @@ table.wqg td.wqg-ck{text-align:center;color:var(--ok);font-weight:900;min-width:
 .own-pc{display:block;width:100%;text-align:left;font-family:inherit;color:var(--tx);background:var(--sf);border:1.5px solid var(--bd);border-radius:14px;margin-bottom:8px;overflow:hidden;padding:0;cursor:pointer}
 .own-h{display:flex;justify-content:space-between;align-items:center;background:var(--pl);padding:6px 12px}
 .own-h b{font-size:calc(16px * var(--ui-scale))}.own-h span{font-weight:700;font-size:calc(13px * var(--ui-scale))}
+.own-h .own-nm{display:flex;align-items:center;gap:7px}.own-h .wqc-dots{display:flex;gap:3px}.own-h .wqc-dots i{width:calc(14px * var(--ui-scale));height:calc(14px * var(--ui-scale))}
+.own-unused{margin-top:10px}.own-unused summary{font-weight:700;padding:8px 2px;cursor:pointer}
 .own-g{display:grid;grid-template-columns:1fr 1fr}
 .own-g>div{padding:5px 12px;border-top:1px solid var(--sf2);min-width:0}
 .own-g>div:nth-child(odd){border-right:1px solid var(--sf2)}
@@ -5088,7 +5090,7 @@ function toggleClerkFold(){document.getElementById('mobMenuBody')?.classList.tog
 //    4 กล่องบนสุด = ก๊อปจาก #ov-kpi-bar ของ renderOv() — ตัวเลขชุดเดียวกับหน้าภาพรวม ห้ามคิดคู่ขนาน
 //    คาดการณ์จันทร์หน้า = abw สุ่มล่าสุด + PDG × วัน · น้ำหนัก = กุ้งในบ่อ (pondShrimpCount) × abw นั้น · กก./ไร่ ÷ p.size
 //    ⚠️ ตัวหนังสือขนาดปกติ (พี่สั่ง ไม่ต้องใหญ่) · ไม่ใช้ตัวหนังสือสีเทา (เจ้าของจะคิดว่าไม่สำคัญ)
-const OWNER_NAMES=['ก้อย','ก้อย2','กุ้ง'];
+const OWNER_NAMES=['ก้อย','กุ้ง'];   // ก้อย2 ลบบัญชีแล้ว (#427)
 let _ownZone=null,_ownView='home',_ownFilt='all',_ownLanded=false,_ownBusy=false;
 function ownerGo(v,keepZone){
   _ownView=v;
@@ -5114,7 +5116,7 @@ function ownProj(p,d){
   const pdg=s.length>=2?parseFloat(getPDG(s))||0:0;
   const abw=lat.abw+(pdg>0?pdg*Math.max(0,dDiff(lat.date,d)):0);
   const kg=c.inPond*abw/1000;
-  return{sizeNow:1000/lat.abw,sizeMon:1000/abw,kgMon:kg,kgRai:p.size>0?kg/p.size:null,bioNow:c.biomass,phKg:c.phKg||0};
+  return{sizeNow:1000/lat.abw,smpDate:lat.date,sizeMon:1000/abw,kgMon:kg,kgRai:p.size>0?kg/p.size:null,bioNow:c.biomass,phKg:c.phKg||0};
 }
 function ownZoneLbl(z){return z===DZ_NONE?'ไม่ระบุโซน':'โซน '+z;}
 function renderOwnHome(){
@@ -5132,9 +5134,13 @@ function renderOwnHome(){
     const adm=APP_ROLE==='admin',M=v=>(v/1e6).toFixed(2);
     const ps=act.filter(p=>zOf(p)===_ownZone).sort((a,b)=>(pondCurAge(b)||0)-(pondCurAge(a)||0));
     let tons=0,cost=0;
+    const td=today();
     const tiles=ps.map(p=>{
       const pr=ownProj(p,mon),c=adm?ceoTotalCost(p):0;cost+=c;
-      const head='<div class="own-h"><b>'+mpEsc(p.name)+'</b><span>'+(pondCurAge(p)||0)+' วัน ›</span></div>';
+      // #427 จุดสีน้ำวันนี้ข้างชื่อบ่อ — กติกาเดียวกับภาพรวม (#426) ยังไม่จดวันนี้ = ไม่มีจุด
+      const wr=(p.records||[]).find(r=>r.date===td),wc=wr?wqcParse(wr.notes).cols:[];
+      const dots=wc.length?'<span class="wqc-dots">'+wc.map(n=>'<i style="background:'+WQ_COLORS.find(x=>x[0]===n)[1]+'"></i>').join('')+'</span>':'';
+      const head='<div class="own-h"><span class="own-nm"><b>'+mpEsc(p.name)+'</b>'+dots+'</span><span>'+(pondCurAge(p)||0)+' วัน ›</span></div>';
       if(!pr)return '<button type="button" class="own-pc" onclick="openPondDetail(\''+p.id+'\')">'+head
         +'<div class="own-ns"><span>ยังไม่สุ่ม</span>'+(adm?'<span>ต้นทุน '+M(c)+' ล้าน</span>':'')+'</div></button>';
       tons+=pr.kgMon;
@@ -5143,7 +5149,7 @@ function renderOwnHome(){
       const chip=yr==null?'':yr>=PARTIAL_YIELD_CEILING?'<span class="own-chip d">เต็มบ่อ</span>':yr>=PARTIAL_YIELD_TARGET?'<span class="own-chip w">ถึงเกณฑ์พาเชียล</span>':'';
       const f=getFCR(p);
       return '<button type="button" class="own-pc" onclick="openPondDetail(\''+p.id+'\')">'+head+'<div class="own-g">'
-        +'<div><div class="l">ไซส์ตอนนี้</div><div class="v">'+Math.round(pr.sizeNow)+' <small>ตัว/กก.</small></div></div>'
+        +'<div><div class="l">ไซส์ '+atSmpTxt(pr.smpDate)+'</div><div class="v">'+Math.round(pr.sizeNow)+' <small>ตัว/กก.</small></div></div>'
         +'<div class="mon"><div class="l">จันทร์ '+monTxt+'</div><div class="v">~'+Math.round(pr.sizeMon)+' <small>· '+(pr.kgMon/1000).toFixed(1)+' ตัน</small></div></div>'
         +(adm?'<div><div class="l">ต้นทุนสะสม</div><div class="v">'+M(c)+' <small>ล้าน</small></div>'+(perKg!=null?'<div class="l2">'+Math.round(perKg).toLocaleString()+' ฿/กก.</div>':'')+'</div>'
           :'<div><div class="l">FCR</div><div class="v">'+(f!=null?f:'-')+'</div></div>')
@@ -5160,28 +5166,34 @@ function renderOwnStock(){
   const catSel=document.getElementById('own-cat'),coSel=document.getElementById('own-co');
   const cat=catSel.value||'',co=coSel.dataset.v||coSel.value||'';
   const cnt=(arr,k)=>arr.reduce((m,i)=>{const x=k(i);m[x]=(m[x]||0)+1;return m;},{});
-  const cc=cnt(all,i=>i.category||''),oc=cnt(all,i=>i.companyId||'');
-  catSel.innerHTML='<option value="">📂 หมวด: ทั้งหมด ('+all.length+')</option>'+Object.keys(cc).sort((a,b)=>cc[b]-cc[a])
+  // #427 ของไม่ได้ใช้ (ไม่เคลื่อนไหว 90 วัน + ยอด 0 ทั้งสองฝั่ง — stkUnusedSet ตัวเดียวกับหน้าสต็อก #409) พับไว้ท้าย ไม่นับในตัวเลขใดๆ
+  const un=stkUnusedSet(),used=all.filter(i=>!un.has(i.id));
+  const cc=cnt(used,i=>i.category||''),oc=cnt(used,i=>i.companyId||'');
+  catSel.innerHTML='<option value="">📂 หมวด: ทั้งหมด ('+used.length+')</option>'+Object.keys(cc).sort((a,b)=>cc[b]-cc[a])
     .map(k=>'<option value="'+mpEsc(k)+'">📂 '+mpEsc(STOCK_CAT_LABEL[k]||k||'ไม่ระบุ')+' ('+cc[k]+')</option>').join('');
   catSel.value=cat;
-  coSel.innerHTML='<option value="">🏢 บริษัท: ทั้งหมด ('+all.length+')</option>'+Object.keys(oc).sort((a,b)=>oc[b]-oc[a])
+  coSel.innerHTML='<option value="">🏢 บริษัท: ทั้งหมด ('+used.length+')</option>'+Object.keys(oc).sort((a,b)=>oc[b]-oc[a])
     .map(k=>'<option value="'+mpEsc(k)+'">🏢 '+mpEsc(prCoName(k)||'ยังไม่ระบุบริษัท')+' ('+oc[k]+')</option>').join('');
   coSel.value=co;coSel.dataset.v='';
   catSel.classList.toggle('on',!!catSel.value);coSel.classList.toggle('on',!!coSel.value);
   const q=(document.getElementById('own-q').value||'').trim().toLowerCase();
   const out=i=>stkOut(i.qty),low=i=>!out(i)&&i.minQty>0&&(parseFloat(i.qty)||0)<=i.minQty;
   let list=all.filter(i=>(!catSel.value||(i.category||'')===catSel.value)&&(!coSel.value||(i.companyId||'')===coSel.value)&&(!q||String(i.name).toLowerCase().includes(q)));
+  const unList=list.filter(i=>un.has(i.id)).sort((a,b)=>String(a.name).localeCompare(String(b.name),'th'));
+  list=list.filter(i=>!un.has(i.id));
   const bad=list.filter(i=>out(i)||low(i)).length;
   document.getElementById('own-chips').innerHTML='<button type="button" class="'+(_ownFilt==='all'?'on':'')+'" onclick="_ownFilt=\'all\';renderOwnStock()">ทั้งหมด '+list.length+'</button>'
     +'<button type="button" class="'+(_ownFilt==='bad'?'on':'')+'" onclick="_ownFilt=\'bad\';renderOwnStock()">หมด / ใกล้หมด '+bad+'</button>';
   if(_ownFilt==='bad')list=list.filter(i=>out(i)||low(i));
   list.sort((a,b)=>(out(a)?0:low(a)?1:2)-(out(b)?0:low(b)?1:2)||String(a.name).localeCompare(String(b.name),'th'));
-  document.getElementById('own-items').innerHTML=list.map(i=>{
+  const card=(i,used)=>{
     const u=mpEsc(i.unit||''),shopKnown=!stkOut(shopQ(i))||i.shopCountedAt;
-    return '<div class="own-it"><div class="n"><span>'+mpEsc(i.name)+'</span>'+(out(i)?'<span class="own-chip d">หมด</span>':low(i)?'<span class="own-chip w">ใกล้หมด</span>':'')+'</div>'
+    return '<div class="own-it"><div class="n"><span>'+mpEsc(i.name)+'</span>'+(!used?'':out(i)?'<span class="own-chip d">หมด</span>':low(i)?'<span class="own-chip w">ใกล้หมด</span>':'')+'</div>'
       +(prCoName(i.companyId)?'<div class="co">'+mpEsc(prCoName(i.companyId))+'</div>':'')
       +'<div class="q"><div class="stk-f">ฟาร์ม<b class="stk-fv">'+stkQ(i.qty)+' <small>'+u+'</small></b></div><div class="shop stk-s">บุญชู<b class="stk-sv">'+(shopKnown?stkQ(shopQ(i))+' <small>'+u+'</small>':'—')+'</b></div></div></div>';
-  }).join('')||'<div class="card">ไม่พบสินค้า</div>';
+  };
+  document.getElementById('own-items').innerHTML=(list.map(i=>card(i,true)).join('')||(unList.length?'':'<div class="card">ไม่พบสินค้า</div>'))
+    +(unList.length&&_ownFilt!=='bad'?'<details class="own-unused"'+(q?' open':'')+'><summary>ไม่ได้ใช้ 90 วัน · '+unList.length+' รายการ</summary>'+unList.map(i=>card(i,false)).join('')+'</details>':'');
 }
 function updateUserHeader(user,role){
   const u=document.getElementById('hdr-user');if(u)u.style.display='flex';
