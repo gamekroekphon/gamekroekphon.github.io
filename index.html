@@ -10840,7 +10840,8 @@ function stockEmptyEmit(savedP,ids){
     });
   }).catch(()=>{});
 }
-const BILL_MAX_PAGES=4, BILL_IMG_MAX=1600, BILL_IMG_Q=0.72;
+// #429 1600px/72% ได้จริง ~0.8 MB/รูป (รูปกระดาษมีลายเยอะ) โตเดือนละ ~20 MB → 1280px/60% ~0.2 MB ตัวหนังสือในบิลยังอ่านได้ (เทียบบิล CPF จริง)
+const BILL_MAX_PAGES=4, BILL_IMG_MAX=1280, BILL_IMG_Q=0.6;
 let _billCap=null;   // ร่างของ staff ที่กำลังกรอก {id|null, pages:[dataURL], items:[], date, shop, replacePhotos}
 let _billRev=null;   // ร่างของ admin ที่กำลังตรวจ {id, items:[], billTotal, updCat, page}
 function billToast(t){showToast(t,'');}
@@ -10867,7 +10868,7 @@ function billWhen(iso){
   return(d===today()?'วันนี้':fD(d))+(t?' '+t:'');
 }
 
-// ── ย่อรูปก่อนส่ง: ด้านยาวสุด 1600px · JPEG 72% (~150-300 KB) ──
+// ── ย่อรูปก่อนส่ง: ด้านยาวสุด BILL_IMG_MAX · JPEG BILL_IMG_Q (#429 ~0.2 MB/รูป) ──
 function billReadFile(file){
   return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(file);});
 }
