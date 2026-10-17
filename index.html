@@ -2589,6 +2589,87 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 .ceo-cost-total-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0 2px;margin-top:4px;border-top:2px solid var(--bd)}
 .ceo-cost-total-row .lbl{font-size:calc(12.5px * var(--ui-scale));font-weight:700}
 .ceo-cost-total-row .val{font-size:calc(16px * var(--ui-scale));font-weight:700;color:var(--p)}
+
+/* ── 🌞 ตะวัน AI (#430) — พระอาทิตย์ · พื้นขาวตามแอป · เร็ว = แดดเช้าทอง / ละเอียด = แดดเที่ยงส้ม ── */
+.ai-wrap{--ai-a:#FFB020;--ai-a2:#FF8A00;--ai-al:#FFFAEB;--ai-ab:#F4DFA6;--ai-at:#7A5503;
+  position:relative;display:flex;flex-direction:column;height:calc(100vh - 150px);min-height:440px;background:var(--bg);border:1px solid var(--bd);border-radius:16px;overflow:hidden}
+.ai-wrap.deep{--ai-a:#FF7A1A;--ai-a2:#D9480F;--ai-al:#FFF0E6;--ai-ab:#FFD2B5;--ai-at:#B23A0A}
+.ai-wrap::before{content:"";position:absolute;left:-30%;right:-30%;top:-150px;height:330px;pointer-events:none;
+  background:radial-gradient(50% 50% at 50% 50%,color-mix(in srgb,var(--ai-a) 22%,transparent),color-mix(in srgb,var(--ai-a) 6%,transparent) 55%,transparent 75%)}
+.ai-wrap>*{position:relative;z-index:1}
+.ai-sun{--s:40px;width:var(--s);height:var(--s);position:relative;flex-shrink:0}
+.ai-sun i{position:absolute;border-radius:50%}
+.ai-sun .h{inset:-35%;background:radial-gradient(circle,color-mix(in srgb,var(--ai-a) 30%,transparent),transparent 62%)}
+.ai-sun .r{inset:0;background:repeating-conic-gradient(from 0deg,var(--ai-a2) 0 6deg,transparent 6deg 30deg);
+  -webkit-mask:radial-gradient(circle,transparent 46%,#000 47%,#000 62%,transparent 63%);mask:radial-gradient(circle,transparent 46%,#000 47%,#000 62%,transparent 63%)}
+.ai-sun .c{inset:18%;background:radial-gradient(circle at 38% 32%,#FFFBE8 0,#FFE27A 22%,var(--ai-a) 55%,var(--ai-a2) 100%);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--ai-a) 20%,transparent),0 0 18px color-mix(in srgb,var(--ai-a2) 55%,transparent)}
+.ai-sun.big{--s:118px;margin:0 auto 18px}
+.ai-wrap.busy .ai-hd .ai-sun .r{animation:aiSpin 7s linear infinite}
+@keyframes aiSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.ai-wrap.busy .ai-hd .ai-sun .r{animation:none}}
+.ai-hd{display:flex;align-items:center;gap:11px;padding:12px 14px 8px}
+.ai-ht{flex:1;min-width:0}.ai-ht b{display:block;font-size:calc(17px * var(--ui-scale));font-weight:600;color:var(--tx)}
+#ai-state{font-size:calc(12.5px * var(--ui-scale));font-weight:500;color:var(--ok);display:flex;align-items:center;gap:5px}
+#ai-state::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.ai-wrap.deep #ai-state{color:var(--ai-a2)}
+.ai-new{border:1px solid var(--bd);background:var(--sf);color:var(--tx);border-radius:12px;padding:6px 11px;font:inherit;font-size:calc(13px * var(--ui-scale));font-weight:500;cursor:pointer}
+#ai-budget{margin:0 14px 8px;padding:7px 11px;border:1px solid var(--bd);border-radius:14px;background:color-mix(in srgb,var(--sf) 88%,transparent);display:flex;align-items:center;gap:10px;font-size:calc(12.5px * var(--ui-scale));font-weight:500;color:var(--tx)}
+#ai-budget:empty{display:none}
+#ai-budget b{font-variant-numeric:tabular-nums;font-size:calc(13px * var(--ui-scale))}
+.ai-bb{flex:1;height:6px;border-radius:9px;background:var(--sf2);overflow:hidden}.ai-bb i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,#FFD25A,#FF8A00)}.ai-bb i.w{background:var(--d)}
+#ai-chat{flex:1;overflow-y:auto;padding:4px 14px 10px;display:flex;flex-direction:column;gap:11px}
+.ai-hero{margin:auto 0;text-align:center;padding:0 16px;color:var(--tx)}
+.ai-hero h2{margin:0 0 6px;font-size:calc(21px * var(--ui-scale));font-weight:600}
+.ai-hero p{margin:0;font-size:calc(14.5px * var(--ui-scale));line-height:1.55}
+.ai-hero span{margin-top:14px;display:inline-block;font-size:calc(13px * var(--ui-scale));padding:5px 12px;border-radius:20px;background:var(--sf);border:1px solid var(--bd)}
+.ai-me{align-self:flex-end;max-width:84%;padding:9px 13px;border-radius:18px 18px 5px 18px;font-weight:500;font-size:calc(14.5px * var(--ui-scale));color:#fff;white-space:pre-wrap;
+  background:linear-gradient(135deg,#B8860B,var(--p));box-shadow:0 3px 12px rgba(154,106,4,.22)}
+.ai-ai{align-self:stretch;max-width:780px;border-radius:18px 18px 18px 5px;padding:11px 13px 9px;font-size:calc(14.5px * var(--ui-scale));line-height:1.55;position:relative;min-width:0;
+  background:var(--sf);border:1px solid var(--bd);box-shadow:0 2px 10px rgba(16,24,40,.05);color:var(--tx)}
+.ai-ai::before{content:"";position:absolute;left:16px;right:16px;top:-1px;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,#FFB020,transparent)}
+.ai-ai.deep{border-color:#FFD2B5}.ai-ai.deep::before{background:linear-gradient(90deg,transparent,#FF7A1A,transparent)}
+.ai-ai p{margin:3px 0}.ai-ai ul,.ai-ai ol{margin:3px 0;padding-left:20px}.ai-ai li{margin:2px 0}.ai-ai code{background:var(--sf2);border-radius:4px;padding:0 4px}
+.ai-h{font-weight:700;margin:7px 0 2px}
+.ai-tag{display:inline-flex;align-items:center;gap:4px;font-size:calc(11.5px * var(--ui-scale));font-weight:700;letter-spacing:.3px;border-radius:20px;padding:1px 9px;color:#7A5503;background:#FFFAEB;border:1px solid #F4DFA6}
+.ai-ai.deep .ai-tag{color:#B23A0A;background:#FFF0E6;border-color:#FFD2B5}
+.ai-pills{display:flex;flex-wrap:wrap;gap:5px;margin:7px 0 8px}
+.ai-pills span{display:inline-flex;align-items:center;gap:5px;font-size:calc(12px * var(--ui-scale));font-weight:500;padding:2px 9px 2px 7px;border-radius:20px;background:#FFFAEB;border:1px solid #F4DFA6;color:#7A5503;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-pills span::before{content:"";width:6px;height:6px;border-radius:50%;background:#FFB020;flex-shrink:0}
+.ai-pills span.web{background:var(--ib);border-color:#BFD6EE;color:var(--in)}.ai-pills span.web::before{background:var(--in)}
+.ai-steps{list-style:none;margin:8px 0 6px;padding:0;display:flex;flex-direction:column;gap:6px;font-size:calc(13.5px * var(--ui-scale))}
+.ai-steps li{display:flex;align-items:center;gap:8px;min-width:0}
+.ai-steps li>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-steps .k{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:calc(11px * var(--ui-scale));flex-shrink:0;background:var(--ob);color:var(--ok);border:1px solid #86D9A6}
+.ai-steps .run{color:#B23A0A;font-weight:600}.ai-ai:not(.deep) .ai-steps .run{color:#7A5503}
+.ai-steps .run .k{background:none;border:2px solid currentColor;border-right-color:transparent;animation:aiSpin 1s linear infinite}
+@media (prefers-reduced-motion:reduce){.ai-steps .run .k{animation:none}}
+.ai-tw{overflow-x:auto;max-width:100%}
+.card .ai-tw table.ai-t,table.ai-t{display:table;border-collapse:separate;border-spacing:0 4px;font-size:calc(13.5px * var(--ui-scale));margin:2px 0 6px;font-variant-numeric:tabular-nums;width:auto;min-width:70%}
+table.ai-t td,table.ai-t th{padding:5px 8px;text-align:right;white-space:nowrap}
+table.ai-t th{font-weight:600;font-size:calc(12px * var(--ui-scale))}
+table.ai-t td{background:var(--sf2)}table.ai-t td:first-child{border-radius:9px 0 0 9px;font-weight:600}table.ai-t td:last-child{border-radius:0 9px 9px 0}
+table.ai-t td:first-child,table.ai-t th:first-child{text-align:left}
+.ai-verdict{margin:7px 0 3px;padding:8px 11px;border-radius:12px;background:var(--ob);border:1px solid #B7EBC9}
+.ai-src{margin-top:7px;display:flex;flex-direction:column;gap:3px;font-size:calc(12.5px * var(--ui-scale))}
+.ai-src a{color:var(--in);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ai-src a:hover{text-decoration:underline}
+.ai-foot{display:flex;justify-content:space-between;align-items:center;margin-top:7px;font-size:calc(12px * var(--ui-scale));font-weight:500;font-variant-numeric:tabular-nums}
+.ai-foot button{border:0;background:none;padding:0;font:inherit;cursor:pointer;color:var(--tx)}.ai-foot button span{display:inline-block;border:1px solid var(--bd);background:var(--sf);border-radius:8px;padding:1px 9px;font-size:calc(12px * var(--ui-scale))}
+.ai-err{margin-top:5px;color:var(--d);font-weight:600;font-size:calc(13.5px * var(--ui-scale))}
+.ai-dock{margin:0 10px 10px;padding:7px;border-radius:22px;border:1px solid var(--bd);background:color-mix(in srgb,var(--sf) 94%,transparent);box-shadow:0 -4px 22px rgba(16,24,40,.07)}
+.ai-seg{display:flex;gap:4px;padding:3px;border-radius:15px;background:var(--sf2);margin-bottom:7px}
+.ai-seg button{flex:1;border:0;background:none;padding:5px 0;border-radius:12px;font:inherit;font-size:calc(13px * var(--ui-scale));font-weight:500;color:var(--tx);cursor:pointer}
+.ai-seg button small{font-size:calc(10.5px * var(--ui-scale));margin-left:4px;letter-spacing:.3px}
+.ai-seg button.on{color:#3D2A00;background:linear-gradient(135deg,#FFE7A0,#FFB020);box-shadow:0 2px 8px rgba(255,160,0,.35);font-weight:600}
+.ai-seg button.on.deep{color:#fff;background:linear-gradient(135deg,#FF9A4D,#D9480F);box-shadow:0 2px 8px rgba(217,72,15,.35)}
+.ai-row{display:flex;gap:7px;align-items:flex-end}
+#ai-q{flex:1;border:1.5px solid var(--bd);border-radius:16px;padding:9px 13px;font:inherit;font-size:calc(14.5px * var(--ui-scale));resize:none;min-height:42px;max-height:140px;color:var(--tx);background:var(--sf)}
+#ai-q:focus{outline:none;border-color:var(--ai-a)}
+#ai-send{width:44px;height:44px;border-radius:50%;border:0;flex-shrink:0;cursor:pointer;font-size:calc(18px * var(--ui-scale));font-weight:800;color:#fff;
+  background:radial-gradient(circle at 35% 30%,#FFD36B,var(--ai-a2) 58%,color-mix(in srgb,var(--ai-a2) 70%,#000));box-shadow:0 2px 10px color-mix(in srgb,var(--ai-a2) 45%,transparent)}
+#ai-send:focus-visible,.ai-seg button:focus-visible,.ai-new:focus-visible{outline:2px solid var(--in);outline-offset:2px}
+@media (pointer:coarse){#ai-q{font-size:16px}}
+@media (max-width:640px){.ai-wrap{height:calc(100vh - 140px);border-radius:12px;margin:0 -4px}}
 </style>
   <!-- Firebase SDKs (compat v9) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -2664,6 +2745,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <button class="sn-top tab-item" onclick="goTab('forecast',this)"><span>🔮</span> คำนวณ &amp; คาดการณ์</button>
     <button class="sn-top tab-item" onclick="goTab('medproto',this)"><span>💊</span> Protocol เวชภัณฑ์</button>
     <button class="sn-top tab-item admin-only" onclick="goTab('kan',this)"><span>📋</span> กัน</button>
+    <button class="sn-top tab-item admin-only" onclick="goTab('ai',this)"><span>🌞</span> ตะวัน AI</button>
   </nav>
   <div class="sn-label">สวนปาล์ม</div>
   <nav class="sn-nav">
@@ -2750,6 +2832,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <button class="tab" id="tab-forecast" onclick="goTab('forecast',this)">🔮 คำนวณ &amp; คาดการณ์</button>
   <button class="tab" id="tab-medproto" onclick="goTab('medproto',this)">💊 Protocol เวชภัณฑ์</button>
   <button class="tab admin-only" id="tab-kan" onclick="goTab('kan',this)">📋 กัน</button>
+  <button class="tab admin-only" id="tab-ai" onclick="goTab('ai',this)">🌞 ตะวัน AI</button>
   <div class="tab-grp" id="grp-settings">
     <button class="grp-btn" onclick="toggleGrp('settings')">⚙️ ตั้งค่า <span class="grp-caret">▾</span></button>
     <div class="tab-dropdown">
@@ -2822,6 +2905,7 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
     <button class="mob-sheet-item owner-mine" data-t="forecast" onclick="mobMenuGo(this)"><span class="ic">🔮</span>คำนวณ &amp; คาดการณ์</button>
     <button class="mob-sheet-item" data-t="medproto" onclick="mobMenuGo(this)"><span class="ic">💊</span>Protocol เวชภัณฑ์</button>
     <button class="mob-sheet-item admin-only" data-t="kan" onclick="mobMenuGo(this)"><span class="ic">📋</span>กัน</button>
+    <button class="mob-sheet-item admin-only" data-t="ai" onclick="mobMenuGo(this)"><span class="ic">🌞</span>ตะวัน AI</button>
     <div class="mob-sheet-grp">🌳 สวนปาล์ม</div>
     <button class="mob-sheet-item admin-only owner-mine" data-t="palm" onclick="mobMenuGo(this)"><span class="ic">🌴</span>ตะวันปาล์ม</button>
     <div class="mob-sheet-grp">⚙️ ทั่วไป</div>
@@ -2901,6 +2985,17 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
   <div class="sec-hdr"><div class="sec-title">💊 Protocol เวชภัณฑ์ล่าสุด</div></div>
   <div id="mp-view"></div>
   <div id="mp-msg" style="margin-top:10px"></div>
+</div>
+<div id="sec-ai" class="sec">
+  <div class="ai-wrap" id="ai-wrap">
+    <div class="ai-hd"><div class="ai-sun"><i class="h"></i><i class="r"></i><i class="c"></i></div><div class="ai-ht"><b>ตะวัน AI</b><span id="ai-state">พร้อม · อ่านข้อมูลฟาร์มสด</span></div><button type="button" class="ai-new" onclick="aiNew()">＋ ใหม่</button></div>
+    <div id="ai-budget"></div>
+    <div id="ai-chat"></div>
+    <div class="ai-dock">
+      <div class="ai-seg"><button type="button" id="ai-m-q" class="on" onclick="aiSetDeep(false)">⚡ เร็ว<small>HAIKU</small></button><button type="button" id="ai-m-d" class="deep" onclick="aiSetDeep(true)">🔍 ละเอียด<small>SONNET · ค้นเว็บ</small></button></div>
+      <div class="ai-row"><textarea id="ai-q" rows="1" placeholder="พิมพ์คำถาม…" onkeydown="aiKey(event)" aria-label="คำถาม"></textarea><button type="button" id="ai-send" onclick="aiSendOrStop()" aria-label="ส่ง">↑</button></div>
+    </div>
+  </div>
 </div>
 <div id="sec-kan" class="sec">
   <div class="sec-hdr"><div class="sec-title">📋 กัน</div></div>
@@ -7844,7 +7939,7 @@ function initUiSize(){
   applyUiSize(v);
 }
 initUiSize();
-const ADMIN_ONLY_TABS=['palm','users','labor','elec','pl','kan','hatchery','export'];   // hatchery มีกำไร (#316) — เพิ่ม entry #357 · export = PDF ปิดบ่อ มีรายได้/ต้นทุน/กำไร (พี่สั่ง #374)
+const ADMIN_ONLY_TABS=['palm','users','labor','elec','pl','kan','hatchery','export','ai'];   // hatchery มีกำไร (#316) — เพิ่ม entry #357 · export = PDF ปิดบ่อ มีรายได้/ต้นทุน/กำไร (พี่สั่ง #374)
 function goTab(t,btn){
   if(ADMIN_ONLY_TABS.includes(t)&&APP_ROLE!=='admin')return;
   document.querySelectorAll('.tab,.tab-item,.sn-top,.sn-link').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
@@ -7870,7 +7965,7 @@ function goTab(t,btn){
   if(t==='manage')renderManage();
   if(t==='palm')initPalm();
   if(t==='forecast')initForecast();
-  if(t==='medproto')initMedProto();if(t==='kan')initKan();
+  if(t==='medproto')initMedProto();if(t==='kan')initKan();if(t==='ai')initAi();
   if(t==='users')renderUsers();
   if(t==='harvest')initHarvest();
   if(t==='crops')renderCrops();
@@ -16425,6 +16520,246 @@ function renderKanGrid(){
   kanPaintSel();kanSyncToolbar();kanApplyZoom();
   const inf=document.getElementById('kan-size');
   if(inf)inf.textContent=_g.name+' — '+_g.rows+' แถว × '+_g.cols+' คอลัมน์';
+}
+// ══════ 🤖 ผู้ช่วย AI (#430 พี่สั่ง 17 ต.ค. 69) — admin เท่านั้น ══════
+//    หน้าเว็บ → Cloud Function aiChat (เช็ค admin + งบ ฿500/เดือน + ถือคีย์) → Claude · Claude ขอเครื่องมือ → รัน AI_TOOLS ในหน้านี้
+//    (สูตรเดียวกับแอปทุกตัว ห้ามคิดคู่ขนาน) → ส่งผลกลับ วนจนตอบเสร็จ · ชื่อ/ช่องของเครื่องมือต้องตรงกับ functions/ai.js TOOLS
+//    ปกติ Haiku · สวิตช์ "วิเคราะห์ละเอียด" = Sonnet (ปิดเองหลังตอบ) · ประวัติเก็บในเครื่องนี้ต่อบัญชี (50 ข้อความ) ส่งให้ AI แค่ 10 ข้อความล่าสุด
+//    ⚠️ ในรอบเครื่องมือของคำถามเดียว messages ต่อท้ายอย่างเดียว ห้ามแก้ของเก่า (thinking ผูกกับประวัติ)
+const AI_URL='https://asia-southeast1-tawanfarm-efd8b.cloudfunctions.net/aiChat';
+const AI_HIST_MAX=50,AI_CTX_MSGS=10,AI_MAX_ROUNDS=8,AI_TOOL_MAX_CHARS=60000;
+let _aiBusy=false,_aiDeep=false,_aiMonth=null,_aiAbort=null;   // ไม่มีปุ่มคำถามลัด (พี่สั่ง — กันกดเล่นเสียเงิน)
+const AI_TOOL_LBL={farm_overview:'ภาพรวมทุกบ่อ',pond_detail:'ข้อมูลบ่อ',closed_crops:'รอบที่ปิดแล้ว',stock_items:'สินค้าสต็อก',stock_usage:'การเบิกของ',harvests:'การจับกุ้ง',farm_protocols:'Protocol เวชภัณฑ์',palm_summary:'สวนปาล์ม'};
+function aiR(n,d){n=parseFloat(n);if(!isFinite(n))return null;const k=Math.pow(10,d||0);return Math.round(n*k)/k;}
+function aiNorm(s){return String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
+function aiFindPond(name){const k=aiNorm(name);return (D.ponds||[]).find(p=>aiNorm(p.name)===k)||null;}
+function aiYearBE(y){y=parseInt(y);if(!y)return null;return y<100?2500+y:y<2400?y+543:y;}
+function aiClean(o){Object.keys(o).forEach(k=>{if(o[k]===undefined||o[k]===null||o[k]==='')delete o[k];});return o;}
+const AI_TOOLS={
+  farm_overview(){
+    const td=today(),yd=addDaysStr(td,-1),adm=APP_ROLE==='admin';
+    const ponds=wqfeedActivePonds().map(p=>{
+      const s=sortedSamples(p),lat=s[s.length-1],c=pondShrimpCount(p)||{},f=fcrAtSample(p)||{},age=pondCurAge(p);
+      const last=(p.records||[])[(p.records||[]).length-1],cls=pondStatusOv(p),rc=adm?pondRunningCost(p):null;
+      const bio=(c.biomass||0)+(c.phKg||0);
+      return aiClean({pond:p.name,zone:pondZone(p),age,start:p.startDate,hatchery:p.hatchery,stock_order:p.stock,release:pRelease(p),rai:p.size,
+        sample_date:lat&&lat.date,size_per_kg:lat&&lat.abw?aiR(1000/lat.abw,0):null,abw_g:lat&&aiR(lat.abw,2),survival_pct:lat&&lat.survivalRate,
+        pdg_g_day:s.length>=2?aiR(getPDG(s),2):null,biomass_kg:c.biomass?Math.round(c.biomass):null,partial_kg:c.phKg?Math.round(c.phKg):null,
+        kg_per_rai:c.biomass&&p.size?Math.round(c.biomass/p.size):null,fcr:f.fcr!=null?aiR(f.fcr,2):null,fcr_target:f.target,
+        feed_yesterday_kg:(p.feedLog||[]).filter(r=>r.date===yd).reduce((t,r)=>t+(parseFloat(r.totalFeed)||0),0),
+        status:{ok:'ปกติ',warn:'เฝ้าระวัง',danger:'ต้องดู'}[cls]||cls,reasons:allReasonsOv(p,last,age).map(r=>r.text),
+        cost_total:rc?Math.round(rc.total):null,cost_per_kg:rc&&bio>0?Math.round(rc.total/bio):null});
+    });
+    return{today:td,ponds,planned:(D.ponds||[]).filter(p=>p.startDate&&p.startDate>td).map(p=>({pond:p.name,start:p.startDate}))};
+  },
+  pond_detail(a){
+    const p=aiFindPond(a.pond);if(!p)return{error:'ไม่พบบ่อ '+a.pond,ponds:(D.ponds||[]).map(x=>x.name)};
+    const td=today(),n=Math.min(60,Math.max(1,parseInt(a.days)||14)),from0=addDaysStr(td,-n+1);
+    if(!p.startDate)return{pond:p.name,status:'บ่อว่าง/ยังไม่ลงกุ้ง',last_crop:(p.cropHistory||[]).slice(-1).map(c=>({label:cropLbl(p,c),start:c.startDate,close:c.closeDate}))[0]||null};
+    const from=p.startDate>from0?p.startDate:from0,inR=r=>r&&r.date>=from&&r.date<=td;
+    const W=['phM','phA','tM','tA','doM','doA','alk','nh4','no2','sal','ca','mg_','hard'];
+    const rc=APP_ROLE==='admin'?pondRunningCost(p):null;
+    const used={};getStockItemsForPond(p.id,pondCostStartDate(p),td).forEach(i=>{const k=i.name;used[k]=used[k]||{item:k,qty:0,unit:i.unit,value:0};used[k].qty+=i.qty||0;used[k].value+=(i.qty||0)*(i.unitPrice||0);});
+    return{pond:p.name,zone:pondZone(p),age:pondCurAge(p),start:p.startDate,hatchery:p.hatchery,stock_order:p.stock,release:pRelease(p),rai:p.size,
+      samples:sortedSamples(p).map(s=>aiClean({date:s.date,age:recAge(p,s),size_per_kg:s.abw?aiR(1000/s.abw,0):null,abw_g:aiR(s.abw,2),survival_pct:s.survivalRate,pdg:typeof samplePdg==='function'?samplePdg(p.samples,s):null})),
+      feed:sortLogArr('feedLog',(p.feedLog||[]).slice()).filter(inR).map(r=>aiClean({date:r.date,kg:aiR(r.totalFeed,1),brand:feedRecLabel(r),kg_per_100k:aiR(feedPer100k(r.totalFeed,pondFeedBaseOnDate(p,r.date)),1)})),
+      water:(p.records||[]).filter(inR).slice().sort((x,y)=>x.date.localeCompare(y.date)).map(r=>{const o={date:r.date};W.forEach(k=>{if(r[k]!=null&&r[k]!=='')o[k==='mg_'?'mg':k]=r[k];});const wc=wqcParse(r.notes);if(wc.cols.length)o.color=wc.cols.join('+');if(wc.rest)o.note=wc.rest;return o;}),
+      mortality:(p.mortalityLog||[]).filter(inR).map(r=>aiClean({date:r.date,dead:r.count,cause:r.cause})),
+      lab_latest:(p.labResults||[]).slice().sort((x,y)=>(x.date||'').localeCompare(y.date||'')).slice(-3).map(r=>aiClean({date:r.date,tcbs_green:r.tcbsGreen,tcbs_yellow:r.tcbsYellow,hepato_green:r.hepatoGreen,hepato_yellow:r.hepatoYellow,ehp:r.ehp,ehp_larva:r.ehpLarva,hepato:r.hepato,note:r.notes})),
+      partials:(p.partialHarvests||[]).map(r=>aiClean({date:r.date,kg:harvestRowKg(r),size:r.size,price:r.price})),
+      cost:rc?Object.fromEntries(Object.entries(rc).map(([k,v])=>[k,Math.round(v)])):null,
+      stock_used_this_crop:Object.values(used).map(u=>({...u,qty:aiR(u.qty,1),value:Math.round(u.value)})).sort((x,y)=>y.value-x.value).slice(0,40),
+      units:'water: phM/phA=pH เช้า/บ่าย tM/tA=อุณหภูมิ doM/doA=DO alk sal=ความเค็ม · feed kg_per_100k=กก./แสน'};
+  },
+  closed_crops(a){
+    const yb=aiYearBE(a.year),out=[];
+    (D.ponds||[]).forEach(p=>{if(a.pond&&aiNorm(p.name)!==aiNorm(a.pond))return;
+      (p.cropHistory||[]).forEach((c,ci)=>{if(!c||!c.closeDate)return;if(yb&&parseInt(histRecYear(c))!==yb)return;
+        const s=getCloseSummary(p,ci)||{};
+        out.push(aiClean({pond:p.name,label:cropLbl(p,c),start:c.startDate,close:c.closeDate,days:s.ageDays,hatchery:s.hatchery,stock_order:s.stock,
+          kg:aiR(s.totalWeight,0),size:s.closeSize,survival_pct:aiR(s.survivalRate,1),fcr:aiR(s.fcr,2),revenue:s.revenue!=null?Math.round(s.revenue):null,
+          cost:s.totalCost?Math.round(s.totalCost):null,profit:s.netProfit!=null?Math.round(s.netProfit):null,cost_per_kg:s.costPerKg?Math.round(s.costPerKg):null,
+          reason:typeof closeReason==='function'?closeReason(c):null}));});});
+    out.sort((x,y)=>(y.close||'').localeCompare(x.close||''));
+    return{count:out.length,crops:out.slice(0,150),note:out.length>150?'แสดง 150 รอบล่าสุด':undefined};
+  },
+  stock_items(a){
+    const q=String(a.query||'').trim().toLowerCase(),un=stkUnusedSet();
+    const rows=(D.inventoryItems||[]).filter(i=>i&&i.id&&(!q||String(i.name).toLowerCase().includes(q))).map(i=>{
+      const out=stkOut(i.qty),low=!out&&i.minQty>0&&(parseFloat(i.qty)||0)<=i.minQty;
+      return aiClean({item:i.name,farm:aiR(i.qty,1),shop:shopQ(i),unit:i.unit,cost:i.unitPrice,category:STOCK_CAT_LABEL[i.category]||i.category,company:prCoName(i.companyId),
+        status:out?'หมด':low?'ใกล้หมด':null,unused_90d:un.has(i.id)||null});
+    }).filter(r=>!a.low_only||(r.status&&!r.unused_90d));
+    return{count:rows.length,items:rows.slice(0,200)};
+  },
+  stock_usage(a){
+    const from=String(a.from||''),to=String(a.to||today()),items=Object.fromEntries((D.inventoryItems||[]).map(i=>[i.id,i]));
+    const q=String(a.item||'').trim().toLowerCase(),pd=a.pond?aiFindPond(a.pond):null;
+    if(a.pond&&!pd)return{error:'ไม่พบบ่อ '+a.pond};
+    const pn=Object.fromEntries((D.ponds||[]).map(p=>[p.id,p.name])),g=a.group_by||'item',grp={};let n=0;
+    (D.inventoryLog||[]).forEach(l=>{if(!l||(l.type!=='out'&&l.type!=='shared')||l.date<from||l.date>to)return;
+      const it=items[l.itemId],name=l.itemName||(it&&it.name)||'-',cat=it&&STOCK_CAT_LABEL[it.category]||'';if(q&&!name.toLowerCase().includes(q)&&!cat.includes(q))return;
+      if(pd&&l.pondId!==pd.id)return;if(it&&it.category==='feed')return;n++;
+      const pond=l.type==='shared'?'ใช้ร่วม':(pn[l.pondId]||'-'),k=g==='pond'?pond:g==='day'?l.date:g==='item_pond'?name+' | '+pond:name;
+      const r=grp[k]=grp[k]||{key:k,qty:0,unit:l.unit||(it&&it.unit)||'',value:0,rows:0};
+      const qty=parseFloat(l.qty)||0,price=l.noCost?0:(parseFloat(l.unitCost)>0?parseFloat(l.unitCost):(it&&it.unitPrice)||0);
+      r.qty+=qty;r.value+=qty*price;r.rows++;});
+    const mixU=g==='pond'||g==='day',rows=Object.values(grp).map(r=>mixU?{key:r.key,value:Math.round(r.value),rows:r.rows}:{...r,qty:aiR(r.qty,1),value:Math.round(r.value)}).sort((x,y)=>g==='day'?x.key.localeCompare(y.key):y.value-x.value);
+    return{from,to,group_by:g,entries:n,groups:rows.slice(0,200),note:'มูลค่า = ราคาที่จดตอนเบิก (ไม่มีใช้ราคาปัจจุบัน) · ไม่รวมอาหารกุ้ง'};
+  },
+  harvests(a){
+    const from=String(a.from||''),to=String(a.to||'9999');
+    const rows=hsHarvestRows().filter(r=>r.date>=from&&r.date<=to&&(!a.pond||aiNorm(r.pond)===aiNorm(a.pond)))
+      .sort((x,y)=>y.date.localeCompare(x.date)).map(r=>aiClean({date:r.date,pond:r.pond,type:r.type,age:r.age,kg:aiR(r.kg,0),size:r.size,price:r.price,baht:Math.round(r.baht||0),buyer:r.buyer,pending:r.pending||null}));
+    return{count:rows.length,harvests:rows.slice(0,300)};
+  },
+  farm_protocols(a){
+    const q=String(a.query||'').trim().toLowerCase();
+    const rows=(D.medProtocols||[]).filter(m=>m&&(!q||(String(m.title||'')+' '+String(m.text||'')).toLowerCase().includes(q)))
+      .map(m=>aiClean({title:m.title,group:m.grp,text:m.text,updated:m.updatedAt}));
+    return{count:rows.length,protocols:rows};
+  },
+  palm_summary(a){
+    const y=String(a.year||today().slice(0,4)),st=palmYearStats(y);
+    const exp=palmMoneyList().filter(r=>r.type==='expense'&&(r.date||'').startsWith(y)),by=palmExpByCat(exp);
+    return{year:y,kg:st.kg,revenue:Math.round(st.revenue),spend:Math.round(st.spend),care_spend:Math.round(st.careSpend),invest_spend:Math.round(st.investSpend),net:Math.round(st.net),
+      avg_price:aiR(st.avgPrice,2),care_cost_per_kg:aiR(st.careCostPerKg,2),expense_by_category:PALM_CATS.filter(c=>by[c.v]).map(c=>({cat:c.t,group:c.g==='inv'?'ลงทุน':'ค่าดูแล',baht:Math.round(by[c.v])})),
+      plots:palmPlots().map(p=>aiClean({plot:p.name,rai:palmArea(p)||null,trees:palmTreeTotal(p),dike:p.dike||null,plant_year:p.plantYear,status:p.status}))};
+  },
+};
+function aiRunTool(name,input){
+  try{const f=AI_TOOLS[name];if(!f)return{err:'ไม่มีเครื่องมือ '+name};
+    let out=JSON.stringify(f(input&&typeof input==='object'?input:{}));
+    if(out.length>AI_TOOL_MAX_CHARS)out=out.slice(0,AI_TOOL_MAX_CHARS)+' …(ตัดเพราะยาวเกิน ให้ถามแคบลง)';
+    return{out};}catch(e){console.warn('aiTool',name,e);return{err:String(e&&e.message||e)};}
+}
+function aiToolArg(i){i=i||{};const v=[i.pond,i.year,i.query,i.item,i.from&&i.to?fD(i.from)+'–'+fD(i.to):null].filter(Boolean);return v.length?' '+v.join(' · '):'';}
+// ── ประวัติในเครื่อง (ต่อบัญชี) ──
+function aiHistKey(){const u=window.firebase&&firebase.apps.length&&firebase.auth().currentUser;return'tw_ai_chat_'+(u?u.uid:'x');}
+function aiHist(){try{return JSON.parse(localStorage.getItem(aiHistKey())||'[]')||[];}catch(e){return[];}}
+function aiSave(h){try{localStorage.setItem(aiHistKey(),JSON.stringify(h.slice(-AI_HIST_MAX)));}catch(e){}}
+// ── แปลง markdown แบบง่าย (escape ก่อนเสมอ) — ตาราง · ตัวหนา · หัวข้อ · รายการ ──
+function aiMd(src){
+  const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const inl=s=>esc(s).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>');
+  const L=String(src||'').split('\n'),out=[];let i=0;
+  while(i<L.length){const l=L[i];
+    if(/^\s*\|.*\|\s*$/.test(l)){const rows=[];while(i<L.length&&/^\s*\|.*\|\s*$/.test(L[i]))rows.push(L[i++]);
+      const cells=r=>r.trim().replace(/^\||\|$/g,'').split('|').map(c=>c.trim());
+      const body=rows.filter(r=>!/^\s*\|[\s:|-]+\|\s*$/.test(r));
+      out.push('<div class="ai-tw"><table class="ai-t">'+body.map((r,k)=>'<tr>'+cells(r).map(c=>k?'<td>'+inl(c)+'</td>':'<th>'+inl(c)+'</th>').join('')+'</tr>').join('')+'</table></div>');continue;}
+    if(/^\s*[-*•]\s+/.test(l)){const it=[];while(i<L.length&&/^\s*[-*•]\s+/.test(L[i]))it.push('<li>'+inl(L[i++].replace(/^\s*[-*•]\s+/,''))+'</li>');out.push('<ul>'+it.join('')+'</ul>');continue;}
+    if(/^\s*\d+[.)]\s+/.test(l)){const it=[];while(i<L.length&&/^\s*\d+[.)]\s+/.test(L[i]))it.push('<li>'+inl(L[i++].replace(/^\s*\d+[.)]\s+/,''))+'</li>');out.push('<ol>'+it.join('')+'</ol>');continue;}
+    if(/^\s*👉/.test(l)){out.push('<div class="ai-verdict">'+inl(l.trim())+'</div>');i++;continue;}
+    const h=l.match(/^#{1,4}\s+(.*)$/);if(h){out.push('<div class="ai-h">'+inl(h[1])+'</div>');i++;continue;}
+    if(!l.trim()){i++;continue;}
+    out.push('<p>'+inl(l)+'</p>');i++;}
+  return out.join('');
+}
+// ── หน้าจอ ──
+function initAi(){aiRender();aiStatus();}
+async function aiToken(){const u=firebase.apps.length&&firebase.auth().currentUser;if(!u)throw new Error('ต้องล็อกอินก่อน');return u.getIdToken();}
+async function aiStatus(){try{const r=await fetch(AI_URL,{headers:{Authorization:'Bearer '+await aiToken()}});if(r.ok){_aiMonth=await r.json();aiBudget();}}catch(e){}}
+function aiBudget(){const el=document.getElementById('ai-budget');if(!el)return;
+  if(!_aiMonth){el.innerHTML='';return;}
+  const cap=_aiMonth.cap||500,thb=_aiMonth.thb||0,pct=Math.min(100,thb/cap*100);
+  el.innerHTML='<span>งบเดือนนี้</span><span class="ai-bb"><i style="width:'+Math.max(pct,1).toFixed(1)+'%"'+(pct>=80?' class="w"':'')+'></i></span><b>฿'+(thb<10?Math.round(thb*100)/100:Math.round(thb)).toLocaleString()+' / '+cap+'</b>';}
+function aiSafeUrl(u){return /^https?:\/\//i.test(String(u||''))?String(u):'';}
+function aiMsgHtml(m,idx){
+  if(m.role==='user')return'<div class="ai-me">'+mpEsc(m.text)+'</div>';
+  const deep=m.model==='Sonnet',live=m.live!=null,body=live?m.live:m.text;
+  const tl=(m.tools||[]).map(t=>typeof t==='string'?{l:t}:t);
+  let h='<div class="ai-ai'+(deep?' deep':'')+'"><span class="ai-tag">'+(deep?'🔍 Sonnet'+(live?' · กำลังวิเคราะห์':''):'⚡ Haiku')+'</span>';
+  if(live)h+='<ul class="ai-steps">'+tl.map(t=>'<li><span class="k">✓</span><span>'+mpEsc(t.l)+'</span></li>').join('')
+    +(body?'':'<li class="run"><span class="k"></span><span>'+mpEsc(m.phase||'กำลังคิด')+'…</span></li>')+'</ul>';
+  else if(tl.length)h+='<div class="ai-pills">'+tl.map(t=>'<span'+(t.web?' class="web"':'')+'>'+mpEsc(t.l)+'</span>').join('')+'</div>';
+  if(body)h+=aiMd(body);
+  if(!live&&m.src&&m.src.length)h+='<div class="ai-src">'+m.src.map(x=>{const u=aiSafeUrl(x.url);return u?'<a href="'+mpEsc(u)+'" target="_blank" rel="noopener noreferrer">🌐 '+mpEsc(x.title||u)+'</a>':'';}).join('')+'</div>';
+  if(m.err)h+='<div class="ai-err">⚠️ '+mpEsc(m.err)+'</div>';
+  if(!live&&(m.cost||m.sec))h+='<div class="ai-foot"><span>฿'+(Math.round((m.cost||0)*100)/100)+(m.sec?' · '+m.sec+' วิ':'')+'</span>'+(m.text?'<button type="button" onclick="aiCopy('+idx+',this)"><span>คัดลอก</span></button>':'')+'</div>';
+  return h+'</div>';
+}
+function aiHero(){return'<div class="ai-hero"><div class="ai-sun big"><i class="h"></i><i class="r"></i><i class="c"></i></div><h2>สวัสดีครับ</h2><p>ถามเรื่องบ่อ อาหาร ค่าน้ำ<br>ต้นทุน สต็อก การจับ สวนปาล์ม</p><span>ตัวเลขดึงจากแอปตรงๆ</span></div>';}
+function aiMode(){
+  const w=document.getElementById('ai-wrap');if(w){w.classList.toggle('deep',_aiDeep);w.classList.toggle('busy',_aiBusy);}
+  document.getElementById('ai-m-q')?.classList.toggle('on',!_aiDeep);document.getElementById('ai-m-d')?.classList.toggle('on',_aiDeep);
+  const st=document.getElementById('ai-state');if(st)st.textContent=_aiBusy?(_aiDeep?'กำลังวิเคราะห์ละเอียด…':'กำลังคิด…'):(_aiDeep?'วิเคราะห์ละเอียด · ค้นเว็บได้':'พร้อม · อ่านข้อมูลฟาร์มสด');
+  const b=document.getElementById('ai-send');if(b){b.textContent=_aiBusy?'■':'↑';b.setAttribute('aria-label',_aiBusy?'หยุด':'ส่ง');}
+}
+function aiRender(){
+  const box=document.getElementById('ai-chat');if(!box)return;
+  const h=aiHist();
+  box.innerHTML=h.length?h.map(aiMsgHtml).join(''):aiHero();
+  aiMode();aiBudget();box.scrollTop=box.scrollHeight;
+}
+function aiLive(m){const box=document.getElementById('ai-chat');if(!box)return;const last=box.lastElementChild;const html=aiMsgHtml(m,-1);if(last&&last.classList.contains('ai-ai'))last.outerHTML=html;else box.insertAdjacentHTML('beforeend',html);box.scrollTop=box.scrollHeight;}
+function aiSetDeep(v){if(_aiBusy)return;_aiDeep=!!v;aiMode();}
+function aiNew(){if(_aiBusy)return;if(!confirm('เริ่มเรื่องใหม่? ประวัติแชตในเครื่องนี้จะถูกล้าง'))return;aiSave([]);aiRender();}
+function aiKey(e){if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();if(!_aiBusy)aiSendOrStop();}}
+function aiSendOrStop(){if(_aiBusy){if(_aiAbort)_aiAbort.abort();return;}const t=document.getElementById('ai-q');if(!t)return;const q=t.value;t.value='';aiAsk(q);}
+function aiCopy(i,btn){const m=aiHist()[i];if(!m||!m.text)return;navigator.clipboard.writeText(m.text).then(()=>{const sp=btn&&btn.firstChild;if(sp){sp.textContent='คัดลอกแล้ว';setTimeout(()=>{sp.textContent='คัดลอก';},1500);}}).catch(()=>{});}
+async function aiCall(messages,deep,onText,signal){
+  const r=await fetch(AI_URL,{method:'POST',signal,headers:{'Content-Type':'application/json',Authorization:'Bearer '+await aiToken()},body:JSON.stringify({messages,deep})});
+  if(!r.ok){let m='เรียก AI ไม่ได้ ('+r.status+')';try{const j=await r.json();if(j&&j.error)m=j.error;}catch(e){}throw new Error(m);}
+  const rd=r.body.getReader(),dec=new TextDecoder();let buf='',done=null;
+  for(;;){const x=await rd.read();if(x.done)break;buf+=dec.decode(x.value,{stream:true});let k;
+    while((k=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,k);buf=buf.slice(k+2);if(line.indexOf('data: ')!==0)continue;
+      const ev=JSON.parse(line.slice(6));if(ev.t==='text')onText(ev.d);else if(ev.t==='error')throw new Error(ev.msg);else if(ev.t==='done')done=ev;}}
+  if(!done)throw new Error('การเชื่อมต่อขาดกลางทาง ลองใหม่');
+  return done;
+}
+// ค้นเว็บ (โหมดละเอียด): server_tool_use = คำค้น · แหล่งที่มา = citations ในข้อความก่อน ไม่มีค่อยใช้ผลค้น (≤5)
+function aiWebInfo(content,ans){
+  (content||[]).forEach(b=>{
+    if(b.type==='server_tool_use'&&b.name==='web_search'&&b.input&&b.input.query)ans.tools.push({l:'🌐 '+b.input.query,web:true});
+    if(b.type==='text'&&Array.isArray(b.citations))b.citations.forEach(c=>{if(c&&c.url)ans._cite.push({url:c.url,title:c.title});});
+    if(b.type==='web_search_tool_result'&&Array.isArray(b.content))b.content.forEach(c=>{if(c&&c.url)ans._res.push({url:c.url,title:c.title});});
+  });
+}
+async function aiAsk(text){
+  const q=String(text||'').trim();if(!q||_aiBusy)return;
+  if(APP_ROLE!=='admin'){alert('เฉพาะ admin');return;}
+  _aiBusy=true;_aiAbort=new AbortController();const deep=_aiDeep,t0=Date.now(),sig=_aiAbort.signal;
+  const hist=aiHist();
+  // บริบท = คู่ถาม-ตอบที่สำเร็จ 10 ข้อความล่าสุด (ข้อความล้วน ไม่มี thinking/เครื่องมือ) · ต้องขึ้นต้นด้วยคำถาม
+  const ok=[];hist.forEach((m,i)=>{const n=hist[i+1];if(m.role==='user'&&n&&n.role==='assistant'&&n.text&&!n.err)ok.push({role:'user',content:m.text},{role:'assistant',content:n.text});});
+  const ctx=ok.slice(-AI_CTX_MSGS);
+  while(ctx.length&&ctx[0].role!=='user')ctx.shift();
+  const msgs=[...ctx,{role:'user',content:q+'\n(วันนี้ของระบบ: '+today()+')'}];
+  hist.push({role:'user',text:q,at:t0});
+  const ans={role:'assistant',text:'',tools:[],model:deep?'Sonnet':'Haiku',cost:0,at:t0,live:'',phase:'กำลังคิด',_cite:[],_res:[]};
+  hist.push(ans);aiSave(hist);aiRender();
+  try{
+    let round=0;
+    for(;round<AI_MAX_ROUNDS;round++){
+      let rt='';const base=ans.text?ans.text+'\n\n':'';
+      ans.phase=round?(deep?'กำลังวิเคราะห์ข้อมูล':'กำลังสรุป'):(deep?'กำลังคิด · อาจค้นเว็บ':'กำลังคิด');aiLive(ans);
+      const done=await aiCall(msgs,deep,d=>{rt+=d;ans.live=base+rt;aiLive(ans);},sig);
+      ans.cost+=done.cost||0;_aiMonth={thb:done.month,cap:done.cap};aiBudget();
+      aiWebInfo(done.content,ans);
+      const txt=(done.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+      if(txt)ans.text=base+txt;
+      if(done.stop==='tool_use'){
+        const tus=(done.content||[]).filter(b=>b.type==='tool_use');
+        msgs.push({role:'assistant',content:done.content});
+        msgs.push({role:'user',content:tus.map(tu=>{ans.tools.push({l:(AI_TOOL_LBL[tu.name]||tu.name)+aiToolArg(tu.input)});const r=aiRunTool(tu.name,tu.input);
+          return r.err?{type:'tool_result',tool_use_id:tu.id,content:'ผิดพลาด: '+r.err,is_error:true}:{type:'tool_result',tool_use_id:tu.id,content:r.out};})});
+        ans.live=ans.text;aiLive(ans);continue;
+      }
+      if(done.stop==='pause_turn'){msgs.push({role:'assistant',content:done.content});continue;}   // ค้นเว็บยังไม่จบ ส่งต่อแบบไม่เติมคำถาม
+      if(done.stop==='refusal')ans.text+=(ans.text?'\n\n':'')+'(AI ไม่ตอบคำถามนี้ ลองถามแบบอื่น)';
+      if(done.stop==='max_tokens')ans.text+='\n\n(คำตอบยาวเกิน ถูกตัด — ถามแคบลง)';
+      break;
+    }
+    if(round>=AI_MAX_ROUNDS)ans.err='ดึงข้อมูลหลายรอบเกิน ลองถามให้แคบลง';
+  }catch(e){
+    if(e&&e.name==='AbortError'){if(ans.live&&!ans.text)ans.text=ans.live;ans.err='หยุดแล้ว';}
+    else ans.err=e.message||String(e);
+  }
+  const seen={};ans.src=(ans._cite.length?ans._cite:ans._res).filter(x=>{const k=x.url;if(seen[k])return false;seen[k]=1;return true;}).slice(0,5);
+  if(!ans.src.length)delete ans.src;
+  delete ans.live;delete ans.phase;delete ans._cite;delete ans._res;ans.sec=Math.round((Date.now()-t0)/1000);
+  aiSave(hist);_aiDeep=false;_aiBusy=false;_aiAbort=null;aiRender();
 }
 function initKan(){
   if(APP_ROLE!=='admin')return;   // หน้านี้เขียนข้อมูลได้ — กันที่ฟังก์ชันด้วย ไม่ใช่ซ่อนปุ่มอย่างเดียว

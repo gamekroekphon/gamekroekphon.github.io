@@ -3,6 +3,7 @@
  * - lineWebhook  : ตอบคำถามพนักงานผ่าน LINE (อ่านข้อมูลจริงจาก Firebase RTDB)
  * - billNotify   : แจ้งเตือนบิลรับของเข้ากลุ่มไลน์ (staff ส่งบิล / ตีกลับ / อนุมัติเข้าสต็อก)
  * - nightlyBackup: สำรองข้อมูลแอปทุกคืน 03:00 → /tawan_backups (#423)
+ * - aiChat       : ผู้ช่วย AI ในแอป (admin) — ดู ai.js (#430)
  *
  * ตรรกะการคำนวณสถานะบ่อ/วันเตรียมบ่อ/ความเสี่ยงอากาศ ถูก "พอร์ต" มาจาก index.html
  * ของแอปจริง (classifyOv, worstOv, pondStatusOv, PREP_STEPS, renderWx) ไม่ใช่ค่าที่เดาขึ้นมาเอง
@@ -16,6 +17,7 @@ const {onValueCreated} = require("firebase-functions/v2/database");
 const {onSchedule} = require("firebase-functions/v2/scheduler");
 const {billEventText, stockEmptyText} = require("./billNotify");
 const {backupRecord, pruneKeys} = require("./backup");
+const {handleAiChat} = require("./ai");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
@@ -779,4 +781,18 @@ exports.nightlyBackup = onSchedule(
       await admin.database().ref("tawan_backups").update(del);
       logger.info("backup ok", day, "ponds", rec.ponds, "z", rec.z.length);
     },
+);
+
+// ---------------------------------------------------------------------------
+// ผู้ช่วย AI ในแอป (#430) — admin เท่านั้น · เครื่องมือรันในหน้าเว็บ · งบ ฿500/เดือน (ai.js)
+// ---------------------------------------------------------------------------
+
+exports.aiChat = onRequest(
+    {region: "asia-southeast1", timeoutSeconds: 300, memory: "512MiB",
+      cors: ["https://gamekroekphon.github.io", /^http:\/\/localhost(:\d+)?$/]},
+    (req, res) => handleAiChat(req, res, {admin, logger}).catch((e) => {
+      logger.error("aiChat", e);
+      if (!res.headersSent) res.status(500).json({error: "ระบบผิดพลาด"});
+      else res.end();
+    }),
 );
