@@ -1925,7 +1925,7 @@ body.zone-keeper .bnav-btn.bn-staff,body.zone-keeper .bnav-btn.bn-admin,body.zon
 body.owner-mode .bnav-btn.bn-owner{display:flex}
 body.owner-mode #bnav-overview,body.owner-mode #bnav-stock,body.owner-mode .bnav-btn.bn-staff,body.owner-mode .bnav-btn.bn-keeper,body.owner-mode .bnav-btn.bn-clerk{display:none}
 body.owner-mode #bnav-price,body.owner-mode #bnav-harveststat{display:flex}
-body.owner-mode #bnav-own-home{order:1}body.owner-mode #bnav-own-stock{order:2}body.owner-mode #bnav-price{order:3}body.owner-mode #bnav-harveststat{order:4}body.owner-mode #bnav-more{order:5}
+body.owner-mode #bnav-own-home{order:1}body.owner-mode #bnav-own-stock{order:2}body.owner-mode #bnav-ai{order:3}body.owner-mode #bnav-price{order:4}body.owner-mode #bnav-harveststat{order:5}body.owner-mode #bnav-more{order:6}
 body:not(.owner-mode) .owner-only{display:none!important}
 body.owner-mode #mobMenuBody{display:flex;flex-direction:column}
 body.owner-mode #mobMenuBody>.owner-g0{order:-3}
@@ -2592,10 +2592,10 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 
 /* ── 🌞 ตะวัน AI (#430) — พระอาทิตย์ · พื้นขาวตามแอป · เร็ว = แดดเช้าทอง / ละเอียด = แดดเที่ยงส้ม ── */
 .ai-wrap{--ai-a:#FFB020;--ai-a2:#FF8A00;--ai-al:#FFFAEB;--ai-ab:#F4DFA6;--ai-at:#7A5503;
-  position:relative;display:flex;flex-direction:column;height:calc(100vh - 150px);min-height:440px;background:var(--bg);border:1px solid var(--bd);border-radius:16px;overflow:hidden}
+  position:relative;display:flex;flex-direction:column;height:calc(100vh - 150px);min-height:440px;background:var(--bg);border:1px solid var(--bd);border-radius:16px;overflow:hidden;overflow:clip}
 .ai-wrap.deep{--ai-a:#FF7A1A;--ai-a2:#D9480F;--ai-al:#FFF0E6;--ai-ab:#FFD2B5;--ai-at:#B23A0A}
-.ai-wrap::before{content:"";position:absolute;left:-30%;right:-30%;top:-150px;height:330px;pointer-events:none;
-  background:radial-gradient(50% 50% at 50% 50%,color-mix(in srgb,var(--ai-a) 22%,transparent),color-mix(in srgb,var(--ai-a) 6%,transparent) 55%,transparent 75%)}
+.ai-wrap::before{content:"";position:absolute;left:0;right:0;top:-150px;height:330px;pointer-events:none;
+  background:radial-gradient(80% 50% at 50% 50%,color-mix(in srgb,var(--ai-a) 22%,transparent),color-mix(in srgb,var(--ai-a) 6%,transparent) 55%,transparent 75%)}
 .ai-wrap>*{position:relative;z-index:1}
 .ai-sun{--s:40px;width:var(--s);height:var(--s);position:relative;flex-shrink:0}
 .ai-sun i{position:absolute;border-radius:50%}
@@ -2669,6 +2669,39 @@ table.ai-t td:first-child,table.ai-t th:first-child{text-align:left}
   background:radial-gradient(circle at 35% 30%,#FFD36B,var(--ai-a2) 58%,color-mix(in srgb,var(--ai-a2) 70%,#000));box-shadow:0 2px 10px color-mix(in srgb,var(--ai-a2) 45%,transparent)}
 #ai-send:focus-visible,.ai-seg button:focus-visible,.ai-new:focus-visible{outline:2px solid var(--in);outline-offset:2px}
 @media (pointer:coarse){#ai-q{font-size:16px}}
+/* หน้าเจ้าของ (ก้อย/กุ้ง · #431): ปุ่ม 🌞 แถบล่าง · 🎤 พูด (ไม่ส่งเอง) · 🔊 ฟัง · "ไม่ตรง? ถามละเอียด" · ตัวหนังสือใหญ่ขึ้น */
+body:not(.owner-mode) .ai-own{display:none!important}
+body.owner-mode .ai-own-hide{display:none!important}
+.bn-sun{--s:30px;--ai-a:#FFB020;--ai-a2:#FF8A00;display:inline-block;vertical-align:middle}
+.bn-sun .h{display:none}
+body.owner-mode .ai-ai{font-size:calc(16px * var(--ui-scale));line-height:1.6}
+body.owner-mode .ai-me{font-size:calc(16px * var(--ui-scale))}
+body.owner-mode .ai-seg button{font-size:calc(15px * var(--ui-scale));padding:7px 0}
+body.owner-mode .ai-seg button small{font-size:calc(12px * var(--ui-scale))}
+body.owner-mode #ai-q{font-size:16px}
+body.owner-mode #ai-state{font-size:calc(13.5px * var(--ui-scale));font-weight:600}
+.ai-me small{display:block;font-size:calc(12px * var(--ui-scale));font-weight:600}
+#ai-mic{width:52px;height:52px;border-radius:50%;border:0;flex-shrink:0;cursor:pointer;font-size:calc(23px * var(--ui-scale));
+  background:radial-gradient(circle at 35% 30%,#FFD36B,var(--ai-a2) 58%,color-mix(in srgb,var(--ai-a2) 70%,#000));box-shadow:0 2px 12px color-mix(in srgb,var(--ai-a2) 45%,transparent)}
+#ai-mic[hidden]{display:none!important}
+body.owner-mode #ai-send{background:var(--sf2);color:var(--tx);border:1px solid var(--bd);box-shadow:none}
+body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 30%,#FFD36B,var(--ai-a2) 58%,color-mix(in srgb,var(--ai-a2) 70%,#000));color:#fff;border:0}
+.ai-say span{display:inline-flex;align-items:center;gap:5px;border:1.5px solid #F4DFA6;background:#FFFAEB;color:#7A5503;border-radius:20px;padding:3px 13px;font-weight:700;font-size:calc(14px * var(--ui-scale))}
+.ai-redo{display:flex;width:100%;align-items:center;justify-content:center;gap:6px;margin-top:9px;padding:9px;border-radius:12px;border:1.5px dashed #FFB37A;background:#FFF6EF;color:#B23A0A;font:inherit;font-weight:700;font-size:calc(15px * var(--ui-scale));cursor:pointer}
+.ai-redo small{font-weight:600;font-size:calc(13px * var(--ui-scale))}
+.ai-listen{position:absolute;inset:0;z-index:5;background:#FFFAEB;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--tx)}
+.ai-listen[hidden]{display:none!important}
+.ai-listen .ai-sun{--s:140px;--ai-a:#FFB020;--ai-a2:#FF8A00;margin-bottom:22px}
+.ai-listen.on .ai-sun .r{animation:aiSpin 5s linear infinite}
+.ai-listen.on .ai-sun::after{content:"";position:absolute;inset:-26px;border-radius:50%;border:3px solid rgba(255,138,0,.35);animation:aiPulse 1.4s ease-out infinite}
+@keyframes aiPulse{from{transform:scale(.85);opacity:1}to{transform:scale(1.15);opacity:0}}
+@media (prefers-reduced-motion:reduce){.ai-listen.on .ai-sun .r,.ai-listen.on .ai-sun::after{animation:none}}
+.ai-listen h2{margin:0 0 6px;font-size:calc(22px * var(--ui-scale));font-weight:600}
+#ai-said{margin:12px 0 22px;padding:12px 16px;background:var(--sf);border:1.5px solid #F4DFA6;border-radius:16px;font-size:calc(19px * var(--ui-scale));font-weight:600;min-width:240px;max-width:100%}
+.ai-lbtns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.ai-lbtns button{padding:11px 20px;border-radius:16px;font:inherit;font-size:calc(17px * var(--ui-scale));font-weight:700;border:1.5px solid var(--bd);background:var(--sf);color:var(--tx);cursor:pointer}
+.ai-lbtns button.go{background:linear-gradient(135deg,#B8860B,var(--p));color:#fff;border-color:transparent}
+.ai-lbtns button:disabled{opacity:.45;cursor:default}
 @media (max-width:640px){.ai-wrap{height:calc(100vh - 140px);border-radius:12px;margin:0 -4px}}
 </style>
   <!-- Firebase SDKs (compat v9) -->
@@ -2860,6 +2893,7 @@ table.ai-t td:first-child,table.ai-t th:first-child{text-align:left}
   <!-- เจ้าของ (OWNER_NAMES: ก้อย/กุ้ง) — สรุป · สต็อก(ดูอย่างเดียว) · ราคาสินค้า · สถิติจับกุ้ง (พี่สั่ง entry #343) -->
   <button class="bnav-btn bn-owner" id="bnav-own-home" onclick="ownerGo('home')"><span class="bnav-ic">🏠</span>สรุป</button>
   <button class="bnav-btn bn-owner" id="bnav-own-stock" onclick="ownerGo('stock')"><span class="bnav-ic">📦</span>สต็อก</button>
+  <button class="bnav-btn bn-owner" id="bnav-ai" onclick="bnavGo('ai',this)"><span class="bnav-ic"><span class="ai-sun bn-sun"><i class="h"></i><i class="r"></i><i class="c"></i></span></span>ถาม</button>
   <button class="bnav-btn bn-clerk" id="bnav-shop" onclick="clerkGo('shop')"><span class="bnav-ic">🏪</span>บุญชู</button>
   <button class="bnav-btn bn-clerk" id="bnav-ext" onclick="clerkGo('ext')"><span class="bnav-ic">🔧</span>อุปกรณ์นอก</button>
   <button class="bnav-btn" id="bnav-more" onclick="toggleMobMenu(this)"><span class="bnav-ic">☰<span class="bnav-badge" id="bnav-alert-badge"></span></span>เพิ่มเติม</button>
@@ -2992,8 +3026,14 @@ table.ai-t td:first-child,table.ai-t th:first-child{text-align:left}
     <div id="ai-budget"></div>
     <div id="ai-chat"></div>
     <div class="ai-dock">
-      <div class="ai-seg"><button type="button" id="ai-m-q" class="on" onclick="aiSetDeep(false)">⚡ เร็ว<small>HAIKU</small></button><button type="button" id="ai-m-d" class="deep" onclick="aiSetDeep(true)">🔍 ละเอียด<small>SONNET · ค้นเว็บ</small></button></div>
-      <div class="ai-row"><textarea id="ai-q" rows="1" placeholder="พิมพ์คำถาม…" onkeydown="aiKey(event)" aria-label="คำถาม"></textarea><button type="button" id="ai-send" onclick="aiSendOrStop()" aria-label="ส่ง">↑</button></div>
+      <div class="ai-seg"><button type="button" id="ai-m-q" class="on" onclick="aiSetDeep(false)">⚡ เร็ว<small class="ai-own-hide">HAIKU</small><small class="ai-own">~฿0.15</small></button><button type="button" id="ai-m-d" class="deep" onclick="aiSetDeep(true)">🔍 ละเอียด<small class="ai-own-hide">SONNET · ค้นเว็บ</small><small class="ai-own">~฿3</small></button></div>
+      <div class="ai-row"><textarea id="ai-q" rows="1" placeholder="พิมพ์คำถาม…" onkeydown="aiKey(event)" aria-label="คำถาม"></textarea><button type="button" id="ai-send" onclick="aiSendOrStop()" aria-label="ส่ง">↑</button><button type="button" id="ai-mic" class="ai-own" onclick="aiMicStart()" aria-label="พูด" hidden>🎤</button></div>
+    </div>
+    <div class="ai-listen" id="ai-listen" hidden>
+      <div class="ai-sun"><i class="h"></i><i class="r"></i><i class="c"></i></div>
+      <h2 id="ai-listen-h">กำลังฟัง… พูดได้เลย</h2>
+      <div id="ai-said">…</div>
+      <div class="ai-lbtns"><button type="button" onclick="aiMicClose()">ยกเลิก</button><button type="button" onclick="aiMicStart()">พูดใหม่</button><button type="button" class="go" id="ai-said-go" onclick="aiMicSend()" disabled>ส่ง ↑</button></div>
     </div>
   </div>
 </div>
@@ -7973,7 +8013,7 @@ function goTab(t,btn){
   if(t==='price')initPrice();
   // ── sync bottom nav (ข้อ 6) ──
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
-  const bnavMap={overview:'bnav-overview',entry:'bnav-entry',feed:'bnav-feed',stock:'bnav-stock',price:'bnav-price',harveststat:'bnav-harveststat',
+  const bnavMap={overview:'bnav-overview',entry:'bnav-entry',feed:'bnav-feed',stock:'bnav-stock',price:'bnav-price',harveststat:'bnav-harveststat',ai:'bnav-ai',
     tide:'bnav-tide',watlog:'bnav-watlog',mortality:'bnav-mortality'};
   if(bnavMap[t]){const bb=document.getElementById(bnavMap[t]);if(bb)bb.classList.add('on');}
   const tw=document.querySelector('.tabs-wrap');if(tw)tw.classList.remove('mob-open');
@@ -16657,7 +16697,47 @@ function aiMd(src){
   return out.join('');
 }
 // ── หน้าจอ ──
-function initAi(){aiRender();aiStatus();}
+function initAi(){const mic=document.getElementById('ai-mic');if(mic)mic.hidden=!AI_SR;aiRender();aiStatus();}
+// ── 🎤 พูด / 🔊 ฟัง (ใช้ระบบเสียงของมือถือ ไม่เสียเงิน) · พูดแล้วไม่ส่งเอง ต้องกด "ส่ง" (กันได้ยินผิดแล้วเสียเงิน) ──
+const AI_SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let _aiRec=null,_aiSaid='',_aiSpeakI=-1;
+function aiListenUi(on){
+  const o=document.getElementById('ai-listen');if(!o)return;o.classList.toggle('on',on);
+  document.getElementById('ai-listen-h').textContent=on?'กำลังฟัง… พูดได้เลย':(_aiSaid?'ถูกต้องไหม? กดส่ง':'ไม่ได้ยิน กด พูดใหม่');
+  document.getElementById('ai-said').textContent=_aiSaid?'"'+_aiSaid+'"':'…';
+  document.getElementById('ai-said-go').disabled=!_aiSaid;
+}
+function aiMicStart(){
+  if(!AI_SR||_aiBusy)return;aiSpeakStop();
+  try{if(_aiRec)_aiRec.abort();}catch(e){}
+  _aiSaid='';document.getElementById('ai-listen').hidden=false;aiListenUi(true);
+  const r=new AI_SR();r.lang='th-TH';r.interimResults=true;r.continuous=false;r.maxAlternatives=1;
+  r.onresult=e=>{let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;_aiSaid=t.trim();document.getElementById('ai-said').textContent=_aiSaid?'"'+_aiSaid+'"':'…';document.getElementById('ai-said-go').disabled=!_aiSaid;};
+  r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){_aiRec=null;aiListenUi(false);document.getElementById('ai-listen-h').textContent='ไม่ได้รับอนุญาตใช้ไมค์ — อนุญาตในตั้งค่ามือถือ';}};
+  r.onend=()=>{if(_aiRec===r){_aiRec=null;aiListenUi(false);}};
+  _aiRec=r;try{r.start();}catch(e){_aiRec=null;aiListenUi(false);}
+}
+function aiMicClose(){const r=_aiRec;_aiRec=null;try{if(r)r.abort();}catch(e){}document.getElementById('ai-listen').hidden=true;}
+function aiMicSend(){const q=_aiSaid;aiMicClose();if(q)aiAsk(q,{tag:'🎤 พูด'});}
+// อ่านออกเสียง: ตัดเครื่องหมาย markdown/อีโมจิ · ตารางอ่านทีละแถว
+function aiPlain(t){
+  return String(t||'').split('\n').map(l=>{if(/^\s*\|[\s:|-]+\|\s*$/.test(l))return'';if(/^\s*\|/.test(l))return l.replace(/^\s*\||\|\s*$/g,'').split('|').map(c=>c.trim()).filter(Boolean).join(' , ');return l;})
+    .join('\n').replace(/\*\*|`|^#+\s*/gm,'').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu,'').replace(/^\s*[-•]\s+/gm,'');
+}
+function aiSpeak(i){
+  const ss=window.speechSynthesis;if(!ss)return;
+  if(_aiSpeakI===i){aiSpeakStop();return;}
+  aiSpeakStop();const m=aiHist()[i];if(!m||!m.text)return;
+  const u=new SpeechSynthesisUtterance(aiPlain(m.text));u.lang='th-TH';
+  const v=(ss.getVoices()||[]).find(x=>/^th/i.test(x.lang));if(v)u.voice=v;
+  u.onend=u.onerror=()=>{if(_aiSpeakI===i){_aiSpeakI=-1;aiSpeakBtns();}};
+  _aiSpeakI=i;ss.speak(u);aiSpeakBtns();
+}
+function aiSpeakStop(){_aiSpeakI=-1;try{if(window.speechSynthesis)speechSynthesis.cancel();}catch(e){}aiSpeakBtns();}
+function aiSpeakBtns(){document.querySelectorAll('.ai-say').forEach(b=>{b.firstChild.textContent=(+b.dataset.i===_aiSpeakI)?'⏹ หยุดฟัง':'🔊 ฟัง';});}
+// "ไม่ตรง? ถามละเอียด" = ถามคำถามเดิมซ้ำด้วย Sonnet (คำตอบเร็วอันล่าสุดเท่านั้น)
+function aiRedo(i){if(_aiBusy)return;const h=aiHist(),u=h[i-1];if(!u||u.role!=='user'||!u.text)return;aiSpeakStop();_aiDeep=true;aiAsk(u.text,{tag:'🔍 ถามละเอียด'});}
+let _aiLastIdx=-1;
 async function aiToken(){const u=firebase.apps.length&&firebase.auth().currentUser;if(!u)throw new Error('ต้องล็อกอินก่อน');return u.getIdToken();}
 async function aiStatus(){try{const r=await fetch(AI_URL,{headers:{Authorization:'Bearer '+await aiToken()}});if(r.ok){_aiMonth=await r.json();aiBudget();}}catch(e){}}
 function aiBudget(){const el=document.getElementById('ai-budget');if(!el)return;
@@ -16666,7 +16746,7 @@ function aiBudget(){const el=document.getElementById('ai-budget');if(!el)return;
   el.innerHTML='<span>งบเดือนนี้</span><span class="ai-bb"><i style="width:'+Math.max(pct,1).toFixed(1)+'%"'+(pct>=80?' class="w"':'')+'></i></span><b>฿'+(thb<10?Math.round(thb*100)/100:Math.round(thb)).toLocaleString()+' / '+cap+'</b>';}
 function aiSafeUrl(u){return /^https?:\/\//i.test(String(u||''))?String(u):'';}
 function aiMsgHtml(m,idx){
-  if(m.role==='user')return'<div class="ai-me">'+mpEsc(m.text)+'</div>';
+  if(m.role==='user')return'<div class="ai-me">'+(m.tag?'<small>'+mpEsc(m.tag)+'</small>':'')+mpEsc(m.text)+'</div>';
   const deep=m.model==='Sonnet',live=m.live!=null,body=live?m.live:m.text;
   const tl=(m.tools||[]).map(t=>typeof t==='string'?{l:t}:t);
   let h='<div class="ai-ai'+(deep?' deep':'')+'"><span class="ai-tag">'+(deep?'🔍 Sonnet'+(live?' · กำลังวิเคราะห์':''):'⚡ Haiku')+'</span>';
@@ -16676,7 +16756,9 @@ function aiMsgHtml(m,idx){
   if(body)h+=aiMd(body);
   if(!live&&m.src&&m.src.length)h+='<div class="ai-src">'+m.src.map(x=>{const u=aiSafeUrl(x.url);return u?'<a href="'+mpEsc(u)+'" target="_blank" rel="noopener noreferrer">🌐 '+mpEsc(x.title||u)+'</a>':'';}).join('')+'</div>';
   if(m.err)h+='<div class="ai-err">⚠️ '+mpEsc(m.err)+'</div>';
-  if(!live&&(m.cost||m.sec))h+='<div class="ai-foot"><span>฿'+(Math.round((m.cost||0)*100)/100)+(m.sec?' · '+m.sec+' วิ':'')+'</span>'+(m.text?'<button type="button" onclick="aiCopy('+idx+',this)"><span>คัดลอก</span></button>':'')+'</div>';
+  if(!live&&(m.cost||m.sec))h+='<div class="ai-foot">'+(m.text&&window.speechSynthesis&&idx>=0?'<button type="button" class="ai-say ai-own" data-i="'+idx+'" onclick="aiSpeak('+idx+')"><span>'+(_aiSpeakI===idx?'⏹ หยุดฟัง':'🔊 ฟัง')+'</span></button>':'')
+    +'<span>฿'+(Math.round((m.cost||0)*100)/100)+(m.sec?' · '+m.sec+' วิ':'')+'</span>'+(m.text?'<button type="button" class="ai-own-hide" onclick="aiCopy('+idx+',this)"><span>คัดลอก</span></button>':'')+'</div>';
+  if(!live&&!deep&&idx>=1&&idx===_aiLastIdx&&(m.text||m.err))h+='<button type="button" class="ai-redo ai-own" onclick="aiRedo('+idx+')">🔍 ไม่ตรง? ถามละเอียด <small>~฿3</small></button>';
   return h+'</div>';
 }
 function aiHero(){return'<div class="ai-hero"><div class="ai-sun big"><i class="h"></i><i class="r"></i><i class="c"></i></div><h2>สวัสดีครับ</h2><p>ถามเรื่องบ่อ อาหาร ค่าน้ำ<br>ต้นทุน สต็อก การจับ สวนปาล์ม</p><span>ตัวเลขดึงจากแอปตรงๆ</span></div>';}
@@ -16689,6 +16771,7 @@ function aiMode(){
 function aiRender(){
   const box=document.getElementById('ai-chat');if(!box)return;
   const h=aiHist();
+  _aiLastIdx=h.length-1;
   box.innerHTML=h.length?h.map(aiMsgHtml).join(''):aiHero();
   aiMode();aiBudget();box.scrollTop=box.scrollHeight;
 }
@@ -16716,7 +16799,7 @@ function aiWebInfo(content,ans){
     if(b.type==='web_search_tool_result'&&Array.isArray(b.content))b.content.forEach(c=>{if(c&&c.url)ans._res.push({url:c.url,title:c.title});});
   });
 }
-async function aiAsk(text){
+async function aiAsk(text,opt){
   const q=String(text||'').trim();if(!q||_aiBusy)return;
   if(APP_ROLE!=='admin'){alert('เฉพาะ admin');return;}
   _aiBusy=true;_aiAbort=new AbortController();const deep=_aiDeep,t0=Date.now(),sig=_aiAbort.signal;
@@ -16726,7 +16809,7 @@ async function aiAsk(text){
   const ctx=ok.slice(-AI_CTX_MSGS);
   while(ctx.length&&ctx[0].role!=='user')ctx.shift();
   const msgs=[...ctx,{role:'user',content:q+'\n(วันนี้ของระบบ: '+today()+')'}];
-  hist.push({role:'user',text:q,at:t0});
+  hist.push(aiClean({role:'user',text:q,at:t0,tag:opt&&opt.tag}));aiSpeakStop();
   const ans={role:'assistant',text:'',tools:[],model:deep?'Sonnet':'Haiku',cost:0,at:t0,live:'',phase:'กำลังคิด',_cite:[],_res:[]};
   hist.push(ans);aiSave(hist);aiRender();
   try{
