@@ -938,6 +938,40 @@ html[data-uisize="xl"]{--ui-scale:1.25}
 .bill-chip.new{background:var(--ib);color:var(--in)}
 .bill-modal{width:min(96vw,560px);max-height:92vh;display:flex;flex-direction:column;padding:0;overflow:hidden}
 .bill-rev{width:min(98vw,1180px)}
+/* ── 🧮 นับสต็อกพนักงาน (#432) ── */
+.sc-modal{width:min(96vw,560px);height:min(92vh,900px)}
+#scRevModal .sc-modal{height:auto}
+.sc-top{padding:10px 14px;border-bottom:1px solid var(--bd);display:flex;flex-direction:column;gap:8px}
+.sc-prog{display:flex;align-items:center;gap:8px;font-size:calc(13.5px * var(--ui-scale));font-weight:600}
+.sc-prog .b{flex:1;height:8px;border-radius:9px;background:var(--sf2);overflow:hidden}.sc-prog .b i{display:block;height:100%;background:var(--ok);transition:width .2s}
+.sc-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.sc-chips::-webkit-scrollbar{display:none}
+.sc-chips button{flex-shrink:0;border:1.5px solid var(--bd);background:var(--sf);border-radius:20px;padding:4px 11px;font:inherit;font-size:calc(13.5px * var(--ui-scale));font-weight:600;white-space:nowrap;cursor:pointer;color:var(--tx)}
+.sc-chips button.on{background:var(--p);border-color:var(--p);color:#fff}
+.sc-list{flex:1;overflow-y:auto;padding:8px 14px 12px}
+.sc-grp{font-size:calc(14px * var(--ui-scale));font-weight:700;margin:10px 2px 5px;display:flex;justify-content:space-between}
+.sc-it{display:flex;align-items:center;gap:10px;background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:7px 10px;margin-bottom:6px}
+.sc-it .n{flex:1;min-width:0;font-size:calc(15.5px * var(--ui-scale));font-weight:600;overflow-wrap:anywhere}
+.sc-it input{width:96px;height:46px;border:1.5px solid var(--bd);border-radius:11px;font:inherit;font-size:20px;font-weight:700;text-align:center;background:var(--sf);color:var(--tx)}
+.sc-it input.fill{border-color:var(--ok);background:var(--ob);color:var(--ok)}
+.sc-it input.zero{border-color:var(--w);background:var(--wb);color:var(--w-tx)}
+.sc-it .u{width:50px;font-size:calc(13px * var(--ui-scale));font-weight:600}
+.sc-foot{border-top:1px solid var(--bd);padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.sc-foot .s{font-size:calc(13px * var(--ui-scale));font-weight:600;color:var(--ok)}
+.sc-done{text-align:center;padding:26px 10px}
+.sc-done .ok{width:80px;height:80px;border-radius:50%;background:var(--ob);border:3px solid #86D9A6;display:grid;place-items:center;font-size:40px;margin:0 auto 12px;color:var(--ok)}
+.sc-kp{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.sc-kp div{border-radius:10px;padding:6px 9px;font-size:calc(12.5px * var(--ui-scale));font-weight:600;background:var(--sf2)}.sc-kp b{display:block;font-size:calc(17px * var(--ui-scale))}
+.sc-kp .dn{background:var(--db);color:var(--d)}.sc-kp .up{background:var(--ib);color:var(--in)}
+table.sc-t{width:100%;border-collapse:collapse;font-size:calc(13.5px * var(--ui-scale));font-variant-numeric:tabular-nums}
+table.sc-t th{font-size:calc(12px * var(--ui-scale));text-align:right;padding:4px 5px;font-weight:700}table.sc-t th:first-child{text-align:left}
+table.sc-t td{padding:6px 5px;border-top:1px solid var(--sf2);text-align:right}table.sc-t td:first-child{text-align:left;font-weight:600}
+table.sc-t tr.off td{opacity:.45}
+table.sc-t td.dn{color:var(--d);font-weight:700}table.sc-t td.up{color:var(--in);font-weight:700}table.sc-t td.eq{color:var(--ok);font-weight:700}
+.sc-t input[type=checkbox]{width:20px;height:20px;accent-color:var(--ok)}
+.sc-pick{display:flex;flex-direction:column;gap:6px}
+.sc-pick button{display:flex;justify-content:space-between;gap:8px;text-align:left;border:1px solid var(--bd);background:var(--sf);border-radius:12px;padding:10px 12px;font:inherit;cursor:pointer;color:var(--tx)}
+.sc-pick button.on{border-color:var(--p);background:var(--pl)}
+.sc-btns{display:grid;grid-template-columns:1fr 1.4fr;gap:8px}
 .bill-mh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:14px 16px;border-bottom:1px solid var(--bd)}
 .bill-mh b{font-size:calc(16px * var(--ui-scale))}
 .bill-mh small{display:block;color:var(--tx2);font-size:calc(12px * var(--ui-scale))}
@@ -3145,6 +3179,27 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
     <div class="fsl-f"><button type="button" class="btn" onclick="closeFundSellLink()">ยกเลิก</button><button type="button" class="btn btn-p" onclick="saveFundSellLink()">💾 บันทึก</button></div>
   </div>
 </div>
+<div class="modal-bg" id="scModal">
+  <div class="modal bill-modal sc-modal">
+    <div class="bill-mh"><div><b id="sc-title">🧮 นับสต็อก</b><small>นับของในฟาร์ม · ส่งให้ออฟฟิศตรวจ</small></div>
+      <button type="button" class="bill-x" aria-label="ปิด" onclick="closeStockCount()">✕</button></div>
+    <div class="sc-top" id="sc-top">
+      <div class="sc-prog"><span class="b"><i id="sc-bar" style="width:0"></i></span><span id="sc-prog-t">นับแล้ว 0</span></div>
+      <input class="fi" id="sc-q" type="search" placeholder="🔍 ค้นหาของ…" oninput="scSearch(this.value)" aria-label="ค้นหาของ">
+      <div class="sc-chips" id="sc-chips"></div>
+    </div>
+    <div class="sc-list" id="sc-list"></div>
+    <div class="sc-foot" id="sc-foot"></div>
+  </div>
+</div>
+<div class="modal-bg" id="scRevModal">
+  <div class="modal bill-modal sc-modal">
+    <div class="bill-mh"><div><b>🧮 ตรวจยอดนับ</b><small>อนุมัติแล้วยอดในระบบถึงจะเปลี่ยน</small></div>
+      <button type="button" class="bill-x" aria-label="ปิด" onclick="closeScReview()">✕</button></div>
+    <div class="bill-mb" id="sc-rev-body"></div>
+    <div class="sc-foot" id="sc-rev-foot"></div>
+  </div>
+</div>
 <div class="modal-bg" id="billCapModal">
   <div class="modal bill-modal bill-cap">
     <div class="bill-mh"><div><b>📷 ถ่ายบิลรับของ</b><small>ส่งให้ออฟฟิศตรวจ · สต็อกเปลี่ยนเมื่อออฟฟิศอนุมัติ</small></div>
@@ -4661,6 +4716,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   <div class="g4" id="sk-kpi"></div>
   <div id="sk-warn" style="display:none" class="stock-warn">⚠️ <span id="sk-warn-txt"></span></div>
   <div id="sk-bill" class="sk-bill"></div>
+  <div id="sk-count" class="sk-bill"></div>
   <div class="stock-sub">
     <button class="stock-sub-btn on" id="skb-items" onclick="stockTab('items',this)">รายการพัสดุ</button>
     <button class="stock-sub-btn" id="skb-tx" onclick="stockTab('tx',this)">บันทึกรับ-เบิก</button>
@@ -6347,6 +6403,7 @@ function mergeRemote(local, remote) {
   // ⚠️ ต้อง merge ด้วย ไม่งั้นที่กันกรอกจากอีกเครื่องจะหายตอนซิงค์ (id เป็น kan_<บ่อ>_<วันลง> คงที่ข้ามเครื่อง)
   merged.kanDraft = dropDead(mergeArr(merged.kanDraft||[], remote.kanDraft||[]));
   merged.stockBills = dropDead(mergeArr(merged.stockBills||[], remote.stockBills||[]));
+  merged.stockCounts = dropDead(scMergeArr(merged.stockCounts||[], remote.stockCounts||[]));   // #432 ยอดนับพนักงาน · rev สูงกว่าชนะ (อนุมัติแล้วห้ามถูกเครื่องเก่าดึงกลับเป็น "รอตรวจ")
   // ── สต็อกหน้าร้าน (entry #332) — การเคลื่อนไหวฝั่งหน้าร้านแยกจาก inventoryLog (ฟาร์ม) · id ถาวร sh<เวลา> ลบแล้ว push deletedIds
   merged.shopLog = dropDead(mergeArr(merged.shopLog||[], remote.shopLog||[]));
   // ── บริษัทในหน้าราคาสินค้า (entry #291) — id ถาวร co_<เวลา> ลบแล้ว push เข้า deletedIds ──
@@ -11414,13 +11471,14 @@ function openBillFromLog(billId){
 function billRefreshUI(){
   const n=billWaiting().length;
   const backMine=APP_ROLE==='admin'?0:billMine().filter(b=>b.status==='back').length;
-  const badgeN=APP_ROLE==='admin'?n:backMine;
+  const scN=APP_ROLE==='admin'?scWaiting().length:scMine().filter(c=>c.status==='back').length;
+  const badgeN=(APP_ROLE==='admin'?n:backMine)+scN;
   document.querySelectorAll('#tab-stock,#bnav-stock,.sn-link[onclick*="goTab(\'stock\'"]').forEach(btn=>{
     let s=btn.querySelector('.bill-badge');
     if(!badgeN){if(s)s.remove();return;}
     if(!s){s=document.createElement('span');s.className='bill-badge';btn.appendChild(s);}
     s.textContent=badgeN;
-    s.title=APP_ROLE==='admin'?'บิลรอตรวจ':'บิลถูกตีกลับ';
+    s.title=APP_ROLE==='admin'?'บิล/ยอดนับรอตรวจ':'บิล/ยอดนับถูกส่งกลับ';
   });
   const Q=String.fromCharCode(39);
   // admin ถ่ายบิลเองได้ด้วย (พี่สั่ง entry #283) — ปุ่มถ่ายบิลใหญ่เหมือน staff + ปุ่มบิลรอตรวจคู่กันเมื่อมีบิลค้าง
@@ -11443,6 +11501,7 @@ function billRefreshUI(){
       ?(billArr().length?'<button type="button" class="btn btn-s bill-sec" onclick="openBillReview()">🧾 บิลทั้งหมด</button>':'')
       :'');
   }
+  try{scRefreshUI();}catch(e){console.warn('scRefreshUI',e);}
   if(_billCap&&document.getElementById('billCapModal').classList.contains('on'))renderBillMineList();
   // หน้าตรวจบิลเป็นของ admin เท่านั้น — บทบาทเปลี่ยน (ล็อกอินใหม่) ต้องปิดทิ้ง ไม่ให้ค้างหน้าจอ
   if(APP_ROLE!=='admin'&&document.getElementById('billRevModal').classList.contains('on'))closeBillReview();
@@ -11450,6 +11509,193 @@ function billRefreshUI(){
     // ข้อมูลจากอีกเครื่องเข้ามา: บิลที่เปิดอยู่อาจถูกอนุมัติ/ลบไปแล้ว — วาดใหม่จาก D ปัจจุบัน
     if(!isEditingField())renderBillRev();
   }
+}
+
+
+// ══════ 🧮 นับสต็อกพนักงาน (#432 พี่สั่ง 18 ต.ค. 69 · mockup_นับสต็อกพนักงาน.html) ══════
+//   คนนับ = STOCK_COUNTERS (+ admin) · ไม่โชว์ยอดในระบบให้คนนับ (กันกรอกตามเลขเดิม) · ร่างเก็บ localStorage ต่อบัญชี
+//   ส่ง = D.stockCounts {status:'wait', rows:[{itemId,name,unit,n,sys}]} — sys = ยอดตอนกดส่ง · ยอดในระบบยังไม่เปลี่ยน
+//   admin อนุมัติ = item.qty += (n − sys) (ของที่เข้า/ออกหลังกดส่งยังอยู่) + inventoryLog 'adj' (countId) · ไม่ผูก pondId = ไม่เข้าต้นทุนบ่อ
+//   ⚠️ merge ใช้ rev (เพิ่มทุกครั้งที่เปลี่ยนสถานะ) ไม่งั้นเครื่องที่ถือของเก่าดึงกลับเป็น "รอตรวจ" แล้วอนุมัติซ้ำ · อนุมัติเช็ค adj countId กันซ้ำอีกชั้น
+const STOCK_COUNTERS=['เบี้ย','โม','เอื้อง'];
+const SC_CATS=[['feed','🍚 อาหาร'],['chemWater','🧪 ยาลงน้ำ'],['probioWater','🦠 จุลินทรีย์ลงน้ำ'],['chemOral','💊 ยากิน'],['probioOral','🦠 จุลินทรีย์กิน'],['lime','⚪ ปูน/แร่'],['equip','🔧 อุปกรณ์'],['fuel','⛽ น้ำมัน']];
+let _scVals={},_scCat='',_scQ='',_scSent=null,_scRevId=null,_scOff={};
+function scArr(){if(!Array.isArray(D.stockCounts))D.stockCounts=[];return D.stockCounts;}
+function scMergeArr(a,b){
+  if(!Array.isArray(b))return a||[];if(!Array.isArray(a))return b||[];
+  const m=new Map();b.forEach(x=>{if(x&&x.id)m.set(x.id,x);});
+  a.forEach(x=>{if(!x||!x.id)return;const o=m.get(x.id);if(!o||(+x.rev||0)>=(+o.rev||0))m.set(x.id,x);});
+  return[...m.values()];
+}
+function scCan(){return APP_ROLE==='admin'||STOCK_COUNTERS.includes(curUserLabel());}
+function scWaiting(){return scArr().filter(c=>c&&c.status==='wait').sort((a,b)=>String(b.at).localeCompare(String(a.at)));}
+function scMine(){const me=curUserLabel();return scArr().filter(c=>c&&c.by===me).sort((a,b)=>String(b.at).localeCompare(String(a.at)));}
+function scDraftKey(){return'tw_sc_'+(billUid()||'x');}
+function scLoadDraft(){try{const o=JSON.parse(localStorage.getItem(scDraftKey())||'null');return o&&o.vals?o.vals:{};}catch(e){return{};}}
+function scSaveDraft(){try{const has=Object.keys(_scVals).length;if(has)localStorage.setItem(scDraftKey(),JSON.stringify({vals:_scVals,at:Date.now()}));else localStorage.removeItem(scDraftKey());}catch(e){}}
+// ของที่ต้องนับ = ยอดไม่เป็น 0 หรือมีเข้า/ออกใน 90 วัน (รวมอาหาร)
+function scItems(){
+  const from=addDaysStr(today(),-90),act=new Set();
+  (D.inventoryLog||[]).forEach(l=>{if(l&&l.itemId&&l.date>=from)act.add(l.itemId);});
+  const ord=Object.fromEntries(SC_CATS.map((c,i)=>[c[0],i]));
+  return(D.inventoryItems||[]).filter(i=>i&&i.id&&((parseFloat(i.qty)||0)!==0||act.has(i.id)))
+    .sort((a,b)=>((ord[a.category]??99)-(ord[b.category]??99))||String(a.name).localeCompare(String(b.name),'th'));
+}
+function scNum(v){if(v==null||v==='')return null;const n=parseFloat(String(v).replace(',','.'));return isFinite(n)&&n>=0?n:null;}
+function scFilled(){return Object.keys(_scVals).filter(k=>scNum(_scVals[k])!=null);}
+// ── ทางเข้าบนหน้าสต็อก ──
+function scRefreshUI(){
+  const el=document.getElementById('sk-count');if(!el)return;
+  const Q=String.fromCharCode(39);let h='';
+  if(APP_ROLE==='admin'){
+    const w=scWaiting();
+    if(w.length)h='<button type="button" class="bill-entry wait" onclick="openScReview()"><span class="ic">🧮</span><span class="tx"><b>ยอดนับรอตรวจ '+w.length+' ใบ</b><small>'+mpEsc(w.map(c=>c.by).filter((v,i,a)=>a.indexOf(v)===i).join(' · '))+' · เทียบยอดระบบ แล้วกดอนุมัติ</small></span><span class="go">›</span></button>';
+  }
+  if(scCan()&&APP_ROLE!=='admin'){
+    const mine=scMine(),last=mine[0],nd=Object.keys(scLoadDraft()).length,per=skcLabel(skcKeyOf(today()));
+    let sub='รอบ '+per+(nd?' · นับค้าง '+nd+' รายการ':' · แตะเพื่อเริ่มนับ');
+    if(last&&last.status==='back')sub='<span class="bill-bad">↩️ ออฟฟิศให้นับใหม่'+(last.note?' — '+mpEsc(last.note):'')+'</span>';
+    else if(!nd&&last&&last.status==='wait')sub='<span style="color:var(--in);font-weight:700">⏳ ส่งแล้ว '+fD(last.date)+' · รอออฟฟิศตรวจ</span>';
+    else if(!nd&&last&&last.status==='ok'&&skcKeyOf(last.date)===skcKeyOf(today()))sub='<span class="bill-good">✓ ออฟฟิศอนุมัติยอดนับ '+fD(last.date)+' แล้ว</span>';
+    h+='<button type="button" class="bill-entry" onclick="openStockCount()"><span class="ic">🧮</span><span class="tx"><b>นับสต็อก</b><small>'+sub+'</small></span><span class="go">›</span></button>';
+  }
+  el.innerHTML=h;
+  if(_scRevId!=null&&document.getElementById('scRevModal').classList.contains('on')&&!isEditingField())renderScReview();
+}
+// ── หน้านับ (คนนับ) ──
+function openStockCount(){
+  if(!scCan())return;
+  _scVals=scLoadDraft();_scSent=null;_scCat='';_scQ='';
+  const last=scMine()[0];
+  if(!Object.keys(_scVals).length&&last&&last.status==='back')(last.rows||[]).forEach(r=>{_scVals[r.itemId]=String(r.n);});   // ส่งกลับ = เติมเลขเดิมให้แก้
+  const q=document.getElementById('sc-q');if(q)q.value='';
+  document.getElementById('sc-title').textContent='🧮 นับสต็อก · '+skcLabel(skcKeyOf(today()));
+  document.getElementById('scModal').classList.add('on');
+  renderStockCountForm();
+}
+function closeStockCount(){scSaveDraft();document.getElementById('scModal').classList.remove('on');scRefreshUI();}
+function scSearch(v){_scQ=String(v||'').trim().toLowerCase();renderScList();}
+function scPickCat(c){_scCat=_scCat===c?'':c;renderScChips();renderScList();}
+function renderStockCountForm(){
+  const top=document.getElementById('sc-top');
+  if(_scSent){
+    top.hidden=true;
+    document.getElementById('sc-list').innerHTML='<div class="sc-done"><div class="ok">✓</div><h2 style="margin:0 0 6px">ส่งยอดนับแล้ว</h2><p style="margin:0;font-weight:600">'+_scSent.rows.length+' รายการ · รอออฟฟิศตรวจ<br>ยอดในระบบยังไม่เปลี่ยน</p></div>';
+    document.getElementById('sc-foot').innerHTML='<button type="button" class="btn btn-p" onclick="closeStockCount()">ปิด</button>';
+    return;
+  }
+  top.hidden=false;renderScChips();renderScList();scFoot();
+}
+function renderScChips(){
+  const its=scItems(),cnt={};its.forEach(i=>{cnt[i.category]=(cnt[i.category]||0)+1;});
+  document.getElementById('sc-chips').innerHTML='<button type="button" class="'+(_scCat?'':'on')+'" onclick="scPickCat(\'\')">ทั้งหมด '+its.length+'</button>'
+    +SC_CATS.filter(c=>cnt[c[0]]).map(c=>'<button type="button" class="'+(_scCat===c[0]?'on':'')+'" onclick="scPickCat(\''+c[0]+'\')">'+c[1]+' '+cnt[c[0]]+'</button>').join('');
+}
+function scInCls(v){const n=scNum(v);return n==null?'':n===0?'zero':'fill';}
+function renderScList(){
+  const its=scItems().filter(i=>(!_scCat||i.category===_scCat)&&(!_scQ||String(i.name).toLowerCase().includes(_scQ)));
+  const g={};its.forEach(i=>{(g[i.category]=g[i.category]||[]).push(i);});
+  const lbl=Object.fromEntries(SC_CATS);let h='';
+  Object.keys(g).forEach(k=>{
+    const L=g[k],done=L.filter(i=>scNum(_scVals[i.id])!=null).length;
+    h+='<div class="sc-grp"><span>'+(lbl[k]||STOCK_CAT_LABEL[k]||k)+'</span><span>'+done+' / '+L.length+'</span></div>'
+      +L.map(i=>{const v=_scVals[i.id]??'';return'<div class="sc-it"><div class="n">'+mpEsc(i.name)+'</div><input type="number" inputmode="decimal" min="0" step="any" class="'+scInCls(v)+'" data-scid="'+mpEsc(i.id)+'" value="'+mpEsc(v)+'" placeholder="—" aria-label="นับได้ '+mpEsc(i.name)+'" oninput="scSet(this)"><span class="u">'+mpEsc(i.unit||'')+'</span></div>';}).join('');
+  });
+  document.getElementById('sc-list').innerHTML=h||'<p style="padding:16px;text-align:center;font-weight:600">ไม่พบของ</p>';
+  scProg();
+}
+// พิมพ์ = แก้โมเดล + เก็บร่าง · ไม่วาดรายการใหม่ (โฟกัสไม่เด้ง)
+function scSet(inp){
+  const id=inp.dataset.scid,v=inp.value;
+  if(v===''||v==null)delete _scVals[id];else _scVals[id]=v;
+  inp.className=scInCls(v);scSaveDraft();scProg();scFoot();
+}
+function scProg(){
+  const tot=scItems().length,n=scFilled().length;
+  document.getElementById('sc-bar').style.width=(tot?Math.min(100,n/tot*100):0).toFixed(1)+'%';
+  document.getElementById('sc-prog-t').textContent='นับแล้ว '+n+' / '+tot;
+}
+function scFoot(){
+  const n=scFilled().length,el=document.getElementById('sc-foot');
+  el.innerHTML=(n?'<div class="s">✓ เก็บไว้ในเครื่องแล้ว · ปิดแอปแล้วนับต่อได้</div>':'<div style="font-size:13px;font-weight:600">เว้นว่าง = ยังไม่นับ · ไม่มีของ = ใส่ 0 · เศษถุงใส่ 0.5 ได้</div>')
+    +'<button type="button" class="btn btn-p" '+(n?'':'disabled ')+'onclick="scSend()">📨 ส่งให้ออฟฟิศตรวจ · '+n+' รายการ</button>';
+}
+function scSend(){
+  const ids=scFilled();if(!ids.length)return;
+  const tot=scItems().length;
+  if(!confirm('ส่งยอดนับ '+ids.length+(ids.length<tot?' จาก '+tot:'')+' รายการ ให้ออฟฟิศตรวจ?'))return;
+  const items=Object.fromEntries((D.inventoryItems||[]).map(i=>[i.id,i])),me=curUserLabel(),d=today();
+  const rows=ids.map(id=>{const it=items[id];if(!it)return null;return{itemId:id,name:it.name,unit:it.unit||'',n:scNum(_scVals[id]),sys:Math.round((parseFloat(it.qty)||0)*10000)/10000};}).filter(Boolean);
+  scMine().filter(c=>c.status==='back').forEach(c=>{c.status='redone';c.rev=(+c.rev||0)+1;});
+  const c={id:'sc'+Date.now()+'_'+Math.random().toString(36).slice(2,6),date:d,at:new Date().toISOString(),by:me,byUid:billUid(),status:'wait',rev:1,rows};
+  scArr().push(c);
+  _scVals={};scSaveDraft();_scSent=c;
+  save();renderStockCountForm();billRefreshUI();
+}
+// ── หน้าตรวจ (admin) ──
+function openScReview(id){
+  if(APP_ROLE!=='admin')return;
+  const w=scWaiting();_scRevId=id||(w[0]&&w[0].id)||null;_scOff={};
+  document.getElementById('scRevModal').classList.add('on');renderScReview();
+}
+function closeScReview(){document.getElementById('scRevModal').classList.remove('on');_scRevId=null;}
+function scPickRev(id){_scRevId=id;_scOff={};renderScReview();}
+function scToggleRow(id,on){if(on)delete _scOff[id];else _scOff[id]=1;renderScReview();}
+function scRevRows(c){return(c.rows||[]).map(r=>({...r,d:Math.round(((+r.n||0)-(+r.sys||0))*100)/100}));}
+function renderScReview(){
+  const body=document.getElementById('sc-rev-body'),foot=document.getElementById('sc-rev-foot');
+  const w=scWaiting(),c=scArr().find(x=>x&&x.id===_scRevId&&x.status==='wait');
+  if(!c){body.innerHTML='<p style="text-align:center;font-weight:600;padding:20px">ไม่มียอดนับรอตรวจ</p>';foot.innerHTML='';return;}
+  const items=Object.fromEntries((D.inventoryItems||[]).map(i=>[i.id,i]));
+  const R=scRevRows(c),on=R.filter(r=>!_scOff[r.itemId]),dn=R.filter(r=>r.d<0),up=R.filter(r=>r.d>0);
+  const price=r=>+((items[r.itemId]||{}).unitPrice)||0;
+  const lo=dn.reduce((a,r)=>a+(-r.d)*price(r),0),hi=up.reduce((a,r)=>a+r.d*price(r),0);
+  let h='';
+  if(w.length>1)h+='<div class="sc-pick">'+w.map(x=>'<button type="button" class="'+(x.id===c.id?'on':'')+'" onclick="scPickRev(\''+x.id+'\')"><span><b>'+mpEsc(x.by)+'</b> · '+fD(x.date)+'</span><span>'+(x.rows||[]).length+' รายการ</span></button>').join('')+'</div>';
+  h+='<div><div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:6px"><span>รอบ '+skcLabel(skcKeyOf(c.date))+'</span><span style="font-weight:600">'+mpEsc(c.by)+' · '+fD(c.date)+' '+String(new Date(c.at).toTimeString()).slice(0,5)+'</span></div>'
+    +'<div class="sc-kp"><div>นับ<b>'+R.length+'</b></div><div class="dn">ขาด<b>'+dn.length+'</b></div><div class="up">เกิน<b>'+up.length+'</b></div></div>'
+    +'<div style="font-size:13px;font-weight:600;margin-top:6px">ส่วนต่าง <span class="pd-admin-tag">ADMIN</span> ขาด ฿'+Math.round(lo).toLocaleString()+' · เกิน ฿'+Math.round(hi).toLocaleString()+'</div></div>';
+  // เรียงต่างมากก่อน (มูลค่า) · ตรงกันไว้ท้าย
+  const sorted=R.slice().sort((a,b)=>Math.abs(b.d)*price(b)-Math.abs(a.d)*price(a)||String(a.name).localeCompare(String(b.name),'th'));
+  h+='<div class="tbl-wrap"><table class="sc-t"><tr><th>สินค้า</th><th>นับได้</th><th>ระบบ</th><th>ต่าง</th><th>ใช้</th></tr>'
+    +sorted.map(r=>'<tr class="'+(_scOff[r.itemId]?'off':'')+'"><td>'+mpEsc(r.name)+' <small>'+mpEsc(r.unit)+'</small></td><td>'+skcN(r.n)+'</td><td>'+skcN(r.sys)+'</td><td class="'+(r.d<0?'dn':r.d>0?'up':'eq')+'">'+(r.d===0?'✓':(r.d>0?'+':'−')+skcN(Math.abs(r.d)))+'</td>'
+      +'<td><input type="checkbox" '+(_scOff[r.itemId]?'':'checked ')+'onchange="scToggleRow(\''+r.itemId+'\',this.checked)" aria-label="ใช้ยอดนับ '+mpEsc(r.name)+'"></td></tr>').join('')+'</table></div>'
+    +'<div class="bill-msg warn">ระบบ = ยอดตอนกดส่ง · ของที่เข้า/ออกหลังกดส่ง ระบบหักต่อให้เอง</div>';
+  body.innerHTML=h;
+  foot.innerHTML='<div class="sc-btns"><button type="button" class="btn" style="color:var(--d);border:1.5px solid #F5C2C2;background:var(--sf)" onclick="scSendBack()">↩ ให้นับใหม่</button><button type="button" class="btn btn-p" style="background:var(--ok);border-color:var(--ok)" '+(on.length?'':'disabled ')+'onclick="scApprove()">✓ อนุมัติ '+on.length+' รายการ</button></div>';
+}
+function scApprove(){
+  if(APP_ROLE!=='admin')return;
+  const c=scArr().find(x=>x&&x.id===_scRevId);
+  if(!c||c.status!=='wait'){showToast('ยอดนับนี้ตรวจไปแล้ว','');renderScReview();return;}
+  if((D.inventoryLog||[]).some(l=>l&&l.type==='adj'&&l.countId===c.id)){c.status='ok';c.rev=(+c.rev||0)+1;save();renderScReview();billRefreshUI();return;}   // กันอนุมัติซ้ำ
+  const R=scRevRows(c).filter(r=>!_scOff[r.itemId]),nd=R.filter(r=>r.d!==0);
+  if(!confirm('อนุมัติยอดนับ '+R.length+' รายการ?\nปรับยอด '+nd.length+' รายการ'))return;
+  const items=Object.fromEntries((D.inventoryItems||[]).map(i=>[i.id,i])),me=curUserLabel(),applied=[];
+  R.forEach(r=>{
+    const it=items[r.itemId];if(!it)return;
+    if(r.d!==0){
+      it.qty=Math.round(((parseFloat(it.qty)||0)+r.d)*10000)/10000;
+      (D.inventoryLog=D.inventoryLog||[]).push({id:'adj'+Date.now()+'_'+Math.random().toString(36).slice(2,6),itemId:it.id,itemName:it.name,type:'adj',qty:r.d,
+        date:c.date,unit:it.unit||'',by:c.by+' นับ · '+me+' อนุมัติ',balanceAfter:it.qty,note:'ปรับยอดจากการนับ',countId:c.id});
+    }
+    it.countedAt=c.date;applied.push(r.itemId);
+  });
+  c.status='ok';c.rev=(+c.rev||0)+1;c.reviewedBy=me;c.reviewedAt=new Date().toISOString();c.applied=applied;
+  _scOff={};
+  if(typeof tickMemoClear==='function')tickMemoClear();
+  save();
+  showToast('อนุมัติยอดนับ',R.length+' รายการ · ปรับยอด '+nd.length+' รายการ');
+  const next=scWaiting()[0];_scRevId=next?next.id:null;renderScReview();
+  billRefreshUI();if(typeof renderStockKPI==='function')renderStockKPI();if(typeof renderStockItems==='function')renderStockItems();
+  if(!next)closeScReview();
+}
+function scSendBack(){
+  if(APP_ROLE!=='admin')return;
+  const c=scArr().find(x=>x&&x.id===_scRevId);if(!c||c.status!=='wait')return;
+  const note=prompt('ให้นับใหม่ — บอกเหตุผลสั้นๆ (เว้นว่างได้)','');if(note===null)return;
+  c.status='back';c.note=String(note).trim().slice(0,120);c.rev=(+c.rev||0)+1;c.reviewedBy=curUserLabel();c.reviewedAt=new Date().toISOString();
+  save();const next=scWaiting()[0];_scRevId=next?next.id:null;renderScReview();billRefreshUI();if(!next)closeScReview();
 }
 
 function initStock(){
