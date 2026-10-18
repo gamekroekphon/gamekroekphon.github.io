@@ -66,6 +66,40 @@ body{font-family:'Kanit','Sarabun','Segoe UI',system-ui,sans-serif;background:va
 .hdr-brand{font-size:calc(16px * var(--ui-scale));font-weight:800;letter-spacing:.3px;color:var(--text)}
 .hdr-sub{font-size:var(--fs11);color:var(--text-3);margin-top:1px;letter-spacing:.5px;text-transform:uppercase}
 .hdr-right{display:flex;gap:8px;align-items:center}
+/* ── 🔍 ไปที่… · ⭐ ทางลัด · 🧭 แผนที่แอป (#433) ── */
+.hdr-find{display:flex;align-items:center;gap:8px;border:1.5px solid var(--bd);background:var(--sf);border-radius:10px;padding:5px 10px;font:inherit;font-size:calc(13.5px * var(--ui-scale));font-weight:500;color:var(--tx);cursor:pointer;min-width:200px}
+.hdr-find kbd{margin-left:auto;font-family:inherit;font-size:calc(11.5px * var(--ui-scale));background:var(--sf2);border:1px solid var(--bd);border-radius:5px;padding:0 5px}
+@media(max-width:900px){.hdr-find{min-width:0;padding:5px 9px}.hdr-find .t,.hdr-find kbd{display:none}}
+.nav-pal{width:min(96vw,640px);max-height:80vh;display:flex;flex-direction:column;padding:0;overflow:hidden;align-self:flex-start;margin-top:8vh}
+.nav-in{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bd)}
+.nav-in input{flex:1;border:0;outline:none;font:inherit;font-size:calc(18px * var(--ui-scale));font-weight:600;background:none;color:var(--tx);min-width:0}
+.nav-in small{font-size:calc(12px * var(--ui-scale));font-weight:500;white-space:nowrap}
+#nav-res{overflow-y:auto;padding:4px 0 8px}
+.nav-g{font-size:calc(12.5px * var(--ui-scale));font-weight:700;padding:8px 16px 2px}
+.nav-r{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;text-align:left;padding:8px 16px;font:inherit;font-size:calc(15px * var(--ui-scale));color:var(--tx);cursor:pointer}
+.nav-r.on,.nav-r:hover{background:var(--pl)}
+.nav-r .ic{width:30px;height:30px;border-radius:9px;background:var(--sf2);display:grid;place-items:center;flex-shrink:0}
+.nav-r b{font-weight:600;flex:1;min-width:0}
+.nav-r .w{font-size:calc(12.5px * var(--ui-scale));font-weight:600;color:var(--pd);text-align:right;max-width:45%}
+.nav-r mark{background:#FFE69A;border-radius:3px;padding:0 1px;color:inherit}
+.nav-r .n{font-size:calc(11.5px * var(--ui-scale));font-weight:700;background:var(--d);color:#fff;border-radius:9px;padding:0 6px}
+#ov-pins{margin-bottom:12px}
+#ov-pins:empty{display:none}
+.pin-t{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:calc(15px * var(--ui-scale));margin-bottom:6px}
+.pin-t .r{display:flex;gap:6px}
+.pin-t button{border:1px solid var(--bd);background:var(--sf);border-radius:8px;padding:2px 9px;font:inherit;font-size:calc(12.5px * var(--ui-scale));font-weight:600;cursor:pointer;color:var(--tx)}
+.pin-t button.on{background:var(--pl);border-color:#F4DFA6;color:var(--pd)}
+.pins{display:flex;gap:8px;flex-wrap:wrap}
+.pin{display:flex;align-items:center;gap:7px;background:var(--sf);border:1.5px solid var(--bd);border-radius:12px;padding:7px 12px;font:inherit;font-weight:600;font-size:calc(14.5px * var(--ui-scale));cursor:pointer;color:var(--tx);position:relative}
+.pin .n{font-size:calc(12px * var(--ui-scale));font-weight:700;background:var(--d);color:#fff;border-radius:9px;padding:0 6px}
+.pin.add{border-style:dashed}
+.pin .x{margin-left:2px;font-weight:800;color:var(--d)}
+.amap{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.amap-g{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:10px 14px}
+.amap-g h3{margin:0 0 4px;font-size:calc(16px * var(--ui-scale))}
+.amap-q{display:flex;justify-content:space-between;gap:10px;width:100%;border:0;border-top:1px solid var(--sf2);background:none;padding:8px 0;font:inherit;font-size:calc(14.5px * var(--ui-scale));text-align:left;cursor:pointer;color:var(--tx)}
+.amap-q:hover{background:var(--pl)}
+.amap-q span:first-child{font-weight:500;flex:1;min-width:0}.amap-q span:last-child{font-weight:700;color:var(--pd);text-align:right;max-width:60%;overflow-wrap:anywhere}
 .hdr-badge{background:var(--bg-page);border:1px solid var(--border);color:var(--text-2);padding:4px 12px;border-radius:6px;font-size:calc(12px * var(--ui-scale));white-space:nowrap}
 .hdr-meta{display:none}
 
@@ -2813,6 +2847,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
     <button class="sn-top tab-item" onclick="goTab('medproto',this)"><span>💊</span> Protocol เวชภัณฑ์</button>
     <button class="sn-top tab-item admin-only" onclick="goTab('kan',this)"><span>📋</span> กัน</button>
     <button class="sn-top tab-item admin-only" onclick="goTab('ai',this)"><span>🌞</span> ตะวัน AI</button>
+    <button class="sn-top tab-item admin-only" onclick="goTab('appmap',this)"><span>🧭</span> แผนที่แอป</button>
   </nav>
   <div class="sn-label">สวนปาล์ม</div>
   <nav class="sn-nav">
@@ -2839,6 +2874,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
     <div><div class="hdr-brand">ตะวันฟาร์ม</div><div class="hdr-sub">Aquaculture Management System</div></div>
   </div>
   <div class="hdr-right">
+    <button type="button" class="hdr-find admin-only" onclick="openNav()" aria-label="ค้นหา ไปที่หน้า">🔍 <span class="t">ไปที่…</span><kbd>Ctrl K</kbd></button>
     <span class="sync-ind" id="sync-ind" title="">
       <span class="sync-dot"></span>
       <span class="sync-ind-txt" id="sync-msg"></span>
@@ -2900,6 +2936,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   <button class="tab" id="tab-medproto" onclick="goTab('medproto',this)">💊 Protocol เวชภัณฑ์</button>
   <button class="tab admin-only" id="tab-kan" onclick="goTab('kan',this)">📋 กัน</button>
   <button class="tab admin-only" id="tab-ai" onclick="goTab('ai',this)">🌞 ตะวัน AI</button>
+  <button class="tab admin-only" id="tab-appmap" onclick="goTab('appmap',this)">🧭 แผนที่แอป</button>
   <div class="tab-grp" id="grp-settings">
     <button class="grp-btn" onclick="toggleGrp('settings')">⚙️ ตั้งค่า <span class="grp-caret">▾</span></button>
     <div class="tab-dropdown">
@@ -2974,6 +3011,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
     <button class="mob-sheet-item" data-t="medproto" onclick="mobMenuGo(this)"><span class="ic">💊</span>Protocol เวชภัณฑ์</button>
     <button class="mob-sheet-item admin-only" data-t="kan" onclick="mobMenuGo(this)"><span class="ic">📋</span>กัน</button>
     <button class="mob-sheet-item admin-only" data-t="ai" onclick="mobMenuGo(this)"><span class="ic">🌞</span>ตะวัน AI</button>
+    <button class="mob-sheet-item admin-only" data-t="appmap" onclick="mobMenuGo(this)"><span class="ic">🧭</span>แผนที่แอป</button>
     <div class="mob-sheet-grp">🌳 สวนปาล์ม</div>
     <button class="mob-sheet-item admin-only owner-mine" data-t="palm" onclick="mobMenuGo(this)"><span class="ic">🌴</span>ตะวันปาล์ม</button>
     <div class="mob-sheet-grp">⚙️ ทั่วไป</div>
@@ -3053,6 +3091,11 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   <div class="sec-hdr"><div class="sec-title">💊 Protocol เวชภัณฑ์ล่าสุด</div></div>
   <div id="mp-view"></div>
   <div id="mp-msg" style="margin-top:10px"></div>
+</div>
+<div id="sec-appmap" class="sec">
+  <div class="sec-hdr"><div class="sec-title">🧭 แผนที่แอป</div></div>
+  <p style="margin:-4px 0 12px;font-weight:600">ถูกถามเรื่องนี้ → แตะ = ไปหน้านั้น · หาไม่เจอ กด 🔍 ไปที่… (Ctrl K)</p>
+  <div class="amap" id="amap"></div>
 </div>
 <div id="sec-ai" class="sec">
   <div class="ai-wrap" id="ai-wrap">
@@ -3177,6 +3220,12 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
     <div id="fsl-list" class="fsl-list"></div>
     <div id="fsl-sum" class="fsl-sum"></div>
     <div class="fsl-f"><button type="button" class="btn" onclick="closeFundSellLink()">ยกเลิก</button><button type="button" class="btn btn-p" onclick="saveFundSellLink()">💾 บันทึก</button></div>
+  </div>
+</div>
+<div class="modal-bg" id="navModal" onclick="if(event.target===this)closeNav()">
+  <div class="modal nav-pal" role="dialog" aria-label="ไปที่">
+    <div class="nav-in">🔍<input id="nav-q" type="search" placeholder="พิมพ์ เช่น ค่าไฟ · A.8 · นับสต็อก" autocomplete="off" oninput="navSearch()" onkeydown="navKey(event)" aria-label="ค้นหา"><small>↑↓ · Enter · Esc</small></div>
+    <div id="nav-res"></div>
   </div>
 </div>
 <div class="modal-bg" id="scModal">
@@ -3549,8 +3598,9 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
       <div><div class="mhd-greet" id="mhd-greet">สวัสดี 👋</div><small id="mhd-sub">ตะวันฟาร์ม</small></div>
       <div class="mhd-bell" onclick="bnavAlerts(null)">🔔<span class="mhd-bell-badge" id="mhd-bell-badge"></span></div>
     </div>
-    <div class="mhd-search" onclick="document.getElementById('bnav-more')?.click()">🔍 ค้นหาบ่อ / ข้อมูล...</div>
+    <div class="mhd-search" onclick="if(APP_ROLE==='admin')openNav();else document.getElementById('bnav-more')?.click()">🔍 ค้นหาบ่อ / ข้อมูล...</div>
   </div>
+  <div id="ov-pins"></div>
   <div class="ov-kpi-bar" id="ov-kpi-bar"></div>
   <div id="ov-bill"></div>
   <button class="ov-cost-btn admin-only" type="button" onclick="openCostSummary()">
@@ -8036,7 +8086,7 @@ function initUiSize(){
   applyUiSize(v);
 }
 initUiSize();
-const ADMIN_ONLY_TABS=['palm','users','labor','elec','pl','kan','hatchery','export','ai'];   // hatchery มีกำไร (#316) — เพิ่ม entry #357 · export = PDF ปิดบ่อ มีรายได้/ต้นทุน/กำไร (พี่สั่ง #374)
+const ADMIN_ONLY_TABS=['palm','users','labor','elec','pl','kan','hatchery','export','ai','appmap'];   // hatchery มีกำไร (#316) — เพิ่ม entry #357 · export = PDF ปิดบ่อ มีรายได้/ต้นทุน/กำไร (พี่สั่ง #374)
 function goTab(t,btn){
   if(ADMIN_ONLY_TABS.includes(t)&&APP_ROLE!=='admin')return;
   document.querySelectorAll('.tab,.tab-item,.sn-top,.sn-link').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
@@ -8062,7 +8112,7 @@ function goTab(t,btn){
   if(t==='manage')renderManage();
   if(t==='palm')initPalm();
   if(t==='forecast')initForecast();
-  if(t==='medproto')initMedProto();if(t==='kan')initKan();if(t==='ai')initAi();
+  if(t==='medproto')initMedProto();if(t==='kan')initKan();if(t==='ai')initAi();if(t==='appmap')renderAppMap();try{navUse('tab:'+t);}catch(e){}
   if(t==='users')renderUsers();
   if(t==='harvest')initHarvest();
   if(t==='crops')renderCrops();
@@ -9305,6 +9355,7 @@ function homeToggleGroup(id){
 }
 // ── การ์ด "เตรียมบ่อ" — เดิมชื่อ pondCard() รองรับทั้งบ่อกำลังเลี้ยง/เตรียมบ่อ แต่ตอนนี้สถานะ/ไซส์/Biomass/อาหาร/ค่าผิดปกติของบ่อที่กำลังเลี้ยงย้ายไปรวมในตาราง "สถานะบ่อทั้งหมด" หมดแล้ว เหลือเรียกใช้แค่กรณีเตรียมบ่อจุดเดียว เปลี่ยนชื่อ+ตัดกิ่งที่ตายแล้วออกให้ตรงกับการใช้งานจริง ──
 function renderOv(){
+  try{navPinsRender();}catch(e){}
   try{billRefreshUI();}catch(e){}
   const meta=D.ponds.map(p=>{
     if(!Array.isArray(p.records))p.records=[];
@@ -11502,6 +11553,7 @@ function billRefreshUI(){
       :'');
   }
   try{scRefreshUI();}catch(e){console.warn('scRefreshUI',e);}
+  try{navPinsRender();}catch(e){}
   if(_billCap&&document.getElementById('billCapModal').classList.contains('on'))renderBillMineList();
   // หน้าตรวจบิลเป็นของ admin เท่านั้น — บทบาทเปลี่ยน (ล็อกอินใหม่) ต้องปิดทิ้ง ไม่ให้ค้างหน้าจอ
   if(APP_ROLE!=='admin'&&document.getElementById('billRevModal').classList.contains('on'))closeBillReview();
@@ -11697,6 +11749,153 @@ function scSendBack(){
   c.status='back';c.note=String(note).trim().slice(0,120);c.rev=(+c.rev||0)+1;c.reviewedBy=curUserLabel();c.reviewedAt=new Date().toISOString();
   save();const next=scWaiting()[0];_scRevId=next?next.id:null;renderScReview();billRefreshUI();if(!next)closeScReview();
 }
+
+// ══════ 🔍 ไปที่… · ⭐ ทางลัด · 🧭 แผนที่แอป (#433 พี่สั่ง 18 ต.ค. 69 · mockup_หาของในแอป.html) — admin ══════
+//   รายการปลายทางชุดเดียว navEntries(): หน้าจากเมนูซ้าย (อ่านจาก DOM — เพิ่มเมนูแล้วค้นเจอเอง) + แท็บย่อย/ปุ่มลึก NAV_EXTRA + บ่อ
+//   คำค้นสำรอง NAV_SYN ต่อหน้า · นับการใช้ต่อเครื่อง tw_nav_use_<uid> (ไว้จัดเมนูทีหลัง — ไม่ส่งไปไหน) · ทางลัด tw_nav_pins_<uid>
+//   ⚠️ renderOv เรียกก่อน firebase.initializeApp — ห้ามแตะ firebase.auth() ตรงๆ ใช้ navUid()
+function navUid(){try{return firebase.apps&&firebase.apps.length&&firebase.auth().currentUser?firebase.auth().currentUser.uid:'';}catch(e){return'';}}
+function navLs(k,def){try{const v=JSON.parse(localStorage.getItem(k+'_'+navUid())||'null');return v==null?def:v;}catch(e){return def;}}
+function navLsSet(k,v){try{localStorage.setItem(k+'_'+navUid(),JSON.stringify(v));}catch(e){}}
+function navUse(id){if(APP_ROLE!=='admin'||!id||id==='tab:overview')return;const u=navLs('tw_nav_use',{});const x=u[id]||{n:0};x.n++;x.at=Date.now();u[id]=x;navLsSet('tw_nav_use',u);}
+const NAV_SYN={elec:'ไฟ บิลไฟ ค่าไฟฟ้า หน่วยไฟ',labor:'เงินเดือน คนงาน จ่ายคน ค่าจ้าง ค่าแรงสัปดาห์',pl:'กำไร ขาดทุน รายได้ ต้นทุนรอบ',crops:'รอบ ประวัติ ปิดบ่อ ย้อนหลัง',
+  harveststat:'ขาย ขายกุ้ง ราคากุ้ง แพ ยอดขาย ผู้ซื้อ รายได้กุ้ง',harvest:'จับ พาเชียล ปิดบ่อ ขายกุ้ง',sample:'ไซส์ สุ่ม อัตรารอด น้ำหนัก abw pdg',feed:'อาหาร fcr ให้อาหาร เบอร์อาหาร',
+  entry:'น้ำ ph do alk ค่าน้ำ สีน้ำ แอมโมเนีย ไนไตรท์',watlog:'เติมน้ำ ถ่ายน้ำ สูบน้ำเข้า',mortality:'ตาย กุ้งตาย',lab:'เชื้อ แล็บ ตับ ehp vibrio tcbs',
+  tide:'อากาศ ฝน น้ำขึ้น น้ำลง สูบน้ำ ตารางน้ำ',stock:'ของ คลัง เบิก พัสดุ',price:'ราคาทุน ราคาขาย ต้นทุนสินค้า ราคาของ',forecast:'คาดการณ์ จับเมื่อไหร่ ตัน วันจับ',
+  medproto:'ยา สูตร โปรแกรม ผสมอาหาร เวชภัณฑ์',manage:'วางแผน ลงกุ้ง บ่อว่าง ยอดลง',users:'บัญชี สิทธิ์ ล็อกอิน ผู้ใช้',palm:'ปาล์ม ปุ๋ย สวน',
+  hatchery:'ลูกกุ้ง โรงเพาะฟัก cp',compare:'เทียบ เปรียบเทียบ รุ่น',risk:'ความเสี่ยง เตือน',export:'pdf สรุปปิดบ่อ รายงาน',ai:'ai ถาม ผู้ช่วย แชต',kan:'ชีต กัน แผนลงลูกกุ้ง',overview:'หน้าแรก สรุป ทุกบ่อ'};
+function navStock(sub,mode){return()=>{goTabByName('stock');stockTab(sub,document.getElementById('skb-'+sub));if(mode)setStockLogMode(mode);};}
+function navSub(page,fn,arg){return()=>{goTabByName(page);const b=[...document.querySelectorAll('[onclick*="'+fn+'(\''+arg+'\'"]')][0];if(b)b.click();};}
+const NAV_EXTRA=[
+  {id:'x:bills',ic:'📥',t:'บิลรอตรวจ',p:'สต็อก › ปุ่มบนสุด',k:'บิล รับของ อนุมัติ ใบส่งของ',go:()=>{goTabByName('stock');openBillReview();},n:()=>billWaiting().length},
+  {id:'x:billall',ic:'🧾',t:'บิลทั้งหมด (รูปบิล)',p:'สต็อก › บิลทั้งหมด',k:'บิล ใบเสร็จ รูปบิล ย้อนหลัง',go:()=>{goTabByName('stock');openBillReview();}},
+  {id:'x:count',ic:'🧮',t:'ยอดนับรอตรวจ',p:'สต็อก › ปุ่มบนสุด',k:'นับ นับสต็อก ตรวจนับ เบี้ย',go:()=>{goTabByName('stock');openScReview();},n:()=>scWaiting().length},
+  {id:'x:cost',ic:'💰',t:'ต้นทุนทุกบ่อ ในหน้าเดียว',p:'ภาพรวม › ปุ่มต้นทุน',k:'ต้นทุน ทุกบ่อ ต่อกิโล',go:()=>{goTabByName('overview');openCostSummary();}},
+  {id:'sk:items',ic:'📦',t:'รายการพัสดุ (ของเหลือเท่าไหร่)',p:'สต็อก › รายการพัสดุ',k:'คงเหลือ ของเหลือ ยอดสต็อก หมด',go:navStock('items')},
+  {id:'sk:tx',ic:'📝',t:'บันทึกรับ-เบิก',p:'สต็อก › บันทึกรับ-เบิก',k:'เบิก รับเข้า ลงบ่อ',go:navStock('tx')},
+  {id:'sk:out',ic:'📤',t:'ประวัติเบิกลงบ่อ',p:'สต็อก › ประวัติ › ลงบ่อ',k:'เบิก ลงบ่อ ใช้ไป',go:navStock('log','out')},
+  {id:'sk:in',ic:'📥',t:'ประวัติบุญชูเข้าฟาร์ม',p:'สต็อก › ประวัติ › บุญชูเข้าฟาร์ม',k:'รับเข้า โอน',go:navStock('log','in')},
+  {id:'sk:shopin',ic:'🏬',t:'ประวัติขนส่งเข้าบุญชู',p:'สต็อก › ประวัติ › รับขนส่งเข้าบุญชู',k:'บริษัทส่ง ขนส่ง',go:navStock('log','shopin')},
+  {id:'sk:shared',ic:'🔧',t:'ประวัติอุปกรณ์นอก',p:'สต็อก › ประวัติ › อุปกรณ์นอก',k:'ซื้อข้างนอก อุปกรณ์ น้ำมัน',go:navStock('log','shared')},
+  {id:'sk:toshop',ic:'🏪',t:'ประวัติฟาร์มกลับบุญชู',p:'สต็อก › ประวัติ › ฟาร์มกลับบุญชู',k:'คืนร้าน',go:navStock('log','toshop')},
+  {id:'sk:count',ic:'🧮',t:'นับสต็อกรอบ 10 วัน (เทียบกระดาษ)',p:'สต็อก › ประวัติ › นับสต็อก',k:'นับ ตรวจนับ กระดาษ',go:navStock('log','count')},
+  {id:'sk:shop',ic:'🏪',t:'บุญชู (สต็อกหน้าร้าน)',p:'สต็อก › บุญชู',k:'หน้าร้าน ร้าน สั่งของ',go:navStock('shop')},
+  {id:'sk:newitem',ic:'➕',t:'เพิ่มพัสดุใหม่',p:'สต็อก › เพิ่มพัสดุ',k:'สินค้าใหม่',go:navStock('newitem')},
+  {id:'sk:sale',ic:'🛒',t:'ยอดขายลูกค้าภายนอก',p:'สต็อก › ยอดขายลูกค้าภายนอก',k:'ขายของ ลูกค้า',go:navStock('sale')},
+  {id:'sk:cash',ic:'💰',t:'รายรับ-รายจ่าย (เสมียน)',p:'สต็อก › รายรับ-รายจ่าย',k:'เงินสด เสมียน',go:navStock('cash')},
+  {id:'lb:staff',ic:'🧑‍💼',t:'เงินเดือนประจำ',p:'ค่าแรง › เงินเดือนประจำ',k:'เงินเดือน พนักงานประจำ',go:navSub('labor','laborTab','lp-staff')},
+  {id:'lb:cost',ic:'👷',t:'ค่าแรงพนักงานรายวัน (รายสัปดาห์)',p:'ค่าแรง › พนักงานรายวัน',k:'ค่าแรงสัปดาห์ รายวัน',go:navSub('labor','laborTab','lp-cost')},
+  {id:'lb:sum',ic:'📋',t:'ประวัติ/สรุปค่าแรง',p:'ค่าแรง › ประวัติ/สรุป',k:'ค่าแรงรวม',go:navSub('labor','laborTab','lp-summary')},
+  {id:'el:bill',ic:'📝',t:'บันทึกบิลค่าไฟ',p:'ค่าไฟฟ้า › บันทึกบิล',k:'บิลไฟ',go:navSub('elec','elecTab','ep-bill')},
+  {id:'el:sum',ic:'📋',t:'ประวัติ/สรุปค่าไฟ',p:'ค่าไฟฟ้า › ประวัติ/สรุป',k:'ค่าไฟรายเดือน หน่วยไฟ',go:navSub('elec','elecTab','ep-summary')},
+  {id:'pm:plot',ic:'🌴',t:'แปลงปาล์ม',p:'ตะวันปาล์ม › แปลงปาล์ม',k:'แปลง ต้นปาล์ม',go:navSub('palm','palmTab','plot')},
+  {id:'pm:money',ic:'💰',t:'รายรับ-รายจ่ายปาล์ม',p:'ตะวันปาล์ม › รายรับ-รายจ่าย',k:'ขายปาล์ม ค่าปุ๋ย',go:navSub('palm','palmTab','money')},
+  {id:'pm:fert',ic:'🧪',t:'ประวัติใส่ปุ๋ย',p:'ตะวันปาล์ม › ประวัติใส่ปุ๋ย',k:'ปุ๋ย',go:navSub('palm','palmTab','fert')},
+  {id:'pm:harvest',ic:'🌾',t:'ประวัติตัดปาล์ม',p:'ตะวันปาล์ม › ประวัติตัดปาล์ม',k:'ตัดปาล์ม ผลผลิต',go:navSub('palm','palmTab','harvest')},
+  {id:'pm:fund',ic:'📈',t:'กองทุนปาล์ม',p:'ตะวันปาล์ม › กองทุน',k:'กองทุน',go:navSub('palm','palmTab','fund')},
+];
+function navEntries(){
+  const out=[],seen={};
+  document.querySelectorAll('.side-nav [onclick*="goTab(\'"]').forEach(b=>{
+    const m=(b.getAttribute('onclick')||'').match(/goTab\('([a-z]+)'/);if(!m)return;const t=m[1];
+    if(seen[t])return;seen[t]=1;
+    const txt=b.textContent.replace(/\s+/g,' ').trim(),ic=(txt.match(/^\S+/)||[''])[0],tt=txt.slice(ic.length).trim();
+    const sub=b.closest('.sn-sub'),gb=sub&&document.querySelector('.sn-grp-btn[onclick*="\''+sub.id+'\'"]');
+    const grp=gb?gb.textContent.replace(/[▾\s]+/g,' ').trim():'';
+    out.push({id:'tab:'+t,ic,t:tt,p:grp||'เมนูหลัก',k:NAV_SYN[t]||'',go:()=>goTabByName(t)});
+  });
+  NAV_EXTRA.forEach(e=>out.push(e));
+  (D.ponds||[]).forEach(p=>{if(!p||!p.name)return;const age=p.startDate?pondCurAge(p):null;
+    out.push({id:'pond:'+p.id,ic:'🦐',t:'บ่อ '+p.name,p:p.startDate?'กำลังเลี้ยง · '+age+' วัน':'บ่อว่าง',k:p.name+' '+String(p.name).replace(/\W/g,'')+' บ่อ'+String(p.name).replace(/\W/g,''),go:()=>openPondDetail(p.id)});});
+  return out;
+}
+const navNorm=v=>String(v||'').toLowerCase().replace(/[\s.·›\-_/()]/g,'');
+let _navRes=[],_navSel=0,_navPick=false;
+function openNav(pick){
+  if(APP_ROLE!=='admin')return;
+  _navPick=!!pick;const q=document.getElementById('nav-q');q.value='';
+  document.getElementById('navModal').classList.add('on');navSearch();q.focus();setTimeout(()=>q.focus(),30);
+}
+function closeNav(){document.getElementById('navModal').classList.remove('on');_navPick=false;}
+function navSearch(){
+  const raw=document.getElementById('nav-q').value.trim(),E=navEntries();
+  let res;
+  if(!raw){
+    const u=navLs('tw_nav_use',{});
+    res=E.filter(e=>u[e.id]).sort((a,b)=>u[b.id].at-u[a.id].at).slice(0,8);
+    if(!res.length)res=E.filter(e=>e.id.startsWith('tab:')).slice(0,10);
+  }else{
+    const toks=raw.split(/\s+/).map(navNorm).filter(Boolean);
+    res=E.map(e=>{const T=navNorm(e.t),H=navNorm(e.t+' '+e.k+' '+e.p);if(!toks.every(x=>H.includes(x)))return null;
+      const q=toks.join('');return{e,sc:(T.startsWith(q)?4:T.includes(q)?3:navNorm(e.k).includes(q)?2:1)+(e.id.startsWith('pond:')?-0.5:0)};})
+      .filter(Boolean).sort((a,b)=>b.sc-a.sc).slice(0,14).map(x=>x.e);
+  }
+  _navRes=res;_navSel=0;navDraw(raw);
+}
+function navMark(t,raw){const e=mpEsc(t);if(!raw)return e;const q=mpEsc(raw.trim());const i=e.toLowerCase().indexOf(q.toLowerCase());return i<0||!q?e:e.slice(0,i)+'<mark>'+e.slice(i,i+q.length)+'</mark>'+e.slice(i+q.length);}
+function navDraw(raw){
+  const el=document.getElementById('nav-res');
+  if(!_navRes.length){el.innerHTML='<div class="nav-g">ไม่เจอ — ลองคำอื่น หรือดู 🧭 แผนที่แอป</div>';return;}
+  el.innerHTML='<div class="nav-g">'+(_navPick?'เลือกปุ่มที่จะเพิ่มในทางลัด':raw?'ผลค้นหา':'ใช้ล่าสุด')+'</div>'+_navRes.map((e,i)=>{const n=e.n?e.n():0;
+    return'<button type="button" class="nav-r'+(i===_navSel?' on':'')+'" onclick="navGo('+i+')"><span class="ic">'+mpEsc(e.ic)+'</span><b>'+navMark(e.t,raw)+(n?' <span class="n">'+n+'</span>':'')+'</b><span class="w">'+mpEsc(e.p)+'</span></button>';}).join('');
+}
+function navKey(e){
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!_navRes.length)return;_navSel=(_navSel+(e.key==='ArrowDown'?1:-1)+_navRes.length)%_navRes.length;navDraw(document.getElementById('nav-q').value.trim());
+    document.querySelectorAll('#nav-res .nav-r')[_navSel]?.scrollIntoView({block:'nearest'});}
+  else if(e.key==='Enter'){e.preventDefault();if(_navRes.length)navGo(_navSel);}
+  else if(e.key==='Escape'){e.preventDefault();closeNav();}
+}
+function navGo(i){
+  const e=_navRes[i];if(!e)return;
+  if(_navPick){const p=navPins();if(!p.includes(e.id))p.push(e.id);navLsSet('tw_nav_pins',p);closeNav();navPinsRender();return;}
+  closeNav();navUse(e.id);
+  try{e.go();}catch(err){console.warn('navGo',e.id,err);}
+}
+document.addEventListener('keydown',e=>{
+  if(APP_ROLE!=='admin')return;
+  if((e.ctrlKey||e.metaKey)&&e.code==='KeyK'){e.preventDefault();if(document.getElementById('navModal').classList.contains('on'))closeNav();else openNav();}
+});
+// ── ⭐ ทางลัด (หัวหน้าภาพรวม) ──
+const NAV_PIN_DEF=['x:bills','x:count','tab:elec','lb:cost','tab:pl','tab:harveststat','tab:price','tab:ai'];
+let _navPinEdit=false;
+function navPins(){const p=navLs('tw_nav_pins',null);return Array.isArray(p)?p:NAV_PIN_DEF.slice();}
+function navPinMode(){return navLs('tw_nav_pinmode','pin');}
+function navPinsRender(){
+  const el=document.getElementById('ov-pins');if(!el)return;
+  if(APP_ROLE!=='admin'||document.body.classList.contains('owner-mode')){el.innerHTML='';return;}
+  const E=Object.fromEntries(navEntries().map(e=>[e.id,e])),mode=navPinMode();
+  let ids;
+  if(mode==='auto'){const u=navLs('tw_nav_use',{});ids=Object.keys(u).filter(k=>E[k]).sort((a,b)=>u[b].n-u[a].n).slice(0,8);}
+  else ids=navPins().filter(k=>E[k]);
+  // งานค้าง (บิล/ยอดนับ) ขึ้นเสมอเมื่อมี แม้ไม่ได้ปักไว้
+  ['x:bills','x:count'].forEach(k=>{if(E[k]&&E[k].n()>0&&!ids.includes(k))ids.unshift(k);});
+  const pin=k=>{const e=E[k],n=e.n?e.n():0;return'<button type="button" class="pin" onclick="navPinGo(\''+k+'\')">'+mpEsc(e.ic)+' '+mpEsc(e.t)+(n?' <span class="n">'+n+'</span>':'')+(_navPinEdit&&mode==='pin'?' <span class="x" aria-label="เอาออก">✕</span>':'')+'</button>';};
+  el.innerHTML='<div class="pin-t"><span>⭐ ทางลัด</span><span class="r"><button type="button" class="'+(mode==='pin'?'on':'')+'" onclick="navSetPinMode(\'pin\')">ที่เลือกเอง</button><button type="button" class="'+(mode==='auto'?'on':'')+'" onclick="navSetPinMode(\'auto\')">ใช้บ่อย</button>'
+    +(mode==='pin'?'<button type="button" class="'+(_navPinEdit?'on':'')+'" onclick="navPinEditToggle()">'+(_navPinEdit?'✓ เสร็จ':'✏️ แก้')+'</button>':'')+'</span></div>'
+    +'<div class="pins">'+ids.map(pin).join('')+(mode==='pin'?'<button type="button" class="pin add" onclick="openNav(true)">＋ เพิ่ม</button>':'')
+    +(mode==='auto'&&!ids.length?'<span style="font-weight:600">ยังไม่มีข้อมูล — ใช้แอปไปสักพักแล้วจะเรียงให้เอง</span>':'')+'</div>';
+}
+function navPinGo(k){
+  if(_navPinEdit&&navPinMode()==='pin'){navLsSet('tw_nav_pins',navPins().filter(x=>x!==k));navPinsRender();return;}
+  const e=navEntries().find(x=>x.id===k);if(!e)return;navUse(k);try{e.go();}catch(err){console.warn('pin',k,err);}
+}
+function navSetPinMode(m){navLsSet('tw_nav_pinmode',m);_navPinEdit=false;navPinsRender();}
+function navPinEditToggle(){_navPinEdit=!_navPinEdit;navPinsRender();}
+// ── 🧭 แผนที่แอป: คำถาม → ปลายทาง (id ใน navEntries — ชื่อ/ทางเดินมาจากที่เดียวกับช่องค้นหา) ──
+const APP_MAP=[
+  ['💰 เงิน',[['ค่าไฟเดือนไหน','el:sum'],['เงินเดือนพนักงานประจำ','lb:staff'],['ค่าแรงรายสัปดาห์','lb:cost'],['ต้นทุนทุกบ่อตอนนี้','x:cost'],['กำไร/ขาดทุนรอบที่ปิด','tab:pl'],['ขายกุ้งได้เท่าไหร่ แพไหน','tab:harveststat'],['ราคาทุน / ราคาขายสินค้า','tab:price']]],
+  ['🦐 กุ้ง',[['ไซส์ / อัตรารอด','tab:sample'],['ให้อาหาร / FCR','tab:feed'],['จะจับได้กี่ตัน วันไหน','tab:forecast'],['ผลแล็บ / เชื้อ','tab:lab'],['กุ้งตาย','tab:mortality'],['ประวัติรอบเลี้ยงย้อนหลัง','tab:crops'],['โรงเพาะฟักไหนดี','tab:hatchery'],['บันทึกจับกุ้ง / พาเชียล','tab:harvest']]],
+  ['📦 ของ',[['ของเหลือเท่าไหร่','sk:items'],['เบิกอะไรลงบ่อไหน','sk:out'],['บิลรับของ','x:billall'],['ยอดนับสต็อกรอตรวจ','x:count'],['บุญชู (หน้าร้าน)','sk:shop'],['สูตรยา / โปรแกรมที่ใช้','tab:medproto']]],
+  ['💧 น้ำ',[['ค่าน้ำ / สีน้ำวันนี้','tab:entry'],['สูบน้ำได้ตอนไหน / ฝน','tab:tide'],['เติมน้ำครั้งล่าสุด','tab:watlog'],['บ่อไหนเสี่ยง','tab:risk']]],
+  ['🌴 ปาล์ม · อื่นๆ',[['ปาล์ม ภาพรวม','tab:palm'],['ใส่ปุ๋ยปาล์มล่าสุด','pm:fert'],['ตัดปาล์ม / ผลผลิต','pm:harvest'],['วางแผนลงกุ้ง / บ่อว่าง','tab:manage'],['เพิ่ม/ลบผู้ใช้','tab:users'],['ถาม AI','tab:ai']]],
+];
+function renderAppMap(){
+  const el=document.getElementById('amap');if(!el)return;
+  const E=Object.fromEntries(navEntries().map(e=>[e.id,e]));
+  el.innerHTML=APP_MAP.map(([g,rows])=>'<div class="amap-g"><h3>'+g+'</h3>'+rows.filter(r=>E[r[1]]).map(([q,id])=>{const e=E[id];
+    return'<button type="button" class="amap-q" onclick="navMapGo(\''+id+'\')"><span>'+mpEsc(q)+'</span><span>'+mpEsc(e.ic+' '+(id.startsWith('tab:')?e.t:e.p))+'</span></button>';}).join('')+'</div>').join('');
+}
+function navMapGo(id){const e=navEntries().find(x=>x.id===id);if(!e)return;navUse(id);try{e.go();}catch(err){console.warn('map',id,err);}}
 
 function initStock(){
   billRefreshUI();
