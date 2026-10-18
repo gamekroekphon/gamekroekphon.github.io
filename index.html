@@ -11517,7 +11517,7 @@ function billRefreshUI(){
 //   ส่ง = D.stockCounts {status:'wait', rows:[{itemId,name,unit,n,sys}]} — sys = ยอดตอนกดส่ง · ยอดในระบบยังไม่เปลี่ยน
 //   admin อนุมัติ = item.qty += (n − sys) (ของที่เข้า/ออกหลังกดส่งยังอยู่) + inventoryLog 'adj' (countId) · ไม่ผูก pondId = ไม่เข้าต้นทุนบ่อ
 //   ⚠️ merge ใช้ rev (เพิ่มทุกครั้งที่เปลี่ยนสถานะ) ไม่งั้นเครื่องที่ถือของเก่าดึงกลับเป็น "รอตรวจ" แล้วอนุมัติซ้ำ · อนุมัติเช็ค adj countId กันซ้ำอีกชั้น
-const STOCK_COUNTERS=['เบี้ย','โม','เอื้อง'];
+const STOCK_COUNTERS=['เบี้ย','โม','เอื้อง','staff1'];   // staff1 = บัญชีทดสอบของพี่บน iPad (ไม่มีชื่อ curUserLabel ได้ส่วนหน้าอีเมล)
 const SC_CATS=[['feed','🍚 อาหาร'],['chemWater','🧪 ยาลงน้ำ'],['probioWater','🦠 จุลินทรีย์ลงน้ำ'],['chemOral','💊 ยากิน'],['probioOral','🦠 จุลินทรีย์กิน'],['lime','⚪ ปูน/แร่'],['equip','🔧 อุปกรณ์'],['fuel','⛽ น้ำมัน']];
 let _scVals={},_scCat='',_scQ='',_scSent=null,_scRevId=null,_scOff={};
 function scArr(){if(!Array.isArray(D.stockCounts))D.stockCounts=[];return D.stockCounts;}
