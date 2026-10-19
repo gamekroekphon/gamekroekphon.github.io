@@ -975,6 +975,35 @@ html[data-uisize="xl"]{--ui-scale:1.25}
 /* ── 🧮 นับสต็อกพนักงาน (#432) ── */
 .sc-modal{width:min(96vw,560px);height:min(92vh,900px)}
 #scRevModal .sc-modal{height:auto}
+/* ── 🛒 ขายของ บุญชู/ฟาร์ม (#434) ── */
+.sl-seg{display:flex;gap:4px;padding:3px;border-radius:13px;background:var(--sf2)}
+.sl-seg button{flex:1;border:0;background:none;padding:8px 0;border-radius:10px;font:inherit;font-weight:700;font-size:calc(15px * var(--ui-scale));cursor:pointer;color:var(--tx)}
+.sl-seg button.on.s{background:var(--in);color:#fff}.sl-seg button.on.f{background:var(--ok);color:#fff}
+.sl-qw{position:relative}
+.sl-drop{position:absolute;left:0;right:0;top:100%;z-index:5;background:var(--sf);border:1px solid var(--bd);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15);max-height:300px;overflow-y:auto;margin-top:4px}
+.sl-drop:empty{display:none}
+.sl-drop button{display:flex;justify-content:space-between;gap:8px;width:100%;border:0;border-bottom:1px solid var(--sf2);background:none;padding:9px 12px;font:inherit;font-size:calc(15px * var(--ui-scale));text-align:left;cursor:pointer;color:var(--tx)}
+.sl-drop button:hover{background:var(--pl)}.sl-drop small{font-weight:600;white-space:nowrap}
+.sl-it{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:10px 12px;margin-bottom:8px}
+.sl-it .t{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sl-it .t b{font-size:calc(16px * var(--ui-scale));overflow-wrap:anywhere}.sl-it .t span{font-size:calc(12.5px * var(--ui-scale));font-weight:700;white-space:nowrap}
+.sl-it .t span.s{color:var(--in)}.sl-it .t span.f{color:var(--ok)}.sl-it .t span.over{color:var(--d)}
+.sl-row{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.sl-qty{display:flex;align-items:center;border:1.5px solid var(--bd);border-radius:11px;overflow:hidden}
+.sl-qty button{width:38px;height:40px;border:0;background:var(--sf2);font:inherit;font-size:20px;font-weight:700;cursor:pointer;color:var(--tx)}
+.sl-qty input{width:56px;height:40px;border:0;text-align:center;font:inherit;font-size:18px;font-weight:700;background:var(--sf);color:var(--tx)}
+.sl-pr{display:flex;gap:4px;align-items:center}
+.sl-pr button{border:1.5px solid var(--bd);background:var(--sf);border-radius:9px;padding:4px 8px;font:inherit;font-size:calc(13px * var(--ui-scale));font-weight:600;cursor:pointer;color:var(--tx)}
+.sl-pr button.on{border-color:var(--p);background:var(--pl);color:var(--pd);font-weight:700}
+.sl-pr input{width:80px;height:34px;border:1.5px solid var(--bd);border-radius:9px;text-align:right;padding:0 6px;font:inherit;font-size:15px;background:var(--sf);color:var(--tx)}
+.sl-sum{margin-left:auto;font-weight:700;font-size:calc(16px * var(--ui-scale));font-variant-numeric:tabular-nums}
+.sl-x{border:0;background:none;color:var(--d);font-size:18px;font-weight:800;cursor:pointer;padding:0 4px}
+.sl-tot{display:flex;justify-content:space-between;font-weight:700;font-size:calc(17px * var(--ui-scale))}
+.sl-mine{font-size:calc(13px * var(--ui-scale));font-weight:600}
+.sl-tag{display:inline-block;font-size:calc(11.5px * var(--ui-scale));font-weight:700;border-radius:7px;padding:0 7px}
+.sl-tag.s{background:var(--ib);color:var(--in)}.sl-tag.f{background:var(--ob);color:var(--ok)}
+.sl-bill{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:8px 12px;margin-bottom:6px;font-size:calc(14px * var(--ui-scale))}
+.sl-bill .a{display:flex;justify-content:space-between;gap:8px;font-weight:700}.sl-bill .b{display:flex;justify-content:space-between;gap:8px;font-size:calc(13px * var(--ui-scale));font-weight:600;margin-top:2px}
 .sc-top{padding:10px 14px;border-bottom:1px solid var(--bd);display:flex;flex-direction:column;gap:8px}
 .sc-prog{display:flex;align-items:center;gap:8px;font-size:calc(13.5px * var(--ui-scale));font-weight:600}
 .sc-prog .b{flex:1;height:8px;border-radius:9px;background:var(--sf2);overflow:hidden}.sc-prog .b i{display:block;height:100%;background:var(--ok);transition:width .2s}
@@ -2154,7 +2183,7 @@ table.wqg td.wqg-ck{text-align:center;color:var(--ok);font-weight:900;min-width:
 .bnav-btn.bn-clerk{display:none}
 body.shop-clerk .bnav-btn.bn-clerk{display:flex}
 body.shop-clerk #bnav-overview,body.shop-clerk #bnav-harveststat,body.shop-clerk .bnav-btn.bn-staff,body.shop-clerk .bnav-btn.bn-keeper{display:none}
-body.shop-clerk #bnav-shop{order:1}body.shop-clerk #bnav-stock{order:2}body.shop-clerk #bnav-price{order:3}body.shop-clerk #bnav-ext{order:4}body.shop-clerk #bnav-more{order:5}
+body.shop-clerk #bnav-shop{order:1}body.shop-clerk #bnav-stock{order:2}body.shop-clerk #bnav-sale{order:3}body.shop-clerk #bnav-price{order:4}body.shop-clerk #bnav-ext{order:5}body.shop-clerk #bnav-more{order:6}
 /* เมนูเพิ่มเติมของคนหน้าร้าน: งานของฉันขึ้นบนสุด · เมนูเรื่องกุ้งพับเก็บ (ค้นหาแล้วเห็นทั้งหมด) */
 body:not(.shop-clerk) .clerk-only{display:none!important}
 body.shop-clerk #mobMenuBody{display:flex;flex-direction:column}
@@ -2966,6 +2995,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   <button class="bnav-btn bn-owner" id="bnav-own-stock" onclick="ownerGo('stock')"><span class="bnav-ic">📦</span>สต็อก</button>
   <button class="bnav-btn bn-owner" id="bnav-ai" onclick="bnavGo('ai',this)"><span class="bnav-ic"><span class="ai-sun bn-sun"><i class="h"></i><i class="r"></i><i class="c"></i></span></span>ถาม</button>
   <button class="bnav-btn bn-clerk" id="bnav-shop" onclick="clerkGo('shop')"><span class="bnav-ic">🏪</span>บุญชู</button>
+  <button class="bnav-btn bn-clerk" id="bnav-sale" onclick="openSale()"><span class="bnav-ic">🛒</span>ขาย</button>
   <button class="bnav-btn bn-clerk" id="bnav-ext" onclick="clerkGo('ext')"><span class="bnav-ic">🔧</span>อุปกรณ์นอก</button>
   <button class="bnav-btn" id="bnav-more" onclick="toggleMobMenu(this)"><span class="bnav-ic">☰<span class="bnav-badge" id="bnav-alert-badge"></span></span>เพิ่มเติม</button>
 </nav>
@@ -3226,6 +3256,18 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   <div class="modal nav-pal" role="dialog" aria-label="ไปที่">
     <div class="nav-in">🔍<input id="nav-q" type="search" placeholder="พิมพ์ เช่น ค่าไฟ · A.8 · นับสต็อก" autocomplete="off" oninput="navSearch()" onkeydown="navKey(event)" aria-label="ค้นหา"><small>↑↓ · Enter · Esc</small></div>
     <div id="nav-res"></div>
+  </div>
+</div>
+<div class="modal-bg" id="saleModal">
+  <div class="modal bill-modal sc-modal">
+    <div class="bill-mh"><div><b>🛒 ขายของ</b><small id="sl-sub">ตัดสต็อกตามที่เลือก</small></div>
+      <button type="button" class="bill-x" aria-label="ปิด" onclick="closeSale()">✕</button></div>
+    <div class="sc-top">
+      <div class="sl-seg" id="sl-seg"></div>
+      <div class="sl-qw"><input class="fi" id="sl-q" type="search" placeholder="🔍 ค้นหาของที่จะขาย…" autocomplete="off" oninput="slSearch()" aria-label="ค้นหาของ"><div class="sl-drop" id="sl-drop"></div></div>
+    </div>
+    <div class="sc-list" id="sl-list"></div>
+    <div class="sc-foot" id="sl-foot"></div>
   </div>
 </div>
 <div class="modal-bg" id="scModal">
@@ -10809,10 +10851,10 @@ function stockJobsForRole(){
   ];
   // พนักงานฟาร์มเป็นคนทำ "ฟาร์ม เข้า หน้าร้าน" (พี่สั่ง entry #335) — ทางเดียว ไม่มีปุ่มสลับ · admin ยังได้ 2 ทาง
   if(APP_ROLE!=='admin')jobs.push({mode:'xfer',ic:'🏪',t:'ฟาร์มกลับบุญชู',s:'ของที่เอากลับไปขายที่บุญชู'});
+  jobs.push({mode:'sale',ic:'🛒',t:'ขายของ',s:APP_ROLE==='admin'?'ตัดสต็อกบุญชู / ฟาร์ม':'ตัดสต็อกฟาร์ม'});   // #434 ทุกคนขายได้ (staff = ฟาร์ม · ไม่เห็นทุน)
   if(APP_ROLE==='admin'){
     jobs.unshift({mode:'xfer',ic:'🔁',t:'บุญชู ⇄ ฟาร์ม',s:'ย้ายของได้ 2 ทาง'});
     jobs.unshift({mode:'in',ic:'📥',t:'รับขนส่งเข้าบุญชู',s:'บริษัทมาส่งที่บุญชู'});
-    jobs.push({mode:'sale',ic:'🛒',t:'ขายลูกค้าภายนอก',s:'ตัดสต็อก แต่ไม่เข้าต้นทุนบ่อไหนเลย'});
     jobs.push({mode:'newitem',ic:'➕',t:'เพิ่ม/แก้รายการพัสดุ',s:'สร้างสินค้าใหม่ในคลัง (เฉพาะ Admin)'});
   }
   return jobs;
@@ -10913,8 +10955,10 @@ function renderShop(){
   const line=r=>stkFS(r.farm,r.shop,r.i.unit)+' · ใช้ '+shopD1(r.rate)+'/วัน → พอ '+shopD1(r.td)+' วัน';
   if(_shopView==='todo'){
     if(document.body.classList.contains('shop-clerk'))
-      s+='<div class="shp-quick"><button type="button" onclick="clerkJob(\'in\')"><span class="ic">📥</span>รับขนส่งเข้าบุญชู</button>'
+      s+='<div class="shp-quick"><button type="button" onclick="openSale()"><span class="ic">🛒</span>ขายของ</button><button type="button" onclick="clerkJob(\'in\')"><span class="ic">📥</span>รับขนส่งเข้าบุญชู</button>'
         +'<button type="button" onclick="clerkJob(\'xfer\')"><span class="ic">🔁</span>บุญชู ⇄ ฟาร์ม</button></div>';
+    else s+='<div class="shp-quick"><button type="button" onclick="openSale()"><span class="ic">🛒</span>ขายของ</button></div>';
+    s+=slTodayHtml();
     s+='<div class="card"><div class="shp-chips"><button type="button" class="'+(_shopTodo==='buy'?'on':'')+'" onclick="_shopTodo=\'buy\';renderShop()">🔴 สั่งบริษัท '+buy.length+'</button>'
       +'<button type="button" class="'+(_shopTodo==='move'?'on':'')+'" onclick="_shopTodo=\'move\';renderShop()">🟠 บุญชูเข้าฟาร์ม '+mv.length+'</button>'
       +'<button type="button" class="'+(_shopTodo==='count'?'on':'')+'" onclick="_shopTodo=\'count\';renderShop()">📋 ต้องนับ '+nc.length+'</button></div>';
@@ -10960,7 +11004,7 @@ function renderShop(){
     const LA=shopLogArr().slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.id).localeCompare(String(a.id)));
     const HM=histMonths(LA.map(l=>l.date),_shopMo);_shopMo=HM.val;
     const L=_shopMo?LA.filter(l=>String(l.date||'').startsWith(_shopMo)):LA.slice(0,80);
-    const T={in:'📥 รับขนส่งเข้าบุญชู',xfer:'🏪→🦐 บุญชูเข้าฟาร์ม',fromFarm:'🦐→🏪 ฟาร์มกลับบุญชู',adj:'✏️ นับ'};
+    const T={in:'📥 รับขนส่งเข้าบุญชู',xfer:'🏪→🦐 บุญชูเข้าฟาร์ม',fromFarm:'🦐→🏪 ฟาร์มกลับบุญชู',adj:'✏️ นับ',sale:'🛒 ขาย'};
     s+='<div class="card"><select class="fi" style="width:150px;margin-bottom:10px" onchange="_shopMo=this.value;renderShop()" aria-label="เลือกเดือน">'+HM.opts+'</select>'+(L.length?L.map(l=>{const plus=l.type==='in'||l.type==='fromFarm'||(l.type==='adj'&&l.qty>0);
       return'<div class="shp-log"><span><b>'+mpEsc(l.itemName||'-')+'</b><small>'+fD(l.date)+' · '+(T[l.type]||l.type)+' · '+mpEsc(l.by||'-')+'</small></span>'
         +'<span style="display:flex;align-items:center;gap:4px"><b class="'+(plus?'p':'m')+'">'+(plus?'+':'−')+Math.abs(l.qty)+' '+mpEsc(l.unit||'')+'</b>'
@@ -11013,6 +11057,7 @@ function deleteShopLog(id){
   D.deletedIds=D.deletedIds||[];
   if(i){
     if(l.type==='in'||l.type==='adj')i.shopQty=Math.round(Math.max(0,shopQ(i)-q)*100)/100;
+    if(l.type==='sale')i.shopQty=Math.round((shopQ(i)+q)*100)/100;   // #434 ขายจากบุญชู → คืนยอด
     if(l.type==='xfer'){i.shopQty=Math.round((shopQ(i)+q)*100)/100;i.qty=Math.round(Math.max(0,(parseFloat(i.qty)||0)-q)*100)/100;}
     if(l.type==='fromFarm'){i.shopQty=Math.round(Math.max(0,shopQ(i)-q)*100)/100;i.qty=Math.round(((parseFloat(i.qty)||0)+q)*100)/100;}
   }
@@ -11770,6 +11815,7 @@ const NAV_EXTRA=[
   {id:'x:bills',ic:'📥',t:'บิลรอตรวจ',p:'สต็อก › ปุ่มบนสุด',k:'บิล รับของ อนุมัติ ใบส่งของ',go:()=>{goTabByName('stock');openBillReview();},n:()=>billWaiting().length},
   {id:'x:billall',ic:'🧾',t:'บิลทั้งหมด (รูปบิล)',p:'สต็อก › บิลทั้งหมด',k:'บิล ใบเสร็จ รูปบิล ย้อนหลัง',go:()=>{goTabByName('stock');openBillReview();}},
   {id:'x:count',ic:'🧮',t:'ยอดนับรอตรวจ',p:'สต็อก › ปุ่มบนสุด',k:'นับ นับสต็อก ตรวจนับ เบี้ย',go:()=>{goTabByName('stock');openScReview();},n:()=>scWaiting().length},
+  {id:'x:sale',ic:'🛒',t:'ขายของ (บุญชู / ฟาร์ม)',p:'แถบล่าง / สต็อก › ขายของ',k:'ขาย ขายของ ลูกค้า หน้าร้าน ขายหน้าร้าน',go:()=>openSale()},
   {id:'x:cost',ic:'💰',t:'ต้นทุนทุกบ่อ ในหน้าเดียว',p:'ภาพรวม › ปุ่มต้นทุน',k:'ต้นทุน ทุกบ่อ ต่อกิโล',go:()=>{goTabByName('overview');openCostSummary();}},
   {id:'sk:items',ic:'📦',t:'รายการพัสดุ (ของเหลือเท่าไหร่)',p:'สต็อก › รายการพัสดุ',k:'คงเหลือ ของเหลือ ยอดสต็อก หมด',go:navStock('items')},
   {id:'sk:tx',ic:'📝',t:'บันทึกรับ-เบิก',p:'สต็อก › บันทึกรับ-เบิก',k:'เบิก รับเข้า ลงบ่อ',go:navStock('tx')},
@@ -11896,6 +11942,136 @@ function renderAppMap(){
     return'<button type="button" class="amap-q" onclick="navMapGo(\''+id+'\')"><span>'+mpEsc(q)+'</span><span>'+mpEsc(e.ic+' '+(id.startsWith('tab:')?e.t:e.p))+'</span></button>';}).join('')+'</div>').join('');
 }
 function navMapGo(id){const e=navEntries().find(x=>x.id===id);if(!e)return;navUse(id);try{e.go();}catch(err){console.warn('map',id,err);}}
+
+// ══════ 🛒 ขายของ บุญชู/ฟาร์ม (#434 พี่สั่ง 19 ต.ค. 69 · mockup_ขายหน้าร้าน.html) ══════
+//   ขายจากบุญชู = item.shopQty ลด + shopLog 'sale' (ห้ามลง inventoryLog) · ขายจากฟาร์ม = item.qty ลด + inventoryLog 'sale' (แบบเดิม)
+//   ทั้ง 2 ไม่เข้าต้นทุนบ่อ · จดราคาทุน ณ วันขาย (unitCost) · saleId ผูกหลายรายการเป็นบิลเดียว · ลบบิล = คืนยอด
+//   staff = ขายจากฟาร์มอย่างเดียว · ห้ามเห็นทุน/กำไร · เห็นยอดขายของตัวเอง · ลูกค้า: ฟาร์มบังคับ · บุญชูไม่บังคับ (ลูกค้าทั่วไป)
+//   ⚠️ เปลี่ยนจากที่พี่ตัดสิน 29 ก.ย. 69 "ขายหน้าร้านไม่ตัดสต็อก" → ตัด (เพื่อให้นับบุญชูแม่น)
+let _sl={src:'shop',cart:[],cust:''};
+function slCanShop(){return APP_ROLE==='admin';}
+function slSrcQty(it){return _sl.src==='shop'?shopQ(it):(parseFloat(it.qty)||0);}
+function openSale(){
+  if(!slCanShop())_sl.src='farm';
+  else if(!_sl.cart.length)_sl.src=(document.body.classList.contains('shop-clerk')||!_sl.src)?'shop':_sl.src;
+  document.getElementById('sl-q').value='';document.getElementById('sl-drop').innerHTML='';
+  document.getElementById('saleModal').classList.add('on');renderSale();
+}
+function closeSale(){
+  if(_sl.cart.length&&!confirm('ปิดโดยไม่บันทึก? รายการในบิลนี้จะหาย'))return;
+  _sl.cart=[];_sl.cust='';document.getElementById('saleModal').classList.remove('on');
+}
+function slSetSrc(src){
+  if(src==='shop'&&!slCanShop())return;
+  if(_sl.src===src)return;
+  if(_sl.cart.length&&!confirm('เปลี่ยนที่ขาย? รายการในบิลจะถูกล้าง'))return;
+  _sl.src=src;_sl.cart=[];renderSale();
+}
+function slSearch(){
+  const q=String(document.getElementById('sl-q').value||'').trim().toLowerCase(),el=document.getElementById('sl-drop');
+  if(!q){el.innerHTML='';return;}
+  const L=(D.inventoryItems||[]).filter(i=>i&&i.id&&!i.shopOff&&String(i.name).toLowerCase().includes(q))
+    .sort((a,b)=>(slSrcQty(b)>0)-(slSrcQty(a)>0)||String(a.name).localeCompare(String(b.name),'th')).slice(0,10);
+  el.innerHTML=L.length?L.map(i=>'<button type="button" onclick="slAdd(\''+i.id+'\')"><span>'+mpEsc(i.name)+'</span><small>'+(_sl.src==='shop'?'บุญชู':'ฟาร์ม')+' '+stkQ(slSrcQty(i))+' '+mpEsc(i.unit||'')+'</small></button>').join('')
+    :'<button type="button" disabled><span>ไม่พบของ</span></button>';
+}
+function slAdd(id){
+  const it=(D.inventoryItems||[]).find(i=>i&&i.id===id);if(!it)return;
+  const c=_sl.cart.find(x=>x.id===id);
+  if(c)c.qty=(+c.qty||0)+1;
+  else{const cash=parseFloat(it.shopPrice)||0;_sl.cart.push({id,qty:1,price:cash||'',kind:cash?'cash':''});}
+  document.getElementById('sl-q').value='';document.getElementById('sl-drop').innerHTML='';renderSale();
+}
+function slQty(id,d){const c=_sl.cart.find(x=>x.id===id);if(!c)return;c.qty=Math.max(0,Math.round(((+c.qty||0)+d)*100)/100);if(!c.qty)_sl.cart=_sl.cart.filter(x=>x.id!==id);renderSale();}
+function slQtySet(id,v){const c=_sl.cart.find(x=>x.id===id);if(!c)return;c.qty=v===''?'':Math.max(0,parseFloat(v)||0);slFoot();slLine(id);}
+function slKind(id,k){const c=_sl.cart.find(x=>x.id===id),it=(D.inventoryItems||[]).find(i=>i&&i.id===id);if(!c||!it)return;c.kind=k;c.price=parseFloat(k==='bulk'?it.shopBulk:it.shopPrice)||'';renderSale();}
+function slPriceSet(id,v){const c=_sl.cart.find(x=>x.id===id);if(!c)return;c.price=v===''?'':Math.max(0,parseFloat(v)||0);c.kind='';slFoot();slLine(id);
+  document.querySelectorAll('[data-slk="'+id+'"]').forEach(b=>b.classList.remove('on'));}
+function slDel(id){_sl.cart=_sl.cart.filter(x=>x.id!==id);renderSale();}
+function slLineTot(c){return(+c.qty||0)*(+c.price||0);}
+function slLine(id){const c=_sl.cart.find(x=>x.id===id),e=document.getElementById('sl-sum-'+id);if(c&&e)e.textContent='฿'+Math.round(slLineTot(c)).toLocaleString();
+  const it=(D.inventoryItems||[]).find(i=>i&&i.id===id),w=document.getElementById('sl-left-'+id);if(it&&w){const over=(+c.qty||0)>slSrcQty(it);w.className=over?'over':(_sl.src==='shop'?'s':'f');w.textContent=over?'เกินยอดที่มี ('+stkQ(slSrcQty(it))+')':(_sl.src==='shop'?'บุญชู':'ฟาร์ม')+'เหลือ '+stkQ(slSrcQty(it))+' '+(it.unit||'');}}
+function renderSale(){
+  const adm=slCanShop();
+  document.getElementById('sl-seg').innerHTML=(adm?'<button type="button" class="s'+(_sl.src==='shop'?' on':'')+'" onclick="slSetSrc(\'shop\')">🏪 ขายจากบุญชู</button>':'')
+    +'<button type="button" class="f'+(_sl.src==='farm'?' on':'')+'" onclick="slSetSrc(\'farm\')">🏠 ขายจากฟาร์ม</button>';
+  document.getElementById('sl-sub').textContent=!adm?'ตัดสต็อกฟาร์ม':_sl.src==='shop'?'ตัดสต็อกบุญชู · ไม่เข้าต้นทุนบ่อ':'ตัดสต็อกฟาร์ม · ไม่เข้าต้นทุนบ่อ';
+  const items=Object.fromEntries((D.inventoryItems||[]).map(i=>[i.id,i]));
+  const rows=_sl.cart.map(c=>{const it=items[c.id];if(!it)return'';const cash=parseFloat(it.shopPrice)||0,bulk=parseFloat(it.shopBulk)||0;
+    return'<div class="sl-it"><div class="t"><b>'+mpEsc(it.name)+'</b><span id="sl-left-'+c.id+'"></span></div><div class="sl-row">'
+      +'<span class="sl-qty"><button type="button" onclick="slQty(\''+c.id+'\',-1)" aria-label="ลด">−</button><input type="number" inputmode="decimal" min="0" step="any" value="'+mpEsc(c.qty)+'" oninput="slQtySet(\''+c.id+'\',this.value)" aria-label="จำนวน '+mpEsc(it.name)+'"><button type="button" onclick="slQty(\''+c.id+'\',1)" aria-label="เพิ่ม">+</button></span>'
+      +'<span class="sl-pr">'+(cash?'<button type="button" data-slk="'+c.id+'" class="'+(c.kind==='cash'?'on':'')+'" onclick="slKind(\''+c.id+'\',\'cash\')">สด ฿'+cash.toLocaleString()+'</button>':'')
+      +(bulk?'<button type="button" data-slk="'+c.id+'" class="'+(c.kind==='bulk'?'on':'')+'" onclick="slKind(\''+c.id+'\',\'bulk\')">ยกลัง ฿'+bulk.toLocaleString()+'</button>':'')
+      +'<input type="number" inputmode="decimal" min="0" step="any" value="'+mpEsc(c.price)+'" placeholder="ราคา" oninput="slPriceSet(\''+c.id+'\',this.value)" aria-label="ราคาขาย '+mpEsc(it.name)+'"></span>'
+      +'<span class="sl-sum" id="sl-sum-'+c.id+'"></span><button type="button" class="sl-x" onclick="slDel(\''+c.id+'\')" aria-label="เอาออก">✕</button></div></div>';}).join('');
+  document.getElementById('sl-list').innerHTML=(rows||'<p style="padding:18px 6px;text-align:center;font-weight:600">พิมพ์ชื่อของในช่องค้นหา แล้วแตะเพื่อใส่ในบิล</p>')
+    +'<div class="fg" style="margin-top:6px"><label class="fl" for="sl-cust">ลูกค้า'+(_sl.src==='farm'?' <b style="color:var(--d)">*</b>':' (ไม่ใส่ = ลูกค้าทั่วไป)')+'</label>'
+    +'<input class="fi" id="sl-cust" list="sl-cust-list" value="'+mpEsc(_sl.cust)+'" placeholder="'+(_sl.src==='farm'?'ชื่อลูกค้า / ร้าน':'ลูกค้าทั่วไป')+'" oninput="_sl.cust=this.value"><datalist id="sl-cust-list">'
+    +[...new Set(saleLogs().map(l=>l.custName).filter(n=>n&&n!=='ลูกค้าทั่วไป'))].sort((a,b)=>a.localeCompare(b,'th')).map(n=>'<option value="'+mpEsc(n)+'">').join('')+'</datalist></div>';
+  _sl.cart.forEach(c=>slLine(c.id));slFoot();
+}
+function slFoot(){
+  const n=_sl.cart.filter(c=>(+c.qty||0)>0).length,tot=_sl.cart.reduce((a,c)=>a+slLineTot(c),0);
+  const mine=slMineHtml();
+  document.getElementById('sl-foot').innerHTML=(mine?'<div class="sl-mine">'+mine+'</div>':'')
+    +'<div class="sl-tot"><span>รวม '+n+' รายการ</span><span>฿'+Math.round(tot).toLocaleString()+'</span></div>'
+    +'<button type="button" class="btn btn-p" '+(n?'':'disabled ')+'onclick="saveSale()">💾 บันทึกขาย · ตัดสต็อก'+(_sl.src==='shop'?'บุญชู':'ฟาร์ม')+'</button>';
+}
+function slMineHtml(){
+  if(APP_ROLE==='admin'){const B=slBills(saleLogs().filter(l=>l.date===today()));return B.length?'วันนี้ขายแล้ว '+B.length+' บิล · ฿'+Math.round(B.reduce((a,b)=>a+b.total,0)).toLocaleString():'';}
+  const me=curUserLabel(),mo=today().slice(0,7),B=slBills(saleLogs().filter(l=>l.by===me&&String(l.date).startsWith(mo)));
+  return B.length?'ขายของฉันเดือนนี้ '+B.length+' บิล · ฿'+Math.round(B.reduce((a,b)=>a+b.total,0)).toLocaleString():'';
+}
+function saveSale(){
+  const items=Object.fromEntries((D.inventoryItems||[]).map(i=>[i.id,i]));
+  const L=_sl.cart.filter(c=>(+c.qty||0)>0&&items[c.id]);if(!L.length)return;
+  const cust=String(_sl.cust||'').trim()||(_sl.src==='shop'?'ลูกค้าทั่วไป':'');
+  if(_sl.src==='farm'&&!cust){alert('ขายจากฟาร์ม ต้องใส่ชื่อลูกค้า/ร้าน');document.getElementById('sl-cust')?.focus();return;}
+  const noP=L.find(c=>!(+c.price>0));if(noP){alert('ใส่ราคาขาย "'+items[noP.id].name+'" ก่อน');return;}
+  const over=L.filter(c=>+c.qty>slSrcQty(items[c.id]));
+  if(over.length&&!confirm('ขายเกินยอดที่มีในระบบ '+over.length+' รายการ ('+over.map(c=>items[c.id].name).join(', ')+')\nบันทึกต่อไหม? ยอดจะเหลือ 0'))return;
+  const src=APP_ROLE==='admin'?_sl.src:'farm',d=today(),by=curUserLabel(),saleId='sa'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  L.forEach(c=>{
+    const it=items[c.id],q=Math.round((+c.qty)*100)/100,base={itemId:it.id,itemName:it.name,type:'sale',qty:q,date:d,unit:it.unit||'',by,custName:cust,sellPrice:+c.price,unitCost:parseFloat(it.unitPrice)||0,saleId};
+    if(src==='shop'){it.shopQty=Math.round(Math.max(0,shopQ(it)-q)*100)/100;shopLogArr().push({id:'sh'+Date.now()+'_'+Math.random().toString(36).slice(2,6),...base,balanceAfter:it.shopQty});}
+    else{it.qty=Math.round(Math.max(0,(parseFloat(it.qty)||0)-q)*100)/100;(D.inventoryLog=D.inventoryLog||[]).push({id:'sl'+Date.now()+'_'+Math.random().toString(36).slice(2,6),...base,note:'',pondId:'',balanceAfter:it.qty});}
+  });
+  const tot=L.reduce((a,c)=>a+slLineTot(c),0);
+  _sl.cart=[];_sl.cust='';
+  if(typeof tickMemoClear==='function')tickMemoClear();
+  save();
+  document.getElementById('saleModal').classList.remove('on');
+  showToast('บันทึกขายแล้ว',(src==='shop'?'บุญชู':'ฟาร์ม')+' · '+L.length+' รายการ · ฿'+Math.round(tot).toLocaleString());
+  try{renderShop();}catch(e){}try{renderStockKPI();renderStockItems();}catch(e){}try{if(document.getElementById('skp-sale')?.classList.contains('on')){initSaleMonthPills();renderSalesReport();}}catch(e){}
+}
+// บิล = รวมรายการที่ saleId เดียวกัน (ข้อมูลก่อน #434 ไม่มี saleId = บิลละรายการ)
+function slBills(rows){
+  const m=new Map();
+  rows.forEach(l=>{const k=(l.saleId||l.id)+'|'+l.src;const b=m.get(k)||{key:k,saleId:l.saleId||null,src:l.src,date:l.date,cust:l.custName||'-',by:l.by||'',lines:[],total:0,cost:0};
+    b.lines.push(l);b.total+=(+l.sellPrice||0)*(+l.qty||0);b.cost+=(+l.unitCost||0)*(+l.qty||0);m.set(k,b);});
+  return[...m.values()].sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.key).localeCompare(String(a.key)));
+}
+function slBillHtml(b){
+  const adm=APP_ROLE==='admin',Q=String.fromCharCode(39);
+  return'<div class="sl-bill"><div class="a"><span>'+fD(b.date)+' · '+mpEsc(b.cust)+'</span><span>฿'+Math.round(b.total).toLocaleString()+'</span></div>'
+    +'<div class="b"><span><span class="sl-tag '+(b.src==='shop'?'s':'f')+'">'+(b.src==='shop'?'บุญชู':'ฟาร์ม')+'</span> '+mpEsc(b.lines.map(l=>l.itemName+' '+skcN(+l.qty||0)).join(' · '))+'</span>'
+    +'<span>'+mpEsc(b.by)+(adm?' · กำไร '+(b.total-b.cost>=0?'+':'')+Math.round(b.total-b.cost).toLocaleString()+' <button type="button" class="btn-sm btn-del" onclick="slDelBill('+Q+b.key+Q+')" aria-label="ลบบิล">🗑️</button>':'')+'</span></div></div>';
+}
+function slTodayHtml(){
+  const B=slBills(saleLogs().filter(l=>l.date===today()));if(!B.length)return'';
+  const n=src=>B.filter(b=>b.src===src).length;
+  return'<div class="card" style="padding:9px 12px;margin-bottom:10px;font-weight:600;display:flex;justify-content:space-between;gap:8px"><span>วันนี้ขายไปแล้ว '+B.length+' บิล · ฿'+Math.round(B.reduce((a,b)=>a+b.total,0)).toLocaleString()+'</span><span><span class="sl-tag s">บุญชู</span> '+n('shop')+' · <span class="sl-tag f">ฟาร์ม</span> '+n('farm')+'</span></div>';
+}
+function slDelBill(key){
+  if(APP_ROLE!=='admin')return;
+  const b=slBills(saleLogs()).find(x=>x.key===key);if(!b)return;
+  if(!confirm('ลบบิลขายนี้? ('+b.lines.length+' รายการ · ฿'+Math.round(b.total).toLocaleString()+')\nยอด'+(b.src==='shop'?'บุญชู':'ฟาร์ม')+'จะถูกคืน'))return;
+  const items=Object.fromEntries((D.inventoryItems||[]).map(i=>[i.id,i])),ids=new Set(b.lines.map(l=>l.id));D.deletedIds=D.deletedIds||[];
+  b.lines.forEach(l=>{const it=items[l.itemId],q=parseFloat(l.qty)||0;if(it){if(b.src==='shop')it.shopQty=Math.round((shopQ(it)+q)*100)/100;else it.qty=Math.round(((parseFloat(it.qty)||0)+q)*100)/100;}D.deletedIds.push(l.id);});
+  if(b.src==='shop')D.shopLog=shopLogArr().filter(x=>!ids.has(x.id));else D.inventoryLog=(D.inventoryLog||[]).filter(x=>!ids.has(x.id));
+  if(typeof tickMemoClear==='function')tickMemoClear();
+  save();initSaleMonthPills();renderSalesReport();try{renderShop();}catch(e){}try{renderStockKPI();renderStockItems();}catch(e){}
+}
 
 function initStock(){
   billRefreshUI();
@@ -12270,8 +12446,9 @@ let _stockCart=[];
 let _stockMode='in';
 
 function setStockMode(mode){
-  // ⚠️ รับเข้า/ขายลูกค้านอก เป็นงาน admin — กันไว้ที่ฟังก์ชันด้วย ไม่ใช่แค่ไม่สร้างปุ่มให้
-  if((mode==='in'||mode==='sale')&&APP_ROLE!=='admin')mode='out';
+  if(mode==='sale'){openSale();return;}   // #434 ขาย = หน้าต่างขายแยก (บุญชู/ฟาร์ม)
+  // ⚠️ รับเข้า เป็นงาน admin — กันไว้ที่ฟังก์ชันด้วย ไม่ใช่แค่ไม่สร้างปุ่มให้
+  if(mode==='in'&&APP_ROLE!=='admin')mode='out';
   if(mode==='xfer'&&APP_ROLE!=='admin')_xferDir='toShop';   // พนักงาน = ฟาร์ม เข้า หน้าร้าน เท่านั้น (#335)
   _stockMode=mode;
   renderStockJobs();
@@ -13118,7 +13295,10 @@ function showStockMsg(area,msg,type){
 }
 // ── ยอดขายลูกค้าภายนอก: รายงานแบ่งรายเดือน + ซ่อนต้นทุน/กำไรจาก staff ─────────
 let _saleMonth='all';
-function saleLogs(){return (D.inventoryLog||[]).filter(l=>l.type==='sale');}
+function saleLogs(){   // #434 ขาย 2 ที่: ฟาร์ม = inventoryLog 'sale' · บุญชู = shopLog 'sale' (ห้ามปนกัน)
+  return (D.inventoryLog||[]).filter(l=>l&&l.type==='sale').map(l=>({...l,src:'farm'}))
+    .concat(shopLogArr().filter(l=>l&&l.type==='sale').map(l=>({...l,src:'shop'})));
+}
 function initSaleMonthPills(){
   const wrap=document.getElementById('sksr-months');if(!wrap)return;
   const months=[...new Set(saleLogs().map(l=>(l.date||'').slice(0,7)))].filter(Boolean).sort().reverse();
@@ -13135,52 +13315,29 @@ function selectSaleMonth(m,btn){
   renderSalesReport();
 }
 function renderSalesReport(){
-  const kpiEl=document.getElementById('sksr-kpi');
-  const tblEl=document.getElementById('sksr-table');
+  const kpiEl=document.getElementById('sksr-kpi'),tblEl=document.getElementById('sksr-table');
   if(!kpiEl||!tblEl)return;
-  const rows=saleLogs().filter(l=>_saleMonth==='all'||(l.date||'').slice(0,7)===_saleMonth)
-    .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  const isMoney=APP_ROLE!=='staff';
-  const staffNote=document.getElementById('sksr-staffnote');
-  if(staffNote)staffNote.style.display=isMoney?'none':'';
-  let totSales=0,totCost=0;
-  rows.forEach(l=>{totSales+=(l.sellPrice||0)*(l.qty||0);totCost+=(l.unitCost||0)*(l.qty||0);});
-  const totProfit=totSales-totCost;
-  kpiEl.innerHTML=`
-    <div class="kpi-card"><div class="kpi-lbl">ยอดขายรวม</div><div class="kpi-val">${totSales?totSales.toLocaleString():'-'}</div><div class="kpi-sub">บาท</div></div>
-    ${isMoney?`<div class="kpi-card"><div class="kpi-lbl">ต้นทุนรวม</div><div class="kpi-val">${totCost?totCost.toLocaleString():'-'}</div><div class="kpi-sub">บาท</div></div>
-    <div class="kpi-card"><div class="kpi-lbl">กำไรรวม</div><div class="kpi-val" style="color:${totProfit>=0?'var(--ok)':'var(--d)'}">${(totProfit>=0?'+':'')+totProfit.toLocaleString()}</div><div class="kpi-sub">บาท</div></div>`:''}
-    <div class="kpi-card"><div class="kpi-lbl">จำนวนรายการ</div><div class="kpi-val">${rows.length}</div><div class="kpi-sub">รายการ</div></div>`;
-  if(!rows.length){tblEl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ไม่มีรายการขายในช่วงที่เลือก</p>';return;}
-  const moneyHdr=isMoney?'<th style="text-align:right">ต้นทุน</th><th style="text-align:right">กำไร</th>':'';
-  tblEl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>ลูกค้า</th><th>สินค้า</th><th style="text-align:right">จำนวน</th><th style="text-align:right">ราคาขาย</th><th style="text-align:right">ยอดขาย</th>${moneyHdr}<th>ผู้บันทึก</th></tr></thead><tbody>${
-    rows.map(l=>{
-      const sales=(l.sellPrice||0)*(l.qty||0);
-      const cost=(l.unitCost||0)*(l.qty||0);
-      const profit=sales-cost;
-      const moneyTd=isMoney?`<td style="text-align:right">${cost.toLocaleString()}</td><td style="text-align:right;color:${profit>=0?'var(--ok)':'var(--d)'};font-weight:700">${(profit>=0?'+':'')+profit.toLocaleString()}</td>`:'';
-      return `<tr>
-        <td>${fD(l.date)}</td>
-        <td>${l.custName||'-'}</td>
-        <td>${l.itemName||'-'}</td>
-        <td style="text-align:right">${l.qty} ${l.unit||''}</td>
-        <td style="text-align:right">${(l.sellPrice||0).toLocaleString()}</td>
-        <td style="text-align:right">${sales.toLocaleString()}</td>
-        ${moneyTd}
-        <td style="font-size:calc(12px * var(--ui-scale));color:var(--tx2)">${l.by||'-'}</td>
-      </tr>`;
-    }).join('')
-  }</tbody></table></div>`;
+  const isMoney=APP_ROLE==='admin';
+  const rows=saleLogs().filter(l=>_saleMonth==='all'||(l.date||'').slice(0,7)===_saleMonth);
+  const staffNote=document.getElementById('sksr-staffnote');if(staffNote)staffNote.style.display=isMoney?'none':'';
+  const B=slBills(rows),amt=src=>B.filter(b=>b.src===src).reduce((a,b)=>a+b.total,0),cnt=src=>B.filter(b=>b.src===src).length;
+  const cost=rows.reduce((a,l)=>a+(+l.unitCost||0)*(+l.qty||0),0),sales=amt('shop')+amt('farm'),profit=sales-cost;
+  kpiEl.innerHTML='<div class="kpi-card"><div class="kpi-lbl">🏪 บุญชู</div><div class="kpi-val" style="color:var(--in)">'+(amt('shop')?amt('shop').toLocaleString():'-')+'</div><div class="kpi-sub">บาท · '+cnt('shop')+' บิล</div></div>'
+    +'<div class="kpi-card"><div class="kpi-lbl">🏠 ฟาร์ม</div><div class="kpi-val" style="color:var(--ok)">'+(amt('farm')?amt('farm').toLocaleString():'-')+'</div><div class="kpi-sub">บาท · '+cnt('farm')+' บิล</div></div>'
+    +(isMoney?'<div class="kpi-card"><div class="kpi-lbl">ต้นทุน</div><div class="kpi-val">'+(cost?Math.round(cost).toLocaleString():'-')+'</div><div class="kpi-sub">บาท</div></div>'
+      +'<div class="kpi-card"><div class="kpi-lbl">กำไร</div><div class="kpi-val" style="color:'+(profit>=0?'var(--ok)':'var(--d)')+'">'+(profit>=0?'+':'')+Math.round(profit).toLocaleString()+'</div><div class="kpi-sub">บาท</div></div>':'');
+  if(!B.length){tblEl.innerHTML='<p style="padding:20px;text-align:center;font-weight:600">ไม่มีรายการขายในช่วงที่เลือก</p>';return;}
+  tblEl.innerHTML=B.map(slBillHtml).join('');
 }
 function exportSaleCSV(){
   const rows=saleLogs().filter(l=>_saleMonth==='all'||(l.date||'').slice(0,7)===_saleMonth)
     .sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   if(!rows.length){alert('ไม่มีข้อมูลสำหรับ export');return;}
-  const hdr='วันที่,ลูกค้า,สินค้า,จำนวน,หน่วย,ราคาขาย,ยอดขาย,ต้นทุน,กำไร,ผู้บันทึก';
+  const hdr='วันที่,ขายจาก,ลูกค้า,สินค้า,จำนวน,หน่วย,ราคาขาย,ยอดขาย,ต้นทุน,กำไร,ผู้บันทึก';
   const csv=hdr+'\n'+rows.map(l=>{
     const sales=(l.sellPrice||0)*(l.qty||0);
     const cost=(l.unitCost||0)*(l.qty||0);
-    return [l.date,l.custName||'',l.itemName||'',l.qty,l.unit||'',l.sellPrice||0,sales,cost,sales-cost,l.by||''].join(',');
+    return [l.date,l.src==='shop'?'บุญชู':'ฟาร์ม',l.custName||'',l.itemName||'',l.qty,l.unit||'',l.sellPrice||0,sales,cost,sales-cost,l.by||''].join(',');
   }).join('\n');
   const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='TawanFarm_ขายลูกค้า_'+(_saleMonth==='all'?'all':_saleMonth)+'.csv';a.click();URL.revokeObjectURL(url);
