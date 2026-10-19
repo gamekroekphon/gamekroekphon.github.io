@@ -6937,7 +6937,7 @@ function hvSimulate(p,targetSize,opt){
   const o=opt||{};
   const sc=pondShrimpCount(p);
   if(!sc||!sc.abw||!(sc.inPond>0))return null;
-  const pdg=o.pdg>0?o.pdg:parseFloat(getPDG(sortedSamples(p)));
+  const pdg=o.pdg>0?o.pdg:(pondAvgPdg(p)||{}).pdg;   // #436 ค่าเริ่ม = PDG เฉลี่ยของรอบ
   if(!(pdg>0))return null;
   const decl=o.decl!=null?o.decl:1;          // % อัตรารอดลดต่อ 10 วัน
   const fp=o.feedPrice>0?o.feedPrice:feedPricePerKg();
@@ -7517,6 +7517,14 @@ function fcrAtSample(p){
   return{fcr:sf.fcr,feed:sf.feed,produced:sf.feed/sf.fcr,date:lat.date,age,target:age>0?fcrTargetFor(p,age):null};
 }
 function getFCR(p){const x=fcrAtSample(p);return x?x.fcr.toFixed(2):null;}
+// PDG เฉลี่ยของรอบนี้ (#436 พี่สั่ง 19 ต.ค. 69) = ค่าเฉลี่ย PDG ทุกช่วงระหว่างสุ่มติดกัน ในรอบปัจจุบัน — ใช้ในหน้าคำนวณ & คาดการณ์ (ฟอร์ม + ควรจับไหม)
+//   แทน PDG สุ่ม 2 ครั้งล่าสุด (ค่าเดียวเหวี่ยงแรง เช่น A.3 0.14 ช่วงท้าย) · ที่อื่นยังใช้ getPDG ล่าสุดตามเดิม · ตัดช่วงที่ผิดปกติ (>3 ก./วัน) ตามกฎเพดาน #254
+function pondAvgPdg(p){
+  const s=(p&&p.samples||[]).filter(x=>x&&x.date&&+x.abw>0&&(!p.startDate||x.date>=p.startDate)).sort((a,b)=>a.date.localeCompare(b.date));
+  const iv=[];for(let i=1;i<s.length;i++){const g=dDiff(s[i-1].date,s[i].date);if(g>0){const v=(s[i].abw-s[i-1].abw)/g;if(Math.abs(v)<=3)iv.push(v);}}
+  if(!iv.length)return null;
+  return{pdg:Math.round(iv.reduce((a,b)=>a+b,0)/iv.length*100)/100,n:iv.length,last:Math.round(iv[iv.length-1]*100)/100};
+}
 function getPDG(samples){
   if(!samples||samples.length<2)return null;
   // เรียงตามวันที่ก่อน — รับ array มาตรงๆ จึงเรียงที่นี่เอง (ไม่แก้ของเดิม คืนสำเนาใหม่)
@@ -13672,6 +13680,8 @@ function initForecast(){
   initHarvestDecide();
 }
 // ── ดึงค่าอัตโนมัติของบ่อที่เลือกมาเติมลงฟอร์ม (เขียนทับค่าที่เคยแก้ไว้ — ตั้งใจ เพราะเปลี่ยนบ่อแล้วค่าเดิมใช้ไม่ได้) ──
+let _fcPdgInfo=null;
+function fcPdgSrc(){const x=_fcPdgInfo;return x?'เฉลี่ย '+x.n+' ช่วงที่สุ่ม · ล่าสุด '+x.last.toFixed(2):'';}
 function fcLoadPond(){
   fcRenderPonds();
   const pid=document.getElementById('fc-pond')?.value;
@@ -13680,7 +13690,8 @@ function fcLoadPond(){
   if(!p){if(warn)warn.innerHTML='';fcCalc();return;}
   const samples=sortedSamples(p).filter(s=>s.abw!=null&&s.abw!=='');
   const lat=samples.length?samples[samples.length-1]:null;
-  const pdgRaw=parseFloat(getPDG(sortedSamples(p)));
+  const _pdgAvg=pondAvgPdg(p),pdgRaw=_pdgAvg?_pdgAvg.pdg:NaN;   // #436 เฉลี่ยทุกครั้งที่สุ่ม (ไม่ใช่ครั้งล่าสุด)
+  _fcPdgInfo=_pdgAvg;
   const age=pondCurAge(p);
   const fcrNow=parseFloat(getFCR(p));
   // ── อาหาร กก./แสนตัว ที่ให้จริงล่าสุด (จากบันทึกอาหาร) — ถ้ายังไม่เคยกรอกอาหาร ใช้ค่าที่สูตร Precision Feeding แนะนำแทน ──
@@ -13713,7 +13724,7 @@ function fcLoadPond(){
   const ah=document.getElementById('fc-abw-hint');
   if(ah)ah.textContent=lat?('จากสุ่มล่าสุด '+fD(lat.date)):'ยังไม่เคยสุ่มตัวอย่าง';
   const ph=document.getElementById('fc-pdg-hint');
-  if(ph)ph.textContent=pdgRaw>0?'จากสุ่ม 2 ครั้งล่าสุด':'ยังคำนวณไม่ได้ (ต้องสุ่ม ≥2 ครั้ง) — กรอกเอง';
+  if(ph)ph.textContent=pdgRaw>0?fcPdgSrc():'ยังคำนวณไม่ได้ (ต้องสุ่ม ≥2 ครั้ง) — กรอกเอง';
   const fh=document.getElementById('fc-fd100k-hint');
   if(fh)fh.textContent=fdSrc||'กรอกเองได้ — ถ้าเว้นว่างจะใช้สูตรคำนวณให้';
   // ── บอกให้ชัดว่าช่องนี้คือ "อัตรารอดสะสม" และระบบหักตัวที่พาเชียลไปแล้วให้เองในการคำนวณ (ผู้ใช้ไม่ต้องหักเอง) ──
@@ -13851,7 +13862,7 @@ function fcAsmLine(){
   const pb=document.querySelector('.fcx-pdg'),ph=document.getElementById('fc-pdg-hint'),auto=+(_fcAuto.pdg||0);
   const pEd=String(document.getElementById('fc-pdg')?.value||'')!==String(_fcAuto.pdg||'');
   if(pb)pb.classList.toggle('edited',pEd);
-  if(ph)ph.textContent=pEd?('แก้เอง · ค่าจากผลสุ่ม = '+(auto>0?auto.toFixed(2):'คำนวณไม่ได้')+' (กด ↺ คืนค่า)'):(auto>0?'จากสุ่ม 2 ครั้งล่าสุด':'ยังคำนวณไม่ได้ (ต้องสุ่ม ≥2 ครั้ง) — ใส่เองได้');
+  if(ph)ph.textContent=pEd?('แก้เอง · ค่าจากผลสุ่ม = '+(auto>0?auto.toFixed(2):'คำนวณไม่ได้')+' (กด ↺ คืนค่า)'):(auto>0?fcPdgSrc():'ยังคำนวณไม่ได้ (ต้องสุ่ม ≥2 ครั้ง) — ใส่เองได้');
   const edited=['abw','pdg','surv','rel','rai','fcr','fd100k'].some(k=>{const e=document.getElementById('fc-'+k);return e&&_fcAuto[k]!=null&&String(e.value)!==String(_fcAuto[k]||'');});
   el.textContent=(parts.join(' · ')||'ยังไม่มีผลสุ่ม')+(edited?' · แก้เองอยู่':'');
 }
@@ -13999,11 +14010,11 @@ function hvCalc(){
   const fpIn=parseFloat(document.getElementById('hv-feedprice')?.value);
   if(!sc||!sc.abw){el.innerHTML='<p style="color:var(--tx3);font-style:italic;padding:8px 0">ต้องมีผลสุ่มตัวอย่างก่อน จึงคำนวณได้</p>';return;}
   if(!(pNow>0)){el.innerHTML='<p style="color:var(--tx3);font-style:italic;padding:8px 0">ใส่ราคาถ้าจับวันนี้ก่อน จึงจะเทียบได้</p>';return;}
-  const pdg=parseFloat(getPDG(sortedSamples(p)));
+  const _pa=pondAvgPdg(p),pdg=_pa?_pa.pdg:NaN;   // #436 เฉลี่ยทุกครั้งที่สุ่ม
   if(!(pdg>0)){el.innerHTML='<p style="color:var(--w);font-style:italic;padding:8px 0">⚠️ ต้องสุ่มอย่างน้อย 2 ครั้งเพื่อหาอัตราโต (PDG) จึงคาดการณ์วันได้</p>';return;}
   const wNow=sc.biomass, revNow=wNow*pNow;
   const curSize=Math.round(1000/sc.abw);
-  const opt={feedPrice:fpIn>0?fpIn:0};
+  const opt={feedPrice:fpIn>0?fpIn:0,pdg};
   const rows=(_hvSizes||[]).filter(r=>r.size>0).map(r=>{
     if(r.size>=curSize)return{...r,err:'ไซส์นี้เล็กกว่า/เท่ากุ้งตอนนี้'};
     const sim=hvSimulate(p,r.size,opt);
