@@ -975,6 +975,31 @@ html[data-uisize="xl"]{--ui-scale:1.25}
 /* ── 🧮 นับสต็อกพนักงาน (#432) ── */
 .sc-modal{width:min(96vw,560px);height:min(92vh,900px)}
 #scRevModal .sc-modal{height:auto}
+/* ── 🔬 ผลแล็บ × ของที่ใช้ (#435) ── */
+.lu-badge{display:inline-block;font-size:calc(12px * var(--ui-scale));font-weight:700;border-radius:8px;padding:1px 8px;background:var(--wb);color:var(--w-tx);margin-left:6px;vertical-align:middle}
+.lu-chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.lu-chips button{border:1.5px solid var(--bd);background:var(--sf);border-radius:20px;padding:3px 11px;font:inherit;font-size:calc(13px * var(--ui-scale));font-weight:600;cursor:pointer;color:var(--tx)}
+.lu-chips button.on{background:var(--lab);border-color:var(--lab);color:#fff}
+table.lu-t{width:100%;border-collapse:collapse;font-size:calc(13.5px * var(--ui-scale));font-variant-numeric:tabular-nums}
+table.lu-t th{font-size:calc(12px * var(--ui-scale));font-weight:700;text-align:right;padding:4px 6px}table.lu-t th:first-child{text-align:left}
+table.lu-t td{padding:6px;border-top:1px solid var(--sf2);text-align:right}table.lu-t td:first-child{text-align:left;font-weight:600}
+table.lu-t tr.base td{background:var(--sf2)}
+.lu-prog{display:inline-flex;align-items:center;gap:6px;font-size:calc(12.5px * var(--ui-scale));font-weight:600}
+.lu-prog i{display:inline-block;width:60px;height:7px;border-radius:5px;background:var(--sf2);overflow:hidden;position:relative}
+.lu-prog i b{position:absolute;inset:0 auto 0 0;background:var(--lab);border-radius:5px}
+.lu-v{border-radius:10px;padding:8px 10px;font-size:calc(13.5px * var(--ui-scale));font-weight:600;margin-top:8px;background:var(--wb);color:var(--w-tx)}
+.lu-v.d{background:var(--db);color:var(--d)}
+.lu-iv{border:1px solid var(--bd);border-radius:12px;padding:8px 10px;margin-bottom:8px}
+.lu-iv .h{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:calc(14px * var(--ui-scale))}
+.lu-lab{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:6px 0}
+.lu-lab div{border-radius:9px;padding:4px 6px;font-size:calc(12px * var(--ui-scale));font-weight:600;background:var(--sf2)}
+.lu-lab b{display:block;font-size:calc(14px * var(--ui-scale))}
+.lu-lab .dn{background:var(--ob);color:var(--ok)}.lu-lab .up{background:var(--db);color:var(--d)}
+.lu-use{display:flex;flex-wrap:wrap;gap:4px}
+.lu-use span{font-size:calc(12px * var(--ui-scale));font-weight:600;border-radius:7px;padding:1px 7px;border:1px solid var(--bd)}
+.lu-use .chemOral{background:#FFF0E6;border-color:#FFD2B5;color:#B23A0A}.lu-use .probioOral{background:var(--pl);border-color:#F4DFA6;color:var(--pd)}
+.lu-use .probioWater{background:var(--ib);border-color:#BFD6EE;color:var(--in)}.lu-use .chemWater{background:var(--labl);border-color:#9EDBD3;color:var(--labd)}
+.lu-warn{font-size:calc(12.5px * var(--ui-scale));font-weight:600;color:var(--w-tx);margin-top:5px}
 /* ── 🛒 ขายของ บุญชู/ฟาร์ม (#434) ── */
 .sl-seg{display:flex;gap:4px;padding:3px;border-radius:13px;background:var(--sf2)}
 .sl-seg button{flex:1;border:0;background:none;padding:8px 0;border-radius:10px;font:inherit;font-weight:700;font-size:calc(15px * var(--ui-scale));cursor:pointer;color:var(--tx)}
@@ -3905,6 +3930,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
 <div id="sec-lab" class="sec">
   <div class="sec-hdr"><div class="sec-title">🔬 ผลตรวจแล็บ</div></div>
   <div class="card" id="lb-all" style="margin-bottom:16px"></div>
+  <div class="card admin-only" id="lb-use" style="margin-bottom:16px"></div>
   <div class="g2" style="margin-bottom:16px;align-items:start">
     <div class="card">
       <div class="card-t">📝 บันทึกผลแล็บ</div>
@@ -9023,6 +9049,7 @@ ${String(p.cropNote).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`:''}
     ${pdCard('surv','🦐 อัตรารอด','<div id="pd-survival-card"></div>')}
     ${pdCard('harvest',`🦐 การจับกุ้ง / พาเชียล${(p.partialHarvests||[]).length?` · ${p.partialHarvests.length} ครั้ง`:''}`,'<div id="pd-harvest-card"></div>')}
     ${pdCard('lab',`🔬 ผลแล็บ${(p.labResults||[]).length?` · ${p.labResults.length} ครั้ง`:''}`,'<div id="pd-lab-card"></div>')}
+    ${APP_ROLE==='admin'?pdCard('labuse','🔬 ผลแล็บ × ของที่ใช้','<div id="pd-labuse"></div>'):''}
     ${pdCard('mort',`🦐 บันทึกกุ้งตาย${cropMortalityLog(p).length?` · ${cropMortalityLog(p).length} วัน`:''}`,'<div id="pd-mort-card"></div>')}
     ${pdCard('crophist',`📚 ประวัติรอบเลี้ยงบ่อนี้${(p.cropHistory||[]).length?` · ${p.cropHistory.length} รอบ`:''}`,'<div id="pd-crophist-card"></div>')}
     <div class="pd-actions">
@@ -9036,7 +9063,7 @@ ${String(p.cropNote).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`:''}
   if(!clsNoShrimp(cls))renderFarmCard(p);
   renderSurvivalCard(p);
   renderPdHarvestCard(p);
-  renderPdLabCard(p);
+  renderPdLabCard(p);try{renderPdLabUse(p);}catch(e){console.warn('labuse',e);}
   renderPdMortCard(p);
   renderPdCropHistCard(p);
   renderPdWqHistory(p);
@@ -12071,6 +12098,78 @@ function slDelBill(key){
   if(b.src==='shop')D.shopLog=shopLogArr().filter(x=>!ids.has(x.id));else D.inventoryLog=(D.inventoryLog||[]).filter(x=>!ids.has(x.id));
   if(typeof tickMemoClear==='function')tickMemoClear();
   save();initSaleMonthPills();renderSalesReport();try{renderShop();}catch(e){}try{renderStockKPI();renderStockItems();}catch(e){}
+}
+
+// ══════ 🔬 ผลแล็บ × ของที่ใช้ลงบ่อ (#435 พี่สั่ง 19 ต.ค. 69 · mockup_แล็บกับของที่ใช้.html) — admin ══════
+//   หน่วยวิเคราะห์ = ช่วงระหว่างผลแล็บ 2 ครั้งติดกันของบ่อเดียวกัน (≤ LU_MAX_GAP วัน) · ของที่ใช้ = inventoryLog 'out' มี pondId ช่วง [ครั้งก่อน, ครั้งถัดไป)
+//   ③ เกณฑ์ของฟาร์ม (LU_TH) → ช่วงนั้นใช้อะไร → ครั้งถัดไปต่ำกว่าเกณฑ์ไหม · มีแถว "ไม่ได้ใช้" เทียบเสมอ
+//   **โหมดเก็บข้อมูล (พี่สั่ง)**: < LU_MIN_N ครั้ง = โชว์จำนวน + แถบความคืบหน้า ไม่โชว์ % · "หาย" ต้องมีค่าครั้งถัดไปจริง (ว่าง ≠ หาย)
+//   ไปด้วยกัน ≠ เพราะสิ่งนี้ (ใช้หลายอย่างพร้อมกัน · เชื้อขึ้นตามอายุ · บันทึกขาด) · ตารางคะแนนรายสินค้า = รอข้อมูลมากกว่านี้ (พี่สั่ง)
+const LU_MAX_GAP=14,LU_MIN_N=10,LU_CATS=['chemOral','probioOral','probioWater','chemWater'];
+const LU_CAT_LBL={chemOral:'ยากิน',probioOral:'จุลินทรีย์กิน',probioWater:'จุลินทรีย์ลงน้ำ',chemWater:'ยาลงน้ำ'};
+const LU_TH=[{id:'hy',k:'hepatoYellow',t:1e4,lbl:'ตับ เหลือง ≥10⁴'},{id:'hg',k:'hepatoGreen',t:1e2,lbl:'ตับ เขียว ≥10²'},{id:'el',k:'ehpLarva',t:40,lbl:'EHP ตัวอ่อน ≥40'}];
+const LU_MET=[['hepatoYellow','ตับ เหลือง',1],['hepatoGreen','ตับ เขียว',1],['tcbsYellow','น้ำ เหลือง',1],['tcbsGreen','น้ำ เขียว',1],['ehpLarva','EHP ตัวอ่อน',0],['gutInflam','ลำไส้อักเสบ',0]];
+let _luTh='hy';
+function luVal(r,k){const v=r&&r[k];if(v===''||v==null)return null;const n=parseFloat(v);return isFinite(n)?n:null;}
+function luIntervals(pondFilter){
+  const items=Object.fromEntries((D.inventoryItems||[]).map(i=>[i.id,i]));
+  const use={};(D.inventoryLog||[]).forEach(l=>{if(!l||l.type!=='out'||!l.pondId)return;const it=items[l.itemId];if(!it||!LU_CATS.includes(it.category))return;(use[l.pondId]=use[l.pondId]||[]).push({l,cat:it.category});});
+  const out=[];
+  (D.ponds||[]).forEach(p=>{if(pondFilter&&p.id!==pondFilter)return;
+    const labs=(p.labResults||[]).concat(...(p.cropHistory||[]).map(c=>c&&c.labResults||[])).filter(r=>r&&r.date).sort((a,b)=>a.date.localeCompare(b.date));
+    for(let i=1;i<labs.length;i++){const a=labs[i-1],b=labs[i],g=dDiff(a.date,b.date);if(!(g>0&&g<=LU_MAX_GAP))continue;
+      const q={};(use[p.id]||[]).forEach(({l,cat})=>{if(l.date>=a.date&&l.date<b.date){const k=l.itemName||'-';const x=q[k]=q[k]||{name:k,cat,qty:0,unit:l.unit||''};x.qty+=parseFloat(l.qty)||0;}});
+      out.push({pond:p.name,pondId:p.id,a,b,gap:g,use:Object.values(q).sort((x,y)=>y.qty-x.qty)});}
+  });
+  return out;
+}
+function luThEvents(th,ivs){return(ivs||luIntervals()).filter(x=>{const va=luVal(x.a,th.k),vb=luVal(x.b,th.k);return va!=null&&va>=th.t&&vb!=null;}).map(x=>({...x,ok:luVal(x.b,th.k)<th.t}));}
+function luGroup(ev,cat){
+  const g={};let none={n:0,ok:0};
+  ev.forEach(e=>{const ps=[...new Set(e.use.filter(u=>u.cat===cat).map(u=>u.name))];
+    if(!ps.length){none.n++;if(e.ok)none.ok++;return;}const k=ps.sort().join(' + ');const o=g[k]=g[k]||{name:k,n:0,ok:0};o.n++;if(e.ok)o.ok++;});
+  return{rows:Object.values(g).sort((a,b)=>b.n-a.n),none};
+}
+function luSingle(ev,cat){const g={};ev.forEach(e=>{[...new Set(e.use.filter(u=>u.cat===cat).map(u=>u.name))].forEach(n=>{const o=g[n]=g[n]||{name:n,n:0,ok:0};o.n++;if(e.ok)o.ok++;});});return Object.values(g).sort((a,b)=>b.n-a.n);}
+function luCell(o){
+  if(o.n>=LU_MIN_N)return'<td>'+o.n+'</td><td><b>'+Math.round(o.ok/o.n*100)+'%</b> <small>('+o.ok+')</small></td>';
+  return'<td>'+o.n+'</td><td><span class="lu-prog"><i><b style="width:'+(o.n/LU_MIN_N*100)+'%"></b></i>'+o.n+'/'+LU_MIN_N+'</span></td>';
+}
+function renderLabUse(){
+  const el=document.getElementById('lb-use');if(!el)return;
+  if(APP_ROLE!=='admin'){el.innerHTML='';return;}
+  const ivs=luIntervals(),th=LU_TH.find(x=>x.id===_luTh)||LU_TH[0],ev=luThEvents(th,ivs);
+  const G=luGroup(ev,'chemOral'),P=luSingle(ev,'probioOral');
+  const tbl=(rows,base)=>'<table class="lu-t"><tr><th>ช่วงนั้นใช้</th><th>ครั้ง</th><th>หาย (ครั้งถัดไปต่ำกว่าเกณฑ์)</th></tr>'
+    +rows.map(o=>'<tr><td>'+mpEsc(o.name)+'</td>'+luCell(o)+'</tr>').join('')+(base?'<tr class="base"><td>ไม่ได้ใช้ยากิน (เทียบ)</td>'+luCell(base)+'</tr>':'')+'</table>';
+  let v='';
+  if(ev.length&&ev.every(e=>!e.ok))v='<div class="lu-v d">❗ '+ev.length+'/'+ev.length+' ครั้ง ครั้งถัดไปยังไม่ต่ำกว่าเกณฑ์ — ทั้งใช้และไม่ใช้</div>';
+  else{const ready=G.rows.filter(o=>o.n>=LU_MIN_N);v='<div class="lu-v">'+(ready.length&&G.none.n>=LU_MIN_N?'⚖️ เทียบกับแถว "ไม่ได้ใช้" ก่อนสรุป · ไปด้วยกัน ≠ เพราะสิ่งนี้':'📊 กำลังเก็บข้อมูล — ครบ '+LU_MIN_N+' ครั้งถึงขึ้น % · ไปด้วยกัน ≠ เพราะสิ่งนี้')+'</div>';}
+  el.innerHTML='<div class="card-t">📊 ใช้แล้วได้ผลไหม <span class="lu-badge">กำลังเก็บข้อมูล</span></div>'
+    +'<div style="font-size:var(--fs115);font-weight:600">เจอเชื้อเกินเกณฑ์ → ช่วงนั้นใช้อะไร → ผลครั้งถัดไป · '+ivs.length+' ช่วง (ห่าง ≤'+LU_MAX_GAP+' วัน)</div>'
+    +'<div class="lu-chips">'+LU_TH.map(t=>'<button type="button" class="'+(t.id===th.id?'on':'')+'" onclick="_luTh=\''+t.id+'\';renderLabUse()">'+t.lbl+' · '+luThEvents(t,ivs).length+'</button>').join('')+'</div>'
+    +(ev.length?'<div style="font-weight:700;margin:4px 0">💊 ยากิน</div>'+tbl(G.rows,G.none)+v
+      +(P.length?'<details style="margin-top:10px"><summary style="font-weight:700;cursor:pointer">🦠 จุลินทรีย์กินช่วงเดียวกัน · '+P.length+' ตัว</summary><div style="font-size:var(--fs115);font-weight:600;margin:4px 0">ใช้เกือบทุกช่วง → เทียบได้แค่คร่าวๆ</div>'+tbl(P,null)+'</details>':'')
+      :'<p style="font-weight:600;padding:8px 0">ยังไม่มีช่วงที่เกินเกณฑ์นี้</p>');
+}
+// ① หน้าบ่อ: ทีละช่วง (รอบปัจจุบัน) · ค่าที่เปลี่ยนมากสุด 3 ตัว · ของที่ใช้ 7 อันดับ · เตือนเกินเกณฑ์แต่ไม่มียากินในบันทึก
+function luFmt(v,lg){return v==null?'—':lg?Math.round(v).toLocaleString():String(Math.round(v*10)/10);}
+function renderPdLabUse(p){
+  const el=document.getElementById('pd-labuse');if(!el||!p)return;
+  const ivs=luIntervals(p.id).filter(x=>!p.startDate||x.a.date>=p.startDate).slice(-4).reverse();
+  if(!ivs.length){el.innerHTML='<p style="font-weight:600">ยังไม่มีผลแล็บ 2 ครั้งติดกันในรอบนี้</p>';return;}
+  el.innerHTML=ivs.map(x=>{
+    const ch=LU_MET.map(([k,l,lg])=>{const va=luVal(x.a,k),vb=luVal(x.b,k);if(va==null||vb==null)return null;
+      const sc=lg?Math.log10(vb+1)-Math.log10(va+1):(vb-va)/25;return{l,va,vb,sc,lg};}).filter(Boolean);
+    const sig=ch.filter(c=>Math.abs(c.sc)>=0.3),dn=sig.filter(c=>c.sc<0).length,up=sig.filter(c=>c.sc>0).length;
+    const vd=!sig.length?['คงที่','var(--tx)']:up&&dn?['ปนกัน','var(--w-tx)']:dn?['ดีขึ้น','var(--ok)']:['แย่ลง','var(--d)'];
+    const top=ch.slice().sort((a,b)=>Math.abs(b.sc)-Math.abs(a.sc)).slice(0,3);
+    const over=LU_TH.filter(t=>{const v=luVal(x.a,t.k);return v!=null&&v>=t.t;}),oral=x.use.some(u=>u.cat==='chemOral');
+    return'<div class="lu-iv"><div class="h"><span>'+fD(x.a.date)+' → '+fD(x.b.date)+' ('+x.gap+' วัน)</span><span style="color:'+vd[1]+'">'+vd[0]+'</span></div>'
+      +(top.length?'<div class="lu-lab">'+top.map(c=>'<div class="'+(Math.abs(c.sc)<0.3?'':c.sc<0?'dn':'up')+'">'+c.l+'<b>'+luFmt(c.va,c.lg)+' → '+luFmt(c.vb,c.lg)+'</b></div>').join('')+'</div>':'')
+      +'<div class="lu-use">'+x.use.slice(0,7).map(u=>'<span class="'+u.cat+'">'+mpEsc(u.name)+' '+skcN(Math.round(u.qty*10)/10)+'</span>').join('')+(x.use.length>7?'<span>+'+(x.use.length-7)+'</span>':'')+(x.use.length?'':'<span>ไม่มีบันทึกการใช้</span>')+'</div>'
+      +(over.length&&!oral?'<div class="lu-warn">⚠️ '+over.map(t=>t.lbl).join(' · ')+' ตอนต้นช่วง แต่ไม่มียากินในบันทึก</div>':'')+'</div>';
+  }).join('')+'<div class="lu-use" style="margin-top:2px">'+LU_CATS.map(c=>'<span class="'+c+'">'+LU_CAT_LBL[c]+'</span>').join('')+'</div>';
 }
 
 function initStock(){
@@ -17171,7 +17270,7 @@ function renderKanGrid(){
 const AI_URL='https://asia-southeast1-tawanfarm-efd8b.cloudfunctions.net/aiChat';
 const AI_HIST_MAX=50,AI_CTX_MSGS=10,AI_MAX_ROUNDS=8,AI_TOOL_MAX_CHARS=60000;
 let _aiBusy=false,_aiDeep=false,_aiMonth=null,_aiAbort=null;   // ไม่มีปุ่มคำถามลัด (พี่สั่ง — กันกดเล่นเสียเงิน)
-const AI_TOOL_LBL={farm_overview:'ภาพรวมทุกบ่อ',pond_detail:'ข้อมูลบ่อ',closed_crops:'รอบที่ปิดแล้ว',stock_items:'สินค้าสต็อก',stock_usage:'การเบิกของ',harvests:'การจับกุ้ง',farm_protocols:'Protocol เวชภัณฑ์',palm_summary:'สวนปาล์ม'};
+const AI_TOOL_LBL={farm_overview:'ภาพรวมทุกบ่อ',pond_detail:'ข้อมูลบ่อ',closed_crops:'รอบที่ปิดแล้ว',stock_items:'สินค้าสต็อก',stock_usage:'การเบิกของ',harvests:'การจับกุ้ง',farm_protocols:'Protocol เวชภัณฑ์',lab_vs_usage:'ผลแล็บ × ของที่ใช้',palm_summary:'สวนปาล์ม'};
 function aiR(n,d){n=parseFloat(n);if(!isFinite(n))return null;const k=Math.pow(10,d||0);return Math.round(n*k)/k;}
 function aiNorm(s){return String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
 function aiFindPond(name){const k=aiNorm(name);return (D.ponds||[]).find(p=>aiNorm(p.name)===k)||null;}
@@ -17254,6 +17353,19 @@ const AI_TOOLS={
     const rows=hsHarvestRows().filter(r=>r.date>=from&&r.date<=to&&(!a.pond||aiNorm(r.pond)===aiNorm(a.pond)))
       .sort((x,y)=>y.date.localeCompare(x.date)).map(r=>aiClean({date:r.date,pond:r.pond,type:r.type,age:r.age,kg:aiR(r.kg,0),size:r.size,price:r.price,baht:Math.round(r.baht||0),buyer:r.buyer,pending:r.pending||null}));
     return{count:rows.length,harvests:rows.slice(0,300)};
+  },
+  lab_vs_usage(a){
+    const pd=a.pond?aiFindPond(a.pond):null;if(a.pond&&!pd)return{error:'ไม่พบบ่อ '+a.pond};
+    const ivs=luIntervals(),TH=a.threshold&&a.threshold!=='all'?LU_TH.filter(t=>t.id===a.threshold):LU_TH;
+    const q=String(a.item||'').trim().toLowerCase();
+    const res={min_n:LU_MIN_N,note:'ช่วง = ระหว่างผลแล็บ 2 ครั้งติดกัน ≤'+LU_MAX_GAP+' วัน · หาย = ครั้งถัดไปต่ำกว่าเกณฑ์ · <min_n = กำลังเก็บข้อมูล ห้ามสรุป · ต้องเทียบกับ no_oral_med เสมอ · ไปด้วยกัน ≠ เพราะสิ่งนี้',thresholds:TH.map(t=>{
+      const ev=luThEvents(t,ivs),G=luGroup(ev,'chemOral');
+      const f=o=>({name:o.name,n:o.n,recovered:o.ok,pct:o.n?Math.round(o.ok/o.n*100):null,collecting:o.n<LU_MIN_N});
+      return{threshold:t.lbl,events:ev.length,oral_meds:G.rows.map(f).filter(o=>!q||o.name.toLowerCase().includes(q)),no_oral_med:f({name:'ไม่ได้ใช้ยากิน',...G.none}),
+        probiotic_oral_same_period:luSingle(ev,'probioOral').map(f).filter(o=>!q||o.name.toLowerCase().includes(q))};})};
+    if(pd)res.pond_intervals=luIntervals(pd.id).slice(-6).map(x=>({from:x.a.date,to:x.b.date,lab_from:Object.fromEntries(LU_MET.map(([k])=>[k,luVal(x.a,k)])),lab_to:Object.fromEntries(LU_MET.map(([k])=>[k,luVal(x.b,k)])),
+      used:x.use.slice(0,15).map(u=>({item:u.name,cat:LU_CAT_LBL[u.cat],qty:aiR(u.qty,1),unit:u.unit}))}));
+    return res;
   },
   farm_protocols(a){
     const q=String(a.query||'').trim().toLowerCase();
@@ -18943,7 +19055,7 @@ function labOpenPond(pid){
   const s=document.getElementById('lb-pond');if(!s)return;s.value=pid;onLbPond();
   document.getElementById('lb-tbl-wrap')?.closest('.card')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
-function initLab(){populateAll();document.getElementById('lb-date').value=today();calcAge('lb');renderLabTable();renderLabAll();updateLabSrcCount('water');updateLabSrcCount('hep');}
+function initLab(){populateAll();document.getElementById('lb-date').value=today();calcAge('lb');renderLabTable();renderLabAll();try{renderLabUse();}catch(e){console.warn('labuse',e);}updateLabSrcCount('water');updateLabSrcCount('hep');}
 function updateLabStatus(){
   const tg=parseFloat(document.getElementById('lb-tcbs-g').value)||null;
   const ty=parseFloat(document.getElementById('lb-tcbs-y').value)||null;
