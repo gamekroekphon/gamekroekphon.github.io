@@ -3165,7 +3165,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
       <div class="ai-sun"><i class="h"></i><i class="r"></i><i class="c"></i></div>
       <h2 id="ai-listen-h">กำลังฟัง… พูดได้เลย</h2>
       <div id="ai-said">…</div>
-      <div class="ai-lbtns"><button type="button" onclick="aiMicClose()">ยกเลิก</button><button type="button" onclick="aiMicStart()">พูดใหม่</button><button type="button" class="go" id="ai-said-go" onclick="aiMicSend()" disabled>ส่ง ↑</button></div>
+      <div class="ai-lbtns"><button type="button" onclick="aiMicClose()">ยกเลิก</button><button type="button" onclick="aiMicStart()">พูดใหม่</button><button type="button" onclick="aiMicKeyboard()">⌨️ ไมค์แป้นพิมพ์</button><button type="button" class="go" id="ai-said-go" onclick="aiMicSend()" disabled>ส่ง ↑</button></div>
     </div>
   </div>
 </div>
@@ -17422,7 +17422,7 @@ function aiMd(src){
   return out.join('');
 }
 // ── หน้าจอ ──
-function initAi(){const mic=document.getElementById('ai-mic');if(mic)mic.hidden=!AI_SR;aiRender();aiStatus();}
+function initAi(){const mic=document.getElementById('ai-mic');if(mic)mic.hidden=false;/* ไม่มีระบบเสียงของเว็บ = ปุ่มนี้เปิดไมค์แป้นพิมพ์แทน */aiRender();aiStatus();}
 // ── 🎤 พูด / 🔊 ฟัง (ใช้ระบบเสียงของมือถือ ไม่เสียเงิน) · พูดแล้วไม่ส่งเอง ต้องกด "ส่ง" (กันได้ยินผิดแล้วเสียเงิน) ──
 const AI_SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 let _aiRec=null,_aiSaid='',_aiSpeakI=-1;
@@ -17432,15 +17432,33 @@ function aiListenUi(on){
   document.getElementById('ai-said').textContent=_aiSaid?'"'+_aiSaid+'"':'…';
   document.getElementById('ai-said-go').disabled=!_aiSaid;
 }
+// ⚠️ iPhone ที่ติดตั้งแอปบนหน้าจอโฮม (standalone) ระบบแปลงเสียงของเว็บใช้ไม่ได้ (ก้อย/กุ้ง แจ้ง 19 ต.ค. 69 "กดพูดไม่ได้")
+//    → ใช้ไมค์บนแป้นพิมพ์แทน (ใช้ได้ทุกเครื่อง) · เครื่องอื่นลองเสียงของเว็บก่อน พังเมื่อไหร่บอกเหตุผล + ปุ่มใช้ไมค์แป้นพิมพ์
+function aiIosStandalone(){const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  return ios&&(navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));}
+const AI_SR_ERR={'not-allowed':'มือถือไม่ให้แอปใช้ไมค์','service-not-allowed':'มือถือไม่ให้แอปใช้ไมค์','network':'ต่อเน็ตไม่ได้','audio-capture':'ไม่พบไมค์','no-speech':'ไม่ได้ยินเสียง','language-not-supported':'มือถือไม่รองรับภาษาไทย','aborted':''};
+let _aiSrErr='';
+function aiMicKeyboard(){
+  aiMicClose();const q=document.getElementById('ai-q');if(!q)return;
+  q.placeholder='แตะ 🎤 บนแป้นพิมพ์ แล้วพูด…';q.focus();
+  showToast('พูดผ่านแป้นพิมพ์','แตะไมค์ 🎤 บนแป้นพิมพ์ แล้วพูด · เสร็จแล้วกดส่ง');
+}
 function aiMicStart(){
-  if(!AI_SR||_aiBusy)return;aiSpeakStop();
+  if(_aiBusy)return;aiSpeakStop();
+  if(!AI_SR||aiIosStandalone()){aiMicKeyboard();return;}
   try{if(_aiRec)_aiRec.abort();}catch(e){}
-  _aiSaid='';document.getElementById('ai-listen').hidden=false;aiListenUi(true);
+  _aiSaid='';_aiSrErr='';document.getElementById('ai-listen').hidden=false;aiListenUi(true);
   const r=new AI_SR();r.lang='th-TH';r.interimResults=true;r.continuous=false;r.maxAlternatives=1;
-  r.onresult=e=>{let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;_aiSaid=t.trim();document.getElementById('ai-said').textContent=_aiSaid?'"'+_aiSaid+'"':'…';document.getElementById('ai-said-go').disabled=!_aiSaid;};
-  r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){_aiRec=null;aiListenUi(false);document.getElementById('ai-listen-h').textContent='ไม่ได้รับอนุญาตใช้ไมค์ — อนุญาตในตั้งค่ามือถือ';}};
-  r.onend=()=>{if(_aiRec===r){_aiRec=null;aiListenUi(false);}};
-  _aiRec=r;try{r.start();}catch(e){_aiRec=null;aiListenUi(false);}
+  let heard=false;
+  r.onstart=()=>{heard=true;};
+  r.onresult=e=>{heard=true;let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;_aiSaid=t.trim();document.getElementById('ai-said').textContent=_aiSaid?'"'+_aiSaid+'"':'…';document.getElementById('ai-said-go').disabled=!_aiSaid;};
+  r.onerror=e=>{_aiSrErr=e.error||'';};
+  r.onend=()=>{if(_aiRec!==r)return;_aiRec=null;aiListenUi(false);
+    if(!_aiSaid&&_aiSrErr&&AI_SR_ERR[_aiSrErr]!==''){document.getElementById('ai-listen-h').textContent=(AI_SR_ERR[_aiSrErr]||'ใช้เสียงไม่ได้')+' — ใช้ไมค์บนแป้นพิมพ์แทน';}};
+  _aiRec=r;
+  // บางเครื่องเงียบไปเลยไม่ยิง error — 6 วิไม่เริ่มฟัง = ถือว่าใช้ไม่ได้
+  setTimeout(()=>{if(_aiRec===r&&!heard){try{r.abort();}catch(e){}_aiRec=null;aiListenUi(false);document.getElementById('ai-listen-h').textContent='มือถือไม่เริ่มฟัง — ใช้ไมค์บนแป้นพิมพ์แทน';}},6000);
+  try{r.start();}catch(e){_aiRec=null;aiListenUi(false);document.getElementById('ai-listen-h').textContent='ใช้เสียงไม่ได้ — ใช้ไมค์บนแป้นพิมพ์แทน';}
 }
 function aiMicClose(){const r=_aiRec;_aiRec=null;try{if(r)r.abort();}catch(e){}document.getElementById('ai-listen').hidden=true;}
 function aiMicSend(){const q=_aiSaid;aiMicClose();if(q)aiAsk(q,{tag:'🎤 พูด'});}
