@@ -5305,6 +5305,7 @@ function normalizeD(d) {
   if (!d.inventoryLog) d.inventoryLog = [];
   if (!d.deletedIds) d.deletedIds = [];
   rescueDeadIds(d);   // #439
+  fix440DropFeedOrphans(d);
   return d;
 }
 
@@ -6576,6 +6577,18 @@ function elecKey(b){return 'elec_'+b.month+(b.tid?'_'+b.tid:'');}
 function elecNewTid(month){const dead=new Set(D.deletedIds||[]);if(!dead.has('elec_'+month))return null;let i=0,t;do{t='r'+(++i);}while(dead.has('elec_'+month+'_'+t));return t;}
 // ของที่อยู่ในข้อมูลชุดเดียวกับ tombstone ของตัวเอง = กรอกใหม่หลังลบ (ชุดที่มี tombstone จะ dropDead ไปแล้วถ้าเป็นของเก่า)
 //    → ตั้ง id ใหม่ก่อน merge · เฉพาะ log ที่ใช้ id ตายตัว — inventoryLog ฯลฯ id ไม่ซ้ำอยู่แล้ว ไม่แตะ
+// ══ #440 log ตัดสต็อกอาหาร 27/9/69 ที่ค้าง 52 รายการ (13 บ่อ × 4) — อาหารวันนั้นกรอกซ้ำ 5 รอบเพราะบัค #439
+//    รายการอาหารหายทุกรอบ แต่ log ตัดสต็อกค้าง (7704S 170.4 · 7703S 358.4 · 7702S 18.4 กระสอบ)
+//    ลบ log อย่างเดียว ไม่คืนยอดสต็อก — ยอดนับปรับให้ตรงของจริงแล้ว 20/10/69 (พี่สั่ง 23 ต.ค. 69) ══
+function fix440Ids(){return ["sl_fd_1790561245577_90hq","sl_fd_1790561245579_hbzo","sl_fd_1790561245581_lmqy","sl_fd_1790561245582_09py","sl_fd_1790561245583_kwgg","sl_fd_1790561245584_qijh","sl_fd_1790561245585_xqw6","sl_fd_1790561245586_4agc","sl_fd_1790561245587_92o0","sl_fd_1790561245587_v3rm","sl_fd_1790561245588_gvps","sl_fd_1790561245589_nsig","sl_fd_1790561245589_bris","sl_fd_1791175319276_eww5","sl_fd_1791175319278_5cbk","sl_fd_1791175319279_elkr","sl_fd_1791175319279_z64j","sl_fd_1791175319279_j980","sl_fd_1791175319279_o80z","sl_fd_1791175319280_vyvy","sl_fd_1791175319280_kw5c","sl_fd_1791175319280_38y4","sl_fd_1791175319281_yf1r","sl_fd_1791175319281_4e6p","sl_fd_1791175319281_hc8p","sl_fd_1791175319281_wnwy","sl_fd_1791642966398_fm9e","sl_fd_1791642966400_4h1z","sl_fd_1791642966401_qr1l","sl_fd_1791642966402_huor","sl_fd_1791642966403_8hu4","sl_fd_1791642966405_v9ik","sl_fd_1791642966406_rxyy","sl_fd_1791642966407_pfeq","sl_fd_1791642966408_q6e1","sl_fd_1791642966409_v8ac","sl_fd_1791642966410_uzn3","sl_fd_1791642966410_x8i0","sl_fd_1791642966411_0n25","sl_fd_1791784677847_u0p8","sl_fd_1791784677848_swzf","sl_fd_1791784677849_444h","sl_fd_1791784677850_t5oi","sl_fd_1791784677851_w3wf","sl_fd_1791784677851_ukzc","sl_fd_1791784677852_6zlb","sl_fd_1791784677852_t5es","sl_fd_1791784677852_z0es","sl_fd_1791784677853_jagn","sl_fd_1791784677853_9cwc","sl_fd_1791784677853_26x4","sl_fd_1791784677853_i3qu"];}
+function fix440DropFeedOrphans(d){
+  if(!d||!Array.isArray(d.inventoryLog))return 0;
+  const ids=new Set(fix440Ids()),n0=d.inventoryLog.length;
+  d.inventoryLog=d.inventoryLog.filter(l=>!(l&&ids.has(l.id)));
+  const n=n0-d.inventoryLog.length;
+  if(n){d.deletedIds=d.deletedIds||[];const dead=new Set(d.deletedIds);ids.forEach(id=>{if(!dead.has(id))d.deletedIds.push(id);});}
+  return n;
+}
 function rescueDeadIds(d){
   if(!d||!Array.isArray(d.deletedIds)||!d.deletedIds.length)return 0;
   const dead=new Set(d.deletedIds);let n=0;
