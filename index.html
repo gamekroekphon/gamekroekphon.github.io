@@ -6515,7 +6515,11 @@ function mergeRemote(local, remote) {
     else p.prepChecklist = mergeChecklist(lc, rc);
   });
   const localIds = new Set(merged.ponds.map(p=>p.id));
-  (remote.ponds||[]).forEach(rp => { if (!localIds.has(rp.id) && !dead.has(rp.id)) merged.ponds.push(rp); });
+  // #439 บ่อที่ id อยู่ใน deletedIds แต่ไม่เคยถูกลบผ่าน delPond (ไม่อยู่ใน deletedPondNames) = tombstone เพี้ยน
+  //    (A14/A15 ติดมาตั้งแต่ก่อน 23 ก.ย. 69 ทั้งที่บ่อยังใช้งาน) → ยังรับบ่อจาก cloud · บ่อที่ลบจริงมีชื่อใน deletedPondNames เสมอ
+  merged.deletedPondNames = Object.assign({}, remote.deletedPondNames||{}, local.deletedPondNames||{});
+  const pondGone = id => dead.has(id) && !!merged.deletedPondNames[id];
+  (remote.ponds||[]).forEach(rp => { if (!localIds.has(rp.id) && !pondGone(rp.id)) merged.ponds.push(rp); });
   merged.staff = dropDead(mergeArr(merged.staff, remote.staff));
   merged.electricityBills = mergeByMonth(merged.electricityBills||[], remote.electricityBills||[], dead);
   merged.inventoryItems = dropDead(mergeArr(merged.inventoryItems||[], remote.inventoryItems||[]));
