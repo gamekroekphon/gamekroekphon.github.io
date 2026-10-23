@@ -5304,6 +5304,7 @@ function normalizeD(d) {
   if (!d.inventoryItems) d.inventoryItems = [];
   if (!d.inventoryLog) d.inventoryLog = [];
   if (!d.deletedIds) d.deletedIds = [];
+  rescueDeadIds(d);   // #439
   return d;
 }
 
@@ -6487,6 +6488,7 @@ function dropArchivedDupes(p){
   return n;
 }
 function mergeRemote(local, remote) {
+  rescueDeadIds(local); rescueDeadIds(remote);   // #439 ต้องก่อน union deletedIds — ใช้ tombstone ของแต่ละฝั่งเอง
   const merged = cln(local);
   // tombstone: union รายการที่ถูกลบจากทุกเครื่อง → กรองออกหลัง merge
   merged.deletedIds = [...new Set([...(local.deletedIds||[]), ...(remote.deletedIds||[])])];
@@ -6557,9 +6559,26 @@ function mergeByMonth(localArr, remoteArr, dead) {
   if (!Array.isArray(remoteArr)) return localArr || [];
   if (!Array.isArray(localArr)) return remoteArr || [];
   const map = {};
-  remoteArr.forEach(r => { if (r && r.month && !(dead&&dead.has('elec_'+r.month))) map[r.month] = r; });
-  localArr.forEach(l => { if (l && l.month && !(dead&&dead.has('elec_'+l.month))) map[l.month] = l; }); // local wins
+  remoteArr.forEach(r => { if (r && r.month && !(dead&&dead.has(elecKey(r)))) map[r.month] = r; });
+  localArr.forEach(l => { if (l && l.month && !(dead&&dead.has(elecKey(l)))) map[l.month] = l; }); // local wins
   return Object.values(map);
+}
+// ══ กรอกแล้วหาย (#439) — id ตายตัว (บ่อ+วันที่ / elec_เดือน) ที่เคยลบ อยู่ใน deletedIds ถาวร (merge union ทุกเครื่อง ลบออกไม่ได้)
+//    กรอกใหม่วันเดิมได้ id เดิม → dropDead ลบทิ้งทุกครั้งที่ซิงค์ (ค่าไฟ ก.ย. 69 หาย 2 รอบ · อาหาร 27/9 กรอก 5 รอบ หายทุกรอบ)
+//    แก้: ออก id ต่อท้าย _r1,_r2… ตายตัว (ทุกเครื่องได้เลขเดียวกัน ไม่เกิดสำเนา) · บิลค่าไฟใช้ tid แทน ══
+function liveIdIn(dead,base){let id=base,n=0;while(dead.has(id))id=base+'_r'+(++n);return id;}
+function liveId(base){return liveIdIn(new Set(D.deletedIds||[]),base);}
+function elecKey(b){return 'elec_'+b.month+(b.tid?'_'+b.tid:'');}
+function elecNewTid(month){const dead=new Set(D.deletedIds||[]);if(!dead.has('elec_'+month))return null;let i=0,t;do{t='r'+(++i);}while(dead.has('elec_'+month+'_'+t));return t;}
+// ของที่อยู่ในข้อมูลชุดเดียวกับ tombstone ของตัวเอง = กรอกใหม่หลังลบ (ชุดที่มี tombstone จะ dropDead ไปแล้วถ้าเป็นของเก่า)
+//    → ตั้ง id ใหม่ก่อน merge · เฉพาะ log ที่ใช้ id ตายตัว — inventoryLog ฯลฯ id ไม่ซ้ำอยู่แล้ว ไม่แตะ
+function rescueDeadIds(d){
+  if(!d||!Array.isArray(d.deletedIds)||!d.deletedIds.length)return 0;
+  const dead=new Set(d.deletedIds);let n=0;
+  const fix=arr=>(arr||[]).forEach(r=>{if(r&&r.id!==undefined&&dead.has(r.id)){r.id=liveIdIn(dead,r.id);n++;}});
+  (d.ponds||[]).forEach(p=>['feedLog','samples','labResults','records','mortalityLog'].forEach(k=>fix(p[k])));
+  (d.electricityBills||[]).forEach(b=>{if(b&&b.month&&dead.has(elecKey(b))){let i=0,t;do{t='r'+(++i);}while(dead.has('elec_'+b.month+'_'+t));b.tid=t;n++;}});
+  return n;
 }
 // ══ เก็บสำเนาข้อมูลลงเครื่อง (#419) — iPhone (Safari) ให้ localStorage ราว 5 MB = 2.62 ล้านตัวอักษร · ข้อมูลฟาร์มเกินเส้นนี้ 15 ต.ค. 69
 //    เดิม setItem throw QuotaExceededError → iPhone บันทึกไม่ขึ้น cloud + เปิดแอปขึ้น "อัปเดตไม่ได้" ══
@@ -10364,6 +10383,7 @@ function saveElecBill(){
   const bill={month,m1kwh,m1baht,m2kwh,m2baht,m3kwh,m3baht,note,totalKwh:m1kwh+m2kwh+m3kwh,totalBaht:m1baht+m2baht+m3baht};
   if(!D.electricityBills)D.electricityBills=[];
   const idx=D.electricityBills.findIndex(b=>b.month===month);
+  {const tid=idx>=0?D.electricityBills[idx].tid:elecNewTid(month);if(tid)bill.tid=tid;}   // #439
   if(idx>=0)D.electricityBills[idx]=bill;else D.electricityBills.push(bill);
   save();
   showElecMsg('✅ บันทึกบิลค่าไฟ '+fmtMonth(month)+' แล้ว','ok');
@@ -10378,8 +10398,9 @@ function clearElecBill(silent){
 }
 function deleteElecBill(month){
   if(!confirm('ลบบิลค่าไฟ '+fmtMonth(month)+' ?'))return;
+  const gone=(D.electricityBills||[]).filter(b=>b.month===month);
   D.electricityBills=(D.electricityBills||[]).filter(b=>b.month!==month);
-  D.deletedIds=D.deletedIds||[];D.deletedIds.push('elec_'+month);
+  D.deletedIds=D.deletedIds||[];(gone.length?gone:[{month}]).forEach(b=>D.deletedIds.push(elecKey(b)));
   save();renderElecKPI();renderElecHistory();renderElecActiveSection();renderElecTrendChart();renderElecCropSummary();
   const cur=document.getElementById('el-month')?.value;if(cur===month)clearElecBill(true);
 }
@@ -15639,7 +15660,7 @@ function wqgNoteSet(pid,t){
   const p=pond(pid);if(!p)return;const d=wqgDate();
   const rec=(p.records||[]).find(r=>r.date===d);
   if(rec)rec.notes=t.trim();
-  else{if(!t.trim())return;const r={id:'wq_'+pid+'_'+d,date:d,age:docAge(p.startDate,d),notes:t.trim()};PARAMS.forEach(pm=>r[pm.key]=null);p.records.push(r);p.records.sort((a,b)=>new Date(a.date)-new Date(b.date));}
+  else{if(!t.trim())return;const r={id:liveId('wq_'+pid+'_'+d),date:d,age:docAge(p.startDate,d),notes:t.trim()};PARAMS.forEach(pm=>r[pm.key]=null);p.records.push(r);p.records.sort((a,b)=>new Date(a.date)-new Date(b.date));}
   save();renderWqGrid();if(document.getElementById('ep-pond').value===pid)renderWQTable();
 }
 function wqOddAsk(list){
@@ -15666,7 +15687,7 @@ function saveWqGrid(force){
     const vals={};let any=false;
     Object.keys(dr).forEach(k=>{const s=String(dr[k]).trim().replace(',','.');if(s===''){vals[k]=null;return;}const v=parseFloat(s);if(isNaN(v)){bad.push(p.name+' '+WQG_SHORT[k]);return;}vals[k]=v;any=true;});
     let rec=(p.records||[]).find(r=>r.date===d);
-    if(!rec){if(!any)return;rec={id:'wq_'+pid+'_'+d,date:d,age:docAge(p.startDate,d),notes:''};PARAMS.forEach(pm=>rec[pm.key]=null);p.records.push(rec);p.records.sort((a,b)=>new Date(a.date)-new Date(b.date));}
+    if(!rec){if(!any)return;rec={id:liveId('wq_'+pid+'_'+d),date:d,age:docAge(p.startDate,d),notes:''};PARAMS.forEach(pm=>rec[pm.key]=null);p.records.push(rec);p.records.sort((a,b)=>new Date(a.date)-new Date(b.date));}
     Object.assign(rec,vals);rec.age=docAge(p.startDate,d);n++;
   });
   if(bad.length){alert('ตัวเลขไม่ถูกต้อง: '+bad.join(', ')+'\nแก้แล้วกดบันทึกอีกครั้ง');return;}
@@ -15839,6 +15860,7 @@ function saveWQ(){
   PARAMS.forEach(pm=>{const v=document.getElementById('ef-'+pm.key)?.value;rec[pm.key]=v===''||v===undefined?null:parseFloat(v)});
   rec.notes=document.getElementById('ep-notes').value;
   const idx=p.records.findIndex(r=>r.date===d);
+  rec.id=idx>=0&&p.records[idx].id?p.records[idx].id:liveId(rec.id);   // #439
   let msg;
   if(idx>=0){
     if(!confirm(`มีข้อมูลของวันที่ ${fD(d)} บ่อ ${p.name} อยู่แล้ว ต้องการบันทึกทับข้อมูลเดิมหรือไม่?`))return;
@@ -18085,6 +18107,9 @@ function saveFeedGridAll(){
   if(jumps.length&&!confirm('อาหารต่างจากเมื่อวานมาก\n\n'+jumps.join('\n')+'\n\nตัวเลขถูกแล้ว กด OK เพื่อบันทึก'))return;
   // ── จำยอดอาหารก่อนตัด — หลังบันทึก เบอร์ไหนจาก ≥1 เหลือ <1 = หมด → แจ้ง LINE (แก้ entry #357 · เดิม #336 แจ้งเฉพาะเบิกหน้าสต็อก)
   const feedBefore={};(D.inventoryItems||[]).forEach(i=>{if(i&&i.category==='feed')feedBefore[i.id]=parseFloat(i.qty)||0;});
+  // ── ช่องว่าง = ลบของเดิม · กันลบทั้งวันโดยไม่ตั้งใจ (#439 — 27/9/69 อาหาร 13 บ่อถูกลบพร้อมกัน) ──
+  const willDel=ponds.filter(p=>{const el=document.getElementById(`fdg-${p.id}-total`);return el&&el.value===''&&(p.feedLog||[]).some(r=>r.id==='fd_'+p.id+'_'+d||r.date===d);});
+  if(willDel.length>=2&&!confirm('ช่องว่าง = ลบอาหารวันที่ '+fD(d)+' ของ '+willDel.length+' บ่อ'+String.fromCharCode(10)+willDel.map(p=>p.name).join(', ')+String.fromCharCode(10,10)+'ต้องการลบจริง กด OK'))return;
   let saved=0,deleted=0;
   ponds.forEach(p=>{
     const totalEl=document.getElementById(`fdg-${p.id}-total`);if(!totalEl)return;
@@ -18110,7 +18135,7 @@ function saveFeedGridAll(){
     let newSacks=0;
     if(stockItemId)newSacks=Math.round(((item2?total-kg2:total)/25)*100)/100;
     if(oldRec)reverseFeedStockDeduction(oldRec);
-    const rec={id:recId,date:d,age:docAge(p.startDate,d)||0,
+    const rec={id:oldRec&&oldRec.id?oldRec.id:liveId(recId),date:d,age:docAge(p.startDate,d)||0,
       feedBrand:brand,feedGrade:oldRec?.feedGrade||'',
       totalFeed:total,feedRate:null,notes};
     // ── ล็อกราคาต่อกระสอบ (entry #298) · วันเดิม เบอร์เดิม = เก็บราคาเดิม (ข้อ 3)
@@ -18376,6 +18401,7 @@ function saveSample(){
       survivalRate:c.surv||null,biomass:c.bio!=null?Math.round(c.bio):null,
       pdg,notes:v.notes||''};
     const idx=p.samples.findIndex(r=>r.id===rec.id||r.date===d);
+    rec.id=idx>=0&&p.samples[idx].id?p.samples[idx].id:liveId(rec.id);   // #439
     if(idx>=0)p.samples[idx]=rec; else{p.samples.push(rec);p.samples.sort((a,b)=>new Date(a.date)-new Date(b.date));}
     done.push({p,rec});
   });
@@ -18943,7 +18969,7 @@ function saveMortality(){
     const count=Math.max(0,parseInt(mtValOf(p.id,d),10)||0);
     dead+=count;
     const old=p.mortalityLog.find(r=>r&&(r.id==='mt_'+p.id+'_'+d||r.date===d));
-    const rec={id:'mt_'+p.id+'_'+d,date:d,age:x.age,count,
+    const rec={id:old&&old.id?old.id:liveId('mt_'+p.id+'_'+d),date:d,age:x.age,count,
       cause:(old&&old.cause)||'',notes:(old&&old.notes)||'',by:curUserLabel()};
     if(old){Object.assign(old,rec);upd++;}
     else{p.mortalityLog.push(rec);p.mortalityLog.sort((a,b)=>new Date(a.date)-new Date(b.date));add++;}
@@ -19085,20 +19111,22 @@ function labOpenPond(pid){
   document.getElementById('lb-tbl-wrap')?.closest('.card')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function initLab(){populateAll();document.getElementById('lb-date').value=today();calcAge('lb');renderLabTable();renderLabAll();try{renderLabUse();}catch(e){console.warn('labuse',e);}updateLabSrcCount('water');updateLabSrcCount('hep');}
+// ช่องว่าง = ไม่ได้ตรวจ (null) · 0 = ตรวจแล้วไม่พบ — เดิม parseFloat()||null ทำให้ 0 หายเป็นช่องว่าง (entry #438)
+function labNum(id){const v=document.getElementById(id)?.value;if(v==null||String(v).trim()==='')return null;const n=parseFloat(v);return isFinite(n)?n:null;}
 function updateLabStatus(){
-  const tg=parseFloat(document.getElementById('lb-tcbs-g').value)||null;
-  const ty=parseFloat(document.getElementById('lb-tcbs-y').value)||null;
-  const tvc=parseFloat(document.getElementById('lb-tvc').value)||null;
-  const tvcHep=parseFloat(document.getElementById('lb-tvc-hep').value)||null;
+  const tg=labNum('lb-tcbs-g');
+  const ty=labNum('lb-tcbs-y');
+  const tvc=labNum('lb-tvc');
+  const tvcHep=labNum('lb-tvc-hep');
   const el=document.getElementById('lb-status-display');const msgs=[];
   if(tg!==null){const s=classifyOv('tcbsGreen',tg);msgs.push({s,m:`🟢 เชื้อเขียว: ${tg.toLocaleString()} CFU/mL — ${s==='ok'?'ปลอดภัย':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย AHPND!'}`})}
   if(ty!==null){const s=classifyOv('tcbsYellow',ty);msgs.push({s,m:`🟡 เชื้อเหลือง: ${ty.toLocaleString()} CFU/mL — ${s==='ok'?'ปกติ':'เฝ้าระวัง'}`})}
-  const hg=parseFloat(document.getElementById('lb-hep-g').value)||null;
-  const hy=parseFloat(document.getElementById('lb-hep-y').value)||null;
+  const hg=labNum('lb-hep-g');
+  const hy=labNum('lb-hep-y');
   if(hg!==null){const s=classifyOv('hepatoGreen',hg);msgs.push({s,m:`🟢 เชื้อเขียวในตับ: ${hg.toLocaleString()} CFU/g — ${s==='ok'?'ปลอดภัย':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย AHPND!'}`})}
   if(hy!==null){const s=classifyOv('hepatoYellow',hy);msgs.push({s,m:`🟡 เชื้อเหลืองในตับ: ${hy.toLocaleString()} CFU/g — ${s==='ok'?'ปกติ':'เฝ้าระวัง'}`})}
-  if(tvc!==null){const s=classifyOv('tvc',tvc);msgs.push({s,m:`TVC น้ำ: ${tvc.toExponential(1)} CFU/mL — ${s==='ok'?'ปกติ':s==='warn'?'เริ่มสูง':'สูงมาก'}`})}
-  if(tvcHep!==null){const s=classifyOv('tvcHepato',tvcHep);msgs.push({s,m:`TVC ตับ: ${tvcHep.toExponential(1)} CFU/g — ${s==='ok'?'ปกติ':s==='warn'?'เริ่มสูง':'สูงมาก'}`})}
+  if(tvc!==null){const s=classifyOv('tvc',tvc);msgs.push({s,m:`TVC น้ำ: ${tvc?tvc.toExponential(1):0} CFU/mL — ${s==='ok'?'ปกติ':s==='warn'?'เริ่มสูง':'สูงมาก'}`})}
+  if(tvcHep!==null){const s=classifyOv('tvcHepato',tvcHep);msgs.push({s,m:`TVC ตับ: ${tvcHep?tvcHep.toExponential(1):0} CFU/g — ${s==='ok'?'ปกติ':s==='warn'?'เริ่มสูง':'สูงมาก'}`})}
   const ehpRaw=document.getElementById('lb-ehp')?.value;const ehp=ehpRaw!==''&&ehpRaw!=null?parseFloat(ehpRaw):null;
   if(ehp!==null&&!isNaN(ehp)){const s=classifyOv('ehp',ehp);msgs.push({s,m:`EHP: พบ ${ehp}% — ${s==='ok'?'ไม่พบเชื้อ':s==='warn'?'เฝ้าระวัง':'⚠️ อันตราย เสี่ยง stunted growth'}`})}
   const ehpLarvaRaw=document.getElementById('lb-ehp-larva')?.value;const ehpLarva=ehpLarvaRaw!==''&&ehpLarvaRaw!=null?parseFloat(ehpLarvaRaw):null;
@@ -19113,14 +19141,14 @@ function saveLab(){
   const pid=document.getElementById('lb-pond').value,d=document.getElementById('lb-date').value;
   if(!pid||!d){showMsg('lb-msg','warn','กรุณาเลือกบ่อและวันที่');return}
   const p=pond(pid);if(!p)return;if(!p.labResults)p.labResults=[];
-  const tg=parseFloat(document.getElementById('lb-tcbs-g').value)||null;
-  const ty=parseFloat(document.getElementById('lb-tcbs-y').value)||null;
-  const hg=parseFloat(document.getElementById('lb-hep-g').value)||null;
-  const hy=parseFloat(document.getElementById('lb-hep-y').value)||null;
+  const tg=labNum('lb-tcbs-g');
+  const ty=labNum('lb-tcbs-y');
+  const hg=labNum('lb-hep-g');
+  const hy=labNum('lb-hep-y');
   const rec={id:'lb_'+pid+'_'+d,date:d,age:parseInt(document.getElementById('lb-age').value)||0,
     labName:document.getElementById('lb-lab').value,tcbsGreen:tg,tcbsYellow:ty,hepatoGreen:hg,hepatoYellow:hy,
-    tvc:parseFloat(document.getElementById('lb-tvc').value)||null,
-    tvcHepato:parseFloat(document.getElementById('lb-tvc-hep').value)||null,
+    tvc:labNum('lb-tvc'),
+    tvcHepato:labNum('lb-tvc-hep'),
     ehp:document.getElementById('lb-ehp').value!==''?parseFloat(document.getElementById('lb-ehp').value):null,
     ehpLarva:document.getElementById('lb-ehp-larva').value!==''?parseFloat(document.getElementById('lb-ehp-larva').value):null,
     gutInflam:document.getElementById('lb-gut').value!==''?parseFloat(document.getElementById('lb-gut').value):null,
@@ -19128,10 +19156,11 @@ function saveLab(){
     hepato:document.getElementById('lb-hepato').value||null,
     notes:document.getElementById('lb-notes').value};
   const idx=p.labResults.findIndex(r=>r.id===rec.id||r.date===d);
+  rec.id=idx>=0&&p.labResults[idx].id?p.labResults[idx].id:liveId(rec.id);   // #439
   rec.enteredAt=(idx>=0&&p.labResults[idx].enteredAt)||today();   // วันที่ลงผล (#384) — เตือน 3 วันนับจากวันนี้ · แก้ผลทีหลังไม่เลื่อนวัน
   const sg=tg!==null?(tg>1000?'danger':tg>100?'warn':'ok'):'ok';
   if(idx>=0){p.labResults[idx]=rec;showMsg('lb-msg','warn',`อัปเดต ${fD(d)}`)}
-  else{p.labResults.push(rec);p.labResults.sort((a,b)=>new Date(a.date)-new Date(b.date));showMsg('lb-msg',sg==='danger'?'danger':sg==='warn'?'warn':'ok',`✅ บันทึกผลแล็บ บ่อ ${p.name} 🟢${tg||'-'} 🟡${ty||'-'} CFU/mL`)}
+  else{p.labResults.push(rec);p.labResults.sort((a,b)=>new Date(a.date)-new Date(b.date));showMsg('lb-msg',sg==='danger'?'danger':sg==='warn'?'warn':'ok',`✅ บันทึกผลแล็บ บ่อ ${p.name} 🟢${tg??'-'} 🟡${ty??'-'} CFU/mL`)}
   save();renderLabTable();renderLabAll();renderOv();
   flashSaveBtn(document.getElementById('lb-save-btn'));
 }
@@ -19189,7 +19218,7 @@ function renderLabTable(){
         +'<td><b>'+fD(r.date)+'</b></td><td>'+(recAge(p,r)??r.age)+' วัน</td>'
         +labCell('tcbsGreen',r.tcbsGreen,sciNum)+labCell('tcbsYellow',r.tcbsYellow,sciNum)+labCell('hepatoGreen',r.hepatoGreen,sciNum)+labCell('hepatoYellow',r.hepatoYellow,sciNum)
         +el+labCell('gutInflam',r.gutInflam,pct)+labCell('lipidDroplet',r.lipidDroplet,pct)
-        +(r.tvc?labCell('tvc',r.tvc,sciNum):'<td>-</td>')+(r.tvcHepato?labCell('tvcHepato',r.tvcHepato,sciNum):'<td>-</td>')
+        +labCell('tvc',r.tvc,sciNum)+labCell('tvcHepato',r.tvcHepato,sciNum)
         +ehpTd(r)+hepTd(r)+'<td>'+mpEsc(r.labName||'-')+'</td><td style="white-space:normal;min-width:120px">'+mpEsc(r.notes||'-')+'</td></tr>';
     }).join('')+'</tbody></table>';
 }
