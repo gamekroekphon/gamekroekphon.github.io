@@ -2615,6 +2615,11 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 .sp-pill.b{background:var(--ib);color:var(--in)}
 .sp-pill.c{background:var(--ob);color:var(--ok)}
 .sp-out .mut{color:var(--tx3);font-weight:400}
+.sp-out .sp-sz{flex-basis:100%;display:flex;align-items:baseline;gap:7px;background:var(--ib);color:var(--in);border-radius:10px;padding:6px 12px}
+.sp-out .sp-sz b{font-size:calc(26px * var(--ui-scale));font-weight:800;font-variant-numeric:tabular-nums;line-height:1.15}
+.sp-out .sp-sz span{font-size:calc(13px * var(--ui-scale));font-weight:700}
+.sp-out .sp-pdg{font-weight:700;color:var(--tx)}
+.sp-out .sp-pdg i{font-style:normal;font-weight:400;color:var(--tx2)}
 .sp-note{margin-top:8px}
 .sp-note input{width:100%;border:1px solid var(--bd);border-radius:9px;background:var(--sf);font-family:inherit;
   font-size:calc(13px * var(--ui-scale));min-height:44px;padding:0 11px;color:var(--tx)}
@@ -2869,7 +2874,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
       <button class="sn-link tab-item" onclick="goTab('feed',this)">🍖 อาหาร &amp; FCR</button>
       <button class="sn-link tab-item" onclick="goTab('stock',this)">📦 สต็อก</button>
       <button class="sn-link tab-item" onclick="goTab('price',this)">💲 ราคาสินค้า</button>
-      <button class="sn-link tab-item" onclick="goTab('sample',this)">⚖️ สุ่มตัวอย่าง</button>
+      <button class="sn-link tab-item" onclick="goTab('sample',this)">⚖️ สุ่มกุ้งประจำอาทิตย์</button>
       <button class="sn-link tab-item" onclick="goTab('watlog',this)">💦 จัดการน้ำ</button>
       <button class="sn-link tab-item" onclick="goTab('mortality',this)">☠️ กุ้งตาย</button>
     </div>
@@ -2955,7 +2960,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
       <button class="tab-item" id="tab-feed" onclick="goTab('feed',this)">🍖 อาหาร &amp; FCR <span style="font-size:var(--fs10);opacity:.7">(อัตราแลกเนื้อ)</span></button>
       <button class="tab-item" id="tab-stock" onclick="goTab('stock',this)">📦 สต็อก</button>
       <button class="tab-item" id="tab-price" onclick="goTab('price',this)">💲 ราคาสินค้า</button>
-      <button class="tab-item" id="tab-sample" onclick="goTab('sample',this)">⚖️ สุ่มตัวอย่าง</button>
+      <button class="tab-item" id="tab-sample" onclick="goTab('sample',this)">⚖️ สุ่มกุ้งประจำอาทิตย์</button>
       <button class="tab-item" id="tab-watlog" onclick="goTab('watlog',this)">💦 จัดการน้ำ</button>
       <button class="tab-item" id="tab-mortality" onclick="goTab('mortality',this)">☠️ กุ้งตาย</button>
     </div>
@@ -3044,7 +3049,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
     <button class="mob-sheet-item" data-t="feed" onclick="mobMenuGo(this)"><span class="ic">🍖</span>อาหาร &amp; FCR</button>
     <button class="mob-sheet-item" data-t="stock" onclick="mobMenuGo(this)"><span class="ic">📦</span>สต็อก</button>
     <button class="mob-sheet-item" data-t="price" onclick="mobMenuGo(this)"><span class="ic">💲</span>ราคาสินค้า</button>
-    <button class="mob-sheet-item" data-t="sample" onclick="mobMenuGo(this)"><span class="ic">⚖️</span>สุ่มตัวอย่าง</button>
+    <button class="mob-sheet-item" data-t="sample" onclick="mobMenuGo(this)"><span class="ic">⚖️</span>สุ่มกุ้งประจำอาทิตย์</button>
     <button class="mob-sheet-item" data-t="watlog" onclick="mobMenuGo(this)"><span class="ic">💦</span>จัดการน้ำ</button>
     <button class="mob-sheet-item" data-t="mortality" onclick="mobMenuGo(this)"><span class="ic">☠️</span>กุ้งตาย</button>
     <div class="mob-sheet-grp">🌾 บันทึกรอบเลี้ยง</div>
@@ -3818,7 +3823,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
 </div>
 <!-- SAMPLING -->
 <div id="sec-sample" class="sec">
-  <div class="sec-hdr"><div class="sec-title">⚖️ สุ่มตัวอย่าง (Sampling)</div></div>
+  <div class="sec-hdr"><div class="sec-title">⚖️ สุ่มกุ้งประจำอาทิตย์</div></div>
   <div class="dz-bar" id="sp-zones"></div>
   <div class="g2" style="margin-bottom:16px;align-items:start">
     <div class="card">
@@ -18252,7 +18257,7 @@ function spPartialsOn(p,d){return(p.partialHarvests||[]).filter(x=>x&&(!d||!x.da
 function spCalc(p,v,d){
   const cnt=parseFloat(v.count)||0, kg=parseFloat(v.weight)||0, surv=parseFloat(v.surv)||0;
   const abw=cnt>0?(kg*1000)/cnt:0;
-  const size=abw>0?Math.round(1000/abw):0;
+  const size=abw>0?Math.round(1000/abw):0;   // เลขเต็มที่เก็บลง plCount — บนจอใช้ spSz() 2 ตำแหน่งไม่ปัด
   let bio=null,inPond=null,ph=null;
   if(abw>0&&surv>0){
     ph=partialTotals(spPartialsOn(p,d));
@@ -18288,6 +18293,8 @@ function spUseFeed(pid){
   const inp=card?card.querySelector('.sp-sv input'):null;if(inp)inp.value=v.surv;
   spRefreshRow(p,d);
 }
+// ไซส์บนจอ = 1000 ÷ ABW (2 ตำแหน่งตามที่เก็บ) ทศนิยม 2 ตำแหน่ง ตัดทิ้ง ไม่ปัดขึ้น/ลง (พี่สั่ง 3 พ.ย. 69) — การ์ด/ตาราง/ผลหลังบันทึกต้องใช้ ABW ชุดเดียวกัน · plCount ที่เก็บยังเป็นเลขเต็ม
+function spSz(abw){const a=parseFloat(abw);if(!(a>0))return null;return(Math.floor(1000/a*100+1e-9)/100).toFixed(2);}
 function spOutHtml(p,d,v){
   const c=spCalc(p,v,d);
   if(!(c.abw>0))return'';
@@ -18298,10 +18305,10 @@ function spOutHtml(p,d,v){
   let grow='';
   if(prev&&prev.abw){
     const days=dDiff(prev.date,d);
-    if(days>0)grow='<span class="mut">โต '+((c.abw-prev.abw)/days>=0?'+':'')+(((c.abw-prev.abw)/days).toFixed(2))+' ก./วัน (จาก '+prev.abw+' ก.)</span>';
+    if(days>0)grow='<span class="sp-pdg">PDG '+((c.abw-prev.abw)/days>=0?'+':'')+(((c.abw-prev.abw)/days).toFixed(2))+' ก./วัน <i>(จาก '+prev.abw+' ก.)</i></span>';
   }
-  return fdLine+'<span class="sp-pill a">ABW '+c.abw.toFixed(2)+' ก.</span>'
-    +'<span class="sp-pill b">ไซส์ '+c.size+' ตัว/กก.</span>'
+  return fdLine+'<div class="sp-sz">ไซส์ <b>'+spSz(Math.round(c.abw*100)/100)+'</b><span>ตัว/กก.</span></div>'
+    +'<span class="sp-pill a">ABW '+c.abw.toFixed(2)+' ก.</span>'
     +(c.bio!=null?'<span class="sp-pill c">Biomass '+Math.round(c.bio).toLocaleString()+' กก.</span>':'')
     +grow
     +((c.ph&&c.ph.count>0)?'<span class="mut">(หักพาเชียลไปแล้ว '+Math.round(c.ph.count).toLocaleString()+' ตัว)</span>':'');
@@ -18472,7 +18479,7 @@ function renderSampleResult(done,d){
         const verdict=ratio>=0.95?'<b style="color:var(--ok)">✓ ตามเกณฑ์</b>':ratio>=0.85?'<b style="color:var(--w)">△ ต่ำกว่าเกณฑ์เล็กน้อย</b>':'<b style="color:var(--d)">✗ ต่ำกว่าเกณฑ์ ควรติดตาม</b>';
         chips.push(chip('เป้าหมายอายุ '+rAge+' วัน ~'+target.toFixed(1)+' g '+verdict));
       }
-      if(rec.plCount)chips.push(chip('ไซส์ ~'+rec.plCount+' ตัว/กก.'));
+      if(rec.abw>0||rec.plCount)chips.push(chip('ไซส์ <b>'+(spSz(rec.abw)||rec.plCount)+'</b> ตัว/กก.'));
       if(rec.biomass)chips.push(chip('Biomass ~'+Math.round(rec.biomass).toLocaleString()+' กก.'));
       return'<div style="padding:5px 0'+(done.length>1?';border-bottom:1px dashed var(--bd)':'')+'">'
         +'<div style="font-weight:700;font-size:calc(13px * var(--ui-scale));margin-bottom:5px">บ่อ '+mpEsc(p.name)
@@ -18549,7 +18556,7 @@ function renderSampleTable(reset){
         +'<td>'+((recAge(p,r)!=null?recAge(p,r):r.age)||'-')+'</td>'
         +'<td>'+(r.sampleCount||'-')+'</td><td>'+(r.sampleWeight!=null?r.sampleWeight+' กก.':'-')+'</td>'
         +'<td><strong style="color:var(--p)">'+(r.abw!=null?Number(r.abw).toFixed(2):'-')+'</strong></td>'
-        +'<td><strong style="color:var(--in)">'+(r.plCount||'-')+'</strong></td>'
+        +'<td><strong style="color:var(--in)">'+(spSz(r.abw)||r.plCount||'-')+'</strong></td>'
         +'<td>'+(r.survivalRate?r.survivalRate+'%':'-')+'</td>'
         +'<td>'+(b!=null?Math.round(b).toLocaleString():'-')+'</td>'
         +'<td>'+(sf.feed>0?Math.round(sf.feed).toLocaleString():'-')+'</td>'
