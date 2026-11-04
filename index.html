@@ -5834,6 +5834,7 @@ async function initFirebase() {
 
     lgLoaded(true);
     if (_pushAfter) setTimeout(save, 0);
+    else fix444Run();   // #444 แก้ยอดครั้งเดียว (admin)
     // ── Real-time listener — ฟังแค่ updated (ไม่กี่ไบต์) พอเปลี่ยนค่อยดึงตัวบีบอัด (entry #297)
     //    เดิมฟังทั้ง node → ทุกครั้งที่ใครบันทึก ทุกเครื่องที่เปิดอยู่โหลด 2 MB ──
     if (_unsubscribe) _unsubscribe();
@@ -6592,6 +6593,36 @@ function elecNewTid(month){const dead=new Set(D.deletedIds||[]);if(!dead.has('el
 //    รายการอาหารหายทุกรอบ แต่ log ตัดสต็อกค้าง (7704S 170.4 · 7703S 358.4 · 7702S 18.4 กระสอบ)
 //    ลบ log อย่างเดียว ไม่คืนยอดสต็อก — ยอดนับปรับให้ตรงของจริงแล้ว 20/10/69 (พี่สั่ง 23 ต.ค. 69) ══
 function fix440Ids(){return ["sl_fd_1790561245577_90hq","sl_fd_1790561245579_hbzo","sl_fd_1790561245581_lmqy","sl_fd_1790561245582_09py","sl_fd_1790561245583_kwgg","sl_fd_1790561245584_qijh","sl_fd_1790561245585_xqw6","sl_fd_1790561245586_4agc","sl_fd_1790561245587_92o0","sl_fd_1790561245587_v3rm","sl_fd_1790561245588_gvps","sl_fd_1790561245589_nsig","sl_fd_1790561245589_bris","sl_fd_1791175319276_eww5","sl_fd_1791175319278_5cbk","sl_fd_1791175319279_elkr","sl_fd_1791175319279_z64j","sl_fd_1791175319279_j980","sl_fd_1791175319279_o80z","sl_fd_1791175319280_vyvy","sl_fd_1791175319280_kw5c","sl_fd_1791175319280_38y4","sl_fd_1791175319281_yf1r","sl_fd_1791175319281_4e6p","sl_fd_1791175319281_hc8p","sl_fd_1791175319281_wnwy","sl_fd_1791642966398_fm9e","sl_fd_1791642966400_4h1z","sl_fd_1791642966401_qr1l","sl_fd_1791642966402_huor","sl_fd_1791642966403_8hu4","sl_fd_1791642966405_v9ik","sl_fd_1791642966406_rxyy","sl_fd_1791642966407_pfeq","sl_fd_1791642966408_q6e1","sl_fd_1791642966409_v8ac","sl_fd_1791642966410_uzn3","sl_fd_1791642966410_x8i0","sl_fd_1791642966411_0n25","sl_fd_1791784677847_u0p8","sl_fd_1791784677848_swzf","sl_fd_1791784677849_444h","sl_fd_1791784677850_t5oi","sl_fd_1791784677851_w3wf","sl_fd_1791784677851_ukzc","sl_fd_1791784677852_6zlb","sl_fd_1791784677852_t5es","sl_fd_1791784677852_z0es","sl_fd_1791784677853_jagn","sl_fd_1791784677853_9cwc","sl_fd_1791784677853_26x4","sl_fd_1791784677853_i3qu"];}
+// ══ #444 แก้ยอดสต็อก 20 รายการที่ถูกเครื่องแอปเวอร์ชันเก่าทับ 4 พ.ย. 69 ช่วง 10:30–12:23 (ก่อนทุกเครื่องได้ #443) — พี่สั่ง "ทำ ก"
+//    ยอดที่ควรเป็น = ยอด cloud 09:42 + รายการเบิก/รับที่บันทึกหลังจากนั้น (ประวัติครบ ยอดคงเหลือผิด) · คำนวณ ณ cloud 13:39:52
+//    ทำครั้งเดียวทั้งฟาร์ม: เฉพาะเครื่อง admin ตอนโหลดจาก cloud เสร็จ + ไม่มีของค้างส่ง · ทำแล้วใส่ 'fix444' ใน deletedIds (union ข้ามเครื่อง)
+//    กันพลาด: ยอดตอนนี้ต้อง = ยอด 13:39 + รายการที่สร้างหลัง 13:39 (ดูจากเวลาใน id) ไม่ตรง = ข้ามตัวนั้น ไม่เดา (เช่นมีการลบรายการเก่า) ──
+const FIX444_T1=Date.parse('2026-11-04T06:39:52.582Z');
+function fix444Rows(){return [["cat1783083936056_3yp7_บลัง", -59.2, -112.6], ["cat1783083936056_mead_บลัง", 143.4, 30.4], ["cat1783083936056_331j_ไอแบ", 22, 20], ["cat1783083936056_746i_แอคต", 39.5, 32], ["cat1783083936056_bt6c_โซเด", 50, 46], ["cat1783083936056_h4un_โปตั", 15, 14], ["cat1783083936056_x70k_แอสม", 41.5, 34], ["cat1783083936056_xzmw_แลคโ", 319.63, 296.63], ["cat1783083936056_nppb_บิ๊ก", 62, 58], ["cat1783083936056_omtr_ข้อต", 16, 4], ["cat1783083936056_x8mp_ยอยก", 5, 1], ["cat1783083936056_o6w4_ทุ่น", 107, 104], ["cat1783083936056_wygw_บ่าท", 108, 103], ["cat1783083936056_b0p3_ใบพั", 195, 166], ["cat1783083936056_bckh_บู๊ต", 400, 300], ["cat1783083936056_2ghz_ทุ่น", 15, 6], ["sk1783142695358_9wx1", 2, 0], ["cat1787820647513_phia_ไลโซ", 15.5, 14], ["sk1789739607544_new1", 0, 79], ["cat1792218332258_u9t8_แลคโ", 51, 48]];}   // [id, ยอด ณ 13:39, ยอดที่ควรเป็น ณ 13:39]
+function fix444Run(){
+  if(APP_ROLE!=='admin'||!_dReal||unsynced())return;
+  if((D.deletedIds||[]).includes('fix444'))return;
+  const items={};(D.inventoryItems||[]).forEach(i=>{if(i&&i.id)items[i.id]=i;});
+  const since={};
+  (D.inventoryLog||[]).forEach(l=>{
+    const m=/^(?:sl_fd_|sl|adj)(\d{13})/.exec((l&&l.id)||'');if(!m||+m[1]<=FIX444_T1)return;
+    const q=parseFloat(l.qty)||0,e=(l.type==='in'||l.type==='adj')?q:(['out','shared','sale','toShop'].includes(l.type)?-q:0);
+    since[l.itemId]=(since[l.itemId]||0)+e;
+  });
+  const done=[],skip=[];
+  fix444Rows().forEach(([id,now,exp])=>{
+    const it=items[id];if(!it)return;
+    const cur=parseFloat(it.qty)||0,ds=since[id]||0,want=now+ds,feed=it.category==='feed';
+    // หน้าสต็อกตัดยอดไม่ต่ำกว่า 0 (ไม่ใช่อาหาร) — ยอด 0 ที่ควรติดลบถือว่าตรง
+    if(!(Math.abs(cur-want)<=0.01||(!feed&&cur===0&&want<0))){skip.push(it.name);return;}
+    let t=Math.round((exp+ds)*100)/100;if(!feed&&t<0)t=0;
+    it.qty=t;done.push(it.name+' '+cur+'→'+t);
+  });
+  D.deletedIds=D.deletedIds||[];D.deletedIds.push('fix444');
+  console.info('#444 ปรับยอดสต็อก',done.length,'รายการ',done,'ข้าม',skip);
+  save();
+  try{if(document.getElementById('sec-stock')?.classList.contains('on')){renderStockKPI();renderStockWarn();renderStockItems();}}catch(e){}
+}
 function fix440DropFeedOrphans(d){
   if(!d||!Array.isArray(d.inventoryLog))return 0;
   const ids=new Set(fix440Ids()),n0=d.inventoryLog.length;
