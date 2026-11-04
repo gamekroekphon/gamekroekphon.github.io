@@ -5789,6 +5789,7 @@ async function initFirebase() {
       await _lsZReady;   // iPhone: รอแตกสำเนาบีบอัดในเครื่องก่อน (#420)
       if (unsynced() && _dReal) { D = mergeRemote(D, remote); _pushAfter = true; }   // มีของบันทึกแล้วยังไม่ถึง cloud — ห้ามโหลดทับ (เฉพาะ D จริง #421)
       else { D = remote; lsPut(LS_UNSYNC_K,null); }
+      stkBaseSet(remote);   // #443
       _dReal = true;
       tickMemoClear();
       _lastUpdated = first.updated;lsDataAt(first.updated);
@@ -5851,6 +5852,7 @@ async function initFirebase() {
         const remote = normalizeD(JSON.parse(r.json));
         if (unsynced() && _dReal) { D = mergeRemote(D, remote); setTimeout(save, 0); }   // มีของค้างส่ง — รวม ไม่ทับ (#420)
         else D = remote;
+        stkBaseSet(remote);   // #443
         _dReal = true;
         tickMemoClear();
         _lastUpdated = r.updated;lsDataAt(r.updated);
@@ -6532,6 +6534,7 @@ function mergeRemote(local, remote) {
   merged.staff = dropDead(mergeArr(merged.staff, remote.staff));
   merged.electricityBills = mergeByMonth(merged.electricityBills||[], remote.electricityBills||[], dead);
   merged.inventoryItems = dropDead(mergeArr(merged.inventoryItems||[], remote.inventoryItems||[]));
+  stkMergeQty(merged.inventoryItems, local, remote);   // #443 ยอดคงเหลือ = cloud + ส่วนที่เครื่องนี้เปลี่ยนเอง (ไม่ใช่เครื่องชนะทั้งก้อน)
   merged.inventoryLog = dropDead(mergeArr(merged.inventoryLog||[], remote.inventoryLog||[]));
   // ⚠️ ต้อง merge ด้วย ไม่งั้นที่กันกรอกจากอีกเครื่องจะหายตอนซิงค์ (id เป็น kan_<บ่อ>_<วันลง> คงที่ข้ามเครื่อง)
   merged.kanDraft = dropDead(mergeArr(merged.kanDraft||[], remote.kanDraft||[]));
@@ -6620,6 +6623,23 @@ const SKZ='tawan_v3_z',LS_UNSYNC_K='tw_unsynced2',LS_PEND_EV='tw_pendEv',LS_PEND
 //    → #420 เอาข้อมูลตั้งต้นไป merge ทับ cloud: harvestLog 659 หาย · Protocol 19→5 · บ่อปลอม A.12 · record ปลอม 343
 //    ธงเก่า tw_unsynced และสำเนาเก่าที่ไม่มี tw_skBase2 ไม่นับ
 let _lsFull=false,_lsZSeq=0,_saveInflight=false,_lsZReady=Promise.resolve(),_unsyncShown=false;
+// ══ ยอดสต็อกรวมแบบ 3 ทาง (#443) — 27 ต.ค. 69 รับแป๊ป ZIGA 91 แล้วอีกเครื่องที่ถือยอดเก่า (0) บันทึกตามมา → mergeArr ให้ของเครื่องชนะทั้งก้อน ยอดกลับเป็น 0
+//    _stkBase = ยอด qty/shopQty ของ cloud ชุดล่าสุดที่เครื่องนี้รู้ · ตอน merge: ยอด = cloud + (เครื่อง − base) = ได้ทั้งของเครื่องอื่นและที่เครื่องนี้เปลี่ยนเอง
+//    ตั้ง base ทุกครั้งที่ D ตรงกับ cloud (โหลด · ดึง · เขียนสำเร็จ) · เก็บใน localStorage ไว้ใช้ตอนเปิดแอปใหม่ที่มีของค้างส่ง · ไม่มี base = แบบเดิม (เครื่องชนะ) ══
+const LS_STK_BASE='tw_stkBase';
+let _stkBase=(()=>{try{return JSON.parse(localStorage.getItem(LS_STK_BASE)||'null');}catch(e){return null;}})();
+function stkQtyMap(d){const m={};((d&&d.inventoryItems)||[]).forEach(i=>{if(i&&i.id)m[i.id]=[parseFloat(i.qty)||0,parseFloat(i.shopQty)||0];});return m;}
+function stkBaseSet(d){_stkBase=stkQtyMap(d);try{localStorage.setItem(LS_STK_BASE,JSON.stringify(_stkBase));}catch(e){}}
+function stkMergeQty(items,local,remote){
+  if(!_stkBase)return;
+  const L=stkQtyMap(local),Rm=stkQtyMap(remote);
+  (items||[]).forEach(it=>{
+    const b=_stkBase[it.id],l=L[it.id],r=Rm[it.id];if(!b||!l||!r)return;
+    it.qty=Math.round((r[0]+l[0]-b[0])*100)/100;
+    const sq=Math.round((r[1]+l[1]-b[1])*100)/100;
+    if(sq||it.shopQty!=null)it.shopQty=sq;
+  });
+}
 let _dReal=(()=>{try{return !!(localStorage.getItem(SK)&&localStorage.getItem('tw_skBase2'));}catch(e){return false;}})();
 try{localStorage.removeItem('tw_unsynced');}catch(e){}
 function lsSetD(json){
@@ -6688,11 +6708,13 @@ async function save() {
       if (r) {
         const remote = normalizeD(JSON.parse(r.json));
         D = mergeRemote(D, remote);tickMemoClear();
+        stkBaseSet(remote);   // #443 เขียนไม่สำเร็จ = cloud ยังเป็นชุดนี้
       }
     }
     const json = JSON.stringify(D);
     lsSetD(json);
     await writeRemote(json);
+    stkBaseSet(D);   // #443 cloud = D แล้ว
     setSyncStatus('sync-ok', '✅ บันทึกสำเร็จ');
     syncedOk();
     return true;
@@ -6717,6 +6739,7 @@ async function saveForce(){
   try{
     const json=JSON.stringify(D);
     await writeRemote(json);
+    stkBaseSet(D);   // #443
     setSyncStatus('sync-ok','✅ บันทึกสำเร็จ');
     syncedOk();return true;
   }catch(e){setSyncStatus('sync-err','⚠️ บันทึกไม่ได้: '+e.message);unsyncBar('err');return false;}
