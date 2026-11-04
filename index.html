@@ -5850,6 +5850,7 @@ async function initFirebase() {
         const r = await fetchRemoteJson();
         if (!r || r.updated === _lastUpdated) return;
         if (Date.now() < _remoteIgnoreUntil) { setTimeout(pullRemote, _remoteIgnoreUntil - Date.now() + 50); return; }   // กำลังบันทึกของเราเองอยู่ — กลับมาดูใหม่พอพ้นช่วง
+        if (_saveInflight || _saveQueued) { setTimeout(pullRemote, 500); return; }   // #445 ห้าม merge ระหว่างที่ save ยังเขียนไม่เสร็จ (base จะเพี้ยน)
         const remote = normalizeD(JSON.parse(r.json));
         if (unsynced() && _dReal) { D = mergeRemote(D, remote); setTimeout(save, 0); }   // มีของค้างส่ง — รวม ไม่ทับ (#420)
         else D = remote;
@@ -6660,7 +6661,8 @@ let _lsFull=false,_lsZSeq=0,_saveInflight=false,_lsZReady=Promise.resolve(),_uns
 const LS_STK_BASE='tw_stkBase';
 let _stkBase=(()=>{try{return JSON.parse(localStorage.getItem(LS_STK_BASE)||'null');}catch(e){return null;}})();
 function stkQtyMap(d){const m={};((d&&d.inventoryItems)||[]).forEach(i=>{if(i&&i.id)m[i.id]=[parseFloat(i.qty)||0,parseFloat(i.shopQty)||0];});return m;}
-function stkBaseSet(d){_stkBase=stkQtyMap(d);try{localStorage.setItem(LS_STK_BASE,JSON.stringify(_stkBase));}catch(e){}}
+function stkBaseApply(m){_stkBase=m;try{localStorage.setItem(LS_STK_BASE,JSON.stringify(m));}catch(e){}}
+function stkBaseSet(d){stkBaseApply(stkQtyMap(d));}
 function stkMergeQty(items,local,remote){
   if(!_stkBase)return;
   const L=stkQtyMap(local),Rm=stkQtyMap(remote);
@@ -6721,12 +6723,25 @@ function billBar(st){
 // ส่งซ้ำเองเมื่อเน็ตกลับมา + ทุก 60 วิ ระหว่างมีของค้าง
 window.addEventListener('online',()=>{if(unsynced()&&firebase.apps.length&&firebase.auth().currentUser)save();});
 setInterval(()=>{if(unsynced()&&!_saveInflight&&navigator.onLine!==false&&firebase.apps.length&&firebase.auth().currentUser)save();},60000);
+// ── #445 บันทึกทีละรอบ (ต่อคิว) — 4 พ.ย. 69 ลบ 4 รายการแล้วกรอกใหม่ ยอดลดซ้ำ 2–3 เท่า: save หลายรอบวิ่งซ้อนกัน + pullRemote merge ระหว่างที่ยังเขียนไม่เสร็จ
+//    ทำให้ _stkBase (#443) ไม่ตรงกับของที่อยู่บน cloud จริง → ส่วนต่างถูกบวกซ้ำ · ตอนนี้: เขียนลงเครื่องทันทีเหมือนเดิม แต่ส่งขึ้น cloud ทีละรอบ
+//    รอบที่รอคิวอยู่แล้วใช้ร่วมกัน (ส่ง D ล่าสุดตอนเริ่ม) · base = ยอดของ JSON ที่เขียนจริง ไม่ใช่ D ตอนเขียนเสร็จ ──
+//    ⚠️ ต้องเป็น async — seedPonds() เรียก save() ตอนโหลดสคริปต์ก่อน `let _dReal`/`_saveChain` จะถูกสร้าง (TDZ) · async = error กลายเป็น promise ที่ reject ไม่หยุดทั้งแอป
+let _saveChain=Promise.resolve(),_saveQueued=null;
 async function save() {
   tickMemoClear();   // ข้อมูลเพิ่งเปลี่ยน — แคชระหว่างวาด (#363) ต้องล้าง
-  if (!_dReal) { console.warn('ยังไม่ได้โหลดข้อมูลจริง — ไม่บันทึก (#421)'); return false; }
+  if (!_dReal) { console.warn('ยังไม่ได้โหลดข้อมูลจริง — ไม่บันทึก (#421)'); return Promise.resolve(false); }
   lsSetD(JSON.stringify(D));
   lsPut(LS_UNSYNC_K,'1');   // ยังไม่ถึง cloud จนกว่า writeRemote จะสำเร็จ (#420)
-  if (!firebase.apps.length) return false;
+  if (!firebase.apps.length) return Promise.resolve(false);
+  if (_saveQueued) return _saveQueued;
+  const p = _saveChain.then(() => { _saveQueued = null; return saveCore(); });
+  _saveQueued = p;
+  _saveChain = p.catch(() => false);
+  return p;
+}
+async function saveCore() {
+  if (!_dReal || !firebase.apps.length) return false;
   _saveInflight = true;
   _remoteIgnoreUntil = Date.now() + 4000;
   setSyncStatus('sync-load', 'กำลังบันทึก...');
@@ -6742,10 +6757,10 @@ async function save() {
         stkBaseSet(remote);   // #443 เขียนไม่สำเร็จ = cloud ยังเป็นชุดนี้
       }
     }
-    const json = JSON.stringify(D);
+    const json = JSON.stringify(D), wBase = stkQtyMap(D);   // #445 base = ยอดของ JSON ที่ส่งจริง
     lsSetD(json);
     await writeRemote(json);
-    stkBaseSet(D);   // #443 cloud = D แล้ว
+    stkBaseApply(wBase);   // #443 cloud = JSON ที่ส่ง
     setSyncStatus('sync-ok', '✅ บันทึกสำเร็จ');
     syncedOk();
     return true;
@@ -6768,9 +6783,9 @@ async function saveForce(){
   _remoteIgnoreUntil=Date.now()+4000;
   setSyncStatus('sync-load','กำลังบันทึก...');
   try{
-    const json=JSON.stringify(D);
+    const json=JSON.stringify(D),wBase=stkQtyMap(D);
     await writeRemote(json);
-    stkBaseSet(D);   // #443
+    stkBaseApply(wBase);   // #443 #445
     setSyncStatus('sync-ok','✅ บันทึกสำเร็จ');
     syncedOk();return true;
   }catch(e){setSyncStatus('sync-err','⚠️ บันทึกไม่ได้: '+e.message);unsyncBar('err');return false;}
