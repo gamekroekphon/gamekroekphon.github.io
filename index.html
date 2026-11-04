@@ -2045,6 +2045,15 @@ body.role-admin .bnav-btn.bn-staff{display:none}
 body.zone-keeper .bnav-btn.bn-keeper{display:flex}
 body.zone-keeper .bnav-btn.bn-staff,body.zone-keeper .bnav-btn.bn-admin,body.zone-keeper #bnav-stock{display:none}
 /* คนหน้าร้าน (#337) — body.shop-clerk ตั้งจากชื่อคนล็อกอิน (SHOP_CLERKS) · แถบล่าง = หน้าร้าน · สต็อก · ราคาสินค้า · อุปกรณ์นอก · เพิ่มเติม */
+/* คนหน้าร้านบนคอม (#446) — เมนูซ้ายเหลือ ⭐ งานของฉัน + ใช้บ้าง · ที่เหลือพับ (ck-open = เปิดเมนูเต็ม) */
+.sn-clerk{display:flex;flex-direction:column;gap:2px}
+.sn-clerk-h{font-size:calc(12px * var(--ui-scale));font-weight:700;color:var(--sn-lime);margin:8px 8px 3px}
+.side-nav .sn-clerk .sn-top{font-size:calc(15.5px * var(--ui-scale));padding:11px 12px}
+.side-nav .sn-clerk .sn-link{padding-left:16px;font-size:calc(13px * var(--ui-scale));color:#cfe2d4}
+.side-nav .sn-clerk .sn-link.on::before{left:4px}
+.sn-clerk-fold{display:flex;justify-content:space-between;align-items:center;margin:10px 0 4px;width:100%;background:none;border:1.5px dashed #3d6b53;border-radius:9px;color:#F2FAF2;font-family:inherit;font-size:calc(13px * var(--ui-scale));font-weight:600;padding:8px 11px;cursor:pointer}
+.sn-clerk-fold:hover{background:var(--sn-bg2)}
+body.shop-clerk .side-nav:not(.ck-open) .sn-nav>:not(.sn-clerk){display:none!important}
 /* เจ้าของ (#343) — body.owner-mode จากชื่อล็อกอิน (OWNER_NAMES) · แถบล่าง = สรุป · สต็อก · ราคาสินค้า · สถิติจับกุ้ง · เพิ่มเติม */
 .bnav-btn.bn-owner{display:none}
 body.owner-mode .bnav-btn.bn-owner{display:flex}
@@ -2868,6 +2877,22 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   <div class="sn-logo"><span class="sn-mark">🦐</span> ตะวันฟาร์ม</div>
   <div class="sn-label">เมนูหลัก</div>
   <nav class="sn-nav">
+    <!-- คนหน้าร้านบนคอม (#446) — ชุดเดียวกับแถบล่าง + ⭐ ในเมนูเพิ่มเติมของมือถือ · เมนูอื่นพับไว้ (sn-clerk-fold) -->
+    <div class="sn-clerk clerk-only">
+      <div class="sn-clerk-h">⭐ งานของฉัน</div>
+      <button class="sn-top sn-ck" data-ck="shop" onclick="clerkNav(this)"><span>🏪</span> บุญชู</button>
+      <button class="sn-top sn-ck" data-ck="stock" onclick="clerkNav(this)"><span>📦</span> สต็อก</button>
+      <button class="sn-top sn-ck" data-ck="sale" onclick="openSale()"><span>🛒</span> ขาย</button>
+      <button class="sn-top sn-ck" data-ck="price" onclick="clerkNav(this)"><span>💲</span> ราคาสินค้า</button>
+      <button class="sn-top sn-ck" data-ck="ext" onclick="clerkNav(this)"><span>🔧</span> อุปกรณ์นอก</button>
+      <div class="sn-clerk-h">ใช้บ้าง</div>
+      <button class="sn-link sn-ck" data-ck="overview" onclick="clerkNav(this)">🏠 ภาพรวมบ่อ</button>
+      <button class="sn-link sn-ck" data-ck="stock-sale" onclick="clerkNav(this)">🛒 ยอดขายลูกค้าภายนอก</button>
+      <button class="sn-link sn-ck" data-ck="alerts" onclick="clerkNav(this)">🔔 การแจ้งเตือน</button>
+      <button class="sn-link sn-ck" data-ck="labor" onclick="clerkNav(this)">👷 ค่าแรง</button>
+      <button class="sn-link sn-ck" data-ck="elec" onclick="clerkNav(this)">⚡ ค่าไฟฟ้า</button>
+      <button type="button" class="sn-clerk-fold" onclick="snClerkFold()"><span>เมนูอื่นทั้งหมด <span id="sn-clerk-n"></span></span><span id="sn-clerk-arr">▸</span></button>
+    </div>
     <button class="sn-top tab on" id="sn-overview" onclick="goTab('overview',this)"><span>🏠</span> ภาพรวม</button>
 
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-daily')"><span>📅</span> รายวัน <span class="sn-caret">▾</span></button>
@@ -5403,6 +5428,29 @@ function clerkFoldLabel(){
   ['mob-clerk-arr','mob-own-arr'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=body.classList.contains('clerk-open')?'▴':'▾';});
 }
 function toggleClerkFold(){document.getElementById('mobMenuBody')?.classList.toggle('clerk-open');clerkFoldLabel();}
+// ── คนหน้าร้านบนคอม (#446 พี่สั่ง 4 พ.ย. 69) — เมนูซ้ายชุดเดียวกับมือถือ · data-ck แทน goTab('…') ใน onclick (goTabByName หาเมนูจาก onclick — กันมาเจอปุ่มชุดนี้) ──
+function clerkNav(btn){
+  const t=btn&&btn.dataset.ck;if(!t)return;
+  if(t==='shop'||t==='ext')clerkGo(t);
+  else if(t==='alerts')bnavAlerts(null);
+  else if(t==='stock-sale'){document.getElementById('tab-stock')?.click();stockTab('sale',document.getElementById('skb-sale'));}
+  else document.getElementById('tab-'+t)?.click();
+  setTimeout(()=>clerkNavMark(t),0);
+}
+function clerkNavMark(t){
+  document.querySelectorAll('.side-nav .sn-top.on,.side-nav .sn-link.on').forEach(b=>b.classList.remove('on'));
+  document.querySelector('.sn-ck[data-ck="'+t+'"]')?.classList.add('on');
+}
+function snClerkFold(){
+  const nav=document.getElementById('sideNav');if(!nav)return;
+  nav.classList.toggle('ck-open');
+  const arr=document.getElementById('sn-clerk-arr');if(arr)arr.textContent=nav.classList.contains('ck-open')?'▾':'▸';
+}
+function snClerkCount(){
+  const el=document.getElementById('sn-clerk-n');if(!el)return;
+  const n=[...document.querySelectorAll('.side-nav .sn-nav .sn-top,.side-nav .sn-nav .sn-link')].filter(b=>!b.closest('.sn-clerk')&&(!b.classList.contains('admin-only')||APP_ROLE==='admin')).length;
+  el.textContent='('+n+')';
+}
 // ══════ หน้ามือถือเจ้าของ (ก้อย/กุ้ง — พี่สั่ง entry #343) ══════
 //    ดูอย่างเดียว ไม่กรอกอะไร · เปิดมาเจอ Zone A ทุกครั้ง · คอมเหมือนเดิม · สิทธิ์ตามบัญชี (staff ไม่เห็นต้นทุน)
 //    4 กล่องบนสุด = ก๊อปจาก #ov-kpi-bar ของ renderOv() — ตัวเลขชุดเดียวกับหน้าภาพรวม ห้ามคิดคู่ขนาน
@@ -5526,6 +5574,8 @@ function updateUserHeader(user,role){
   document.body.classList.toggle('shop-clerk',isClerk);
   // เปิดแอปบนมือถือ (มีแถบล่าง) → หน้าร้านทันที ครั้งเดียวต่อการเปิดแอป · รอ applyRole ข้างล่างก่อน (หน้าร้านเป็นของ admin)
   if(isClerk&&!_clerkLanded&&getComputedStyle(document.getElementById('bnav')).display!=='none'){_clerkLanded=true;setTimeout(()=>clerkGo('shop'),0);}
+  // คอม (#446) เปิดมาหน้าบุญชูเหมือนมือถือ
+  else if(isClerk&&!_clerkLanded){_clerkLanded=true;setTimeout(()=>{clerkGo('shop');clerkNavMark('shop');snClerkCount();},0);}
   const n=document.getElementById('hdr-uname');if(n)n.textContent=uname;
   const mn=document.getElementById('mobile-uname');if(mn)mn.textContent=uname;
   const sn=document.getElementById('sn-uname');if(sn)sn.textContent=uname;
