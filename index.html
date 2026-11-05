@@ -4298,7 +4298,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
           <div class="fg"><label class="fl" for="cm-cost-labor">ต้นทุนค่าแรง (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากข้อมูลเงินเดือน+ค่าแรงรายสัปดาห์ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-labor" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="cm-cost-elec">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="cm-cost-elec" step="1" placeholder="ดึงจากบิลค่าไฟจริงอัตโนมัติ" style="background:var(--sf2)"></div>
           <div class="fg"><label class="fl" for="cm-cost-fuel">ต้นทุนน้ำมัน (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากงาน "อุปกรณ์นอก" ในสต็อกอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-fuel" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl" for="cm-cost-equip">อุปกรณ์ (บาท) <span style="font-weight:400;color:var(--tx3)">(ที่เบิกลงบ่อไม่นับแล้ว — คิดใน "อุปกรณ์นอก" · ดูรายการได้ในสรุปปิดบ่อ)</span></label><input type="number" class="fi" id="cm-cost-equip" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="cm-cost-equip">อุปกรณ์ในฟาร์ม (บาท) <span style="font-weight:400;color:var(--tx2)">(เบิกจากสต็อก ตั้งแต่ 1 พ.ย. 69 · ของเก่าก่อนนั้นอยู่ในอุปกรณ์นอก)</span></label><input type="number" class="fi" id="cm-cost-equip" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="cm-cost-equip-out">อุปกรณ์นอก (บาท) <span style="font-weight:400;color:var(--tx3)">(ดึงจากงาน "อุปกรณ์นอก" ในสต็อกอัตโนมัติ แก้ไขได้)</span></label><input type="number" class="fi" id="cm-cost-equip-out" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="cm-cost-catch">ค่าจับกุ้ง (บาท) <span style="font-weight:400;color:var(--tx3)">(1.5 บ./กก. ถ้าไม่ถึง 4 ตันคิด 6,000 บ. · คิดจาก<b>ผลผลิตรวมทั้งรอบ</b> รวมพาเชียลและเกรดพิเศษ — ตัวเลขในช่องเป็นแค่คำแนะนำ กรอกยืนยันเอง)</span></label><input type="number" class="fi" id="cm-cost-catch" step="1" placeholder="กรอกเอง"><div id="cm-catch-brk"></div></div>
         </div>
@@ -4393,7 +4393,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
           <div class="fg"><label class="fl" for="ecm-cost-labor">ต้นทุนค่าแรง (บาท)</label><input type="number" class="fi" id="ecm-cost-labor" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="ecm-cost-elec">ต้นทุนค่าไฟฟ้า (บาท)</label><input type="number" class="fi" id="ecm-cost-elec" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="ecm-cost-fuel">ต้นทุนน้ำมัน (บาท)</label><input type="number" class="fi" id="ecm-cost-fuel" step="1" placeholder="0"></div>
-          <div class="fg"><label class="fl" for="ecm-cost-equip">อุปกรณ์ (บาท)</label><input type="number" class="fi" id="ecm-cost-equip" step="1" placeholder="0"></div>
+          <div class="fg"><label class="fl" for="ecm-cost-equip">อุปกรณ์ในฟาร์ม (บาท)</label><input type="number" class="fi" id="ecm-cost-equip" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="ecm-cost-equip-out">อุปกรณ์นอก (บาท)</label><input type="number" class="fi" id="ecm-cost-equip-out" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="ecm-cost-catch">ค่าจับกุ้ง (บาท)</label><input type="number" class="fi" id="ecm-cost-catch" step="1" placeholder="0"></div>
           <div class="fg"><label class="fl" for="ecm-pct-caretaker">% คนเลี้ยง (บาท) <span style="font-weight:400;color:var(--tx3)">(ยอดเงิน ไม่ใช่ %)</span></label><input type="number" class="fi" id="ecm-pct-caretaker" step="1" placeholder="0"></div>
@@ -7148,8 +7148,9 @@ function pondRunningCost(p){
   //    บ่อจะได้ส่วนแบ่งของรายการที่ตัวเองไม่ได้อยู่ในตัวหาร → รวมทุกบ่อแล้วเกินมูลค่าจริงของรายการนั้น
   //    (ต่างจาก chem ข้างบนที่ผูก pondId ตรงๆ ย้อนไปช่วงเตรียมบ่อได้ ไม่มีการหารกับใคร)
   const fuel=getSharedCostForPond(p.id,p.startDate,shareEnd,'fuel')||0;        // หมวดน้ำมัน (แชร์ทุกบ่อ)
-  const shared=(getSharedCostForPond(p.id,p.startDate,shareEnd)||0)-fuel;      // อุปกรณ์นอกที่เหลือ (แชร์ทุกบ่อ) — ตัดน้ำมันออกกันนับซ้ำ
-  return{fry,transport,feed,chem,labor,elec,shared,fuel,total:fry+transport+feed+chem+labor+elec+shared+fuel};
+  const farmEq=getSharedCostForPond(p.id,p.startDate,shareEnd,'farmEquip')||0; // #447 อุปกรณ์ในฟาร์มที่ใช้ร่วม (ชุดเทส ฯลฯ) → นับกับอุปกรณ์ ไม่ใช่อุปกรณ์นอก
+  const shared=(getSharedCostForPond(p.id,p.startDate,shareEnd)||0)-fuel-farmEq;      // อุปกรณ์นอกที่เหลือ (แชร์ทุกบ่อ) — ตัดน้ำมันออกกันนับซ้ำ
+  return{fry,transport,feed,chem:chem+farmEq,labor,elec,shared,fuel,total:fry+transport+feed+chem+farmEq+labor+elec+shared+fuel};
 }
 // ── สลับแท็บด้วยชื่อ section (หา nav button ให้เอง) — ใช้กับปุ่มทางลัดข้ามหน้า เช่น ประวัติ→PDF, ปิดรอบเสร็จ→เตรียมบ่อ ──
 function goTabByName(t){
@@ -9078,15 +9079,18 @@ function renderPondDetail(id){
     const pdSharedItems=getSharedItemsInRange(p.startDate,pdShareEnd);   // ⚠️ วันลงกุ้ง→วันจับกุ้ง ให้ตรงกับตัวหารและกับ pondRunningCost (entry #248)
     let pdSharedCost=0,pdFuelCost=0;
     const pdSharedCatItems={},pdFuelCatItems={};
+    const pdFarmEqShared=[];
     pdSharedItems.forEach(l=>{
-      if(l.noCost)return;   // อุปกรณ์จากสต็อกที่ไม่คิดเงิน (#377) — 0 บาท ไม่ต้องขึ้นแถว
+      const v=sharedLogCost(l);if(!(v>0))return;   // อุปกรณ์จากสต็อกที่ไม่คิดเงิน (#377 · ของเก่า #447) — 0 บาท ไม่ต้องขึ้นแถว
       const ac=activePondCountOnDate(l.date)||1;
-      const share=((l.qty||0)*(l.unitCost||0))/ac;
+      const share=v/ac;
+      if(sharedIsFarmEquip(l)){pdFarmEqShared.push({l,ac,share});return;}   // #447 → แถวอุปกรณ์ในฟาร์ม
       const isFuel=l.category==='fuel';
       if(isFuel)pdFuelCost+=share;else pdSharedCost+=share;
       (isFuel?pdFuelCatItems:pdSharedCatItems)[l.id]={name:l.itemName,unit:`แชร์ ${ac} บ่อ`,qty:fD(l.date),total:share};
     });
     const pdCatSums={},pdCatItems={shared:pdSharedCatItems,fuel:pdFuelCatItems};
+    pdFarmEqShared.forEach(({l,ac,share})=>{pdCatSums.equip=(pdCatSums.equip||0)+share;(pdCatItems.equip=pdCatItems.equip||{})['sh'+l.id]={name:l.itemName+' (ใช้ร่วม)',unit:`แชร์ ${ac} บ่อ`,qty:fD(l.date),total:share};});
     pdStockItems.forEach(it=>{
       const cat=STOCK_CATEGORIES.some(c=>c.key===it.category)?it.category:'other';
       pdCatSums[cat]=(pdCatSums[cat]||0)+it.qty*it.unitPrice;
@@ -12915,7 +12919,7 @@ function renderExtHist(){
         return '<div class="ext-hi"><div class="dt"><b>'+d.getDate()+'</b>'+d.toLocaleDateString('th-TH',{month:'short'})+'</div>'+
           '<div class="bd"><div class="nm">'+escHtml(l.itemName||'-')+'</div><div class="mt"><span class="ext-src '+(st?'s':'b')+'">'+(st?'สต็อก':'ซื้อข้างนอก')+'</span>'+
           (st?escHtml(l.qty+' '+(l.unit||''))+' · ':'')+'โดย '+escHtml(l.by||'-')+(l.note?' · '+escHtml(l.note):'')+'</div></div>'+
-          '<div class="am">'+(l.noCost?'<span style="font-size:calc(11.5px * var(--ui-scale))">ไม่คิดเงิน<br>(บิลปุ๊ก)</span>':showV?'฿'+v.toLocaleString():'')+'</div>'+
+          '<div class="am">'+(equipLogCharge(l)===0?'<span style="font-size:calc(11.5px * var(--ui-scale))">ของเก่า<br>ไม่คิดเงิน</span>':l.noCost&&equipLogCharge(l)==null?'<span style="font-size:calc(11.5px * var(--ui-scale))">ไม่คิดเงิน<br>(บิลปุ๊ก)</span>':showV?'฿'+Math.round(sharedLogCost(l)).toLocaleString():'')+'</div>'+
           '<button type="button" class="del" title="ลบรายการนี้" aria-label="ลบ '+escHtml(l.itemName||'')+'" onclick="deleteStockLog(\''+l.id+'\');renderExtHist()">🗑️</button></div>';
       }).join('');
   }).join('');
@@ -12995,7 +12999,7 @@ function saveStockTxBatch(){
       if(item)item.qty=Math.round(Math.max(0,item.qty-c.qty)*100)/100;
       markEmpty(item,before);
       // อุปกรณ์ (หมวด equip) จากสต็อก เช่น ชุดเทสน้ำ = ตัดจำนวนอย่างเดียว ไม่คิดเงิน (#377 พี่ยืนยัน: ค่าอุปกรณ์อยู่ในบิลเบิกของปุ๊กแล้ว — กฎเดียวกับ #362)
-      const eqNc=!!item&&item.category==='equip';
+      const eqNc=!!item&&item.category==='equip'&&date<EQUIP_COST_FROM;   // #447 หลัง 1 พ.ย. คิดเงินตามโควตาของเก่า
       const entry={id:'sl'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
         itemId:c.itemId||null,itemName:c.itemName,type:'shared',qty:c.qty,date,note,pondId:'',
         balanceAfter:item?item.qty:null,unit:c.unit,by:curUserLabel(),
@@ -13036,7 +13040,7 @@ function saveStockTxBatch(){
         qty:c.qty,date,note,unit:c.unit,by:curUserLabel(),balanceAfter:item.shopQty,linkedLogId:lid});
       if(itemUseOnArrival(item)){   // เข้าฟาร์มแล้วใช้เลย (#377) — ตัดออกทันทีเป็นของใช้รวมทุกบ่อ
         item.qty=Math.round(Math.max(0,(parseFloat(item.qty)||0)-c.qty)*100)/100;
-        const nc=item.category==='equip',pr=parseFloat(item.unitPrice)||0;
+        const nc=item.category==='equip'&&date<EQUIP_COST_FROM,pr=parseFloat(item.unitPrice)||0;   // #447
         const se={id:'sl'+Date.now()+'_'+Math.random().toString(36).slice(2,6)+'u',itemId:item.id,itemName:item.name,type:'shared',qty:c.qty,date,
           note:'เข้าฟาร์มแล้วใช้เลย',pondId:'',balanceAfter:item.qty,unit:c.unit,by:curUserLabel(),category:item.category||'',unitCost:nc?0:pr,autoUseOf:lid};
         if(nc){se.noCost=true;se.refPrice=pr;}
@@ -20108,13 +20112,13 @@ function csItemsHTML(items,shown){
 }
 // แถว "อุปกรณ์" ในสรุปปิดบ่อ: รอบเก่า = รายการที่คิดเงิน (เดิม) · รอบใหม่ (#362) = รายการที่เบิกไปใช้ + มูลค่าอ้างอิง ไม่นับต้นทุน
 function csEquipHTML(rows,shown){
-  const costed=plCatItems(rows,'equip'),used=plEquipUsed(rows);
+  const costed=plCatItems(rows,'equip').concat(plSharedItems(rows,'farmEquip')).sort((a,b)=>b.amt-a.amt),used=plEquipUsed(rows);   // #447 รวมอุปกรณ์ในฟาร์มที่ใช้ร่วม
   if(!costed.length&&!used.length)return CS_EMPTY_MSG;
   let s=costed.length?csItemsHTML(costed,shown):'';
   if(used.length){
     const sum=used.reduce((a,i)=>a+i.amt,0);
     s+='<div style="font-size:var(--fs10);font-weight:700;color:var(--tx);margin:'+(costed.length?'8px':'0')+' 0 3px">🔧 เบิกไปใช้ '+used.length+' รายการ · มูลค่า '+Math.round(sum).toLocaleString()+' บาท</div>'
-      +'<div style="font-size:var(--fs10);color:var(--tx2);margin-bottom:3px">ไม่นับในต้นทุน — ค่าอุปกรณ์คิดใน "อุปกรณ์นอก" แล้ว</div>'
+      +'<div style="font-size:var(--fs10);color:var(--tx2);margin-bottom:3px">ไม่นับในต้นทุน — ของก่อน 1 พ.ย. 69 คิดใน "อุปกรณ์นอก" · ของเก่าที่มีอยู่ ณ 1 พ.ย. จ่ายในบิลอุปกรณ์นอกแล้ว</div>'
       +used.map(csItemLine).join('');
   }
   return s;
@@ -20184,7 +20188,7 @@ function closeSummaryHtml(p,s,opt){
     ${row('ต้นทุนค่าแรง (บาท)',s.hasCostData?money(s.costLabor)||'0':null)}
     ${row('ต้นทุนค่าไฟฟ้า (บาท)',s.hasCostData?money(s.costElec)||'0':null)}
     ${rowX('ต้นทุนน้ำมัน (บาท)',s.hasCostData?money(s.costFuel)||'0':null,'fuel')}
-    ${rowX('อุปกรณ์ (บาท)',s.hasCostData?money(s.costEquip)||'0':null,'equip')}
+    ${rowX('อุปกรณ์ในฟาร์ม (บาท)',s.hasCostData?money(s.costEquip)||'0':null,'equip')}
     ${rowX('อุปกรณ์นอก (บาท)',s.hasCostData?money(s.costEquipOut)||'0':null,'equipOut')}
     ${row('ค่าจับกุ้ง (บาท)',s.hasCostData?money(s.costCatch)||'0':null)}
     ${s.costChemLegacy!=null?row('สารเคมี (เดิม, บาท)',money(s.costChemLegacy)):''}
@@ -20355,7 +20359,7 @@ function pdfCostBreakdownHtml(s){
     {key:'costLabor',label:'ค่าแรง',color:'#0f6e56'},
     {key:'costElec',label:'ค่าไฟฟ้า',color:'#0ea5e9'},
     {key:'costFuel',label:'น้ำมัน',color:'#dc2626'},
-    {key:'costEquip',label:'อุปกรณ์',color:'#16a34a'},
+    {key:'costEquip',label:'อุปกรณ์ในฟาร์ม',color:'#16a34a'},
     {key:'costEquipOut',label:'อุปกรณ์นอก',color:'#65a30d'},
     {key:'costCatch',label:'ค่าจับกุ้ง',color:'#c026d3'},
     {key:'amtCaretaker',label:'ส่วนแบ่งคนเลี้ยง',color:'#f59e0b',pctKey:'pctCaretaker'},
@@ -21364,7 +21368,7 @@ function chCostBlockHtml(p,s){
     {l:'ค่าแรง',v:s.costLabor},
     {l:'ค่าไฟฟ้า',v:s.costElec},
     {l:'น้ำมัน',v:s.costFuel,k:'fuel'},
-    {l:(s.costEquip?'อุปกรณ์':'อุปกรณ์ที่เบิกใช้ (ไม่นับต้นทุน)'),v:s.costEquip,k:'equip',keep:!!(detRows&&plEquipUsed(detRows).length)},
+    {l:(s.costEquip?'อุปกรณ์ในฟาร์ม':'อุปกรณ์ที่เบิกใช้ (ไม่นับต้นทุน)'),v:s.costEquip,k:'equip',keep:!!(detRows&&plEquipUsed(detRows).length)},
     {l:'อุปกรณ์นอก (แชร์ทุกบ่อ)',v:s.costEquipOut,k:'equipOut'},
     {l:'ค่าจับกุ้ง',v:s.costCatch},
     {l:'ส่วนแบ่งคนเลี้ยง',v:s.amtCaretaker},
@@ -21764,7 +21768,8 @@ function openCropModal(pid){
   const stockGroups=getStockCostGroupsForPond(pid,pondCostStartDate(p),today());
   document.getElementById('cm-cost-med').value=stockGroups.med||'';
   document.getElementById('cm-cost-lime').value=stockGroups.lime||'';
-  document.getElementById('cm-cost-equip').value=stockGroups.equip||'';
+  {const fe=Math.round(getSharedCostForPond(pid,p.startDate,p.harvestDate||today(),'farmEquip')||0);   // #447 อุปกรณ์ในฟาร์มใช้ร่วม
+   document.getElementById('cm-cost-equip').value=Math.round((stockGroups.equip||0)+fe)||'';}
   cmFillShareCosts(p);
   // ── ค่าแรง: ดึงจาก getLaborCostForPond (เงินเดือนประจำ+พนักงานรายวัน หารตามบ่อ active จริงรายวัน) แทนกรอกเองแล้ว — พี่ยืนยันแล้วว่าเทียบตัวเลขที่กรอกเองไว้ก่อนหน้ากับสูตรนี้ไม่ต่างกัน แก้ไขได้ถ้าจำเป็น ──
 
@@ -22193,7 +22198,7 @@ function cmFillShareCosts(p){
     elec:Math.round(getElecCostForPeriod(p.startDate,shareEnd)||0),
     labor:Math.round(getLaborCostForPond(p.id,p.startDate,shareEnd)||0),
     fuel:Math.round(fuel),
-    equipOut:Math.round((getSharedCostForPond(p.id,p.startDate,shareEnd)||0)-fuel)
+    equipOut:Math.round((getSharedCostForPond(p.id,p.startDate,shareEnd,'outside')||0)-fuel)   // #447 ไม่รวมอุปกรณ์ในสต็อก
   };
   // เขียนทับเฉพาะช่องที่ยังเป็นค่าที่ระบบเติมไว้เอง — ถ้าพี่แก้ด้วยมือแล้ว ห้ามทับ
   const put=(id,key)=>{
@@ -22978,6 +22983,45 @@ function pondCostStartDate(p,refDate){
 //       บ่อที่ไม่มีในตาราง (สร้างทีหลัง) = ไม่คิดทั้งหมด
 const EQUIP_NOCOST_FROM={"B1":"2026-09-16","B2":"2026-09-24","P1781143693494":"2026-01-17","P1781143722960":"2026-01-16","A21":"2026-07-14","A22":"2026-07-15","A23":"2026-07-13","P1781934505097":"2026-02-03","P1781934530310":"2026-01-26","P1781934551076":"2026-02-27","A14":"2026-06-13","A15":"2026-07-07","P1784527489172":"2026-04-04","P1784527525733":"2026-09-16","P1784527588753":"2026-04-08","P1784613333134":"2026-07-10","P1784613349881":"2026-07-02","P1784613391225":"2026-02-19","P1784613412447":"2026-02-14","P1784613446145":"2026-01-14","P1784613463383":"2026-01-06","P1784613479081":"2026-01-11","P1784615608157":"2026-02-26","P1784617254377":"2026-07-08","P1784617283338":"2026-07-13","P1785573523714":"2026-01-13","P1788757200087":""};
 function equipNoCost(pondId,date){const f=EQUIP_NOCOST_FROM[pondId];return !f||String(date||'')>=f;}
+// ══ #447 อุปกรณ์ในฟาร์ม คิดเงินอีกครั้ง ตั้งแต่ 1 พ.ย. 69 (พี่สั่ง 4 พ.ย. 69) — ปุ๊กรับอุปกรณ์เข้าสต็อกพร้อมราคา · บิลอุปกรณ์นอกเหลือของนอกสต็อก (ซ่อม/น้ำมัน)
+//    อุปกรณ์ (หมวด equip) ที่เบิกลงบ่อ (out) / ใช้ร่วม (shared) / ขาย วันที่ ≥ EQUIP_COST_FROM = คิดเงิน "อุปกรณ์ในฟาร์ม" แยกจาก "อุปกรณ์นอก"
+//    ของเก่าที่มีอยู่ ณ 1 พ.ย. (ฟาร์ม+บุญชู) จ่ายไปแล้วในบิลอุปกรณ์นอก ต.ค. → EQUIP_OLD_QTY = โควตาเบิกฟรี ใช้ก่อนตามลำดับวันที่+id
+//    (คำนวณจากยอด 4 พ.ย. 20:45 ย้อนรายการรับ/เบิก/ขายตั้งแต่ 1 พ.ย. · ไม่นับรายการปรับยอดจากการนับ = แก้บัค) · ก่อน 1 พ.ย. = กฎ #362 เดิม (0 บาท)
+//    ⚠️ ห้ามแก้ EQUIP_OLD_QTY ย้อนหลัง (ต้นทุนรอบที่ใช้ไปแล้วจะเปลี่ยน) · กรอกเบิกย้อนหลังลงวันก่อน 1 พ.ย. ไม่หักโควตา ──
+const EQUIP_COST_FROM='2026-11-01';
+const EQUIP_OLD_QTY={"cat1783083936056_67d6_ชุดเ":13,"cat1783083936056_d7ns_ชุดเ":9.5,"cat1783083936056_dyi3_ชุดเ":8,"cat1783083936056_6w46_ชุดเ":15,"cat1783083936056_9e93_ชุดเ":10,"cat1783083936056_ozzx_ชุดเ":11,"cat1783083936056_m2o3_ชุดเ":5,"cat1783083936056_uyx8_ชุดเ":5,"cat1783083936056_omtr_ข้อต":185,"cat1783083936056_x8mp_ยอยก":423,"cat1783083936056_o6w4_ทุ่น":15,"cat1783083936056_wygw_บ่าท":103,"cat1783083936056_b0p3_ใบพั":166,"cat1783083936056_bckh_บู๊ต":300,"cat1783083936056_khr9_กาวต":5,"cat1783083936056_2ghz_ทุ่น":6,"sk1789739607544_new1":100,"cat1791365900443_jui0_ใยฟู":2};
+// รายการสินค้าตาม id (แคชระหว่างวาด) — ฟังก์ชันชุดนี้ถูกเรียกทุกรายการเบิก × ทุกบ่อ ห้ามใช้ find() ทั้งอาเรย์
+function eqItemMap(){const _m=tickMemo();if(!_m.eqItems){_m.eqItems={};(D.inventoryItems||[]).forEach(i=>{if(i&&i.id)_m.eqItems[i.id]=i;});}return _m.eqItems;}
+function equipChargeMap(){
+  const _m=tickMemo();if(_m.eqCharge)return _m.eqCharge;
+  const it={};(D.inventoryItems||[]).forEach(i=>{if(i&&i.category==='equip')it[i.id]=i;});
+  const ev=[];
+  (D.inventoryLog||[]).forEach(l=>{if(l&&it[l.itemId]&&l.date>=EQUIP_COST_FROM&&(l.type==='out'||l.type==='shared'||l.type==='sale'))ev.push(l);});
+  (D.shopLog||[]).forEach(l=>{if(l&&it[l.itemId]&&l.date>=EQUIP_COST_FROM&&l.type==='sale')ev.push(l);});
+  ev.sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.id).localeCompare(String(b.id)));
+  const left={},m={};
+  ev.forEach(l=>{
+    if(!(l.itemId in left))left[l.itemId]=EQUIP_OLD_QTY[l.itemId]||0;
+    const q=parseFloat(l.qty)||0,free=Math.min(q,left[l.itemId]);
+    left[l.itemId]=Math.round((left[l.itemId]-free)*100)/100;
+    m[l.id]=Math.round((q-free)*100)/100;
+  });
+  return _m.eqCharge=m;
+}
+// จำนวนที่ต้องคิดเงินของรายการอุปกรณ์ (null = ไม่ใช่อุปกรณ์ในสต็อก หรือก่อนวันเริ่ม)
+function equipLogCharge(l){
+  if(!l||!(l.date>=EQUIP_COST_FROM))return null;
+  const it=eqItemMap()[l.itemId];if(!it||it.category!=='equip')return null;
+  const m=equipChargeMap();return l.id in m?m[l.id]:(parseFloat(l.qty)||0);
+}
+// ของใช้ร่วม (shared) ที่เป็นอุปกรณ์ในสต็อก = "อุปกรณ์ในฟาร์ม" ไม่ใช่ "อุปกรณ์นอก"
+function sharedIsFarmEquip(l){const it=l&&l.itemId&&eqItemMap()[l.itemId];return !!(it&&it.category==='equip');}
+// มูลค่ารายการใช้ร่วม 1 รายการ (ก่อนหาร) — อุปกรณ์ในสต็อกหลัง 1 พ.ย. = ราคา × จำนวนที่เกินโควตาของเก่า
+function sharedLogCost(l){
+  const ch=equipLogCharge(l);
+  if(ch!=null){const it=eqItemMap()[l.itemId];const pr=parseFloat(l.refPrice)||parseFloat(l.unitCost)||parseFloat(it&&it.unitPrice)||0;return ch*pr;}
+  return l.noCost?0:(l.qty||0)*(l.unitCost||0);
+}
 function getStockItemsForPond(pondId,startDate,endDate){
   if(!pondId||!startDate)return[];
   const end=endDate||today();
@@ -22987,11 +23031,15 @@ function getStockItemsForPond(pondId,startDate,endDate){
     _m.itemById={};(D.inventoryItems||[]).forEach(i=>{if(i)_m.itemById[i.id]=i;});
   }
   return(_m.outByPond[pondId]||[]).filter(l=>l.date>=startDate&&l.date<=end)
-    .map(l=>{const item=_m.itemById[l.itemId];
+    .flatMap(l=>{const item=_m.itemById[l.itemId];
       // ราคาที่ล็อกไว้ตอนเบิก (entry #298) ก่อน · รายการเก่าที่ไม่มี = ราคาปัจจุบันแบบเดิม
       const locked=parseFloat(l.unitCost);
-      const nc=item?.category==='equip'&&equipNoCost(pondId,l.date);   // อุปกรณ์ = 0 บาท (#362)
-      return{name:l.itemName||item?.name||'-',category:item?.category||'',date:l.date,qty:l.qty||0,unit:l.unit||item?.unit||'',unitPrice:nc?0:(locked>0?locked:(item?.unitPrice||0)),refPrice:locked>0?locked:(item?.unitPrice||0),locked:locked>0,noCost:nc};
+      const ch=item?.category==='equip'?equipLogCharge(l):null;   // #447 หลัง 1 พ.ย. = คิดเฉพาะส่วนที่เกินของเก่า
+      const nc=ch!=null?ch<=0:(item?.category==='equip'&&equipNoCost(pondId,l.date));   // อุปกรณ์ = 0 บาท (#362)
+      const pr=locked>0?locked:(item?.unitPrice||0),q0=parseFloat(l.qty)||0;
+      const row=(q,free)=>({name:l.itemName||item?.name||'-',category:item?.category||'',date:l.date,qty:q,unit:l.unit||item?.unit||'',unitPrice:free?0:pr,refPrice:pr,locked:locked>0,noCost:free});
+      if(ch!=null&&ch>0&&ch<q0)return[row(Math.round((q0-ch)*100)/100,true),row(ch,false)];   // #447 เบิกคาบเกี่ยว = แถวของเก่า (ฟรี) + แถวของใหม่ (คิดเงิน)
+      return[row(l.qty||0,nc)];
     })
     // ── ตัดหมวด 'feed' (คิดแยกจาก pondFeedCost อยู่แล้ว) และหมวดเก่า 'seed' (คิดแยกจาก p.costFry อยู่แล้ว — ป้องกันนับซ้ำ) ──
     // ⚠️ จุดนี้คือ single source of truth ของ "รายการสต็อกที่นับเป็นต้นทุนบ่อ" ใช้ร่วมกันทั้งการ์ด "ต้นทุนสะสม" หน้ารายละเอียดบ่อ, KPI ต้นทุนสะสมหน้าภาพรวม, และฟอร์ม "ปิดรอบ" — ถ้าตัดหมวดตรงนี้จุดเดียว ทุกจุดจะตรงกันเสมอ (เดิมฟอร์มปิดรอบตัด 'seed' เองอีกที ทำให้ถ้ามีสินค้าที่ยังติดหมวดเก่า 'seed' อยู่ ตัวเลข "รวมต้นทุนสะสม" กับตอนปิดบ่อจะไม่ตรงกัน เพราะการ์ดต้นทุนสะสมนับรวม แต่ฟอร์มปิดรอบไม่ได้ดึงมาให้)
@@ -23003,6 +23051,10 @@ function getStockItemsForPond(pondId,startDate,endDate){
 function getSharedItemsInRange(fromDate,toDate,category){
   if(!fromDate)return[];
   const end=toDate||today();
+  if(category==='farmEquip'||category==='outside'){   // #447 อุปกรณ์ในฟาร์ม (ของในสต็อก) / ของนอกสต็อก
+    const fe=category==='farmEquip';
+    return getSharedItemsInRange(fromDate,end).filter(l=>sharedIsFarmEquip(l)===fe);
+  }
   // ⚠️ ต้องเรียงวันที่เสมอ — D.inventoryLog เรียงตามลำดับที่ merge กับ remote ไม่ใช่ตามวันที่
   //    ถ้าไม่เรียง รายการในการ์ดต้นทุนจะสลับไปมา อ่านยาก (พี่แจ้ง entry #247)
   //    เรียงใหม่→เก่า ให้ตรงกับ getStockItemsForPond() และตารางหน้าสต็อก
@@ -23014,7 +23066,7 @@ function getSharedCostForPond(pondId,fromDate,toDate,category){
   if(!pondId||!fromDate)return 0;
   return getSharedItemsInRange(fromDate,toDate,category).reduce((s,l)=>{
     const activeCount=activePondCountOnDate(l.date)||1;
-    return s+((l.qty||0)*(l.unitCost||0))/activeCount;
+    return s+sharedLogCost(l)/activeCount;   // #447
   },0);
 }
 // ── ต้นทุนสะสมรวมของบ่อ (ใช้ใน KPI หน้าภาพรวม) — เรียก pondRunningCost ตัวกลางเสมอ ไม่รวมยอดเองซ้ำ ──
@@ -23553,15 +23605,15 @@ function plSharedItems(rows,fuelOnly){
   rows.forEach(r=>{
     if(!r||!r._pond||!r._crop)return;
     const w=closedCropSharedWindow(r._pond,r._crop);if(!w)return;
-    getSharedItemsInRange(w.from,w.to).forEach(l=>{
-      if(l.noCost)return;   // #377
+    getSharedItemsInRange(w.from,w.to,fuelOnly==='farmEquip'?'farmEquip':'outside').forEach(l=>{
+      const v=sharedLogCost(l);if(!(v>0))return;   // #377 · #447
       const isFuel=(l.category==='fuel');
-      if(fuelOnly?!isFuel:isFuel)return;
+      if(fuelOnly!=='farmEquip'&&(fuelOnly?!isFuel:isFuel))return;
       const n=activePondCountOnDate(l.date)||1;
       const nm=l.itemName||'-';
       const k=nm+'|'+(l.unit||'');
       const o=m.get(k)||{name:nm,unit:l.unit||'',qty:0,amt:0,times:0,last:''};
-      o.qty+=(l.qty||0)/n;o.amt+=((l.qty||0)*(l.unitCost||0))/n;o.times++;
+      o.qty+=(l.qty||0)/n;o.amt+=v/n;o.times++;
       if((l.date||'')>o.last)o.last=l.date||'';
       m.set(k,o);
     });
@@ -23659,7 +23711,7 @@ function renderPLCostChart(rows){
   const medLabels=MED_SUBCATS.map(sc=>sc.label).concat(medRest>0?['เวชภัณฑ์ ไม่ระบุหมวด']:[]);
   const medVals=MED_SUBCATS.map(sc=>_med.out[sc.key]||0).concat(medRest>0?[medRest]:[]);
   const medColors=MED_SUBCATS.map(sc=>sc.color).concat(medRest>0?['#9ca3af']:[]);
-  const labels=['ลูกกุ้ง','ค่าขนส่งลูกกุ้ง','อาหารกุ้ง',...medLabels,'ปูน','ค่าแรง','ค่าไฟฟ้า','น้ำมัน','อุปกรณ์','อุปกรณ์นอก','ค่าจับกุ้ง','ส่วนแบ่งคนเลี้ยง','ส่วนแบ่งผู้จัดการ','สารเคมี(เดิม)','อื่นๆ(เดิม)'];
+  const labels=['ลูกกุ้ง','ค่าขนส่งลูกกุ้ง','อาหารกุ้ง',...medLabels,'ปูน','ค่าแรง','ค่าไฟฟ้า','น้ำมัน','อุปกรณ์ในฟาร์ม','อุปกรณ์นอก','ค่าจับกุ้ง','ส่วนแบ่งคนเลี้ยง','ส่วนแบ่งผู้จัดการ','สารเคมี(เดิม)','อื่นๆ(เดิม)'];
   const vals=[totFry,totTransport,totFeed,...medVals,totLime,totLabor,totElec,totFuel,totEquip,totEquipOut,totCatch,totAmtCare,totAmtMgr,totChem,totOther];
   const colors=['#9A6A04','#C08A2E','#3b82f6',...medColors,'#a3a3a3','#0f6e56','#0ea5e9','#dc2626','#16a34a','#65a30d','#c026d3','#f59e0b','#ea580c','#94a3b8','#cbd5e1'];
   // ── รายการสินค้าย่อยของแต่ละแถว (กดกางดูได้) — ต้องเรียงให้ตรงกับ labels เป๊ะ ──
@@ -23673,7 +23725,7 @@ function renderPLCostChart(rows){
     plDetailHTML(plCatItems(rows,'lime'),totLime),          // ปูน
     null,null,                                              // ค่าแรง · ค่าไฟฟ้า
     plDetailHTML(plSharedItems(rows,true),totFuel),         // น้ำมัน (ของแชร์)
-    plDetailHTML(plCatItems(rows,'equip'),totEquip),        // อุปกรณ์
+    plDetailHTML(plCatItems(rows,'equip').concat(plSharedItems(rows,'farmEquip')).sort((a,b)=>b.amt-a.amt),totEquip),   // อุปกรณ์ในฟาร์ม (เบิกลงบ่อ + ใช้ร่วม #447)
     plDetailHTML(plSharedItems(rows,false),totEquipOut),    // อุปกรณ์นอก (ของแชร์)
     null,null,null,null,null];                              // ค่าจับ · คนเลี้ยง · ผู้จัดการ · สารเคมี(เดิม) · อื่นๆ(เดิม)
   if(details.length!==labels.length)console.warn('[PL] details ไม่ตรงกับ labels',details.length,labels.length);
