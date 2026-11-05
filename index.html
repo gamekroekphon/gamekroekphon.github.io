@@ -795,6 +795,31 @@ button,input,select,textarea{font-family:inherit}
 /* ── Modal ── */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;align-items:center;justify-content:center}
 .modal-bg.on{display:flex}
+/* #449 สต็อกบ่อนี้ */
+.pst-btn{background:var(--p);color:#fff;border:none;border-radius:99px;padding:4px 13px;font:inherit;font-weight:700;font-size:calc(13px * var(--ui-scale));cursor:pointer}
+.pst-modal{width:520px;padding:14px 14px 10px}
+.pst-head{display:flex;justify-content:space-between;align-items:center;font-size:calc(16px * var(--ui-scale));margin-bottom:8px}
+.pst-x{background:none;border:none;font-size:calc(19px * var(--ui-scale));cursor:pointer;color:var(--tx);padding:2px 6px}
+.pst-seg{display:flex;background:var(--sf2);border-radius:10px;padding:3px;margin-bottom:8px}
+.pst-seg button{flex:1;border:none;background:none;padding:6px;border-radius:8px;font:inherit;font-weight:700;font-size:calc(13.5px * var(--ui-scale));color:var(--tx);cursor:pointer}
+.pst-seg button.on{background:var(--sf);box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.pst-f{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.pst-f button{border:1px solid var(--bd);background:var(--sf);border-radius:99px;padding:3px 10px;font:inherit;font-size:calc(12.5px * var(--ui-scale));font-weight:700;color:var(--tx);cursor:pointer}
+.pst-f button.on{background:#FEF6E0;border-color:#EBD9A8;color:#7A5403}
+.pst-day{border:1px solid var(--bd);border-radius:12px;padding:7px 10px;margin-bottom:7px}
+.pst-dd{font-weight:800;font-size:calc(14px * var(--ui-scale));margin-bottom:5px}
+.pst-it{display:flex;flex-wrap:wrap;gap:5px}
+.pst-it span,.pst-nm{border-radius:7px;padding:2px 8px;font-size:calc(12.5px * var(--ui-scale));font-weight:700}
+.pst-tb{border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+.pst-tb details{border-top:1px solid var(--bd)}
+.pst-tb summary,.pst-th{list-style:none;display:grid;grid-template-columns:1fr auto 44px;gap:8px;padding:7px 10px;font-size:calc(13.5px * var(--ui-scale))}
+.pst-tb summary{cursor:pointer}
+.pst-tb summary::-webkit-details-marker{display:none}
+.pst-th{background:var(--sf2);font-weight:800;font-size:calc(12.5px * var(--ui-scale))}
+.pst-tb summary>span:nth-child(n+2),.pst-th>span:nth-child(n+2){text-align:right}
+.pst-dl{padding:0 10px 8px 22px;font-size:calc(12.5px * var(--ui-scale));display:flex;flex-wrap:wrap;gap:4px 12px}
+.pst-empty{text-align:center;padding:18px;font-weight:600}
+.pst-c-pw{background:#0891B21f;color:#0E7490}.pst-c-po{background:#16A34A1f;color:#15803D}.pst-c-cw{background:#DC26261a;color:#B91C1C}.pst-c-co{background:#EA580C1f;color:#C2410C}.pst-c-li{background:#78716C26;color:#57534E}.pst-c-eq{background:#4F46E51f;color:#4338CA}.pst-c-fe{background:#9A6A0426;color:#7A5403}.pst-c-ot{background:#6B72801f;color:var(--tx)}
 .modal{background:var(--sf);border-radius:10px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
 .modal-t{font-size:calc(15px * var(--ui-scale));font-weight:800;margin-bottom:18px;color:var(--tx);border-bottom:2px solid var(--p);padding-bottom:10px}
 .spin{display:inline-block;width:20px;height:20px;border:2px solid var(--bd);border-top-color:var(--p);border-radius:50%;animation:sp .7s linear infinite}
@@ -4228,6 +4253,12 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
 <!-- PREP -->
 <!-- CLOSE CROP MODAL -->
 <!-- ปิดรอบสำเร็จ — เสนอทางไปต่อ 3 ทาง (ประวัติ/PDF/เตรียมบ่อ) แทน alert เปล่าๆ -->
+<div id="pondStockModal" class="modal-bg" onclick="if(event.target===this)closePondStock()">
+  <div class="modal pst-modal">
+    <div class="pst-head"><b id="pst-title">📦 สต็อกที่ลงบ่อ</b><button type="button" class="pst-x" onclick="closePondStock()" aria-label="ปิด">✕</button></div>
+    <div id="pst-body"></div>
+  </div>
+</div>
 <div id="closeDoneModal" class="modal-bg">
   <div class="modal" style="max-width:440px;width:92vw;text-align:center;padding:26px 22px">
     <div style="font-size:calc(17px * var(--ui-scale));font-weight:700;color:var(--ok);margin-bottom:6px">✅ <span id="cdm-title">ปิดรอบสำเร็จ</span></div>
@@ -9216,7 +9247,7 @@ function renderPondDetail(id){
       </div>
       <span class="${badgeCls}" style="padding:5px 12px;border-radius:14px;font-size:calc(12px * var(--ui-scale));font-weight:600;flex:none">${badgeTxt}</span>
     </div>
-    <div style="display:inline-flex;align-items:center;gap:6px;background:var(--a1);color:var(--a);font-size:calc(12px * var(--ui-scale));font-weight:600;padding:3px 10px;border-radius:99px;margin-bottom:12px">⏱ อายุ ${age} วัน</div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px"><div style="display:inline-flex;align-items:center;gap:6px;background:var(--a1);color:var(--a);font-size:calc(12px * var(--ui-scale));font-weight:600;padding:3px 10px;border-radius:99px">⏱ อายุ ${age} วัน</div><button type="button" class="pst-btn" onclick="openPondStock('${p.id}')">📦 สต็อกบ่อนี้</button></div>
     ${p.cropNote?`<div class="pd-crop-note">📝 <b>หมายเหตุรอบนี้</b>
 ${String(p.cropNote).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`:''}
     ${costCardHtml}
@@ -16322,6 +16353,52 @@ function renderPdMedHistory(p){
   }</tbody></table></div>`;
 }
 
+// ══ #449 ปุ่ม "📦 สต็อกบ่อนี้" หน้าบ่อ — รายการเบิกสต็อกลงบ่อ (out) รายวัน / รวมรายสินค้า · จำนวนอย่างเดียว ไม่มีเงิน (staff เห็นได้)
+//    รอบนี้ = pondCostStartDate (ครอบช่วงเตรียมบ่อ) ถึงวันนี้ · ข้ามรายการตัดอาหารอัตโนมัติ (sl_fd_) ที่ไม่มีบันทึกอาหารผูกอยู่
+//    (13 รายการวันที่ 3 พ.ย. 69 ตัดซ้ำช่วงบัค #443 — ยอดคงเหลือถูกปรับตามนับแล้ว ห้ามลบ ไม่งั้นสต็อกเด้งคืน)
+const PST_CATS=[['','ทั้งหมด'],['probio','🦠 จุลินทรีย์'],['med','💊 ยา'],['lime','🪨 ปูน'],['equip','🔧 อุปกรณ์'],['feed','🍚 อาหาร']];
+const PST_ORD={feed:0,probioWater:1,probioOral:2,chemWater:3,chemOral:4,chem:4,lime:5,equip:6};
+const PST_CLS={feed:'fe',probioWater:'pw',probioOral:'po',chemWater:'cw',chemOral:'co',chem:'co',lime:'li',equip:'eq'};
+let _pstPond=null,_pstView='day',_pstPer='crop',_pstCat='';
+function pstGroup(c){return c==='probioWater'||c==='probioOral'?'probio':c==='chemWater'||c==='chemOral'||c==='chem'?'med':c;}
+function pondStockRows(p,from,to){
+  const items=eqItemMap(),fdRef=new Set();
+  [p,...(p.cropHistory||[])].forEach(c=>((c&&c.feedLog)||[]).forEach(r=>{if(r&&r.stockLogId)fdRef.add(r.stockLogId);if(r&&r.mix2&&r.mix2.stockLogId)fdRef.add(r.mix2.stockLogId);}));
+  return(D.inventoryLog||[]).filter(l=>l&&l.type==='out'&&l.pondId===p.id&&l.date>=from&&l.date<=to&&!(String(l.id).startsWith('sl_fd_')&&!fdRef.has(l.id)))
+    .map(l=>{const it=items[l.itemId];return{date:l.date,name:l.itemName||(it&&it.name)||'-',unit:l.unit||(it&&it.unit)||'',qty:parseFloat(l.qty)||0,cat:(it&&it.category)||''};});
+}
+function openPondStock(pid){_pstPond=pid;_pstView='day';_pstPer='crop';_pstCat='';renderPondStock();document.getElementById('pondStockModal').classList.add('on');}
+function closePondStock(){document.getElementById('pondStockModal').classList.remove('on');}
+function pstSet(k,v){if(k==='v')_pstView=v;else if(k==='p')_pstPer=v;else _pstCat=v;renderPondStock();}
+function renderPondStock(){
+  const p=pond(_pstPond),el=document.getElementById('pst-body');if(!p||!el)return;
+  document.getElementById('pst-title').textContent='📦 สต็อกที่ลงบ่อ '+p.name;
+  const to=today(),from=_pstPer==='crop'?(pondCostStartDate(p,p.startDate||to)||p.startDate||addDaysStr(to,-60)):addDaysStr(to,-(_pstPer-1));
+  let rows=pondStockRows(p,from,to);
+  if(_pstCat)rows=rows.filter(r=>pstGroup(r.cat)===_pstCat);
+  const q=x=>(Math.round(x*100)/100).toLocaleString();
+  const cls=c=>'pst-c-'+(PST_CLS[c]||'ot');
+  const ord=c=>c in PST_ORD?PST_ORD[c]:9;
+  const btn=(k,v,t,on)=>'<button type="button" class="'+(on?'on':'')+'" onclick="pstSet(\''+k+'\','+(typeof v==='number'?v:'\''+v+'\'')+')">'+t+'</button>';
+  let h='<div class="pst-seg">'+btn('v','day','รายวัน',_pstView==='day')+btn('v','sum','รวมรายสินค้า',_pstView==='sum')+'</div>'
+    +'<div class="pst-f">'+btn('p','crop','รอบนี้',_pstPer==='crop')+btn('p',7,'7 วัน',_pstPer===7)+btn('p',30,'30 วัน',_pstPer===30)+'</div>'
+    +'<div class="pst-f">'+PST_CATS.map(([k,t])=>btn('c',k,t,_pstCat===k)).join('')+'</div>'
+    +'<div style="font-size:var(--fs11);font-weight:600;margin:-2px 0 8px">ตั้งแต่ '+fD(from)+' · '+rows.length+' รายการ</div>';
+  if(!rows.length){el.innerHTML=h+'<div class="pst-empty">ไม่มีการเบิกในช่วงนี้</div>';return;}
+  if(_pstView==='day'){
+    const days={};rows.forEach(r=>{const d=days[r.date]=days[r.date]||{};const k=r.name+'|'+r.unit;(d[k]=d[k]||Object.assign({},r,{qty:0})).qty+=r.qty;});
+    h+=Object.keys(days).sort().reverse().map(d=>'<div class="pst-day"><div class="pst-dd">'+fD(d)+'</div><div class="pst-it">'
+      +Object.values(days[d]).sort((a,b)=>ord(a.cat)-ord(b.cat)||a.name.localeCompare(b.name,'th'))
+        .map(r=>'<span class="'+cls(r.cat)+'">'+mpEsc(r.name)+' '+q(r.qty)+' '+mpEsc(r.unit)+'</span>').join('')+'</div></div>').join('');
+  }else{
+    const m={};rows.forEach(r=>{const k=r.name+'|'+r.unit;const o=m[k]=m[k]||{name:r.name,unit:r.unit,cat:r.cat,qty:0,n:0,d:{}};o.qty+=r.qty;o.n++;o.d[r.date]=(o.d[r.date]||0)+r.qty;});
+    h+='<div class="pst-tb"><div class="pst-th"><span>รายการ</span><span>รวม</span><span>ครั้ง</span></div>'
+      +Object.values(m).sort((a,b)=>ord(a.cat)-ord(b.cat)||b.qty-a.qty).map(o=>'<details><summary><span><span class="pst-nm '+cls(o.cat)+'">'+mpEsc(o.name)+'</span></span><span><b>'+q(o.qty)+'</b> '+mpEsc(o.unit)+'</span><span>'+o.n+'</span></summary>'
+        +'<div class="pst-dl">'+Object.keys(o.d).sort().reverse().map(d=>'<span>'+fD(d)+' · <b>'+q(o.d[d])+'</b></span>').join('')+'</div></details>').join('')+'</div>'
+      +'<div style="font-size:var(--fs11);font-weight:600;margin-top:6px">กดรายการ = ดูว่าลงวันไหนบ้าง</div>';
+  }
+  el.innerHTML=h;
+}
 
 // ══════ การ์ด "🦐 การจับกุ้ง / พาเชียล" หน้ารายละเอียดบ่อ — ดึงข้อมูลรอบปัจจุบันของบ่อนี้มาโชว์ ไม่ต้องออกไปหน้า "จับกุ้ง" ══════
 // ⚠️ ใช้ partialTotals/pondShrimpCount/harvestRowKg/harvestRowBaht ตัวเดียวกับหน้า "จับกุ้ง"/"ภาพรวม" ทั้งหมด ไม่คำนวณคู่ขนาน — เลิกใช้ partialHarvestInfo/_phTarget แล้วตั้งแต่ entry #244 (ตัวนั้นเหลือใช้เฉพาะหน้าปฏิทินพาเชียล)
