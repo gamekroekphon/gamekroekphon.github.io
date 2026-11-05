@@ -1178,6 +1178,8 @@ table.sc-t td.dn{color:var(--d);font-weight:700}table.sc-t td.up{color:var(--in)
 .cost-sum-modal{width:min(1000px,96vw);max-height:92vh;display:flex;flex-direction:column;padding:0;overflow:hidden}
 .cost-sum-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:15px 18px;border-bottom:1px solid var(--bd);flex:0 0 auto}
+.cs-est{background:#FEF6E0;border:1px solid #EBD9A8;color:#5C3F02;border-radius:10px;padding:8px 12px;margin-bottom:11px;font-size:calc(13px * var(--ui-scale));line-height:1.55}
+.tbl th.cs-ec,.tbl td.cs-ec{background:rgba(22,163,74,.08);color:var(--ok);white-space:nowrap}
 .cost-sum-ttl{font-weight:700;font-size:calc(16px * var(--ui-scale))}
 #cost-sum-body{overflow:auto;padding:15px 18px 20px}
 .cs-tot{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
@@ -14324,6 +14326,46 @@ function closeCostSummary(){
   const m=document.getElementById('costSumModal');if(m)m.classList.remove('on');
 }
 function csSort(k){_csSort=k;renderCostSummary();}
+// ══ #450 คาดต้นทุน/กก. ตอนปิดรอบ จากค่าเฉลี่ยจริงของฟาร์ม (พี่สั่ง 5 พ.ย. 69) ══
+//    ฐาน = รอบที่ปิดตั้งแต่ EST_BASE_FROM (เริ่มที่ A.1 A.2 A.3 A.6 = บ่อที่เก็บข้อมูลในแอปจริงจัง) · ปิดรอบใหม่เข้าฐานเอง
+//    ① น้ำหนักจับจริง ÷ ที่ประเมิน ณ วันสุ่มล่าสุด (นับพาเชียลหลังวันสุ่มเป็น "จับจริง") — 4 บ่อแรก 85–90% เฉลี่ย 88%
+//    ② ค่าจับ+ส่วนแบ่งคนเลี้ยง+ผู้จัดการ ÷ ผลผลิตรวมทั้งรอบ — 4 บ่อแรกเฉลี่ย 7.5 ฿/กก. (หน้าต้นทุนทุกบ่อไม่นับก้อนนี้)
+//    ตอนกดปิดรอบจด c.preClose={sampleDate,estKg} (ค่าประเมิน) · ของจริง/ค่าจับคิดสดจาก harvestResult (แก้ทีหลังได้ตัวเลขใหม่)
+const EST_BASE_FROM='2026-09-01';
+function cropEstPair(p,c){
+  const hr=c&&c.harvestResult;if(!hr||!(+hr.totalWeight>0))return null;
+  const ph=c.partialHarvests||[];
+  let last=c.preClose&&c.preClose.sampleDate,est=c.preClose&&c.preClose.estKg;
+  if(!(est>0)){
+    last=(c.samples||[]).filter(s=>s&&s.abw>0&&s.date<=c.closeDate).map(s=>s.date).sort().pop();if(!last)return null;
+    let sc=null;try{sc=pondShrimpCount(Object.assign({},c,{id:p.id,name:p.name,size:p.size,cropHistory:[],partialHarvests:ph.filter(h=>h&&h.date<=last)}));}catch(e){}
+    if(!sc||!(sc.biomass>0))return null;est=sc.biomass;
+  }
+  const fin=(+hr.totalWeight||0)+(hr.grades||[]).reduce((s,g)=>s+(+g.kg||0),0);
+  const act=partialTotals(ph.filter(h=>h&&h.date>last)).kg+fin;
+  const ch=cropHarvestResult(c)||hr,kgAll=ch.totalWeightAll!=null?ch.totalWeightAll:hr.totalWeight;
+  const add=(+hr.costCatch||0)+(+hr.amtCaretaker||0)+(+hr.amtManager||0);
+  return{sampleDate:last,estKg:Math.round(est),actKg:Math.round(act),kgAll:Math.round(kgAll),add:Math.round(add)};
+}
+function closeEstStats(){
+  const m=tickMemo();if(m.ceStats!==undefined)return m.ceStats;
+  const rows=[];
+  (D.ponds||[]).forEach(p=>(p.cropHistory||[]).forEach(c=>{
+    if(!c||!(String(c.closeDate||'')>=EST_BASE_FROM))return;
+    const r=cropEstPair(p,c);if(r&&r.estKg>0&&r.actKg>0&&r.kgAll>0)rows.push(Object.assign({pond:p.name},r));
+  }));
+  if(!rows.length)return m.ceStats=null;
+  return m.ceStats={n:rows.length,ponds:rows.map(r=>r.pond),
+    wt:rows.reduce((s,r)=>s+r.actKg/r.estKg,0)/rows.length,
+    add:rows.reduce((s,r)=>s+r.add/r.kgAll,0)/rows.length};
+}
+// คาดตอนปิด ของบ่อที่กำลังเลี้ยง: กก. = พาเชียลแล้ว + ในบ่อ × อัตราจับจริง · ต้นทุน = สะสม + ค่าจับ/ส่วนแบ่ง × กก.
+function pondCloseEst(p,rc,bio){
+  const st=closeEstStats();if(!st||!rc||!(bio>0))return null;
+  const kg=partialTotals(p.partialHarvests).kg+bio*st.wt;if(!(kg>0))return null;
+  const cost=rc.total+st.add*kg;
+  return{kg,cost,perKg:cost/kg};
+}
 function renderCostSummary(){
   const el=document.getElementById('cost-sum-body');if(!el)return;
   if(APP_ROLE!=='admin'){el.innerHTML='';return;}
@@ -14337,7 +14379,7 @@ function renderCostSummary(){
     const dc=pondDailyCost(p);
     const bio=getLatestBiomass(p);
     const produced=(bio!=null?bio:0)+partialTotals(p.partialHarvests).kg;
-    return{p,rc,dc,bio,produced,
+    return{p,rc,dc,bio,produced,est:pondCloseEst(p,rc,bio),
       age:pondCurAge(p),
       total:rc?rc.total:0,
       perKg:(rc&&produced>0)?rc.total/produced:null,
@@ -14349,8 +14391,10 @@ function renderCostSummary(){
   const T=rows.reduce((o,r)=>({total:o.total+r.total, day:o.day+(r.perDay||0), kg:o.kg+r.produced,
     fry:o.fry+(r.rc?r.rc.fry:0), feed:o.feed+(r.rc?r.rc.feed:0),
     labor:o.labor+(r.rc?r.rc.labor:0), elec:o.elec+(r.rc?r.rc.elec:0),
-    other:o.other+(r.rc?(r.rc.chem+r.rc.shared+r.rc.fuel):0)}),
-    {total:0,day:0,kg:0,fry:0,feed:0,labor:0,elec:0,other:0});
+    other:o.other+(r.rc?(r.rc.chem+r.rc.shared+r.rc.fuel):0),
+    ek:o.ek+(r.est?r.est.kg:0),ec:o.ec+(r.est?r.est.cost:0)}),
+    {total:0,day:0,kg:0,fry:0,feed:0,labor:0,elec:0,other:0,ek:0,ec:0});
+  const ceS=closeEstStats();
   const sortBtn=(k,lbl)=>'<button type="button" class="cs-sort'+(_csSort===k?' on':'')+'" onclick="csSort(\''+k+'\')">'+lbl+'</button>';
   el.innerHTML=
     '<div class="cs-tot">'+
@@ -14360,6 +14404,7 @@ function renderCostSummary(){
       '<div class="b"><div class="k">ต้นทุนรวม/กก.</div><div class="v">'+(T.kg>0?money(T.total/T.kg):'-')+'</div></div>'+
       '<div class="b"><div class="k">จำนวนบ่อ</div><div class="v">'+rows.length+' <span style="font-size:calc(12px * var(--ui-scale));color:var(--tx3)">บ่อ</span></div></div>'+
     '</div>'+
+    (ceS?'<div class="cs-est">🎯 <b>คาดตอนปิด</b> = ค่าเฉลี่ยจริงของฟาร์ม · ค่าจับ+ส่วนแบ่ง <b>+'+ceS.add.toFixed(1)+' ฿/กก.</b> · จับได้จริง <b>'+Math.round(ceS.wt*100)+'%</b> ของที่ประเมิน · จาก '+ceS.n+' รอบ ('+ceS.ponds.join(' ')+')</div>':'')+
     '<div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:11px">'+
       '<span style="font-size:calc(12.5px * var(--ui-scale));color:var(--tx2);font-weight:600">เรียงตาม</span>'+
       sortBtn('doc','อายุบ่อ')+sortBtn('total','ต้นทุนสะสม')+
@@ -14368,11 +14413,11 @@ function renderCostSummary(){
     '<div style="overflow-x:auto"><table class="tbl"><thead><tr>'+
       '<th>บ่อ</th><th>DOC</th><th>เนื้อกุ้ง</th>'+
       '<th>ลูกกุ้ง</th><th>อาหาร</th><th>ค่าแรง</th><th>ค่าไฟ</th><th>อื่นๆ</th>'+
-      '<th>ต้นทุนสะสม</th><th>ต้นทุน/กก.</th><th>ต้นทุน/วัน</th>'+
+      '<th>ต้นทุนสะสม</th><th>ต้นทุน/กก.</th><th class="cs-ec">คาดจับได้</th><th class="cs-ec">คาด ฿/กก. ตอนปิด</th><th>ต้นทุน/วัน</th>'+
     '</tr></thead><tbody>'+
     rows.map(r=>{
       const c=r.rc;
-      if(!c)return'<tr><td><b>'+r.p.name+'</b></td><td>'+r.age+'</td><td colspan="9" style="color:var(--tx3);font-style:italic">ยังคำนวณไม่ได้ — ต้องมีวันลงกุ้ง</td></tr>';
+      if(!c)return'<tr><td><b>'+r.p.name+'</b></td><td>'+r.age+'</td><td colspan="11" style="color:var(--tx3);font-style:italic">ยังคำนวณไม่ได้ — ต้องมีวันลงกุ้ง</td></tr>';
       return'<tr style="cursor:pointer" onclick="closeCostSummary();openPondDetail(\''+r.p.id+'\')" title="แตะเพื่อดูรายละเอียดบ่อนี้">'+
         '<td><b>'+r.p.name+'</b></td>'+
         '<td>'+r.age+'</td>'+
@@ -14384,16 +14429,20 @@ function renderCostSummary(){
         '<td>'+money(c.chem+c.shared+c.fuel)+'</td>'+
         '<td style="font-weight:700">'+money(c.total)+'</td>'+
         '<td style="font-weight:700;color:var(--p)">'+(r.perKg!=null?money(r.perKg):'-')+'</td>'+
+        '<td class="cs-ec">'+(r.est?money(r.est.kg)+' กก.':'-')+'</td>'+
+        '<td class="cs-ec" style="font-weight:800">'+(r.est?money(r.est.perKg):'-')+'</td>'+
         '<td>'+(r.perDay!=null?money(r.perDay):'-')+'</td></tr>';
     }).join('')+
     '<tr style="background:var(--sf2);font-weight:700"><td>รวม</td><td>-</td><td>'+money(T.kg)+' กก.</td>'+
       '<td>'+money(T.fry)+'</td><td>'+money(T.feed)+'</td><td>'+money(T.labor)+'</td><td>'+money(T.elec)+'</td>'+
       '<td>'+money(T.other)+'</td><td>'+money(T.total)+'</td>'+
-      '<td>'+(T.kg>0?money(T.total/T.kg):'-')+'</td><td>'+money(T.day)+'</td></tr>'+
+      '<td>'+(T.kg>0?money(T.total/T.kg):'-')+'</td>'+
+      '<td class="cs-ec">'+(T.ek>0?money(T.ek)+' กก.':'-')+'</td><td class="cs-ec">'+(T.ek>0?money(T.ec/T.ek):'-')+'</td><td>'+money(T.day)+'</td></tr>'+
     '</tbody></table></div>'+
     '<div class="hint" style="margin-top:10px">แตะที่แถวเพื่อเปิดหน้ารายละเอียดบ่อนั้น · '+
       '<b>เนื้อกุ้ง</b> = ที่อยู่ในบ่อ + ที่พาเชียลไปแล้ว · '+
-      '<b>ต้นทุน/วัน</b> คืออัตราเดินเครื่องตอนนี้ ไม่ใช่ค่าเฉลี่ยทั้งรอบ</div>';
+      '<b>ต้นทุน/วัน</b> คืออัตราเดินเครื่องตอนนี้ ไม่ใช่ค่าเฉลี่ยทั้งรอบ · '+
+      '<b>คาด ฿/กก. ตอนปิด</b> = รวมค่าจับ+ส่วนแบ่ง และหักน้ำหนักตามที่จับได้จริงโดยเฉลี่ย (บิลที่ยังไม่ลงยังไม่รวม)</div>';
 }
 function initPalm(){
   if(APP_ROLE!=='admin')return;
@@ -22431,6 +22480,7 @@ function confirmCloseCrop(){
     closed:true,
   };
   if(!p.cropHistory)p.cropHistory=[];
+  try{const pc=cropEstPair(p,archived);if(pc)archived.preClose={sampleDate:pc.sampleDate,estKg:pc.estKg,at:today()};}catch(e){}   // #450 ค่าประเมินตอนปิด → ฐานคาดต้นทุนตอนปิด
   p.cropHistory.push(archived);
   // ── tombstone ทุก log ของรอบที่ปิด — save() ทำ merge แบบ union กับ remote เสมอ ถ้าไม่ tombstone ข้อมูลรอบเก่าจากเครื่องอื่น/remote จะถูกดันกลับเข้า array สดของรอบใหม่ (สำเนาใน cropHistory ไม่โดนกรอง เพราะ dropDead กรองเฉพาะ item ชั้นบนสุด) ──
   D.deletedIds=D.deletedIds||[];
