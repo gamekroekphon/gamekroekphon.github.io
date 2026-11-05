@@ -14480,6 +14480,15 @@ function palmPv(pane,v){
     window.scrollTo({top:Math.max(0,bar.getBoundingClientRect().top+scrollY-80)});
   }
 }
+// ══ #451 หน้าตะวันปาล์ม: วาดกราฟหลังหน้าขึ้นแล้ว (กราฟ = เวลาเกือบทั้งหมดตอนเปิดแท็บ · มือถือ ~100–150 ms/กราฟ ค้างทั้งหน้า)
+//    rAF → setTimeout = หลังเบราว์เซอร์ paint 1 เฟรม · เรียกซ้ำก่อนถึงคิว = วาดครั้งล่าสุดครั้งเดียว · จอซ่อน (ไม่มี rAF) = วาดทันที
+const _palmDeferTok={};
+function palmDefer(key,fn){
+  const t=_palmDeferTok[key]=(_palmDeferTok[key]||0)+1;
+  const run=()=>{if(_palmDeferTok[key]===t)fn();};
+  if(document.hidden||typeof requestAnimationFrame!=='function')return run();
+  requestAnimationFrame(()=>setTimeout(run,0));
+}
 function palmTab(paneId,btn){
   if(APP_ROLE!=='admin')return;   // กันเปิดแท็บย่อยตรงๆ (โดยเฉพาะ "รายรับ-รายจ่าย"/"กองทุน" ที่มีจำนวนเงิน) — CSS ซ่อนปุ่มอย่างเดียวไม่พอ
   _palmActiveTab=paneId;
@@ -14487,12 +14496,12 @@ function palmTab(paneId,btn){
   document.querySelectorAll('#sec-palm .stock-sub-btn').forEach(b=>b.classList.remove('on'));
   const p=document.getElementById('palmp-'+paneId);if(p)p.classList.add('on');
   if(btn)btn.classList.add('on');
-  if(paneId==='ov'){renderPalmOverview();renderPalmYieldFilterChips();renderPalmYieldChart();}
+  if(paneId==='ov'){renderPalmOverview();renderPalmYieldFilterChips();palmDefer('yield',renderPalmYieldChart);}
   if(paneId==='plot')renderPalmPlots();
   if(PALM_PV[paneId])palmPv(paneId);
   if(paneId==='money'){populatePalmPlotSelects();setPalmMoneyMode(_palmMoneyMode);renderPalmMoneyPeriodChips();renderPalmMoneyFilterChips();setPalmMoneyViewType(_palmMoneyViewType);}
   if(paneId==='fert'){populatePalmPlotSelects();renderPalmFertYearOptions();renderPalmFertFilterChips();renderPalmFertSummary();renderPalmFertLog();}
-  if(paneId==='harvest'){renderPalmHarvestFilterChips();renderPalmHarvestChart();renderPalmHarvestTable();}
+  if(paneId==='harvest'){renderPalmHarvestFilterChips();renderPalmHarvestTable();palmDefer('harvest',renderPalmHarvestChart);}
   if(paneId==='fund'){
     const fbd=document.getElementById('fb-date'),fnd=document.getElementById('fn-date'),fsd=document.getElementById('fs-date');
     if(fbd&&!fbd.value)fbd.value=today();
@@ -15700,6 +15709,7 @@ function renderFundPane(){
       del:"deleteFundNav('"+n.id+"')"})),null,'fnav'+_fundSel,5);
   }
 
+  palmDefer('fund',()=>{   // #451 กราฟกองทุนวาดหลังหน้าขึ้น
   const canvas=document.getElementById('fund-chart');
   if(_fundChart){_fundChart.destroy();_fundChart=null;}
   if(navLog.length){
@@ -15721,6 +15731,7 @@ function renderFundPane(){
       }
     });
   }
+  });
 }
 
 function initEntry(){
