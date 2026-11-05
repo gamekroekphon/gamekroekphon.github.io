@@ -5301,6 +5301,7 @@ function normalizeD(d) {
   const curYear = new Date().getFullYear();
   d.ponds.forEach(p => {
     dropArchivedDupes(p);   // entry #299
+    healClosedHeader(p);   // #448
     ['feedLog','samples','waterLog','chemLog','labResults','partialHarvests'].forEach(k => {
       if (!p[k]) p[k] = [];
     });
@@ -6550,6 +6551,23 @@ function dropArchivedDupes(p){
   });
   return n;
 }
+// ══ หัวบ่อค้างรอบที่ปิดแล้ว (#448) — ปิดรอบ = ล้างหัวบ่อ (วันลง/จำนวนลง/วันจับ/ผลจับรอสรุป ฯลฯ) แต่ช่องเหล่านี้ merge แบบ local ชนะทั้งก้อน
+//    เครื่องที่มีของค้างส่ง (unsynced) ตอนอีกเครื่องกดปิดรอบ → ส่งหัวบ่อเก่าทับ (A.6 ปิด 5 พ.ย. 69 10:57 แล้วกลับมาเป็นรอบเดิม)
+//    กติกา: บ่อที่ startDate ตรงกับรอบที่ปิดแล้วใน cropHistory = หัวบ่อค้าง (รอบใหม่ลงวันเดียวกับรอบเก่าไม่ได้) → ล้างแบบเดียวกับ confirmCloseCrop
+function healClosedHeader(p){
+  if(!p||!p.startDate||!(p.cropHistory||[]).length)return false;
+  const c=p.cropHistory.find(x=>x&&x.closed!==false&&x.startDate===p.startDate);
+  if(!c)return false;
+  const nxt=computeNextCrop(p,c.closeDate);
+  p.cropNum=nxt.cropNum;p.cropYear=nxt.cropYear;
+  p.startDate='';p.stock=0;p.stockBonus=0;
+  p.hatchery='';p.plType='';p.plWeight=null;
+  p.costFry=null;p.costTransport=null;p.cropNote=null;
+  p.harvestDate=null;p.pendingHarvest=null;
+  if(p.prepChecklist&&c.prepChecklist&&p.prepChecklist.id===c.prepChecklist.id)p.prepChecklist=null;
+  console.warn('[#448] ล้างหัวบ่อค้างรอบที่ปิดแล้ว',p.name,c.startDate,'→',c.closeDate);
+  return true;
+}
 function mergeRemote(local, remote) {
   rescueDeadIds(local); rescueDeadIds(remote);   // #439 ต้องก่อน union deletedIds — ใช้ tombstone ของแต่ละฝั่งเอง
   const merged = cln(local);
@@ -6568,6 +6586,7 @@ function mergeRemote(local, remote) {
     const rp = remotePonds[p.id];
     if (!rp) return;
     LOG_KEYS.forEach(k => { p[k] = sortLogArr(k, dropDead(mergeArr(p[k], rp[k]))); });
+    healClosedHeader(p);   // #448 หัวบ่อจากเครื่องค้างส่งทับการปิดรอบ
     dropArchivedDupes(p);   // เครื่องค้างหน้าเก่าดันข้อมูลรอบที่ปิดแล้วกลับมา — ตัดสำเนาทิ้ง (entry #299)
     // ── เช็คลิสต์เตรียมบ่อ: เคารพ tombstone ก่อน merge — ถ้าฝั่งใดถูกล้างไปแล้ว (id อยู่ใน deletedIds) ห้ามให้อีกฝั่งดันกลับมา ──
     const lc = p.prepChecklist, rc = rp.prepChecklist;
