@@ -6967,7 +6967,8 @@ setInterval(()=>{if(unsynced()&&!_saveInflight&&navigator.onLine!==false&&fireba
 let _saveChain=Promise.resolve(),_saveQueued=null;
 async function save() {
   tickMemoClear();   // ข้อมูลเพิ่งเปลี่ยน — แคชระหว่างวาด (#363) ต้องล้าง
-  if (!_dReal) { console.warn('ยังไม่ได้โหลดข้อมูลจริง — ไม่บันทึก (#421)'); return Promise.resolve(false); }
+  let _real;try{_real=_dReal;}catch(e){return false;}   // #454 seedPonds() เรียกตอนโหลดสคริปต์ก่อน `let _dReal` (TDZ) — เดิม reject ขึ้น console ทุกครั้งที่เปิดแอป
+  if (!_real) { console.warn('ยังไม่ได้โหลดข้อมูลจริง — ไม่บันทึก (#421)'); return Promise.resolve(false); }
   lsSetD(JSON.stringify(D));
   lsPut(LS_UNSYNC_K,'1');   // ยังไม่ถึง cloud จนกว่า writeRemote จะสำเร็จ (#420)
   if (!firebase.apps.length) return Promise.resolve(false);

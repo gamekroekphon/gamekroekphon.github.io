@@ -7000,3 +7000,7 @@ CP3S → 7703S   ·   CP4S → 7704S   ·   CO4S → 7704S   ·   โภคา4 
 - ขอบเขตโซนของภาพรวมแยกจากหน้ารายวัน (tf_ovZone) · ปุ๊ก/ดาว ไม่เปลี่ยน (เปิดเจอบุญชู) · ก้อย/กุ้ง หน้าเจ้าของไม่เปลี่ยน
 - ทดสอบ: admin/โป๊ะ/โม จำลอง · โป๊ะไม่เจอคำว่าเงิน · ovOpenPond กางการ์ด+เลื่อนถึง (smooth ถูกดึงกลับ → instant) · มือถือ 375 ไม่ล้น · crawl คอม/มือถือ 0 error · checks 26 ผ่าน (แก้ checks.js ให้อ่าน KPI ใหม่)
 - เริ่มทำงานจาก `Desktop\TWF APP\repo` (โฟลเดอร์ใหม่) ตั้งแต่ #453
+
+### 454. 🧹 error ค้างใน console ทุกครั้งที่เปิดแอป (6 พ.ย. 69 รีเช็คละเอียดหลัง #453)
+- seedPonds() เรียก save() ตอนโหลดสคริปต์ก่อน `let _dReal` → ReferenceError (TDZ) กลายเป็น promise reject "Uncaught (in promise)" ทุกครั้ง (ตั้งแต่ #445 ทำ save เป็น async) · ไม่บันทึกผิด แต่ขึ้น error
+- save(): อ่าน _dReal ใน try → TDZ = return false · เปิดแอปฉบับแก้ console ว่าง · error "login-screen null" ที่เห็นเป็นของ harness (ตัดหน้าล็อกอิน) ไม่ใช่ของจริง
