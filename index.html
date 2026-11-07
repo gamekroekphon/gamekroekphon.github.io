@@ -2051,7 +2051,10 @@ body:not(.role-admin) #skb-tx{order:-1}
 .sko-savebar{display:flex;gap:8px;margin-top:8px}
 #skp-tx.sko-on .sko-savebar{position:sticky;bottom:8px;z-index:5;background:var(--sf);padding:6px 0 2px}
 #skp-tx.sko-on #sk-save-btn{padding:12px;font:inherit;font-size:calc(15px * var(--ui-scale));font-weight:700;background:var(--sn-bg);color:#fff;border:none;border-radius:13px;cursor:pointer}
-body:not(.role-admin) #sec-stock:has(#skp-tx.sko-on:not(.sko-pick)) :is(#sk-bill,#sk-count,.stock-sub,#sk-jobs){display:none!important}
+body:not(.role-admin) #sec-stock:has(#skp-tx.skx) :is(#sk-bill,#sk-count){display:none!important}
+#skp-tx.skx .sk-cart-item .ceo-cat-dot{display:none}
+#skp-tx.skx .sk-cart-name{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25}
+body:not(.role-admin) #sec-stock:has(#skp-tx.sko-on:not(.sko-pick):not(.skx)) :is(#sk-bill,#sk-count,.stock-sub,#sk-jobs){display:none!important}
 @media(max-width:1400px){#skp-tx.sko-on .sko-savebar{bottom:calc(84px + env(safe-area-inset-bottom))}}
 @media(max-width:600px){
   #skp-tx.sko-on .sko-savebar{position:fixed;left:12px;right:12px;margin:0;background:none;padding:0;z-index:120}
@@ -5146,12 +5149,13 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
       </div>
       <!-- ── งาน "อุปกรณ์นอก" (type:'shared') — entry #317 · ข้อมูลจริง 41/61 รายการเป็นบิลซื้อข้างนอก (จำนวน 1 × ยอดรวม ทุกรายการ หมวดอุปกรณ์/น้ำมันเท่านั้น)
            เดิมทางหลักนี้ซ่อนเป็นลิงก์เส้นประ "สินค้านี้ไม่มีในสต็อก" + ฟอร์ม 5 ช่อง → ปุ่มสลับ 3 ทางขนาดเท่ากัน เปิดมาที่ "ซื้อข้างนอก" ก่อน
-           ⚠️ พนักงานเห็นและกรอกงานนี้ได้ (พี่ยืนยัน — บางครั้งพนักงานเป็นคนกรอกบิล) -->
+           ⚠️ #459 พนักงานเบิกจากสต็อกได้ · แท็บซื้อข้างนอก = admin เท่านั้น (พี่สั่ง 7 พ.ย. 69) -->
       <div class="ext-seg" id="sk-ext-seg" style="display:none" role="tablist">
         <button type="button" id="ext-t-bill" onclick="setExtTab('bill')">🧾 ซื้อข้างนอก<small>บิล ไม่มีในสต็อก</small></button>
         <button type="button" id="ext-t-stock" onclick="setExtTab('stock')">📦 จากสต็อก<small>อมิโน, โปตัสฯ</small></button>
         <button type="button" id="ext-t-hist" onclick="setExtTab('hist')">📋 ประวัติ<small>ที่เพิ่มไปแล้ว</small></button>
       </div>
+      <div id="skx"></div>
       <div class="fg" id="sk-tx-search-row" style="position:relative;margin-bottom:8px">
         <label class="fl" for="sk-tx-search">เพิ่มรายการพัสดุ <span id="sk-stk-note" style="font-weight:400;color:var(--tx3);font-size:var(--fs11);display:none">(แสดงเฉพาะมีสินค้า)</span></label>
         <input class="fi" id="sk-tx-search" placeholder="พิมพ์ชื่อเพื่อค้นหา..." autocomplete="off" oninput="filterStockSearch()" onfocus="showStockDrop()" onblur="setTimeout(hideStockDrop,200)">
@@ -5174,7 +5178,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
         <button type="button" class="ext-more" id="ext-more" onclick="_extShowAll=true;renderExtHist()">ดูเดือนก่อนหน้า ▾</button>
       </div>
       <div id="sk-shared-note-row" style="display:none;margin-bottom:8px">
-        <div style="font-size:var(--fs115);color:var(--tx2);background:var(--ib);border:1px solid #cfe1f5;border-radius:8px;padding:8px 11px;line-height:1.6">ℹ️ ไม่ต้องเลือกบ่อ — ยอดหารเฉลี่ยให้ทุกบ่อที่มีกุ้ง ณ วันที่บันทึก</div>
+        <div style="font-size:var(--fs115);color:var(--tx2);background:var(--ib);border:1px solid #cfe1f5;border-radius:8px;padding:8px 11px;line-height:1.6">ℹ️ ไม่ต้องเลือกบ่อ · หารให้ทุกบ่อที่มีกุ้ง</div>
       </div>
       <div id="sk-tx-entry">
       <div id="sk-cart-wrap" style="display:none;margin-bottom:8px">
@@ -13145,28 +13149,50 @@ function skoStep(id,dir){
   c.qty=v>0?v:st;
   const inp=document.getElementById('sk-cart-qty-'+id);if(inp)inp.value=c.qty;
 }
+function skoShr(){return _stockMode==='shared'&&_extTab==='stock';}   // #459 อุปกรณ์นอก › จากสต็อก ใช้หน้าตาเดียวกับเบิกลงบ่อ
+function skoSum(ls){const m={};ls.forEach(l=>{const o=m[l.itemId]=m[l.itemId]||{id:l.itemId,name:l.itemName,unit:l.unit||'',q:0};o.q+=parseFloat(l.qty)||0;});return Object.values(m);}
+function skoDays(d,lbl){
+  const td=today(),yd=addDaysStr(td,-1),Q=String.fromCharCode(39),other=d!==td&&d!==yd;
+  const dc=(v,t)=>'<button type="button" class="sko-d'+(d===v?' on':'')+'" onclick="skoSetDate('+Q+v+Q+')">'+t+'</button>';
+  return '<div class="sko-l">'+lbl+'</div><div class="sko-ds">'+dc(td,'วันนี้ '+skoShort(td))+dc(yd,'เมื่อวาน '+skoShort(yd))
+    +'<label class="sko-d'+(other?' on':'')+'"><span>'+(other?mpEsc(skoShort(d)):'เลือกวัน')+'</span><input type="date" value="'+d+'" aria-label="เลือกวัน" onchange="skoSetDate(this.value)"></label></div>';
+}
+// #459 ของใช้ร่วมจากสต็อก: ไม่มีขั้นเลือกบ่อ · ไม่นับรายการ "เข้าฟาร์มแล้วใช้เลย" (autoUseOf) เพราะไม่ได้กดเอง · ไม่คิดปริมาณให้
+function skxHtml(){
+  const d=skoDate(),td=today(),items=eqItemMap(),inCart=new Set(_stockCart.map(c=>c.itemId)),Q=String.fromCharCode(39);
+  const can=id=>{const i=items[id];return i&&!stkRetired(i)&&(i.qty||0)>0&&!inCart.has(id);};
+  const logs=(D.inventoryLog||[]).filter(l=>l&&l.type==='shared'&&l.itemId&&l.date&&!l.autoUseOf);
+  const q2=v=>Math.round(v*100)/100,lastD=logs.filter(l=>l.date<d).map(l=>l.date).sort().pop();
+  const already=skoSum(logs.filter(l=>l.date===d)),prev=lastD?skoSum(logs.filter(l=>l.date===lastD)):[];
+  const prevShow=prev.filter(x=>can(x.id)).slice(0,10),seen=new Set(prev.map(x=>x.id));
+  const from=addDaysStr(td,-30),m={};logs.forEach(l=>{if(l.date>=from&&can(l.itemId)&&!seen.has(l.itemId))m[l.itemId]=(m[l.itemId]||0)+1;});
+  const top=Object.keys(m).sort((a,b)=>m[b]-m[a]).slice(0,8);
+  return skoDays(d,'ใช้ของวันไหน')
+    +(already.length?'<div class="sko-done">✓ '+mpEsc(skoShort(d))+' ใช้แล้ว: '+already.map(x=>mpEsc(x.name)+' '+q2(x.q)).join(' · ')+'</div>':'')
+    +(prevShow.length?'<div class="sko-l">ครั้งก่อนใช้<span>'+mpEsc(skoShort(lastD))+' · แตะเพื่อเพิ่ม</span></div><div class="sko-cs y">'+prevShow.map(x=>'<button type="button" onclick="skoAdd('+Q+x.id+Q+','+q2(x.q)+')">'+mpEsc(x.name)+' '+q2(x.q)+'</button>').join('')+'</div>':'')
+    +(top.length?'<div class="sko-l">ใช้บ่อย</div><div class="sko-cs">'+top.map(id=>'<button type="button" onclick="skoAdd('+Q+id+Q+')">'+mpEsc(items[id].name)+'</button>').join('')+'</div>':'');
+}
 function skoSaveLbl(){
   const b=document.getElementById('sk-save-btn');if(!b)return;
+  if(skoShr()){b.textContent='💾 บันทึก'+(_stockCart.length?' ใช้ทั้งฟาร์ม · '+_stockCart.length+' รายการ':'');return;}
   const p=_stockMode==='out'?pond(skoPond()):null;
   b.textContent=p?'💾 บันทึก '+p.name+(_stockCart.length?' · '+_stockCart.length+' รายการ':''):'💾 บันทึก';
 }
 function renderSko(){
   const el=document.getElementById('sko'),pane=document.getElementById('skp-tx');if(!el||!pane)return;
-  const on=_stockMode==='out',pid=on?skoPond():'';
-  pane.classList.toggle('sko-on',on);pane.classList.toggle('sko-pick',on&&!pid);
+  const out=_stockMode==='out',shr=skoShr(),on=out||shr,pid=out?skoPond():'';
+  pane.classList.toggle('sko-on',on);pane.classList.toggle('sko-pick',out&&!pid);pane.classList.toggle('skx',shr);
+  const ex=document.getElementById('skx');if(ex)ex.innerHTML=shr?skxHtml():'';
   const sr=document.getElementById('sk-tx-search');if(sr)sr.placeholder=on?'🔍 ค้นหาชื่ออื่น…':'พิมพ์ชื่อเพื่อค้นหา...';
   skoSaveLbl();
-  if(!on){el.innerHTML='';return;}
+  if(!out){el.innerHTML='';return;}
   const d=skoDate(),td=today(),yd=addDaysStr(td,-1),outs=skoOuts(),Q=String.fromCharCode(39);
   if(!pid){
     const cnt={};outs.forEach(l=>{if(l.date===d)cnt[l.pondId]=(cnt[l.pondId]||0)+1;});
     const sorted=sortPondsByAge(D.ponds||[]),hasShrimp=p=>!clsNoShrimp(pondStatusOv(p)),act=sorted.filter(hasShrimp),rest=sorted.filter(p=>!hasShrimp(p));   // นับบ่อแบบเดียวกับภาพรวม
-    const dc=(v,t)=>'<button type="button" class="sko-d'+(d===v?' on':'')+'" onclick="skoSetDate('+Q+v+Q+')">'+t+'</button>';
-    const other=d!==td&&d!==yd;
     const pb=p=>'<button type="button" class="sko-p'+(cnt[p.id]?' done':'')+'" onclick="skoPick('+Q+p.id+Q+')">'+mpEsc(p.name)+(cnt[p.id]?'<small>✓ '+cnt[p.id]+'</small>':'')+'</button>';
     const restDone=rest.filter(p=>cnt[p.id]).length;
-    el.innerHTML='<div class="sko-l">เบิกของวันไหน</div><div class="sko-ds">'+dc(td,'วันนี้ '+skoShort(td))+dc(yd,'เมื่อวาน '+skoShort(yd))
-      +'<label class="sko-d'+(other?' on':'')+'"><span>'+(other?mpEsc(skoShort(d)):'เลือกวัน')+'</span><input type="date" value="'+d+'" aria-label="เลือกวัน" onchange="skoSetDate(this.value)"></label></div>'
+    el.innerHTML=skoDays(d,'เบิกของวันไหน')
       +'<div class="sko-l">เลือกบ่อ<span>เบิกแล้ว '+act.filter(p=>cnt[p.id]).length+' / '+act.length+' บ่อ</span></div><div class="sko-ps">'+act.map(pb).join('')+'</div>'
       +(rest.length?'<details class="sko-rest"'+(restDone?' open':'')+'><summary>บ่อว่าง / เตรียมบ่อ '+rest.length+' บ่อ</summary><div class="sko-ps">'+rest.map(pb).join('')+'</div></details>':'');
     return;
@@ -13175,7 +13201,7 @@ function renderSko(){
   const can=id=>{const i=items[id];return i&&!stkRetired(i)&&(i.qty||0)>0&&!inCart.has(id);};
   const mine=outs.filter(l=>l.pondId===pid);
   const lastD=mine.filter(l=>l.date<d).map(l=>l.date).sort().pop();
-  const sumBy=ls=>{const m={};ls.forEach(l=>{const o=m[l.itemId]=m[l.itemId]||{id:l.itemId,name:l.itemName,unit:l.unit||'',q:0};o.q+=parseFloat(l.qty)||0;});return Object.values(m);};
+  const sumBy=skoSum;
   const q2=v=>Math.round(v*100)/100;
   const already=sumBy(mine.filter(l=>l.date===d));
   const prev=lastD?sumBy(mine.filter(l=>l.date===lastD)):[];
@@ -13196,6 +13222,7 @@ function setStockMode(mode){
   if(mode==='sale'){openSale();return;}   // #434 ขาย = หน้าต่างขายแยก (บุญชู/ฟาร์ม)
   // ⚠️ รับเข้า เป็นงาน admin — กันไว้ที่ฟังก์ชันด้วย ไม่ใช่แค่ไม่สร้างปุ่มให้
   if(mode==='in'&&APP_ROLE!=='admin')mode='out';
+  if(mode==='shared'&&APP_ROLE!=='admin')_extTab='stock';   // #459 พนักงานเบิกจากสต็อกอย่างเดียว · ซื้อข้างนอก = พี่กับปุ๊ก
   if(mode==='xfer'&&APP_ROLE!=='admin')_xferDir='toShop';   // พนักงาน = ฟาร์ม เข้า หน้าร้าน เท่านั้น (#335)
   _stockMode=mode;
   renderStockJobs();
@@ -13302,11 +13329,13 @@ function addStockToCart(itemId,qty,noFocus){   // #456 ของแนะนำ 
 //    ⚠️ getSharedCostForPond แยกหมวด 'fuel' ออกจากที่เหลือเป็นคนละแถวใน P&L — หมวดต้องเป็น 'equip' หรือ 'fuel' เท่านั้น ห้ามเพิ่มหมวดอื่นโดยไม่เช็คสูตรนั้น
 let _extTab='bill',_extCat='',_extFlt='all',_extShowAll=false;
 const EXT_CAT_PREFIX={equip:'อุปกรณ์นอก ชุดที่',fuel:'น้ำมัน ชุดที่'};
-function setExtTab(t){_extTab=t;if(t==='hist')_extShowAll=false;applyExtTab();if(t==='hist')renderExtHist();}
+function setExtTab(t){if(t==='bill'&&APP_ROLE!=='admin')t='stock';_extTab=t;if(t==='hist')_extShowAll=false;applyExtTab();renderStockCart();renderSko();if(t==='hist')renderExtHist();}
 function applyExtTab(){
+  if(_extTab==='bill'&&APP_ROLE!=='admin')_extTab='stock';
   const on=_stockMode==='shared',t=_extTab;
   const show=(id,v)=>{const e=document.getElementById(id);if(e)e.style.display=v?'':'none';};
   show('sk-ext-seg',on);
+  show('ext-t-bill',APP_ROLE==='admin');   // #459 ซื้อข้างนอก = พี่กับปุ๊กเท่านั้น (พี่สั่ง 7 พ.ย. 69)
   ['bill','stock','hist'].forEach(k=>{const b=document.getElementById('ext-t-'+k);if(b){b.classList.toggle('on',k===t);b.setAttribute('aria-selected',k===t?'true':'false');}});
   show('sk-tx-search-row',!on||t==='stock');
   show('sk-manual-box',on&&t==='bill');
@@ -13367,7 +13396,7 @@ function renderExtHist(){
     return '<div class="ext-mh"><span>'+mTh(m)+' · '+rs.length+' รายการ</span>'+(isAdmin?'<b>฿'+Math.round(tot).toLocaleString()+'</b>':'')+'</div>'+
       rs.map(l=>{
         const st=!!l.itemId,v=Math.round((l.qty||0)*(l.unitCost||0));
-        const showV=isAdmin||(me&&l.by===me);
+        const showV=isAdmin;   // #459 ของจากสต็อกคือทุน พนักงานห้ามเห็น · เดิมเห็นรายการของตัวเอง (ตอนยังลงบิลซื้อนอกได้)
         const d=new Date(l.date);
         return '<div class="ext-hi"><div class="dt"><b>'+d.getDate()+'</b>'+d.toLocaleDateString('th-TH',{month:'short'})+'</div>'+
           '<div class="bd"><div class="nm">'+escHtml(l.itemName||'-')+'</div><div class="mt"><span class="ext-src '+(st?'s':'b')+'">'+(st?'สต็อก':'ซื้อข้างนอก')+'</span>'+
@@ -13407,10 +13436,10 @@ function renderStockCart(){
   const wrap=document.getElementById('sk-cart-wrap');
   const list=document.getElementById('sk-cart-list');
   if(!wrap||!list)return;
-  if(_stockMode==='out')renderSko();else skoSaveLbl();   // #456 ของในตะกร้าหายจากปุ่มแนะนำ · ป้ายปุ่มบันทึก
+  if(_stockMode==='out'||skoShr())renderSko();else skoSaveLbl();   // #456 ของในตะกร้าหายจากปุ่มแนะนำ · ป้ายปุ่มบันทึก
   if(!_stockCart.length){wrap.style.display='none';return;}
   wrap.style.display='';
-  const isOut=_stockMode==='out';
+  const isOut=_stockMode==='out'||skoShr();
   const isSale=_stockMode==='sale';
   const isShared=_stockMode==='shared';
   list.innerHTML=_stockCart.map(c=>`
@@ -13530,7 +13559,8 @@ function saveStockTxBatch(){
   document.getElementById('sk-tx-note').value='';
   if(mode==='out'){   // #456 เบี้ยลงหลายบ่อต่อรอบ — คงวันที่ไว้ กลับหน้าเลือกบ่อ (✓ ขึ้นบ่อที่เพิ่งลง)
     skoBack();window.scrollTo(0,0);
-  }else document.getElementById('sk-tx-date').value=today();
+  }else if(skoShr()){renderSko();window.scrollTo(0,0);}   // #459 อยู่หน้าเดิม วันเดิม
+  else document.getElementById('sk-tx-date').value=today();
   const custEl=document.getElementById('sk-tx-cust');if(custEl)custEl.value='';
   if(mode==='sale')populateCustList();
   renderStockKPI();renderStockWarn();renderStockItems();
@@ -13542,7 +13572,7 @@ function clearStockTx(){
   _stockCart=[];renderStockCart();
   const srch=document.getElementById('sk-tx-search');if(srch)srch.value='';
   const note=document.getElementById('sk-tx-note');if(note)note.value='';
-  const date=document.getElementById('sk-tx-date');if(date&&_stockMode!=='out')date.value=today();   // #456 เบิกของ: ล้างแล้ววันที่เดิม
+  const date=document.getElementById('sk-tx-date');if(date&&_stockMode!=='out'&&!skoShr())date.value=today();   // #456 เบิกของ: ล้างแล้ววันที่เดิม
   const cust=document.getElementById('sk-tx-cust');if(cust)cust.value='';
   resetExtForm();
   hideStockDrop();
