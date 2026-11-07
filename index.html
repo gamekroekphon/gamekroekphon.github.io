@@ -686,6 +686,10 @@ table.pd-surv-tb td.w{color:var(--w);font-weight:700}
 .plx-rc .w{font-size:calc(12.5px * var(--ui-scale));font-weight:600;margin-top:4px}
 .plx-rc.nodata{opacity:.55}
 .plx-csv{width:auto!important}
+.plx-pdfb{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.plx-pdfb .btn{justify-content:center;width:100%}
+#pl-pdf{margin-bottom:14px}
+.plx-all{display:block;width:100%;background:none;border:none;padding:10px 0 4px;min-height:0;font:inherit;font-weight:700;color:var(--pd);cursor:pointer;text-align:center}
 @media(min-width:900px){#pl-table-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));column-gap:18px}}
 #sec-pl .kpi-card.pl-kpi-dark{background:var(--sn-bg);border-color:var(--sn-bg);border-top-color:var(--sn-lime)}
 #sec-pl .kpi-card.pl-kpi-dark .kpi-lbl{color:#a9c9b3}
@@ -3187,15 +3191,14 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
       <button class="sn-link tab-item" onclick="goTab('sample',this)">⚖️ สุ่มกุ้งประจำอาทิตย์</button>
       <button class="sn-link tab-item" onclick="goTab('watlog',this)">💦 จัดการน้ำ</button>
       <button class="sn-link tab-item" onclick="goTab('mortality',this)">☠️ กุ้งตาย</button>
+      <button class="sn-link tab-item admin-only" onclick="goTab('harvest',this)">🦐 จับกุ้ง</button>
     </div>
 
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-crop')"><span>🌾</span> บันทึกรอบเลี้ยง <span class="sn-caret">▾</span></button>
     <div class="sn-sub" id="sn-g-crop">
       <button class="sn-link tab-item" onclick="goTab('crops',this)">📚 ประวัติรอบเลี้ยง</button>
-      <button class="sn-link tab-item" onclick="goTab('harveststat',this)">📊 สถิติจับกุ้ง</button>
+      <button class="sn-link tab-item admin-only" onclick="goTab('harveststat',this)">📊 สถิติจับกุ้ง</button>
       <button class="sn-link tab-item admin-only" onclick="goTab('pl',this)">💵 P&amp;L สรุป</button>
-      <button class="sn-link tab-item admin-only" onclick="goTab('export',this)">📄 PDF ปิดบ่อ</button>
-      <button class="sn-link tab-item" onclick="goTab('harvest',this)">🦐 จับกุ้ง</button>
     </div>
 
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-analyze')"><span>🔍</span> วิเคราะห์ <span class="sn-caret">▾</span></button>
@@ -3226,7 +3229,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   <nav class="sn-nav">
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-settings')"><span>⚙️</span> ตั้งค่า <span class="sn-caret">▾</span></button>
     <div class="sn-sub" id="sn-g-settings">
-      <button class="sn-link tab-item" onclick="goTab('manage',this)">🗺️ จัดการบ่อ</button>
+      <button class="sn-link tab-item admin-only" onclick="goTab('manage',this)">🗺️ จัดการบ่อ</button>
       <button class="sn-link tab-item admin-only" onclick="goTab('users',this)">👤 จัดการผู้ใช้</button>
     </div>
   </nav>
@@ -3273,16 +3276,15 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
       <button class="tab-item" id="tab-sample" onclick="goTab('sample',this)">⚖️ สุ่มกุ้งประจำอาทิตย์</button>
       <button class="tab-item" id="tab-watlog" onclick="goTab('watlog',this)">💦 จัดการน้ำ</button>
       <button class="tab-item" id="tab-mortality" onclick="goTab('mortality',this)">☠️ กุ้งตาย</button>
+      <button class="tab-item admin-only" id="tab-harvest" onclick="goTab('harvest',this)">🦐 จับกุ้ง</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-crop">
     <button class="grp-btn" onclick="toggleGrp('crop')">🌾 บันทึกรอบเลี้ยง <span class="grp-caret">▾</span></button>
     <div class="tab-dropdown">
       <button class="tab-item" id="tab-crops" onclick="goTab('crops',this)">📚 ประวัติรอบเลี้ยง</button>
-      <button class="tab-item" id="tab-harveststat" onclick="goTab('harveststat',this)">📊 สถิติจับกุ้ง</button>
+      <button class="tab-item admin-only" id="tab-harveststat" onclick="goTab('harveststat',this)">📊 สถิติจับกุ้ง</button>
       <button class="tab-item admin-only" id="tab-pl" onclick="goTab('pl',this)">💵 P&amp;L สรุป</button>
-      <button class="tab-item admin-only" id="tab-export" onclick="goTab('export',this)">📄 PDF ปิดบ่อ</button>
-      <button class="tab-item" id="tab-harvest" onclick="goTab('harvest',this)">🦐 จับกุ้ง</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-analyze">
@@ -3362,12 +3364,11 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
     <button class="mob-sheet-item" data-t="sample" onclick="mobMenuGo(this)"><span class="ic">⚖️</span>สุ่มกุ้งประจำอาทิตย์</button>
     <button class="mob-sheet-item" data-t="watlog" onclick="mobMenuGo(this)"><span class="ic">💦</span>จัดการน้ำ</button>
     <button class="mob-sheet-item" data-t="mortality" onclick="mobMenuGo(this)"><span class="ic">☠️</span>กุ้งตาย</button>
+    <button class="mob-sheet-item admin-only" data-t="harvest" onclick="mobMenuGo(this)"><span class="ic">🦐</span>จับกุ้ง</button>
     <div class="mob-sheet-grp">🌾 บันทึกรอบเลี้ยง</div>
     <button class="mob-sheet-item owner-mine" data-t="crops" onclick="mobMenuGo(this)"><span class="ic">📚</span>ประวัติรอบเลี้ยง</button>
-    <button class="mob-sheet-item" data-t="harveststat" onclick="mobMenuGo(this)"><span class="ic">📊</span>สถิติจับกุ้ง</button>
+    <button class="mob-sheet-item admin-only" data-t="harveststat" onclick="mobMenuGo(this)"><span class="ic">📊</span>สถิติจับกุ้ง</button>
     <button class="mob-sheet-item admin-only owner-mine" data-t="pl" onclick="mobMenuGo(this)"><span class="ic">💵</span>P&amp;L สรุป</button>
-    <button class="mob-sheet-item admin-only" data-t="export" onclick="mobMenuGo(this)"><span class="ic">📄</span>PDF ปิดบ่อ</button>
-    <button class="mob-sheet-item" data-t="harvest" onclick="mobMenuGo(this)"><span class="ic">🦐</span>จับกุ้ง</button>
     <div class="mob-sheet-grp">🔍 วิเคราะห์</div>
     <button class="mob-sheet-item" data-t="lab" onclick="mobMenuGo(this)"><span class="ic">🔬</span>ผลแล็บ</button>
     <button class="mob-sheet-item" data-t="compare" onclick="mobMenuGo(this)"><span class="ic">🔄</span>เปรียบเทียบ</button>
@@ -3385,7 +3386,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
     <div class="mob-sheet-grp">🌳 สวนปาล์ม</div>
     <button class="mob-sheet-item admin-only owner-mine" data-t="palm" onclick="mobMenuGo(this)"><span class="ic">🌴</span>ตะวันปาล์ม</button>
     <div class="mob-sheet-grp">⚙️ ทั่วไป</div>
-    <button class="mob-sheet-item" data-t="manage" onclick="mobMenuGo(this)"><span class="ic">🗺️</span>จัดการบ่อ</button>
+    <button class="mob-sheet-item admin-only" data-t="manage" onclick="mobMenuGo(this)"><span class="ic">🗺️</span>จัดการบ่อ</button>
     <button class="mob-sheet-item admin-only" data-t="users" onclick="mobMenuGo(this)"><span class="ic">👤</span>จัดการผู้ใช้</button>
   </div>
 </div>
@@ -4792,52 +4793,6 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   </div>
 </div>
 <!-- EXPORT -->
-<div id="sec-export" class="sec">
-  <div class="sec-hdr"><div class="sec-title">📄 สรุปปิดบ่อ (PDF)</div></div>
-  <!-- รายรอบ / สรุปทั้งปี (#374) — ปุ่มสลับโชว์เฉพาะ admin (ข้อสรุปมีตัวเงิน) -->
-  <div class="pv-bar" id="ex-mode" style="max-width:520px" hidden></div>
-  <div id="ex-crop-view">
-  <div class="card" style="max-width:520px">
-    <div class="card-t">📋 สร้างรายงานสรุปปิดบ่อ</div>
-    
-      <div class="fg" style="margin-bottom:16px">
-      <label class="fl" for="ex-pond">เลือกบ่อ</label>
-      <select class="fi" id="ex-pond" onchange="onExPondChange()"><option value="all">ทุกบ่อ (สรุปรวม)</option></select>
-    </div>
-    <div class="fg" id="ex-crop-wrap" style="margin-bottom:16px;display:none">
-      <label class="fl" for="ex-crop">เลือกรอบที่ปิด (ประวัติ)</label>
-      <select class="fi" id="ex-crop" onchange="renderExPreview()"></select>
-    </div>
-    <div class="fg" id="ex-chart-toggles" style="margin-bottom:16px;display:none">
-      <label class="fl">เลือกกราฟที่ต้องการแสดงใน PDF <span style="font-weight:400;color:var(--tx3)">(เฉพาะกราฟที่มีข้อมูลบันทึกไว้)</span></label>
-      <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
-        <label id="ex-chk-growth-row" style="display:none;align-items:center;gap:7px;font-size:calc(13px * var(--ui-scale));color:var(--tx2);cursor:pointer">
-          <input type="checkbox" id="ex-chk-growth" checked onchange="this.dataset.touched='1'"> 📈 การเติบโต (ABW)
-        </label>
-        <label id="ex-chk-feed-row" style="display:none;align-items:center;gap:7px;font-size:calc(13px * var(--ui-scale));color:var(--tx2);cursor:pointer">
-          <input type="checkbox" id="ex-chk-feed" checked onchange="this.dataset.touched='1'"> 🍚 อาหารสะสมตลอดรอบ
-        </label>
-        <label id="ex-chk-profit-row" style="display:none;align-items:center;gap:7px;font-size:calc(13px * var(--ui-scale));color:var(--tx2);cursor:pointer">
-          <input type="checkbox" id="ex-chk-profit" checked onchange="this.dataset.touched='1'"> 💰 กำไร-ต้นทุน เทียบรอบก่อนหน้า
-        </label>
-        <label id="ex-chk-compare-row" style="display:none;align-items:center;gap:7px;font-size:calc(13px * var(--ui-scale));color:var(--tx2);cursor:pointer">
-          <input type="checkbox" id="ex-chk-compare" checked onchange="this.dataset.touched='1'"> 📊 FCR/อัตรารอด เทียบรอบก่อนหน้า
-        </label>
-      </div>
-    </div>
-    <button class="btn btn-p" id="ex-pdf-btn" onclick="genPDF()" style="width:100%;justify-content:center;padding:13px;font-size:calc(14px * var(--ui-scale))">
-      📄 สร้าง PDF สรุปปิดบ่อ
-    </button>
-    <button class="btn btn-s" id="ex-share-btn" onclick="genPDF({share:true})" style="width:100%;justify-content:center;padding:12px;margin-top:8px;font-size:calc(14px * var(--ui-scale))">📤 ส่ง LINE / แชร์</button>
-    <div id="ex-info" style="margin-top:12px"></div>
-  </div>
-  <div class="card" id="ex-chart-wrap" style="max-width:520px;margin-top:16px;display:none">
-    <div class="card-t">📊 เปรียบเทียบรอบเลี้ยงที่ปิดแล้ว</div>
-    <canvas id="ex-chart" height="200"></canvas>
-  </div>
-  </div>
-  <div id="ex-year-view" hidden></div>
-</div>
 <!-- MANAGE -->
 <div id="sec-manage" class="sec">
   <div class="sec-hdr"><div class="sec-title">🗺️ จัดการบ่อ</div><button class="btn btn-p" onclick="openAddPond()">+ เพิ่มบ่อใหม่</button></div>
@@ -5418,6 +5373,52 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   <div class="crx-chips" id="pl-yr-chips"></div>
   <select id="pl-year" hidden onchange="renderPL()"></select>
   <div id="pl-kpi"></div>
+  <!-- #457 PDF ย้ายมาจากหน้า PDF ปิดบ่อ (พี่สั่ง 7 พ.ย. 69) · ปุ่มสลับ ex-mode ซ่อน ใช้ 2 ปุ่มนี้แทน -->
+  <div class="plx-pdfb"><button type="button" class="btn btn-p" id="plb-year" onclick="plPdf('year')">📄 PDF ทั้งปี</button><button type="button" class="btn btn-p" id="plb-crop" onclick="plPdf('crop')">📄 PDF เลือกบ่อ</button></div>
+  <div id="pl-pdf" hidden>
+  <div class="pv-bar" id="ex-mode" style="max-width:520px" hidden></div>
+  <div id="ex-crop-view">
+  <div class="card" style="max-width:520px">
+    <div class="card-t">📋 สร้างรายงานสรุปปิดบ่อ</div>
+    
+      <div class="fg" style="margin-bottom:16px">
+      <label class="fl" for="ex-pond">เลือกบ่อ</label>
+      <select class="fi" id="ex-pond" onchange="onExPondChange()"><option value="all">ทุกบ่อ (สรุปรวม)</option></select>
+    </div>
+    <div class="fg" id="ex-crop-wrap" style="margin-bottom:16px;display:none">
+      <label class="fl" for="ex-crop">เลือกรอบที่ปิด (ประวัติ)</label>
+      <select class="fi" id="ex-crop" onchange="renderExPreview()"></select>
+    </div>
+    <div class="fg" id="ex-chart-toggles" style="margin-bottom:16px;display:none">
+      <label class="fl">เลือกกราฟที่ต้องการแสดงใน PDF <span style="font-weight:400;color:var(--tx3)">(เฉพาะกราฟที่มีข้อมูลบันทึกไว้)</span></label>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+        <label id="ex-chk-growth-row" style="display:none;align-items:center;gap:7px;font-size:calc(13px * var(--ui-scale));color:var(--tx2);cursor:pointer">
+          <input type="checkbox" id="ex-chk-growth" checked onchange="this.dataset.touched='1'"> 📈 การเติบโต (ABW)
+        </label>
+        <label id="ex-chk-feed-row" style="display:none;align-items:center;gap:7px;font-size:calc(13px * var(--ui-scale));color:var(--tx2);cursor:pointer">
+          <input type="checkbox" id="ex-chk-feed" checked onchange="this.dataset.touched='1'"> 🍚 อาหารสะสมตลอดรอบ
+        </label>
+        <label id="ex-chk-profit-row" style="display:none;align-items:center;gap:7px;font-size:calc(13px * var(--ui-scale));color:var(--tx2);cursor:pointer">
+          <input type="checkbox" id="ex-chk-profit" checked onchange="this.dataset.touched='1'"> 💰 กำไร-ต้นทุน เทียบรอบก่อนหน้า
+        </label>
+        <label id="ex-chk-compare-row" style="display:none;align-items:center;gap:7px;font-size:calc(13px * var(--ui-scale));color:var(--tx2);cursor:pointer">
+          <input type="checkbox" id="ex-chk-compare" checked onchange="this.dataset.touched='1'"> 📊 FCR/อัตรารอด เทียบรอบก่อนหน้า
+        </label>
+      </div>
+    </div>
+    <button class="btn btn-p" id="ex-pdf-btn" onclick="genPDF()" style="width:100%;justify-content:center;padding:13px;font-size:calc(14px * var(--ui-scale))">
+      📄 สร้าง PDF สรุปปิดบ่อ
+    </button>
+    <button class="btn btn-s" id="ex-share-btn" onclick="genPDF({share:true})" style="width:100%;justify-content:center;padding:12px;margin-top:8px;font-size:calc(14px * var(--ui-scale))">📤 ส่ง LINE / แชร์</button>
+    <div id="ex-info" style="margin-top:12px"></div>
+  </div>
+  <div class="card" id="ex-chart-wrap" style="max-width:520px;margin-top:16px;display:none">
+    <div class="card-t">📊 เปรียบเทียบรอบเลี้ยงที่ปิดแล้ว</div>
+    <canvas id="ex-chart" height="200"></canvas>
+  </div>
+  </div>
+  <div id="ex-year-view" hidden></div>
+  </div>
   <div id="pl-live"></div>
   <div class="card" style="margin-bottom:14px">
     <div class="card-t">💸 เงินไปไหน <span class="plx-hint">แตะดูรายการ</span></div>
@@ -5633,8 +5634,8 @@ document.addEventListener('focusout', () => {
 
 
 // ===== AUTH & ROLE =====
-const FINANCE_TABS=['tab-harvest','tab-harveststat','tab-export','tab-labor','tab-elec','tab-pl','tab-manage','tab-hatchery'];
-const FINANCE_SECS=['sec-harvest','sec-harveststat','sec-export','sec-labor','sec-elec','sec-pl','sec-manage','sec-hatchery'];
+const FINANCE_TABS=['tab-harvest','tab-harveststat','tab-labor','tab-elec','tab-pl','tab-manage','tab-hatchery'];
+const FINANCE_SECS=['sec-harvest','sec-harveststat','sec-labor','sec-elec','sec-pl','sec-manage','sec-hatchery'];
 function applyRole(role){
   APP_ROLE=role;
   document.body.classList.remove('role-admin');
@@ -7445,6 +7446,7 @@ function pondRunningCost(p){
 }
 // ── สลับแท็บด้วยชื่อ section (หา nav button ให้เอง) — ใช้กับปุ่มทางลัดข้ามหน้า เช่น ประวัติ→PDF, ปิดรอบเสร็จ→เตรียมบ่อ ──
 function goTabByName(t){
+  if(t==='export')t='pl';   // #457 หน้า PDF ปิดบ่อ รวมเข้า P&L แล้ว
   if(ADMIN_ONLY_TABS.includes(t)&&APP_ROLE!=='admin')return;   // กันทางลัดข้ามหน้าเปิดหน้า admin-only ให้ staff
   const btn=[...document.querySelectorAll('.tab,.tab-item,.sn-top,.sn-link')].find(b=>(b.getAttribute('onclick')||'').includes("'"+t+"'"));
   if(btn)goTab(t,btn);
@@ -8617,7 +8619,7 @@ function initUiSize(){
   applyUiSize(v);
 }
 initUiSize();
-const ADMIN_ONLY_TABS=['palm','users','labor','elec','pl','kan','hatchery','export','ai','appmap'];   // hatchery มีกำไร (#316) — เพิ่ม entry #357 · export = PDF ปิดบ่อ มีรายได้/ต้นทุน/กำไร (พี่สั่ง #374)
+const ADMIN_ONLY_TABS=['palm','users','labor','elec','pl','kan','hatchery','ai','appmap','harvest','harveststat','manage'];   // hatchery มีกำไร (#316) — เพิ่ม entry #357 · export = PDF ปิดบ่อ มีรายได้/ต้นทุน/กำไร (พี่สั่ง #374)
 function goTab(t,btn){
   if(ADMIN_ONLY_TABS.includes(t)&&APP_ROLE!=='admin')return;
   document.querySelectorAll('.tab,.tab-item,.sn-top,.sn-link').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
@@ -8639,7 +8641,7 @@ function goTab(t,btn){
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
   if(t==='lab')initLab();if(t==='mortality')initMortality();
 
-  if(t==='compare')initCompare();if(t==='hatchery')initHatchery();if(t==='risk'){if(_wxDaily)renderRisk(_wxDaily);else fetchWx();}if(t==='export')initExport();
+  if(t==='compare')initCompare();if(t==='hatchery')initHatchery();if(t==='risk'){if(_wxDaily)renderRisk(_wxDaily);else fetchWx();}
   if(t==='manage')renderManage();
   if(t==='palm')initPalm();
   if(t==='forecast')initForecast();
@@ -12401,6 +12403,7 @@ const NAV_EXTRA=[
   {id:'x:billall',ic:'🧾',t:'บิลทั้งหมด (รูปบิล)',p:'สต็อก › บิลทั้งหมด',k:'บิล ใบเสร็จ รูปบิล ย้อนหลัง',go:()=>{goTabByName('stock');openBillReview();}},
   {id:'x:count',ic:'🧮',t:'ยอดนับรอตรวจ',p:'สต็อก › ปุ่มบนสุด',k:'นับ นับสต็อก ตรวจนับ เบี้ย',go:()=>{goTabByName('stock');openScReview();},n:()=>scWaiting().length},
   {id:'x:sale',ic:'🛒',t:'ขายของ (บุญชู / ฟาร์ม)',p:'แถบล่าง / สต็อก › ขายของ',k:'ขาย ขายของ ลูกค้า หน้าร้าน ขายหน้าร้าน',go:()=>openSale()},
+  {id:'x:pdf',ic:'📄',t:'PDF ปิดบ่อ',p:'P&L › ปุ่ม PDF',k:'pdf พีดีเอฟ สรุปปิดบ่อ รายงาน ทั้งปี',go:()=>{goTabByName('pl');plPdf('crop',true);}},
   {id:'x:cost',ic:'💰',t:'ต้นทุนทุกบ่อ ในหน้าเดียว',p:'ภาพรวม › ปุ่มต้นทุน',k:'ต้นทุน ทุกบ่อ ต่อกิโล',go:()=>{goTabByName('overview');openCostSummary();}},
   {id:'sk:items',ic:'📦',t:'รายการพัสดุ (ของเหลือเท่าไหร่)',p:'สต็อก › รายการพัสดุ',k:'คงเหลือ ของเหลือ ยอดสต็อก หมด',go:navStock('items')},
   {id:'sk:tx',ic:'📝',t:'บันทึกรับ-เบิก',p:'สต็อก › บันทึกรับ-เบิก',k:'เบิก รับเข้า ลงบ่อ',go:navStock('tx')},
@@ -16886,6 +16889,7 @@ function renderPondStock(){
 // ⚠️ ใช้ partialTotals/pondShrimpCount/harvestRowKg/harvestRowBaht ตัวเดียวกับหน้า "จับกุ้ง"/"ภาพรวม" ทั้งหมด ไม่คำนวณคู่ขนาน — เลิกใช้ partialHarvestInfo/_phTarget แล้วตั้งแต่ entry #244 (ตัวนั้นเหลือใช้เฉพาะหน้าปฏิทินพาเชียล)
 function renderPdHarvestCard(p){
   const el=document.getElementById('pd-harvest-card');if(!el||!p)return;
+  const adm=APP_ROLE==='admin';   // #457 พี่สั่ง: พนักงานไม่เห็นตัวเลขการขาย · เหลือ กก. กับชื่อแพ
   const rows=(p.partialHarvests||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
   // ── สรุปด้านบน 3 บรรทัด (พี่สั่ง entry #244):
   //    เอาออกแล้ว = ผลผลิตสะสม (กก.) · ได้เงินเท่าไร · เหลือในบ่ออีกเท่าไร
@@ -16901,8 +16905,8 @@ function renderPdHarvestCard(p){
     sumHtml=
       row('ผลผลิตสะสม (พาเชียลรอบนี้)',
         `<b style="font-weight:700">${Math.round(pt.kg).toLocaleString()} กก.</b>`)
-     +row('รวมจำนวนเงิน',
-        `<b style="font-weight:700;color:var(--ok)">${Math.round(pt.baht).toLocaleString()} บาท</b>`)
+     +(adm?row('รวมจำนวนเงิน',
+        `<b style="font-weight:700;color:var(--ok)">${Math.round(pt.baht).toLocaleString()} บาท</b>`):'')
      +row('น้ำหนักกุ้งที่เหลืออยู่ในบ่อ',
         (sc&&sc.biomass!=null)
           ? (over
@@ -16923,16 +16927,16 @@ function renderPdHarvestCard(p){
     </div>`;
   }
   const histHtml=rows.length?`<div style="overflow-x:auto;margin-top:${sumHtml?'10px':'0'}"><table class="tbl" style="font-size:calc(12.5px * var(--ui-scale))"><thead><tr>
-      <th>วันที่</th><th>แพ</th><th style="text-align:right">น้ำหนัก (กก.)</th><th style="text-align:right">รวม (บาท)</th><th></th>
+      <th>วันที่</th><th>แพ</th><th style="text-align:right">น้ำหนัก (กก.)</th>${adm?'<th style="text-align:right">รวม (บาท)</th><th></th>':''}
     </tr></thead><tbody>${rows.map(r=>{
       const totKg=harvestRowKg(r),baht=harvestRowBaht(r);
       const grList=((r.grades)||[]).filter(g=>(g.kg||0)>0);
-      const bad=!(r.size>0)||!(baht>0);
+      const bad=adm&&(!(r.size>0)||!(baht>0));
       return`<tr${bad?' style="background:var(--wb)" title="ข้อมูลไม่ครบ — กดแก้ไขที่หน้าจับกุ้ง"':''}>
         <td>${fD(r.date)}</td><td>${r.buyer||'-'}</td>
         <td style="text-align:right;font-weight:700">${totKg?Math.round(totKg).toLocaleString():'-'}${grList.length?`<div class="hv-gr-sub">${grList.map(g=>mpEsc(g.n)+' '+g.kg).join(' · ')}</div>`:''}</td>
-        <td style="text-align:right;color:var(--ok)">${baht?Math.round(baht).toLocaleString():'-'}</td>
-        <td style="text-align:center"><button onclick="jumpHarvestEdit('${p.id}','${r.id}')" style="background:none;border:none;cursor:pointer;font-size:calc(13px * var(--ui-scale))" title="แก้ไขที่หน้าจับกุ้ง">✏️</button></td>
+        ${adm?`<td style="text-align:right;color:var(--ok)">${baht?Math.round(baht).toLocaleString():'-'}</td>
+        <td style="text-align:center"><button onclick="jumpHarvestEdit('${p.id}','${r.id}')" style="background:none;border:none;cursor:pointer;font-size:calc(13px * var(--ui-scale))" title="แก้ไขที่หน้าจับกุ้ง">✏️</button></td>`:''}
       </tr>`;
     }).join('')}</tbody></table></div>`
     :`<p style="color:var(--tx3);text-align:center;padding:${sumHtml?'12px':'16px'} 0;font-style:italic">ยังไม่มีพาเชียลในรอบนี้</p>`;
@@ -20448,7 +20452,7 @@ function exModeBar(){
   const bar=document.getElementById('ex-mode'),cv=document.getElementById('ex-crop-view'),yv=document.getElementById('ex-year-view');
   if(!bar||!cv||!yv)return;
   if(APP_ROLE!=='admin')_exMode='crop';
-  bar.hidden=APP_ROLE!=='admin';
+  bar.hidden=true;   // #457 สลับด้วยปุ่มในหน้า P&L
   bar.innerHTML=[['crop','📄 รายรอบ'],['year','📅 สรุปทั้งปี']].map(([k,l])=>'<button type="button" class="'+(_exMode===k?'on':'')+'" aria-pressed="'+(_exMode===k)+'" onclick="exSetMode(\''+k+'\')">'+l+'</button>').join('');
   cv.hidden=_exMode!=='crop';yv.hidden=_exMode!=='year';
 }
@@ -21259,6 +21263,7 @@ function crMonthsTxt(ms){   // [1,2,3,4] → ม.ค.–เม.ย. · [1,6,7,8,
   return out.join(' · ');
 }
 function crSetSort(k){_crSort=k;_crOpen=null;renderCrops();}
+function crPhTxt(c){const h=cropHarvestResult(c);return h&&h._phAdj?' (รวมพาเชียล '+Math.round(h._phKg).toLocaleString()+')':'';}   // #457
 function crToggle(key){_crOpen=_crOpen===key?null:key;renderCrops();}
 function crCloseDetail(){const c=document.getElementById('ch-card');if(c)c.hidden=true;}
 // FCR เทียบเกณฑ์ตามอายุตอนปิด (fcrTargetFor ของรอบนั้น — ใช้วันลง + ผลสุ่มของรอบนั้นเอง) · ⚠️ รอบที่จับเร็ว FCR ต่ำตามธรรมชาติ เทียบดิบจะหลอกตา
@@ -21281,7 +21286,7 @@ function renderCrops(){
     yrEl.value=cv;
     const ych=document.getElementById('cr-years');
     if(ych)ych.innerHTML=[...yrEl.options].map(o=>'<button type="button" class="crx-chip'+(o.value===cv?' on':'')+'" onclick="crSetYear(\''+o.value+'\')">'+o.text+'</button>').join('')
-      +'<button type="button" class="crx-chip" onclick="goStatForCropYear()">📊 สถิติจับกุ้ง</button>';
+      +(APP_ROLE==='admin'?'<button type="button" class="crx-chip" onclick="goStatForCropYear()">📊 สถิติจับกุ้ง</button>':'');
   }
   const isAdmin=APP_ROLE==='admin';
   const M=v=>(v/1e6).toFixed(2),n=v=>Math.round(v).toLocaleString();
@@ -21349,14 +21354,14 @@ function renderCrops(){
     pSel.value=pv;pf=pv;
   }
   // ── เรียง ──
-  const SORTS=[['new','ล่าสุด'],...(isAdmin?[['pr','กำไร']]:[]),['fcr','FCR เทียบเกณฑ์'],['rai','กก./ไร่'],['days','วันเลี้ยง']];
+  const SORTS=[['new','ล่าสุด'],...(isAdmin?[['pr','กำไร'],['cpk','ทุน/กก.']]:[]),['fcr','FCR เทียบเกณฑ์'],['rai','กก./ไร่'],['days','วันเลี้ยง']];
   if(!SORTS.some(x=>x[0]===_crSort))_crSort='new';
   const sEl=document.getElementById('cr-sorts');
   if(sEl)sEl.innerHTML=SORTS.map(x=>'<button type="button" class="crx-chip'+(x[0]===_crSort?' on':'')+'" onclick="crSetSort(\''+x[0]+'\')">'+x[1]+'</button>').join('');
   let L=rows.filter(r=>(pf==='all'||r.p.id===pf)&&(!_crReason||closeReason(r.c)===_crReason));
   {const fe=document.getElementById('cr-rflt');if(fe)fe.innerHTML=_crReason?'<button type="button" class="crx-rflt" onclick="crSetReason(\''+_crReason+'\')"><span>🩺 '+_crReason+' · '+L.length+' รอบ</span><span>✕</span></button>':'';}
   const nz=(v,d)=>v==null?d:v;
-  const key={new:r=>String(r.c.closeDate||''),pr:r=>nz(r.np,-1e15),fcr:r=>r.fcr!=null&&r.tgt!=null?-(r.fcr-r.tgt):-1e9,rai:r=>r.yr,days:r=>r.age}[_crSort];
+  const key={new:r=>String(r.c.closeDate||''),pr:r=>nz(r.np,-1e15),cpk:r=>r.s.costPerKg!=null?parseFloat(r.s.costPerKg):-1,fcr:r=>r.fcr!=null&&r.tgt!=null?-(r.fcr-r.tgt):-1e9,rai:r=>r.yr,days:r=>r.age}[_crSort];
   L.sort((a,b)=>{const x=key(a),y=key(b);return x<y?1:x>y?-1:0;});
   const mx=Math.max(1,...rows.map(r=>Math.abs(r.np||0)));
   const histEl=document.getElementById('cr-history');if(!histEl)return;
@@ -21370,7 +21375,7 @@ function renderCrops(){
     if(open){
       const dl=(a,b)=>'<div class="crx-dl"><span>'+a+'</span><b>'+b+'</b></div>';
       det='<div class="crx-det"><div class="crx-dh">🦐 ผลผลิต</div>'
-        +dl('น้ำหนักรวม',r.kg?n(r.kg)+' กก.':'-')+dl('ไซส์ปิดบ่อ',s.closeSize?s.closeSize+' ตัว/กก.':'-')
+        +dl('น้ำหนักรวม',r.kg?n(r.kg)+' กก.'+crPhTxt(r.c):'-')+dl('ไซส์ปิดบ่อ',s.closeSize?s.closeSize+' ตัว/กก.':'-')
         +dl('อัตรารอด',s.survivalRate!=null?s.survivalRate+'%':'-')
         +dl('FCR',r.fcr!=null?r.fcr.toFixed(2)+(r.tgt!=null?' · เกณฑ์อายุ '+r.age+' วัน = '+r.tgt.toFixed(1)+(r.fcr<=r.tgt+1e-9?' ✓':' ⚠️'):''):'-')
         +dl('กก./ไร่',r.yr?n(r.yr):'-')+(s.adg?dl('โตเฉลี่ย',s.adg+' ก./วัน'):'')+dl('ลูกกุ้ง',mpEsc(s.hatchery||'-'))
@@ -22775,11 +22780,12 @@ function cdmGoPdf(){
 }
 // ── กระโดดไปหน้า PDF ปิดบ่อ พร้อมเลือกบ่อ+รอบให้เลย (ใช้จากปุ่ม 📄 ท้ายแถวประวัติ และ dialog หลังปิดรอบ) ──
 function goPdfForCrop(pondId,idx){
-  goTabByName('export');
+  goTabByName('pl');plPdf('crop',true);
   const sel=document.getElementById('ex-pond');if(!sel)return;
   sel.value=pondId;
   onExPondChange();
   if(idx!=null&&idx>=0){const cs=document.getElementById('ex-crop');if(cs){cs.value=String(idx);renderExPreview();}}
+  document.getElementById('pl-pdf')?.scrollIntoView({block:'start',behavior:'instant'});
 }
 
 // ===== HARVEST =====
@@ -23755,6 +23761,7 @@ function renderPL(){
     chips.innerHTML=opts.map(o=>`<button class="crx-chip${o.value===yr?' on':''}" aria-pressed="${o.value===yr}" onclick="plSetYear('${o.value}')">${o.text} (${o.value?cnt[o.value]||0:all})</button>`).join('');
   }
   renderPLKPI(rows);renderPLLive(yr);renderPLTable(rows);renderPLCostChart(rows);
+  if(_exMode==='year'&&yr&&!document.getElementById('pl-pdf')?.hidden){_exYear=yr;renderExYear();}
 }
 // การ์ด "กำลังเลี้ยง" (#411) — บ่อที่ยังไม่ปิดรอบไม่อยู่ในสรุปปี จึงแยกกล่องน้ำเงิน "ถ้าจับวันนี้" · โชว์เฉพาะปีนี้/ทุกปี
 //   ทุน = pondRunningCost (ตัวเดียวกับหน้าบ่อ) · ในบ่อ = biomass ณ วันสุ่ม × hvLastPrice(ไซส์) (±1 แล้ว ±2 เหมือนหน้าจับกุ้ง)
@@ -23847,7 +23854,7 @@ function renderPLTable(rows){
   else if(_plSort==='loss')L.sort((a,b)=>(a.netProfit||0)-(b.netProfit||0));
   else if(_plSort==='cpk')L.sort((a,b)=>(cpkOf(b)??-1)-(cpkOf(a)??-1));
   const M=v=>(v/1e6).toFixed(2);
-  wrap.innerHTML=L.map(r=>{
+  wrap.innerHTML=L.slice(0,5).map(r=>{   // #457 5 อันดับ · ทุกรอบดูที่ประวัติรอบเลี้ยง
     const cost=costOf(r),wAll=wOf(r),cpk=cpkOf(r),prof=r.netProfit;
     const noData=!r.revenue;
     // ต้นทุนหลัก (ลูกกุ้ง+อาหาร+ค่าแรง+ค่าไฟ) ยังไม่ได้ลง
@@ -23863,7 +23870,26 @@ function renderPLTable(rows){
       <div class="c"><span>ขาย <b>฿${r.price?r.price.toLocaleString():'-'}</b>/กก.</span>${cpk!=null?`<span class="${r.price&&cpk>r.price?'hi':''}">ทุน <b>฿${cpk.toFixed(0)}</b>/กก.</span>`:''}${r.fcr?`<span>FCR <b>${r.fcr}</b></span>`:''}</div>
       ${costIncomplete?'<div class="w" style="color:var(--w)">⚠️ ต้นทุนยังไม่ครบ</div>':''}
     </div>`;
-  }).join('');
+  }).join('')+(L.length>5?`<button type="button" class="plx-all" onclick="plGoCrops()">ดูทุกรอบ ${L.length} รอบ ›</button>`:'');
+}
+// #457 ปุ่ม PDF ในหน้า P&L · กดซ้ำ = พับ · PDF ทั้งปีเริ่มที่ปีที่เลือกอยู่
+function plPdf(m,keep){
+  const box=document.getElementById('pl-pdf');if(!box)return;
+  if(!box.hidden&&_exMode===m&&!keep)box.hidden=true;
+  else{
+    box.hidden=false;_exMode=m;
+    const y=document.getElementById('pl-year')?.value;if(m==='year'&&y)_exYear=y;
+    initExport();
+  }
+  ['year','crop'].forEach(k=>document.getElementById('plb-'+k)?.setAttribute('aria-pressed',String(!box.hidden&&_exMode===k)));
+}
+function plGoCrops(){
+  const y=document.getElementById('pl-year')?.value;
+  goTabByName('crops');
+  const sel=document.getElementById('cr-year'),v=y?String(yearBE(parseInt(y))):'all';
+  if(sel){if(![...sel.options].some(o=>o.value===v))sel.add(new Option(v,v));sel.value=v;}
+  const ps=document.getElementById('cr-hist-pond');if(ps)ps.value='all';
+  _crOpen=null;renderCrops();window.scrollTo(0,0);
 }
 // ── เจาะจาก P&L ไปประวัติรอบเลี้ยงปีนั้นๆ — เห็นรอบขาดทุนแล้วกดเดียวไปดูสาเหตุ (หมายเหตุ/FCR/พาเชียล) ──
 // ── ไปที่การ์ดประวัติรอบเลี้ยง พร้อมตั้ง "ปี" และ "บ่อ" ให้เลย ──
