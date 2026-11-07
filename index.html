@@ -305,6 +305,7 @@ body.role-admin .side-nav .sn-link.admin-only{display:block!important}
 .crx-sum .g div.neg{background:#B91C1C}   /* กำไรติดลบ = กล่องแดง (พี่สั่ง entry #364) */
 .crx-sum b{display:block;font-size:calc(20px * var(--ui-scale));font-weight:900;white-space:nowrap}.crx-sum span{font-size:calc(12px * var(--ui-scale));font-weight:500}
 .crx-h{font-weight:800;font-size:calc(15px * var(--ui-scale));margin:4px 2px 8px}
+.crx-fold{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;background:var(--sf);border:1.5px solid var(--bd);border-radius:12px;padding:10px 13px;min-height:44px;margin:0 0 10px;font:inherit;font-size:calc(14.5px * var(--ui-scale));font-weight:700;color:var(--tx);cursor:pointer;text-align:left}
 .crx-act{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px;scrollbar-width:thin}
 .crx-ac{flex:0 0 auto;background:var(--sf);border-radius:14px;padding:10px 12px;min-width:140px;border:1.5px solid var(--bd);cursor:pointer;text-align:left;font:inherit;color:var(--tx)}
 .crx-ac b{font-size:calc(16px * var(--ui-scale))}.crx-ac .s{font-size:calc(12.5px * var(--ui-scale));font-weight:500;margin-top:2px}
@@ -4465,7 +4466,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   <div class="crx-chips" id="cr-years"></div>
   <div id="cr-sum"></div>
   <div id="cr-reason"></div>
-  <div id="cr-act-wrap"><div class="crx-h">🦐 รอบปัจจุบัน</div><div class="crx-act" id="cr-act"></div></div>
+  <div id="cr-act-wrap"><button type="button" class="crx-fold" id="cr-act-tog" onclick="crActToggle()"></button><div class="crx-act" id="cr-act"></div></div>
   <div class="crx-h">✅ ปิดแล้ว</div>
   <div class="crx-row"><select class="fi" id="cr-hist-pond" onchange="_crOpen=null;renderCrops()" aria-label="เลือกบ่อ"></select><button class="btn btn-s admin-only" style="margin-left:auto;font-size:var(--fs11);padding:4px 10px;white-space:nowrap" onclick="openAddCropModal()" title="ใส่ข้อมูลรอบเลี้ยงเก่าของบ่อที่ตกหล่นไป (กรอกย้อนหลังเอง)">➕ เพิ่มข้อมูล</button></div>
   <div class="crx-chips" id="cr-sorts"></div>
@@ -21250,7 +21251,7 @@ function pondNameById(pondId){
 // ══ หน้า 📚 ประวัติรอบเลี้ยง แบบการ์ด (พี่สั่ง entry #364) ══
 //   1 การ์ด = 1 รอบ เห็นผลทันที (ตัน · ไซส์ · FCR เทียบเกณฑ์ · รอด · กก./ไร่ · กำไร) · เรียงเทียบได้ · แตะ = สรุปย่อ + ปุ่มดูละเอียด (การ์ด #ch-card เดิม)
 //   ตัวเลขทุกตัวมาจาก getCloseSummary() ชุดเดียวกับรายละเอียด/PDF · ปีของรอบ = histRecYear() (entry #266/#267) · index ที่ส่งต่อ = index จริงใน p.cropHistory
-let _crSort='new',_crOpen=null,_crReason=null;
+let _crSort='new',_crOpen=null,_crReason=null,_crActOpen=false;
 function crSetYear(v){const e=document.getElementById('cr-year');if(e)e.value=v;_crOpen=null;_crReason=null;renderCrops();}
 function crSetReason(k){_crReason=_crReason===k?null:k;_crOpen=null;renderCrops();}
 // ── สาเหตุปิดบ่อ (entry #395 พี่สั่ง 8 ต.ค. 69 · mockup_รอบเลี้ยงสาเหตุปิดบ่อ.html) — closeReason() ตัวเดียวกับ PDF สรุปทั้งปี (#374)
@@ -21264,6 +21265,7 @@ function crMonthsTxt(ms){   // [1,2,3,4] → ม.ค.–เม.ย. · [1,6,7,8,
 }
 function crSetSort(k){_crSort=k;_crOpen=null;renderCrops();}
 function crPhTxt(c){const h=cropHarvestResult(c);return h&&h._phAdj?' (รวมพาเชียล '+Math.round(h._phKg).toLocaleString()+')':'';}   // #457
+function crActToggle(){_crActOpen=!_crActOpen;renderCrops();}
 function crToggle(key){_crOpen=_crOpen===key?null:key;renderCrops();}
 function crCloseDetail(){const c=document.getElementById('ch-card');if(c)c.hidden=true;}
 // FCR เทียบเกณฑ์ตามอายุตอนปิด (fcrTargetFor ของรอบนั้น — ใช้วันลง + ผลสุ่มของรอบนั้นเอง) · ⚠️ รอบที่จับเร็ว FCR ต่ำตามธรรมชาติ เทียบดิบจะหลอกตา
@@ -21338,7 +21340,13 @@ function renderCrops(){
     return{p,age,st};
   }).sort((a,b)=>({wait:0,grow:1,prep:2}[a.st]-{wait:0,grow:1,prep:2}[b.st])||b.age-a.age):[];
   if(actWrap)actWrap.style.display=act.length?'':'none';
-  if(actEl)actEl.innerHTML=act.map(({p,age,st})=>{
+  // #458 พับรอบปัจจุบัน (ปุ่มปิดรอบอยู่ข้างใน) · บ่อรอทำสรุปโชว์เสมอ — พี่สั่ง 7 พ.ย. 69
+  const nGrow=act.filter(x=>x.st==='grow').length,nWait=act.filter(x=>x.st==='wait').length,nPrep=act.filter(x=>x.st==='prep').length;
+  const actShow=_crActOpen?act:act.filter(x=>x.st==='wait');
+  const actTog=document.getElementById('cr-act-tog');
+  if(actTog){actTog.setAttribute('aria-expanded',String(_crActOpen));actTog.innerHTML='<span>🦐 รอบปัจจุบัน '+(nGrow+nWait)+' บ่อ'+(nWait?' · รอทำสรุป '+nWait:'')+(nPrep?' · เตรียมบ่อ '+nPrep:'')+'</span><span>'+(_crActOpen?'▾':'▸')+'</span>';}
+  if(actEl)actEl.style.display=actShow.length?'':'none';
+  if(actEl)actEl.innerHTML=actShow.map(({p,age,st})=>{
     const rc=isAdmin&&st!=='prep'?pondRunningCost(p):null;
     const sub=st==='wait'?'📋 รอทำสรุป · จับ '+fD(p.harvestDate):st==='grow'?age+' วัน':'🧹 เตรียมบ่อ · อีก '+(1-age)+' วัน';
     return '<div class="crx-ac" role="button" tabindex="0" onclick="openPondDetail(\''+p.id+'\')"><b>'+mpEsc(p.name)+'</b><div class="s">'+sub+'</div>'
