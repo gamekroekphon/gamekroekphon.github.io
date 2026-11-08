@@ -18085,11 +18085,13 @@ function renderKanGrid(){
 //    ⚠️ ในรอบเครื่องมือของคำถามเดียว messages ต่อท้ายอย่างเดียว ห้ามแก้ของเก่า (thinking ผูกกับประวัติ)
 const AI_URL='https://asia-southeast1-tawanfarm-efd8b.cloudfunctions.net/aiChat';
 const AI_HIST_MAX=50,AI_CTX_MSGS=10,AI_MAX_ROUNDS=8,AI_TOOL_MAX_CHARS=60000;
+const AI_FINAL_NOTE='ครบจำนวนรอบดึงข้อมูลแล้ว ให้ตอบเป็นภาษาไทยจากข้อมูลที่มีตอนนี้เลย บอกด้วยว่าอะไรยังสรุปไม่ได้';
 let _aiBusy=false,_aiDeep=false,_aiMonth=null,_aiAbort=null;   // ไม่มีปุ่มคำถามลัด (พี่สั่ง — กันกดเล่นเสียเงิน)
-const AI_TOOL_LBL={farm_overview:'ภาพรวมทุกบ่อ',pond_detail:'ข้อมูลบ่อ',closed_crops:'รอบที่ปิดแล้ว',stock_items:'สินค้าสต็อก',stock_usage:'การเบิกของ',harvests:'การจับกุ้ง',farm_protocols:'Protocol เวชภัณฑ์',lab_vs_usage:'ผลแล็บ × ของที่ใช้',palm_summary:'สวนปาล์ม'};
+const AI_TOOL_LBL={farm_overview:'ภาพรวมทุกบ่อ',pond_detail:'ข้อมูลบ่อ',pond_timeline:'ไทม์ไลน์บ่อ',closed_crops:'รอบที่ปิดแล้ว',stock_items:'สินค้าสต็อก',stock_usage:'การเบิกของ',harvests:'การจับกุ้ง',farm_protocols:'Protocol เวชภัณฑ์',lab_vs_usage:'ผลแล็บ × ของที่ใช้',palm_summary:'สวนปาล์ม'};
 function aiR(n,d){n=parseFloat(n);if(!isFinite(n))return null;const k=Math.pow(10,d||0);return Math.round(n*k)/k;}
 function aiNorm(s){return String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
-function aiFindPond(name){const k=aiNorm(name);return (D.ponds||[]).find(p=>aiNorm(p.name)===k)||null;}
+function aiFindPond(name){const k=aiNorm(name),num=(String(name||'').match(/\d+/)||[''])[0];   // #461 รับ 13 · บ่อ 13 · เอ13
+  return (D.ponds||[]).find(p=>aiNorm(p.name)===k)||(num?(D.ponds||[]).find(p=>(String(p.name).match(/\d+/)||[''])[0]===num):null)||null;}
 function aiYearBE(y){y=parseInt(y);if(!y)return null;return y<100?2500+y:y<2400?y+543:y;}
 function aiClean(o){Object.keys(o).forEach(k=>{if(o[k]===undefined||o[k]===null||o[k]==='')delete o[k];});return o;}
 const AI_TOOLS={
@@ -18128,6 +18130,28 @@ const AI_TOOLS={
       stock_used_this_crop:Object.values(used).map(u=>({...u,qty:aiR(u.qty,1),value:Math.round(u.value)})).sort((x,y)=>y.value-x.value).slice(0,40),
       units:'water: phM/phA=pH เช้า/บ่าย tM/tA=อุณหภูมิ doM/doA=DO alk sal=ความเค็ม · feed kg_per_100k=กก./แสน'};
   },
+  // #461 ไทม์ไลน์บ่อรายวัน — ค่าน้ำ · ของที่ลง · อาหาร · กุ้งตาย · เติมน้ำ · สุ่ม · แล็บ · จับ ในแถววันเดียวกัน (ไว้วิเคราะห์สาเหตุ)
+  pond_timeline(a){
+    const p=aiFindPond(a.pond);if(!p)return{error:'ไม่พบบ่อ '+a.pond,ponds:(D.ponds||[]).map(x=>x.name)};
+    if(!p.startDate)return{pond:p.name,status:'บ่อว่าง/ยังไม่ลงกุ้ง'};
+    const td=today(),n=Math.min(60,Math.max(1,parseInt(a.days)||21)),f0=addDaysStr(td,-n+1),from=p.startDate>f0?p.startDate:f0;
+    const inR=r=>r&&r.date&&r.date>=from&&r.date<=td,rows={},at=d=>rows[d]=rows[d]||{date:d};
+    const items=Object.fromEntries((D.inventoryItems||[]).map(i=>[i.id,i]));
+    const W=['phM','phA','tM','tA','doM','doA','alk','nh4','no2','no3','sal','ca','mg_','hard'];
+    (p.records||[]).filter(inR).forEach(r=>{const o=at(r.date);W.forEach(k=>{if(r[k]!=null&&r[k]!=='')o[k==='mg_'?'mg':k]=r[k];});const wc=wqcParse(r.notes);if(wc.cols.length)o.color=wc.cols.join('+');if(wc.rest)o.water_note=wc.rest;});
+    (p.feedLog||[]).filter(inR).forEach(r=>{const o=at(r.date);o.feed_kg=aiR((o.feed_kg||0)+(parseFloat(r.totalFeed)||0),1);});
+    (p.mortalityLog||[]).filter(inR).forEach(r=>{const o=at(r.date);o.dead=(o.dead||0)+(parseFloat(r.count)||0);if(r.cause)o.dead_cause=r.cause;});
+    (p.waterLog||[]).filter(inR).forEach(r=>{const o=at(r.date);o.water_action=(o.water_action?o.water_action+' · ':'')+(WL_ACT[r.action]||r.action||'เติมน้ำ')+(r.vol?' '+r.vol+' ซม.':'')+(r.notes?' ('+r.notes+')':'');});
+    (D.inventoryLog||[]).forEach(l=>{if(!l||l.pondId!==p.id||l.type!=='out'||!inR(l))return;const it=items[l.itemId];if(it&&it.category==='feed')return;if(String(l.id||'').startsWith('sl_fd_'))return;
+      const o=at(l.date);(o.used=o.used||[]).push((l.itemName||(it&&it.name)||'-')+' '+l.qty+' '+(l.unit||(it&&it.unit)||''));});
+    (p.samples||[]).filter(inR).forEach(s=>{at(s.date).sample=aiClean({size_per_kg:s.abw?aiR(1000/s.abw,0):null,abw_g:aiR(s.abw,2),survival_pct:s.survivalRate});});
+    (p.labResults||[]).filter(inR).forEach(r=>{at(r.date).lab=aiClean({tcbs_green:r.tcbsGreen,tcbs_yellow:r.tcbsYellow,hepato_green:r.hepatoGreen,hepato_yellow:r.hepatoYellow,ehp:r.ehp,ehp_larva:r.ehpLarva});});
+    (p.partialHarvests||[]).filter(inR).forEach(r=>{at(r.date).harvest_kg=aiR(harvestRowKg(r),0);});
+    const c=pondShrimpCount(p)||{};
+    return{pond:p.name,zone:pondZone(p),age:pondCurAge(p),start:p.startDate,rai:p.size,biomass_kg:c.biomass?Math.round(c.biomass):null,from,to:td,
+      days:Object.values(rows).sort((x,y)=>x.date.localeCompare(y.date)),
+      units:'phM/phA=pH เช้า/บ่าย tM/tA=อุณหภูมิ doM/doA=DO · used=ของที่เบิกลงบ่อวันนั้น ไม่รวมอาหาร · แถวที่ไม่มี used = ไม่มีบันทึกเบิก ไม่ได้ยืนยันว่าไม่ได้ลง · ค่าที่ไม่มีในแถว = ไม่ได้วัดวันนั้น'};
+  },
   closed_crops(a){
     const yb=aiYearBE(a.year),out=[];
     (D.ponds||[]).forEach(p=>{if(a.pond&&aiNorm(p.name)!==aiNorm(a.pond))return;
@@ -18157,11 +18181,11 @@ const AI_TOOLS={
     (D.inventoryLog||[]).forEach(l=>{if(!l||(l.type!=='out'&&l.type!=='shared')||l.date<from||l.date>to)return;
       const it=items[l.itemId],name=l.itemName||(it&&it.name)||'-',cat=it&&STOCK_CAT_LABEL[it.category]||'';if(q&&!name.toLowerCase().includes(q)&&!cat.includes(q))return;
       if(pd&&l.pondId!==pd.id)return;if(it&&it.category==='feed')return;n++;
-      const pond=l.type==='shared'?'ใช้ร่วม':(pn[l.pondId]||'-'),k=g==='pond'?pond:g==='day'?l.date:g==='item_pond'?name+' | '+pond:name;
+      const pond=l.type==='shared'?'ใช้ร่วม':(pn[l.pondId]||'-'),k=g==='pond'?pond:g==='day'?l.date:g==='item_day'?l.date+' | '+name:g==='item_pond'?name+' | '+pond:name;
       const r=grp[k]=grp[k]||{key:k,qty:0,unit:l.unit||(it&&it.unit)||'',value:0,rows:0};
       const qty=parseFloat(l.qty)||0,price=l.noCost?0:(parseFloat(l.unitCost)>0?parseFloat(l.unitCost):(it&&it.unitPrice)||0);
       r.qty+=qty;r.value+=qty*price;r.rows++;});
-    const mixU=g==='pond'||g==='day',rows=Object.values(grp).map(r=>mixU?{key:r.key,value:Math.round(r.value),rows:r.rows}:{...r,qty:aiR(r.qty,1),value:Math.round(r.value)}).sort((x,y)=>g==='day'?x.key.localeCompare(y.key):y.value-x.value);
+    const mixU=g==='pond'||g==='day',rows=Object.values(grp).map(r=>mixU?{key:r.key,value:Math.round(r.value),rows:r.rows}:{...r,qty:aiR(r.qty,1),value:Math.round(r.value)}).sort((x,y)=>g==='day'||g==='item_day'?x.key.localeCompare(y.key):y.value-x.value);
     return{from,to,group_by:g,entries:n,groups:rows.slice(0,200),note:'มูลค่า = ราคาที่จดตอนเบิก (ไม่มีใช้ราคาปัจจุบัน) · ไม่รวมอาหารกุ้ง'};
   },
   harvests(a){
@@ -18190,7 +18214,8 @@ const AI_TOOLS={
     return{count:rows.length,protocols:rows};
   },
   palm_summary(a){
-    const y=String(a.year||today().slice(0,4)),st=palmYearStats(y);
+    let yy=parseInt(a.year)||parseInt(today().slice(0,4));if(yy>2400)yy-=543;   // #461 AI ส่ง พ.ศ. มาก็ได้
+    const y=String(yy),st=palmYearStats(y);
     const exp=palmMoneyList().filter(r=>r.type==='expense'&&(r.date||'').startsWith(y)),by=palmExpByCat(exp);
     return{year:y,kg:st.kg,revenue:Math.round(st.revenue),spend:Math.round(st.spend),care_spend:Math.round(st.careSpend),invest_spend:Math.round(st.investSpend),net:Math.round(st.net),
       avg_price:aiR(st.avgPrice,2),care_cost_per_kg:aiR(st.careCostPerKg,2),expense_by_category:PALM_CATS.filter(c=>by[c.v]).map(c=>({cat:c.t,group:c.g==='inv'?'ลงทุน':'ค่าดูแล',baht:Math.round(by[c.v])})),
@@ -18302,6 +18327,7 @@ function aiMsgHtml(m,idx){
     +(body?'':'<li class="run"><span class="k"></span><span>'+mpEsc(m.phase||'กำลังคิด')+'…</span></li>')+'</ul>';
   else if(tl.length)h+='<div class="ai-pills">'+tl.map(t=>'<span'+(t.web?' class="web"':'')+'>'+mpEsc(t.l)+'</span>').join('')+'</div>';
   if(body)h+=aiMd(body);
+  if(!live&&m.text&&!tl.length)h+='<div class="ai-foot" style="margin-top:6px"><span>ตอบจากความรู้ ไม่ได้ดึงข้อมูลในแอป</span></div>';   // #461
   if(!live&&m.src&&m.src.length)h+='<div class="ai-src">'+m.src.map(x=>{const u=aiSafeUrl(x.url);return u?'<a href="'+mpEsc(u)+'" target="_blank" rel="noopener noreferrer">🌐 '+mpEsc(x.title||u)+'</a>':'';}).join('')+'</div>';
   if(m.err)h+='<div class="ai-err">⚠️ '+mpEsc(m.err)+'</div>';
   if(!live&&(m.cost||m.sec))h+='<div class="ai-foot">'+(m.text&&window.speechSynthesis&&idx>=0?'<button type="button" class="ai-say ai-own" data-i="'+idx+'" onclick="aiSpeak('+idx+')"><span>'+(_aiSpeakI===idx?'⏹ หยุดฟัง':'🔊 ฟัง')+'</span></button>':'')
@@ -18329,8 +18355,8 @@ function aiNew(){if(_aiBusy)return;if(!confirm('เริ่มเรื่อ�
 function aiKey(e){if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();if(!_aiBusy)aiSendOrStop();}}
 function aiSendOrStop(){if(_aiBusy){if(_aiAbort)_aiAbort.abort();return;}const t=document.getElementById('ai-q');if(!t)return;const q=t.value;t.value='';aiAsk(q);}
 function aiCopy(i,btn){const m=aiHist()[i];if(!m||!m.text)return;navigator.clipboard.writeText(m.text).then(()=>{const sp=btn&&btn.firstChild;if(sp){sp.textContent='คัดลอกแล้ว';setTimeout(()=>{sp.textContent='คัดลอก';},1500);}}).catch(()=>{});}
-async function aiCall(messages,deep,onText,signal){
-  const r=await fetch(AI_URL,{method:'POST',signal,headers:{'Content-Type':'application/json',Authorization:'Bearer '+await aiToken()},body:JSON.stringify({messages,deep})});
+async function aiCall(messages,deep,onText,signal,final){
+  const r=await fetch(AI_URL,{method:'POST',signal,headers:{'Content-Type':'application/json',Authorization:'Bearer '+await aiToken()},body:JSON.stringify({messages,deep,final:!!final})});
   if(!r.ok){let m='เรียก AI ไม่ได้ ('+r.status+')';try{const j=await r.json();if(j&&j.error)m=j.error;}catch(e){}throw new Error(m);}
   const rd=r.body.getReader(),dec=new TextDecoder();let buf='',done=null;
   for(;;){const x=await rd.read();if(x.done)break;buf+=dec.decode(x.value,{stream:true});let k;
@@ -18353,7 +18379,11 @@ async function aiAsk(text,opt){
   _aiBusy=true;_aiAbort=new AbortController();const deep=_aiDeep,t0=Date.now(),sig=_aiAbort.signal;
   const hist=aiHist();
   // บริบท = คู่ถาม-ตอบที่สำเร็จ 10 ข้อความล่าสุด (ข้อความล้วน ไม่มี thinking/เครื่องมือ) · ต้องขึ้นต้นด้วยคำถาม
-  const ok=[];hist.forEach((m,i)=>{const n=hist[i+1];if(m.role==='user'&&n&&n.role==='assistant'&&n.text&&!n.err)ok.push({role:'user',content:m.text},{role:'assistant',content:n.text});});
+  // #461 คำถามที่ไม่สำเร็จต้องอยู่ในบริบทด้วย ไม่งั้นถาม "คำตอบอยู่ไหน" แล้วไปต่อเรื่องเก่า · แนบชื่อข้อมูลที่ใช้ ให้รู้ว่าเลขมาจากไหน
+  const ok=[];hist.forEach((m,i)=>{const n=hist[i+1];if(m.role!=='user'||!n||n.role!=='assistant')return;
+    const used=(n.tools||[]).map(t=>typeof t==='string'?t:t.l).filter(Boolean);
+    const body=n.text&&!n.err?n.text:(n.text?n.text+'\n':'')+'(คำถามนี้ตอบไม่สำเร็จ'+(n.err?': '+n.err:'')+')';
+    ok.push({role:'user',content:m.text},{role:'assistant',content:body+(used.length?'\n[ข้อมูลที่ใช้: '+[...new Set(used)].slice(0,8).join(' · ')+']':'')});});
   const ctx=ok.slice(-AI_CTX_MSGS);
   while(ctx.length&&ctx[0].role!=='user')ctx.shift();
   const msgs=[...ctx,{role:'user',content:q+'\n(วันนี้ของระบบ: '+today()+')'}];
@@ -18361,19 +18391,23 @@ async function aiAsk(text,opt){
   const ans={role:'assistant',text:'',tools:[],model:deep?'Sonnet':'Haiku',cost:0,at:t0,live:'',phase:'กำลังคิด',_cite:[],_res:[]};
   hist.push(ans);aiSave(hist);aiRender();
   try{
-    let round=0;
+    let round=0,force=false;const calls=new Set();
     for(;round<AI_MAX_ROUNDS;round++){
-      let rt='';const base=ans.text?ans.text+'\n\n':'';
+      let rt='';const base=ans.text?ans.text+'\n\n':'',last=force||round===AI_MAX_ROUNDS-1;
       ans.phase=round?(deep?'กำลังวิเคราะห์ข้อมูล':'กำลังสรุป'):(deep?'กำลังคิด · อาจค้นเว็บ':'กำลังคิด');aiLive(ans);
-      const done=await aiCall(msgs,deep,d=>{rt+=d;ans.live=base+rt;aiLive(ans);},sig);
+      if(last&&msgs[msgs.length-1].role==='user'&&Array.isArray(msgs[msgs.length-1].content))msgs[msgs.length-1].content.push({type:'text',text:AI_FINAL_NOTE});   // #461 รอบสุดท้าย: ปิดเครื่องมือ บังคับสรุป
+      const done=await aiCall(msgs,deep,d=>{rt+=d;ans.live=base+rt;aiLive(ans);},sig,last);
       ans.cost+=done.cost||0;_aiMonth={thb:done.month,cap:done.cap};aiBudget();
       aiWebInfo(done.content,ans);
       const txt=(done.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
-      if(txt)ans.text=base+txt;
+      if(txt&&done.stop!=='tool_use')ans.text=base+txt;   // #461 ข้อความคั่นก่อนเรียกเครื่องมือไม่นับเป็นคำตอบ
       if(done.stop==='tool_use'){
         const tus=(done.content||[]).filter(b=>b.type==='tool_use');
         msgs.push({role:'assistant',content:done.content});
-        msgs.push({role:'user',content:tus.map(tu=>{ans.tools.push({l:(AI_TOOL_LBL[tu.name]||tu.name)+aiToolArg(tu.input)});const r=aiRunTool(tu.name,tu.input);
+        force=tus.every(tu=>calls.has(tu.name+JSON.stringify(tu.input||{})));   // #461 เรียกซ้ำทั้งรอบ = รอบหน้าบังคับสรุป ไม่เสียเงินวนต่อ
+        msgs.push({role:'user',content:tus.map(tu=>{const sig2=tu.name+JSON.stringify(tu.input||{});
+          if(calls.has(sig2))return{type:'tool_result',tool_use_id:tu.id,content:'เรียกซ้ำ: เงื่อนไขนี้ดึงไปแล้ว ผลเหมือนเดิม ใช้ผลเดิมตอบเลย หรือเปลี่ยนเครื่องมือ/เงื่อนไข'};calls.add(sig2);ans.tools.push({l:(AI_TOOL_LBL[tu.name]||tu.name)+aiToolArg(tu.input)});
+          const r=aiRunTool(tu.name,tu.input);
           return r.err?{type:'tool_result',tool_use_id:tu.id,content:'ผิดพลาด: '+r.err,is_error:true}:{type:'tool_result',tool_use_id:tu.id,content:r.out};})});
         ans.live=ans.text;aiLive(ans);continue;
       }
@@ -18382,7 +18416,7 @@ async function aiAsk(text,opt){
       if(done.stop==='max_tokens')ans.text+='\n\n(คำตอบยาวเกิน ถูกตัด — ถามแคบลง)';
       break;
     }
-    if(round>=AI_MAX_ROUNDS)ans.err='ดึงข้อมูลหลายรอบเกิน ลองถามให้แคบลง';
+    if(round>=AI_MAX_ROUNDS&&!ans.text)ans.err='ดึงข้อมูลหลายรอบเกิน ลองถามให้แคบลง';
   }catch(e){
     if(e&&e.name==='AbortError'){if(ans.live&&!ans.text)ans.text=ans.live;ans.err='หยุดแล้ว';}
     else ans.err=e.message||String(e);
