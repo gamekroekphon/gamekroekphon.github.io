@@ -5580,6 +5580,7 @@ function setSyncStatus(type, msg) {
 
 function normalizeD(d) {
   const curYear = new Date().getFullYear();
+  billHealApproved(d);   // #463
   d.ponds.forEach(p => {
     dropArchivedDupes(p);   // entry #299
     healClosedHeader(p);   // #448
@@ -6890,7 +6891,8 @@ function mergeRemote(local, remote) {
   merged.inventoryLog = dropDead(mergeArr(merged.inventoryLog||[], remote.inventoryLog||[]));
   // ⚠️ ต้อง merge ด้วย ไม่งั้นที่กันกรอกจากอีกเครื่องจะหายตอนซิงค์ (id เป็น kan_<บ่อ>_<วันลง> คงที่ข้ามเครื่อง)
   merged.kanDraft = dropDead(mergeArr(merged.kanDraft||[], remote.kanDraft||[]));
-  merged.stockBills = dropDead(mergeArr(merged.stockBills||[], remote.stockBills||[]));
+  merged.stockBills = dropDead(billMergeArr(merged.stockBills||[], remote.stockBills||[]));   // #463 อนุมัติแล้วห้ามถูกเครื่องค้างส่งเขียนกลับเป็นรอตรวจ
+  billHealApproved(merged);
   merged.stockCounts = dropDead(scMergeArr(merged.stockCounts||[], remote.stockCounts||[]));   // #432 ยอดนับพนักงาน · rev สูงกว่าชนะ (อนุมัติแล้วห้ามถูกเครื่องเก่าดึงกลับเป็น "รอตรวจ")
   // ── สต็อกหน้าร้าน (entry #332) — การเคลื่อนไหวฝั่งหน้าร้านแยกจาก inventoryLog (ฟาร์ม) · id ถาวร sh<เวลา> ลบแล้ว push deletedIds
   merged.shopLog = dropDead(mergeArr(merged.shopLog||[], remote.shopLog||[]));
@@ -12097,6 +12099,7 @@ async function approveBill(){
   // อีกเครื่องอาจเพิ่งอนุมัติ/ลบไป — กันรับเข้าสต็อกซ้ำ
   if(!b){billToast('บิลนี้ถูกลบไปแล้ว');renderBillRev();return;}
   if(b.status==='ok'){billToast('บิลนี้อนุมัติไปแล้ว');renderBillRev();return;}
+  if((D.inventoryLog||[]).some(l=>l&&l.billId===b.id&&l.type==='in')){billHealApproved(D);save();billToast('บิลนี้รับเข้าสต็อกไปแล้ว');renderBillRev();return;}   // #463 กันรับเข้าซ้ำ
   const rows=_billRev.items;
   if(rows.some(x=>!x.itemId||!billItem(x.itemId)||!(x.qty>0)||!(x.price>0))){renderBillRev();return;}
   if(!confirm('อนุมัติบิลนี้? สต็อกจะเพิ่ม '+rows.length+' รายการ'))return;
@@ -12214,6 +12217,22 @@ const STOCK_COUNTERS=['เบี้ย','โม','เอื้อง','staff1'];
 const SC_CATS=[['feed','🍚 อาหาร'],['chemWater','🧪 ยาลงน้ำ'],['probioWater','🦠 จุลินทรีย์ลงน้ำ'],['chemOral','💊 ยากิน'],['probioOral','🦠 จุลินทรีย์กิน'],['lime','⚪ ปูน/แร่'],['equip','🔧 อุปกรณ์'],['fuel','⛽ น้ำมัน']];
 let _scVals={},_scCat='',_scQ='',_scSent=null,_scRevId=null,_scOff={};
 function scArr(){if(!Array.isArray(D.stockCounts))D.stockCounts=[];return D.stockCounts;}
+// #463 บิลรับของ: 10 พ.ย. 69 อนุมัติแล้ว ของเข้าสต็อกแล้ว แต่เครื่องที่ถือสำเนาเก่า (สถานะรอตรวจ) ส่งทีหลัง → mergeArr ให้เครื่องชนะ บิลกลับเป็นรอตรวจ เด้งให้ตรวจซ้ำ
+//    กด อนุมัติซ้ำ = สต็อกเพิ่ม 2 เท่า · แก้ 3 ชั้น: merge ให้ ok ชนะเสมอ · heal บิลที่มีรายการรับเข้าแล้ว · approveBill เช็ค inventoryLog ก่อน
+function billMergeArr(a,b){
+  if(!Array.isArray(b))return a||[];if(!Array.isArray(a))return b||[];
+  const m=new Map();b.forEach(x=>{if(x&&x.id)m.set(x.id,x);});
+  a.forEach(x=>{if(!x||!x.id)return;const o=m.get(x.id);if(o&&o.status==='ok'&&x.status!=='ok')return;m.set(x.id,x);});
+  return[...m.values()];
+}
+function billHealApproved(d){
+  if(!d||!Array.isArray(d.stockBills))return 0;
+  const by={};(d.inventoryLog||[]).forEach(l=>{if(l&&l.billId&&l.type==='in')(by[l.billId]=by[l.billId]||[]).push(l);});
+  let n=0;d.stockBills.forEach(b=>{if(!b||b.status==='ok')return;const ls=by[b.id];if(!ls||!ls.length)return;
+    const t=+((String(ls[0].id).match(/\d{12,}/)||[])[0]);
+    b.status='ok';b.reason='';b.logIds=ls.map(l=>l.id);b.reviewedBy=b.reviewedBy||ls[0].by||'';b.reviewedAt=b.reviewedAt||(t?new Date(t).toISOString():new Date().toISOString());b.healed=true;n++;});
+  return n;
+}
 function scMergeArr(a,b){
   if(!Array.isArray(b))return a||[];if(!Array.isArray(a))return b||[];
   const m=new Map();b.forEach(x=>{if(x&&x.id)m.set(x.id,x);});
