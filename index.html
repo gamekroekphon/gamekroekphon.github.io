@@ -2193,6 +2193,14 @@ input.sk-cart-price{width:90px!important;text-align:center;font-size:calc(13px *
 .meter-badge-1{background:#FEF9E7;color:#92400E}
 .meter-badge-2{background:#EFF6FF;color:#1D4ED8}
 .meter-badge-3{background:#F0FDF4;color:#166534}
+/* #465 บิลค่าไฟ */
+.el-mb{border:1px solid var(--bd);border-radius:10px;padding:10px 12px;margin-top:10px;max-width:520px}
+.el-mh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:calc(15px * var(--ui-scale))}
+.el-ca{font-size:calc(13px * var(--ui-scale));font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.el-two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.el-two .fi{text-align:right;font-size:calc(17px * var(--ui-scale));font-variant-numeric:tabular-nums}
+.el-prev{font-size:calc(13px * var(--ui-scale));margin-top:6px}.el-prev .hi{color:var(--w);font-weight:700}
+#el-total-bar{max-width:520px;box-sizing:border-box}
 .meter-grid{display:grid;grid-template-columns:110px 1fr 1fr 1fr;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--sf2)}
 .meter-grid:last-of-type{border-bottom:none}
 .elec-total-bar{background:var(--pl);border-radius:10px;padding:12px 16px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-top:14px}
@@ -5030,45 +5038,38 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   <div class="elec-pane on" id="ep-bill">
     <div class="card">
       
-      <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
-        <label class="fl" style="margin:0" for="el-month">เดือน</label>
-        <input type="month" id="el-month" class="fi" style="width:180px" onchange="loadElecBill()">
+      <!-- #465 พี่สั่ง: กรอกตามแอป PEA Smart Plus — ปุ่มเดือน · หม้อละกล่อง มีชื่อโซน+เลขผู้ใช้ไฟ · เดือนก่อนใต้ทุกหม้อ -->
+      <div class="dw-wk" id="el-wk"><span id="el-wk-c" style="display:contents"></span><label class="sko-d" id="el-wk-pick"><span id="el-wk-pl">เลือกเดือน</span><input type="month" id="el-month" aria-label="เลือกเดือน" onclick="skoOpenDate(event)" onchange="loadElecBill()"></label></div>
+      <div class="el-mb">
+        <div class="el-mh"><span class="meter-badge meter-badge-1">หม้อ 1</span> <b id="el-m1-nm"></b> <span class="el-ca" id="el-m1-ca"></span></div>
+        <div class="el-two"><div><label class="fl" for="el-m1-kwh">หน่วย</label><input type="number" class="fi" id="el-m1-kwh" step="1" inputmode="numeric" oninput="calcElecRate(1)"></div><div><label class="fl" for="el-m1-baht">บาท (รวมเงิน)</label><input type="number" class="fi" id="el-m1-baht" step="0.01" inputmode="decimal" oninput="calcElecRate(1)"></div></div>
+        <input type="number" id="el-m1-rate" readonly hidden tabindex="-1">
+        <div class="el-prev" id="el-m1-prev"></div>
       </div>
-      <div class="meter-grid" style="font-weight:700;color:var(--tx2);padding-bottom:6px">
-        <div></div><div>หน่วย (kWh)</div><div>ค่าไฟ (บาท)</div><div>อัตรา (บาท/หน่วย)</div>
+      <div class="el-mb">
+        <div class="el-mh"><span class="meter-badge meter-badge-2">หม้อ 2</span> <b id="el-m2-nm"></b> <span class="el-ca" id="el-m2-ca"></span></div>
+        <div class="el-two"><div><label class="fl" for="el-m2-kwh">หน่วย</label><input type="number" class="fi" id="el-m2-kwh" step="1" inputmode="numeric" oninput="calcElecRate(2)"></div><div><label class="fl" for="el-m2-baht">บาท (รวมเงิน)</label><input type="number" class="fi" id="el-m2-baht" step="0.01" inputmode="decimal" oninput="calcElecRate(2)"></div></div>
+        <input type="number" id="el-m2-rate" readonly hidden tabindex="-1">
+        <div class="el-prev" id="el-m2-prev"></div>
       </div>
-      <div class="meter-grid">
-        <div><span class="meter-badge meter-badge-1">หม้อ 1</span></div>
-        <div><input type="number" class="fi" id="el-m1-kwh" step="1" placeholder="0" oninput="calcElecRate(1)"></div>
-        <div><input type="number" class="fi" id="el-m1-baht" step="1" placeholder="0" oninput="calcElecRate(1)"></div>
-        <div><input type="number" class="fi" id="el-m1-rate" step="0.01" placeholder="อัตโนมัติ" readonly style="background:var(--sf2)"></div>
-      </div>
-      <div class="meter-grid">
-        <div><span class="meter-badge meter-badge-2">หม้อ 2</span></div>
-        <div><input type="number" class="fi" id="el-m2-kwh" step="1" placeholder="0" oninput="calcElecRate(2)"></div>
-        <div><input type="number" class="fi" id="el-m2-baht" step="1" placeholder="0" oninput="calcElecRate(2)"></div>
-        <div><input type="number" class="fi" id="el-m2-rate" step="0.01" placeholder="อัตโนมัติ" readonly style="background:var(--sf2)"></div>
-      </div>
-      <div class="meter-grid">
-        <div><span class="meter-badge meter-badge-3">หม้อ 3</span></div>
-        <div><input type="number" class="fi" id="el-m3-kwh" step="1" placeholder="0" oninput="calcElecRate(3)"></div>
-        <div><input type="number" class="fi" id="el-m3-baht" step="1" placeholder="0" oninput="calcElecRate(3)"></div>
-        <div><input type="number" class="fi" id="el-m3-rate" step="0.01" placeholder="อัตโนมัติ" readonly style="background:var(--sf2)"></div>
+      <div class="el-mb">
+        <div class="el-mh"><span class="meter-badge meter-badge-3">หม้อ 3</span> <b id="el-m3-nm"></b> <span class="el-ca" id="el-m3-ca"></span></div>
+        <div class="el-two"><div><label class="fl" for="el-m3-kwh">หน่วย</label><input type="number" class="fi" id="el-m3-kwh" step="1" inputmode="numeric" oninput="calcElecRate(3)"></div><div><label class="fl" for="el-m3-baht">บาท (รวมเงิน)</label><input type="number" class="fi" id="el-m3-baht" step="0.01" inputmode="decimal" oninput="calcElecRate(3)"></div></div>
+        <input type="number" id="el-m3-rate" readonly hidden tabindex="-1">
+        <div class="el-prev" id="el-m3-prev"></div>
       </div>
       <div class="elec-total-bar" id="el-total-bar" style="display:none">
         <span id="el-total-kwh" style="font-weight:700;color:var(--tx)"></span>
         <span id="el-total-baht" style="font-weight:700;color:var(--p)"></span>
-        <span id="el-avg-rate" style="color:var(--tx2);font-size:calc(13px * var(--ui-scale))"></span>
+        <span id="el-avg-rate" style="color:var(--tx);font-size:calc(13px * var(--ui-scale))"></span>
       </div>
+      <div class="el-prev" id="el-prev-tot"></div>
       <div class="fg" style="margin-top:12px"><label class="fl" for="el-note">หมายเหตุ</label><input class="fi" id="el-note" placeholder="เพิ่มเติม..."></div>
-      <div style="display:flex;gap:8px;margin-top:4px">
-        <button id="el-save-btn" onclick="saveElecBill()">💾 บันทึกบิลค่าไฟ</button>
-        <button onclick="clearElecBill()" style="background:var(--sf2);color:var(--tx2)">🗑️ ล้างฟอร์ม</button>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn btn-p" id="el-save-btn" onclick="saveElecBill()">💾 บันทึก</button>
+        <button class="btn btn-s" onclick="clearElecBill()">🗑️ ล้างฟอร์ม</button>
       </div>
       <div id="el-msg"></div>
-      <div class="admin-only" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)">
-        <button onclick="seedElecHistory()" style="background:var(--sf2);color:var(--tx2);font-size:calc(12px * var(--ui-scale))">⬇️ นำเข้าบิลค่าไฟย้อนหลัง (2563-2569)</button>
-      </div>
     </div>
     <div class="card"><div id="el-history"></div></div>
   </div>
@@ -10892,11 +10893,37 @@ function elecTab(paneId,btn){
   btn.classList.add('on');
   document.getElementById(paneId).classList.add('on');
 }
+// #465 หม้อไฟ = เลขผู้ใช้ไฟบนบิล/แอป PEA Smart Plus (พี่บอก 11 พ.ย. 69)
+const ELEC_METERS={1:['Zone A','020004140206'],2:['Zone B','020004133066'],3:['Zone B.2','020004457226']};
+function elYm(ym,k){let[y,m]=ym.split('-').map(Number);m+=k;while(m<1){m+=12;y--;}while(m>12){m-=12;y++;}return y+'-'+String(m).padStart(2,'0');}
+function elShort(ym){return fmtMonth(ym).replace(/25(\d\d)$/,'$1');}
+function elMonths(){const t=today().slice(0,7);return[elYm(t,-1),elYm(t,-2)];}   // บิลเดือนไหนออกต้นเดือนถัดไป
+function elMetersDone(b){return b?[1,2,3].filter(n=>+b['m'+n+'baht']>0).length:0;}
+function renderElMonths(){
+  const c=document.getElementById('el-wk-c'),inp=document.getElementById('el-month');if(!c||!inp)return;
+  const ms=elMonths(),cur=inp.value,Q="'",bills=D.electricityBills||[];
+  c.innerHTML=ms.map(m=>{const k=elMetersDone(bills.find(b=>b.month===m));
+    return'<button type="button" class="sko-d'+(cur===m?' on':'')+'" onclick="elecGoMonth('+Q+m+Q+')">'+mpEsc(elShort(m))+(k>=3?'<small>✓ ครบ 3 หม้อ</small>':k?'<small style="color:var(--w)">กรอก '+k+'/3</small>':'')+'</button>';}).join('');
+  const other=cur&&!ms.includes(cur);
+  document.getElementById('el-wk-pick').classList.toggle('on',!!other);
+  document.getElementById('el-wk-pl').textContent=other?elShort(cur):'เลือกเดือน';
+}
+function renderElPrev(){
+  const cur=document.getElementById('el-month')?.value;if(!cur)return;
+  const pv=(D.electricityBills||[]).find(b=>b.month===elYm(cur,-1));
+  [1,2,3].forEach(n=>{const el=document.getElementById('el-m'+n+'-prev');if(!el)return;
+    const nm=document.getElementById('el-m'+n+'-nm'),ca=document.getElementById('el-m'+n+'-ca');if(nm)nm.textContent=ELEC_METERS[n][0];if(ca)ca.textContent=ELEC_METERS[n][1];
+    const k=parseFloat(document.getElementById('el-m'+n+'-kwh').value)||0,b=parseFloat(document.getElementById('el-m'+n+'-baht').value)||0;
+    const p=pv&&(+pv['m'+n+'kwh']||+pv['m'+n+'baht'])?'เดือนก่อน '+Math.round(+pv['m'+n+'kwh']||0).toLocaleString()+' หน่วย · '+Math.round(+pv['m'+n+'baht']||0).toLocaleString()+' บ.':'';
+    const r=k&&b?'<span'+(elecRateHi(k,b)?' class="hi"':'')+'>'+(b/k).toFixed(2)+' บ./หน่วย</span>':'';
+    el.innerHTML=[p,r].filter(Boolean).join(' · ');});
+  const t=document.getElementById('el-prev-tot');if(t)t.textContent=pv?'เดือนก่อน ('+elShort(pv.month)+') '+Math.round(pv.totalBaht||0).toLocaleString()+' บาท':'';
+}
 function initElec(){
   if(APP_ROLE!=='admin')return;   // กันเรียกตรง — หน้านี้มีบิลค่าไฟ
   populateAll();
   const el=document.getElementById('el-month');
-  if(el&&!el.value){const now=new Date();el.value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');}
+  if(el&&!el.value){const miss=elecMissingMonths();el.value=miss[0]||elMonths()[0];}   // #465 เดิมตั้งเป็นเดือนนี้ (บิลยังไม่ออก)
   loadElecBill();renderElecKPI();renderElecHistory();renderElecActiveSection();renderElecTrendChart();renderElecCropSummary();
 }
 // ══════ เตือนค่าไฟ (entry #383 พี่สั่ง 7 ต.ค. 69) ══════
@@ -10947,9 +10974,11 @@ function calcElecTotal(){
     document.getElementById('el-total-baht').textContent='รวม: '+totalBaht.toLocaleString()+' บาท';
     document.getElementById('el-avg-rate').textContent=totalKwh?'อัตราเฉลี่ย: '+(totalBaht/totalKwh).toFixed(2)+' บาท/หน่วย':'';
   }else{bar.style.display='none';}
+  renderElPrev();
 }
 function loadElecBill(){
   const month=document.getElementById('el-month')?.value;if(!month)return;
+  renderElMonths();
   const bill=(D.electricityBills||[]).find(b=>b.month===month);
   if(!bill){clearElecBill(true);return;}
   [1,2,3].forEach(n=>{document.getElementById('el-m'+n+'-kwh').value=bill['m'+n+'kwh']||'';document.getElementById('el-m'+n+'-baht').value=bill['m'+n+'baht']||'';calcElecRate(n);});
@@ -10974,6 +11003,7 @@ function saveElecBill(){
   if(idx>=0)D.electricityBills[idx]=bill;else D.electricityBills.push(bill);
   save();
   showElecMsg('✅ บันทึกบิลค่าไฟ '+fmtMonth(month)+' แล้ว','ok');
+  renderElMonths();
   renderElecKPI();renderElecHistory();renderElecActiveSection();renderElecTrendChart();renderElecCropSummary();
   flashSaveBtn(document.getElementById('el-save-btn'));
 }
@@ -10982,6 +11012,7 @@ function clearElecBill(silent){
   const noteEl=document.getElementById('el-note');if(noteEl)noteEl.value='';
   const bar=document.getElementById('el-total-bar');if(bar)bar.style.display='none';
   if(!silent)showElecMsg('','');
+  renderElPrev();
 }
 function deleteElecBill(month){
   if(!confirm('ลบบิลค่าไฟ '+fmtMonth(month)+' ?'))return;
@@ -10990,6 +11021,7 @@ function deleteElecBill(month){
   D.deletedIds=D.deletedIds||[];(gone.length?gone:[{month}]).forEach(b=>D.deletedIds.push(elecKey(b)));
   save();renderElecKPI();renderElecHistory();renderElecActiveSection();renderElecTrendChart();renderElecCropSummary();
   const cur=document.getElementById('el-month')?.value;if(cur===month)clearElecBill(true);
+  renderElMonths();
 }
 function showElecMsg(msg,type){
   const el=document.getElementById('el-msg');if(!el)return;
@@ -11241,7 +11273,7 @@ function renderElecHistory(){
     <select class="fi" id="el-hist-year" onchange="elHistYearSel=this.value;renderElecHistory()" style="width:180px;font-size:calc(12px * var(--ui-scale));padding:4px 8px">${opts}</select>
   </div>
   ${elSumBar}
-  ${!bills.length?'<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ไม่มีข้อมูลในปีที่เลือก</p>':`<table class="tbl"><thead><tr><th>เดือน</th><th>หม้อ 1 (หน่วย/฿)</th><th>หม้อ 2 (หน่วย/฿)</th><th>หม้อ 3 (หน่วย/฿)</th><th>รวม (฿)</th><th>อัตรา/วัน (฿)</th><th>บ่อที่กำลังเลี้ยง</th><th>อัตรา/บ่อ/วัน (฿)</th><th></th></tr></thead><tbody>${
+  ${!bills.length?'<p style="color:var(--tx3);padding:10px;font-style:italic;text-align:center">ไม่มีข้อมูลในปีที่เลือก</p>':`<table class="tbl"><thead><tr><th>เดือน</th><th>หม้อ 1 · Zone A</th><th>หม้อ 2 · Zone B</th><th>หม้อ 3 · Zone B.2</th><th>รวม (฿)</th><th>อัตรา/วัน (฿)</th><th>บ่อที่กำลังเลี้ยง</th><th>อัตรา/บ่อ/วัน (฿)</th><th></th></tr></thead><tbody>${
     bills.map(b=>{
       const [y,m]=b.month.split('-').map(Number);
       const daysInMonth=new Date(y,m,0).getDate();
