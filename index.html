@@ -2034,6 +2034,7 @@ body:not(.role-admin) #skb-tx{order:-1}
 @media(min-width:700px){.sko-ps{grid-template-columns:repeat(auto-fill,minmax(82px,1fr))}}
 .sko-p{background:var(--sf);border:1.5px solid var(--bd);border-radius:11px;padding:9px 2px;min-height:48px;font:inherit;font-size:calc(15px * var(--ui-scale));font-weight:700;color:var(--tx);cursor:pointer}
 .sko-p small{display:block;font-size:calc(11px * var(--ui-scale));font-weight:600}
+.sko-p small.prep{color:var(--p)}
 .sko-p.done{background:color-mix(in srgb,var(--ok) 10%,var(--sf));border-color:color-mix(in srgb,var(--ok) 40%,var(--bd));color:var(--ok)}
 .sko-rest{margin-top:10px}
 .sko-rest summary{font-size:calc(13px * var(--ui-scale));font-weight:600;cursor:pointer;margin-bottom:6px}
@@ -5214,9 +5215,10 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
       </div>
       <div id="skl-pane-out">
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-          <select class="fi" id="skl-out-pond" style="width:170px" onchange="renderStockOutLog(true)">
+          <select class="fi" id="skl-out-pond" style="width:170px" onchange="document.getElementById('skl-out-crop').value='cur';renderStockOutLog(true)">
             <option value="">ทุกบ่อ</option>
           </select>
+          <select class="fi" id="skl-out-crop" style="width:170px;display:none" onchange="renderStockOutLog(true)" aria-label="เลือกรอบ"><option value="cur">รอบนี้</option><option value="all">ทุกรอบ (รวมรอบเก่า)</option></select>
           <select class="fi" id="skl-out-cat" style="width:150px" onchange="renderStockOutLog(true)">
             <option value="">ทุกหมวด</option>
             <option value="feed">🍚 อาหารกุ้ง</option>
@@ -13153,11 +13155,13 @@ function skoStep(id,dir){
 }
 function skoShr(){return _stockMode==='shared'&&_extTab==='stock';}   // #459 อุปกรณ์นอก › จากสต็อก ใช้หน้าตาเดียวกับเบิกลงบ่อ
 function skoSum(ls){const m={};ls.forEach(l=>{const o=m[l.itemId]=m[l.itemId]||{id:l.itemId,name:l.itemName,unit:l.unit||'',q:0};o.q+=parseFloat(l.qty)||0;});return Object.values(m);}
+// #462 คอม (เมาส์): คลิกช่องวันที่ Chrome/Edge เปิดปฏิทินแค่ตอนกดไอคอน ซึ่งเราซ่อนไว้ → เรียก showPicker เอง · จอสัมผัสใช้ของเครื่องเหมือนเดิม
+function skoOpenDate(e){const i=e&&e.currentTarget;if(!i||!i.showPicker||!matchMedia('(pointer:fine)').matches)return;e.preventDefault();try{i.showPicker();}catch(x){}}
 function skoDays(d,lbl){
   const td=today(),yd=addDaysStr(td,-1),Q=String.fromCharCode(39),other=d!==td&&d!==yd;
   const dc=(v,t)=>'<button type="button" class="sko-d'+(d===v?' on':'')+'" onclick="skoSetDate('+Q+v+Q+')">'+t+'</button>';
   return '<div class="sko-l">'+lbl+'</div><div class="sko-ds">'+dc(td,'วันนี้ '+skoShort(td))+dc(yd,'เมื่อวาน '+skoShort(yd))
-    +'<label class="sko-d'+(other?' on':'')+'"><span>'+(other?mpEsc(skoShort(d)):'เลือกวัน')+'</span><input type="date" value="'+d+'" aria-label="เลือกวัน" onchange="skoSetDate(this.value)"></label></div>';
+    +'<label class="sko-d'+(other?' on':'')+'"><span>'+(other?mpEsc(skoShort(d)):'เลือกวัน')+'</span><input type="date" value="'+d+'" aria-label="เลือกวัน" onclick="skoOpenDate(event)" onchange="skoSetDate(this.value)"></label></div>';
 }
 // #459 ของใช้ร่วมจากสต็อก: ไม่มีขั้นเลือกบ่อ · ไม่นับรายการ "เข้าฟาร์มแล้วใช้เลย" (autoUseOf) เพราะไม่ได้กดเอง · ไม่คิดปริมาณให้
 function skxHtml(){
@@ -13192,7 +13196,7 @@ function renderSko(){
   if(!pid){
     const cnt={};outs.forEach(l=>{if(l.date===d)cnt[l.pondId]=(cnt[l.pondId]||0)+1;});
     const sorted=sortPondsByAge(D.ponds||[]),hasShrimp=p=>!clsNoShrimp(pondStatusOv(p)),act=sorted.filter(hasShrimp),rest=sorted.filter(p=>!hasShrimp(p));   // นับบ่อแบบเดียวกับภาพรวม
-    const pb=p=>'<button type="button" class="sko-p'+(cnt[p.id]?' done':'')+'" onclick="skoPick('+Q+p.id+Q+')">'+mpEsc(p.name)+(cnt[p.id]?'<small>✓ '+cnt[p.id]+'</small>':'')+'</button>';
+    const pb=p=>'<button type="button" class="sko-p'+(cnt[p.id]?' done':'')+'" onclick="skoPick('+Q+p.id+Q+')">'+mpEsc(p.name)+(hasShrimp(p)?'':'<small class="prep">เตรียมบ่อ</small>')+(cnt[p.id]?'<small>✓ '+cnt[p.id]+'</small>':'')+'</button>';   // #462 พี่สั่ง
     const restDone=rest.filter(p=>cnt[p.id]).length;
     el.innerHTML=skoDays(d,'เบิกของวันไหน')
       +'<div class="sko-l">เลือกบ่อ<span>เบิกแล้ว '+act.filter(p=>cnt[p.id]).length+' / '+act.length+' บ่อ</span></div><div class="sko-ps">'+act.map(pb).join('')+'</div>'
@@ -13211,7 +13215,7 @@ function renderSko(){
   // ใช้บ่อยของ "บ่อนี้" 30 วันล่าสุด (พี่สั่ง — แต่ละบ่อไม่เหมือนกัน) · ไม่พอ 8 ตัว (บ่อใหม่) เติมจากทั้งฟาร์ม
   const from=addDaysStr(td,-30),count=ls=>{const m={};ls.forEach(l=>{if(l.date>=from&&can(l.itemId)&&!seen.has(l.itemId))m[l.itemId]=(m[l.itemId]||0)+1;});return Object.keys(m).sort((x,y)=>m[y]-m[x]);};
   const mineTop=count(mine),top=mineTop.concat(count(outs).filter(id=>!mineTop.includes(id))).slice(0,8);
-  el.innerHTML='<div class="sko-sel"><div><b>'+mpEsc(p?p.name:'')+'</b> · '+mpEsc(fD(d))+'</div><button type="button" onclick="skoBack()">เปลี่ยนบ่อ</button></div>'
+  el.innerHTML='<div class="sko-sel"><div><b>'+mpEsc(p?p.name:'')+'</b>'+(p&&clsNoShrimp(pondStatusOv(p))?' · เตรียมบ่อ':'')+' · '+mpEsc(fD(d))+'</div><button type="button" onclick="skoBack()">เปลี่ยนบ่อ</button></div>'
     +(already.length?'<div class="sko-done">✓ '+mpEsc(skoShort(d))+' บ่อนี้เบิกแล้ว: '+already.map(x=>mpEsc(x.name)+' '+q2(x.q)).join(' · ')+'</div>':'')
     +(prevShow.length?'<div class="sko-l">รอบก่อนบ่อนี้ใช้<span>'+mpEsc(skoShort(lastD))+' · แตะเพื่อเพิ่ม</span></div><div class="sko-cs y">'+prevShow.map(x=>'<button type="button" onclick="skoAdd('+Q+x.id+Q+','+q2(x.q)+')">'+mpEsc(x.name)+' '+q2(x.q)+'</button>').join('')+'</div>':'')
     +(top.length?'<div class="sko-l">ใช้บ่อย</div><div class="sko-cs">'+top.map(id=>'<button type="button" onclick="skoAdd('+Q+id+Q+')">'+mpEsc(items[id].name)+'</button>').join('')+'</div>':'');
@@ -13679,6 +13683,7 @@ function populateStockOutFilters(){
 }
 function clearStockOutFilter(){
   const p=document.getElementById('skl-out-pond');if(p)p.value='';
+  const r=document.getElementById('skl-out-crop');if(r)r.value='cur';
   const c=document.getElementById('skl-out-cat');if(c)c.value='';
   const m=document.getElementById('skl-out-month');if(m)m.value='';
   renderStockOutLog(true);
@@ -13700,11 +13705,18 @@ function renderStockOutLog(resetLimit){
   const pondMap={};(D.ponds||[]).forEach(p=>{pondMap[p.id]=p.name;});
   let logs=(D.inventoryLog||[]).filter(l=>l.type==='out'&&l.pondId);
   if(pid)logs=logs.filter(l=>l.pondId===pid);
+  // #462 พี่สั่ง: เลือกบ่อแล้วไม่ต้องเห็นของรอบที่ปิดไปแล้ว — เริ่มที่ pondCostStartDate (วันถัดจากปิดรอบก่อน) ตัวเดียวกับปุ่มสต็อกบ่อนี้ · ข้อมูลไม่ลบ เลือก "ทุกรอบ" ดูได้
+  const cropSel=document.getElementById('skl-out-crop'),pp=pid?pond(pid):null;
+  let cropFrom=null;
+  if(cropSel){cropSel.style.display=pp?'':'none';
+    if(pp){cropFrom=pondCostStartDate(pp,pp.startDate||today());cropSel.options[0].text='รอบนี้'+(cropFrom?' · ตั้งแต่ '+fD(cropFrom):'');}
+    if(!pp||cropSel.value!=='cur')cropFrom=null;}
+  if(cropFrom)logs=logs.filter(l=>l.date&&l.date>=cropFrom);
   if(cat)logs=logs.filter(l=>{const it=itemMap[l.itemId];return it&&it.category===cat;});
   const month=histMonthFill(document.getElementById('skl-out-month'),logs.map(l=>l.date));
   if(month)logs=logs.filter(l=>l.date&&l.date.startsWith(month));
   logs=logs.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ไม่มีประวัติลงบ่อ'+(pid||cat||month?'ตามตัวกรองนี้':'')+'</p>';return;}
+  if(!logs.length){tbl.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ไม่มีประวัติลงบ่อ'+(cropFrom?'รอบนี้':(pid||cat||month?'ตามตัวกรองนี้':''))+'</p>';return;}
   const total=logs.length;
   const shown=_skOutAll?logs:logs.slice(0,SK_OUT_PAGE);
   tbl.innerHTML=`<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่</th><th>บ่อ</th><th>หมวด</th><th>รายการ</th><th style="text-align:right">จำนวน</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${
