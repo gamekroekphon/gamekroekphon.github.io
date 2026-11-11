@@ -2028,6 +2028,17 @@ body:not(.role-admin) #skb-tx{order:-1}
 .sko-ds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:12px}
 .sko-d{position:relative;display:block;text-align:center;background:var(--sf);border:1.5px solid var(--bd);border-radius:10px;padding:8px 2px;font:inherit;font-size:calc(13px * var(--ui-scale));font-weight:600;color:var(--tx);cursor:pointer;min-height:0;overflow:hidden}
 .sko-d.on{background:color-mix(in srgb,var(--p) 13%,var(--sf));border-color:var(--p)}
+/* #464 ค่าแรงสัปดาห์ */
+.dw-wk{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:520px}
+.dw-wk .sko-d{padding:10px 2px;font-size:calc(14px * var(--ui-scale))}
+.dw-wk .sko-d small{display:block;font-size:calc(11px * var(--ui-scale));color:var(--ok)}
+.dw-z{border-collapse:collapse;margin-top:12px;width:100%;max-width:520px}
+.dw-z th{font-size:calc(12.5px * var(--ui-scale));font-weight:600;text-align:left;padding:0 4px 4px}
+.dw-z td{padding:4px}.dw-z td.dw-zn{font-weight:700;width:96px;font-size:calc(14px * var(--ui-scale))}
+.dw-z .fi{text-align:right;font-size:calc(17px * var(--ui-scale));font-variant-numeric:tabular-nums}
+.dw-z .fi.dw-n{width:72px;text-align:center}
+.dw-sum{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--ob);color:var(--ok);border-radius:10px;padding:10px 12px;font-weight:700;font-size:calc(16px * var(--ui-scale));margin-top:8px;max-width:520px;box-sizing:border-box}
+.dw-prev{font-size:calc(13px * var(--ui-scale));margin-top:5px}
 .sko-d .date-hint{display:none}
 .sko-d input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;padding:0}
 .sko-ps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
@@ -4953,17 +4964,19 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   <!-- SUB-PANE: พนักงานรายวัน (รายสัปดาห์) -->
   <div class="labor-pane" id="lp-cost">
     <div class="card" style="margin-bottom:16px">
-      <div class="card-t">👷 บันทึกยอดจ่ายจริง — พนักงานรายวัน (ตัดรอบทุกวันพุธ จ่ายจริงวันพฤหัสบดี)</div>
-      <div class="card-sub" style="font-size:var(--fs115);color:var(--tx3);margin-bottom:12px">แต่ละแถว = ยอดของสัปดาห์ที่ตัดรอบวันพุธนั้น ครอบคลุมช่วงทำงาน 7 วัน (พฤหัสบดี–พุธ) กรอกวันที่ตัดรอบ (วันพุธ) เป็นตัวระบุสัปดาห์ สัปดาห์ที่ตัดรอบไปแล้วจะล็อกไว้ ไม่ถูกคำนวณย้อนหลังใหม่ ต่อให้สัปดาห์ถัดไปยอดเปลี่ยน</div>
+      <div class="card-t">👷 ค่าแรงสัปดาห์ — พนักงานรายวัน</div>
+      <div class="card-sub" style="font-size:var(--fs115);margin-bottom:10px">ตัดรอบวันพุธ · กรอกตามใบของเบี้ย</div>
       <input type="hidden" id="dw-edit-id">
-      <div class="fgrid">
-        <div class="fg"><label class="fl" for="dw-start">วันตัดรอบ (ต้องเป็นวันพุธ) *</label><input type="date" class="fi" id="dw-start" onchange="checkDwWednesday()"></div>
-        <div class="fg"><label class="fl" for="dw-people">จำนวนคนทำงานจริง</label><input type="number" class="fi" id="dw-people" placeholder="เช่น 32"></div>
-        <div class="fg"><label class="fl" for="dw-amount">ยอดจ่ายจริง (บาท) *</label><input type="number" class="fi" id="dw-amount" placeholder="เช่น 61500" inputmode="decimal"></div>
-      </div>
-      <div class="fgrid" style="margin-top:11px">
-        <div class="fg" style="grid-column:1/-1"><label class="fl" for="dw-note">หมายเหตุ</label><input type="text" class="fi" id="dw-note" placeholder="เช่น มีวันหยุดนักขัตฤกษ์ 1 วัน"></div>
-      </div>
+      <!-- #464 พี่สั่ง: ปุ่มสัปดาห์ + ยอดแยก Zone A / B / สวนปาล์ม ตามใบเขียนมือ แอปรวมให้ -->
+      <div class="dw-wk" id="dw-wk"><span id="dw-wk-c" style="display:contents"></span><label class="sko-d" id="dw-wk-pick"><span id="dw-wk-pl">เลือกวัน</span><input type="date" id="dw-start" aria-label="เลือกวันตัดรอบ" onclick="skoOpenDate(event)" onchange="checkDwWednesday();renderDwForm()"></label></div>
+      <table class="dw-z"><thead><tr><th></th><th>ยอดรวม (บาท)</th><th>คน</th></tr></thead><tbody>
+        <tr><td class="dw-zn">Zone A</td><td><input type="number" class="fi" id="dw-za" inputmode="numeric" oninput="renderDwSum()" aria-label="ยอด Zone A"></td><td><input type="number" class="fi dw-n" id="dw-zan" inputmode="numeric" oninput="renderDwSum()" aria-label="คน Zone A"></td></tr>
+        <tr><td class="dw-zn">Zone B</td><td><input type="number" class="fi" id="dw-zb" inputmode="numeric" oninput="renderDwSum()" aria-label="ยอด Zone B"></td><td><input type="number" class="fi dw-n" id="dw-zbn" inputmode="numeric" oninput="renderDwSum()" aria-label="คน Zone B"></td></tr>
+        <tr><td class="dw-zn">สวนปาล์ม</td><td><input type="number" class="fi" id="dw-zp" inputmode="numeric" oninput="renderDwSum()" aria-label="ยอด สวนปาล์ม"></td><td><input type="number" class="fi dw-n" id="dw-zpn" inputmode="numeric" oninput="renderDwSum()" aria-label="คน สวนปาล์ม"></td></tr>
+        <tr id="dw-oldrow" style="display:none"><td class="dw-zn">ยอดรวม<br>(ข้อมูลเก่า)</td><td><input type="number" class="fi" id="dw-amount" inputmode="numeric" oninput="renderDwSum()" aria-label="ยอดรวม"></td><td><input type="number" class="fi dw-n" id="dw-people" inputmode="numeric" oninput="renderDwSum()" aria-label="จำนวนคน"></td></tr>
+      </tbody></table>
+      <div id="dw-sum"></div>
+      <div class="fg" style="margin-top:10px"><label class="fl" for="dw-note">หมายเหตุ</label><input type="text" class="fi" id="dw-note" placeholder="เช่น ลาวปู หยุด 7 วัน"></div>
       <div id="dw-wed-warn" style="margin-top:8px"></div>
       <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn btn-p" id="dw-save-btn" onclick="saveDailyWeek()">💾 บันทึก</button>
@@ -10452,18 +10465,52 @@ function checkDwWednesday(){
     warnEl.innerHTML='';
   }
 }
+// #464 ใบค่าแรงของเบี้ย = Zone A / Zone B / สวนปาล์ม (สวนปาล์มรวมเข้ายอดเหมือนเดิม พี่สั่ง — ปาล์มยังไม่พอเลี้ยงตัวเอง)
+//   rec.zones = {A:{amount,people},B:…,P:…} · amount/people = ผลรวม (โค้ดคิดต้นทุนอ่านแค่ 2 ตัวนี้ ไม่ต้องแก้)
+//   รายการเก่าไม่มี zones → แก้ไขผ่านแถว "ยอดรวม (ข้อมูลเก่า)" (#dw-oldrow) · คนหยุดทั้งสัปดาห์ได้ 0 บาทก็นับคน (พี่สั่ง)
+const DW_Z=[['A','dw-za','A'],['B','dw-zb','B'],['P','dw-zp','ปาล์ม']];
+function dwWeeks(){const t=new Date(today()+'T00:00:00');while(t.getDay()!==3)t.setDate(t.getDate()-1);const w0=ymdLocal(t);return[w0,addDaysStr(w0,-7)];}
+function dwRange(we){const st=addDaysStr(we,-6);return(st.slice(5,7)===we.slice(5,7)?String(+st.slice(8)):skoShort(st))+'–'+skoShort(we);}
+function dwRec(we){return(D.dailyLaborWeeks||[]).find(r=>r&&r.weekEnd===we);}
+function dwZoneVals(){let z=null,amt=0,ppl=0;DW_Z.forEach(([k,id])=>{const a=parseFloat(document.getElementById(id).value),n=parseInt(document.getElementById(id+'n').value);
+  if(a>0||n>0){z=z||{};z[k]={amount:a>0?a:0,people:n>0?n:0};amt+=a>0?a:0;ppl+=n>0?n:0;}});return{z,amt,ppl};}
+function dwOldOn(){const r=document.getElementById('dw-oldrow');return!!r&&r.style.display!=='none';}
+function dwPickWeek(we){const r=dwRec(we);if(r){editDailyWeek(r.id);return;}clearDailyWeek(true);document.getElementById('dw-msg').innerHTML='';document.getElementById('dw-start').value=we;checkDwWednesday();renderDwForm();}
+function renderDwForm(){
+  const c=document.getElementById('dw-wk-c'),inp=document.getElementById('dw-start');if(!c||!inp)return;
+  const ws=dwWeeks();
+  if(!inp.value&&!document.getElementById('dw-edit-id').value&&!dwZoneVals().z&&!dwRec(ws[0]))inp.value=ws[0];   // สัปดาห์ล่าสุดที่ยังไม่กรอก
+  const cur=inp.value,Q="'";
+  c.innerHTML=ws.map(w=>{const r=dwRec(w);return'<button type="button" class="sko-d'+(cur===w?' on':'')+'" onclick="dwPickWeek('+Q+w+Q+')">'+mpEsc(dwRange(w))+(r?'<small>✓ กรอกแล้ว</small>':'')+'</button>';}).join('');
+  const other=cur&&!ws.includes(cur);
+  document.getElementById('dw-wk-pick').classList.toggle('on',!!other);
+  document.getElementById('dw-wk-pl').textContent=other?dwRange(cur):'เลือกวัน';
+  renderDwSum();
+}
+function renderDwSum(){
+  const el=document.getElementById('dw-sum');if(!el)return;
+  const v=dwZoneVals();let amt=v.amt,ppl=v.ppl;
+  if(!v.z&&dwOldOn()){amt=parseFloat(document.getElementById('dw-amount').value)||0;ppl=parseInt(document.getElementById('dw-people').value)||0;}
+  const cur=document.getElementById('dw-start').value||dwWeeks()[0];
+  const pv=(D.dailyLaborWeeks||[]).filter(r=>r&&r.weekEnd&&r.weekEnd<cur).sort((a,b)=>b.weekEnd.localeCompare(a.weekEnd))[0];
+  el.innerHTML='<div class="dw-sum"><span>รวม '+ppl+' คน</span><span>'+Math.round(amt).toLocaleString()+' บาท</span></div>'
+    +(pv?'<div class="dw-prev">สัปดาห์ก่อน ('+mpEsc(dwRange(pv.weekEnd))+') '+Math.round(pv.amount).toLocaleString()+' บาท'+(pv.people?' · '+pv.people+' คน':'')+'</div>':'');
+}
 function saveDailyWeek(){
   const weekEnd=document.getElementById('dw-start').value;
-  const people=parseInt(document.getElementById('dw-people').value)||null;
-  const amount=parseFloat(document.getElementById('dw-amount').value);
+  const zv=dwZoneVals();
+  let people=parseInt(document.getElementById('dw-people').value)||null;
+  let amount=dwOldOn()?parseFloat(document.getElementById('dw-amount').value):NaN;
+  if(zv.z){amount=zv.amt;people=zv.ppl||null;}
   const note=document.getElementById('dw-note').value.trim();
   const editId=document.getElementById('dw-edit-id').value;
   const msg=document.getElementById('dw-msg');
   if(!weekEnd){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุวันที่ตัดรอบ</span>';return;}
   if(new Date(weekEnd+'T00:00:00').getDay()!==3){msg.innerHTML='<span style="color:var(--d)">วันที่ต้องเป็นวันพุธ</span>';return;}
-  if(!amount||amount<=0){msg.innerHTML='<span style="color:var(--d)">กรุณาระบุยอดจ่ายจริง</span>';return;}
+  if(!amount||amount<=0){msg.innerHTML='<span style="color:var(--d)">กรอกยอดอย่างน้อย 1 โซน</span>';return;}
   if(!D.dailyLaborWeeks)D.dailyLaborWeeks=[];
   const rec={id:editId||('dw_'+weekEnd+'_'+Date.now()),weekEnd,people,amount,note};
+  if(zv.z)rec.zones=zv.z;
   const idx=editId?D.dailyLaborWeeks.findIndex(r=>r.id===editId):D.dailyLaborWeeks.findIndex(r=>r.weekEnd===weekEnd);
   if(idx>=0)D.dailyLaborWeeks[idx]=rec;else D.dailyLaborWeeks.push(rec);
   save();
@@ -10483,7 +10530,10 @@ function clearDailyWeek(keepMsg){
   document.getElementById('dw-amount').value='';
   document.getElementById('dw-note').value='';
   document.getElementById('dw-wed-warn').innerHTML='';
+  DW_Z.forEach(([k,id])=>{document.getElementById(id).value='';document.getElementById(id+'n').value='';});
+  document.getElementById('dw-oldrow').style.display='none';
   if(!keepMsg)document.getElementById('dw-msg').innerHTML='';
+  renderDwForm();
 }
 function editDailyWeek(id){
   const r=(D.dailyLaborWeeks||[]).find(x=>x.id===id);if(!r)return;
@@ -10492,6 +10542,11 @@ function editDailyWeek(id){
   document.getElementById('dw-people').value=r.people||'';
   document.getElementById('dw-amount').value=r.amount;
   document.getElementById('dw-note').value=r.note||'';
+  DW_Z.forEach(([k,id])=>{const z=r.zones&&r.zones[k];document.getElementById(id).value=z&&z.amount?z.amount:'';document.getElementById(id+'n').value=z&&z.people?z.people:'';});
+  document.getElementById('dw-oldrow').style.display=r.zones?'none':'';   // #464 รายการก่อนแยกโซน
+  document.getElementById('dw-wed-warn').innerHTML='';document.getElementById('dw-msg').innerHTML='';
+  renderDwForm();
+  const w=document.getElementById('dw-wk');if(w&&w.scrollIntoView)w.scrollIntoView({block:'center',behavior:'smooth'});
 }
 function deleteDailyWeek(id){
   if(!confirm('ลบรายการสัปดาห์นี้?'))return;
@@ -10523,6 +10578,7 @@ function normalizeDailyLaborWeeks(){
 }
 function renderDailyWeekTable(){
   renderDailyWeekGapWarn();
+  renderDwForm();   // #464
   const el=document.getElementById('dw-table');if(!el)return;
   const list=(D.dailyLaborWeeks||[]).filter(r=>r.weekEnd).slice().sort((a,b)=>b.weekEnd.localeCompare(a.weekEnd));
   if(!list.length){el.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีข้อมูล — บันทึกยอดจ่ายจริงได้ที่ฟอร์มด้านบน</p>';return;}
@@ -10532,7 +10588,7 @@ function renderDailyWeekTable(){
       const periodStart=addDaysStr(r.weekEnd,-6);
       const locked=r.weekEnd<=todayStr;
       const activePonds=activePondCountOnDate(r.weekEnd); // จำนวนบ่อที่กำลังเลี้ยงอยู่จริง ณ วันตัดรอบ (วันสุดท้าย) ของสัปดาห์นั้น
-      return`<tr><td>${fD(r.weekEnd)}</td><td style="font-size:calc(12px * var(--ui-scale));color:var(--tx3)">${fD(periodStart)} – ${fD(r.weekEnd)}</td><td>${locked?'🔒 ตัดรอบแล้ว':'📅 ประมาณการ'}</td><td>${activePonds} บ่อ</td><td>${r.people?r.people+' คน':'-'}</td><td>${r.amount.toLocaleString()}</td><td>${Math.round(r.amount/7).toLocaleString()}</td><td>${r.people>0?Math.round(r.amount/r.people).toLocaleString():'-'}</td><td><div class="tbl-act"><button class="btn btn-s" style="padding:4px 10px;font-size:calc(12px * var(--ui-scale))" onclick="editDailyWeek('${r.id}')">✏️</button><button class="btn btn-s" style="padding:4px 10px;font-size:calc(12px * var(--ui-scale))" onclick="deleteDailyWeek('${r.id}')">🗑️</button></div></td></tr>`;
+      return`<tr><td>${fD(r.weekEnd)}</td><td style="font-size:calc(12px * var(--ui-scale));color:var(--tx3)">${fD(periodStart)} – ${fD(r.weekEnd)}</td><td>${locked?'🔒 ตัดรอบแล้ว':'📅 ประมาณการ'}</td><td>${activePonds} บ่อ</td><td>${r.people?r.people+' คน':'-'}</td><td>${r.amount.toLocaleString()}${r.zones?'<div style="font-size:calc(11.5px * var(--ui-scale));white-space:nowrap">'+DW_Z.filter(([k])=>r.zones[k]).map(([k,,l])=>l+' '+Math.round(r.zones[k].amount).toLocaleString()).join(' · ')+'</div>':''}</td><td>${Math.round(r.amount/7).toLocaleString()}</td><td>${r.people>0?Math.round(r.amount/r.people).toLocaleString():'-'}</td><td><div class="tbl-act"><button class="btn btn-s" style="padding:4px 10px;font-size:calc(12px * var(--ui-scale))" onclick="editDailyWeek('${r.id}')">✏️</button><button class="btn btn-s" style="padding:4px 10px;font-size:calc(12px * var(--ui-scale))" onclick="deleteDailyWeek('${r.id}')">🗑️</button></div></td></tr>`;
     }).join('')
   }</tbody></table>`;
 }
