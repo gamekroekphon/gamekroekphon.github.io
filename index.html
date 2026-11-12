@@ -14220,10 +14220,18 @@ function skcPondRows(start,end,pid){
     return Object.assign(r,{total:skcR(t)});
   });
 }
-function skcGroup(rows){   // จัดกลุ่มตามหมวด เรียงตามลำดับที่ใช้ทั้งแอป
-  const by={};rows.forEach(r=>{const c=r.cat||'';(by[c]=by[c]||[]).push(r);});
-  return SKC_CAT_ORDER.filter(c=>by[c]&&by[c].length).map(c=>[c,by[c]]);
+// #468 พี่สั่ง 12 พ.ย. 69: หน้านับสต็อกเรียงเหมือน "ใบนับสต็อก_10วัน.pdf" ที่ใช้นับจริง (เดิมเรียงตามยอดใช้/มีเคลื่อนไหวก่อน → นับจากกระดาษต้องเลื่อนขึ้นลง)
+//   กลุ่ม+ลำดับตามใบ (จับคู่ด้วยชื่อสินค้า) · สินค้าที่ไม่อยู่ในใบ = ท้ายกลุ่มตามหมวดของมัน (เรียงชื่อ) · หมวดที่ใบไม่มี = "สินค้าอื่นๆ" ท้ายสุด
+//   ⚠️ เปลี่ยนชื่อสินค้าในแอป = หลุดจากลำดับ ไปอยู่ท้ายกลุ่ม → แก้ชื่อในรายการนี้ด้วย
+const SKC_SHEET=[["feed", "อาหาร", ["7704S", "7703S", "7702S"]], ["chemWater", "เคมี / ยาลงน้ำ", ["โซดาไฟ (วอเตอร์)", "คลอรีนฟูจิ", "FINE-DOC", "ไลโซแมก", "เฮเม็กซอล", "ไฮโดรเจน", "สีน้ำเทียม 1kg (กรีนเซเวน)", "อ๊อกซิเจนผง", "WORK (ซิสเคม)", "ด่างทับทิม", "เวอร์คอน"]], ["lime", "ปูน / แร่ธาตุ", ["บิ๊กชริม", "ปูนร้อน PHพลัส", "ปูนซิเมนต์", "โซเดียม-ไบขาบ", "ปูนจับตะกัน เกรทเทอร์เวท", "โปตัสเซียม คลอไรด์", "คอปเปอร์", "ซิลิเกต", "แมกนีเซียม คลอไรต์", "แคลเซียม คลอไรด์"]], ["probioWater", "จุลินทรีย์ลงน้ำ", ["บี บลูม", "ไอแบค", "แองจี้เคลียร์", "PH Fixer", "B2B", "เดลต้า แบค", "SUPER PS", "ไบโอแบค", "ไบโอทริม", "All in brown"]], ["probioOral", "จุลินทรีย์ผสมอาหาร", ["แลคโต Pro biotic", "เนอร์ส bac", "IN-OUT", "ไบโอติก (ADVANCE)", "แอสมิโค", "อมิโน (วังเคมี)"]], ["chemOral", "ยา / วิตามินผสมอาหาร", ["อควาฟอร์ท", "แอคตินอล"]], ["equip", "อุปกรณ์", ["ใบพัด 6แฉกดำ", "บู๊ตเกือกม้า", "ยอยกระโหลก", "บ่าทุ่น", "ทุ่นเป่า 7\"", "แป๊ป 1\"", "แป๊ป 1\" ZIGA", "ข้อต่อตรง", "ทุ่นเขียว", "ชุดเทส ไตเตรท T", "ชุดเทส อัลคาไลน์", "ชุดเทส คลอรีน", "ชุดเทส แอมโมเนีย", "ชุดเทส ไนไตรท์", "ชุดเทส แมกนีเซียม", "ชุดเทส ไนเตรท (กล่องปลา)", "กาวต่อ PE"]]];
+const _skcSheetIx={};SKC_SHEET.forEach(([g,,ns])=>ns.forEach((n,i)=>{_skcSheetIx[n]={g,i};}));
+function skcNm(r){return String(r.name||(r.item&&r.item.name)||'').trim();}
+function skcGroup(rows){
+  const by={};rows.forEach(r=>{const x=_skcSheetIx[skcNm(r)];const g=x?x.g:(SKC_SHEET.some(z=>z[0]===r.cat)?r.cat:'other');r._ord=x?x.i:9999;(by[g]=by[g]||[]).push(r);});
+  return SKC_SHEET.map(z=>z[0]).concat('other').filter(c=>by[c]&&by[c].length)
+    .map(c=>[c,by[c].sort((a,b)=>a._ord-b._ord||skcNm(a).localeCompare(skcNm(b),'th'))]);
 }
+function skcGrpLbl(c){const z=SKC_SHEET.find(x=>x[0]===c);return z?z[1]:'สินค้าอื่นๆ';}
 function renderStockCount(){
   const box=document.getElementById('skc-body');if(!box)return;
   skcPopulate();
@@ -14244,9 +14252,8 @@ function renderSkcAll(box,sub,start,end,isCur){
   const groups=skcGroup(shown.map(r=>Object.assign(r,{cat:r.item.category||''})));
   let tb='',mc='';
   groups.forEach(([c,arr])=>{
-    arr.sort((a,b)=>(b.n>0)-(a.n>0)||String(a.item.name||'').localeCompare(String(b.item.name||''),'th'));
-    tb+='<tr class="skc-grp"><td colspan="8">'+(STOCK_CAT_LABEL[c]||'อื่นๆ')+' · '+arr.length+' รายการ</td></tr>';
-    mc+='<div class="skc-mgrp">'+(STOCK_CAT_LABEL[c]||'อื่นๆ')+' <span>· '+arr.length+' รายการ</span></div><div class="skc-mlist">';
+    tb+='<tr class="skc-grp"><td colspan="8">'+skcGrpLbl(c)+' · '+arr.length+' รายการ</td></tr>';
+    mc+='<div class="skc-mgrp">'+skcGrpLbl(c)+' <span>· '+arr.length+' รายการ</span></div><div class="skc-mlist">';
     arr.forEach(r=>{
       const id=r.item.id,open=!!_skcOpen[id];
       tb+='<tr'+(r.n?'':' class="quiet"')+'><td class="skc-nm">'+(r.item.name||'-')+
@@ -14345,9 +14352,8 @@ function renderSkcPond(box,sub,start,end,key){
   if(!rows.length){box.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">บ่อนี้ไม่มีรายการเบิกในรอบนี้</p>';return;}
   let tb='',mc='';
   skcGroup(rows).forEach(([c,arr])=>{
-    arr.sort((a,b)=>b.total-a.total);
-    tb+='<tr class="skc-grp"><td colspan="'+(3+days.length)+'">'+(STOCK_CAT_LABEL[c]||'อื่นๆ')+' · '+arr.length+' รายการ</td></tr>';
-    mc+='<div class="skc-mgrp">'+(STOCK_CAT_LABEL[c]||'อื่นๆ')+' <span>· '+arr.length+' รายการ</span></div><div class="skc-mlist">';
+    tb+='<tr class="skc-grp"><td colspan="'+(3+days.length)+'">'+skcGrpLbl(c)+' · '+arr.length+' รายการ</td></tr>';
+    mc+='<div class="skc-mgrp">'+skcGrpLbl(c)+' <span>· '+arr.length+' รายการ</span></div><div class="skc-mlist">';
     arr.forEach(r=>{
       const auto=r.auto?'<span class="skc-auto" title="ระบบตัดสต็อกให้เองจากหน้าบันทึกอาหาร">อัตโนมัติ</span>':'';
       tb+='<tr><td class="skc-nm">'+r.name+auto+'</td><td style="color:var(--tx3)">'+(r.unit||'')+'</td>'+
