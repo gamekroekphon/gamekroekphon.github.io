@@ -1989,6 +1989,7 @@ table.exy-t td,table.exy-t th{font-variant-numeric:tabular-nums}
 /* ⚠️ ต้องเขียนเจาะจงกว่า .tbl tbody tr:nth-child(even) td (0,2,3) ไม่งั้นแถวคู่กลืนสีที่ตั้งใจเน้น (บทเรียน entry #296/#299) */
 table.skc-tbl tbody tr td.skc-sys,table.skc-tbl thead th.skc-sys{background:var(--pl);font-weight:800;color:var(--tx)}
 table.skc-tbl tbody tr:hover td.skc-sys{background:#F7ECCD}
+.skc-wb{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--wb);border:1.5px solid var(--w);border-radius:12px;padding:10px 12px;margin-top:10px;font-size:calc(14px * var(--ui-scale));line-height:1.55}.skc-wb b{color:var(--w)}
 .skc-prev{background:var(--ib);border:1.5px solid var(--in);border-radius:12px;padding:9px 12px;margin-top:8px;font-size:calc(14px * var(--ui-scale));line-height:1.6}.skc-prev b{color:var(--in)}
 table.skc-tbl tbody tr td.skc-box{background:repeating-linear-gradient(-45deg,transparent,transparent 7px,rgba(0,0,0,.025) 7px,rgba(0,0,0,.025) 14px);min-width:72px}
 /* จอแคบ — ตัดช่องเปล่าที่เว้นไว้จดกระดาษออกก่อน ไม่งั้นช่อง "คงเหลือตามระบบ" ที่ต้องใช้ไล่นับถูกดันหลุดขอบ */
@@ -14318,10 +14319,51 @@ function skcCntSet(id,v){
   document.querySelectorAll('.skc-cin').forEach(e=>{if(e!==document.activeElement&&e.dataset.skcid===id)e.value=v;});
   skcCntFoot();
 }
+// ══ #471 พี่ทำผิด 12 พ.ย. 69: ใบนับรอบ 1–10 ไปกดบันทึกในรอบ 11–20 (ลงวันที่ 12 · เทียบยอดวันนี้) → ปุ่มย้ายทั้งชุดไปเป็นยอดนับ ณ สิ้นรอบที่แล้ว ══
+//   ชุด = adj "ปรับยอดจากการนับ" (ไม่ใช่แบบย้อนรอบ) ลงวันที่ในรอบปัจจุบัน ไม่เกิน 5 วันแรก กดภายใน 10 วินาทีเดียวกัน
+//   + สินค้าที่นับแล้วต่าง 0 (ไม่มี adj) = countedAt วันเดียวกัน · ยอดนับ = balanceAfter (มี adj) / ยอด ณ ตอนกดบันทึก (ต่าง 0)
+//   ย้าย: ลบ adj เดิม (ย้อนยอด) → ต่างใหม่ = นับ − ยอดระบบ ณ สิ้นรอบที่แล้ว → adj ลงวันที่สิ้นรอบ · ของที่เบิกหลังวันนั้นอยู่ครบ
+function skcLogTs(l){const m=String((l&&l.id)||'').match(/(\d{13})/);return m?+m[1]:0;}
+function skcSgn(l){const q=parseFloat(l.qty)||0;return l.type==='in'||l.type==='adj'?q:-q;}
+function skcWrongBatches(start,end){
+  const lim=addDaysStr(start,4);
+  const L=(D.inventoryLog||[]).filter(l=>l&&l.type==='adj'&&l.note==='ปรับยอดจากการนับ'&&l.date>=start&&l.date<=end&&l.date<=lim).sort((a,b)=>skcLogTs(a)-skcLogTs(b));
+  const out=[];L.forEach(l=>{const t=skcLogTs(l),b=out[out.length-1];if(b&&b.date===l.date&&t-b.last<=10000){b.logs.push(l);b.last=t;}else out.push({date:l.date,ts:t,last:t,logs:[l],by:l.by||''});});
+  out.forEach(b=>{const ids=new Set(b.logs.map(l=>l.itemId));b.zero=(D.inventoryItems||[]).filter(i=>i&&i.countedAt===b.date&&!ids.has(i.id));});
+  return out;
+}
+let _skcWB=[];
+function skcMoveBatch(i){
+  const b=_skcWB[i];if(!b)return;
+  const pe=skcRange(skcPrevKey()).end,IM={};(D.inventoryItems||[]).forEach(x=>{if(x)IM[x.id]=x;});
+  const r2=v=>Math.round(v*100)/100;
+  const cnt=b.logs.map(l=>({it:IM[l.itemId],n:parseFloat(l.balanceAfter)})).filter(x=>x.it&&isFinite(x.n));
+  b.zero.forEach(it=>{const later=(D.inventoryLog||[]).filter(l=>l&&l.itemId===it.id&&skcLogTs(l)>b.last).reduce((a,l)=>a+skcSgn(l),0);cnt.push({it,n:r2((parseFloat(it.qty)||0)-later)});});
+  if(!cnt.length)return;
+  if(!confirm('ย้ายยอดนับวันที่ '+fD(b.date)+' ('+cnt.length+' รายการ) ไปเป็นยอดนับ ณ '+fD(pe)+'?\n\nลบรายการปรับยอดเดิม '+b.logs.length+' รายการ แล้วคิดส่วนต่างใหม่เทียบยอดระบบ ณ สิ้นวันที่ '+fD(pe)+'\nของที่เบิกหลังวันนั้นยังอยู่ครบ'))return;
+  const del=new Set(b.logs.map(l=>l.id));
+  b.logs.forEach(l=>{const it=IM[l.itemId];if(it)it.qty=r2((parseFloat(it.qty)||0)-(parseFloat(l.qty)||0));});
+  D.inventoryLog=(D.inventoryLog||[]).filter(l=>!del.has(l.id));D.deletedIds=(D.deletedIds||[]).concat([...del]);
+  let nd=0;
+  cnt.forEach(x=>{
+    const after=(D.inventoryLog||[]).filter(l=>l&&l.itemId===x.it.id&&l.date&&l.date>pe).reduce((a,l)=>a+skcSgn(l),0);
+    const closing=r2((parseFloat(x.it.qty)||0)-after),d=r2(x.n-closing);
+    x.it.qty=r2((parseFloat(x.it.qty)||0)+d);x.it.countedAt=pe;
+    if(d!==0){nd++;D.inventoryLog.push({id:'adj'+Date.now()+'_'+Math.random().toString(36).slice(2,6),itemId:x.it.id,itemName:x.it.name,type:'adj',qty:d,date:pe,unit:x.it.unit||'',by:b.by||curUserLabel(),balanceAfter:x.n,
+      note:'ปรับยอดจากการนับ (นับ '+fD(pe)+' · กรอก '+fD(b.date)+' · ย้ายจากรอบผิด)'});}
+  });
+  _skcCnt={};if(typeof tickMemoClear==='function')tickMemoClear();
+  save();_skcKey=skcPrevKey();skcPopulate();renderStockCount();if(typeof renderStockKPI==='function')renderStockKPI();renderStockItems();
+  showToast('ย้ายยอดนับแล้ว',cnt.length+' รายการ → ณ '+fD(pe)+' · ต่าง '+nd+' รายการ');
+}
 function skcCntFootHtml(start,end){
   const adj=(D.inventoryLog||[]).filter(l=>l&&l.type==='adj'&&l.date>=start&&l.date<=end).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
   const q=String.fromCharCode(39);
+  _skcWB=start===skcRange(skcKeyOf(today())).start?skcWrongBatches(start,end):[];
+  const pe=skcRange(skcPrevKey()).end;
   return '<div class="skc-cfoot" id="skc-cfoot"></div>'
+    +_skcWB.map((b,i)=>'<div class="skc-wb"><div><b>⚠️ ยอดนับวันที่ '+fD(b.date)+' · '+(b.logs.length+b.zero.length)+' รายการ</b><br>ถ้าเป็นใบนับของรอบที่แล้ว (นับเย็น '+fD(pe)+') ให้ย้ายไปลงรอบนั้น</div>'
+      +'<button type="button" class="btn btn-p" onclick="skcMoveBatch('+i+')">↩️ ย้ายไปเป็นยอดนับ ณ '+fD(pe).replace(/\s\d{2}$/,'')+'</button></div>').join('')
     +(adj.length?'<div class="skc-adj"><div class="h">ปรับยอดจากการนับ · '+adj.length+' รายการ</div>'+adj.map(l=>{const v=parseFloat(l.qty)||0;
       return '<div class="r"><span>'+fD(l.date)+' · '+mpEsc(l.itemName||'')+'</span><span><b class="'+(v<0?'skc-dn':'skc-up')+'">'+(v>0?'+':'−')+skcN(Math.abs(v))+' '+mpEsc(l.unit||'')+'</b>'
         +' <button type="button" onclick="deleteStockLog('+q+l.id+q+')" aria-label="ลบ">🗑️</button></span></div>';}).join('')+'</div>':'');
