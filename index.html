@@ -1989,6 +1989,7 @@ table.exy-t td,table.exy-t th{font-variant-numeric:tabular-nums}
 /* ⚠️ ต้องเขียนเจาะจงกว่า .tbl tbody tr:nth-child(even) td (0,2,3) ไม่งั้นแถวคู่กลืนสีที่ตั้งใจเน้น (บทเรียน entry #296/#299) */
 table.skc-tbl tbody tr td.skc-sys,table.skc-tbl thead th.skc-sys{background:var(--pl);font-weight:800;color:var(--tx)}
 table.skc-tbl tbody tr:hover td.skc-sys{background:#F7ECCD}
+.skc-prev{background:var(--ib);border:1.5px solid var(--in);border-radius:12px;padding:9px 12px;margin-top:8px;font-size:calc(14px * var(--ui-scale));line-height:1.6}.skc-prev b{color:var(--in)}
 table.skc-tbl tbody tr td.skc-box{background:repeating-linear-gradient(-45deg,transparent,transparent 7px,rgba(0,0,0,.025) 7px,rgba(0,0,0,.025) 14px);min-width:72px}
 /* จอแคบ — ตัดช่องเปล่าที่เว้นไว้จดกระดาษออกก่อน ไม่งั้นช่อง "คงเหลือตามระบบ" ที่ต้องใช้ไล่นับถูกดันหลุดขอบ */
 @media(max-width:1000px){table.skc-tbl th.skc-box,table.skc-tbl td.skc-box{display:none}.skc-dsk{display:none}}
@@ -14249,10 +14250,14 @@ function renderStockCount(){
 }
 function renderSkcAll(box,sub,start,end,isCur){
   const rows=skcAllRows(start,end);
+  const prevEdit=!isCur&&_skcKey===skcPrevKey(),canCnt=isCur||prevEdit;   // #470
+  if(_skcCntForKey!==_skcKey){_skcCnt={};_skcCntForKey=_skcKey;}
+  _skcCntBase=prevEdit?{end,base:Object.fromEntries(rows.map(r=>[r.item.id,r.closing]))}:null;
   const moved=rows.filter(r=>r.n>0).length;
   const shown=rows.filter(r=>r.n>0||(_skcAll&&(r.closing!==0||r.opening!==0)));
   if(sub)sub.innerHTML='รอบ <b>'+skcLabel(_skcKey)+'</b>'+(isCur&&end<skcRange(_skcKey).end?' · รอบนี้ยังไม่จบ รวมยอดถึงวันนี้ ('+fD(end)+')':'')+
-    ' · <b>'+moved+'</b> รายการมีความเคลื่อนไหว';
+    ' · <b>'+moved+'</b> รายการมีความเคลื่อนไหว'
+    +(prevEdit?'<div class="skc-prev">📝 <b>กรอกยอดนับของรอบนี้ได้ถึง '+fD(skcRange(skcKeyOf(today())).end)+'</b><br>เทียบกับ <b>ยอดระบบ ณ สิ้นวันที่ '+fD(end)+'</b> (เบี้ยนับเย็นวันนั้นหลังเบิกของ) · ส่วนต่างลงวันที่ '+fD(end)+'</div>':'');
   if(!shown.length){box.innerHTML='<p style="color:var(--tx3);padding:20px;font-style:italic;text-align:center">ไม่มีความเคลื่อนไหวในรอบนี้</p>';return;}
   const groups=skcGroup(shown.map(r=>Object.assign(r,{cat:r.item.category||''})));
   let tb='',mc='';
@@ -14267,37 +14272,45 @@ function renderSkcAll(box,sub,start,end,isCur){
         '<td class="num">'+stkQ(r.opening)+'</td>'+
         '<td class="num skc-in">'+(r.inQ?'+'+skcN(r.inQ):'—')+'</td>'+
         '<td class="num skc-out">'+(r.outQ?'−'+skcN(r.outQ):'—')+'</td>'+
-        '<td class="num skc-sys">'+(isCur?skcN(r.closing):stkQ(r.closing))+'</td>'+   // รอบปัจจุบัน = ใบนับ ต้องเห็นเศษ (#409) ไม่งั้นนับ 7 แต่ระบบ 7.2 ขึ้นต่าง −0.2
-        (isCur?skcCntTd(r.item):'<td class="skc-box"></td><td class="skc-box"></td>')+'</tr>';
+        '<td class="num skc-sys">'+(canCnt?skcN(r.closing):stkQ(r.closing))+'</td>'+   // รอบปัจจุบัน = ใบนับ ต้องเห็นเศษ (#409) ไม่งั้นนับ 7 แต่ระบบ 7.2 ขึ้นต่าง −0.2
+        (canCnt?skcCntTd(r.item):'<td class="skc-box"></td><td class="skc-box"></td>')+'</tr>';
       if(open)tb+='<tr class="skc-det"><td colspan="8">'+skcDetailHtml(r)+'</td></tr>';
       mc+='<div class="skc-mit'+(r.n?'':' quiet')+'"'+(r.n?' onclick="skcToggleItem(\''+id+'\')"':'')+'>'+
         '<div><div class="skc-mn">'+(r.item.name||'-')+'</div><div class="skc-mm">'+
         (r.n?'<b>'+stkQ(r.opening)+'</b>'+(r.inQ?'<i class="in">+'+skcN(r.inQ)+'</i>':'')+(r.outQ?'<i class="out">−'+skcN(r.outQ)+'</i>':'')+' <span style="color:var(--in)">· '+r.n+' ครั้ง '+(open?'▴':'▾')+'</span>':'ไม่มีความเคลื่อนไหว')+
-        '</div></div><div class="skc-mr"><div class="skc-mv">'+(isCur?skcN(r.closing):stkQ(r.closing))+'</div><div class="skc-mu">'+(r.item.unit||'')+'</div></div>'+(isCur?skcCntCard(r.item):'')+'</div>'+
+        '</div></div><div class="skc-mr"><div class="skc-mv">'+(canCnt?skcN(r.closing):stkQ(r.closing))+'</div><div class="skc-mu">'+(r.item.unit||'')+'</div></div>'+(canCnt?skcCntCard(r.item):'')+'</div>'+
         (open?'<div class="skc-mdet">'+skcDetailHtml(r)+'</div>':'');
     });
     mc+='</div>';
   });
   _skcCntShown=shown.map(r=>r.item.id);
-  box.innerHTML='<div class="skc-tblwrap"><table class="tbl skc-tbl"><thead><tr><th>รายการ</th><th>หน่วย</th><th class="num">ยกมา</th><th class="num">รับเข้า</th><th class="num">เบิก / ใช้</th><th class="num skc-sys">คงเหลือ (ระบบ)</th><th class="num skc-box">นับจริง</th><th class="num skc-box">ต่าง</th></tr></thead><tbody>'+tb+'</tbody></table></div>'+
-    '<div class="skc-cards">'+mc+'</div>'+(isCur?skcCntFootHtml(start,end):'');
-  if(isCur)skcCntFoot();
+  box.innerHTML='<div class="skc-tblwrap"><table class="tbl skc-tbl"><thead><tr><th>รายการ</th><th>หน่วย</th><th class="num">ยกมา</th><th class="num">รับเข้า</th><th class="num">เบิก / ใช้</th><th class="num skc-sys">'+(prevEdit?'ระบบ ณ '+fD(end).replace(/\s\d{2}$/,''):'คงเหลือ (ระบบ)')+'</th><th class="num skc-box">นับจริง</th><th class="num skc-box">ต่าง</th></tr></thead><tbody>'+tb+'</tbody></table></div>'+
+    '<div class="skc-cards">'+mc+'</div>'+(canCnt?skcCntFootHtml(start,end):'');
+  if(canCnt)skcCntFoot();
 }
 // ══════ ③ บันทึกยอดนับสต็อกฟาร์ม (entry #409 พี่สั่ง 12 ต.ค. 69 · mockup_สต็อกนับยอด.html) ══════
 //   กรอกได้เฉพาะรอบปัจจุบัน · ต่าง = นับจริง − ยอดคงเหลือตอนนี้ (item.qty) · เว้นว่าง = ไม่ได้นับ ไม่แตะ
 //   บันทึก = item.qty ← ยอดนับ + inventoryLog type 'adj' qty มีเครื่องหมาย (ลบได้ด้วย deleteStockLog → ย้อนยอด)
 //   ส่วนต่างไม่ผูก pondId = ไม่เข้าต้นทุนบ่อไหน · ตัวเงินเห็นเฉพาะ admin · ค่าที่พิมพ์ค้างอยู่ใน _skcCnt แยกจาก D
 let _skcCnt={},_skcCntShown=[];
+// #470 พี่สั่ง 12 พ.ย. 69: เบี้ยนับเย็นวันสุดท้ายของรอบ (หลังเบิกของ) ส่งใบให้พี่ 2–3 วันหลัง → กรอกย้อนได้ "รอบที่แล้ว" 1 รอบ จนรอบปัจจุบันจบ
+//   เทียบกับยอดระบบ ณ สิ้นวันสุดท้ายของรอบ (closing ของ skcAllRows = item.qty − ความเคลื่อนไหวหลังวันนั้น) ไม่ใช่ยอดวันนี้
+//   บันทึก: adj ลงวันที่สิ้นรอบ · item.qty += ส่วนต่าง (ของที่เบิกหลังวันนั้นยังอยู่ครบ) · ช่วยเรื่องอาหารวันนั้นกรอกเช้าวันถัดไปด้วย
+//   _skcCntBase = null → รอบปัจจุบัน (เทียบ item.qty แบบเดิม #409) · {end,base:{itemId:closing}} → รอบที่แล้ว
+let _skcCntBase=null,_skcCntForKey='';
+function skcPrevKey(){return skcKeyOf(addDaysStr(skcRange(skcKeyOf(today())).start,-1));}
+function skcCntCur(it){if(!it)return null;if(_skcCntBase){const b=_skcCntBase.base[it.id];return b==null?null:b;}return parseFloat(it.qty)||0;}
 function skcCntDiff(id){
   const v=_skcCnt[id];if(v==null||v==='')return null;
   const n=parseFloat(String(v).replace(',','.'));if(!isFinite(n)||n<0)return null;
   const it=(D.inventoryItems||[]).find(i=>i&&i.id===id);if(!it)return null;
-  return{n,cur:parseFloat(it.qty)||0,d:Math.round((n-(parseFloat(it.qty)||0))*100)/100,it};
+  const cur=skcCntCur(it);if(cur==null)return null;
+  return{n,cur,d:Math.round((n-cur)*100)/100,it};
 }
 function skcDfHtml(id){const x=skcCntDiff(id);if(!x)return'';return x.d===0?'<span class="skc-ok">✓</span>':'<span class="'+(x.d<0?'skc-dn':'skc-up')+'">'+(x.d>0?'+':'−')+skcN(Math.abs(x.d))+'</span>';}
 function skcCntInput(it){const q=String.fromCharCode(39);return '<input type="number" inputmode="decimal" min="0" step="any" class="skc-cin" data-skcid="'+mpEsc(it.id)+'" value="'+mpEsc(_skcCnt[it.id]??'')+'" placeholder="—" aria-label="นับจริง '+mpEsc(it.name||'')+'" oninput="skcCntSet('+q+it.id+q+',this.value)">';}
-function skcCntTd(it){return '<td class="num skc-cnt">'+skcCntInput(it)+((parseFloat(it.qty)||0)<0?'<small class="skc-neg">ติดลบ = ค้างรับเข้า</small>':'')+'</td><td class="num" data-skcdf="'+it.id+'">'+skcDfHtml(it.id)+'</td>';}
-function skcCntCard(it){return '<div class="skc-mc" onclick="event.stopPropagation()">'+skcCntInput(it)+'<div data-skcdf="'+it.id+'">'+skcDfHtml(it.id)+'</div>'+((parseFloat(it.qty)||0)<0?'<small class="skc-neg">ค้างรับเข้า</small>':'')+'</div>';}
+function skcCntTd(it){return '<td class="num skc-cnt">'+skcCntInput(it)+((skcCntCur(it)||0)<0?'<small class="skc-neg">ติดลบ = ค้างรับเข้า</small>':'')+'</td><td class="num" data-skcdf="'+it.id+'">'+skcDfHtml(it.id)+'</td>';}
+function skcCntCard(it){return '<div class="skc-mc" onclick="event.stopPropagation()">'+skcCntInput(it)+'<div data-skcdf="'+it.id+'">'+skcDfHtml(it.id)+'</div>'+((skcCntCur(it)||0)<0?'<small class="skc-neg">ค้างรับเข้า</small>':'')+'</div>';}
 function skcCntSet(id,v){
   if(v===''||v==null)delete _skcCnt[id];else _skcCnt[id]=v;
   document.querySelectorAll('[data-skcdf="'+id+'"]').forEach(e=>{e.innerHTML=skcDfHtml(id);});
@@ -14322,17 +14335,18 @@ function skcCntFoot(){
   if(APP_ROLE==='admin'){const lo=L.filter(x=>x.d<0).reduce((s,x)=>s+(-x.d)*(+x.it.unitPrice||0),0),hi=L.filter(x=>x.d>0).reduce((s,x)=>s+x.d*(+x.it.unitPrice||0),0);
     money=' · <span class="pd-admin-tag">ADMIN</span> ขาด ฿'+Math.round(lo).toLocaleString()+' · เกิน ฿'+Math.round(hi).toLocaleString();}
   el.innerHTML='<div class="skc-csum">นับแล้ว '+L.length+' รายการ · ต่าง '+nd+money+'</div>'
-    +'<button type="button" class="btn btn-p skc-csave" onclick="skcSaveCount()">💾 บันทึกยอดนับ '+L.length+' รายการ</button>';
+    +'<button type="button" class="btn btn-p skc-csave" onclick="skcSaveCount()">💾 บันทึกยอดนับ'+(_skcCntBase?' ณ '+fD(_skcCntBase.end).replace(/\s\d{2}$/,'')+' ·':'')+' '+L.length+' รายการ</button>';
 }
 function skcSaveCount(){
   const L=Object.keys(_skcCnt).map(skcCntDiff).filter(Boolean);if(!L.length)return;
   const nd=L.filter(x=>x.d!==0);
-  if(!confirm('บันทึกยอดนับ '+L.length+' รายการ?\nยอดฟาร์มจะถูกปรับให้เท่ากับที่นับ ('+nd.length+' รายการมีส่วนต่าง)'))return;
-  const d=today(),by=curUserLabel();
+  const prev=_skcCntBase,d=prev?prev.end:today(),by=curUserLabel();   // #470 รอบที่แล้ว = ลงวันที่สิ้นรอบ
+  if(!confirm('บันทึกยอดนับ'+(prev?' ณ '+fD(d):'')+' '+L.length+' รายการ?\n'+(prev?'ส่วนต่างลงวันที่ '+fD(d)+' · ยอดตอนนี้ขยับเท่าส่วนต่าง':'ยอดฟาร์มจะถูกปรับให้เท่ากับที่นับ')+' ('+nd.length+' รายการมีส่วนต่าง)'))return;
   L.forEach(x=>{
-    x.it.qty=x.n;x.it.countedAt=d;
+    if(prev){x.it.qty=Math.round(((parseFloat(x.it.qty)||0)+x.d)*100)/100;if(!x.it.countedAt||x.it.countedAt<d)x.it.countedAt=d;}
+    else{x.it.qty=x.n;x.it.countedAt=d;}
     if(x.d!==0)(D.inventoryLog=D.inventoryLog||[]).push({id:'adj'+Date.now()+'_'+Math.random().toString(36).slice(2,6),itemId:x.it.id,itemName:x.it.name,type:'adj',qty:x.d,
-      date:d,unit:x.it.unit||'',by,balanceAfter:x.n,note:'ปรับยอดจากการนับ'});
+      date:d,unit:x.it.unit||'',by,balanceAfter:x.n,note:prev?'ปรับยอดจากการนับ (นับ '+fD(d)+' · กรอก '+fD(today())+')':'ปรับยอดจากการนับ'});
   });
   _skcCnt={};
   if(typeof tickMemoClear==='function')tickMemoClear();
