@@ -14202,9 +14202,14 @@ function skcAllRows(start,end){
 // ── มุมมองรายบ่อ: เบิกลงบ่อนั้น แยกตามวันในรอบ (สินค้าที่ถูกลบไปแล้วยังโชว์ได้ เพราะ key ตกไปใช้ชื่อ) ──
 function skcPondRows(start,end,pid){
   const IM={};(D.inventoryItems||[]).forEach(i=>{IM[i.id]=i;});
+  // #469 พี่สั่ง: ข้ามรายการตัดอาหารอัตโนมัติ (sl_fd_) ที่ไม่มีบันทึกอาหารผูก — 3 พ.ย. 69 ตัดซ้ำ 13 บ่อ 166 กส. (บัค #443)
+  //   กฎเดียวกับ pondStockRows (#449) · ยอดคงเหลือถูกปรับตามนับแล้ว ห้ามลบรายการ · ต้นทุน/FCR คิดจาก feedLog ไม่กระทบ
+  const pp=pond(pid),fdRef=new Set();
+  if(pp)[pp,...(pp.cropHistory||[])].forEach(c=>((c&&c.feedLog)||[]).forEach(r=>{if(r&&r.stockLogId)fdRef.add(r.stockLogId);if(r&&r.mix2&&r.mix2.stockLogId)fdRef.add(r.mix2.stockLogId);}));
   const map={};
   (D.inventoryLog||[]).forEach(l=>{
     if(l.type!=='out'||l.pondId!==pid||!l.date||l.date<start||l.date>end)return;
+    if(String(l.id||'').startsWith('sl_fd_')&&!fdRef.has(l.id))return;
     const it=IM[l.itemId];
     const k=l.itemId||('nm:'+(l.itemName||''));
     const r=map[k]=map[k]||{name:l.itemName||it?.name||'-',cat:it?.category||'',unit:l.unit||it?.unit||'',days:{},n:0,auto:0};
