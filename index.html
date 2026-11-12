@@ -285,6 +285,26 @@ body.role-admin .side-nav .sn-link.admin-only{display:block!important}
 .pd-back{display:inline-block;font-size:calc(14px * var(--ui-scale));font-weight:500;color:var(--p);cursor:pointer;margin-bottom:14px;padding:6px 2px}
 .pd-back:hover{text-decoration:underline}
 .pd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:4px}
+/* #467 เกณฑ์ FCR ฟาร์ม */
+.fs-sub{font-size:calc(13.5px * var(--ui-scale));margin:-4px 2px 12px}
+.fs-k3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.fs-k{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:10px 12px;min-width:0}
+.fs-k .l{font-size:calc(13px * var(--ui-scale));font-weight:700}.fs-k .v{font-size:calc(28px * var(--ui-scale));font-weight:800;line-height:1.2}.fs-k .v small{font-size:calc(14px * var(--ui-scale))}
+.fs-k .s{font-size:calc(12.5px * var(--ui-scale));font-weight:600;line-height:1.4}
+.fs-k.ok{border-color:var(--ok);background:var(--ob)}.fs-k.wa{border-color:var(--w);background:var(--wb)}
+.fs-find{background:var(--sf);border:2px solid var(--p);border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:calc(15px * var(--ui-scale));line-height:1.65}
+.fs-find .g{color:var(--ok)}.fs-find .r{color:var(--d)}
+.fs-card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;margin-bottom:12px;min-width:0}
+.fs-ct{font-weight:800;font-size:calc(15px * var(--ui-scale));margin-bottom:8px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}.fs-ct span{font-size:calc(12.5px * var(--ui-scale));font-weight:600}
+.fs-lg{display:flex;gap:14px;flex-wrap:wrap;font-size:calc(12.5px * var(--ui-scale));font-weight:700;margin-top:4px}.fs-lg i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.fs-tb{overflow-x:auto}.fs-tb table{width:100%;border-collapse:collapse;font-size:calc(13.5px * var(--ui-scale));font-variant-numeric:tabular-nums}
+.fs-tb th{font-size:calc(12.5px * var(--ui-scale));text-align:right;padding:5px 6px;border-bottom:1.5px solid var(--tx);white-space:nowrap}.fs-tb th:first-child,.fs-tb td:first-child{text-align:left}
+.fs-tb td{padding:5px 6px;text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap}
+.fs-tb tr.hi td{background:var(--wb)}.fs-tb td.up{color:var(--d);font-weight:800}.fs-tb td.dn{color:var(--in);font-weight:800}.fs-tb td.eq{color:var(--ok);font-weight:700}.fs-tb td.gd{color:var(--p);font-weight:800;font-size:calc(15px * var(--ui-scale))}
+.fs-two{display:grid;grid-template-columns:1.25fr 1fr;gap:12px;align-items:start}
+.fs-chip{display:inline-block;border-radius:99px;padding:1px 8px;font-size:calc(11.5px * var(--ui-scale));font-weight:700;background:var(--sf2);color:var(--tx)}.fs-chip.wt{background:var(--pl);color:var(--p)}
+.fs-nx{font-size:calc(13.5px * var(--ui-scale));line-height:1.65}
+@media(max-width:900px){.fs-two{grid-template-columns:1fr}.fs-k3{grid-template-columns:1fr 1fr}.fs-k3 .fs-k:last-child{grid-column:1/-1}}
 /* #466 หน้ารายบ่อใหม่ */
 .pd-hero{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;margin-bottom:10px}
 .pd-hr1{display:flex;justify-content:space-between;align-items:center;gap:10px}
@@ -3266,6 +3286,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
       <button class="sn-link tab-item" onclick="goTab('compare',this)">🔄 เปรียบเทียบ</button>
       <button class="sn-link tab-item" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
       <button class="sn-link tab-item admin-only" onclick="goTab('hatchery',this)">🥚 โรงเพาะฟัก</button>
+      <button class="sn-link tab-item admin-only" onclick="goTab('fcrstd',this)">📐 เกณฑ์ FCR ฟาร์ม</button>
     </div>
 
     <button class="sn-grp-btn" onclick="snToggleGrp(this,'sn-g-market')"><span>💰</span> ค่าแรง / ค่าไฟ <span class="sn-caret">▾</span></button>
@@ -3353,6 +3374,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
       <button class="tab-item" id="tab-compare" onclick="goTab('compare',this)">🔄 เปรียบเทียบ</button>
       <button class="tab-item" id="tab-risk" onclick="goTab('risk',this)">⚠️ ความเสี่ยง</button>
       <button class="tab-item admin-only" id="tab-hatchery" onclick="goTab('hatchery',this)">🥚 โรงเพาะฟัก</button>
+      <button class="tab-item admin-only" id="tab-fcrstd" onclick="goTab('fcrstd',this)">📐 เกณฑ์ FCR ฟาร์ม</button>
     </div>
   </div>
   <div class="tab-grp" id="grp-market">
@@ -3433,6 +3455,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
     <button class="mob-sheet-item" data-t="compare" onclick="mobMenuGo(this)"><span class="ic">🔄</span>เปรียบเทียบ</button>
     <button class="mob-sheet-item" data-t="risk" onclick="mobMenuGo(this)"><span class="ic">⚠️</span>ความเสี่ยง</button>
     <button class="mob-sheet-item admin-only" data-t="hatchery" onclick="mobMenuGo(this)"><span class="ic">🥚</span>โรงเพาะฟัก</button>
+    <button class="mob-sheet-item admin-only" data-t="fcrstd" onclick="mobMenuGo(this)"><span class="ic">📐</span>เกณฑ์ FCR ฟาร์ม</button>
     <div class="mob-sheet-grp clerk-hide">💰 ค่าแรง / ค่าไฟ</div>
     <button class="mob-sheet-item admin-only clerk-mine" data-t="labor" onclick="mobMenuGo(this)"><span class="ic">👷</span>ค่าแรง</button>
     <button class="mob-sheet-item admin-only clerk-mine" data-t="elec" onclick="mobMenuGo(this)"><span class="ic">⚡</span>ค่าไฟฟ้า</button>
@@ -4476,6 +4499,12 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   </div>
 </div>
 <!-- โรงเพาะฟัก — เทียบยุติธรรมด้วยวันเลี้ยง (entry #316) -->
+<!-- #467 พี่สั่ง 12 พ.ย. 69: เกณฑ์ FCR ของฟาร์มจากผลจับจริง · อัปเดตเองทุกครั้งที่ปิดบ่อ · ไกด์ไลน์ ยังไม่แทนเกณฑ์ที่ใช้คิดรอด -->
+<div id="sec-fcrstd" class="sec">
+  <div class="sec-hdr"><div class="sec-title">📐 เกณฑ์ FCR ของฟาร์ม</div></div>
+  <div class="fs-sub">คิดย้อนจากผลจับจริงของบ่อที่ปิดแล้ว · อัปเดตเองทุกครั้งที่ปิดบ่อ</div>
+  <div id="fs-body"></div>
+</div>
 <div id="sec-hatchery" class="sec">
   <div class="sec-hdr"><div class="sec-title">🥚 โรงเพาะฟัก</div></div>
   <div class="hat-note"><b>ทำไมต้องกรองวันเลี้ยง</b> — กำไรขึ้นกับ "เลี้ยงกี่วัน" มากกว่าขึ้นกับโรงเพาะฟัก
@@ -8677,7 +8706,7 @@ function initUiSize(){
   applyUiSize(v);
 }
 initUiSize();
-const ADMIN_ONLY_TABS=['palm','users','labor','elec','pl','kan','hatchery','ai','appmap','harvest','harveststat','manage'];   // hatchery มีกำไร (#316) — เพิ่ม entry #357 · export = PDF ปิดบ่อ มีรายได้/ต้นทุน/กำไร (พี่สั่ง #374)
+const ADMIN_ONLY_TABS=['palm','users','labor','elec','pl','kan','hatchery','ai','appmap','harvest','harveststat','manage','fcrstd'];   // hatchery มีกำไร (#316) — เพิ่ม entry #357 · export = PDF ปิดบ่อ มีรายได้/ต้นทุน/กำไร (พี่สั่ง #374)
 function goTab(t,btn){
   if(ADMIN_ONLY_TABS.includes(t)&&APP_ROLE!=='admin')return;
   document.querySelectorAll('.tab,.tab-item,.sn-top,.sn-link').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
@@ -8699,7 +8728,7 @@ function goTab(t,btn){
   if(t==='sample')initSample();if(t==='watlog')initWaterLog();
   if(t==='lab')initLab();if(t==='mortality')initMortality();
 
-  if(t==='compare')initCompare();if(t==='hatchery')initHatchery();if(t==='risk'){if(_wxDaily)renderRisk(_wxDaily);else fetchWx();}
+  if(t==='compare')initCompare();if(t==='hatchery')initHatchery();if(t==='fcrstd')renderFcrStd();if(t==='risk'){if(_wxDaily)renderRisk(_wxDaily);else fetchWx();}
   if(t==='manage')renderManage();
   if(t==='palm')initPalm();
   if(t==='forecast')initForecast();
@@ -9860,6 +9889,96 @@ function renderSurvivalCard(p){
 // (การ์ด "เทียบกับรอบก่อน" + หัวข้อช่วย bm* ถูกลบออกตามที่พี่สั่ง — ซ้ำกับการ์ด "ประวัติรอบเลี้ยงบ่อนี้")
 // ══════ เฟส 2 (ดีไซน์ใหม่พี่แพรว): เกจค่าน้ำ + กราฟรายบ่อ ══════
 const PD_GAUGE_RANGE={phM:[6.5,9.5],doM:[0,10],nh4:[0,1],no2:[0,5],tM:[20,38]};
+// ══ #467 เกณฑ์ FCR ของฟาร์มจากผลจับจริง (พี่สั่ง 12 พ.ย. 69 "เป็นไกด์ไลน์ อัปเดตได้ทุกครั้งหลังปิดบ่อ") ══
+//   รอดในการสุ่ม = อาหารสะสม ÷ FCR เกณฑ์ (fcrFarmAt) → ÷ ABW → ÷ ยอดปล่อย · แม่นแค่ไหนขึ้นกับเกณฑ์ FCR
+//   คิดย้อน ณ วันสุ่ม: น้ำหนักจริง ≈ (จำนวนที่จับได้ทั้งหมด − ตัวที่พาเชียลไปก่อนวันนั้น) × ABW + พาเชียล กก. ก่อนวันนั้น
+//   FCR จริง = อาหารสะสมก่อนวันสุ่ม ÷ น้ำหนักนั้น · ไม่รู้ตายหลังวันสุ่ม → ประเมินสูงนิด → รอบที่รอดจริง < FS_MIN_SURV ตัดออก
+//   ⚠️ เป็นไกด์ไลน์ ไม่ได้เปลี่ยน fcrFarmAt ที่ใช้คิดรอด/biomass ทั้งแอป (ต้องให้พี่ตัดสินเอง)
+const FS_MIN_SURV=75,FS_MIN_SAMPLES=3;
+function fcrStdCrops(){
+  const out=[];
+  (D.ponds||[]).forEach(p=>(p.cropHistory||[]).forEach(c=>{
+    if(!c||!c.startDate||!c.closeDate)return;
+    const hr=c.harvestResult||{};
+    const ss=(c.samples||[]).filter(x=>x&&x.date&&+x.abw>0&&x.date>=c.startDate&&x.date<=c.closeDate).sort((a,b)=>a.date.localeCompare(b.date));
+    const fl=(c.feedLog||[]).filter(x=>x&&x.date);
+    const base={pond:p.name,zone:pondZone(p),start:c.startDate,close:c.closeDate,label:cropLbl(p,c)};
+    if(ss.length<FS_MIN_SAMPLES||!fl.length||!(+hr.totalWeight>0)||!(+hr.caught>0)){out.push({...base,skip:'nodata'});return;}
+    const ph=(c.partialHarvests||[]).filter(x=>x&&x.date).map(x=>({date:x.date,kg:+x.weight||0,cnt:(+x.weight||0)*(+x.size||0)}));
+    const phKg=ph.reduce((a,x)=>a+x.kg,0),phCnt=ph.reduce((a,x)=>a+x.cnt,0);
+    const caughtAll=hr.caughtIncludesPartial?+hr.caught:+hr.caught+phCnt;
+    const feedAll=fl.reduce((a,x)=>a+(+x.totalFeed||0),0);
+    const surv=+hr.survivalRate||null;
+    const rows=ss.map((x,i)=>{
+      const feedTo=fl.filter(f=>f.date<x.date).reduce((a,f)=>a+(+f.totalFeed||0),0);
+      const pb=ph.filter(h=>h.date<=x.date),kgB=pb.reduce((a,h)=>a+h.kg,0),cntB=pb.reduce((a,h)=>a+h.cnt,0);
+      const prod=(caughtAll-cntB)*(+x.abw)/1000+kgB;
+      return{k:i+1,age:docAge(c.startDate,x.date),abw:+x.abw,survIn:+x.survivalRate,rule:fcrFarmAt(i+1),fcr:prod>0?feedTo/prod:null};
+    }).filter(r=>r.fcr!=null&&r.fcr>0&&r.fcr<4);
+    const last=rows.slice(-4).filter(r=>r.survIn>0);
+    out.push({...base,rows,surv,fcrAct:feedAll/(+hr.totalWeight+phKg),survIn:last.length?last.reduce((a,r)=>a+r.survIn,0)/last.length:null,
+      skip:surv!=null&&surv<FS_MIN_SURV?'lowsurv':''});
+  }));
+  return out;
+}
+function fcrStdTable(crops){
+  const byK={};crops.filter(c=>!c.skip).forEach(c=>c.rows.forEach(r=>(byK[r.k]=byK[r.k]||[]).push(r)));
+  return Object.keys(byK).map(Number).sort((a,b)=>a-b).map(k=>{const l=byK[k],av=f=>l.reduce((a,r)=>a+f(r),0)/l.length;const fcr=av(r=>r.fcr);
+    return{k,n:l.length,age:av(r=>r.age),abw:av(r=>r.abw),rule:fcrFarmAt(k),fcr,lo:Math.min(...l.map(r=>r.fcr)),hi:Math.max(...l.map(r=>r.fcr)),guide:Math.round(fcr*20)/20};});
+}
+function renderFcrStd(){
+  const el=document.getElementById('fs-body');if(!el||APP_ROLE!=='admin')return;
+  const crops=fcrStdCrops(),use=crops.filter(c=>!c.skip),low=crops.filter(c=>c.skip==='lowsurv'),nod=crops.filter(c=>c.skip==='nodata');
+  const tb=fcrStdTable(crops);
+  const wait=(D.ponds||[]).filter(p=>p.startDate&&(p.samples||[]).filter(x=>x&&x.date>=p.startDate&&+x.abw>0).length>=1).map(p=>p.name);
+  const NEED=10;
+  const f2=v=>v.toFixed(2),sg=v=>{const r=Math.round(v*100)/100+0;return(r>=0?'+':'')+r.toFixed(2);};
+  if(!use.length){el.innerHTML='<div class="fs-card fs-nx">ยังไม่มีรอบที่ปิดแล้วที่มีข้อมูลครบ (สุ่ม ≥ '+FS_MIN_SAMPLES+' ครั้ง + กรอกอาหาร + ผลจับ) · ปิดบ่อรอบหน้าแล้วหน้านี้จะเริ่มคำนวณเอง</div>';return;}
+  const early=tb.filter(r=>r.age<70&&r.n>=2),late=tb.filter(r=>r.age>=70&&r.n>=2);
+  const avgD=l=>l.length?l.reduce((a,r)=>a+(r.fcr-r.rule),0)/l.length:null;
+  const dE=avgD(early),dL=avgD(late);
+  const sv=use.filter(c=>c.survIn!=null&&c.surv!=null),svD=sv.length?sv.reduce((a,c)=>a+(c.survIn-c.surv),0)/sv.length:null;
+  const msg=[];
+  if(dE!=null)msg.push((Math.abs(dE)<=0.05?'✅ ':'⚠️ ')+'<b class="'+(Math.abs(dE)<=0.05?'g':'r')+'">อายุก่อน 70 วัน</b> FCR จริงต่างจากเกณฑ์เฉลี่ย <b>'+sg(dE)+'</b>');
+  if(dL!=null)msg.push((Math.abs(dL)<=0.05?'✅ ':'⚠️ ')+'<b class="'+(Math.abs(dL)<=0.05?'g':'r')+'">หลัง 70 วัน</b> FCR จริงต่างจากเกณฑ์เฉลี่ย <b class="'+(Math.abs(dL)<=0.05?'g':'r')+'">'+sg(dL)+'</b>');
+  if(svD!=null)msg.push((Math.abs(svD)<=2?'✅ ':'⚠️ ')+'อัตรารอดที่กรอกช่วงท้าย '+(svD>=0?'สูง':'ต่ำ')+'กว่าที่จับจริง <b class="'+(Math.abs(svD)<=2?'g':'r')+'">'+Math.abs(svD).toFixed(1)+'%</b> (เฉลี่ย '+sv.length+' รอบ)');
+  msg.push(use.length<NEED?'💡 ยังมีแค่ '+use.length+' รอบ ใช้เป็นไกด์ไลน์ได้ · ควรมี ~'+NEED+' รอบก่อนเปลี่ยนเกณฑ์ที่ใช้คิดรอด':'💡 ครบ '+use.length+' รอบแล้ว ใช้ช่อง "แนะนำ" เป็นเกณฑ์ได้');
+  // ── กราฟ SVG ล้วน
+  const W=860,H=290,L=44,R=40,T=12,B=32;
+  const allPts=crops.filter(c=>c.rows).flatMap(c=>c.rows);
+  const x0=Math.min(28,...allPts.map(r=>r.age)),x1=Math.max(...allPts.map(r=>r.age),100)+4;
+  const yv=allPts.map(r=>r.fcr).concat(tb.map(r=>r.rule));const y0=Math.floor(Math.min(...yv)*10-1)/10,y1=Math.ceil(Math.max(...yv)*10+1)/10;
+  const X=a=>L+(a-x0)/(x1-x0)*(W-L-R),Y=v=>T+(y1-v)/(y1-y0)*(H-T-B);
+  let g='';
+  for(let v=Math.ceil(y0*10)/10;v<=y1+1e-9;v+=0.1){const y=Y(v);g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" style="stroke:var(--bd)"/>';if(Math.round(v*10)%2===0)g+='<text x="'+(L-6)+'" y="'+(y+4)+'" font-size="11" text-anchor="end" style="fill:var(--tx)">'+v.toFixed(1)+'</text>';}
+  for(let a=Math.ceil(x0/10)*10;a<=x1;a+=10)g+='<text x="'+X(a)+'" y="'+(H-12)+'" font-size="11" text-anchor="middle" style="fill:var(--tx)">'+a+'</text>';
+  g+='<text x="'+(W-R)+'" y="'+(H-1)+'" font-size="11" text-anchor="end" style="fill:var(--tx)">อายุ (วัน)</text>';
+  if(x1>70)g+='<rect x="'+X(Math.max(70,x0))+'" y="'+T+'" width="'+(X(x1)-X(Math.max(70,x0)))+'" height="'+(H-T-B)+'" style="fill:var(--w);opacity:.06"/>';
+  const pl=(pts,st)=>'<polyline fill="none" stroke-linejoin="round" style="'+st+'" points="'+pts.map(q=>X(q[0]).toFixed(1)+','+Y(q[1]).toFixed(1)).join(' ')+'"/>';
+  low.forEach(c=>{const pts=c.rows.map(r=>[r.age,r.fcr]);g+=pl(pts,'stroke:var(--d);stroke-width:1.6;opacity:.35');const q=pts[pts.length-1];if(q)g+='<text x="'+(X(q[0])+4)+'" y="'+(Y(q[1])+4)+'" font-size="11" style="fill:var(--d)">'+mpEsc(c.pond)+'</text>';});
+  use.forEach(c=>g+=pl(c.rows.map(r=>[r.age,r.fcr]),'stroke:var(--in);stroke-width:1.4;opacity:.45'));
+  const step=[];tb.forEach((r,i)=>{const nx=tb[i+1]?tb[i+1].age:r.age+7;step.push([r.age,r.rule],[nx,r.rule]);});
+  g+=pl(step,'stroke:var(--p);stroke-width:2.4;stroke-dasharray:6 4');
+  const av=tb.map(r=>[r.age,r.fcr]);g+=pl(av,'stroke:var(--ok);stroke-width:3.4');
+  av.forEach(q=>g+='<circle cx="'+X(q[0])+'" cy="'+Y(q[1])+'" r="3.6" style="fill:var(--ok)"/>');
+  const lq=av[av.length-1];g+='<text x="'+(X(lq[0])+6)+'" y="'+(Y(lq[1])+4)+'" font-size="12" font-weight="700" style="fill:var(--ok)">'+f2(lq[1])+'</text>';
+  const rowK=tb.map(r=>{const df=r.fcr-r.rule,c=df>=0.05?'up':df<=-0.05?'dn':'eq';
+    return'<tr class="'+(df>=0.05?'hi':'')+'"><td>'+r.k+(r.n<2?' <span class="fs-chip">'+r.n+' รอบ</span>':'')+'</td><td>'+Math.round(r.age)+'</td><td class="gd">'+r.guide.toFixed(2)+'</td><td>'+r.rule.toFixed(1)+'</td><td><b>'+f2(r.fcr)+'</b></td><td class="'+c+'">'+sg(df)+'</td><td>'+f2(r.lo)+'–'+f2(r.hi)+'</td><td>'+r.abw.toFixed(1)+'</td></tr>';}).join('');
+  const rowS=use.concat(low).map(c=>{const df=c.survIn!=null&&c.surv!=null?c.survIn-c.surv:null;
+    return'<tr><td>'+mpEsc(c.pond)+' <span class="fs-chip">'+mpEsc(fD(c.close).replace(/\s\d{2}$/,''))+'</span>'+(c.skip?' <span class="fs-chip">ตัดออก</span>':'')+'</td><td>'+(c.survIn!=null?c.survIn.toFixed(1)+'%':'-')+'</td><td>'+(c.surv!=null?c.surv+'%':'-')+'</td><td class="'+(df!=null&&Math.abs(df)>2?'up':'eq')+'">'+(df!=null?(df>=0?'+':'')+df.toFixed(1):'-')+'</td><td>'+f2(c.fcrAct)+'</td></tr>';}).join('');
+  el.innerHTML='<div class="fs-k3">'
+    +'<div class="fs-k ok"><div class="l">รอบที่ใช้คิด</div><div class="v">'+use.length+' <small>รอบ</small></div><div class="s">'+mpEsc(use.map(c=>c.pond).join(' '))+'</div></div>'
+    +'<div class="fs-k"><div class="l">รอบที่ตัดออก</div><div class="v">'+low.length+' <small>รอบ</small></div><div class="s">'+(low.length?mpEsc(low.map(c=>c.pond).join(' '))+' · รอดจริงต่ำกว่า '+FS_MIN_SURV+'%':'รอดจริงต่ำกว่า '+FS_MIN_SURV+'% จะถูกตัด')+(nod.length?' · ไม่มีข้อมูลสุ่ม '+nod.length+' รอบ':'')+'</div></div>'
+    +'<div class="fs-k'+(use.length<NEED?' wa':' ok')+'"><div class="l">ควรมีก่อนเปลี่ยนเกณฑ์</div><div class="v">~'+NEED+' <small>รอบ</small></div><div class="s">'+(use.length<NEED?'ยังขาด '+(NEED-use.length)+' · ปิดบ่อแล้วเพิ่มเอง':'ครบแล้ว')+'</div></div></div>'
+    +'<div class="fs-find">'+msg.join('<br>')+'</div>'
+    +'<div class="fs-card"><div class="fs-ct">FCR ตามอายุกุ้ง <span>เส้นบาง = แต่ละรอบ · คิดย้อนจากผลจับ</span></div><div class="fs-tb"><svg viewBox="0 0 '+W+' '+H+'" width="100%" style="min-width:560px" role="img" aria-label="กราฟ FCR ตามอายุ">'+g+'</svg></div>'
+    +'<div class="fs-lg"><span><i style="border-top:2.5px dashed var(--p);height:0"></i>เกณฑ์ที่ใช้อยู่</span><span><i style="background:var(--ok);height:4px"></i>ของจริงเฉลี่ย</span><span><i style="background:var(--in);opacity:.5"></i>แต่ละรอบ</span>'+(low.length?'<span><i style="background:var(--d);opacity:.4"></i>ตัดออก</span>':'')+'</div></div>'
+    +'<div class="fs-two"><div class="fs-card"><div class="fs-ct">📐 เกณฑ์แนะนำ ทีละครั้งที่สุ่ม <span>เฉลี่ย '+use.length+' รอบ</span></div><div class="fs-tb"><table><tr><th>สุ่มครั้งที่</th><th>อายุ</th><th>แนะนำ</th><th>ใช้อยู่</th><th>จริง</th><th>ต่าง</th><th>ช่วง</th><th>ABW</th></tr>'+rowK+'</table></div>'
+    +'<div class="fs-nx" style="margin-top:6px">แนะนำ = ค่าจริงเฉลี่ย ปัดทีละ 0.05</div></div>'
+    +'<div><div class="fs-card"><div class="fs-ct">อัตรารอด: กรอก vs จับจริง <span>เฉลี่ย 4 ครั้งท้าย</span></div><div class="fs-tb"><table><tr><th>บ่อ</th><th>กรอก</th><th>จริง</th><th>ต่าง</th><th>FCR จริง</th></tr>'+rowS+'</table></div></div>'
+    +'<div class="fs-card fs-nx"><div class="fs-ct">รอบที่จะเข้ามาเพิ่ม</div>'+(wait.length?'<span class="fs-chip wt">รอปิด</span> '+mpEsc(wait.join(' · '))+'<br>':'')+'ปิดบ่อแล้วแอปคิดเพิ่มให้เอง · ต้องมีสุ่ม ≥ '+FS_MIN_SAMPLES+' ครั้ง + กรอกอาหาร + ผลจับ</div></div></div>'
+    +'<div class="fs-card fs-nx"><b>วิธีคิด:</b> ณ วันสุ่ม น้ำหนักกุ้งจริง ≈ จำนวนตัวที่จับได้ทั้งหมด × ABW วันสุ่ม (หักตัวที่พาเชียลไปก่อน + บวก กก. พาเชียลก่อนวันนั้น) · FCR จริง = อาหารสะสมก่อนวันสุ่ม ÷ น้ำหนักนั้น · ไม่รู้ว่าตายหลังวันสุ่มกี่ตัว ตัวเลขจึงสูงนิดหน่อย รอบที่รอดจริงต่ำกว่า '+FS_MIN_SURV+'% จึงตัดออก · หน้านี้เป็นไกด์ไลน์ ยังไม่เปลี่ยนเกณฑ์ที่แอปใช้คิดอัตรารอด</div>';
+}
 function renderPdGauges(p,last){
   const wrap=document.getElementById('pd-gauges');if(!wrap)return;
   const thirdKey=(last&&last.nh4!=null&&last.nh4!=='')?'nh4':'no2';
@@ -12600,7 +12719,7 @@ const NAV_SYN={elec:'ไฟ บิลไฟ ค่าไฟฟ้า หน่�
   entry:'น้ำ ph do alk ค่าน้ำ สีน้ำ แอมโมเนีย ไนไตรท์',watlog:'เติมน้ำ ถ่ายน้ำ สูบน้ำเข้า',mortality:'ตาย กุ้งตาย',lab:'เชื้อ แล็บ ตับ ehp vibrio tcbs',
   tide:'อากาศ ฝน น้ำขึ้น น้ำลง สูบน้ำ ตารางน้ำ',stock:'ของ คลัง เบิก พัสดุ',price:'ราคาทุน ราคาขาย ต้นทุนสินค้า ราคาของ',forecast:'คาดการณ์ จับเมื่อไหร่ ตัน วันจับ',
   medproto:'ยา สูตร โปรแกรม ผสมอาหาร เวชภัณฑ์',manage:'วางแผน ลงกุ้ง บ่อว่าง ยอดลง',users:'บัญชี สิทธิ์ ล็อกอิน ผู้ใช้',palm:'ปาล์ม ปุ๋ย สวน',
-  hatchery:'ลูกกุ้ง โรงเพาะฟัก cp',compare:'เทียบ เปรียบเทียบ รุ่น',risk:'ความเสี่ยง เตือน',export:'pdf สรุปปิดบ่อ รายงาน',ai:'ai ถาม ผู้ช่วย แชต',kan:'ชีต กัน แผนลงลูกกุ้ง',overview:'หน้าแรก สรุป ทุกบ่อ'};
+  hatchery:'ลูกกุ้ง โรงเพาะฟัก cp',fcrstd:'fcr เกณฑ์ มาตรฐาน อัตรารอด ผลจับจริง',compare:'เทียบ เปรียบเทียบ รุ่น',risk:'ความเสี่ยง เตือน',export:'pdf สรุปปิดบ่อ รายงาน',ai:'ai ถาม ผู้ช่วย แชต',kan:'ชีต กัน แผนลงลูกกุ้ง',overview:'หน้าแรก สรุป ทุกบ่อ'};
 function navStock(sub,mode){return()=>{goTabByName('stock');stockTab(sub,document.getElementById('skb-'+sub));if(mode)setStockLogMode(mode);};}
 function navSub(page,fn,arg){return()=>{goTabByName(page);const b=[...document.querySelectorAll('[onclick*="'+fn+'(\''+arg+'\'"]')][0];if(b)b.click();};}
 const NAV_EXTRA=[
