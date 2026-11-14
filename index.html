@@ -3303,6 +3303,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
     <div class="sn-sub" id="sn-g-crop">
       <button class="sn-link tab-item" onclick="goTab('crops',this)">📚 ประวัติรอบเลี้ยง</button>
       <button class="sn-link tab-item admin-only" onclick="goTab('harveststat',this)">📊 สถิติจับกุ้ง</button>
+      <button class="sn-link tab-item admin-only" onclick="goTab('pricehist',this)">💲 ประวัติราคาขาย</button>
       <button class="sn-link tab-item admin-only" onclick="goTab('pl',this)">💵 P&amp;L สรุป</button>
     </div>
 
@@ -3390,6 +3391,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
     <div class="tab-dropdown">
       <button class="tab-item" id="tab-crops" onclick="goTab('crops',this)">📚 ประวัติรอบเลี้ยง</button>
       <button class="tab-item admin-only" id="tab-harveststat" onclick="goTab('harveststat',this)">📊 สถิติจับกุ้ง</button>
+      <button class="tab-item admin-only" id="tab-pricehist" onclick="goTab('pricehist',this)">💲 ประวัติราคาขาย</button>
       <button class="tab-item admin-only" id="tab-pl" onclick="goTab('pl',this)">💵 P&amp;L สรุป</button>
     </div>
   </div>
@@ -3475,6 +3477,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
     <div class="mob-sheet-grp">🌾 บันทึกรอบเลี้ยง</div>
     <button class="mob-sheet-item owner-mine" data-t="crops" onclick="mobMenuGo(this)"><span class="ic">📚</span>ประวัติรอบเลี้ยง</button>
     <button class="mob-sheet-item admin-only" data-t="harveststat" onclick="mobMenuGo(this)"><span class="ic">📊</span>สถิติจับกุ้ง</button>
+    <button class="mob-sheet-item admin-only" data-t="pricehist" onclick="mobMenuGo(this)"><span class="ic">💲</span>ประวัติราคาขาย</button>
     <button class="mob-sheet-item admin-only owner-mine" data-t="pl" onclick="mobMenuGo(this)"><span class="ic">💵</span>P&amp;L สรุป</button>
     <div class="mob-sheet-grp">🔍 วิเคราะห์</div>
     <button class="mob-sheet-item" data-t="lab" onclick="mobMenuGo(this)"><span class="ic">🔬</span>ผลแล็บ</button>
@@ -4890,9 +4893,6 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
 <!-- HARVEST STAT -->
 <div id="sec-harveststat" class="sec">
   <div class="sec-hdr"><div class="sec-title">📊 สถิติจับกุ้ง</div></div>
-  <!-- #474 พี่สั่ง: แท็บประวัติราคาขายตามไซส์ ไว้ดูตอนขอราคาแพ -->
-  <div class="hsp-tabs"><button type="button" id="hs-tab-stat" class="on" onclick="hsTab('stat')">📊 สถิติ</button><button type="button" id="hs-tab-price" onclick="hsTab('price')">💲 ประวัติราคา</button></div>
-  <div id="hs-pane-price" hidden></div>
   <div id="hs-pane-stat">
   <div class="hsy-sub">รวมพาเชียล + ปิดบ่อ · แตะรายการ = เปิดประวัติรอบนั้น</div>
   <div class="hsy-yrs" id="hs-yr-btns"></div>
@@ -4913,6 +4913,12 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
 </div>
 <!-- EXPORT -->
 <!-- MANAGE -->
+<!-- #475 พี่สั่ง: ประวัติราคาขายแยกเป็นหน้าในหมวดบันทึกรอบเลี้ยง (เดิมเป็นแท็บในสถิติจับกุ้ง #474) -->
+<div id="sec-pricehist" class="sec">
+  <div class="sec-hdr"><div class="sec-title">💲 ประวัติราคาขายกุ้ง</div></div>
+  <div class="hsy-sub">ไว้ดูตอนขอราคาแพ · เลือกไซส์ที่จะขาย</div>
+  <div id="hs-pane-price"></div>
+</div>
 <div id="sec-manage" class="sec">
   <div class="sec-hdr"><div class="sec-title">🗺️ จัดการบ่อ</div><button class="btn btn-p" onclick="openAddPond()">+ เพิ่มบ่อใหม่</button></div>
   <div id="mg-cards"></div>
@@ -8543,16 +8549,12 @@ function hsBuyersFromApp(shortYr){
 function hsFmt(n){return Math.round(n||0).toLocaleString('en-US');}
 function hsEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function hsFd(d){const[y,m,dd]=d.split('-');return (+dd)+'/'+(+m)+'/'+String((+y+543)%100).padStart(2,'0');}
-function initHarvestStat(){_hsRenderAll();if(_hsTab==='price')renderHsPrice();}
+function initHarvestStat(){_hsRenderAll();}
 // ══ #474 ประวัติราคาขายตามไซส์ (พี่สั่ง 14 พ.ย. 69 "ไว้ดูเวลาขอราคาขาย") ══
 //   ข้อมูล: D.harvestLog (ชีตเดิม 2560–ก.ค. 69) ถึงวันสุดท้ายของมัน + hsHarvestRows() (รอบเลี้ยงในแอป) หลังจากนั้น — กันนับซ้ำช่วงที่ทับกัน
 //   ตัดราคา < 20 (ข้อมูลผิด เช่น 1.23) · เฉลี่ยถ่วงน้ำหนักตาม กก. · ช่วงไซส์ตามที่พี่ตกลง (ใช้ไปก่อน รอเก็บว่าต้องเปลี่ยนไหม)
 const HSP_B=[[0,25,'≤25'],[26,30,'26–30'],[31,35,'31–35'],[36,40,'36–40'],[41,50,'41–50'],[51,60,'51–60'],[61,70,'61–70'],[71,80,'71–80'],[81,100,'81–100'],[101,99999,'100+']];
-let _hsTab='stat',_hspBand=null;
-function hsTab(t){_hsTab=t;
-  document.getElementById('hs-pane-stat').hidden=t!=='stat';document.getElementById('hs-pane-price').hidden=t!=='price';
-  document.getElementById('hs-tab-stat').classList.toggle('on',t==='stat');document.getElementById('hs-tab-price').classList.toggle('on',t==='price');
-  if(t==='price')renderHsPrice();}
+let _hspBand=null;
 function hspPoints(){
   const H=(D.harvestLog||[]).filter(h=>h&&h.date);
   const cut=H.reduce((m,h)=>h.date>m?h.date:m,'');
@@ -8789,7 +8791,7 @@ function initUiSize(){
   applyUiSize(v);
 }
 initUiSize();
-const ADMIN_ONLY_TABS=['palm','users','labor','elec','pl','kan','hatchery','ai','appmap','harvest','harveststat','manage','fcrstd'];   // hatchery มีกำไร (#316) — เพิ่ม entry #357 · export = PDF ปิดบ่อ มีรายได้/ต้นทุน/กำไร (พี่สั่ง #374)
+const ADMIN_ONLY_TABS=['palm','users','labor','elec','pl','kan','hatchery','ai','appmap','harvest','harveststat','manage','fcrstd','pricehist'];   // hatchery มีกำไร (#316) — เพิ่ม entry #357 · export = PDF ปิดบ่อ มีรายได้/ต้นทุน/กำไร (พี่สั่ง #374)
 function goTab(t,btn){
   if(ADMIN_ONLY_TABS.includes(t)&&APP_ROLE!=='admin')return;
   document.querySelectorAll('.tab,.tab-item,.sn-top,.sn-link').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
@@ -8820,6 +8822,7 @@ function goTab(t,btn){
   if(t==='harvest')initHarvest();
   if(t==='crops')renderCrops();
   if(t==='harveststat')initHarvestStat();
+  if(t==='pricehist')renderHsPrice();
   if(t==='price')initPrice();
   // ── sync bottom nav (ข้อ 6) ──
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
@@ -12798,7 +12801,7 @@ function navLs(k,def){try{const v=JSON.parse(localStorage.getItem(k+'_'+navUid()
 function navLsSet(k,v){try{localStorage.setItem(k+'_'+navUid(),JSON.stringify(v));}catch(e){}}
 function navUse(id){if(APP_ROLE!=='admin'||!id||id==='tab:overview')return;const u=navLs('tw_nav_use',{});const x=u[id]||{n:0};x.n++;x.at=Date.now();u[id]=x;navLsSet('tw_nav_use',u);}
 const NAV_SYN={elec:'ไฟ บิลไฟ ค่าไฟฟ้า หน่วยไฟ',labor:'เงินเดือน คนงาน จ่ายคน ค่าจ้าง ค่าแรงสัปดาห์',pl:'กำไร ขาดทุน รายได้ ต้นทุนรอบ',crops:'รอบ ประวัติ ปิดบ่อ ย้อนหลัง',
-  harveststat:'ขาย ขายกุ้ง ราคากุ้ง แพ ยอดขาย ผู้ซื้อ รายได้กุ้ง',harvest:'จับ พาเชียล ปิดบ่อ ขายกุ้ง',sample:'ไซส์ สุ่ม อัตรารอด น้ำหนัก abw pdg',feed:'อาหาร fcr ให้อาหาร เบอร์อาหาร',
+  harveststat:'ขาย ขายกุ้ง ราคากุ้ง แพ ยอดขาย ผู้ซื้อ รายได้กุ้ง',pricehist:'ราคาขาย ราคากุ้ง ขอราคา ไซส์ แพ ประวัติราคา',harvest:'จับ พาเชียล ปิดบ่อ ขายกุ้ง',sample:'ไซส์ สุ่ม อัตรารอด น้ำหนัก abw pdg',feed:'อาหาร fcr ให้อาหาร เบอร์อาหาร',
   entry:'น้ำ ph do alk ค่าน้ำ สีน้ำ แอมโมเนีย ไนไตรท์',watlog:'เติมน้ำ ถ่ายน้ำ สูบน้ำเข้า',mortality:'ตาย กุ้งตาย',lab:'เชื้อ แล็บ ตับ ehp vibrio tcbs',
   tide:'อากาศ ฝน น้ำขึ้น น้ำลง สูบน้ำ ตารางน้ำ',stock:'ของ คลัง เบิก พัสดุ',price:'ราคาทุน ราคาขาย ต้นทุนสินค้า ราคาของ',forecast:'คาดการณ์ จับเมื่อไหร่ ตัน วันจับ',
   medproto:'ยา สูตร โปรแกรม ผสมอาหาร เวชภัณฑ์',manage:'วางแผน ลงกุ้ง บ่อว่าง ยอดลง',users:'บัญชี สิทธิ์ ล็อกอิน ผู้ใช้',palm:'ปาล์ม ปุ๋ย สวน',
