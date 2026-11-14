@@ -1382,6 +1382,7 @@ button.pr-it:hover,button.pr-it:active{background:var(--sf2)}
 .pr-mb{padding:14px 16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
 .pr-mb .fg,.pr-mb .pr-g2 .fg{margin:0}
 .pr-g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pr-sum{margin:-4px 0 12px;font-size:calc(14px * var(--ui-scale));font-weight:700}.pr-sum b{color:var(--p)}
 .pr-hint{font-size:calc(11.5px * var(--ui-scale));color:var(--tx3);margin-top:3px;font-weight:400}
 .pr-big{font-weight:700}
 .pr-err{background:var(--db);color:var(--d);border-radius:8px;padding:8px 10px;font-size:calc(13px * var(--ui-scale))}
@@ -3669,8 +3670,9 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
           <option value="probioOral">🦠 จุลินทรีย์กิน</option><option value="probioWater">🧫 จุลินทรีย์ลงน้ำ</option><option value="lime">🪨 ปูน</option><option value="equip">🔧 อุปกรณ์</option></select></div></div>
       <div class="pr-g2"><div class="fg"><label class="fl" for="pri-sell">ราคาขาย เงินสด</label><input class="fi pr-big" id="pri-sell" type="number" min="0" step="any" inputmode="decimal"></div>
         <div class="fg"><label class="fl" for="pri-bulk">พิเศษ/ยกลัง</label><input class="fi" id="pri-bulk" type="number" min="0" step="any" inputmode="decimal" placeholder="ไม่มีเว้นว่าง"></div></div>
-      <div class="fg"><label class="fl" for="pri-cost">ต้นทุน (ฟาร์มใช้ · รวมค่าขนส่ง)</label><input class="fi" id="pri-cost" type="number" min="0" step="any" inputmode="decimal">
-        <div class="pr-hint">ช่องเดียวกับราคา/หน่วยในหน้าสต็อก — แก้แล้วต้นทุนบ่อเปลี่ยนตาม</div></div>
+      <div class="pr-g2"><div class="fg"><label class="fl" for="pri-cost">ต้นทุนสินค้า</label><input class="fi" id="pri-cost" type="number" min="0" step="any" inputmode="decimal" oninput="prCostSum()"></div>
+        <div class="fg"><label class="fl" for="pri-ship">ค่าขนส่ง /หน่วย</label><input class="fi" id="pri-ship" type="number" min="0" step="any" inputmode="decimal" placeholder="ไม่มีเว้นว่าง" oninput="prCostSum()"></div></div>
+      <div class="pr-sum" id="pri-sum"></div>
       <div class="pr-g2"><div class="fg"><label class="fl" for="pri-co">บริษัท</label><select class="fi" id="pri-co"></select></div>
         <div class="fg"><label class="fl" for="pri-unit">หน่วย</label><input class="fi" id="pri-unit" placeholder="ถัง, ถุง, กระสอบ"></div></div>
       <div class="fg"><label class="fl" for="pri-props">สรรพคุณ <span class="pr-hint">(staff เห็นด้วย · ช่องเดียวกับในหน้าสต็อก)</span></label><textarea class="fi" id="pri-props" rows="2" placeholder="เช่น ฆ่าเชื้อในน้ำ ก่อนลงลูกกุ้ง · บำรุงตับ"></textarea></div>
@@ -8393,20 +8395,22 @@ function openPrItem(id){
   document.getElementById('pri-new-row').style.display=it?'none':'';
   v('pri-co',it?it.companyId||'':(_prCo&&_prCo!=='none'&&_prCo!=='off'?_prCo:''));
   v('pri-unit',it?it.unit:'');v('pri-name','');v('pri-cat','equip');
-  v('pri-props',it?it.props:'');v('pri-potency',it?it.potency:'');v('pri-cost',it?it.unitPrice:'');v('pri-sell',it?it.shopPrice:'');v('pri-bulk',it?it.shopBulk:'');v('pri-note',it?it.shopNote:'');
+  v('pri-props',it?it.props:'');v('pri-potency',it?it.potency:'');const shp=it?(parseFloat(it.shipCost)||0):0;v('pri-ship',shp||'');v('pri-cost',it?Math.max(0,Math.round(((parseFloat(it.unitPrice)||0)-shp)*100)/100):'');v('pri-sell',it?it.shopPrice:'');v('pri-bulk',it?it.shopBulk:'');v('pri-note',it?it.shopNote:'');
   const off=document.getElementById('pri-off');off.style.display=it?'':'none';
   if(it)off.textContent=it.shopOff?'↩️ กลับมาขาย':'เลิกขาย';
-  document.getElementById('pri-msg').innerHTML='';
+  document.getElementById('pri-msg').innerHTML='';prCostSum();
   document.getElementById('prItemModal').classList.add('on');
 }
+function prCostSum(){const g=k=>parseFloat(document.getElementById(k).value)||0;const c=g('pri-cost'),sh=g('pri-ship'),u=(document.getElementById('pri-unit').value||'').trim();
+  document.getElementById('pri-sum').innerHTML=sh>0?'ต้นทุนรวม = <b>'+prB(Math.round((c+sh)*100)/100)+'</b> บาท'+(u?'/'+billEsc(u):''):'';}
 function closePrItem(){_prEditId=null;document.getElementById('prItemModal').classList.remove('on');}
 function prMsg(t){document.getElementById('pri-msg').innerHTML='<div class="pr-err">'+billEsc(t)+'</div>';}
 function savePrItem(){
   if(!prIsAdmin()||_prEditId==null)return;
   const g=k=>(document.getElementById(k).value||'').trim();
   const n=k=>{const x=g(k);return x===''?null:parseFloat(x);};
-  const cost=n('pri-cost'),sell=n('pri-sell'),bulk=n('pri-bulk');
-  if([cost,sell,bulk].some(x=>x!=null&&(isNaN(x)||x<0))){prMsg('ราคาต้องเป็นตัวเลขตั้งแต่ 0 ขึ้นไป');return;}
+  const ship=n('pri-ship'),prod=n('pri-cost'),cost=prod==null&&ship==null?null:Math.round(((prod||0)+(ship||0))*100)/100,sell=n('pri-sell'),bulk=n('pri-bulk');
+  if([prod,ship,sell,bulk].some(x=>x!=null&&(isNaN(x)||x<0))){prMsg('ราคาต้องเป็นตัวเลขตั้งแต่ 0 ขึ้นไป');return;}
   let it;
   if(_prEditId){
     it=(D.inventoryItems||[]).find(i=>i.id===_prEditId);   // หาใหม่จาก D — อาจถูกแทนทั้งก้อนจากอีกเครื่องระหว่างเปิดหน้าต่าง
@@ -8431,7 +8435,7 @@ function savePrItem(){
   if(cost!=null)it.unitPrice=cost;
   const set=(k,x)=>{if(x==null||x===''||x===0)delete it[k];else it[k]=x;};
   it.props=g('pri-props');it.potency=g('pri-potency');   // ฟอร์มสต็อกเก็บเป็นสตริงว่างได้ — ทำแบบเดียวกัน
-  set('companyId',g('pri-co'));set('shopPrice',sell);set('shopBulk',bulk);set('shopNote',g('pri-note'));
+  set('shipCost',ship);set('companyId',g('pri-co'));set('shopPrice',sell);set('shopBulk',bulk);set('shopNote',g('pri-note'));
   save();
   closePrItem();
   renderPrice();
@@ -12111,6 +12115,7 @@ function stockEmptyEmit(savedP,ids){
 // #429 1600px/72% ได้จริง ~0.8 MB/รูป (รูปกระดาษมีลายเยอะ) โตเดือนละ ~20 MB → 1280px/60% ~0.2 MB ตัวหนังสือในบิลยังอ่านได้ (เทียบบิล CPF จริง)
 const BILL_MAX_PAGES=4, BILL_IMG_MAX=1280, BILL_IMG_Q=0.6;
 let _billCap=null;   // ร่างของ staff ที่กำลังกรอก {id|null, pages:[dataURL], items:[], date, shop, replacePhotos}
+function itProdCost(it){return Math.max(0,(+it.unitPrice||0)-(parseFloat(it.shipCost)||0));}   // #476 ต้นทุนสินค้าไม่รวมขนส่ง
 let _billRev=null;   // ร่างของ admin ที่กำลังตรวจ {id, items:[], billTotal, updCat, page}
 function billToast(t){showToast(t,'');}
 function billArr(){if(!Array.isArray(D.stockBills))D.stockBills=[];return D.stockBills;}
@@ -12418,7 +12423,7 @@ function renderBillRev(){
       '<span class="bill-chip new">staff พิมพ์: '+billEsc(x.name)+'</span>'+
       '<select class="fi" '+(lock?'disabled':'')+' onchange="billMap('+i+',this.value)" aria-label="จับคู่กับสินค้าในระบบ"><option value="">— เลือกสินค้าในระบบ —</option>'+
         cats.map(c=>'<option value="'+c.id+'">'+billEsc(c.name)+'</option>').join('')+'</select>';
-    const catPrice=it?(+it.unitPrice||0):null;
+    const catPrice=it?itProdCost(it):null;
     const diff=(it&&x.price>0&&Math.abs(x.price-catPrice)>0.0001)?'<small class="bill-diff">ราคาในระบบ '+billFmt(catPrice)+'</small>':'';
     return '<tr><td>'+name+'</td>'+
       '<td class="num"><input class="fi bill-in-q" type="number" inputmode="decimal" step="any" min="0" value="'+(x.qty||0)+'" '+(lock?'disabled':'')+' onchange="billRevSet('+i+','+Q+'qty'+Q+',this.value)" aria-label="จำนวน"></td>'+
@@ -12432,7 +12437,7 @@ function renderBillRev(){
   const unmapped=_billRev.items.some(x=>!x.itemId||!billItem(x.itemId));
   const noPrice=_billRev.items.some(x=>!(x.price>0));
   const noQty=_billRev.items.some(x=>!(x.qty>0));
-  const changed=_billRev.items.filter(x=>{const it=x.itemId&&billItem(x.itemId);return it&&x.price>0&&Math.abs(x.price-(+it.unitPrice||0))>0.0001;});
+  const changed=_billRev.items.filter(x=>{const it=x.itemId&&billItem(x.itemId);return it&&x.price>0&&Math.abs(x.price-itProdCost(it))>0.0001;});
   let foot='';
   if(lock){
     const logs=(b.logIds||[]).map(id=>(D.inventoryLog||[]).find(l=>l.id===id)).filter(Boolean);
@@ -12490,7 +12495,7 @@ async function approveBill(){
   rows.forEach(x=>{
     const it=billItem(x.itemId);
     it.qty=Math.round(((+it.qty||0)+x.qty)*100)/100;
-    if(_billRev.updCat&&Math.abs(x.price-(+it.unitPrice||0))>0.0001)it.unitPrice=x.price;
+    if(_billRev.updCat&&Math.abs(x.price-itProdCost(it))>0.0001)it.unitPrice=Math.round((x.price+(parseFloat(it.shipCost)||0))*100)/100;   // #476 บิล = ราคาสินค้า · บวกค่าขนส่งที่ตั้งไว้
     const id='sl'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
     // ⚠️ unitCost = ราคาจากบิล (เก็บดิบไว้เป็นหลักฐาน) — ต้นทุนเข้าบ่อยังคิดจาก item.unitPrice ตามเดิม
     D.inventoryLog.push({id,itemId:it.id,itemName:it.name,type:'in',qty:x.qty,date:b.date||today(),
