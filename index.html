@@ -23943,6 +23943,10 @@ function _a11yMakeClickable(el){
   el.setAttribute('tabindex','0');
   if(!el.hasAttribute('role'))el.setAttribute('role','button');
   el.addEventListener('keydown',function(e){
+    // #473 พี่แจ้ง 14 พ.ย. 69: หน้าแก้ราคาสินค้า กด space แล้วหน้าต่างปิด — พื้นหลัง modal (div onclick ปิดเมื่อกดนอกกล่อง) ถูกทำให้กดได้ด้วย
+    //   ปุ่มคีย์บอร์ด แล้ว space/Enter จากช่องพิมพ์ข้างในเด้งขึ้นมาถึง → el.click() target = พื้นหลัง → ปิดหน้าต่าง (เป็นทุกหน้าต่าง)
+    //   → ทำงานเฉพาะตอนโฟกัสอยู่ที่ตัวมันเอง ไม่ใช่ลูกข้างใน
+    if(e.target!==el)return;
     if(e.key==='Enter'||e.key===' '||e.key==='Spacebar'){
       e.preventDefault();
       el.click();
