@@ -21928,12 +21928,13 @@ function renderCrops(){
     const {p,c,i,s}=r,k=p.id+':'+i,open=_crOpen===k;
     const fCls=r.fcr!=null&&r.tgt!=null?(r.fcr<=r.tgt+1e-9?' fg':' fo'):'';
     const lbl=String(s.cropLabel||'').replace('รอบที่ ','');
+    const svO=s.survivalRateOrder!=null?s.survivalRateOrder:s.survivalRate;
     let det='';
     if(open){
       const dl=(a,b)=>'<div class="crx-dl"><span>'+a+'</span><b>'+b+'</b></div>';
       det='<div class="crx-det"><div class="crx-dh">🦐 ผลผลิต</div>'
         +dl('น้ำหนักรวม',r.kg?n(r.kg)+' กก.'+crPhTxt(r.c):'-')+dl('ไซส์ปิดบ่อ',s.closeSize?s.closeSize+' ตัว/กก.':'-')
-        +dl('อัตรารอด',s.survivalRate!=null?s.survivalRate+'%':'-')
+        +dl('อัตรารอด (ยอดซื้อ)',svO!=null?svO+'%':'-')+(s.survivalRateOrder!=null&&s.survivalRate!=null?dl('รอด (ซื้อ+แถม)',s.survivalRate+'%'):'')
         +dl('FCR',r.fcr!=null?r.fcr.toFixed(2)+(r.tgt!=null?' · เกณฑ์อายุ '+r.age+' วัน = '+r.tgt.toFixed(1)+(r.fcr<=r.tgt+1e-9?' ✓':' ⚠️'):''):'-')
         +dl('กก./ไร่',r.yr?n(r.yr):'-')+(s.adg?dl('โตเฉลี่ย',s.adg+' ก./วัน'):'')+dl('ลูกกุ้ง',mpEsc(s.hatchery||'-'))
         +(isAdmin&&s.hasCostData?'<div class="crx-dh">💰 การเงิน</div>'
@@ -21954,7 +21955,7 @@ function renderCrops(){
       +'<div class="crx-kp" onclick="crToggle(\''+k+'\')"><div><b>'+(r.kg?(r.kg/1000).toFixed(1):'-')+'</b><span>ตัน</span></div>'
       +'<div><b>'+(s.closeSize||'-')+'</b><span>ตัว/กก.</span></div>'
       +'<div class="'+fCls.trim()+hl('fcr')+'"><b>'+(r.fcr!=null?r.fcr.toFixed(2):'-')+'</b><span>FCR'+(r.tgt!=null?' /'+r.tgt.toFixed(1):'')+'</span></div>'
-      +'<div><b>'+(s.survivalRate!=null?Math.round(s.survivalRate)+'%':'-')+'</b><span>รอด</span></div>'
+      +'<div><b>'+(svO!=null?Math.round(svO)+'%':'-')+'</b><span>รอด/ซื้อ</span></div>'
       +'<div class="'+hl('rai').trim()+'"><b>'+(r.yr?n(r.yr):'-')+'</b><span>กก./ไร่</span></div></div>'
       +(isAdmin&&r.np!=null?'<div class="crx-bar"><i style="width:'+(Math.abs(r.np)/mx*100).toFixed(1)+'%;background:'+(r.np>=0?'#16a34a':'#dc2626')+'"></i></div>':'')
       +det+'</div>';
