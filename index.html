@@ -285,6 +285,30 @@ body.role-admin .side-nav .sn-link.admin-only{display:block!important}
 .pd-back{display:inline-block;font-size:calc(14px * var(--ui-scale));font-weight:500;color:var(--p);cursor:pointer;margin-bottom:14px;padding:6px 2px}
 .pd-back:hover{text-decoration:underline}
 .pd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:4px}
+/* #474 ประวัติราคาขาย */
+.hsp-tabs{display:flex;gap:4px;background:var(--sf2);border-radius:12px;padding:4px;margin:0 0 12px;width:max-content;max-width:100%}
+.hsp-tabs button{border:0;background:none;border-radius:9px;padding:8px 14px;font:inherit;font-size:calc(14px * var(--ui-scale));font-weight:700;color:var(--tx);cursor:pointer}
+.hsp-tabs button.on{background:var(--sf);box-shadow:0 1px 3px #0002;color:var(--p)}
+.hsp-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.hsp-chips button{border:1.5px solid var(--bd);background:var(--sf);border-radius:99px;padding:6px 12px;font:inherit;font-size:calc(13.5px * var(--ui-scale));font-weight:700;color:var(--tx);cursor:pointer}
+.hsp-chips button.on{border-color:var(--p);background:color-mix(in srgb,var(--p) 13%,var(--sf));color:var(--p)}
+.hsp-ct{font-weight:800;font-size:calc(15px * var(--ui-scale));margin-bottom:6px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}.hsp-ct span{font-size:calc(12.5px * var(--ui-scale));font-weight:600}
+.hsp-big{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hsp-k{border:1px solid var(--bd);border-radius:12px;padding:8px 10px;min-width:0}.hsp-k .l{font-size:calc(12.5px * var(--ui-scale));font-weight:700}
+.hsp-k .v{font-size:calc(26px * var(--ui-scale));font-weight:800;color:var(--p);line-height:1.2}.hsp-k .s{font-size:calc(12px * var(--ui-scale));font-weight:600;line-height:1.4}
+.hsp-k.g{background:var(--ob);border-color:color-mix(in srgb,var(--ok) 30%,var(--bd))}.hsp-k.g .v{color:var(--ok)}
+.hsp-by{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--bd);font-size:calc(14px * var(--ui-scale))}.hsp-by:first-of-type{border-top:0}
+.hsp-tb{width:100%;border-collapse:collapse;font-size:calc(13.5px * var(--ui-scale));font-variant-numeric:tabular-nums}
+.hsp-tb th{font-size:calc(12px * var(--ui-scale));text-align:right;padding:5px 6px;border-bottom:1.5px solid var(--tx);white-space:nowrap}.hsp-tb th:first-child,.hsp-tb td:first-child{text-align:left}
+.hsp-tb td{padding:5px 6px;border-bottom:1px solid var(--bd);text-align:right;white-space:nowrap}
+.hsp-tb .pr,.hsp-by .pr{font-weight:800;color:var(--p)}
+.hsp-bar{display:inline-block;width:64px;height:8px;background:var(--sf2);border-radius:99px;position:relative;vertical-align:middle}.hsp-bar i{position:absolute;top:0;bottom:0;background:#E7C77A;border-radius:99px}.hsp-bar u{position:absolute;top:-2px;bottom:-2px;width:3px;background:var(--p);border-radius:2px}
+.hsp-hm{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}.hsp-hm th{font-size:calc(11.5px * var(--ui-scale));padding:4px 2px;text-align:center}
+.hsp-hm td{text-align:center;padding:4px 2px;font-size:calc(12.5px * var(--ui-scale));font-weight:700;color:#1F2328;border-bottom:1px solid var(--bd)}.hsp-hm td:first-child{text-align:left;font-weight:800;color:var(--tx);white-space:nowrap}
+.hsp-hm tr{cursor:pointer}.hsp-hm tr.sel td{outline:2px solid var(--p);outline-offset:-2px}
+.hsp-two{display:grid;grid-template-columns:1fr;gap:0}
+@media(min-width:900px){.hsp-two{grid-template-columns:1fr 1fr;gap:12px;align-items:start}}
+@media(max-width:899px){.hsp-hmc{display:none}}
 /* #467 เกณฑ์ FCR ฟาร์ม */
 .fs-sub{font-size:calc(13.5px * var(--ui-scale));margin:-4px 2px 12px}
 .fs-k3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
@@ -4866,6 +4890,10 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
 <!-- HARVEST STAT -->
 <div id="sec-harveststat" class="sec">
   <div class="sec-hdr"><div class="sec-title">📊 สถิติจับกุ้ง</div></div>
+  <!-- #474 พี่สั่ง: แท็บประวัติราคาขายตามไซส์ ไว้ดูตอนขอราคาแพ -->
+  <div class="hsp-tabs"><button type="button" id="hs-tab-stat" class="on" onclick="hsTab('stat')">📊 สถิติ</button><button type="button" id="hs-tab-price" onclick="hsTab('price')">💲 ประวัติราคา</button></div>
+  <div id="hs-pane-price" hidden></div>
+  <div id="hs-pane-stat">
   <div class="hsy-sub">รวมพาเชียล + ปิดบ่อ · แตะรายการ = เปิดประวัติรอบนั้น</div>
   <div class="hsy-yrs" id="hs-yr-btns"></div>
   <div class="hsy-kpis" id="hs-kpi"></div>
@@ -4880,6 +4908,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
     <div class="card-t">📈 ยอดรวมรายปี (ล้านบาท) — แตะแท่งเพื่อดูปีนั้น</div>
     <div style="position:relative;height:220px"><canvas id="hs-chart-annual"></canvas></div>
     <div class="hsy-note">แท่งเทา (ปี 60–67) = ยอดรวมจากชีตเดิม</div>
+  </div>
   </div>
 </div>
 <!-- EXPORT -->
@@ -8514,7 +8543,59 @@ function hsBuyersFromApp(shortYr){
 function hsFmt(n){return Math.round(n||0).toLocaleString('en-US');}
 function hsEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function hsFd(d){const[y,m,dd]=d.split('-');return (+dd)+'/'+(+m)+'/'+String((+y+543)%100).padStart(2,'0');}
-function initHarvestStat(){_hsRenderAll();}
+function initHarvestStat(){_hsRenderAll();if(_hsTab==='price')renderHsPrice();}
+// ══ #474 ประวัติราคาขายตามไซส์ (พี่สั่ง 14 พ.ย. 69 "ไว้ดูเวลาขอราคาขาย") ══
+//   ข้อมูล: D.harvestLog (ชีตเดิม 2560–ก.ค. 69) ถึงวันสุดท้ายของมัน + hsHarvestRows() (รอบเลี้ยงในแอป) หลังจากนั้น — กันนับซ้ำช่วงที่ทับกัน
+//   ตัดราคา < 20 (ข้อมูลผิด เช่น 1.23) · เฉลี่ยถ่วงน้ำหนักตาม กก. · ช่วงไซส์ตามที่พี่ตกลง (ใช้ไปก่อน รอเก็บว่าต้องเปลี่ยนไหม)
+const HSP_B=[[0,25,'≤25'],[26,30,'26–30'],[31,35,'31–35'],[36,40,'36–40'],[41,50,'41–50'],[51,60,'51–60'],[61,70,'61–70'],[71,80,'71–80'],[81,100,'81–100'],[101,99999,'100+']];
+let _hsTab='stat',_hspBand=null;
+function hsTab(t){_hsTab=t;
+  document.getElementById('hs-pane-stat').hidden=t!=='stat';document.getElementById('hs-pane-price').hidden=t!=='price';
+  document.getElementById('hs-tab-stat').classList.toggle('on',t==='stat');document.getElementById('hs-tab-price').classList.toggle('on',t==='price');
+  if(t==='price')renderHsPrice();}
+function hspPoints(){
+  const H=(D.harvestLog||[]).filter(h=>h&&h.date);
+  const cut=H.reduce((m,h)=>h.date>m?h.date:m,'');
+  const out=[];
+  H.forEach(h=>{const pr=+h.price,sz=+h.size;if(pr>=20&&sz>0)out.push({date:String(h.date).slice(0,10),pond:h.pondName||'',size:sz,price:pr,kg:+h.weight||1,buyer:buyerName(h.buyer||''),ph:h.type==='พาเชียล'});});
+  hsHarvestRows().forEach(r=>{if(r.date>cut&&r.price>=20&&r.size>0)out.push({date:r.date,pond:r.pond,size:r.size,price:r.price,kg:r.kg||1,buyer:r.buyer||'',ph:r.type==='พาเชียล'});});
+  return out.sort((a,b)=>b.date.localeCompare(a.date));
+}
+function hspBandOf(sz){const i=HSP_B.findIndex(b=>sz>=b[0]&&sz<=b[1]);return i<0?0:i;}
+function hspSet(i){_hspBand=i;renderHsPrice();}
+function renderHsPrice(){
+  const el=document.getElementById('hs-pane-price');if(!el)return;
+  const pts=hspPoints();
+  if(!pts.length){el.innerHTML='<div class="card">ยังไม่มีข้อมูลการขาย</div>';return;}
+  if(_hspBand==null)_hspBand=hspBandOf(pts[0].size);
+  const b=HSP_B[_hspBand],sel=pts.filter(x=>x.size>=b[0]&&x.size<=b[1]);
+  const TH=HV_MONTHS_S,be=y=>+y+543,fd=d=>{const[y,m,dd]=d.split('-');return(+dd)+' '+TH[+m-1]+' '+String(be(y)).slice(2);};
+  const wavg=a=>Math.round(a.reduce((s,x)=>s+x.price*x.kg,0)/a.reduce((s,x)=>s+x.kg,0));
+  const t=today(),mon=t.slice(5,7),from12=addDaysStr(t,-365);
+  const chips='<div class="hsp-chips">'+HSP_B.map((x,i)=>'<button type="button" class="'+(i===_hspBand?'on':'')+'" onclick="hspSet('+i+')">'+x[2]+'</button>').join('')+'</div>';
+  if(!sel.length){el.innerHTML=chips+'<div class="card">ไซส์ '+b[2]+' ยังไม่เคยขาย</div>';return;}
+  const last=sel[0],y12=sel.filter(x=>x.date>=from12),lo=Math.min(...sel.map(x=>x.price)),hi=Math.max(...sel.map(x=>x.price));
+  const kpi='<div class="card"><div class="hsp-ct">ไซส์ '+b[2]+' ตัว/กก.<span>'+sel.length+' ครั้ง · ตั้งแต่ปี '+be(sel[sel.length-1].date.slice(0,4))+'</span></div><div class="hsp-big">'
+    +'<div class="hsp-k"><div class="l">ขายล่าสุด</div><div class="v">฿'+hsFmt(last.price)+'</div><div class="s">'+fd(last.date)+' · '+hsEsc(last.pond)+' · ไซส์ '+last.size+(last.buyer?' · '+hsEsc(last.buyer):'')+'</div></div>'
+    +(y12.length?'<div class="hsp-k g"><div class="l">12 เดือนล่าสุด</div><div class="v">฿'+wavg(y12)+'</div><div class="s">'+y12.length+' ครั้ง · ต่ำสุด '+Math.min(...y12.map(x=>x.price))+' · สูงสุด '+Math.max(...y12.map(x=>x.price))+'</div></div>'
+      :'<div class="hsp-k g"><div class="l">12 เดือนล่าสุด</div><div class="v">—</div><div class="s">ไม่ได้ขายไซส์นี้</div></div>')+'</div></div>';
+  const bym={};y12.forEach(x=>{if(x.buyer)(bym[x.buyer]=bym[x.buyer]||[]).push(x);});
+  const bl=Object.entries(bym).sort((a,c)=>wavg(c[1])-wavg(a[1]));
+  const buyers=bl.length?'<div class="card"><div class="hsp-ct">แพ · 12 เดือนล่าสุด<span>เฉลี่ยถ่วงน้ำหนัก</span></div>'+bl.map(([k,a])=>'<div class="hsp-by"><span><b>'+hsEsc(k)+'</b> · '+a.length+' ครั้ง</span><span><b class="pr">฿'+wavg(a)+'</b> ('+Math.min(...a.map(x=>x.price))+'–'+Math.max(...a.map(x=>x.price))+')</span></div>').join('')+'</div>':'';
+  const yrs=[...new Set(pts.map(x=>x.date.slice(0,4)))].sort().reverse();
+  const L=v=>(hi>lo?((v-lo)/(hi-lo)*100):50).toFixed(0)+'%';
+  const yrow=yrs.map(y=>{const a=sel.filter(x=>x.date.startsWith(y));if(!a.length)return'';const mn=Math.min(...a.map(x=>x.price)),mx=Math.max(...a.map(x=>x.price)),av=wavg(a),sm=a.filter(x=>x.date.slice(5,7)===mon);
+    return'<tr><td><b>'+be(y)+'</b></td><td>'+a.length+'</td><td class="pr">'+av+'</td><td>'+mn+'–'+mx+' <span class="hsp-bar"><i style="left:'+L(mn)+';right:calc(100% - '+L(mx)+')"></i><u style="left:'+L(av)+'"></u></span></td><td>'+(sm.length?wavg(sm):'-')+'</td></tr>';}).join('');
+  const ytab='<div class="card"><div class="hsp-ct">รายปี<span>฿/กก.</span></div><div class="hsy-tw"><table class="hsp-tb"><tr><th>ปี</th><th>ครั้ง</th><th>เฉลี่ย</th><th>ต่ำ–สูง</th><th>'+TH[+mon-1]+'</th></tr>'+yrow+'</table></div></div>';
+  const lst='<div class="card"><div class="hsp-ct">ขายล่าสุด 8 ครั้ง</div><div class="hsy-tw"><table class="hsp-tb"><tr><th>วันที่</th><th>บ่อ</th><th>ไซส์</th><th>฿</th><th>แพ</th></tr>'
+    +sel.slice(0,8).map(x=>'<tr><td>'+fd(x.date)+(x.ph?' <small>พาเชียล</small>':'')+'</td><td>'+hsEsc(x.pond)+'</td><td>'+x.size+'</td><td class="pr">'+hsFmt(x.price)+'</td><td>'+hsEsc(x.buyer||'-')+'</td></tr>').join('')+'</table></div></div>';
+  const hmY=yrs.slice(0,8);let mn0=1e9,mx0=0;const cell={};
+  HSP_B.forEach(bb=>hmY.forEach(y=>{const a=pts.filter(x=>x.size>=bb[0]&&x.size<=bb[1]&&x.date.startsWith(y));if(a.length){const v=wavg(a);cell[bb[2]+y]=v;mn0=Math.min(mn0,v);mx0=Math.max(mx0,v);}}));
+  const col=v=>{const k=mx0>mn0?(v-mn0)/(mx0-mn0):.5;return'hsl(40,'+(45+k*40)+'%,'+(94-k*30)+'%)';};
+  const hm='<div class="card hsp-hmc"><div class="hsp-ct">ทุกไซส์ × ทุกปี<span>เฉลี่ย ฿/กก.</span></div><div class="hsy-tw"><table class="hsp-hm"><tr><th>ไซส์</th>'+hmY.map(y=>'<th>'+String(be(y)).slice(2)+'</th>').join('')+'</tr>'
+    +HSP_B.map((bb,i)=>'<tr class="'+(i===_hspBand?'sel':'')+'" onclick="hspSet('+i+')"><td>'+bb[2]+'</td>'+hmY.map(y=>{const v=cell[bb[2]+y];return v?'<td style="background:'+col(v)+'">'+v+'</td>':'<td>·</td>';}).join('')+'</tr>').join('')+'</table></div></div>';
+  el.innerHTML=chips+'<div class="hsp-two"><div>'+kpi+buyers+lst+'</div><div>'+ytab+hm+'</div></div>';
+}
 function hsSetYr(yr){_hsYr=yr;_hsRenderAll();}
 function _hsRenderAll(){
   const all=hsHarvestRows();
