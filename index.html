@@ -318,6 +318,12 @@ body.role-admin .side-nav .sn-link.admin-only{display:block!important}
 .fs-k.ok{border-color:var(--ok);background:var(--ob)}.fs-k.wa{border-color:var(--w);background:var(--wb)}
 .fs-find{background:var(--sf);border:2px solid var(--p);border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:calc(15px * var(--ui-scale));line-height:1.65}
 .fs-find .g{color:var(--ok)}.fs-find .r{color:var(--d)}
+.fs-fix{background:#FFF4E0;border:2px solid var(--w);border-radius:14px;padding:12px 14px;margin-bottom:12px}
+.fs-fix h4{margin:0 0 6px;font-size:calc(15px * var(--ui-scale))}
+.fs-fix table{width:100%;border-collapse:collapse;font-size:calc(13.5px * var(--ui-scale));font-variant-numeric:tabular-nums;margin:6px 0 10px}
+.fs-fix th{text-align:right;font-size:calc(12px * var(--ui-scale));padding:4px 6px;border-bottom:1.5px solid var(--tx)}.fs-fix th:first-child,.fs-fix td:first-child{text-align:left}
+.fs-fix td{text-align:right;padding:5px 4px;border-bottom:1px solid var(--bd);white-space:nowrap}.fs-fix td b{color:var(--p)}
+.fs-fix .btn{width:100%}
 .fs-card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;margin-bottom:12px;min-width:0}
 .fs-ct{font-weight:800;font-size:calc(15px * var(--ui-scale));margin-bottom:8px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}.fs-ct span{font-size:calc(12.5px * var(--ui-scale));font-weight:600}
 .fs-lg{display:flex;gap:14px;flex-wrap:wrap;font-size:calc(12.5px * var(--ui-scale));font-weight:700;margin-top:4px}.fs-lg i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
@@ -4534,6 +4540,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
 <div id="sec-fcrstd" class="sec">
   <div class="sec-hdr"><div class="sec-title">📐 เกณฑ์ FCR ของฟาร์ม</div></div>
   <div class="fs-sub">คิดย้อนจากผลจับจริงของบ่อที่ปิดแล้ว · อัปเดตเองทุกครั้งที่ปิดบ่อ</div>
+  <div id="fs-fix"></div>
   <div id="fs-body"></div>
 </div>
 <div id="sec-hatchery" class="sec">
@@ -10017,7 +10024,62 @@ function fcrStdTable(crops){
   return Object.keys(byK).map(Number).sort((a,b)=>a-b).map(k=>{const l=byK[k],av=f=>l.reduce((a,r)=>a+f(r),0)/l.length;const fcr=av(r=>r.fcr);
     return{k,n:l.length,age:av(r=>r.age),abw:av(r=>r.abw),rule:fcrFarmAt(k),fcr,lo:Math.min(...l.map(r=>r.fcr)),hi:Math.max(...l.map(r=>r.fcr)),guide:Math.round(fcr*20)/20};});
 }
+// ══ #479 พี่สั่ง 15 พ.ย. 69: ปรับรอดในการสุ่มของบ่อที่เลี้ยงอยู่ให้ตรงเกณฑ์ FCR ใหม่ (#478) ══
+//   เหตุ: รอดที่กรอกไว้คิดด้วยเกณฑ์เดิม → FCR ในแอป = เกณฑ์เดิม (1.5) แต่ปิดบ่อจริง ~1.7 → biomass สูงเกิน แจ้งแพพลาด
+//   รอดที่กรอก ≈ สูตรเดิม (ต่าง ≤ 2%) → ใช้สูตรใหม่ตรงๆ (spFeedSurv ทศนิยม 1) · ต่างเกินนั้น (ใส่เอง) → ปรับตามสัดส่วน ใหม่/เดิม คงส่วนต่างที่ใส่ไว้
+//   biomass ที่เก็บในครั้งสุ่มคิดใหม่ตาม · ทำครั้งเดียว กล่องหายเองเมื่อไม่เหลือให้ปรับ
+const FS_FIX_LAST='2026-11-15';   // ครั้งสุ่มหลังวันนี้คิดด้วยเกณฑ์ใหม่อยู่แล้ว → ไม่แตะ · ครั้งที่ปรับแล้วติด fsFix=1 กันปรับซ้ำ
+function fcrFarmAtOld(k){return k>0?+(FCR_BASE+FCR_STEP*Math.floor(k/2)).toFixed(2):FCR_BASE;}
+function fsFixList(){
+  const out=[];
+  (D.ponds||[]).filter(p=>p.startDate&&!p.harvestDate&&pondCurAge(p)>0).forEach(p=>{
+    const rel=pRelease(p);if(!rel)return;
+    const S=(p.samples||[]).filter(r=>r&&r.date&&r.date>=p.startDate&&+r.abw>0&&r.survivalRate!=null&&r.survivalRate!=='').sort((a,b)=>a.date.localeCompare(b.date));
+    const ch=[],skip=[];
+    S.forEach((r,i)=>{
+      if(r.fsFix||r.date>FS_FIX_LAST)return;
+      const fs=spFeedSurv(p,r.date,+r.abw);if(!fs)return;
+      const k=i+1,fo=fcrFarmAtOld(k),fn=fcrFarmAt(k);if(fo===fn)return;
+      const ph=partialTotals(spPartialsOn(p,r.date));
+      const oldX=((fs.feed/fo-ph.kg)*1000/(+r.abw)+ph.count)/rel*100;
+      const cur=+r.survivalRate,man=Math.abs(cur-oldX)>2,nw=Math.round((man?cur*fs.surv/oldX:fs.surv)*10)/10;
+      if(man)skip.push({r,cur,oldX});
+      if(Math.abs(cur-nw)<0.05)return;
+      ch.push({r,cur,nw});
+    });
+    if(!ch.length&&!skip.length)return;
+    const lat=S[S.length-1],latCh=ch.find(x=>x.r===lat);
+    const bioOf=sv=>{const php=partialTotals(spPartialsOn(p,lat.date)).count;return Math.max(0,rel*sv/100-php)*(+lat.abw)/1000;};
+    out.push({p,ch,skip,lat,k:S.length,fNew:fcrFarmAt(S.length),bOld:latCh?bioOf(latCh.cur):null,bNew:latCh?bioOf(latCh.nw):null});
+  });
+  return out.sort((a,b)=>String(a.p.name).localeCompare(String(b.p.name),'th',{numeric:true}));
+}
+function renderFsFix(){
+  const el=document.getElementById('fs-fix');if(!el)return;
+  if(APP_ROLE!=='admin'){el.innerHTML='';return;}
+  const L=fsFixList(),n=L.reduce((a,x)=>a+x.ch.length,0);
+  if(!n){el.innerHTML='';return;}
+  const t=v=>(v/1000).toFixed(1);
+  el.innerHTML='<div class="fs-fix"><h4>⚠️ รอดในการสุ่มยังคิดด้วยเกณฑ์ FCR เดิม · '+L.filter(x=>x.ch.length).length+' บ่อ</h4>'
+    +'<div>ปรับให้ตรงเกณฑ์ใหม่ → ตันในบ่อตรงกับตอนจับ</div>'
+    +'<table><tr><th>บ่อ</th><th>สุ่ม</th><th>FCR</th><th>รอด %</th><th>ตัน</th></tr>'
+    +L.filter(x=>x.ch.length).map(x=>{const c=x.ch.find(y=>y.r===x.lat);
+      return '<tr><td><b style="color:var(--tx)">'+mpEsc(x.p.name)+'</b></td><td>'+fD(x.lat.date).replace(/ \d+$/,'')+' #'+x.k+'</td><td>'+x.fNew.toFixed(1)+'</td>'
+        +'<td>'+(c?c.cur+' → <b>'+c.nw+'</b>':'—')+'</td><td>'+(c?t(x.bOld)+' → <b>'+t(x.bNew)+'</b>':'—')+'</td></tr>';}).join('')
+    +'</table>'
+    +'<button type="button" class="btn btn-p" onclick="fsFixApply()">✅ ปรับรอดทั้งหมด ('+n+' ครั้งสุ่ม)</button></div>';
+}
+function fsFixApply(){
+  if(APP_ROLE!=='admin')return;
+  const L=fsFixList(),n=L.reduce((a,x)=>a+x.ch.length,0);if(!n)return;
+  if(!confirm('ปรับรอดในการสุ่ม '+n+' ครั้ง ('+L.filter(x=>x.ch.length).length+' บ่อ) ให้ตรงเกณฑ์ FCR ใหม่?'))return;
+  L.forEach(x=>x.ch.forEach(c=>{c.r.survivalRate=c.nw;c.r.fsFix=1;const b=sampleInPondBiomass(x.p,c.r);c.r.biomass=b!=null?Math.round(b):null;}));
+  save();
+  renderFcrStd();if(typeof renderOv==='function')renderOv();
+  alert('ปรับแล้ว '+n+' ครั้งสุ่ม');
+}
 function renderFcrStd(){
+  renderFsFix();
   const el=document.getElementById('fs-body');if(!el||APP_ROLE!=='admin')return;
   const crops=fcrStdCrops(),use=crops.filter(c=>!c.skip),low=crops.filter(c=>c.skip==='lowsurv'),nod=crops.filter(c=>c.skip==='nodata');
   const tb=fcrStdTable(crops);
