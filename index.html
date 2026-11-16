@@ -15400,7 +15400,7 @@ function renderCostSummary(){
     '<div style="overflow-x:auto"><table class="tbl"><thead><tr>'+
       '<th>บ่อ</th><th>DOC</th><th>เนื้อกุ้ง</th>'+
       '<th>ลูกกุ้ง</th><th>อาหาร</th><th>ค่าแรง</th><th>ค่าไฟ</th><th>อื่นๆ</th>'+
-      '<th>ต้นทุนสะสม</th><th>ต้นทุน/กก.</th><th class="cs-ec">คาดจับได้</th><th class="cs-ec">คาด ฿/กก. ตอนปิด</th><th>ต้นทุน/วัน</th>'+
+      '<th>ต้นทุนสะสม</th><th>ต้นทุน/กก.</th>'+(ceS&&ceS.wtN?'<th class="cs-ec">คาดจับได้</th>':'')+'<th class="cs-ec">คาด ฿/กก. ตอนปิด</th><th>ต้นทุน/วัน</th>'+
     '</tr></thead><tbody>'+
     rows.map(r=>{
       const c=r.rc;
@@ -15416,7 +15416,7 @@ function renderCostSummary(){
         '<td>'+money(c.chem+c.shared+c.fuel)+'</td>'+
         '<td style="font-weight:700">'+money(c.total)+'</td>'+
         '<td style="font-weight:700;color:var(--p)">'+(r.perKg!=null?money(r.perKg):'-')+'</td>'+
-        '<td class="cs-ec">'+(r.est?money(r.est.kg)+' กก.':'-')+'</td>'+
+        (ceS&&ceS.wtN?'<td class="cs-ec">'+(r.est?money(r.est.kg)+' กก.':'-')+'</td>':'')+
         '<td class="cs-ec" style="font-weight:800">'+(r.est?money(r.est.perKg):'-')+'</td>'+
         '<td>'+(r.perDay!=null?money(r.perDay):'-')+'</td></tr>';
     }).join('')+
@@ -15424,7 +15424,7 @@ function renderCostSummary(){
       '<td>'+money(T.fry)+'</td><td>'+money(T.feed)+'</td><td>'+money(T.labor)+'</td><td>'+money(T.elec)+'</td>'+
       '<td>'+money(T.other)+'</td><td>'+money(T.total)+'</td>'+
       '<td>'+(T.kg>0?money(T.total/T.kg):'-')+'</td>'+
-      '<td class="cs-ec">'+(T.ek>0?money(T.ek)+' กก.':'-')+'</td><td class="cs-ec">'+(T.ek>0?money(T.ec/T.ek):'-')+'</td><td>'+money(T.day)+'</td></tr>'+
+      (ceS&&ceS.wtN?'<td class="cs-ec">'+(T.ek>0?money(T.ek)+' กก.':'-')+'</td>':'')+'<td class="cs-ec">'+(T.ek>0?money(T.ec/T.ek):'-')+'</td><td>'+money(T.day)+'</td></tr>'+
     '</tbody></table></div>'+
     '<div class="hint" style="margin-top:10px">แตะที่แถวเพื่อเปิดหน้ารายละเอียดบ่อนั้น · '+
       '<b>เนื้อกุ้ง</b> = ที่อยู่ในบ่อ + ที่พาเชียลไปแล้ว · '+
