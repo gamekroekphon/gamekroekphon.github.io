@@ -15335,11 +15335,15 @@ function closeEstStats(){
   const rows=[];
   (D.ponds||[]).forEach(p=>(p.cropHistory||[]).forEach(c=>{
     if(!c||!(String(c.closeDate||'')>=EST_BASE_FROM))return;
-    const r=cropEstPair(p,c);if(r&&r.estKg>0&&r.actKg>0&&r.kgAll>0)rows.push(Object.assign({pond:p.name},r));
+    const r=cropEstPair(p,c);if(r&&r.estKg>0&&r.actKg>0&&r.kgAll>0)rows.push(Object.assign({pond:p.name,close:c.closeDate},r));
   }));
   if(!rows.length)return m.ceStats=null;
+  // #480 พี่สั่ง 16 พ.ย. 69: อัตราจับจริง (wt) เรียนเฉพาะรอบที่ปิดหลังเปลี่ยนเกณฑ์ FCR (#478/#479 · FS_FIX_LAST)
+  //   รอบก่อนนั้นประเมินด้วยเกณฑ์เดิม (ตันในบ่อสูงเกิน ~12% → 88%) — เอามาคูณกับตันในบ่อเกณฑ์ใหม่ = หักซ้ำ
+  //   ยังไม่มีรอบใหม่ → ใช้ 100% · ค่าจับ+ส่วนแบ่ง (add) ไม่เกี่ยวกับ FCR ใช้ทุกรอบเหมือนเดิม
+  const nw=rows.filter(r=>r.close>FS_FIX_LAST);
   return m.ceStats={n:rows.length,ponds:rows.map(r=>r.pond),
-    wt:rows.reduce((s,r)=>s+r.actKg/r.estKg,0)/rows.length,
+    wt:nw.length?nw.reduce((s,r)=>s+r.actKg/r.estKg,0)/nw.length:1,wtN:nw.length,wtPonds:nw.map(r=>r.pond),
     add:rows.reduce((s,r)=>s+r.add/r.kgAll,0)/rows.length};
 }
 // คาดตอนปิด ของบ่อที่กำลังเลี้ยง: กก. = พาเชียลแล้ว + ในบ่อ × อัตราจับจริง · ต้นทุน = สะสม + ค่าจับ/ส่วนแบ่ง × กก.
@@ -15387,7 +15391,7 @@ function renderCostSummary(){
       '<div class="b"><div class="k">ต้นทุนรวม/กก.</div><div class="v">'+(T.kg>0?money(T.total/T.kg):'-')+'</div></div>'+
       '<div class="b"><div class="k">จำนวนบ่อ</div><div class="v">'+rows.length+' <span style="font-size:calc(12px * var(--ui-scale));color:var(--tx3)">บ่อ</span></div></div>'+
     '</div>'+
-    (ceS?'<div class="cs-est">🎯 <b>คาดตอนปิด</b> = ค่าเฉลี่ยจริงของฟาร์ม · ค่าจับ+ส่วนแบ่ง <b>+'+ceS.add.toFixed(1)+' ฿/กก.</b> · จับได้จริง <b>'+Math.round(ceS.wt*100)+'%</b> ของที่ประเมิน · จาก '+ceS.n+' รอบ ('+ceS.ponds.join(' ')+')</div>':'')+
+    (ceS?'<div class="cs-est">🎯 <b>คาดตอนปิด</b> = ค่าเฉลี่ยจริงของฟาร์ม · ค่าจับ+ส่วนแบ่ง <b>+'+ceS.add.toFixed(1)+' ฿/กก.</b> ('+ceS.n+' รอบ) · จับได้จริง <b>'+Math.round(ceS.wt*100)+'%</b> ของที่ประเมิน · '+(ceS.wtN?ceS.wtN+' รอบหลังเปลี่ยนเกณฑ์ FCR ('+ceS.wtPonds.join(' ')+')':'ยังไม่มีบ่อปิดหลังเปลี่ยนเกณฑ์ FCR')+'</div>':'')+
     '<div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:11px">'+
       '<span style="font-size:calc(12.5px * var(--ui-scale));color:var(--tx2);font-weight:600">เรียงตาม</span>'+
       sortBtn('doc','อายุบ่อ')+sortBtn('total','ต้นทุนสะสม')+
