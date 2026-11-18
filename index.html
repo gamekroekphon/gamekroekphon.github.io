@@ -2487,6 +2487,17 @@ body.role-vip .sn-top:is([onclick*="'kan'"],[onclick*="'users'"]),
 body.role-vip .mob-sheet-item:is([data-t="entry"],[data-t="feed"],[data-t="sample"],[data-t="watlog"],[data-t="harvest"],[data-t="users"],[data-t="kan"],[data-t="stock-sale"]),
 body.role-vip #bnav-entry,body.role-vip #bnav-feed,body.role-vip #bnav-sample,
 body.role-vip :is(button,a,.btn,span,div)[onclick]:is([onclick*="save" i],[onclick*="delete" i],[onclick*="remove" i],[onclick*="edit" i],[onclick*="add" i],[onclick*="openPrItem"],[onclick*="togglePrOff"],[onclick*="jumpHarvest"],[onclick*="jumpMort"],[onclick*="openSale"],[onclick*="openCropModal"],[onclick*="finalize" i],[onclick*="openBill"],[onclick*="startCount" i],[onclick*="skMove" i],[onclick*="fsFix" i],[onclick*="openCheck" i],[onclick*="newCrop" i],[onclick*="openPh" i],[onclick*="ownEdit" i]),
+body.role-vip :is(#tab-forecast,#tab-risk,#pdc-surv,#pdc-risk,.pd-why),
+body.role-vip .sn-top[onclick*="'forecast'"],body.role-vip .sn-link[onclick*="'risk'"],body.role-vip .mob-sheet-item:is([data-t="forecast"],[data-t="risk"]),
+body.role-vip [onclick]:is([onclick*="jumpEntry"],[onclick*="jumpFeed"]){display:none!important}
+.pdv-rel{background:var(--sf);border:1.5px solid var(--bd);border-radius:14px;padding:10px 12px;margin-bottom:10px;font-size:calc(13.5px * var(--ui-scale));line-height:1.55;color:var(--tx)}
+.pdv-rel b{font-size:calc(14.5px * var(--ui-scale))}
+.pdv-hv{width:100%;border-collapse:collapse;font-size:calc(13px * var(--ui-scale));font-variant-numeric:tabular-nums;color:var(--tx)}
+.pdv-hv th{text-align:right;font-size:calc(12px * var(--ui-scale));padding:4px 4px;border-bottom:1.5px solid var(--tx)}.pdv-hv th:first-child,.pdv-hv td:first-child{text-align:left}
+.pdv-hv td{text-align:right;padding:6px 4px;border-bottom:1px solid var(--bd)}.pdv-hv tr.sum td{font-weight:800;border-top:1.5px solid var(--tx);border-bottom:0}
+.pdv-no{display:inline-block;background:var(--pl);color:var(--p);border-radius:6px;padding:0 6px;font-size:calc(12px * var(--ui-scale));font-weight:800;white-space:nowrap}
+.pdv-hh{font-weight:800;font-size:calc(14.5px * var(--ui-scale));margin-bottom:6px;color:var(--tx)}
+.hsv-b{display:block;font-size:calc(12.5px * var(--ui-scale));font-weight:600;color:var(--tx);margin-top:2px}
 body.role-vip [onclick]:is([onclick*="goTabByName('entry')"],[onclick*="goTabByName('feed')"],[onclick*="goTabByName('sample')"],[onclick*="goTabByName('watlog')"],[onclick*="goTabByName('harvest')"]),
 body.role-vip :is(#skp-tx,#skb-tx,#skb-newitem,#skb-sale,#skb-cash,#lp-staff>.card:first-child,#ep-bill,.elec-sub-btn:first-child,.ovk-js,.vip-hide-form),
 body.role-vip :is(button,div)[onclick]:is([onclick*="stockTab('tx'"],[onclick*="stockTab('newitem'"],[onclick*="stockTab('sale'"],[onclick*="stockTab('cash'"],[onclick*="palmQuick"],[onclick*="clearStaff"],[onclick*="clearElecBill"],[onclick*="clearLab"],[onclick*="clearStockTx"]),
@@ -5939,13 +5950,14 @@ function ownMenuGo(id){
 }
 function renderOwnMenu(){
   const el=document.getElementById('own-menu');if(!el)return;
-  const all={};OWN_MENU.forEach(g=>g[1].forEach(t=>{all[t[0]]=t;}));
+  const OM=OWN_MENU.map(g=>[g[0],g[1].filter(t=>!(IS_VIP&&t[0]==='forecast'))]);   // #487 VIP ไม่มีคาดการณ์
+  const all={};OM.forEach(g=>g[1].forEach(t=>{all[t[0]]=t;}));
   const rec=ownMenuRecent().filter(id=>all[id]);
   const Q=String.fromCharCode(39);
   const btn=t=>'<button type="button" class="omn-t'+(t[3]?' wide':'')+'" onclick="ownMenuGo('+Q+t[0]+Q+')"><i>'+t[1]+'</i><b>'+t[2]+'</b></button>';
   el.innerHTML='<div class="sec-title" style="margin:2px 2px 10px">🧭 จะดูอะไร</div>'
     +(rec.length?'<div class="omn-rec">'+rec.map(id=>'<button type="button" onclick="ownMenuGo('+Q+id+Q+')">'+all[id][1]+' '+all[id][2]+'</button>').join('')+'</div>':'')
-    +OWN_MENU.map(g=>'<div class="omn-g">'+g[0]+'</div><div class="omn-grid">'+g[1].map(btn).join('')+'</div>').join('')
+    +OM.map(g=>'<div class="omn-g">'+g[0]+'</div><div class="omn-grid">'+g[1].map(btn).join('')+'</div>').join('')
     +'<button type="button" class="omn-all" onclick="toggleMobMenu(this)">🔍 ค้นหา / เมนูทั้งหมด</button>';
 }
 function pdGoBack(){
@@ -5991,6 +6003,14 @@ function renderOwnHome(){
       const yr=pr.kgRai;
       const chip=yr==null?'':yr>=PARTIAL_YIELD_CEILING?'<span class="own-chip d">เต็มบ่อ</span>':yr>=PARTIAL_YIELD_TARGET?'<span class="own-chip w">ถึงเกณฑ์พาเชียล</span>':'';
       const f=getFCR(p);
+      if(IS_VIP){   // #487 ตัวเลขจริงเท่านั้น: ไซส์ ณ สุ่ม · น้ำหนักกุ้งในบ่อ · จับไปแล้ว · ต้นทุน
+        return '<button type="button" class="own-pc" onclick="openPondDetail(\''+p.id+'\')">'+head+'<div class="own-g">'
+          +'<div><div class="l">ไซส์ '+atSmpTxt(pr.smpDate)+'</div><div class="v">'+Math.round(pr.sizeNow)+' <small>ตัว/กก.</small></div></div>'
+          +'<div><div class="l">น้ำหนักกุ้งในบ่อ</div><div class="v">'+(pr.bioNow/1000).toFixed(1)+' <small>ตัน</small></div></div>'
+          +'<div><div class="l">ต้นทุนสะสม</div><div class="v">'+M(c)+' <small>ล้าน</small></div>'+(perKg!=null?'<div class="l2">'+Math.round(perKg).toLocaleString()+' ฿/กก.</div>':'')+'</div>'
+          +'<div><div class="l">จับไปแล้ว</div><div class="v">'+(pr.phKg>0?(pr.phKg/1000).toFixed(1)+' <small>ตัน</small>':'-')+'</div></div>'
+          +'</div></button>';
+      }
       return '<button type="button" class="own-pc" onclick="openPondDetail(\''+p.id+'\')">'+head+'<div class="own-g">'
         +'<div><div class="l">ไซส์ '+atSmpTxt(pr.smpDate)+'</div><div class="v">'+Math.round(pr.sizeNow)+' <small>ตัว/กก.</small></div></div>'
         +'<div class="mon"><div class="l">จันทร์ '+monTxt+'</div><div class="v">~'+Math.round(pr.sizeMon)+' <small>· '+(pr.kgMon/1000).toFixed(1)+' ตัน</small></div></div>'
@@ -5999,7 +6019,7 @@ function renderOwnHome(){
         +'<div class="mon"><div class="l">กก./ไร่ จันทร์หน้า</div><div class="v">'+(yr!=null?Math.round(yr).toLocaleString():'-')+'</div>'+chip+'</div>'
         +'</div></button>';
     }).join('');
-    document.getElementById('own-sum').innerHTML=ps.length?'<span>จันทร์หน้า ~'+(tons/1000).toFixed(1)+' ตัน</span>'+(adm?'<span>ต้นทุนรวม '+M(cost)+' ล้าน</span>':''):'';
+    document.getElementById('own-sum').innerHTML=ps.length?(IS_VIP?'':'<span>จันทร์หน้า ~'+(tons/1000).toFixed(1)+' ตัน</span>')+(adm?'<span>ต้นทุนรวม '+M(cost)+' ล้าน</span>':''):'';
     document.getElementById('own-ponds').innerHTML=tiles||'<div class="card">ยังไม่มีบ่อที่มีกุ้งในโซนนี้</div>';
   }finally{_ownBusy=false;}
 }
@@ -8742,6 +8762,11 @@ function hsRenderKpi(rs,all,yr){
 function hsRenderTable(rs,yr){
   const el=document.getElementById('hs-table');if(!el)return;
   if(!rs.length){el.innerHTML='<div class="hsy-empty">ยังไม่มีรายการจับกุ้งในแอป</div>';return;}
+  // #487 VIP: เลขครั้งพาเชียลต่อรอบ (นับจากทุกปีของรอบนั้น)
+  const _hk=r=>r.pondId+'|'+r.ci+'|'+r.date+'|'+Math.round(r.kg),_hn={};
+  if(IS_VIP){const g={};hsHarvestRows().filter(r=>r.type==='พาเชียล').forEach(r=>{(g[r.pondId+'|'+r.ci]=g[r.pondId+'|'+r.ci]||[]).push(r);});
+    Object.values(g).forEach(a=>a.sort((x,y)=>x.date.localeCompare(y.date)).forEach((r,i)=>{_hn[_hk(r)]=i+1;}));}
+  const _ht=r=>r.type==='พาเชียล'&&_hn[_hk(r)]?'พาเชียล ครั้งที่ '+_hn[_hk(r)]:r.type;
   let h='<table class="hsy-t hsy-mt"><thead><tr><th>บ่อ</th><th>วัน</th><th>จับ</th><th class="num">อายุ</th><th class="num">ไซส์</th><th class="num">ราคา</th><th>แพ</th><th class="num">จำนวนเงิน</th><th class="num">กก.</th></tr></thead><tbody>';
   const lastM=Math.max(...rs.map(r=>r.m));
   for(let m=1;m<=lastM;m++){
@@ -8751,7 +8776,7 @@ function hsRenderTable(rs,yr){
     mr.forEach(r=>{
       h+=`<tr class="hsy-r" tabindex="0" title="${r.ci==null?'เปิดหน้าบ่อ':'เปิดประวัติรอบ'} ${hsEsc(r.pond)}" onclick="hsOpen('${hsEsc(r.pondId)}',${r.ci==null?'null':r.ci})" onkeydown="if(event.key==='Enter')hsOpen('${hsEsc(r.pondId)}',${r.ci==null?'null':r.ci})">`
         +`<td><b>${hsEsc(r.pond)}</b></td><td>${hsFd(r.date)}</td>`
-        +`<td><span class="hsy-chip ${r.type==='ปิดบ่อ'?'c-close':'c-part'}">${r.type}</span>${r.pending?' <span class="hsy-chip c-wait" title="บันทึกผลจับแล้ว ยังไม่กดปิดรอบ">รอปิดรอบ</span>':''}</td>`
+        +`<td><span class="hsy-chip ${r.type==='ปิดบ่อ'?'c-close':'c-part'}">${_ht(r)}</span>${r.pending?' <span class="hsy-chip c-wait" title="บันทึกผลจับแล้ว ยังไม่กดปิดรอบ">รอปิดรอบ</span>':''}</td>`
         +`<td class="num">${r.age!=null?r.age+' วัน':'-'}</td><td class="num">${r.size?r.size+' ตัว':'-'}</td>`
         +`<td class="num">${r.price?hsFmt(r.price):'-'}</td><td>${r.buyer?hsEsc(r.buyer):'<span class="hsy-miss">ไม่ระบุ</span>'}</td>`
         +`<td class="num">${hsFmt(r.baht)}</td><td class="num">${hsFmt(r.kg)}</td></tr>`;
@@ -8768,6 +8793,9 @@ function hsRenderTable(rs,yr){
     const mr=rs.filter(r=>r.m===m);if(!mr.length)continue;
     cd+=`<div class="hsy-cmh">${HV_MONTHS_L[m-1]}</div>`;
     mr.forEach(r=>{
+      if(IS_VIP){cd+=`<div class="hsy-hc" role="button" tabindex="0" onclick="${go(r)}" onkeydown="if(event.key==='Enter')${go(r)}">`
+        +`<div class="a"><span class="nm">${hsEsc(r.pond)} <span class="hsy-chip ${r.type==='ปิดบ่อ'?'c-close':'c-part'}">${_ht(r)}</span>${r.pending?' <span class="hsy-chip c-wait">รอปิดรอบ</span>':''}</span><span class="m">฿${hsFmt(r.baht)}</span></div>`
+        +`<span class="hsv-b">${hsFd(r.date).replace(/\/\d{2}$/,'')}${r.age!=null?' · '+r.age+' วัน':''} · ไซส์ ${r.size||'-'} · ${hsFmt(r.kg)} กก. · ${r.price?'฿'+hsFmt(r.price):'-'} · ${r.buyer?hsEsc(r.buyer):'ไม่ระบุแพ'}</span></div>`;return;}
       cd+=`<div class="hsy-hc" role="button" tabindex="0" onclick="${go(r)}" onkeydown="if(event.key==='Enter')${go(r)}">`
         +`<div class="a"><span class="nm">${hsEsc(r.pond)}<small>${hsFd(r.date).replace(/\/\d{2}$/,'')}${r.age!=null?' · '+r.age+' วัน':''}</small> <span class="hsy-chip ${r.type==='ปิดบ่อ'?'c-close':'c-part'}">${r.type}</span>${r.pending?' <span class="hsy-chip c-wait">รอปิดรอบ</span>':''}</span><span class="m">฿${hsFmt(r.baht)}</span></div>`
         +`<div class="b"><span>ไซส์ ${r.size||'-'} · ${r.price?'฿'+hsFmt(r.price):'-'} · ${r.buyer?hsEsc(r.buyer):'ไม่ระบุแพ'}</span><span>${hsFmt(r.kg)} กก.</span></div></div>`;
@@ -9765,7 +9793,7 @@ function renderPondDetail(id){
   const pdFg=pdFeedGrowthRows(p),pdFgLast=pdFg.length?pdFg[pdFg.length-1]:null;
   const pdT=v=>v>=1000?(Math.round(v/100)/10).toLocaleString()+' <small>ตัน</small>':Math.round(v).toLocaleString()+' <small>กก.</small>';
   const pdNoKpi=cls==='prep';
-  const pdKpi=pdNoKpi?'':`<div class="pd-k4">
+  const pdKpi=pdNoKpi?'':IS_VIP?pdVipKpi(p,{sizeCount,lat,biomass,pdYr,latFeed,fcr}):`<div class="pd-k4">
     <div class="pd-k"><div class="l">ไซส์</div><div class="v">${sizeCount??'—'}${sizeCount?' <small>ตัว/กก.</small>':''}</div>
       <div class="s">${prevSizeCount?'จาก '+prevSizeCount:''}${pdFgLast&&pdFgLast.adg>0?(prevSizeCount?' · ':'')+'โต <b class="'+(pdFgLast.adgCh!=null&&pdFgLast.adgCh<0?'dn':'up')+'">'+pdFgLast.adg.toFixed(2)+' ก./วัน '+(pdFgLast.adgCh!=null&&pdFgLast.adgCh<0?'▼':'▲')+'</b>':''}${lat&&lat.date?' · สุ่ม '+fD(lat.date).replace(/\s\d{2}$/,''):''}</div></div>
     <div class="pd-k${pdYrHit?' good':''}"><div class="l">กุ้งในบ่อ</div><div class="v">${biomass?pdT(biomass):'—'}</div>
@@ -9856,6 +9884,7 @@ function renderPondDetail(id){
   if(!clsNoShrimp(cls))renderFarmCard(p);
   renderSurvivalCard(p);
   renderPdHarvestCard(p);
+  if(IS_VIP){const hc=document.getElementById('pdc-harvest'),fc=document.getElementById('pdc-feedhist');if(hc&&fc)fc.after(hc);}   // #487 VIP: จับ/พาเชียล อยู่ใต้อาหาร
   renderPdLabCard(p);try{renderPdLabUse(p);}catch(e){console.warn('labuse',e);}
   renderPdMortCard(p);
   renderPdCropHistCard(p);
@@ -9960,6 +9989,22 @@ function pdPrepCostCard(p){
   return pdCard('prepcost',
     `🧰 ต้นทุนเตรียมบ่อ <span style="color:var(--p);font-weight:800">${ceoMoney(total)}</span> <span class="pd-admin-tag">ADMIN</span>`,
     body);
+}
+// ── #487 VIP: กล่องวันปล่อย (ไซส์วันปล่อยจาก นน. PL) + KPI ตัวเลขจริง (ไม่มีรอดสะสม/เกณฑ์พาเชียล) ──
+function pdVipKpi(p,o){
+  const plw=parseFloat(p.plWeight)||0,rel=pRelease(p),st=parseFloat(p.stock)||0,bn=parseFloat(p.stockBonus)||0;
+  const pt=partialTotals(p.partialHarvests),n=(p.partialHarvests||[]).filter(r=>harvestRowKg(r)>0).length;
+  const T=v=>v>=1000?(Math.round(v/100)/10).toLocaleString()+' <small>ตัน</small>':Math.round(v).toLocaleString()+' <small>กก.</small>';
+  const ds=d=>fD(d).replace(/\s\d{2}$/,'');
+  return '<div class="pdv-rel"><b>🐣 วันปล่อย '+(p.startDate?fD(p.startDate):'-')+'</b><br>'
+    +[p.hatchery?mpEsc(p.hatchery):'',p.plType?mpEsc(p.plType):'',plw>0?'<b>ไซส์วันปล่อย '+Math.round(1000/plw).toLocaleString()+' ตัว/กก.</b> ('+plw+' ก./ตัว)':''].filter(Boolean).join(' · ')
+    +(rel?'<br>'+rel.toLocaleString()+' ตัว'+(bn?' (ซื้อ '+st.toLocaleString()+' + แถม '+bn.toLocaleString()+')':''):'')+'</div>'
+    +'<div class="pd-k4">'
+    +'<div class="pd-k"><div class="l">ไซส์'+(o.lat&&o.lat.date?' ณ สุ่ม '+ds(o.lat.date):'')+'</div><div class="v">'+(o.sizeCount??'—')+(o.sizeCount?' <small>ตัว/กก.</small>':'')+'</div><div class="s">'+(o.lat&&o.lat.abw?'ABW '+o.lat.abw+' ก.':'')+'</div></div>'
+    +'<div class="pd-k"><div class="l">น้ำหนักกุ้งในบ่อ</div><div class="v">'+(o.biomass?T(o.biomass):'—')+'</div><div class="s">'+(o.pdYr!=null?Math.round(o.pdYr).toLocaleString()+' กก./ไร่':'')+'</div></div>'
+    +'<div class="pd-k"><div class="l">จับไปแล้ว</div><div class="v">'+(pt.kg>0?T(pt.kg):'—')+'</div><div class="s">'+(n?n+' ครั้ง':'ยังไม่จับ')+'</div></div>'
+    +'<div class="pd-k"><div class="l">อาหารล่าสุด'+(o.latFeed&&o.latFeed.date?' · '+ds(o.latFeed.date):'')+'</div><div class="v">'+(o.latFeed&&o.latFeed.totalFeed!=null?o.latFeed.totalFeed.toLocaleString()+' <small>กก.</small>':'—')+'</div><div class="s">'+(o.fcr!=null?'FCR '+o.fcr:'')+'</div></div>'
+    +'</div>';
 }
 function pdCard(key,title,bodyHtml,extraCls,sumHtml){
   const open=_pdOpenCards.has(key);
@@ -10471,12 +10516,19 @@ function renderOvKpis(list,all){
   if(admin){
     const cost=list.reduce((s,m)=>s+ceoTotalCost(m.p),0);
     let ec=0,ek=0;list.forEach(m=>{const e=pondCloseEst(m.p,pondRunningCost(m.p),getLatestBiomass(m.p));if(e){ec+=e.cost;ek+=e.kg;}});
-    h+=K('','💰 ต้นทุนสะสม',V((cost/1e6).toFixed(2),'ล้าน'),ek>0?'คาดตอนปิด ~฿'+Math.round(ec/ek)+'/กก.':'','openCostSummary()','<div class="go">ดูต้นทุนทุกบ่อ ›</div>');
+    if(IS_VIP){let pc=0,pk=0;list.forEach(m=>{const k=(getLatestBiomass(m.p)||0)+partialTotals(m.p.partialHarvests).kg;if(k>0){pk+=k;pc+=ceoTotalCost(m.p);}});   // เฉพาะบ่อที่สุ่มแล้ว (ฐานเดียวกับการ์ดบ่อ)
+      h+=K('','💰 ต้นทุนสะสม',V((cost/1e6).toFixed(2),'ล้าน'),pk>0?'บ่อที่สุ่มแล้ว เฉลี่ย ฿'+Math.round(pc/pk)+'/กก.':'','openCostSummary()','<div class="go">ดูต้นทุนทุกบ่อ ›</div>');}
+    else h+=K('','💰 ต้นทุนสะสม',V((cost/1e6).toFixed(2),'ล้าน'),ek>0?'คาดตอนปิด ~฿'+Math.round(ec/ek)+'/กก.':'','openCostSummary()','<div class="go">ดูต้นทุนทุกบ่อ ›</div>');
   }else{
     const n=list.length,cnt=f=>list.filter(m=>f(m.p)).length;
     const wq=cnt(p=>(p.records||[]).some(r=>r.date===td)),fd=cnt(p=>(p.feedLog||[]).some(r=>r.date===td)),mt=cnt(p=>(p.mortalityLog||[]).some(r=>r.date===td));
     const ln=(ic,t,a,go)=>'<button type="button" class="ovk-j" onclick="'+go+'">'+ic+' '+t+' <b class="'+(a<n?'no':'ok')+'">'+a+'/'+n+'</b>'+(n&&a>=n?' ✓':'')+'</button>';
     h+=K('job','📝 งานกรอกวันนี้','<div class="ovk-js">'+ln('💧','น้ำ',wq,"goTabByName('entry')")+ln('🍚','อาหาร',fd,"goTabByName('feed')")+'</div>');
+  }
+  if(IS_VIP){   // #487 VIP: ตัวเลขจริง — จับแล้วปีนี้ แทนจับครั้งถัดไป (คาดการณ์)
+    const yy=today().slice(0,4),hr=hsHarvestRows().filter(r=>r.date.slice(0,4)===yy),hk=hr.reduce((s,r)=>s+r.kg,0);
+    h+=K('gold','🎣 จับแล้วปีนี้',V((hk/1000).toFixed(0),'ตัน'),hr.length+' ครั้ง',"goTabByName('harveststat')");
+    el.innerHTML=h;return;
   }
   const nx=ovNextRows()[0];
   if(nx){const{p,info}=nx,go="openPondDetail('"+p.id+"')";
@@ -15473,7 +15525,7 @@ function renderCostSummary(){
     '<div class="cs-tot">'+
       '<div class="b"><div class="k">ต้นทุนสะสมทั้งฟาร์ม</div><div class="v">'+money(T.total)+'</div></div>'+
       '<div class="b"><div class="k">ต้นทุนเดินเครื่อง/วัน</div><div class="v">'+money(T.day)+'</div></div>'+
-      '<div class="b"><div class="k">เนื้อกุ้งที่ผลิตได้</div><div class="v">'+money(T.kg)+' <span style="font-size:calc(12px * var(--ui-scale));color:var(--tx3)">กก.</span></div></div>'+
+      '<div class="b"><div class="k">น้ำหนักกุ้งที่ผลิตได้</div><div class="v">'+money(T.kg)+' <span style="font-size:calc(12px * var(--ui-scale));color:var(--tx3)">กก.</span></div></div>'+
       '<div class="b"><div class="k">ต้นทุนรวม/กก.</div><div class="v">'+(T.kg>0?money(T.total/T.kg):'-')+'</div></div>'+
       '<div class="b"><div class="k">จำนวนบ่อ</div><div class="v">'+rows.length+' <span style="font-size:calc(12px * var(--ui-scale));color:var(--tx3)">บ่อ</span></div></div>'+
     '</div>'+
@@ -15484,7 +15536,7 @@ function renderCostSummary(){
       sortBtn('perKg','ต้นทุน/กก.')+sortBtn('perDay','ต้นทุน/วัน')+
     '</div>'+
     '<div style="overflow-x:auto"><table class="tbl"><thead><tr>'+
-      '<th>บ่อ</th><th>DOC</th><th>เนื้อกุ้ง</th>'+
+      '<th>บ่อ</th><th>DOC</th><th>น้ำหนักกุ้ง</th>'+
       '<th>ลูกกุ้ง</th><th>อาหาร</th><th>ค่าแรง</th><th>ค่าไฟ</th><th>อื่นๆ</th>'+
       '<th>ต้นทุนสะสม</th><th>ต้นทุน/กก.</th>'+(ceS&&ceS.wtN?'<th class="cs-ec">คาดจับได้</th>':'')+'<th class="cs-ec">คาด ฿/กก. ตอนปิด</th><th>ต้นทุน/วัน</th>'+
     '</tr></thead><tbody>'+
@@ -15513,7 +15565,7 @@ function renderCostSummary(){
       (ceS&&ceS.wtN?'<td class="cs-ec">'+(T.ek>0?money(T.ek)+' กก.':'-')+'</td>':'')+'<td class="cs-ec">'+(T.ek>0?money(T.ec/T.ek):'-')+'</td><td>'+money(T.day)+'</td></tr>'+
     '</tbody></table></div>'+
     '<div class="hint" style="margin-top:10px">แตะที่แถวเพื่อเปิดหน้ารายละเอียดบ่อนั้น · '+
-      '<b>เนื้อกุ้ง</b> = ที่อยู่ในบ่อ + ที่พาเชียลไปแล้ว · '+
+      '<b>น้ำหนักกุ้ง</b> = ที่อยู่ในบ่อ + ที่พาเชียลไปแล้ว · '+
       '<b>ต้นทุน/วัน</b> คืออัตราเดินเครื่องตอนนี้ ไม่ใช่ค่าเฉลี่ยทั้งรอบ · '+
       '<b>คาด ฿/กก. ตอนปิด</b> = รวมค่าจับ+ส่วนแบ่ง และหักน้ำหนักตามที่จับได้จริงโดยเฉลี่ย (บิลที่ยังไม่ลงยังไม่รวม)</div>';
 }
@@ -17558,6 +17610,19 @@ function renderPondStock(){
 // ⚠️ ใช้ partialTotals/pondShrimpCount/harvestRowKg/harvestRowBaht ตัวเดียวกับหน้า "จับกุ้ง"/"ภาพรวม" ทั้งหมด ไม่คำนวณคู่ขนาน — เลิกใช้ partialHarvestInfo/_phTarget แล้วตั้งแต่ entry #244 (ตัวนั้นเหลือใช้เฉพาะหน้าปฏิทินพาเชียล)
 function renderPdHarvestCard(p){
   const el=document.getElementById('pd-harvest-card');if(!el||!p)return;
+  if(IS_VIP){   // #487 VIP: ตารางครั้งที่ · วัน · ไซส์ · กก. · ราคา · เงิน + แถวรวม (ไม่มีรอดสะสม/คงเหลือ)
+    const L=(p.partialHarvests||[]).filter(r=>harvestRowKg(r)>0).slice().sort((a,b)=>a.date.localeCompare(b.date)||String(a.id||'').localeCompare(String(b.id||'')));
+    if(!L.length){el.innerHTML='<div style="padding:8px 2px;font-weight:600">ยังไม่มีการจับในรอบนี้</div>';return;}
+    const kg=L.reduce((s,r)=>s+harvestRowKg(r),0),bt=L.reduce((s,r)=>s+harvestRowBaht(r),0);
+    const ML=v=>(v/1e6).toFixed(2)+' ล.',ds=d=>fD(d).replace(/\s\d{2}$/,'');
+    const by=[...new Set(L.map(r=>buyerName(r.buyer)).filter(Boolean))];
+    el.innerHTML='<div class="pdv-hh">🎣 จับแล้ว '+L.length+' ครั้ง · '+Math.round(kg).toLocaleString()+' กก. · ฿'+Math.round(bt).toLocaleString()+'</div>'
+      +'<div style="overflow-x:auto"><table class="pdv-hv"><tr><th>ครั้ง</th><th>วันที่</th><th>ไซส์</th><th>กก.</th><th>฿/กก.</th><th>เงิน</th></tr>'
+      +L.map((r,i)=>'<tr><td><span class="pdv-no">ครั้งที่ '+(i+1)+'</span></td><td>'+ds(r.date)+'</td><td>'+(r.size||'-')+'</td><td><b>'+Math.round(harvestRowKg(r)).toLocaleString()+'</b></td><td>'+(r.price||'-')+'</td><td>'+ML(harvestRowBaht(r))+'</td></tr>').join('')
+      +'<tr class="sum"><td>รวม</td><td></td><td></td><td>'+Math.round(kg).toLocaleString()+'</td><td>'+(kg>0?Math.round(bt/kg):'-')+'</td><td>'+ML(bt)+'</td></tr></table></div>'
+      +(by.length?'<div style="font-size:calc(12.5px * var(--ui-scale));font-weight:600;margin-top:6px">แพ '+by.map(mpEsc).join(' · ')+'</div>':'');
+    return;
+  }
   const adm=APP_ROLE==='admin';   // #457 พี่สั่ง: พนักงานไม่เห็นตัวเลขการขาย · เหลือ กก. กับชื่อแพ
   const rows=(p.partialHarvests||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
   // ── สรุปด้านบน 3 บรรทัด (พี่สั่ง entry #244):
@@ -22051,13 +22116,13 @@ function renderCrops(){
     let prevTxt='';
     if(selYear!=='all'&&rows.length){   // เทียบปีก่อน: จำนวนรอบ (+กำไร admin) ต่อสาเหตุ
       const pv={};D.ponds.forEach(p=>(p.cropHistory||[]).forEach((c,i)=>{if(histRecYear(c)!==selYear-1)return;const s=getCloseSummary(p,i);if(!s)return;const k=closeReason(c),x=pv[k]=pv[k]||{n:0,np:0};x.n++;if(s.hasCostData&&s.netProfit!=null)x.np+=s.netProfit;}));
-      const parts=CR_REASONS.filter(([k])=>pv[k]).map(([k])=>k.replace(' / ครบรอบ','')+' '+pv[k].n+' รอบ'+(isAdmin?' ('+(pv[k].np>=0?'+':'−')+M(Math.abs(pv[k].np))+' ล.)':''));
+      const parts=CR_REASONS.filter(([k])=>pv[k]).map(([k])=>k.replace(' / ครบรอบ','')+' '+pv[k].n+' บ่อ'+(isAdmin?' ('+(pv[k].np>=0?'+':'−')+M(Math.abs(pv[k].np))+' ล.)':''));
       if(parts.length)prevTxt='<div class="crx-rprev">ปี '+(selYear-1)+': '+parts.join(' · ')+'</div>';
     }
     rsEl.innerHTML=G.length?'<div class="crx-reason"><div class="crx-rh"><span>🩺 สาเหตุปิดบ่อ</span><small>กดเพื่อกรอง</small></div>'
       +'<div class="crx-rbar">'+G.map(g=>'<i style="width:'+(g.n/rows.length*100)+'%;background:'+g.col+'"></i>').join('')+'</div>'
       +G.map(g=>'<button type="button" class="crx-rs'+(_crReason===g.k?' on':'')+'" onclick="crSetReason(\''+g.k+'\')"><span class="dot" style="background:'+g.col+'"></span>'
-        +'<span><b>'+g.k+' '+g.n+' รอบ</b><small>เฉลี่ย '+Math.round(g.d)+' วัน · '+(g.kg/1000).toFixed(0)+' ตัน'+(selYear!=='all'&&g.ms.length?' · ปิด '+crMonthsTxt(g.ms):'')+'</small></span>'
+        +'<span><b>'+g.k+' '+g.n+' บ่อ</b><small>เฉลี่ย '+Math.round(g.d)+' วัน · '+(g.kg/1000).toFixed(0)+' ตัน'+(selYear!=='all'&&g.ms.length?' · ปิด '+crMonthsTxt(g.ms):'')+'</small></span>'
         +(isAdmin&&g.hasNp?'<span class="m '+(g.np<0?'neg':'pos')+'">'+(g.np>=0?'+':'−')+M(Math.abs(g.np))+' ล.</span>':'<span></span>')+'</button>').join('')
       +prevTxt+'</div>':'';
   }
@@ -22097,7 +22162,7 @@ function renderCrops(){
   const sEl=document.getElementById('cr-sorts');
   if(sEl)sEl.innerHTML=SORTS.map(x=>'<button type="button" class="crx-chip'+(x[0]===_crSort?' on':'')+'" onclick="crSetSort(\''+x[0]+'\')">'+x[1]+'</button>').join('');
   let L=rows.filter(r=>(pf==='all'||r.p.id===pf)&&(!_crReason||closeReason(r.c)===_crReason));
-  {const fe=document.getElementById('cr-rflt');if(fe)fe.innerHTML=_crReason?'<button type="button" class="crx-rflt" onclick="crSetReason(\''+_crReason+'\')"><span>🩺 '+_crReason+' · '+L.length+' รอบ</span><span>✕</span></button>':'';}
+  {const fe=document.getElementById('cr-rflt');if(fe)fe.innerHTML=_crReason?'<button type="button" class="crx-rflt" onclick="crSetReason(\''+_crReason+'\')"><span>🩺 '+_crReason+' · '+L.length+' บ่อ</span><span>✕</span></button>':'';}
   const nz=(v,d)=>v==null?d:v;
   const key={new:r=>String(r.c.closeDate||''),pr:r=>nz(r.np,-1e15),cpk:r=>r.s.costPerKg!=null?parseFloat(r.s.costPerKg):-1,fcr:r=>r.fcr!=null&&r.tgt!=null?-(r.fcr-r.tgt):-1e9,rai:r=>r.yr,days:r=>r.age}[_crSort];
   L.sort((a,b)=>{const x=key(a),y=key(b);return x<y?1:x>y?-1:0;});
