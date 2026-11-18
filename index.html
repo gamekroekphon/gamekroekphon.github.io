@@ -23924,6 +23924,8 @@ function renderPartialList(){
   const p=pond(pid);if(!p)return;
   if(nameEl)nameEl.textContent=' — บ่อ '+p.name;
   const rows=(p.partialHarvests||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  // #485 พี่สั่ง: เลขครั้งพาเชียล (เก่าสุด = ครั้งที่ 1) · วันเดียวกันเรียงตาม id (เวลาบันทึก)
+  const _phNo={};(p.partialHarvests||[]).slice().sort((a,b)=>a.date.localeCompare(b.date)||String(a.id||'').localeCompare(String(b.id||''))).forEach((r,i)=>{_phNo[r.id]=i+1;});
   // ── แถว "จับปิดบ่อ" ของรอบนี้ — เดิมไม่โผล่ในรายการเลย แก้ย้อนหลังไม่ได้ ต่างจากพาเชียล (พี่สั่ง entry #261)
   //    ไม่ได้อยู่ใน partialHarvests แต่อยู่ใน p.pendingHarvest จึงประกอบแถวขึ้นมาเองให้หน้าตาเหมือนกัน ──
   const _ph=p.harvestDate&&p.pendingHarvest?p.pendingHarvest:null;
@@ -23954,7 +23956,7 @@ function renderPartialList(){
     // ── รายการเก่าที่บันทึกไว้ก่อนมีการบังคับกรอก อาจไม่มีไซส์/ราคา → ไฮไลต์เตือนให้กดแก้ไข ──
     const bad=!(r.size>0)||!(harvestRowBaht(r)>0);
     return`<tr style="border-bottom:1px solid var(--bd)${r.isClose?';background:var(--ob)':bad?';background:var(--wb)':''}" ${bad&&!r.isClose?'title="ข้อมูลไม่ครบ — กด ✏️ เพื่อแก้ไข"':''}>
-      <td style="padding:8px 10px">${fD(r.date)}${r.isClose?'<div style="font-size:var(--fs10);font-weight:700;color:var(--ok)">🏁 จับปิดบ่อ</div>':''}</td>
+      <td style="padding:8px 10px">${fD(r.date)}${r.isClose?'<div style="font-size:var(--fs10);font-weight:700;color:var(--ok)">🏁 จับปิดบ่อ</div>':(_phNo[r.id]?'<div style="font-size:var(--fs10);font-weight:700;color:var(--p)">ครั้งที่ '+_phNo[r.id]+'</div>':'')}</td>
       <td style="padding:8px 10px">${r.buyer||'-'}</td>
       <td style="padding:8px 10px"><span style="color:${liveClr}">${r.live||'-'}</span></td>
       <td style="padding:8px 10px;text-align:right">${r.size||'-'}</td>
