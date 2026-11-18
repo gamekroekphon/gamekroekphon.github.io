@@ -2465,6 +2465,32 @@ body.owner-mode #bnav-overview,body.owner-mode #bnav-stock,body.owner-mode .bnav
 body.owner-mode #bnav-price,body.owner-mode #bnav-harveststat{display:flex}
 body.owner-mode #bnav-own-home{order:1}body.owner-mode #bnav-own-stock{order:2}body.owner-mode #bnav-ai{order:3}body.owner-mode #bnav-price{order:4}body.owner-mode #bnav-harveststat{order:5}body.owner-mode #bnav-more{order:6}
 body:not(.owner-mode) .owner-only{display:none!important}
+/* #486 เมนูปุ่มใหญ่ของเจ้าของ (🧭 เมนู) — แทน ☰ เพิ่มเติม · ราคาสินค้า/สถิติจับกุ้งย้ายเข้าเมนู */
+body.owner-mode #bnav-price,body.owner-mode #bnav-harveststat,body.owner-mode #bnav-more{display:none!important}
+body.owner-mode #bnav-own-menu{order:9}
+.omn-rec{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}.omn-rec button{background:var(--sf);border:1.5px solid var(--p);color:var(--p);border-radius:99px;padding:6px 12px;font:inherit;font-size:calc(13.5px * var(--ui-scale));font-weight:800;cursor:pointer}
+.omn-g{font-size:calc(14px * var(--ui-scale));font-weight:800;color:var(--tx);margin:4px 2px 6px}
+.omn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.omn-t{background:var(--sf);border:1.5px solid var(--bd);border-radius:14px;padding:10px 11px;min-height:76px;text-align:left;font:inherit;color:var(--tx);cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.omn-t:hover,.omn-t:active{border-color:var(--p)}.omn-t i{font-style:normal;font-size:calc(24px * var(--ui-scale));line-height:1.1}.omn-t b{font-size:calc(14.5px * var(--ui-scale));line-height:1.3}
+.omn-t.wide{grid-column:1/-1}
+.omn-all{display:block;width:100%;border:1.5px dashed var(--bd);border-radius:12px;background:none;padding:11px;font:inherit;font-weight:800;color:var(--tx);cursor:pointer;margin-bottom:10px}
+/* #486 role VIP (ก้อย · กุ้ง) — เห็นทุกอย่างเท่า admin แต่ดูอย่างเดียว: ซ่อนหน้ากรอก + ปุ่มบันทึก/แก้/ลบ/เพิ่ม · กันชั้น 2 = save() ไม่บันทึก + กฎ Firebase */
+.hdr-role-badge.role-vip,.vip-badge{background:#F3E8FF;color:#6B21A8;border:1.5px solid #6B21A8;border-radius:99px;font-weight:800}
+.vip-badge{white-space:nowrap}@media(max-width:700px){.vip-badge .vb-l{display:none}}
+.vip-badge{display:none;font-size:calc(12px * var(--ui-scale));padding:2px 9px;margin-left:6px;vertical-align:middle}body.role-vip .vip-badge{display:inline-block}
+.vip-note{display:none;background:#F3E8FF;border:1.5px solid #6B21A8;color:#6B21A8;border-radius:10px;padding:7px 11px;font-size:calc(13px * var(--ui-scale));font-weight:800;margin:0 0 10px}
+body.role-vip .vip-note{display:block}
+body.role-vip :is(#tab-entry,#tab-feed,#tab-sample,#tab-watlog,#tab-harvest,#tab-users,#tab-kan,#tab-mortality),
+body.role-vip .sn-link:is([onclick*="'entry'"],[onclick*="'feed'"],[onclick*="'sample'"],[onclick*="'watlog'"],[onclick*="'harvest'"],[onclick*="'users'"]),
+body.role-vip .sn-top:is([onclick*="'kan'"],[onclick*="'users'"]),
+body.role-vip .mob-sheet-item:is([data-t="entry"],[data-t="feed"],[data-t="sample"],[data-t="watlog"],[data-t="harvest"],[data-t="users"],[data-t="kan"],[data-t="stock-sale"]),
+body.role-vip #bnav-entry,body.role-vip #bnav-feed,body.role-vip #bnav-sample,
+body.role-vip :is(button,a,.btn,span,div)[onclick]:is([onclick*="save" i],[onclick*="delete" i],[onclick*="remove" i],[onclick*="edit" i],[onclick*="add" i],[onclick*="openPrItem"],[onclick*="togglePrOff"],[onclick*="jumpHarvest"],[onclick*="jumpMort"],[onclick*="openSale"],[onclick*="openCropModal"],[onclick*="finalize" i],[onclick*="openBill"],[onclick*="startCount" i],[onclick*="skMove" i],[onclick*="fsFix" i],[onclick*="openCheck" i],[onclick*="newCrop" i],[onclick*="openPh" i],[onclick*="ownEdit" i]),
+body.role-vip [onclick]:is([onclick*="goTabByName('entry')"],[onclick*="goTabByName('feed')"],[onclick*="goTabByName('sample')"],[onclick*="goTabByName('watlog')"],[onclick*="goTabByName('harvest')"]),
+body.role-vip :is(#skp-tx,#skb-tx,#skb-newitem,#skb-sale,#skb-cash,#lp-staff>.card:first-child,#ep-bill,.elec-sub-btn:first-child,.ovk-js,.vip-hide-form),
+body.role-vip :is(button,div)[onclick]:is([onclick*="stockTab('tx'"],[onclick*="stockTab('newitem'"],[onclick*="stockTab('sale'"],[onclick*="stockTab('cash'"],[onclick*="palmQuick"],[onclick*="clearStaff"],[onclick*="clearElecBill"],[onclick*="clearLab"],[onclick*="clearStockTx"]),
+body.role-vip :is(.pr-add,.pr-ibtn,.mp-actions,.crx-note,.crx-btns .btn-s,.fs-fix,#sk-bill,#sk-count,#sk-jobs,.bill-entry,.ov-quick,.home-quick){display:none!important}
 body.owner-mode #mobMenuBody{display:flex;flex-direction:column}
 body.owner-mode #mobMenuBody>.owner-g0{order:-3}
 body.owner-mode #mobMenuBody>.owner-mine{order:-2}
@@ -3363,7 +3389,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
 <div class="hdr">
   <div class="hdr-left">
     <div class="hdr-logo">🦐</div>
-    <div><div class="hdr-brand">ตะวันฟาร์ม</div><div class="hdr-sub">Aquaculture Management System</div></div>
+    <div><div class="hdr-brand">ตะวันฟาร์ม<span class="vip-badge">VIP<span class="vb-l"> · ดูอย่างเดียว</span></span></div><div class="hdr-sub">Aquaculture Management System</div></div>
   </div>
   <div class="hdr-right">
     <button type="button" class="hdr-find admin-only" onclick="openNav()" aria-label="ค้นหา ไปที่หน้า">🔍 <span class="t">ไปที่…</span><kbd>Ctrl K</kbd></button>
@@ -3457,6 +3483,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   <!-- เจ้าของ (OWNER_NAMES: ก้อย/กุ้ง) — สรุป · สต็อก(ดูอย่างเดียว) · ราคาสินค้า · สถิติจับกุ้ง (พี่สั่ง entry #343) -->
   <button class="bnav-btn bn-owner" id="bnav-own-home" onclick="ownerGo('home')"><span class="bnav-ic">🏠</span>สรุป</button>
   <button class="bnav-btn bn-owner" id="bnav-own-stock" onclick="ownerGo('stock')"><span class="bnav-ic">📦</span>สต็อก</button>
+  <button class="bnav-btn bn-owner" id="bnav-own-menu" onclick="ownerGo('menu')"><span class="bnav-ic">🧭</span>เมนู</button>
   <button class="bnav-btn bn-owner" id="bnav-ai" onclick="bnavGo('ai',this)"><span class="bnav-ic"><span class="ai-sun bn-sun"><i class="h"></i><i class="r"></i><i class="c"></i></span></span>ถาม</button>
   <button class="bnav-btn bn-clerk" id="bnav-shop" onclick="clerkGo('shop')"><span class="bnav-ic">🏪</span>บุญชู</button>
   <button class="bnav-btn bn-clerk" id="bnav-sale" onclick="openSale()"><span class="bnav-ic">🛒</span>ขาย</button>
@@ -4140,6 +4167,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
     <div class="own-sum" id="own-sum"></div>
     <div id="own-ponds"></div>
   </div>
+  <div id="own-menu" hidden></div>
   <div id="own-stock" hidden>
     <input class="fi own-q" id="own-q" type="search" placeholder="🔍 ค้นหาสินค้า..." oninput="renderOwnStock()" aria-label="ค้นหาสินค้า">
     <div class="own-f"><select class="fi" id="own-cat" onchange="renderOwnStock()" aria-label="หมวด"></select><select class="fi" id="own-co" onchange="renderOwnStock()" aria-label="บริษัท"></select></div>
@@ -4354,7 +4382,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   <div class="card" id="lb-all" style="margin-bottom:16px"></div>
   <div class="card admin-only" id="lb-use" style="margin-bottom:16px"></div>
   <div class="g2" style="margin-bottom:16px;align-items:start">
-    <div class="card">
+    <div class="card vip-hide-form">
       <div class="card-t">📝 บันทึกผลแล็บ</div>
       <div style="display:flex;flex-direction:column;gap:12px">
         <div class="fgrid" style="grid-template-columns:1fr 1fr">
@@ -5000,7 +5028,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
       <div class="fg"><label class="fl" for="nu-name">ชื่อที่แสดง</label><input class="fi" id="nu-name" placeholder="ชื่อพนักงาน"></div>
       <div class="fg"><label class="fl" for="nu-pass">รหัสผ่านเริ่มต้น</label><input class="fi" id="nu-pass" type="text" placeholder="อย่างน้อย 6 ตัว"></div>
       <div class="fg"><label class="fl" for="nu-role">สิทธิ์ (Role)</label>
-        <select class="fi" id="nu-role"><option value="staff">staff (พนักงาน)</option><option value="admin">admin</option></select>
+        <select class="fi" id="nu-role"><option value="staff">staff (พนักงาน)</option><option value="vip">VIP (เห็นทุกอย่าง ดูอย่างเดียว)</option><option value="admin">admin</option></select>
       </div>
       <div class="fg"><button class="btn btn-p" onclick="addNewUser()">💾 เพิ่มผู้ใช้</button></div>
     </div>
@@ -5207,6 +5235,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   </div>
 </div>
 <div id="sec-price" class="sec">
+  <div class="vip-note">👁️ ดูอย่างเดียว · แก้ไขไม่ได้</div>
   <div class="pr-wrap">
     <div class="pr-top" id="pr-top">
       <div class="pr-trow"><div class="sec-title">💲 ราคาสินค้า</div><button type="button" class="pr-add admin-only" onclick="openPrItem('')">+ เพิ่ม<span class="pr-add-long">สินค้า</span></button></div>
@@ -5222,6 +5251,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   </div>
 </div>
 <div id="sec-stock" class="sec">
+  <div class="vip-note">👁️ ดูอย่างเดียว · แก้ไขไม่ได้</div>
   <div class="sec-hdr"><div class="sec-title">📦 สต็อกพัสดุ</div><button type="button" class="sk-low-chip" id="sk-low-chip" onclick="skLowToggle()"></button></div>
   <div class="g4" id="sk-kpi"></div>
   <div id="sk-warn" style="display:none" class="stock-warn">⚠️ <span id="sk-warn-txt"></span></div>
@@ -5602,6 +5632,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
 <script>
 const SK='tawan_v3';
 let APP_ROLE='staff';
+let IS_VIP=false;   // #486 role VIP: APP_ROLE เป็น 'admin' (เห็นทุกอย่าง) แต่ save() ไม่บันทึก
 // ── ชื่อผู้ใช้ที่ล็อกอินอยู่ ณ ขณะนี้ — ใช้แปะไว้กับ log ที่ต้องรู้ว่าใครเป็นคนบันทึก (เช่น ประวัติสต็อก) ──
 function curUserLabel(){
   // ⚠️ ถูกเรียกได้ก่อน firebase.initializeApp (renderOv ตอน DOMContentLoaded → ปุ่มโซน dzCur) — firebase.auth() ตอนนั้น throw ทำให้แอปหยุดโหลด (#339)
@@ -5775,6 +5806,9 @@ document.addEventListener('focusout', () => {
 const FINANCE_TABS=['tab-harvest','tab-harveststat','tab-labor','tab-elec','tab-pl','tab-manage','tab-hatchery'];
 const FINANCE_SECS=['sec-harvest','sec-harveststat','sec-labor','sec-elec','sec-pl','sec-manage','sec-hatchery'];
 function applyRole(role){
+  IS_VIP=role==='vip';   // #486 VIP = เห็นทุกอย่างเท่า admin แต่ดูอย่างเดียว
+  document.body.classList.toggle('role-vip',IS_VIP);
+  if(IS_VIP)role='admin';
   APP_ROLE=role;
   document.body.classList.remove('role-admin');
   if(role==='admin'){
@@ -5784,6 +5818,10 @@ function applyRole(role){
     document.body.classList.add('role-admin');
     const sr=document.getElementById('sn-role');if(sr)sr.textContent='Admin';
     const ms=document.getElementById('mhd-sub');if(ms)ms.textContent='ตะวันฟาร์ม · Admin';
+    if(IS_VIP){
+      const b=document.getElementById('hdr-role-badge');b.className='hdr-role-badge role-vip';b.textContent='VIP · ดูอย่างเดียว';
+      if(sr)sr.textContent='VIP · ดูอย่างเดียว';if(ms)ms.textContent='ตะวันฟาร์ม · VIP ดูอย่างเดียว';
+    }
   }else{
     // role ที่ไม่ใช่ 'admin' (รวมถึง role เก่าที่อาจหลงเหลืออยู่ในฐานข้อมูล เช่น 'ceo' ที่เลิกใช้แล้ว) ตกมาเป็น staff เสมอ กันเผื่อ role แปลกๆ ได้สิทธิ์เกินตัว
     FINANCE_TABS.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
@@ -5876,11 +5914,39 @@ function ownerGo(v,keepZone){
   document.getElementById('sec-owner').classList.add('on');
   document.getElementById('own-home').hidden=v!=='home';
   document.getElementById('own-stock').hidden=v!=='stock';
+  document.getElementById('own-menu').hidden=v!=='menu';
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
-  document.getElementById(v==='home'?'bnav-own-home':'bnav-own-stock')?.classList.add('on');
+  document.getElementById({home:'bnav-own-home',stock:'bnav-own-stock',menu:'bnav-own-menu'}[v]||'bnav-own-home')?.classList.add('on');
   closeMobMenu();
-  if(v==='home')renderOwnHome();else renderOwnStock();
+  if(v==='home')renderOwnHome();else if(v==='menu')renderOwnMenu();else renderOwnStock();
   window.scrollTo({top:0,behavior:'instant'});
+}
+// ── #486 🧭 เมนูปุ่มใหญ่ของเจ้าของ (mockup_เมนูเจ้าของ_ปุ่มใหญ่ v2 · พี่สั่ง 18 พ.ย. 69) ──
+const OWN_MENU=[
+  ['🦐 กุ้ง',[['home','🏠','บ่อไหนเป็นยังไง'],['hatchery','🥚','ปล่อยกุ้ง · ลูกกุ้งโรงไหน'],['forecast','🔮','จะจับเมื่อไหร่ กี่ตัน'],['crops','📚','รอบที่ปิด ได้เท่าไหร่'],['pricehist','💲','ขายกุ้งราคาเท่าไหร่',1]]],
+  ['📦 ของ · 💰 เงิน',[['stock','📦','ของเหลือเท่าไหร่'],['price','🏷️','ราคาสินค้า'],['cost','💰','ต้นทุนแต่ละบ่อ'],['pl','💵','กำไร / ขาดทุน']]],
+  ['🌴 อื่นๆ',[['palm','🌴','สวนปาล์ม'],['tide','🌊','สภาพอากาศ · น้ำ']]],
+];
+const OWN_MENU_LS='tw_ownmenu_recent';
+function ownMenuRecent(){try{const a=JSON.parse(localStorage.getItem(OWN_MENU_LS)||'[]');return Array.isArray(a)?a:[];}catch(e){return[];}}
+function ownMenuGo(id){
+  try{const a=ownMenuRecent().filter(x=>x!==id);a.unshift(id);localStorage.setItem(OWN_MENU_LS,JSON.stringify(a.slice(0,3)));}catch(e){}
+  if(id==='home'){ownerGo('home');return;}
+  if(id==='stock'){ownerGo('stock');return;}
+  if(id==='cost'){ownerGo('home');setTimeout(()=>openCostSummary(),0);return;}
+  goTabByName(id);window.scrollTo({top:0,behavior:'instant'});
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));document.getElementById('bnav-own-menu')?.classList.add('on');
+}
+function renderOwnMenu(){
+  const el=document.getElementById('own-menu');if(!el)return;
+  const all={};OWN_MENU.forEach(g=>g[1].forEach(t=>{all[t[0]]=t;}));
+  const rec=ownMenuRecent().filter(id=>all[id]);
+  const Q=String.fromCharCode(39);
+  const btn=t=>'<button type="button" class="omn-t'+(t[3]?' wide':'')+'" onclick="ownMenuGo('+Q+t[0]+Q+')"><i>'+t[1]+'</i><b>'+t[2]+'</b></button>';
+  el.innerHTML='<div class="sec-title" style="margin:2px 2px 10px">🧭 จะดูอะไร</div>'
+    +(rec.length?'<div class="omn-rec">'+rec.map(id=>'<button type="button" onclick="ownMenuGo('+Q+id+Q+')">'+all[id][1]+' '+all[id][2]+'</button>').join('')+'</div>':'')
+    +OWN_MENU.map(g=>'<div class="omn-g">'+g[0]+'</div><div class="omn-grid">'+g[1].map(btn).join('')+'</div>').join('')
+    +'<button type="button" class="omn-all" onclick="toggleMobMenu(this)">🔍 ค้นหา / เมนูทั้งหมด</button>';
 }
 function pdGoBack(){
   if(document.body.classList.contains('owner-mode')&&getComputedStyle(document.getElementById('bnav')).display!=='none'){ownerGo('home',true);return;}
@@ -6023,6 +6089,8 @@ function renderUsers(){
         ?'<span style="display:inline-flex;padding:3px 10px;border-radius:20px;font-size:var(--fs115);font-weight:700;background:var(--db);color:var(--d)">ไม่มีสิทธิ์</span>'
         :r.role==='admin'
         ?'<span style="display:inline-flex;padding:3px 10px;border-radius:20px;font-size:var(--fs115);font-weight:700;background:var(--pl);color:var(--p)">Admin</span>'
+        :r.role==='vip'
+        ?'<span class="hdr-role-badge role-vip" style="display:inline-flex;padding:3px 10px;font-size:var(--fs115)">VIP · ดูอย่างเดียว</span>'
         :'<span style="display:inline-flex;padding:3px 10px;border-radius:20px;font-size:var(--fs115);font-weight:700;background:var(--sf2);color:var(--tx3)">พนักงาน (staff)</span>';
       const lastLogin=r.lastLogin?(fD(r.lastLogin.slice(0,10))+' '+(r.lastLogin.slice(11,16)||'')):'-';
       return `<tr>
@@ -6032,7 +6100,8 @@ function renderUsers(){
         </div></td>
         <td style="padding:10px">${roleBadge}</td>
         <td style="padding:10px"><select class="fi" style="padding:6px 8px;font-size:calc(12.5px * var(--ui-scale));width:auto" onchange="changeUserRole('${r.uid}',this.value,'${esc(r.email)}')">
-          <option value="staff"${r.role!=='admin'?' selected':''}>staff</option>
+          <option value="staff"${r.role!=='admin'&&r.role!=='vip'?' selected':''}>staff</option>
+          <option value="vip"${r.role==='vip'?' selected':''}>VIP</option>
           <option value="admin"${r.role==='admin'?' selected':''}>admin</option>
         </select></td>
         <td style="padding:10px;font-size:calc(12px * var(--ui-scale))">${lastLogin}</td>
@@ -7208,7 +7277,10 @@ setInterval(()=>{if(unsynced()&&!_saveInflight&&navigator.onLine!==false&&fireba
 //    รอบที่รอคิวอยู่แล้วใช้ร่วมกัน (ส่ง D ล่าสุดตอนเริ่ม) · base = ยอดของ JSON ที่เขียนจริง ไม่ใช่ D ตอนเขียนเสร็จ ──
 //    ⚠️ ต้องเป็น async — seedPonds() เรียก save() ตอนโหลดสคริปต์ก่อน `let _dReal`/`_saveChain` จะถูกสร้าง (TDZ) · async = error กลายเป็น promise ที่ reject ไม่หยุดทั้งแอป
 let _saveChain=Promise.resolve(),_saveQueued=null;
+let _vipWarnAt=0;
+function vipBlocked(){const t=Date.now();if(t-_vipWarnAt>3000){_vipWarnAt=t;try{showToast('👁️ บัญชี VIP ดูอย่างเดียว — ไม่ได้บันทึก','');}catch(e){alert('บัญชี VIP ดูอย่างเดียว — ไม่ได้บันทึก');}}}
 async function save() {
+  if(IS_VIP){vipBlocked();return false;}   // #486 กันชั้น 1 (ชั้น 2 = กฎ Firebase)
   tickMemoClear();   // ข้อมูลเพิ่งเปลี่ยน — แคชระหว่างวาด (#363) ต้องล้าง
   let _real;try{_real=_dReal;}catch(e){return false;}   // #454 seedPonds() เรียกตอนโหลดสคริปต์ก่อน `let _dReal` (TDZ) — เดิม reject ขึ้น console ทุกครั้งที่เปิดแอป
   if (!_real) { console.warn('ยังไม่ได้โหลดข้อมูลจริง — ไม่บันทึก (#421)'); return Promise.resolve(false); }
@@ -11298,6 +11370,7 @@ function initElec(){
   const el=document.getElementById('el-month');
   if(el&&!el.value){const miss=elecMissingMonths();el.value=miss[0]||elMonths()[0];}   // #465 เดิมตั้งเป็นเดือนนี้ (บิลยังไม่ออก)
   loadElecBill();renderElecKPI();renderElecHistory();renderElecActiveSection();renderElecTrendChart();renderElecCropSummary();
+  if(IS_VIP){const b=document.querySelector('.elec-sub-btn[onclick*="ep-summary"]');if(b)elecTab('ep-summary',b);}   // #486
 }
 // ══════ เตือนค่าไฟ (entry #383 พี่สั่ง 7 ต.ค. 69) ══════
 //    ① ลืมกรอกบิล: เลยวันที่ ELEC_DUE_DAY ของเดือนแล้ว ยังไม่มีบิลเดือนก่อน — _dailyElecRate ใช้บิลล่าสุดแทนแบบเงียบ ต้นทุนบ่อช่วงนั้นเป็นค่าประมาณ
@@ -13233,6 +13306,7 @@ function initStock(){
   // เปิดมาที่หน้าบันทึกเลย (งานหลักของทั้ง 2 role) พร้อมโหมดที่ตรงกับหน้าที่ของคนนั้น
   // เดิมเปิดมาที่ "รายการพัสดุ" + โหมด "รับเข้า" เสมอ staff จึงต้องกดแก้ทาง 2 ครั้งทุกครั้ง
   const txb=document.getElementById('skb-tx');if(txb)txb.textContent=APP_ROLE==='admin'?'บันทึกรับ-เบิก':'📤 เบิกของ';   // #456
+  if(IS_VIP){stockTab('items',document.getElementById('skb-items'));return;}   // #486 VIP ไม่มีหน้าบันทึกรับ-เบิก
   stockTab('tx',txb);
   setStockMode(stockDefaultMode());
 }
