@@ -2477,7 +2477,7 @@ body.owner-mode #bnav-own-menu{order:9}
 .omn-all{display:block;width:100%;border:1.5px dashed var(--bd);border-radius:12px;background:none;padding:11px;font:inherit;font-weight:800;color:var(--tx);cursor:pointer;margin-bottom:10px}
 /* #486 role VIP (ก้อย · กุ้ง) — เห็นทุกอย่างเท่า admin แต่ดูอย่างเดียว: ซ่อนหน้ากรอก + ปุ่มบันทึก/แก้/ลบ/เพิ่ม · กันชั้น 2 = save() ไม่บันทึก + กฎ Firebase */
 .hdr-role-badge.role-vip,.vip-badge{background:#F3E8FF;color:#6B21A8;border:1.5px solid #6B21A8;border-radius:99px;font-weight:800}
-.vip-badge{white-space:nowrap}@media(max-width:700px){.vip-badge .vb-l{display:none}}
+.vip-badge,.hdr-role-badge.role-vip{white-space:nowrap}@media(max-width:700px){.vip-badge .vb-l{display:none}body.role-vip #hdr-role-badge{display:none}}   /* #491 มือถือ: ป้ายขวาบนตกขอบ — เหลือป้าย VIP ใต้โลโก้อันเดียว */
 .vip-badge{display:none;font-size:calc(12px * var(--ui-scale));padding:2px 9px;margin-left:6px;vertical-align:middle}body.role-vip .vip-badge{display:inline-block}
 .vip-note{display:none;background:#F3E8FF;border:1.5px solid #6B21A8;color:#6B21A8;border-radius:10px;padding:7px 11px;font-size:calc(13px * var(--ui-scale));font-weight:800;margin:0 0 10px}
 body.role-vip .vip-note{display:block}
@@ -2489,9 +2489,14 @@ body.role-vip #bnav-entry,body.role-vip #bnav-feed,body.role-vip #bnav-sample,
 body.role-vip :is(button,a,.btn,span,div)[onclick]:is([onclick*="save" i],[onclick*="delete" i],[onclick*="remove" i],[onclick*="edit" i],[onclick*="add" i],[onclick*="openPrItem"],[onclick*="togglePrOff"],[onclick*="jumpHarvest"],[onclick*="jumpMort"],[onclick*="openSale"],[onclick*="openCropModal"],[onclick*="finalize" i],[onclick*="openBill"],[onclick*="startCount" i],[onclick*="skMove" i],[onclick*="fsFix" i],[onclick*="openCheck" i],[onclick*="newCrop" i],[onclick*="openPh" i],[onclick*="ownEdit" i]),
 body.role-vip :is(#tab-forecast,#tab-risk,#pdc-surv,#pdc-risk,.pd-why),
 body.role-vip .sn-top[onclick*="'forecast'"],body.role-vip .sn-link[onclick*="'risk'"],body.role-vip .mob-sheet-item:is([data-t="forecast"],[data-t="risk"]),
-body.role-vip [onclick]:is([onclick*="jumpEntry"],[onclick*="jumpFeed"]){display:none!important}
+body.role-vip [onclick]:is([onclick*="jumpEntry"],[onclick*="jumpFeed"]),
+body.role-vip :is(#ov-partial-card,#ov-next,[onclick*="tab:forecast"],[onclick*="tab:risk"],[onclick*="goTabByName('forecast')"],[onclick*="goTabByName('risk')"]){display:none!important}   /* #491 VIP ไม่มีคาดการณ์: จับกุ้งเร็วๆ นี้ · คาดพาเชียล · ลิงก์คาดการณ์ในแผนที่แอป/ค้นหา */
 .pdv-rel{background:var(--sf);border:1.5px solid var(--bd);border-radius:14px;padding:10px 12px;margin-bottom:10px;font-size:calc(13.5px * var(--ui-scale));line-height:1.55;color:var(--tx)}
 .pdv-rel b{font-size:calc(14.5px * var(--ui-scale))}
+/* #491 VIP หน้าบ่อ/หน้าแรก ไม่ซ้ำ: ป้าย ADMIN · หัวการ์ดอาหาร/จับไม่มีตัวเลข (อยู่ในกล่องบนแล้ว) · การ์ดเปิดแล้วตัวเลขบนหัวหาย · บรรทัดซ้ำในการ์ด · ปุ่มต้นทุนทุกบ่อซ้ำกับลิงก์ในกล่องต้นทุน */
+body.role-vip :is(.pd-admin-tag,.ov-cost-btn,.pdv-hh,.pd-lab-more,#pd-feed-sum .pd-fs-tiles>div:not(:nth-child(2)),#pd-med-sum>.pd-fs-lbl:first-child,#pd-med-sum>.pd-ms-chips),
+body.role-vip :is(#pdc-feedhist,#pdc-harvest)>.pd-col-head :is(.pd-sum,.pd-sum-c),
+body.role-vip .card:has(>.pd-col-body.show)>.pd-col-head :is(.pd-sum,.pd-sum-c){display:none!important}
 .pdv-hv{width:100%;border-collapse:collapse;font-size:calc(13px * var(--ui-scale));font-variant-numeric:tabular-nums;color:var(--tx)}
 .pdv-hv th{text-align:right;font-size:calc(12px * var(--ui-scale));padding:4px 4px;border-bottom:1.5px solid var(--tx)}.pdv-hv th:first-child,.pdv-hv td:first-child{text-align:left}
 .pdv-hv td{text-align:right;padding:6px 4px;border-bottom:1px solid var(--bd)}.pdv-hv tr.sum td{font-weight:800;border-top:1.5px solid var(--tx);border-bottom:0}
@@ -7687,6 +7692,7 @@ function pondRunningCost(p){
 function goTabByName(t){
   if(t==='export')t='pl';   // #457 หน้า PDF ปิดบ่อ รวมเข้า P&L แล้ว
   if(ADMIN_ONLY_TABS.includes(t)&&APP_ROLE!=='admin')return;   // กันทางลัดข้ามหน้าเปิดหน้า admin-only ให้ staff
+  if(IS_VIP&&(t==='forecast'||t==='risk'))return;   // #491
   const btn=[...document.querySelectorAll('.tab,.tab-item,.sn-top,.sn-link')].find(b=>(b.getAttribute('onclick')||'').includes("'"+t+"'"));
   if(btn)goTab(t,btn);
   else{document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));const sec=document.getElementById('sec-'+t);if(sec)sec.classList.add('on');}
@@ -8920,6 +8926,7 @@ initUiSize();
 const ADMIN_ONLY_TABS=['palm','users','labor','elec','pl','kan','hatchery','ai','appmap','harvest','harveststat','manage','fcrstd','pricehist'];   // hatchery มีกำไร (#316) — เพิ่ม entry #357 · export = PDF ปิดบ่อ มีรายได้/ต้นทุน/กำไร (พี่สั่ง #374)
 function goTab(t,btn){
   if(ADMIN_ONLY_TABS.includes(t)&&APP_ROLE!=='admin')return;
+  if(IS_VIP&&(t==='forecast'||t==='risk'))return;   // #491 VIP ไม่มีหน้าคาดการณ์ (กันทางลัด/ค้นหา)
   document.querySelectorAll('.tab,.tab-item,.sn-top,.sn-link').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
   document.querySelectorAll('.tab-grp').forEach(g=>g.classList.remove('grp-on','grp-open'));
   const grp=btn.closest('.tab-grp');if(grp)grp.classList.add('grp-on');
@@ -9763,7 +9770,7 @@ function renderPondDetail(id){
     const pdProducedKg=(biomass!=null?biomass:0)+partialTotals(p.partialHarvests).kg;
     const pdCostPerKg=(pdProducedKg>0&&biomass!=null)?pdCostTotal/pdProducedKg:null;
     costCardHtml=pdCard('cost',
-      `💰 ต้นทุน <span class="pd-admin-tag">ADMIN</span> <span style="margin-left:auto;color:var(--p);font-weight:800">${pdCostPerKg!=null?'฿'+pdCostPerKg.toFixed(1)+'/กก. · ':''}สะสม ${ceoMoney(pdCostTotal)}</span>`,
+      `💰 ต้นทุน <span class="pd-admin-tag">ADMIN</span> <span class="pd-sum-c" style="margin-left:auto;color:var(--p);font-weight:800">${pdCostPerKg!=null?'฿'+pdCostPerKg.toFixed(1)+'/กก. · ':''}สะสม ${ceoMoney(pdCostTotal)}</span>`,
       `<div class="ceo-cost-total-row" style="border-top:none;padding-top:0"><span class="lbl">รวมต้นทุนสะสมของบ่อนี้</span><span class="val">${ceoMoney(pdCostTotal)}</span></div>
       <div class="pd-water-row" style="border-top:1px dashed var(--bd)"><span style="color:var(--tx2)">ต้นทุน/กก. ประมาณ (ณ วันนี้)</span><span style="font-weight:700;color:var(--p)">${pdCostPerKg!=null?'฿'+pdCostPerKg.toFixed(1)+'/กก.':'-'}</span></div>
       <div style="text-align:center;padding:8px 0 2px;cursor:pointer;border-top:1px solid var(--sf2)" onclick="pdToggleCostDetail()">
@@ -9834,7 +9841,7 @@ function renderPondDetail(id){
       <div class="pd-hr1"><div class="pd-name">${pdE(p.name)}<small>${p.startDate&&p.startDate<=today()?'อายุ '+age+' วัน · ':''}${p.size?p.size+' ไร่':''}</small></div>
       <span class="${badgeCls}" style="padding:5px 12px;border-radius:14px;font-size:calc(13px * var(--ui-scale));font-weight:700;flex:none">${badgeTxt}</span></div>
       ${pdWhy.length?`<div class="pd-why ${cls==='danger'||pdRkBad?'bad':'amb'}">${pdWhy.map(x=>'<div>'+x+'</div>').join('')}</div>`:''}
-      ${pdNoteTxt?`<div class="pd-note">${pdNoteTxt}</div>`:''}
+      ${pdNoteTxt&&!IS_VIP?`<div class="pd-note">${pdNoteTxt}</div>`:''}
     </div>
     ${pdKpi}
     ${costCardHtml}
@@ -9993,12 +10000,13 @@ function pdVipKpi(p,o){
   const ds=d=>fD(d).replace(/\s\d{2}$/,'');
   return '<div class="pdv-rel"><b>🐣 วันปล่อย '+(p.startDate?fD(p.startDate):'-')+'</b><br>'
     +[p.hatchery?mpEsc(p.hatchery):'',p.plType?mpEsc(p.plType):'',plw>0?'<b>ไซส์วันปล่อย '+Math.round(1000/plw).toLocaleString()+' ตัว/กก.</b> ('+plw+' ก./ตัว)':''].filter(Boolean).join(' · ')
-    +(rel?'<br>'+rel.toLocaleString()+' ตัว'+(bn?' (ซื้อ '+st.toLocaleString()+' + แถม '+bn.toLocaleString()+')':''):'')+'</div>'
+    +(rel?'<br>'+rel.toLocaleString()+' ตัว'+(bn?' (ซื้อ '+st.toLocaleString()+' + แถม '+bn.toLocaleString()+')':''):'')
+    +(p.cropNote?'<br>📝 '+mpEsc(String(p.cropNote).split('\n')[0]):'')+'</div>'   // #491 VIP: รวมบรรทัดใต้เลขบ่อ (pd-note) เข้ากล่องนี้ — ไม่ซ้ำ
     +'<div class="pd-k4">'
     +'<div class="pd-k"><div class="l">ไซส์'+(o.lat&&o.lat.date?' ณ สุ่ม '+ds(o.lat.date):'')+'</div><div class="v">'+(o.sizeCount??'—')+(o.sizeCount?' <small>ตัว/กก.</small>':'')+'</div><div class="s">'+(o.lat&&o.lat.abw?'ABW '+o.lat.abw+' ก.':'')+'</div></div>'
     +'<div class="pd-k"><div class="l">น้ำหนักกุ้งในบ่อ</div><div class="v">'+(o.biomass?T(o.biomass):'—')+'</div><div class="s">'+(o.pdYr!=null?Math.round(o.pdYr).toLocaleString()+' กก./ไร่':'')+'</div></div>'
     +'<div class="pd-k"><div class="l">จับไปแล้ว</div><div class="v">'+(pt.kg>0?T(pt.kg):'—')+'</div><div class="s">'+(n?n+' ครั้ง':'ยังไม่จับ')+'</div></div>'
-    +'<div class="pd-k"><div class="l">อาหารล่าสุด'+(o.latFeed&&o.latFeed.date?' · '+ds(o.latFeed.date):'')+'</div><div class="v">'+(o.latFeed&&o.latFeed.totalFeed!=null?o.latFeed.totalFeed.toLocaleString()+' <small>กก.</small>':'—')+'</div><div class="s">'+(o.fcr!=null?'FCR '+o.fcr:'')+'</div></div>'
+    +'<div class="pd-k"><div class="l">อาหารล่าสุด'+(o.latFeed&&o.latFeed.date?' · '+ds(o.latFeed.date):'')+'</div><div class="v">'+(o.latFeed&&o.latFeed.totalFeed!=null?o.latFeed.totalFeed.toLocaleString()+' <small>กก.</small>':'—')+'</div><div class="s">'+[o.fcr!=null?'FCR '+o.fcr:'',o.latFeed?mpEsc(pdFeedBrandOf(o.latFeed)||''):''].filter(Boolean).join(' · ')+'</div></div>'
     +'</div>';
 }
 function pdCard(key,title,bodyHtml,extraCls,sumHtml){
@@ -17722,7 +17730,7 @@ function renderPdLabCard(p){
     row('เม็ดไขมันตับ','<span class="badge '+lip.c+'">'+lip.d+'</span>')+
     row('สภาพตับอ่อน','<span class="badge '+(!lat.hepato?'b-na':lat.hepato==='normal'?'b-ok':lat.hepato==='pale'?'b-warn':'b-danger')+'">'+(lat.hepato?(HEPATO_LBL[lat.hepato]||lat.hepato):'-')+'</span>')+
     (lat.notes?'<div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-top:8px;padding-top:8px;border-top:1px dashed var(--bd)">📝 '+mpEsc(lat.notes)+'</div>':'')+
-    (rows.length>1?'<div style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-top:10px">มีผลแล็บย้อนหลังอีก '+(rows.length-1)+' ครั้ง</div>':'')+
+    (rows.length>1?'<div class="pd-lab-more" style="font-size:calc(12px * var(--ui-scale));color:var(--tx3);margin-top:10px">มีผลแล็บย้อนหลังอีก '+(rows.length-1)+' ครั้ง</div>':'')+
     '<div style="margin-top:10px"><button class="btn btn-s" onclick="jumpLab('+Q+p.id+Q+')">🔬 ดู/บันทึกผลแล็บทั้งหมด</button></div>';
 }
 function jumpLab(pid){
