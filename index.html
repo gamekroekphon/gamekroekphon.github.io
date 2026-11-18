@@ -9591,7 +9591,7 @@ function renderPondDetail(id){
   const prevSizeCount=latPrev&&latPrev.abw&&latPrev.abw>0?Math.round(1000/latPrev.abw):null;
   const sizeArrow=sizeCount&&prevSizeCount?(sizeCount<prevSizeCount?`<span style="color:#64748b">▼ จาก ${prevSizeCount}</span>`:sizeCount>prevSizeCount?`<span style="color:#64748b">▲ จาก ${prevSizeCount}</span>`:''):'';
   // ── ② (entry #406 พี่เลือกแบบ ก) ช่อง FCR → อาหาร % ของน้ำหนักกุ้งต่อวัน — FCR ระหว่างเลี้ยงเท่าเกณฑ์เสมอเพราะอัตรารอดคิดจากอาหาร (#402)
-  const feedPctBio=latFeed&&latFeed.totalFeed>0&&biomass>0?latFeed.totalFeed/biomass*100:null;
+  // #489 (18 พ.ย. 69 พี่สั่ง): ถอดการ์ด อาหาร % ของน้ำหนักกุ้ง — ฟาร์มใช้แค่ กก./แสน
   // ── ③ รอดเกิน 100% → จำนวนตัวเกินยอดปล่อย (ตัวเลขไม่ตัด แค่บอก)
   const pdOverRel=!!(pdSC&&pdSC.release>0&&pdSC.aliveAll>pdSC.release);
   const kpiHero=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
@@ -9624,11 +9624,6 @@ function renderPondDetail(id){
       <div style="font-size:var(--fs10);color:#16a34a;margin-bottom:4px">อาหารรวม</div>
       <div style="font-size:calc(22px * var(--ui-scale));font-weight:500;color:#15803d;line-height:1">${cumFeed?cumFeed.toLocaleString():'—'}</div>
       <div style="font-size:var(--fs10);color:#16a34a;margin-top:3px">กก. ตลอดรอบ</div>
-    </div>
-    <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px" title="อาหารล่าสุด ÷ น้ำหนักกุ้งในบ่อ">
-      <div style="font-size:var(--fs10);color:#16a34a;margin-bottom:4px">อาหาร / น้ำหนักกุ้ง</div>
-      <div style="font-size:calc(22px * var(--ui-scale));font-weight:500;color:#15803d;line-height:1">${feedPctBio!=null?feedPctBio.toFixed(1)+'%':'—'}</div>
-      <div style="font-size:var(--fs10);color:#16a34a;margin-top:3px">${feedPctBio!=null?'ต่อวัน · '+latFeed.totalFeed.toLocaleString()+' ÷ '+Math.round(biomass).toLocaleString()+' กก.':'ต่อวัน'}</div>
     </div>
     <div style="background:#f0fdf4;border:0.5px solid #bbf7d0;border-radius:10px;padding:10px 12px" title="อาหารรวมถึงเมื่อวานของวันสุ่ม ÷ biomass วันสุ่ม (+พาเชียล) · เกณฑ์ฟาร์มนับตามครั้งที่สุ่ม — ไม่ใช่ FCR สุดท้ายตอนปิดรอบ">
       <div style="font-size:var(--fs10);color:#16a34a;margin-bottom:4px">FCR ประเมิน</div>
@@ -10340,7 +10335,7 @@ function renderPdFeedGrowth(p){
       +'<div class="v">อาหาร <b>'+(r.kpl!=null?f1(r.kpl):'-')+'</b> กก./แสน '+up+'</div>'
       +(r.kplEnd!=null?'<div class="v sub">เฉลี่ยในช่วง · '+fD(r.endD)+' = <b>'+f1(r.kplEnd)+'</b></div>':'')
       +'<div class="v">โต <b>'+r.adg.toFixed(2)+'</b> ก./วัน '+ach+'</div>'
-      +'<div class="v sub">'+Math.round(r.fpd).toLocaleString()+' กก./วัน'+(r.fr!=null?' · '+r.fr.toFixed(1)+'% ของน้ำหนักกุ้ง':'')+' · ABW '+r.abw+' ก.'
+      +'<div class="v sub">'+Math.round(r.fpd).toLocaleString()+' กก./วัน'+' · ABW '+r.abw+' ก.'
         +(r.fedDays<r.days?' · <span style="color:var(--w)">กรอกอาหาร '+r.fedDays+'/'+r.days+' วัน</span>':'')
         +(r.phN?' · 🦐 พาเชียล '+r.phN+' ครั้ง '+Math.round(r.phKg).toLocaleString()+' กก.':'')+'</div>'
       +(r.flag?'<div class="tag">⚠️ ไม่ได้ขึ้นอาหาร → โตช้าลง</div>':'')+'</div>';
@@ -15305,7 +15300,7 @@ function renderHvDaily(){
       '<td>'+c.age+'</td>'+
       '<td>'+(sz?sz+' ตัว/กก.':'-')+'</td>'+
       '<td>'+_hvMoney(c.bio)+' กก.</td>'+
-      '<td>'+_hvMoney(c.feed)+'<div style="font-size:var(--fs10);color:var(--tx3)">'+Math.round(c.feedKg)+' กก.'+(c.actRate!=null?' · '+c.actRate.toFixed(1)+'%':'')+'<br>'+
+      '<td>'+_hvMoney(c.feed)+'<div style="font-size:var(--fs10);color:var(--tx3)">'+Math.round(c.feedKg)+' กก.'+'<br>'+
         (c.feedSrc==='actual'?'จากที่ให้จริง '+c.feedDays+' วัน'
          :c.feedSrc==='last'?'ครั้งล่าสุด '+fD(c.feedLastDate)
          :'<span style="color:var(--w)">ยังไม่มีบันทึก — ใช้สูตร</span>')+'</div></td>'+
