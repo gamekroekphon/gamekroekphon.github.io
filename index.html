@@ -10125,7 +10125,7 @@ function fcrStdCrops(){
     const hr=c.harvestResult||{};
     const ss=(c.samples||[]).filter(x=>x&&x.date&&+x.abw>0&&x.date>=c.startDate&&x.date<=c.closeDate).sort((a,b)=>a.date.localeCompare(b.date));
     const fl=(c.feedLog||[]).filter(x=>x&&x.date);
-    const base={pond:p.name,zone:pondZone(p),start:c.startDate,close:c.closeDate,label:cropLbl(p,c)};
+    const base={pond:p.name,zone:pondZone(p),start:c.startDate,close:c.closeDate,label:cropLbl(p,c),plw:+c.plWeight||null};   // #490 plw = น้ำหนักลูกกุ้งวันปล่อย (ก.) → ไซส์วันปล่อย
     if(ss.length<FS_MIN_SAMPLES||!fl.length||!(+hr.totalWeight>0)||!(+hr.caught>0)){out.push({...base,skip:'nodata'});return;}
     const ph=(c.partialHarvests||[]).filter(x=>x&&x.date).map(x=>({date:x.date,kg:+x.weight||0,cnt:(+x.weight||0)*(+x.size||0)}));
     const phKg=ph.reduce((a,x)=>a+x.kg,0),phCnt=ph.reduce((a,x)=>a+x.cnt,0);
@@ -10241,9 +10241,9 @@ function renderFcrStd(){
   av.forEach(q=>g+='<circle cx="'+X(q[0])+'" cy="'+Y(q[1])+'" r="3.6" style="fill:var(--ok)"/>');
   const lq=av[av.length-1];g+='<text x="'+(X(lq[0])+6)+'" y="'+(Y(lq[1])+4)+'" font-size="12" font-weight="700" style="fill:var(--ok)">'+f2(lq[1])+'</text>';
   const rowK=tb.map(r=>{const df=r.fcr-r.rule,c=df>=0.05?'up':df<=-0.05?'dn':'eq';
-    return'<tr class="'+(df>=0.05?'hi':'')+'"><td>'+r.k+(r.n<2?' <span class="fs-chip">'+r.n+' รอบ</span>':'')+'</td><td>'+Math.round(r.age)+'</td><td class="gd">'+r.guide.toFixed(2)+'</td><td>'+r.rule.toFixed(1)+'</td><td><b>'+f2(r.fcr)+'</b></td><td class="'+c+'">'+sg(df)+'</td><td>'+f2(r.lo)+'–'+f2(r.hi)+'</td><td>'+r.abw.toFixed(1)+'</td></tr>';}).join('');
+    return'<tr class="'+(df>=0.05?'hi':'')+'"><td>'+r.k+(r.n<2?' <span class="fs-chip">'+r.n+' รอบ</span>':'')+'</td><td>'+Math.round(r.age)+'</td><td class="gd">'+r.guide.toFixed(2)+'</td><td>'+r.rule.toFixed(1)+'</td><td><b>'+f2(r.fcr)+'</b></td><td class="'+c+'">'+sg(df)+'</td><td>'+f2(r.lo)+'–'+f2(r.hi)+'</td><td>'+Math.round(1000/r.abw).toLocaleString()+'</td></tr>';}).join('');
   const rowS=use.concat(low).map(c=>{const df=c.survIn!=null&&c.surv!=null?c.survIn-c.surv:null;
-    return'<tr><td>'+mpEsc(c.pond)+' <span class="fs-chip">'+mpEsc(fD(c.close).replace(/\s\d{2}$/,''))+'</span>'+(c.skip?' <span class="fs-chip">ตัดออก</span>':'')+'</td><td>'+(c.survIn!=null?c.survIn.toFixed(1)+'%':'-')+'</td><td>'+(c.surv!=null?c.surv+'%':'-')+'</td><td class="'+(df!=null&&Math.abs(df)>2?'up':'eq')+'">'+(df!=null?(df>=0?'+':'')+df.toFixed(1):'-')+'</td><td>'+f2(c.fcrAct)+'</td></tr>';}).join('');
+    return'<tr><td>'+mpEsc(c.pond)+' <span class="fs-chip">'+mpEsc(fD(c.close).replace(/\s\d{2}$/,''))+'</span>'+(c.skip?' <span class="fs-chip">ตัดออก</span>':'')+'</td><td>'+(c.plw>0?Math.round(1000/c.plw).toLocaleString():'-')+'</td><td>'+(c.survIn!=null?c.survIn.toFixed(1)+'%':'-')+'</td><td>'+(c.surv!=null?c.surv+'%':'-')+'</td><td class="'+(df!=null&&Math.abs(df)>2?'up':'eq')+'">'+(df!=null?(df>=0?'+':'')+df.toFixed(1):'-')+'</td><td>'+f2(c.fcrAct)+'</td></tr>';}).join('');
   el.innerHTML='<div class="fs-k3">'
     +'<div class="fs-k ok"><div class="l">รอบที่ใช้คิด</div><div class="v">'+use.length+' <small>รอบ</small></div><div class="s">'+mpEsc(use.map(c=>c.pond).join(' '))+'</div></div>'
     +'<div class="fs-k"><div class="l">รอบที่ตัดออก</div><div class="v">'+low.length+' <small>รอบ</small></div><div class="s">'+(low.length?mpEsc(low.map(c=>c.pond).join(' '))+' · รอดจริงต่ำกว่า '+FS_MIN_SURV+'%':'รอดจริงต่ำกว่า '+FS_MIN_SURV+'% จะถูกตัด')+(nod.length?' · ไม่มีข้อมูลสุ่ม '+nod.length+' รอบ':'')+'</div></div>'
@@ -10251,9 +10251,9 @@ function renderFcrStd(){
     +'<div class="fs-find">'+msg.join('<br>')+'</div>'
     +'<div class="fs-card"><div class="fs-ct">FCR ตามอายุกุ้ง <span>เส้นบาง = แต่ละรอบ · คิดย้อนจากผลจับ</span></div><div class="fs-tb"><svg viewBox="0 0 '+W+' '+H+'" width="100%" style="min-width:560px" role="img" aria-label="กราฟ FCR ตามอายุ">'+g+'</svg></div>'
     +'<div class="fs-lg"><span><i style="border-top:2.5px dashed var(--p);height:0"></i>เกณฑ์ที่ใช้อยู่</span><span><i style="background:var(--ok);height:4px"></i>ของจริงเฉลี่ย</span><span><i style="background:var(--in);opacity:.5"></i>แต่ละรอบ</span>'+(low.length?'<span><i style="background:var(--d);opacity:.4"></i>ตัดออก</span>':'')+'</div></div>'
-    +'<div class="fs-two"><div class="fs-card"><div class="fs-ct">📐 เกณฑ์แนะนำ ทีละครั้งที่สุ่ม <span>เฉลี่ย '+use.length+' รอบ</span></div><div class="fs-tb"><table><tr><th>สุ่มครั้งที่</th><th>อายุ</th><th>แนะนำ</th><th>ใช้อยู่</th><th>จริง</th><th>ต่าง</th><th>ช่วง</th><th>ABW</th></tr>'+rowK+'</table></div>'
-    +'<div class="fs-nx" style="margin-top:6px">แนะนำ = ค่าจริงเฉลี่ย ปัดทีละ 0.05</div></div>'
-    +'<div><div class="fs-card"><div class="fs-ct">อัตรารอด: กรอก vs จับจริง <span>เฉลี่ย 4 ครั้งท้าย</span></div><div class="fs-tb"><table><tr><th>บ่อ</th><th>กรอก</th><th>จริง</th><th>ต่าง</th><th>FCR จริง</th></tr>'+rowS+'</table></div></div>'
+    +'<div class="fs-two"><div class="fs-card"><div class="fs-ct">📐 เกณฑ์แนะนำ ทีละครั้งที่สุ่ม <span>เฉลี่ย '+use.length+' รอบ</span></div><div class="fs-tb"><table><tr><th>สุ่มครั้งที่</th><th>อายุ</th><th>แนะนำ</th><th>ใช้อยู่</th><th>จริง</th><th>ต่าง</th><th>ช่วง</th><th>ไซส์</th></tr>'+rowK+'</table></div>'
+    +'<div class="fs-nx" style="margin-top:6px">แนะนำ = ค่าจริงเฉลี่ย ปัดทีละ 0.05 · ไซส์ = ตัว/กก. (เฉลี่ย ณ ครั้งที่สุ่มนั้น)</div></div>'
+    +'<div><div class="fs-card"><div class="fs-ct">อัตรารอด: กรอก vs จับจริง <span>เฉลี่ย 4 ครั้งท้าย</span></div><div class="fs-tb"><table><tr><th>บ่อ</th><th>ไซส์วันปล่อย</th><th>กรอก</th><th>จริง</th><th>ต่าง</th><th>FCR จริง</th></tr>'+rowS+'</table></div></div>'
     +'<div class="fs-card fs-nx"><div class="fs-ct">รอบที่จะเข้ามาเพิ่ม</div>'+(wait.length?'<span class="fs-chip wt">รอปิด</span> '+mpEsc(wait.join(' · '))+'<br>':'')+'ปิดบ่อแล้วแอปคิดเพิ่มให้เอง · ต้องมีสุ่ม ≥ '+FS_MIN_SAMPLES+' ครั้ง + กรอกอาหาร + ผลจับ</div></div></div>'
     +'<div class="fs-card fs-nx"><b>วิธีคิด:</b> ณ วันสุ่ม น้ำหนักกุ้งจริง ≈ จำนวนตัวที่จับได้ทั้งหมด × ABW วันสุ่ม (หักตัวที่พาเชียลไปก่อน + บวก กก. พาเชียลก่อนวันนั้น) · FCR จริง = อาหารสะสมก่อนวันสุ่ม ÷ น้ำหนักนั้น · ไม่รู้ว่าตายหลังวันสุ่มกี่ตัว ตัวเลขจึงสูงนิดหน่อย รอบที่รอดจริงต่ำกว่า '+FS_MIN_SURV+'% จึงตัดออก · หน้านี้เป็นไกด์ไลน์ ยังไม่เปลี่ยนเกณฑ์ที่แอปใช้คิดอัตรารอด</div>';
 }
