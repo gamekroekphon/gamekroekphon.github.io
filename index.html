@@ -8747,7 +8747,7 @@ function hsRenderKpi(rs,all,yr){
     const pr=all.filter(r=>r.y===py);
     if(pr.length){
       const pm=pr.filter(r=>r.m<=lastM);
-      pb=pm.reduce((s,r)=>s+r.baht,0);pk=pm.reduce((s,r)=>s+r.kg,0);pn=pm.length;
+      pb=pm.reduce((s,r)=>s+r.baht,0);pk=pm.reduce((s,r)=>s+r.kg,0);pn=pm.filter(r=>r.type==='ปิดบ่อ').length;
       suf='จากปี '+py;if(lastM<12)note='% = เทียบปี '+py+' ช่วง ม.ค.–'+HV_MONTHS_S[lastM-1];
     }else if(lastM===12&&HV_OLD[py]){
       pb=HV_OLD[py][0];pk=HV_OLD[py][1];suf='จากปี '+py;
@@ -8757,7 +8757,7 @@ function hsRenderKpi(rs,all,yr){
     <div class="hsy-kpi"><small>ยอดขายรวม</small><b>฿${hsFmt(bt)}</b><span>${(bt/1e6).toFixed(2)} ล้านบาท</span>${hsYoy(bt,pb,suf)}</div>
     <div class="hsy-kpi"><small>น้ำหนักรวม</small><b>${hsFmt(kg)} กก.</b><span>${(kg/1000).toFixed(1)} ตัน</span>${hsYoy(kg,pk,suf)}</div>
     <div class="hsy-kpi"><small>ราคาเฉลี่ย</small><b>฿${kg?(bt/kg).toFixed(2):'-'}</b><span>บาท/กก. (ถ่วงตามน้ำหนัก)</span>${kg&&pk?hsYoy(bt/kg,pb/pk,suf):''}</div>
-    <div class="hsy-kpi"><small>จับทั้งหมด</small><b>${rs.length} ครั้ง</b><span>ปิดบ่อ ${nClose} · พาเชียล ${rs.length-nClose}</span>${nWait?'<span class="hsy-waitn">รอปิดรอบ '+nWait+' บ่อ</span>':''}${hsYoy(rs.length,pn,suf)}</div>${note?'<div class="hsy-yoyn">'+note+'</div>':''}`;
+    <div class="hsy-kpi"><small>ปิดบ่อทั้งหมด</small><b>${nClose} บ่อ</b>${nWait?'<span class="hsy-waitn">รอปิดรอบ '+nWait+' บ่อ</span>':''}${hsYoy(nClose,pn,suf)}</div>${note?'<div class="hsy-yoyn">'+note+'</div>':''}`;
 }
 function hsRenderTable(rs,yr){
   const el=document.getElementById('hs-table');if(!el)return;
