@@ -2443,6 +2443,8 @@ input.sk-cart-price{width:90px!important;text-align:center;font-size:calc(13px *
 body.role-admin .bnav-btn.bn-admin{display:flex}
 body.role-admin .bnav-btn.bn-staff{display:none}
 /* ผู้ดูแลโซน (#319) — body.zone-keeper ตั้งจากชื่อคนล็อกอินใน updateUserHeader() · ต้องอยู่หลังกฎ role เพื่อชนะ specificity เท่ากัน */
+/* #484 พี่สั่ง 18 พ.ย. 69: เลิกเก็บข้อมูลกุ้งตาย (ใช้งานจริงไม่ได้) → ซ่อนทางเข้าทั้งหมด · ข้อมูลเก่ายังอยู่ */
+#tab-mortality,.sn-link[onclick*="'mortality'"],#bnav-mortality,body.zone-keeper #bnav-mortality,.mob-sheet-item[data-t="mortality"]{display:none!important}
 .bnav-btn.bn-keeper{display:none}
 body.zone-keeper .bnav-btn.bn-keeper{display:flex}
 body.zone-keeper .bnav-btn.bn-staff,body.zone-keeper .bnav-btn.bn-admin,body.zone-keeper #bnav-stock{display:none}
@@ -9745,7 +9747,6 @@ function renderPondDetail(id){
     <div class="pd-gauges" id="pd-gauges" hidden></div>
     <div class="pd-sec"><span>📋 เรื่องของบ่อนี้ · กดดูรายละเอียด</span></div>
     <div class="pd-list">
-    ${pdCard('mort','🦐 กุ้งตาย','<div id="pd-mort-card"></div>','',pdMortSum)}
     ${pdCard('feedhist','🍖 อาหาร',
       `<div id="pd-feed-sum"></div>
       <div class="chip-row" id="pd-feed-hist-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
@@ -10403,7 +10404,7 @@ function renderOvKpis(list,all){
     const n=list.length,cnt=f=>list.filter(m=>f(m.p)).length;
     const wq=cnt(p=>(p.records||[]).some(r=>r.date===td)),fd=cnt(p=>(p.feedLog||[]).some(r=>r.date===td)),mt=cnt(p=>(p.mortalityLog||[]).some(r=>r.date===td));
     const ln=(ic,t,a,go)=>'<button type="button" class="ovk-j" onclick="'+go+'">'+ic+' '+t+' <b class="'+(a<n?'no':'ok')+'">'+a+'/'+n+'</b>'+(n&&a>=n?' ✓':'')+'</button>';
-    h+=K('job','📝 งานกรอกวันนี้','<div class="ovk-js">'+ln('💧','น้ำ',wq,"goTabByName('entry')")+ln('🍚','อาหาร',fd,"goTabByName('feed')")+ln('☠️','กุ้งตาย',mt,"goTabByName('mortality')")+'</div>');
+    h+=K('job','📝 งานกรอกวันนี้','<div class="ovk-js">'+ln('💧','น้ำ',wq,"goTabByName('entry')")+ln('🍚','อาหาร',fd,"goTabByName('feed')")+'</div>');
   }
   const nx=ovNextRows()[0];
   if(nx){const{p,info}=nx,go="openPondDetail('"+p.id+"')";
@@ -10451,7 +10452,6 @@ function renderOvTodo(list){
   }
   const fd=list.filter(m=>(m.p.feedLog||[]).some(r=>r.date===td)).length;
   if(n&&fd<n)s+=row('n','<b>อาหารวันนี้ยังไม่กรอก</b>',(n-fd)+' จาก '+n+' บ่อ',"goTabByName('feed')");
-  if(!admin&&n){const mt=list.filter(m=>(m.p.mortalityLog||[]).some(r=>r.date===td)).length;if(mt<n)s+=row('n','<b>กุ้งตายยังไม่กรอก</b>',(n-mt)+' จาก '+n+' บ่อ',"goTabByName('mortality')");}
   const ty=ovTypos(list);
   if(ty.length)s+='<div class="ov2-typo">🔎 ตรวจตัวเลข: '+ty.join(' · ')+'</div>';
   el.innerHTML='<div class="ov3-ch"><b>ต้องทำวันนี้</b>'+(red.length?'<span class="ov3-urg">'+red.length+' ด่วน</span>':'')+'</div>'+(s||'<div class="ov2-allok">✅ ไม่มีงานค้างวันนี้</div>');
@@ -12882,7 +12882,7 @@ function navLsSet(k,v){try{localStorage.setItem(k+'_'+navUid(),JSON.stringify(v)
 function navUse(id){if(APP_ROLE!=='admin'||!id||id==='tab:overview')return;const u=navLs('tw_nav_use',{});const x=u[id]||{n:0};x.n++;x.at=Date.now();u[id]=x;navLsSet('tw_nav_use',u);}
 const NAV_SYN={elec:'ไฟ บิลไฟ ค่าไฟฟ้า หน่วยไฟ',labor:'เงินเดือน คนงาน จ่ายคน ค่าจ้าง ค่าแรงสัปดาห์',pl:'กำไร ขาดทุน รายได้ ต้นทุนรอบ',crops:'รอบ ประวัติ ปิดบ่อ ย้อนหลัง',
   harveststat:'ขาย ขายกุ้ง ราคากุ้ง แพ ยอดขาย ผู้ซื้อ รายได้กุ้ง',pricehist:'ราคาขาย ราคากุ้ง ขอราคา ไซส์ แพ ประวัติราคา',harvest:'จับ พาเชียล ปิดบ่อ ขายกุ้ง',sample:'ไซส์ สุ่ม อัตรารอด น้ำหนัก abw pdg',feed:'อาหาร fcr ให้อาหาร เบอร์อาหาร',
-  entry:'น้ำ ph do alk ค่าน้ำ สีน้ำ แอมโมเนีย ไนไตรท์',watlog:'เติมน้ำ ถ่ายน้ำ สูบน้ำเข้า',mortality:'ตาย กุ้งตาย',lab:'เชื้อ แล็บ ตับ ehp vibrio tcbs',
+  entry:'น้ำ ph do alk ค่าน้ำ สีน้ำ แอมโมเนีย ไนไตรท์',watlog:'เติมน้ำ ถ่ายน้ำ สูบน้ำเข้า',lab:'เชื้อ แล็บ ตับ ehp vibrio tcbs',
   tide:'อากาศ ฝน น้ำขึ้น น้ำลง สูบน้ำ ตารางน้ำ',stock:'ของ คลัง เบิก พัสดุ',price:'ราคาทุน ราคาขาย ต้นทุนสินค้า ราคาของ',forecast:'คาดการณ์ จับเมื่อไหร่ ตัน วันจับ',
   medproto:'ยา สูตร โปรแกรม ผสมอาหาร เวชภัณฑ์',manage:'วางแผน ลงกุ้ง บ่อว่าง ยอดลง',users:'บัญชี สิทธิ์ ล็อกอิน ผู้ใช้',palm:'ปาล์ม ปุ๋ย สวน',
   hatchery:'ปล่อยกุ้ง ลูกกุ้ง โรงเพาะฟัก cp แถม',fcrstd:'fcr เกณฑ์ มาตรฐาน อัตรารอด ผลจับจริง',compare:'เทียบ เปรียบเทียบ รุ่น',risk:'ความเสี่ยง เตือน',export:'pdf สรุปปิดบ่อ รายงาน',ai:'ai ถาม ผู้ช่วย แชต',kan:'ชีต กัน แผนลงลูกกุ้ง',overview:'หน้าแรก สรุป ทุกบ่อ'};
@@ -13008,7 +13008,7 @@ function navPinEditToggle(){_navPinEdit=!_navPinEdit;navPinsRender();}
 // ── 🧭 แผนที่แอป: คำถาม → ปลายทาง (id ใน navEntries — ชื่อ/ทางเดินมาจากที่เดียวกับช่องค้นหา) ──
 const APP_MAP=[
   ['💰 เงิน',[['ค่าไฟเดือนไหน','el:sum'],['เงินเดือนพนักงานประจำ','lb:staff'],['ค่าแรงรายสัปดาห์','lb:cost'],['ต้นทุนทุกบ่อตอนนี้','x:cost'],['กำไร/ขาดทุนรอบที่ปิด','tab:pl'],['ขายกุ้งได้เท่าไหร่ แพไหน','tab:harveststat'],['ราคาทุน / ราคาขายสินค้า','tab:price']]],
-  ['🦐 กุ้ง',[['ไซส์ / อัตรารอด','tab:sample'],['ให้อาหาร / FCR','tab:feed'],['จะจับได้กี่ตัน วันไหน','tab:forecast'],['ผลแล็บ / เชื้อ','tab:lab'],['กุ้งตาย','tab:mortality'],['ประวัติรอบเลี้ยงย้อนหลัง','tab:crops'],['โรงเพาะฟักไหนดี','tab:hatchery'],['บันทึกจับกุ้ง / พาเชียล','tab:harvest']]],
+  ['🦐 กุ้ง',[['ไซส์ / อัตรารอด','tab:sample'],['ให้อาหาร / FCR','tab:feed'],['จะจับได้กี่ตัน วันไหน','tab:forecast'],['ผลแล็บ / เชื้อ','tab:lab'],['ประวัติรอบเลี้ยงย้อนหลัง','tab:crops'],['โรงเพาะฟักไหนดี','tab:hatchery'],['บันทึกจับกุ้ง / พาเชียล','tab:harvest']]],
   ['📦 ของ',[['ของเหลือเท่าไหร่','sk:items'],['เบิกอะไรลงบ่อไหน','sk:out'],['บิลรับของ','x:billall'],['ยอดนับสต็อกรอตรวจ','x:count'],['บุญชู (หน้าร้าน)','sk:shop'],['สูตรยา / โปรแกรมที่ใช้','tab:medproto']]],
   ['💧 น้ำ',[['ค่าน้ำ / สีน้ำวันนี้','tab:entry'],['สูบน้ำได้ตอนไหน / ฝน','tab:tide'],['เติมน้ำครั้งล่าสุด','tab:watlog'],['บ่อไหนเสี่ยง','tab:risk']]],
   ['🌴 ปาล์ม · อื่นๆ',[['ปาล์ม ภาพรวม','tab:palm'],['ใส่ปุ๋ยปาล์มล่าสุด','pm:fert'],['ตัดปาล์ม / ผลผลิต','pm:harvest'],['วางแผนลงกุ้ง / บ่อว่าง','tab:manage'],['เพิ่ม/ลบผู้ใช้','tab:users'],['ถาม AI','tab:ai']]],
