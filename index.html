@@ -672,7 +672,7 @@ table.pd-surv-tb td.w{color:var(--w);font-weight:700}
 .pd-rec-item .v.danger{color:var(--d)}
 .pd-rec-note{font-size:var(--fs11);color:var(--tx2);margin-top:7px;padding-top:7px;border-top:1px dashed var(--bd);line-height:1.5}
 .pd-rec-feedrow{display:flex;justify-content:space-between;font-size:calc(12px * var(--ui-scale))}
-.pd-rec-feedrow b{color:var(--tx)}
+.pd-rec-feedrow b{color:var(--tx);white-space:nowrap;padding-left:8px}
 .pd-chart-card{margin-top:12px}
 .pd-chart-wrap{height:200px;margin-top:6px}
 /* เติมน้ำ + อาหาร vs การเติบโต (#324) */
@@ -1106,7 +1106,7 @@ table.lu-t tr.base td{background:var(--sf2)}
 .lu-iv .h{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:calc(14px * var(--ui-scale))}
 .lu-lab{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:6px 0}
 .lu-lab div{border-radius:9px;padding:4px 6px;font-size:calc(12px * var(--ui-scale));font-weight:600;background:var(--sf2)}
-.lu-lab b{display:block;font-size:calc(14px * var(--ui-scale))}
+.lu-lab b{display:block;font-size:calc(14px * var(--ui-scale));white-space:nowrap}
 .lu-lab .dn{background:var(--ob);color:var(--ok)}.lu-lab .up{background:var(--db);color:var(--d)}
 .lu-use{display:flex;flex-wrap:wrap;gap:4px}
 .lu-use span{font-size:calc(12px * var(--ui-scale));font-weight:600;border-radius:7px;padding:1px 7px;border:1px solid var(--bd)}
@@ -1997,6 +1997,15 @@ table.exy-t td,table.exy-t th{font-variant-numeric:tabular-nums}
 .pmh-note{font-size:calc(13px * var(--ui-scale));margin-top:2px}
 .pmh-s{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px;font-size:calc(12.5px * var(--ui-scale))}
 .pr-dash{font-style:normal!important;font-size:calc(18px * var(--ui-scale));font-weight:700;color:#9CA3AF}.hat-dash{color:var(--tx3);font-weight:700}.wl-eq{color:var(--tx2);font-weight:600}.sw-more{color:var(--p);font-weight:800;cursor:pointer;white-space:nowrap}
+.badge,.pr-size-tag{white-space:nowrap}
+.nw{white-space:nowrap}
+@media(max-width:768px){   /* #501 ตารางมือถือ: วันที่/✏️🗑️/"95 วัน" ไม่แตก 3 บรรทัด · คอลัมน์สุดท้าย (หมายเหตุ) ยังตัดบรรทัดได้ · ตารางเลื่อนซ้ายขวาอยู่แล้ว */
+  .tbl td{white-space:nowrap}.tbl td:last-child{white-space:normal;min-width:110px}
+  .hdr-brand{white-space:nowrap}.hdr-badge .hb-w{display:none}
+  .wl-li{grid-template-columns:64px minmax(0,1fr) auto auto}.wl-li .d{white-space:nowrap}
+  #sec-users .fgrid{grid-template-columns:1fr 1fr!important}
+  .pd-fg-r{grid-template-columns:auto minmax(0,1fr)}.pd-fg-r .wk{grid-row:span 5}.pd-fg-r .v.sub,.pd-fg-r .tag{grid-column:2}
+}
 .pmh-edit{margin:-12px 0 -12px auto;min-width:44px;min-height:44px;border:none;background:none;cursor:pointer;font-family:inherit;padding:0}.pmh-edit span{font-size:calc(12.5px * var(--ui-scale));font-weight:700;color:var(--p);border:1px solid #E9C46A;border-radius:99px;padding:2px 10px}.pmh-edit+.pmh-del{margin-left:0}.pmh-acts{margin-left:auto;display:flex;gap:2px;flex-shrink:0}.pmh-acts .pmh-edit,.pmh-acts .pmh-del{margin:-12px 0}.pmh-acts .pmh-del{margin-right:-4px}
 .pm-editbar{display:flex;align-items:center;gap:8px;background:var(--wb);border:1.5px solid var(--w);border-radius:10px;padding:8px 10px;margin:8px 0;font-weight:700;font-size:calc(13.5px * var(--ui-scale))}.pm-editbar button{margin-left:auto;border:1.5px solid var(--bd);background:var(--sf);border-radius:8px;padding:5px 10px;font-family:inherit;font-weight:700;cursor:pointer}.pm-edit-old{font-size:calc(13px * var(--ui-scale));font-weight:700;color:var(--w);margin-top:6px}
 .pmh-del{margin:-12px -4px -12px auto;min-width:44px;min-height:44px;border:none;background:none;cursor:pointer;font-family:inherit;padding:0}
@@ -7764,7 +7773,7 @@ function wqRuleWhy(key,v){
   const r=WQ_RULE[key];v=parseFloat(v);if(!r)return'';
   if(r.lo!=null&&v<r.lo)return'ต่ำกว่า '+r.lo;
   if(r.hiD!=null&&v>r.hiD)return'เกิน '+r.hiD;
-  if(r.loW!=null&&v<=r.loW)return'ถึงเกณฑ์เตือน';
+  if(r.loW!=null&&v<=r.loW)return'ถึงเกณฑ์';   // #501 สั้นลง (สีเหลือง = เตือนอยู่แล้ว)
   if(r.hi!=null&&v>r.hi)return'สูงมาก (เกิน '+r.hi+')';
   return'';
 }
@@ -10376,12 +10385,12 @@ function renderPdFeedGrowth(p){
     const up=r.kplUp==null?'':r.kplUp>0?'<span class="up">▲ ขึ้น '+f1(r.kplUp)+'</span>':r.kplUp<0?'<span class="dn">▼ ลด '+f1(-r.kplUp)+'</span>':'<span class="fl">= ไม่ได้ขึ้น</span>';
     const ach=r.adgCh==null?'':r.adgCh>=0?'<span class="up">▲</span>':'<span class="'+(r.adgCh<-0.2?'dn':'fl')+'">▼ '+Math.round(-r.adgCh*100)+'%</span>';
     return '<div class="pd-fg-r'+(r.flag?' flag':'')+'"><div class="wk"><b>'+fD(r.to)+'</b>อายุ '+r.age+' วัน</div>'
-      +'<div class="v">อาหาร <b>'+(r.kpl!=null?f1(r.kpl):'-')+'</b> กก./แสน '+up+'</div>'
+      +'<div class="v">อาหาร <b>'+(r.kpl!=null?f1(r.kpl):'-')+'</b> <span class="nw">กก./แสน</span> <span class="nw">'+up+'</span></div>'
       +(r.kplEnd!=null?'<div class="v sub">เฉลี่ยในช่วง · '+fD(r.endD)+' = <b>'+f1(r.kplEnd)+'</b></div>':'')
-      +'<div class="v">โต <b>'+r.adg.toFixed(2)+'</b> ก./วัน '+ach+'</div>'
-      +'<div class="v sub">'+Math.round(r.fpd).toLocaleString()+' กก./วัน'+' · ABW '+r.abw+' ก.'
+      +'<div class="v">โต <b>'+r.adg.toFixed(2)+'</b> <span class="nw">ก./วัน '+ach+'</span></div>'
+      +'<div class="v sub">'+Math.round(r.fpd).toLocaleString()+' กก./วัน'+(r.abw>0?' · ไซส์ '+Math.round(1000/r.abw)+' ตัว/กก.':'')   // #501 ไซส์เป็นตัว/กก.
         +(r.fedDays<r.days?' · <span style="color:var(--w)">กรอกอาหาร '+r.fedDays+'/'+r.days+' วัน</span>':'')
-        +(r.phN?' · 🦐 พาเชียล '+r.phN+' ครั้ง '+Math.round(r.phKg).toLocaleString()+' กก.':'')+'</div>'
+        +(r.phN?' · <span class="nw">🦐 พาเชียล '+r.phN+' ครั้ง '+Math.round(r.phKg).toLocaleString()+' กก.</span>':'')+'</div>'
       +(r.flag?'<div class="tag">⚠️ ไม่ได้ขึ้นอาหาร → โตช้าลง</div>':'')+'</div>';
   }).join('');
   el.innerHTML=alert+'<div class="pd-chart-wrap"><canvas id="pd-c-feedweek"></canvas></div>'
@@ -10458,7 +10467,7 @@ function renderOv(){
   meta.sort((a,b)=>b.age-a.age);   // #453 การ์ดบ่อเรียงตามอายุ (พี่สั่ง) — สีบอกความด่วน
   renderOvStockWarn();
   const dcP=meta.filter(m=>m.cls==='danger').length,wcP=meta.filter(m=>m.cls==='warn').length;
-  document.getElementById('hdr-alert').textContent=dcP>0&&wcP>0?`🔴 ${dcP} ต้องดู · ⚠️ ${wcP} เฝ้าระวัง`:dcP>0?`🔴 ${dcP} ต้องดู`:wcP>0?`⚠️ ${wcP} เฝ้าระวัง`:'✅ ทุกบ่อปกติ';
+  document.getElementById('hdr-alert').innerHTML=dcP>0&&wcP>0?`🔴 ${dcP}<span class="hb-w"> ต้องดู</span> · ⚠️ ${wcP}<span class="hb-w"> เฝ้าระวัง</span>`:dcP>0?`🔴 ${dcP} ต้องดู`:wcP>0?`⚠️ ${wcP} เฝ้าระวัง`:'✅ ทุกบ่อปกติ';   // #501
   const active=meta.filter(m=>!clsNoShrimp(m.cls));
   // ── ลบหน้า "เตรียมบ่อ" ออกแล้ว (entry #213) — บ่อที่ยังไม่มีกุ้งนับเป็น "ว่าง/พักบ่อ" ทั้งหมด
   const idleNotPrepped=meta.filter(m=>clsNoShrimp(m.cls)).length;
@@ -10553,7 +10562,7 @@ function renderOvKpis(list,all){
   const K=(cls,l,body,s,go,extra)=>'<div class="ovk'+(cls?' '+cls:'')+'"'+(go?' role="button" tabindex="0" onclick="'+go+'"':'')+'><div class="l">'+l+'</div>'+body+(s?'<div class="s">'+s+'</div>':'')+(extra||'')+'</div>';
   const V=(v,u)=>'<div class="v">'+v+(u?'<span>'+u+'</span>':'')+'</div>';
   let h=K('','🦐 กุ้งใน'+(z?' '+mpEsc(dzLabel(z)):'บ่อตอนนี้'),V(bio>0?(bio/1000).toFixed(1):'-','ตัน'),bioSub);
-  h+=K('','🍚 อาหารเฉลี่ยต่อวัน',V(fa>0?Math.round(fa).toLocaleString():'-','กก.'),fa>0?'7 วันล่าสุด · เมื่อวาน '+(fy>0?Math.round(fy).toLocaleString()+' กก.':'ยังไม่กรอก'):'',null,fnz.length>1?ovSpark(fs.filter((v,i)=>v>0||i<fs.length-1)):'');   // พี่สั่ง: เฉลี่ยต่อวันแทนเมื่อวาน
+  h+=K('','🍚 อาหารเฉลี่ยต่อวัน',V(fa>0?Math.round(fa).toLocaleString():'-','กก.'),fa>0?'7 วัน · เมื่อวาน '+(fy>0?Math.round(fy).toLocaleString()+' กก.':'ยังไม่กรอก'):'',null,fnz.length>1?ovSpark(fs.filter((v,i)=>v>0||i<fs.length-1)):'');   // พี่สั่ง: เฉลี่ยต่อวันแทนเมื่อวาน
   if(admin){
     const cost=list.reduce((s,m)=>s+ceoTotalCost(m.p),0);
     let ec=0,ek=0;list.forEach(m=>{const e=pondCloseEst(m.p,pondRunningCost(m.p),getLatestBiomass(m.p));if(e){ec+=e.cost;ek+=e.kg;}});
@@ -10651,7 +10660,7 @@ function renderOvNext(){
       +'<span><b>'+mpEsc(p.name)+'</b><small>'+Math.round(info.yr).toLocaleString()+' กก./ไร่'+(info.abw?' · '+Math.round(1000/info.abw)+' ตัว/กก.':'')+((s=>s&&s.date?' · '+atSmpTxt(s.date):'')(latestSample(p)))+'</small></span><span class="in">จับได้</span></button>';
     const d=new Date(info.date+'T00:00:00');
     return '<button type="button" class="ov2-h"'+go+'><span class="dd"><b>'+d.getDate()+'</b>'+d.toLocaleDateString('th-TH',{month:'short'})+'</span>'
-      +'<span><b>'+mpEsc(p.name)+'</b><small>คาด '+Math.round(1000/info.targetAbw)+' ตัว/กก. · ตอนนี้ '+info.pct.toFixed(0)+'%'+((s=>s&&s.date?' · '+atSmpTxt(s.date):'')(latestSample(p)))+'</small></span><span class="in">'+(info.days>0?'อีก '+info.days+' วัน':'วันนี้')+'</span></button>';
+      +'<span><b>'+mpEsc(p.name)+'</b><small>คาด '+Math.round(1000/info.targetAbw)+' ตัว/กก. · ตอนนี้ '+info.pct.toFixed(0)+'%'+((s=>s&&s.date?' · <span class="nw">'+atSmpTxt(s.date).replace('ณ ','')+'</span>':'')(latestSample(p)))+'</small></span><span class="in">'+(info.days>0?'อีก '+info.days+' วัน':'วันนี้')+'</span></button>';
   }).join('');
   if(pc&&pc.style.display!=='none')el.appendChild(pc);   // #492 จับกุ้งเร็วๆ นี้ + ปฏิทินจับกุ้ง = การ์ดเดียว
 }
@@ -13360,7 +13369,7 @@ function renderLabUse(){
   if(APP_ROLE!=='admin'){el.innerHTML='';return;}
   const ivs=luIntervals(),th=LU_TH.find(x=>x.id===_luTh)||LU_TH[0],ev=luThEvents(th,ivs);
   const G=luGroup(ev,'chemOral'),P=luSingle(ev,'probioOral');
-  const tbl=(rows,base)=>'<table class="lu-t"><tr><th>ช่วงนั้นใช้</th><th>ครั้ง</th><th>หาย (ครั้งถัดไปต่ำกว่าเกณฑ์)</th></tr>'
+  const tbl=(rows,base)=>'<table class="lu-t"><tr><th>ช่วงนั้นใช้</th><th>ครั้ง</th><th>หายครั้งถัดไป</th></tr>'
     +rows.map(o=>'<tr><td>'+mpEsc(o.name)+'</td>'+luCell(o)+'</tr>').join('')+(base?'<tr class="base"><td>ไม่ได้ใช้ยากิน (เทียบ)</td>'+luCell(base)+'</tr>':'')+'</table>';
   let v='';
   if(ev.length&&ev.every(e=>!e.ok))v='<div class="lu-v d">❗ '+ev.length+'/'+ev.length+' ครั้ง ครั้งถัดไปยังไม่ต่ำกว่าเกณฑ์ — ทั้งใช้และไม่ใช้</div>';
@@ -16234,7 +16243,7 @@ function palmSplitTxt(r){   // บรรทัดแยกทลาย/ร่ว
   if(!r||!(r.bunchKg>0||r.looseKg>0))return'';
   const p=[];if(r.bunchKg>0)p.push('🌴 ทลาย '+(+r.bunchKg).toLocaleString()+(r.bunchPrice>0?' × '+(+r.bunchPrice).toFixed(2):''));
   if(r.looseKg>0)p.push('🫒 ร่วง '+(+r.looseKg).toLocaleString()+(r.loosePrice>0?' × '+(+r.loosePrice).toFixed(2):''));
-  return p.join(' · ');
+  return p.map(x=>'<span class="nw">'+x+'</span>').join(' · ');   // #501
 }
 function palmMoneyPreview(){
   const v=palmIncVals(),w=v.w;
