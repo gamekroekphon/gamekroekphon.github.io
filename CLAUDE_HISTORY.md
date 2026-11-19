@@ -7221,3 +7221,7 @@ CP3S → 7703S   ·   CP4S → 7704S   ·   CO4S → 7704S   ·   โภคา4 
 ### 496. VIP สวนปาล์ม: เหลือ ผลผลิต · ประวัติใส่ปุ๋ย · กองทุน (19 พ.ย. 69 พี่สั่ง)
 - PALM_VIP_TABS=['harvest','fert','fund'] · initPalm/palmTab: VIP เปิดแท็บอื่น → harvest · palmPv: VIP ไม่มี 'form' (fert → hist · fund → ov)
 - CSS VIP: ซ่อน #palmb-ov/#palmb-plot/#palmb-money + ปุ่ม 📝 บันทึก ใน pv-bar · #palmb-harvest order:-1 · admin 6 แท็บเหมือนเดิม
+
+### 497. VIP สวนปาล์ม: ตัดคำอธิบาย/ข้อความซ้ำ (19 พ.ย. 69 พี่สั่ง "สะอาดตา")
+- CSS VIP: .card-sub ใน #sec-palm (ยกเว้นการ์ดที่มีกราฟ = คำอธิบายเส้น) + card-sub กราฟราคาเฉลี่ย (ซ้ำชื่อกราฟ) · #palmp-fund .sub · #fund-note · .fbs-note · #pvb-fert (ปุ่มเดียว) · ป้ายรอบหน้าใส่ปุ๋ย (.badge ในแถวปุ๋ย = แผน)
+- admin ไม่เปลี่ยน
