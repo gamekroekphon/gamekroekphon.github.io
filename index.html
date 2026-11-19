@@ -24772,6 +24772,7 @@ function plLiveRows(){
 function plLiveToggle(){_plLiveOpen=!_plLiveOpen;renderPLLive(document.getElementById('pl-year')?.value||'');}
 function renderPLLive(yr){
   const el=document.getElementById('pl-live');if(!el)return;
+  el.innerHTML='';el.hidden=true;return;   // #507 พี่สั่ง 19 พ.ย. 69: อ่านแล้วไม่เข้าใจ ไม่จำเป็น → ไม่แสดง (โค้ดเดิมเก็บไว้ด้านล่าง)
   const R=yr&&yr!==today().slice(0,4)?[]:plLiveRows();
   if(!R.length){el.innerHTML='';return;}
   const M=v=>(v/1e6).toFixed(2),S=v=>(v>=0?'+':'')+M(v),T=kg=>(kg/1000).toFixed(1),q=String.fromCharCode(39);
