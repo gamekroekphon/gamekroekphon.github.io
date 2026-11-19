@@ -8824,9 +8824,9 @@ function hsRenderKpi(rs,all,yr){
 function hsRenderTable(rs,yr){
   const el=document.getElementById('hs-table');if(!el)return;
   if(!rs.length){el.innerHTML='<div class="hsy-empty">ยังไม่มีรายการจับกุ้งในแอป</div>';return;}
-  // #487 VIP: เลขครั้งพาเชียลต่อรอบ (นับจากทุกปีของรอบนั้น)
+  // #487 VIP → #506 ทุก role: เลขครั้งพาเชียลต่อรอบ (นับจากทุกปีของรอบนั้น)
   const _hk=r=>r.pondId+'|'+r.ci+'|'+r.date+'|'+Math.round(r.kg),_hn={};
-  if(IS_VIP){const g={};hsHarvestRows().filter(r=>r.type==='พาเชียล').forEach(r=>{(g[r.pondId+'|'+r.ci]=g[r.pondId+'|'+r.ci]||[]).push(r);});
+  {const g={};hsHarvestRows().filter(r=>r.type==='พาเชียล').forEach(r=>{(g[r.pondId+'|'+r.ci]=g[r.pondId+'|'+r.ci]||[]).push(r);});
     Object.values(g).forEach(a=>a.sort((x,y)=>x.date.localeCompare(y.date)).forEach((r,i)=>{_hn[_hk(r)]=i+1;}));}
   const _ht=r=>r.type==='พาเชียล'&&_hn[_hk(r)]?'พาเชียล ครั้งที่ '+_hn[_hk(r)]:r.type;
   let h='<table class="hsy-t hsy-mt"><thead><tr><th>บ่อ</th><th>วัน</th><th>จับ</th><th class="num">อายุ</th><th class="num">ไซส์</th><th class="num">ราคา</th><th>แพ</th><th class="num">จำนวนเงิน</th><th class="num">กก.</th></tr></thead><tbody>';
@@ -8859,7 +8859,7 @@ function hsRenderTable(rs,yr){
         +`<div class="a"><span class="nm">${hsEsc(r.pond)} <span class="hsy-chip ${r.type==='ปิดบ่อ'?'c-close':'c-part'}">${_ht(r)}</span>${r.pending?' <span class="hsy-chip c-wait">รอปิดรอบ</span>':''}</span><span class="m">฿${hsFmt(r.baht)}</span></div>`
         +`<span class="hsv-b">${hsFd(r.date).replace(/\/\d{2}$/,'')}${r.age!=null?' · '+r.age+' วัน':''} · ไซส์ ${r.size||'-'} · ${hsFmt(r.kg)} กก. · ${r.price?'฿'+hsFmt(r.price):'-'} · ${r.buyer?hsEsc(r.buyer):'ไม่ระบุแพ'}</span></div>`;return;}
       cd+=`<div class="hsy-hc" role="button" tabindex="0" onclick="${go(r)}" onkeydown="if(event.key==='Enter')${go(r)}">`
-        +`<div class="a"><span class="nm">${hsEsc(r.pond)}<small>${hsFd(r.date).replace(/\/\d{2}$/,'')}${r.age!=null?' · '+r.age+' วัน':''}</small> <span class="hsy-chip ${r.type==='ปิดบ่อ'?'c-close':'c-part'}">${r.type}</span>${r.pending?' <span class="hsy-chip c-wait">รอปิดรอบ</span>':''}</span><span class="m">฿${hsFmt(r.baht)}</span></div>`
+        +`<div class="a"><span class="nm">${hsEsc(r.pond)}<small>${hsFd(r.date).replace(/\/\d{2}$/,'')}${r.age!=null?' · '+r.age+' วัน':''}</small> <span class="hsy-chip ${r.type==='ปิดบ่อ'?'c-close':'c-part'}">${_ht(r)}</span>${r.pending?' <span class="hsy-chip c-wait">รอปิดรอบ</span>':''}</span><span class="m">฿${hsFmt(r.baht)}</span></div>`
         +`<div class="b"><span>ไซส์ ${r.size||'-'} · ${r.price?'฿'+hsFmt(r.price):'-'} · ${r.buyer?hsEsc(r.buyer):'ไม่ระบุแพ'}</span><span>${hsFmt(r.kg)} กก.</span></div></div>`;
     });
     const mk=mr.reduce((s,r)=>s+r.kg,0),mb=mr.reduce((s,r)=>s+r.baht,0);
