@@ -1999,8 +1999,10 @@ table.exy-t td,table.exy-t th{font-variant-numeric:tabular-nums}
 .pr-dash{font-style:normal!important;font-size:calc(18px * var(--ui-scale));font-weight:700;color:#9CA3AF}.hat-dash{color:var(--tx3);font-weight:700}.wl-eq{color:var(--tx2);font-weight:600}.sw-more{color:var(--p);font-weight:800;cursor:pointer;white-space:nowrap}
 .badge,.pr-size-tag{white-space:nowrap}
 .nw{white-space:nowrap}
-@media(max-width:768px){   /* #501 ตารางมือถือ: วันที่/✏️🗑️/"95 วัน" ไม่แตก 3 บรรทัด · คอลัมน์สุดท้าย (หมายเหตุ) ยังตัดบรรทัดได้ · ตารางเลื่อนซ้ายขวาอยู่แล้ว */
-  .tbl td{white-space:nowrap}.tbl td:last-child{white-space:normal;min-width:110px}
+/* #501 ตาราง: วันที่/✏️🗑️/"95 วัน" ไม่แตก 3 บรรทัด · คอลัมน์สุดท้าย (หมายเหตุ) ยังตัดบรรทัดได้ · ตารางเลื่อนซ้ายขวาได้ · #503 ใช้ทุกจอ (ไอแพดแนวตั้งก็แตก) */
+.tbl td{white-space:nowrap}.tbl td:last-child{white-space:normal;min-width:110px}
+#el-history{overflow-x:auto}
+@media(max-width:768px){
   .hdr-brand{white-space:nowrap}.hdr-badge .hb-w{display:none}
   .wl-li{grid-template-columns:64px minmax(0,1fr) auto auto}.wl-li .d{white-space:nowrap}
   #sec-users .fgrid{grid-template-columns:1fr 1fr!important}
@@ -16750,7 +16752,7 @@ function renderFundSrcCard(buys){
     +'<div class="fbs-legend">'+rows.map(r=>{const m=fundSrcOf(r.b);
       return '<div class="fbs-lg"><small><i style="background:'+m.c+'"></i>'+m.ic+' '+billEsc(fundSrcLabel(r.b))+'</small>'
         +'<b>฿'+Math.round(r.amt).toLocaleString()+'</b>'
-        +'<span>'+r.n+' ครั้ง · '+Math.round(r.amt/tot*100)+'% · '+(r.d0===r.d1?fD(r.d0):fD(r.d0)+' – '+fD(r.d1))+'</span></div>';}).join('')+'</div>'
+        +'<span>'+r.n+' ครั้ง · '+Math.round(r.amt/tot*100)+'% · '+(r.d0===r.d1?'<span class="nw">'+fD(r.d0)+'</span>':'<span class="nw">'+fD(r.d0)+' –</span> <span class="nw">'+fD(r.d1)+'</span>')+'</span></div>';}).join('')+'</div>'
     +'<div class="fbs-note">รวม ฿'+Math.round(tot).toLocaleString()+' · เป็นแค่ที่มาของเงิน — เงินขายขยะ/กุ้งเสียไม่นับเป็นรายรับของสวนปาล์ม</div>';
 }
 function saveFundBuy(){

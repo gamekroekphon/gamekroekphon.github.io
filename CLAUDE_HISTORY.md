@@ -7256,3 +7256,8 @@ CP3S → 7703S   ·   CP4S → 7704S   ·   CO4S → 7704S   ·   โภคา4 
 - ภาพรวม ต้นทุนสะสม "บ่อที่สุ่ม เฉลี่ย ฿/กก." nowrap · เตือน "กินลดลงต่อเนื่อง" · ป้าย "Zone A · มีกุ้ง N บ่อ" (#sp-grp-l,#mt-grp-l nowrap)
 - บุญชู "→ พอ N วัน" · ปุ๋ยปาล์ม ▲ แพงขึ้น/▼ ถูกลง · ราคาขาย ต่ำสุด/สูงสุด · อากาศ ฝน/ลม · .wq4 small → nowrap
 - mockup: Mockup และ Prototype\mockup_มือถือตกแถว_staff_vip.html/.png
+
+### 503. ไอแพด: ตกแถว (พี่สั่ง 19 พ.ย. 69)
+- เทสแบบไอแพดจริง (สลับ media pointer:coarse → เมนูล่าง ไม่มี side-nav) จอ 820 แนวตั้ง + 1180 แนวนอน · admin 42 · staff 19 · VIP 29 หน้า
+- แนวนอนไม่มีตกแถว · แนวตั้ง: .tbl td nowrap ย้ายออกจาก @media 768 → ใช้ทุกจอ (คอลัมน์สุดท้ายยังตัดได้) · #el-history overflow-x:auto (เดิมล้นทั้งหน้า) · กองทุนปาล์ม ช่วงวันที่ nowrap
+- mockup: Mockup และ Prototype\mockup_ไอแพดตกแถว.html/.png
