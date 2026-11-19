@@ -2582,6 +2582,20 @@ body.owner-mode #mobMenuBody.clerk-search>.owner-g9{display:none!important}
 .tx-bar b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--d)}
 .tx-dt{font-size:calc(12.5px * var(--ui-scale))}
 .tx-now{background:var(--sf2);border-radius:10px;padding:8px 12px;margin:2px 0 6px;font-size:calc(13.5px * var(--ui-scale));line-height:1.5}
+.tx-srs{margin-top:8px;font-size:calc(13px * var(--ui-scale));font-weight:700;opacity:.95}
+.tx-wp{font-size:calc(11.5px * var(--ui-scale));font-weight:800;background:#FEF3C7;color:#92400E;border-radius:99px;padding:1px 8px;margin-left:4px;white-space:nowrap}
+.tf-r{display:grid;grid-template-columns:62px 34px 64px 1fr 1fr;align-items:center;gap:4px;padding:7px 2px;border-bottom:1px solid var(--bd);font-size:calc(13.5px * var(--ui-scale))}
+.tf-r.wp{background:#FFFBEB}
+.tf-d b{display:block}.tf-d span{font-size:calc(12px * var(--ui-scale));color:var(--tx2)}
+.tf-i{font-size:calc(22px * var(--ui-scale));text-align:center}
+.tf-t{white-space:nowrap}.tf-t b{font-size:calc(15px * var(--ui-scale))}
+.tf-p,.tf-w{font-weight:700;white-space:nowrap}.tf-p small,.tf-w small{display:block;font-weight:600;font-size:calc(12px * var(--ui-scale));color:var(--tx2)}
+.tf-p.md{color:#1D4ED8}.tf-p.hi{color:#1E3A8A}.tf-w.md{color:var(--w)}.tf-w.hi{color:var(--d)}
+.tf-lg{font-size:calc(12px * var(--ui-scale));color:var(--tx2);margin-top:6px}
+.tx-hr{margin-bottom:14px}.tx-rsum{font-size:calc(13.5px * var(--ui-scale));font-weight:700;margin-bottom:6px}
+.tx-rbar{position:relative;display:grid;grid-template-columns:repeat(24,1fr);gap:2px;align-items:end;height:56px;background:var(--sf2);border-radius:8px;padding:4px}
+.tx-rbar i{background:#2563EB;border-radius:3px 3px 0 0;display:block}.tx-rbar i.past{background:#94A3B8}
+.tx-rbar b{position:absolute;top:0;bottom:0;width:2px;background:var(--d)}
 .tx-alk{background:var(--sf);color:var(--tx);border-radius:10px;padding:8px 10px;margin-top:6px}
 .tx-alk .h{font-weight:800;font-size:calc(13px * var(--ui-scale))}
 .tx-alk .r{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-top:1px solid var(--sf2);font-size:calc(13.5px * var(--ui-scale))}
@@ -4243,8 +4257,8 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   <div id="tide-todo"></div>
   <div id="tide-weather-card" style="margin-bottom:14px"></div>
   <div class="card" style="margin-bottom:14px">
-    <div class="card-t">📅 พยากรณ์อากาศล่วงหน้า 3 วัน</div>
-    <div class="g3" id="tide-forecast"><div style="text-align:center;padding:20px;grid-column:1/-1;color:var(--tx3)">กำลังโหลด...</div></div>
+    <div class="card-t">📅 พยากรณ์อากาศ 7 วัน</div>
+    <div id="tide-forecast"><div style="text-align:center;padding:20px;grid-column:1/-1;color:var(--tx3)">กำลังโหลด...</div></div>
   </div>
   <div style="margin-bottom:16px">
     <div class="card">
@@ -6245,7 +6259,7 @@ function lgInfo(){
   const ch=document.getElementById('lg-chips');if(!ch)return;
   const parts=[now.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})];
   try{const m=moonInfo(now);parts.push(m.ico+' '+m.txt);}catch(e){}
-  try{const w=wanphraInfo(now);if(w)parts.push(w==='phra'?'🙏 วันนี้วันพระ':w==='kon2'?'🧂 วันนี้วันโกน':'🧂 พรุ่งนี้วันโกน');}catch(e){}
+  try{const w=wanphraInfo(now);if(w==='phra'||w==='kon2')parts.push(w==='phra'?'🙏 วันนี้วันพระ':'🙏 พรุ่งนี้วันพระ');}catch(e){}
   ch.innerHTML=parts.map(t=>'<span>'+t+'</span>').join('');
   lgToday();
 }
@@ -9144,23 +9158,36 @@ function renderTideWeatherCard(){
     <div style="font-size:calc(12.5px * var(--ui-scale))">🌧️ ฝน ${_wxToday.rain.toFixed(0)} มม. · 💨 ${_wxToday.wind.toFixed(0)} กม./ชม.</div>
   </div>`;
 }
-function renderTideForecast(){
+function renderTideForecast(){   // #504 3 วัน → 7 วัน แถวละวัน + โอกาสฝน % + ลมกระโชก + วันพระ
   const el=document.getElementById('tide-forecast');if(!el)return;
-  if(!_wxDaily){el.innerHTML='<div style="text-align:center;padding:20px;grid-column:1/-1;color:var(--tx3)">กำลังโหลด...</div>';fetchWx().catch(()=>{});return;}
-  const d=_wxDaily;
-  const lbls=['พรุ่งนี้','มะรืนนี้','อีก 3 วัน'];
-  el.innerHTML=[1,2,3].map((i,k)=>{
-    if(!d.time[i])return'';
-    const tMax=d.temperature_2m_max[i],tMin=d.temperature_2m_min[i];
-    const rain=d.precipitation_sum[i],wind=d.wind_speed_10m_max[i];
-    return`<div class="wx-day">
-      <div style="font-size:var(--fs11);color:var(--tx);font-weight:700;margin-bottom:4px">${lbls[k]}<br>${new Date(d.time[i]).toLocaleDateString('th-TH',{weekday:'short',day:'numeric'})}</div>
-      <div style="font-size:calc(28px * var(--ui-scale));margin-bottom:4px">${wmoIco(d.weathercode[i])}</div>
-      <div style="font-size:calc(13px * var(--ui-scale));color:var(--tx3);margin-bottom:4px">${wmoDesc(d.weathercode[i])}</div>
-      <div style="font-size:calc(16px * var(--ui-scale));font-weight:500">${tMax.toFixed(0)}° / ${tMin.toFixed(0)}°C</div>
-      <div style="font-size:var(--fs11);color:var(--tx3);margin-top:6px"><span class="nw">🌧️ ${rain.toFixed(1)} มม.</span> · <span class="nw">💨 ${wind.toFixed(0)} กม/ชม.</span></div>
-    </div>`;
-  }).join('');
+  if(!_wxDaily){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--tx3)">กำลังโหลด...</div>';fetchWx().catch(()=>{});return;}
+  const d=_wxDaily,pp=d.precipitation_probability_max||[],gu=d.wind_gusts_10m_max||[];
+  const rows=[];
+  for(let i=1;i<d.time.length&&i<=7;i++){
+    const dt=new Date(d.time[i]+'T00:00:00'),pr=pp[i],g=gu[i],rain=d.precipitation_sum[i]||0;
+    const nm=i===1?'พรุ่งนี้':dt.toLocaleDateString('th-TH',{weekday:'short'});
+    const wp=wanphraInfo(dt)==='phra';
+    rows.push('<div class="tf-r'+(wp?' wp':'')+'"><div class="tf-d"><b>'+nm+'</b><span>'+dt.getDate()+'/'+(dt.getMonth()+1)+(wp?' 🙏':'')+'</span></div>'
+      +'<div class="tf-i" title="'+wmoDesc(d.weathercode[i])+'">'+wmoIco(d.weathercode[i])+'</div>'
+      +'<div class="tf-t"><b>'+Math.round(d.temperature_2m_max[i])+'°</b>/'+Math.round(d.temperature_2m_min[i])+'°</div>'
+      +'<div class="tf-p'+(pr>=70?' hi':pr>=40?' md':'')+'">'+(pr!=null?'ฝน '+pr+'%':'')+'<small>'+(rain>=0.1?rain.toFixed(rain<10?1:0)+' มม.':'ไม่มีฝน')+'</small></div>'
+      +'<div class="tf-w'+(g>=50?' hi':g>=35?' md':'')+'">💨 '+Math.round(d.wind_speed_10m_max[i])+'<small>'+(g!=null?'กระโชก '+Math.round(g):'')+'</small></div></div>');
+  }
+  el.innerHTML=rows.join('')+'<div class="tf-lg">ลม กม./ชม. · 🙏 = วันพระ</div>';
+}
+// #504 ฝนวันนี้รายชั่วโมง — แถบ 24 ช่อง สูง = มม. · สี = โอกาสฝน · เส้นแดง = ตอนนี้
+function tideRainHours(){
+  const h=_wxHourly;if(!h||!h.time||!h.precipitation)return '';
+  const td=today(),idx=h.time.map((t,i)=>t.slice(0,10)===td?i:-1).filter(i=>i>=0);if(idx.length<20)return '';
+  const nowH=new Date().getHours(),mm=idx.map(i=>+h.precipitation[i]||0),pr=idx.map(i=>h.precipitation_probability?+h.precipitation_probability[i]||0:0);
+  const mx=Math.max(...mm),wet=idx.map((_,k)=>k).filter(k=>mm[k]>=0.5);   // ≥0.5 มม. = ฝนจริง · ห่าง ≤2 ชม. รวมเป็นช่วงเดียว
+  const rng=[];wet.forEach(k=>{const L=rng[rng.length-1];if(L&&k<=L[1]+2)L[1]=k;else rng.push([k,k]);});
+  const pk=mm.indexOf(mx);
+  const sum=!wet.length?'วันนี้ฝนน้อย/ไม่มีฝน':'ฝน '+rng.map(([a,b])=>'<span class="nw">'+String(a).padStart(2,'0')+'–'+String(b+1).padStart(2,'0')+' น.</span>').join(' · ')+'<br>หนักสุด '+mx.toFixed(1)+' มม. ตอน '+String(pk).padStart(2,'0')+' น.';
+  const bars=mm.map((v,k)=>'<i class="'+(k<nowH?'past':'')+'" style="height:'+(v>0?Math.max(8,Math.min(100,v/5*100)):0).toFixed(0)+'%;opacity:'+(0.35+Math.min(1,pr[k]/100)*0.65).toFixed(2)+'" title="'+String(k).padStart(2,'0')+':00 · '+v.toFixed(1)+' มม. · '+pr[k]+'%"></i>').join('');
+  return '<div class="card tx-hr"><div class="card-t">🌧️ ฝนวันนี้รายชั่วโมง</div><div class="tx-rsum">'+sum+'</div>'
+    +'<div class="tx-rbar">'+bars+'<b style="left:'+((nowH+0.5)/24*100).toFixed(1)+'%"></b></div>'
+    +'<div class="tx-axis"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div></div>';
 }
 // ══════ การ์ดงานบนสุดของหน้าสภาพอากาศ (entry #345) ══════
 //    ① ต้องระวังอะไร — เกณฑ์ชุดเดียวกับ calcWeatherRisk (หน้าความเสี่ยง): ฝน >20 มม. · ร้อน >33° · ลมอ่อน <5 + ร้อน >31° · + พายุ (weathercode ≥95)
@@ -9194,18 +9221,15 @@ function renderTideTodo(){
     ];
     const warns=rules.map(r=>{const ds=[0,1,2,3].filter(i=>d.time[i]!=null&&r.t(i));
       return ds.length?'<div class="tx-warn"><span class="ic">'+r.ic+'</span><div><b>'+ds.map(i=>lbl(i)+r.v(i)).join(' · ')+'</b><div>'+r.a+'</div></div></div>':'';}).join('');
-    // ฝน > 20 มม. หรือพายุ ใน 4 วัน → บ่อที่ ALK ล่าสุด (≤7 วัน) ≤ RAIN_ALK_WATCH = เตรียมปูน (#413)
-    const rainy=[0,1,2,3].some(i=>d.time[i]!=null&&(d.precipitation_sum[i]>20||d.weathercode[i]>=95));
-    const alkRows=rainy?wqfeedActivePonds().map(p=>{const r=(p.records||[]).filter(x=>x.alk!=null&&x.alk!==''&&x.date>=addDaysStr(today(),-7)).sort((a,b)=>b.date.localeCompare(a.date))[0];return r?{p,alk:+r.alk,ph:r.phM!=null&&r.phM!==''?+r.phM:null}:null;})
-      .filter(x=>x&&x.alk<=RAIN_ALK_WATCH).sort((a,b)=>a.alk-b.alk):[];
-    const alkBox=alkRows.length?'<div class="tx-alk"><div class="h">🪨 ALK ใกล้เกณฑ์ → เตรียมปูน</div>'+alkRows.map(x=>'<div class="r"><span><b>'+mpEsc(x.p.name)+'</b>'+(x.p.zone?' · โซน '+mpEsc(x.p.zone):'')+'</span><span'+(x.alk<=WQ_RULE.alk.loW?' class="y"':'')+'>ALK '+x.alk+(x.ph!=null?' · pH '+x.ph.toFixed(2):'')+'</span></div>').join('')+'</div>':'';
+    // #504 กล่อง ALK รายบ่อเอาออก — หน้านี้ = อากาศ + น้ำขึ้นลงอย่างเดียว (บ่อ ALK ต่ำดูที่ภาพรวม/ต้องทำวันนี้)
     const wc=d.weathercode[0],theme=wc>=95?'storm':wc>=51?'rain':wc>=2?'cloud':'sun';
     const hum=d.relative_humidity_2m_max?d.relative_humidity_2m_max[0]:null;
     html+='<div class="tx-hero tx-'+theme+'"><div class="tx-top"><div><div class="tx-lbl">วันนี้ · '+new Date(d.time[0]).toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'short'})+'</div>'
       +'<div class="tx-temp">'+Math.round(d.temperature_2m_max[0])+'°<small> / '+Math.round(d.temperature_2m_min[0])+'°</small></div><div class="tx-desc">'+wmoDesc(wc)+'</div></div>'
       +'<div class="tx-ico">'+wmoIco(wc)+'</div></div>'
       +'<div class="tx-stats"><span>🌧️ '+d.precipitation_sum[0].toFixed(0)+' มม.</span><span>💨 '+Math.round(d.wind_speed_10m_max[0])+' กม./ชม.</span>'+(hum!=null?'<span>💧 '+Math.round(hum)+'%</span>':'')+'</div>'
-      +'<div class="tx-warns"><div class="tx-wt">🧭 ต้องระวัง 4 วันนี้</div>'+(warns||'<div class="tx-warn"><span class="ic">✅</span><div><b>อากาศปกติ</b><div>ไม่มีเรื่องต้องระวังเป็นพิเศษ</div></div></div>')+alkBox+'</div></div>';
+      +(d.sunrise&&d.sunrise[0]?'<div class="tx-srs">🌅 ขึ้น '+d.sunrise[0].slice(11,16)+' · 🌇 ตก '+(d.sunset[0]||'').slice(11,16)+' น.</div>':'')
+      +'<div class="tx-warns"><div class="tx-wt">🧭 ต้องระวัง 4 วันนี้</div>'+(warns||'<div class="tx-warn"><span class="ic">✅</span><div><b>อากาศปกติ</b><div>ไม่มีเรื่องต้องระวังเป็นพิเศษ</div></div></div>')+'</div></div>'+tideRainHours();
   }
   // ② สูบน้ำเข้าบ่อพัก — แถบเวลา 00–24 น. แรเงาช่วงที่น้ำ ≥ 2 ม. · เส้นแดง = ตอนนี้
   const now=Date.now();
@@ -9227,7 +9251,8 @@ function renderTideTodo(){
       const bar='<div class="tx-bar">'+ws.map(w=>'<i class="'+(past(w)?'past':'')+'" style="left:'+pct(w.s).toFixed(1)+'%;width:'+Math.max(1,pct(w.e)-pct(w.s)).toFixed(1)+'%"></i>').join('')
         +(k===0?'<b style="left:'+pct(now).toFixed(1)+'%"></b>':'')+'</div>';
       const txt=ws.length?ws.map(w=>(past(w)?'<s>':'')+tideHM(w.s)+'–'+tideHM(w.e)+(past(w)?'</s> ผ่านแล้ว':' · สูงสุด '+w.max.toFixed(2)+' ม.')).join(' · '):'น้ำไม่ถึง '+TIDE_PUMP_M.toFixed(1)+' ม.';
-      return '<div class="tx-day"><div class="tx-dh"><b>'+nm+'</b>'+(live?'<span class="tx-live">🟢 สูบได้ตอนนี้</span>':'')+'</div>'+bar+'<div class="tx-dt">'+txt+'</div></div>';
+      const wp=wanphraInfo(new Date(ds+'T00:00:00'))==='phra'?' <span class="tx-wp">🙏 วันพระ</span>':'';
+      return '<div class="tx-day"><div class="tx-dh"><b>'+nm+wp+'</b>'+(live?'<span class="tx-live">🟢 สูบได้ตอนนี้</span>':'')+'</div>'+bar+'<div class="tx-dt">'+txt+'</div></div>';
     }).join('')
     +'<div class="tx-axis"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div></div>';
   el.innerHTML=html;
@@ -9550,18 +9575,13 @@ function pondRiskEconomic(p){
 }
 let _fcSelRisk=null,_fcCurPond=null;
 function fcSetFilter(key){_fcSelRisk=_fcSelRisk===key?null:key;renderFarmCard(_fcCurPond);}
-function renderMoonWanphra(){
+function renderMoonWanphra(){   // #504 แสดงวันพระแทนวันโกน
   const el=document.getElementById('wp-oneline');if(!el)return;
   const today=new Date();today.setHours(0,0,0,0);
-  const todayInfo=wanphraInfo(today);
-  if(todayInfo==='kon2'){el.innerHTML=`<b>🧂🧂 วันนี้เป็นวันโกน</b> — อย่าลืมลงแร่ธาตุรวมในบ่อตามรอบปกติของฟาร์ม`;return;}
-  if(todayInfo==='kon'){el.innerHTML=`<b>🧂 พรุ่งนี้เป็นวันโกน</b> — เตรียมแร่ธาตุรวมไว้ล่วงหน้าได้เลย`;return;}
-  for(let i=1;i<=60;i++){
-    const d=addDaysLocal(today,i);
-    if(wanphraInfo(d)==='kon2'){el.innerHTML=`🧂 วันโกนถัดไป: อีก <b>${i} วัน</b> (${d.getDate()}/${d.getMonth()+1})`;return;}
-  }
-  el.innerHTML=`<span style="color:var(--tx3)">ไม่พบข้อมูลวันโกนในตารางปีนี้</span>`;
+  const n=wpNextDays(today);
+  el.innerHTML=n===0?'<b>🙏 วันนี้วันพระ</b>':n===1?'🙏 <b>พรุ่งนี้วันพระ</b>':n!=null?(d=>'🙏 วันพระถัดไป: อีก <b>'+n+' วัน</b> ('+d.getDate()+'/'+(d.getMonth()+1)+')')(addDaysLocal(today,n)):'';
 }
+function wpNextDays(from){for(let i=0;i<=40;i++){if(wanphraInfo(addDaysLocal(from,i))==='phra')return i;}return null;}
 function renderFarmCard(p){
   const gridEl=document.getElementById('fc-grid');if(!gridEl||!p)return;
   _fcCurPond=p;
@@ -10450,6 +10470,7 @@ function jumpHarvest(id){
 }
 let homeAttnExpanded=false;
 let _wxToday=null; // cache สภาพอากาศวันนี้ (จาก fetchWx)
+let _wxHourly=null;   // #504 ฝนรายชั่วโมง (หน้าน้ำขึ้นลง)
 let _wxDaily=null; // cache พยากรณ์รายวันเต็ม (จาก fetchWx) ใช้ทำพยากรณ์ล่วงหน้าในหน้าน้ำขึ้นน้ำลง
 function homeToggleAttn(){homeAttnExpanded=true;renderOv()}
 function homeToggleGroup(id){
@@ -21180,9 +21201,10 @@ async function fetchWx(){
     ].join(',');
     const url=`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}`
       +`&daily=${dailyParams}`
+      +`&hourly=precipitation,precipitation_probability`
       +`&current_weather=true`
       +`&wind_speed_unit=kmh`
-      +`&forecast_days=4&timezone=Asia%2FBangkok`;
+      +`&forecast_days=8&timezone=Asia%2FBangkok`;   // #504 เดิม 4 วัน · หน้าอื่นใช้แค่ 4 วันแรกเหมือนเดิม
     const r=await fetch(url,{signal:controller.signal});
     clearTimeout(timer);
     if(!r.ok)throw new Error('HTTP '+r.status);
@@ -21226,7 +21248,7 @@ function renderWx(data){
   const cur=data.current_weather;
   // cache สภาพอากาศวันนี้ สำหรับ KPI bar ภาพรวม
   _wxToday={tMax:d.temperature_2m_max[0],tMin:d.temperature_2m_min[0],rain:d.precipitation_sum[0],wind:d.wind_speed_10m_max[0]};
-  _wxDaily=d;
+  _wxDaily=d;_wxHourly=data.hourly||null;
   renderOv();
   renderTideTodo();
   lgToday();
