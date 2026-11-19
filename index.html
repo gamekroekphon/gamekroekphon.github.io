@@ -1680,7 +1680,10 @@ body:not(.role-admin) .staff-only{display:revert}
   .palm-quick.pov-q .ic{display:block;margin:0}
   .pov-tiles{grid-template-columns:1fr 1fr}
 }
-.pm-kind{border:1.5px solid var(--bd);border-radius:12px;padding:9px 10px 6px;margin-top:10px}.pm-kind-t{font-weight:800;font-size:calc(14.5px * var(--ui-scale));margin-bottom:4px}.pm-kind-s{text-align:right;font-weight:800;color:var(--p);font-size:calc(13.5px * var(--ui-scale));min-height:1.2em}.pm-msplit{background:var(--pl);border-radius:9px;padding:5px 9px;margin:5px 0 2px;font-size:calc(13.5px * var(--ui-scale));font-weight:700}.pm-msplit span{color:var(--tx2);font-weight:600}
+.pm-kind{border:1.5px solid var(--bd);border-radius:12px;padding:9px 10px 6px;margin-top:10px}.pm-kind-t{font-weight:800;font-size:calc(14.5px * var(--ui-scale));margin-bottom:4px}.pm-kind-s{text-align:right;font-weight:800;color:var(--p);font-size:calc(13.5px * var(--ui-scale));min-height:1.2em}.pm-lanes{display:flex;flex-wrap:wrap;gap:6px}.pm-lanes button{border:1.5px solid var(--bd);background:var(--sf);border-radius:99px;padding:7px 13px;font-family:inherit;font-weight:700;font-size:calc(14px * var(--ui-scale));cursor:pointer;color:var(--tx)}.pm-lanes button.on{border-color:var(--ok);background:var(--ob);color:var(--ok)}.pm-lanes button.nw{border-style:dashed;border-color:var(--p);color:var(--p)}
+.pm-lane-tag{font-size:calc(11.5px * var(--ui-scale));font-weight:700;background:var(--ob);color:var(--ok);border-radius:99px;padding:1px 8px;white-space:nowrap}
+.pl-tb{width:100%;border-collapse:collapse;font-size:calc(13.5px * var(--ui-scale));font-variant-numeric:tabular-nums}.pl-tb th{font-size:calc(12px * var(--ui-scale));text-align:left;border-bottom:1.5px solid var(--tx);padding:4px}.pl-tb td{border-bottom:1px solid var(--bd);padding:7px 4px}.pl-tb tr.best td{background:var(--ob)}.pl-tb tr.best td b{color:var(--ok)}.pl-tb tr.na td{color:var(--tx2)}
+.pm-msplit{background:var(--pl);border-radius:9px;padding:5px 9px;margin:5px 0 2px;font-size:calc(13.5px * var(--ui-scale));font-weight:700}.pm-msplit span{color:var(--tx2);font-weight:600}
 .pm-split{font-size:calc(13px * var(--ui-scale));font-weight:700;margin-top:2px}.pm-kind .fgrid{grid-template-columns:1fr 1fr!important;gap:8px}#pm-cat-wrap[hidden]{display:none!important}   /* #494 มือถือ: น้ำหนัก|ราคา คู่กัน · หมวดรายจ่ายโผล่ตอนรายรับ (.fg flex ทับ hidden) */
 .pm-cut-row{display:flex;gap:8px}.pm-cut-row .fi{flex:1;min-width:0}
 .pm-cut-self{flex-shrink:0;border:1.5px solid var(--bd);background:var(--sf);border-radius:10px;padding:0 12px;font-family:inherit;font-weight:700;color:var(--tx);cursor:pointer;min-height:44px}
@@ -3970,6 +3973,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
       <div id="pm-cat-wrap" class="fg" style="margin-top:10px" hidden><span class="fl">หมวด <span style="color:var(--d)">*</span></span><div id="pm-cat"></div></div>
       <div id="pm-income-fields">
         <div class="pm-edit-old" id="pm-edit-old"></div>
+        <div class="fg" style="margin-top:10px"><span class="fl">🏭 ขายที่ลาน</span><div class="pm-lanes" id="pm-lanes"></div></div>
         <!-- #494 (19 พ.ย. 69 พี่สั่ง): ปาล์มทลาย / ปาล์มร่วง ราคาไม่เท่ากัน → กรอกแยก · weightKg = รวม · pricePerKg = เฉลี่ยถ่วง -->
         <div class="pm-kind"><div class="pm-kind-t">🌴 ปาล์มทลาย</div><div class="fgrid">
           <div class="fg"><label class="fl" for="pm-bw">น้ำหนัก (กก.)</label><input class="fi" id="pm-bw" inputmode="decimal" placeholder="เช่น 2,400" oninput="palmMoneyPreview()"></div>
@@ -4070,6 +4074,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
       <div style="position:relative;height:200px"><canvas id="palm-harvest-chart"></canvas></div>
       <div id="palm-harvest-best" style="text-align:center;margin-top:8px"></div>
     </div>
+    <div class="card" id="palm-lane-card" style="margin-bottom:12px"></div>
     <div class="card">
       <div class="card-t">📋 ประวัติตัดปาล์มรายครั้ง</div>
       <div class="card-sub">ตารางเดียวกับรายการ "รายรับ (ขายปาล์ม)" · กด ✏️ แก้ เพื่อแยกทลาย/ร่วง</div>
@@ -16156,6 +16161,7 @@ function setPalmMoneyMode(mode){
   const amtLbl=document.getElementById('pm-amount-lbl');if(amtLbl)amtLbl.textContent=mode==='income'?'ยอดรวม (บาท)':'จำนวนเงิน (บาท)';
   const cw=document.getElementById('pm-cat-wrap');if(cw)cw.hidden=mode!=='expense';
   renderPalmCatChips();
+  renderPalmLanes();
   renderPalmMoneyJobs();
 }
 // #425 หมวดรายจ่าย — บังคับเลือก (ของใหม่) · แบ่ง ค่าดูแล / ลงทุน
@@ -16196,6 +16202,17 @@ function palmIncVals(){
   const w=bw+lw,gross=bw*bp+lw*lp;
   return{bw,bp,lw,lp,w,gross,pr:w>0&&gross>0?gross/w:0,ok:(bw>0&&bp>0)||(lw>0&&lp>0)};
 }
+// #495 ลานที่ขาย (พี่สั่ง 19 พ.ย. 69) — เก็บที่ rec.lane · รายชื่อลาน = จากรายการที่เคยบันทึก (ไม่มีที่เก็บแยก → ไม่ต้อง merge เพิ่ม)
+let _palmLane='';
+function palmLaneList(){const c={};palmMoneyList().forEach(r=>{const n=String(r.lane||'').trim();if(n&&r.type!=='expense')c[n]=(c[n]||0)+1;});if(_palmLane&&!c[_palmLane])c[_palmLane]=0;return Object.keys(c).sort((a,b)=>c[b]-c[a]||a.localeCompare(b,'th'));}
+function renderPalmLanes(){
+  const el=document.getElementById('pm-lanes');if(!el)return;
+  const q=String.fromCharCode(39);
+  el.innerHTML=palmLaneList().map(n=>'<button type="button" class="'+(_palmLane===n?'on':'')+'" onclick="palmLanePick('+q+billEsc(n).replace(/'/g,'&#39;')+q+')">'+billEsc(n)+'</button>').join('')
+    +'<button type="button" class="nw" onclick="palmLaneNew()">＋ ลานใหม่</button>';
+}
+function palmLanePick(n){_palmLane=_palmLane===n?'':n;renderPalmLanes();}
+function palmLaneNew(){const n=(prompt('ชื่อลานรับซื้อปาล์ม')||'').trim();if(!n)return;_palmLane=n;renderPalmLanes();}
 function palmSplitMonth(rs){   // #494 แถบใต้หัวเดือน: น้ำหนักทลาย/ร่วง (ไม่มีรายการแยกเลย = '')
   const inc=(rs||[]).filter(r=>r&&r.type!=='expense'&&r.weightKg>0);
   const sp=inc.filter(r=>r.bunchKg>0||r.looseKg>0);if(!sp.length)return'';
@@ -16246,6 +16263,7 @@ function editPalmMoney(id){
     if(r.bunchKg>0){sv('pm-bw',r.bunchKg);sv('pm-bp',r.bunchPrice||'');}
     if(r.looseKg>0){sv('pm-lw',r.looseKg);sv('pm-lp',r.loosePrice||'');}
     if(r.cutFee>0)sv('pm-cut',r.cutFee);
+    _palmLane=String(r.lane||'');renderPalmLanes();
   }else{_palmCat=r.cat||'';renderPalmCatChips();}
   sv('pm-amount',r.amount);sv('pm-note',r.note||'');
   if(r.type==='income')palmMoneyPreview();
@@ -16258,7 +16276,7 @@ function palmEditCancel(){
   ['pm-bw','pm-bp','pm-lw','pm-lp','pm-cut','pm-amount','pm-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   ['pm-bs','pm-ls'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='';});
   const ch=document.getElementById('pm-cut-hint');if(ch)ch.innerHTML='';
-  _palmCat='';renderPalmCatChips();palmEditUi();
+  _palmCat='';renderPalmCatChips();_palmLane='';renderPalmLanes();palmEditUi();
 }
 function savePalmMoney(){
   const date=document.getElementById('pm-date').value||today();
@@ -16271,7 +16289,7 @@ function savePalmMoney(){
   const old=_palmEditId?D.palmMoney.find(x=>x.id===_palmEditId):null;
   const rec=old?{...old,type:_palmMoneyMode,plotId,date,amount,note,editedBy:curUserLabel(),editedAt:new Date().toISOString()}
     :{id:'pm'+Date.now()+'_'+Math.random().toString(36).slice(2,6),type:_palmMoneyMode,plotId,date,amount,note,by:curUserLabel()};
-  if(old)['weightKg','pricePerKg','bunchKg','bunchPrice','looseKg','loosePrice','cutFee','cat'].forEach(k=>delete rec[k]);
+  if(old)['weightKg','pricePerKg','bunchKg','bunchPrice','looseKg','loosePrice','cutFee','cat','lane'].forEach(k=>delete rec[k]);
   if(_palmMoneyMode==='income'){
     const v=palmIncVals();
     if(old&&!v.ok){if(old.weightKg>0)rec.weightKg=old.weightKg;if(old.pricePerKg>0)rec.pricePerKg=old.pricePerKg;}   // แก้แต่ไม่ได้กรอกทลาย/ร่วง = น้ำหนัก/ราคาเดิม
@@ -16279,6 +16297,7 @@ function savePalmMoney(){
     if(v.pr)rec.pricePerKg=Math.round(v.pr*10000)/10000;   // เฉลี่ยถ่วง ทลาย+ร่วง (ใช้ที่อื่นเหมือนเดิม)
     if(v.bw>0){rec.bunchKg=v.bw;if(v.bp>0)rec.bunchPrice=v.bp;}
     if(v.lw>0){rec.looseKg=v.lw;if(v.lp>0)rec.loosePrice=v.lp;}
+    if(_palmLane)rec.lane=_palmLane;
     const cut=parseFloat(document.getElementById('pm-cut').value)||0;
     if(cut>0)rec.cutFee=cut;   // ยอด amount ยังเป็นเงินเข้าจริง (หักค่าตัดแล้ว) เหมือนเดิม — cutFee เก็บไว้ดูเฉยๆ
   }else{rec.cat=_palmCat;_palmCat='';renderPalmCatChips();}
@@ -16292,6 +16311,7 @@ function savePalmMoney(){
   ['pm-bw','pm-bp','pm-lw','pm-lp','pm-cut','pm-amount','pm-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   ['pm-bs','pm-ls'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='';});
   const ch=document.getElementById('pm-cut-hint');if(ch)ch.innerHTML='';
+  _palmLane='';renderPalmLanes();
   palmEditUi();
   renderPalmMoney();
   flashSaveBtn(document.querySelector('#palmp-money .btn-p'));
@@ -16428,7 +16448,7 @@ function renderPalmMoney(){
         const sp=inc?palmSplitTxt(r):'';
         const main=inc&&r.weightKg?r.weightKg.toLocaleString()+' กก.'+(r.pricePerKg&&!sp?' × ฿'+(+r.pricePerKg).toFixed(2):'')+(sp?'<div class="pm-split">'+sp+'</div>':''):billEsc(r.note||'-');
         const note=inc&&r.weightKg&&r.note?'<div class="pmh-note">'+billEsc(r.note)+'</div>':'';
-        const chips=(inc?'':palmCatSel(r))+(r.cutFee?'<span class="pm-cut-tag">หักค่าตัด '+B(r.cutFee)+'</span>':'')
+        const chips=(inc?'':palmCatSel(r))+(inc&&r.lane?'<span class="pm-lane-tag">🏭 '+billEsc(r.lane)+'</span>':'')+(r.cutFee?'<span class="pm-cut-tag">หักค่าตัด '+B(r.cutFee)+'</span>':'')
           +(fundMap[r.id]?'<span class="fsl-chip fund">💰 เงินกองทุน '+fD(fundMap[r.id].date)+'</span>':'');
         return '<div class="pmh-r"><div class="pmh-d"><b>'+d.getDate()+'</b><small>'+MO_TH_SHORT[d.getMonth()]+'</small></div>'
           +'<div class="pmh-b"><div class="pmh-t"><span>'+main+'</span><b class="'+(inc?'in':'out')+'">'+(inc?'+':'−')+B(r.amount)+'</b></div>'
@@ -16606,7 +16626,29 @@ function renderPalmHarvestChart(){
     }
   });
 }
+let _palmLanePer='90';
+function renderPalmLaneCard(){
+  const el=document.getElementById('palm-lane-card');if(!el)return;
+  const lim=_palmLanePer==='90'?addDaysStr(today(),-90):'';
+  const L=palmMoneyList().filter(r=>r.type==='income'&&r.weightKg>0&&r.date&&(!lim||r.date>=lim));
+  const by={};L.forEach(r=>{const k=String(r.lane||'').trim()||'';(by[k]=by[k]||[]).push(r);});
+  const avg=(rs,kg,pr)=>{const w=rs.reduce((s,r)=>s+(+r[kg]>0&&+r[pr]>0?+r[kg]:0),0);return w>0?rs.reduce((s,r)=>s+(+r[kg]>0&&+r[pr]>0?r[kg]*r[pr]:0),0)/w:null;};
+  const rows=Object.keys(by).filter(k=>k).map(k=>{const rs=by[k];return{k,n:rs.length,b:avg(rs,'bunchKg','bunchPrice'),l:avg(rs,'looseKg','loosePrice'),last:rs.map(r=>r.date).sort().pop()};})
+    .sort((a,b)=>(b.b||0)-(a.b||0)||b.n-a.n);
+  const best=rows.filter(r=>r.b!=null).length>=2?rows.find(r=>r.b!=null):null;
+  const ds=d=>fD(d).replace(/\s\d{2}$/,''),P=v=>v!=null?v.toFixed(2):'–';
+  const q=String.fromCharCode(39);
+  const chips=[['90','90 วัน'],['all','ทั้งหมด']].map(([k,t])=>'<span class="trial-chip'+(_palmLanePer===k?' on':'')+'" role="button" tabindex="0" onclick="_palmLanePer='+q+k+q+';renderPalmLaneCard()">'+t+'</span>').join('');
+  const na=by['']||[];
+  el.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><div class="card-t" style="margin-bottom:0">🏭 ราคาแต่ละลาน</div><div class="chip-row" style="display:flex;gap:6px">'+chips+'</div></div>'
+    +(rows.length?'<div style="overflow-x:auto"><table class="pl-tb"><tr><th>ลาน</th><th>ครั้ง</th><th>ทลาย ฿/กก.</th><th>ร่วง ฿/กก.</th><th>ล่าสุด</th></tr>'
+      +rows.map(r=>'<tr class="'+(best&&r===best?'best':'')+'"><td><b>'+billEsc(r.k)+'</b></td><td>'+r.n+'</td><td><b>'+P(r.b)+'</b></td><td><b>'+P(r.l)+'</b></td><td>'+ds(r.last)+'</td></tr>').join('')
+      +(na.length?'<tr class="na"><td>ไม่ระบุลาน</td><td>'+na.length+'</td><td>–</td><td>–</td><td>'+ds(na.map(r=>r.date).sort().pop())+'</td></tr>':'')+'</table></div>'
+      +'<div class="card-sub" style="margin-top:6px">เฉลี่ยถ่วงน้ำหนัก · ราคาขึ้นลงทุกวัน เทียบช่วงเดียวกันแม่นกว่า'+(best?' · เขียว = ทลายราคาดีสุด':'')+'</div>'
+     :'<div class="card-sub">ยังไม่มีรายการที่ระบุลาน — เลือก "🏭 ขายที่ลาน" ตอนบันทึกรายรับ หรือกด ✏️ แก้ รายการเก่า'+(na.length?' ('+na.length+' รายการ)':'')+'</div>');
+}
 function renderPalmHarvestTable(){
+  renderPalmLaneCard();
   const tbl=document.getElementById('palm-harvest-table');if(!tbl)return;
   let list=palmHarvestList().filter(r=>_palmHarvestFilterPlot?r.plotId===_palmHarvestFilterPlot:true);
   list=list.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
@@ -16617,7 +16659,7 @@ function renderPalmHarvestTable(){
     main:(r.weightKg||0).toLocaleString()+' กก.'+(r.pricePerKg>0&&!palmSplitTxt(r)?' × ฿'+(+r.pricePerKg).toFixed(2):'')+(palmSplitTxt(r)?'<div class="pm-split">'+palmSplitTxt(r)+'</div>':''),
     amt:'+'+B(r.amount),cls:'in',
     note:r.cutFee?'<span class="pm-cut-tag">หักค่าตัด '+B(r.cutFee)+'</span>':(r.note?billEsc(r.note):''),   // ของเก่าเขียนค่าตัดไว้ในหมายเหตุ (แก้ entry #357)
-    sub:'<span>'+billEsc(palmPlotName(r.plotId))+'</span>',edit:r.linkedFertId?'':"editPalmMoney('"+r.id+"')"})),
+    sub:'<span>'+billEsc(palmPlotName(r.plotId))+'</span>'+(r.lane?' <span class="pm-lane-tag">🏭 '+billEsc(r.lane)+'</span>':''),edit:r.linkedFertId?'':"editPalmMoney('"+r.id+"')"})),
     rs=>rs.reduce((s,r)=>s+(r.weightKg||0),0).toLocaleString()+' กก. · <b class="in">+'+B(rs.reduce((s,r)=>s+(r.amount||0),0))+'</b>',null,null,palmSplitMonth);
 }
 
