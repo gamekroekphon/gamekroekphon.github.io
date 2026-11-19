@@ -2501,6 +2501,8 @@ body.role-vip :is(#ov-partial-card,#ov-next,[onclick*="tab:forecast"],[onclick*=
 .pdv-rel{background:var(--sf);border:1.5px solid var(--bd);border-radius:14px;padding:10px 12px;margin-bottom:10px;font-size:calc(13.5px * var(--ui-scale));line-height:1.55;color:var(--tx)}
 .pdv-rel b{font-size:calc(14.5px * var(--ui-scale))}
 /* #491 VIP หน้าบ่อ/หน้าแรก ไม่ซ้ำ: ป้าย ADMIN · หัวการ์ดอาหาร/จับไม่มีตัวเลข (อยู่ในกล่องบนแล้ว) · การ์ดเปิดแล้วตัวเลขบนหัวหาย · บรรทัดซ้ำในการ์ด · ปุ่มต้นทุนทุกบ่อซ้ำกับลิงก์ในกล่องต้นทุน */
+body.role-vip #palmb-harvest{order:-1}   /* #496 VIP: ผลผลิตขึ้นก่อน */
+body.role-vip :is(#palmb-ov,#palmb-plot,#palmb-money,#sec-palm .pv-bar [onclick*="'form')"]),
 body.role-vip :is(.pd-admin-tag,.pdv-hh,#pd-feed-sum .pd-fs-tiles>div:not(:nth-child(2)),.pd-rk),
 body.role-vip #pdc-harvest>.pd-col-head :is(.pd-sum,.pd-sum-c){display:none!important}
 /* #492 ทุก role: เรื่องเดียวกัน = ข้อมูลชุดเดียว (หน้าบ่อ + ภาพรวม) */
@@ -15611,8 +15613,10 @@ function renderCostSummary(){
       '<b>ต้นทุน/วัน</b> คืออัตราเดินเครื่องตอนนี้ ไม่ใช่ค่าเฉลี่ยทั้งรอบ · '+
       '<b>คาด ฿/กก. ตอนปิด</b> = รวมค่าจับ+ส่วนแบ่ง และหักน้ำหนักตามที่จับได้จริงโดยเฉลี่ย (บิลที่ยังไม่ลงยังไม่รวม)</div>';
 }
+const PALM_VIP_TABS=['harvest','fert','fund'];   // #496 VIP เห็นแค่ ผลผลิต · ประวัติใส่ปุ๋ย · กองทุน (พี่สั่ง 19 พ.ย. 69)
 function initPalm(){
   if(APP_ROLE!=='admin')return;
+  if(IS_VIP&&!PALM_VIP_TABS.includes(_palmActiveTab))_palmActiveTab='harvest';
   palmTab(_palmActiveTab,document.getElementById('palmb-'+_palmActiveTab));
 }
 // ── แท็บย่อยในหน้าปาล์ม (พี่สั่ง entry #340) — ฟอร์มกับประวัติอยู่คนละหน้าจอ ไม่ต้องเลื่อนยาว
@@ -15634,6 +15638,7 @@ function fundHistSet(k){
   document.querySelectorAll('#fh-bar button').forEach((b,i)=>{const on=(i===0)===(k==='buy');b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);});
 }
 function palmPv(pane,v){
+  if(IS_VIP&&(v==='form'||(!v&&_palmPv[pane]==='form')))v=pane==='fund'?'ov':'hist';   // #496 VIP ไม่มีหน้าบันทึก
   if(v)_palmPv[pane]=v;
   const p=document.getElementById('palmp-'+pane),bar=document.getElementById('pvb-'+pane);if(!p||!bar)return;
   p.dataset.pvv=_palmPv[pane];
@@ -15657,6 +15662,8 @@ function palmDefer(key,fn){
   requestAnimationFrame(()=>setTimeout(run,0));
 }
 function palmTab(paneId,btn){
+  if(IS_VIP&&!PALM_VIP_TABS.includes(paneId)){paneId='harvest';btn=document.getElementById('palmb-harvest');}   // #496
+  if(IS_VIP){if(_palmPv.fert==='form')_palmPv.fert='hist';if(_palmPv.fund==='form')_palmPv.fund='ov';}
   if(APP_ROLE!=='admin')return;   // กันเปิดแท็บย่อยตรงๆ (โดยเฉพาะ "รายรับ-รายจ่าย"/"กองทุน" ที่มีจำนวนเงิน) — CSS ซ่อนปุ่มอย่างเดียวไม่พอ
   _palmActiveTab=paneId;
   document.querySelectorAll('#sec-palm .stock-pane').forEach(p=>p.classList.remove('on'));
