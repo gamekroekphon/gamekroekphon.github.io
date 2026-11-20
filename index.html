@@ -5353,7 +5353,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px">
         <span style="font-weight:700;color:var(--tx)">รายการพัสดุทั้งหมด</span>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <input class="fi" id="sk-search" placeholder="🔍 ค้นหาชื่อสินค้า..." style="width:170px" oninput="renderStockItems()">
+          <input class="fi" id="sk-search" placeholder="🔍 ค้นหาสินค้า / บริษัท..." style="width:170px" oninput="renderStockItems()">
           <select class="fi" id="sk-filter-cat" style="width:150px" onchange="renderStockItems()">
             <option value="">ทุกหมวด</option>
             <option value="feed">🍚 อาหารกุ้ง</option>
@@ -5364,6 +5364,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
             <option value="lime">🪨 ปูน</option>
             <option value="equip">🔧 อุปกรณ์</option>
           </select>
+          <select class="fi" id="sk-filter-co" style="width:160px" onchange="renderStockItems()" aria-label="บริษัท"><option value="">🏢 ทุกบริษัท</option></select>
           <button id="sk-zero-toggle" class="btn" style="font-size:calc(12px * var(--ui-scale));padding:4px 10px;white-space:nowrap;background:var(--s1);color:var(--tx2)" onclick="toggleStockZero()">แสดงยอด 0</button>
           <button class="btn admin-only" style="font-size:calc(12px * var(--ui-scale));padding:4px 10px;white-space:nowrap" onclick="seedStockCatalog()">📥 นำเข้าสินค้า</button>
         </div>
@@ -13699,16 +13700,25 @@ function renderStockItems(){
   const el=document.getElementById('sk-item-table');if(!el)return;
   const cat=document.getElementById('sk-filter-cat')?.value||'';
   const search=(document.getElementById('sk-search')?.value||'').trim().toLowerCase();
+  // #509 กรองตามบริษัท (พี่สั่ง 20 พ.ย. 69) · ช่องค้นหาก็เจอชื่อบริษัทด้วย
+  const coSel=document.getElementById('sk-filter-co'),coMap={};(D.shopCompanies||[]).forEach(c=>{if(c&&c.id)coMap[c.id]=String(c.name||'').trim();});
+  if(coSel){const used={};(D.inventoryItems||[]).forEach(i=>{if(i&&i.companyId&&coMap[i.companyId])used[i.companyId]=(used[i.companyId]||0)+1;});
+    const keep=coSel.value,opts=Object.keys(used).sort((a,b)=>coMap[a].localeCompare(coMap[b],'th'));
+    coSel.innerHTML='<option value="">🏢 ทุกบริษัท</option>'+opts.map(id=>'<option value="'+mpEsc(id)+'">'+mpEsc(coMap[id])+' ('+used[id]+')</option>').join('')+'<option value="_none">ไม่ระบุบริษัท</option>';
+    coSel.value=opts.includes(keep)||keep==='_none'?keep:'';}
+  const co=coSel?coSel.value:'';
+  const coOk=i=>!co||(co==='_none'?!(i.companyId&&coMap[i.companyId]):i.companyId===co);
   const rate=shopUseRate();
   const all=(D.inventoryItems||[]).filter(i=>i&&i.id).map(i=>{
     const r=rate[i.id]||0,farm=parseFloat(i.qty)||0,shop=shopQ(i);
     return{i,r,farm,shop,df:r>0?farm/r:null,dt:r>0?(farm+shop)/r:null};
   });
-  const soon=all.filter(x=>x.dt!=null&&x.dt<=STK_SOON_DAYS&&!stkRetired(x.i)&&(!cat||x.i.category===cat)).sort((a,b)=>a.dt-b.dt);
+  const soon=all.filter(x=>x.dt!=null&&x.dt<=STK_SOON_DAYS&&!stkRetired(x.i)&&(!cat||x.i.category===cat)&&coOk(x.i)).sort((a,b)=>a.dt-b.dt);
   const unusedIds=stkUnusedSet(),unusedFold=[],retFold=[];
   const items=all.filter(({i})=>{
     if(cat&&i.category!==cat)return false;
-    if(search&&!i.name.toLowerCase().includes(search)&&!(i.note||'').toLowerCase().includes(search))return false;
+    if(!coOk(i))return false;
+    if(search&&!i.name.toLowerCase().includes(search)&&!(i.note||'').toLowerCase().includes(search)&&!(coMap[i.companyId]||'').toLowerCase().includes(search))return false;
     if(stkRetired(i)){retFold.push({i});return false;}   // เลิกใช้ → กล่องพับท้ายสุด (#442)
     if(!_stockShowZero&&stkOut(i.qty)&&stkOut(shopQ(i)))return false;   // ฟาร์มหมดแต่หน้าร้านมี = ยังต้องเห็น (#334)
     if(!search&&unusedIds.has(i.id)){unusedFold.push({i});return false;}   // ไม่ได้ใช้ → พับไว้ท้าย (#409)
