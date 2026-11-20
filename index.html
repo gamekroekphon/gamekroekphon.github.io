@@ -2010,6 +2010,7 @@ table.exy-t td,table.exy-t th{font-variant-numeric:tabular-nums}
 }
 .wq4 small{white-space:nowrap}
 #sp-grp-l,#mt-grp-l{white-space:nowrap}
+body.role-vip .pr-it{cursor:default}
 .pmh-edit{margin:-12px 0 -12px auto;min-width:44px;min-height:44px;border:none;background:none;cursor:pointer;font-family:inherit;padding:0}.pmh-edit span{font-size:calc(12.5px * var(--ui-scale));font-weight:700;color:var(--p);border:1px solid #E9C46A;border-radius:99px;padding:2px 10px}.pmh-edit+.pmh-del{margin-left:0}.pmh-acts{margin-left:auto;display:flex;gap:2px;flex-shrink:0}.pmh-acts .pmh-edit,.pmh-acts .pmh-del{margin:-12px 0}.pmh-acts .pmh-del{margin-right:-4px}
 .pm-editbar{display:flex;align-items:center;gap:8px;background:var(--wb);border:1.5px solid var(--w);border-radius:10px;padding:8px 10px;margin:8px 0;font-weight:700;font-size:calc(13.5px * var(--ui-scale))}.pm-editbar button{margin-left:auto;border:1.5px solid var(--bd);background:var(--sf);border-radius:8px;padding:5px 10px;font-family:inherit;font-weight:700;cursor:pointer}.pm-edit-old{font-size:calc(13px * var(--ui-scale));font-weight:700;color:var(--w);margin-top:6px}
 .pmh-del{margin:-12px -4px -12px auto;min-width:44px;min-height:44px;border:none;background:none;cursor:pointer;font-family:inherit;padding:0}
@@ -2507,7 +2508,7 @@ body.role-vip .sn-link:is([onclick*="'entry'"],[onclick*="'feed'"],[onclick*="'s
 body.role-vip .sn-top:is([onclick*="'kan'"],[onclick*="'users'"]),
 body.role-vip .mob-sheet-item:is([data-t="entry"],[data-t="feed"],[data-t="sample"],[data-t="watlog"],[data-t="harvest"],[data-t="users"],[data-t="kan"],[data-t="stock-sale"]),
 body.role-vip #bnav-entry,body.role-vip #bnav-feed,body.role-vip #bnav-sample,
-body.role-vip :is(button,a,.btn,span,div)[onclick]:is([onclick*="save" i],[onclick*="delete" i],[onclick*="remove" i],[onclick*="edit" i],[onclick*="add" i],[onclick*="openPrItem"],[onclick*="togglePrOff"],[onclick*="jumpHarvest"],[onclick*="jumpMort"],[onclick*="openSale"],[onclick*="openCropModal"],[onclick*="finalize" i],[onclick*="openBill"],[onclick*="startCount" i],[onclick*="skMove" i],[onclick*="fsFix" i],[onclick*="openCheck" i],[onclick*="newCrop" i],[onclick*="openPh" i],[onclick*="ownEdit" i]),
+body.role-vip :is(button,a,.btn,span,div)[onclick]:is([onclick*="save" i],[onclick*="delete" i],[onclick*="remove" i],[onclick*="edit" i],[onclick*="add" i],[onclick*="openPrItem"]:not(.pr-it),[onclick*="togglePrOff"],[onclick*="jumpHarvest"],[onclick*="jumpMort"],[onclick*="openSale"],[onclick*="openCropModal"],[onclick*="finalize" i],[onclick*="openBill"],[onclick*="startCount" i],[onclick*="skMove" i],[onclick*="fsFix" i],[onclick*="openCheck" i],[onclick*="newCrop" i],[onclick*="openPh" i],[onclick*="ownEdit" i]),
 body.role-vip :is(#tab-forecast,#tab-risk,#pdc-surv,#pdc-risk,.pd-why),
 body.role-vip .sn-top[onclick*="'forecast'"],body.role-vip .sn-link[onclick*="'risk'"],body.role-vip .mob-sheet-item:is([data-t="forecast"],[data-t="risk"]),
 body.role-vip [onclick]:is([onclick*="jumpEntry"],[onclick*="jumpFeed"]),
@@ -6005,8 +6006,8 @@ function ownerGo(v,keepZone){
 }
 // ── #486 🧭 เมนูปุ่มใหญ่ของเจ้าของ (mockup_เมนูเจ้าของ_ปุ่มใหญ่ v2 · พี่สั่ง 18 พ.ย. 69) ──
 const OWN_MENU=[
-  ['🦐 กุ้ง',[['home','🏠','บ่อไหนเป็นยังไง'],['hatchery','🥚','ปล่อยกุ้ง · ลูกกุ้งโรงไหน'],['forecast','🔮','จะจับเมื่อไหร่ กี่ตัน'],['crops','📚','รอบที่ปิด ได้เท่าไหร่'],['pricehist','💲','ขายกุ้งราคาเท่าไหร่',1]]],
-  ['📦 ของ · 💰 เงิน',[['stock','📦','ของเหลือเท่าไหร่'],['price','🏷️','ราคาสินค้า'],['cost','💰','ต้นทุนแต่ละบ่อ'],['pl','💵','กำไร / ขาดทุน']]],
+  ['🦐 กุ้ง',[['home','🏠','ภาพรวม'],['hatchery','🥚','ปล่อยกุ้ง'],['forecast','🔮','จะจับเมื่อไหร่ กี่ตัน'],['crops','📚','ประวัติการเลี้ยง'],['harveststat','🦐','จับกุ้งรอบปี']]],   // #511 ชื่อใหม่ · ขายกุ้งราคาเท่าไหร่ → จับกุ้งรอบปี
+  ['📦 ของ · 💰 เงิน',[['stock','📦','สต๊อก'],['price','🏷️','ราคาสินค้า'],['cost','💰','ต้นทุนบ่อ'],['elec','⚡','ค่าไฟ'],['labor','👷','ค่าแรง'],['pl','💵','กำไร / ขาดทุน']]],
   ['🌴 อื่นๆ',[['palm','🌴','สวนปาล์ม'],['tide','🌊','สภาพอากาศ · น้ำ']]],
 ];
 const OWN_MENU_LS='tw_ownmenu_recent';
@@ -6025,7 +6026,7 @@ function renderOwnMenu(){
   const all={};OM.forEach(g=>g[1].forEach(t=>{all[t[0]]=t;}));
   const rec=ownMenuRecent().filter(id=>all[id]);
   const Q=String.fromCharCode(39);
-  const btn=t=>'<button type="button" class="omn-t'+(t[3]?' wide':'')+'" onclick="ownMenuGo('+Q+t[0]+Q+')"><i>'+t[1]+'</i><b>'+t[2]+'</b></button>';
+  const btn=(t,i,a)=>'<button type="button" class="omn-t'+(a.length%2&&i===a.length-1?' wide':'')+'" onclick="ownMenuGo('+Q+t[0]+Q+')"><i>'+t[1]+'</i><b>'+t[2]+'</b></button>';
   el.innerHTML='<div class="sec-title" style="margin:2px 2px 10px">🧭 จะดูอะไร</div>'
     +(rec.length?'<div class="omn-rec">'+rec.map(id=>'<button type="button" onclick="ownMenuGo('+Q+id+Q+')">'+all[id][1]+' '+all[id][2]+'</button>').join('')+'</div>':'')
     +OM.map(g=>'<div class="omn-g">'+g[0]+'</div><div class="omn-grid">'+g[1].map(btn).join('')+'</div>').join('')
@@ -8570,7 +8571,7 @@ function closePrPick(){document.getElementById('prPickModal').classList.remove('
 function pickPrCo(id){_prCo=id;closePrPick();renderPrice();window.scrollTo({top:0});}
 // ── หน้าต่างแก้สินค้า ──
 function openPrItem(id){
-  if(!prIsAdmin())return;
+  if(!prIsAdmin()||IS_VIP)return;   // #511 VIP ดูอย่างเดียว (แถวราคากดแล้วไม่เปิดฟอร์มแก้)
   const it=id?(D.inventoryItems||[]).find(i=>i.id===id):null;
   if(id&&!it)return;
   _prEditId=id||'';
