@@ -2593,9 +2593,18 @@ body.owner-mode #mobMenuBody.clerk-search>.owner-g9{display:none!important}
 .tf-p.md{color:#1D4ED8}.tf-p.hi{color:#1E3A8A}.tf-w.md{color:var(--w)}.tf-w.hi{color:var(--d)}
 .tf-lg{font-size:calc(12px * var(--ui-scale));color:var(--tx2);margin-top:6px}
 .tx-hr{margin-bottom:14px}.tx-rsum{font-size:calc(13.5px * var(--ui-scale));font-weight:700;margin-bottom:6px}
-.tx-rbar{position:relative;display:grid;grid-template-columns:repeat(24,1fr);gap:2px;align-items:end;height:56px;background:var(--sf2);border-radius:8px;padding:4px}
-.tx-rbar i{background:#2563EB;border-radius:3px 3px 0 0;display:block}.tx-rbar i.past{background:#94A3B8}
-.tx-rbar b{position:absolute;top:0;bottom:0;width:2px;background:var(--d)}
+.tx-rbar{position:relative;display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:2px;align-items:end;height:130px;background:var(--sf2);border-radius:8px;padding:4px 2px 0}
+.tx-rb{all:unset;box-sizing:border-box;min-width:0!important;min-height:0!important;padding:0!important;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;cursor:pointer;border-radius:4px 4px 0 0;position:relative;-webkit-tap-highlight-color:transparent}
+.tx-rb i{display:block;width:100%;border-radius:3px 3px 0 0;background:#93C5FD}
+.tx-rb.lv2 i{background:#2563EB}.tx-rb.lv3 i{background:#1E3A8A}.tx-rb.past i{filter:grayscale(1);opacity:.55}
+.tx-rb .v{font-size:calc(9.5px * var(--ui-scale));font-weight:800;color:var(--tx);line-height:1.1;margin-bottom:1px;white-space:nowrap}
+.tx-rb.sel{background:rgba(37,99,235,.12);outline:2px solid #2563EB;outline-offset:-1px}
+.tx-rb:focus-visible{outline:2px solid var(--p)}
+.tx-rax{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:2px;padding:3px 2px 0;font-size:calc(10.5px * var(--ui-scale));font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
+.tx-rb.pk .v{color:var(--d)}@media(max-width:600px){.tx-rb .v{display:none}.tx-rb.pk .v{display:block}}
+.tx-rpick{margin-top:8px;background:var(--sf2);border-radius:8px;padding:7px 10px;font-size:calc(13.5px * var(--ui-scale))}
+.tx-rlg{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font-size:calc(12px * var(--ui-scale));font-weight:600}.tx-rlg i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px;background:#93C5FD}.tx-rlg i.lv2{background:#2563EB}.tx-rlg i.lv3{background:#1E3A8A}
+.tx-rbar b{position:absolute;top:0;bottom:0;width:2px;background:var(--d);pointer-events:none}
 .tx-alk{background:var(--sf);color:var(--tx);border-radius:10px;padding:8px 10px;margin-top:6px}
 .tx-alk .h{font-weight:800;font-size:calc(13px * var(--ui-scale))}
 .tx-alk .r{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-top:1px solid var(--sf2);font-size:calc(13.5px * var(--ui-scale))}
@@ -9175,7 +9184,7 @@ function renderTideForecast(){   // #504 3 วัน → 7 วัน แถว�
   }
   el.innerHTML=rows.join('')+'<div class="tf-lg">ลม กม./ชม. · 🙏 = วันพระ</div>';
 }
-// #504 ฝนวันนี้รายชั่วโมง — แถบ 24 ช่อง สูง = มม. · สี = โอกาสฝน · เส้นแดง = ตอนนี้
+// #504 ฝนวันนี้รายชั่วโมง — แถบ 24 ช่อง สูง = มม. · เส้นแดง = ตอนนี้ · #508 สี = ความหนักฝน · แตะดูรายชั่วโมง
 function tideRainHours(){
   const h=_wxHourly;if(!h||!h.time||!h.precipitation)return '';
   const td=today(),idx=h.time.map((t,i)=>t.slice(0,10)===td?i:-1).filter(i=>i>=0);if(idx.length<20)return '';
@@ -9184,10 +9193,25 @@ function tideRainHours(){
   const rng=[];wet.forEach(k=>{const L=rng[rng.length-1];if(L&&k<=L[1]+2)L[1]=k;else rng.push([k,k]);});
   const pk=mm.indexOf(mx);
   const sum=!wet.length?'วันนี้ฝนน้อย/ไม่มีฝน':'ฝน '+rng.map(([a,b])=>'<span class="nw">'+String(a).padStart(2,'0')+'–'+String(b+1).padStart(2,'0')+' น.</span>').join(' · ')+'<br>หนักสุด '+mx.toFixed(1)+' มม. ตอน '+String(pk).padStart(2,'0')+' น.';
-  const bars=mm.map((v,k)=>'<i class="'+(k<nowH?'past':'')+'" style="height:'+(v>0?Math.max(8,Math.min(100,v/5*100)):0).toFixed(0)+'%;opacity:'+(0.35+Math.min(1,pr[k]/100)*0.65).toFixed(2)+'" title="'+String(k).padStart(2,'0')+':00 · '+v.toFixed(1)+' มม. · '+pr[k]+'%"></i>').join('');
+  // #508 แท่งสูงขึ้น · สีตามความหนักของฝน · เลขชั่วโมงครบ 24 · แตะ/ชี้แท่ง = ดูรายละเอียดด้านล่าง (มือถือไม่มี hover)
+  _trh={mm,pr,nowH};
+  const top=Math.max(mx,2),lv=v=>v>=2?3:v>=0.5?2:v>0?1:0;
+  const bars=mm.map((v,k)=>'<button type="button" class="tx-rb lv'+lv(v)+(k<nowH?' past':'')+(k===nowH?' sel':'')+(k===pk&&mx>0?' pk':'')+'" onclick="tideRainPick('+k+')" onmouseenter="tideRainPick('+k+')" aria-label="'+String(k).padStart(2,'0')+':00 ฝน '+v.toFixed(1)+' มม.">'
+    +(v>=0.1?'<span class="v">'+v.toFixed(1)+'</span>':'')+'<i style="height:'+(v>0?Math.max(6,v/top*100):0).toFixed(0)+'%"></i></button>').join('');
+  const axis=mm.map((_,k)=>'<span>'+k+'</span>').join('');
+  const lg='<div class="tx-rlg"><span><i class="lv1"></i>ปรอย &lt;0.5</span><span><i class="lv2"></i>ฝน 0.5–2</span><span><i class="lv3"></i>หนัก ≥2 มม.</span></div>';
   return '<div class="card tx-hr"><div class="card-t">🌧️ ฝนวันนี้รายชั่วโมง</div><div class="tx-rsum">'+sum+'</div>'
-    +'<div class="tx-rbar">'+bars+'<b style="left:'+((nowH+0.5)/24*100).toFixed(1)+'%"></b></div>'
-    +'<div class="tx-axis"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div></div>';
+    +'<div class="tx-rbar">'+bars+'<b style="left:calc('+((nowH+new Date().getMinutes()/60)/24*100).toFixed(2)+'% - 1px)"></b></div>'
+    +'<div class="tx-rax">'+axis+'</div><div class="tx-rpick" id="tx-rpick">'+tideRainTxt(nowH)+'</div>'+lg+'</div>';
+}
+let _trh=null;
+function tideRainTxt(k){
+  if(!_trh)return '';const v=_trh.mm[k],p=_trh.pr[k],hh=String(k).padStart(2,'0')+':00–'+String(k+1).padStart(2,'0')+':00';
+  return '🕐 <b>'+hh+'</b>'+(k===_trh.nowH?' (ตอนนี้)':k<_trh.nowH?' (ผ่านแล้ว)':'')+' · ฝน <b>'+v.toFixed(1)+' มม.</b> · โอกาสฝน <b>'+p+'%</b>';
+}
+function tideRainPick(k){
+  const el=document.getElementById('tx-rpick');if(el)el.innerHTML=tideRainTxt(k);
+  document.querySelectorAll('.tx-rb').forEach((b,i)=>b.classList.toggle('sel',i===k));
 }
 // ══════ การ์ดงานบนสุดของหน้าสภาพอากาศ (entry #345) ══════
 //    ① ต้องระวังอะไร — เกณฑ์ชุดเดียวกับ calcWeatherRisk (หน้าความเสี่ยง): ฝน >20 มม. · ร้อน >33° · ลมอ่อน <5 + ร้อน >31° · + พายุ (weathercode ≥95)
