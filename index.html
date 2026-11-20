@@ -11684,6 +11684,11 @@ function elecBreakdownForPeriod(fromDate,toDate){
     minPonds:minP===Infinity?0:minP, maxPonds:maxP,
     farmPerDay:farmTotal/days, perPondPerDay:total/days};
 }
+// #513 ค่าไฟของรอบที่ปิดแล้ว = ยอดที่บันทึกไว้ตอนปิดรอบ (ตัวเดียวกับหน้า P&L · พี่สั่ง 20 พ.ย. 69) · รอบที่ไม่มียอดบันทึก → คิดจากบิลเหมือนเดิม
+function cropElecCost(c){
+  const hr=cropHarvestResult(c),v=hr?hr.costElec:null;
+  return v!=null&&v!==''&&!isNaN(+v)?+v:getElecCostForPeriod(c.startDate,c.closeDate);
+}
 function getElecCostForPeriod(fromDate,toDate){
   const b=elecBreakdownForPeriod(fromDate,toDate);
   return b?b.total:0;
@@ -11718,7 +11723,7 @@ function renderElecKPI(){
   // ถ่วงน้ำหนักด้วย กก. (ค่าไฟรวมทุกรอบ / น้ำหนักรวมทุกรอบ) — สูตรเดียวกับ renderLaborKPI
   let avgPerKg=null,totElecY=0,totKgY=0;
   closed.forEach(c=>{
-    const ec=getElecCostForPeriod(c.startDate,c.closeDate);
+    const ec=cropElecCost(c);   // #513 ใช้ค่าไฟที่บันทึกตอนปิดรอบ (ตัวเดียวกับ P&L)
     if(ec>0&&c._w>0){totElecY+=ec;totKgY+=c._w;}
   });
   if(totKgY>0)avgPerKg=totElecY/totKgY;
@@ -11783,7 +11788,7 @@ function renderElecCropSummary(){
     if(!c.closeDate||!w)return;
     if(elecStart&&c.closeDate<elecStart)return;
     const days=docAge(c.startDate,c.closeDate);
-    const ec=getElecCostForPeriod(c.startDate,c.closeDate);
+    const ec=cropElecCost(c);   // #513 ตัวเดียวกับ P&L
     allRows.push({name:p.name,cropNum:cropLbl(p,c),closeDate:c.closeDate,weight:w,elec:ec,perKg:ec&&w?ec/w:null,days,yearBE:yearBE(parseInt(c.closeDate.split('-')[0],10))});
   }));
   if(!allRows.length){el.innerHTML=`<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีรอบที่ปิดแล้วตั้งแต่มีข้อมูลบิลค่าไฟจริง${elecStart?' ('+fD(elecStart)+' เป็นต้นไป)':''}</p>`;return;}
