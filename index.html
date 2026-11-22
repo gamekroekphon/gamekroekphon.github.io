@@ -1948,7 +1948,7 @@ table.exy-t td,table.exy-t th{font-variant-numeric:tabular-nums}
 .hv-card .cl{font-weight:700;color:var(--ok);font-size:calc(12.5px * var(--ui-scale))}
 .hv-tag{flex:none;border-radius:6px;padding:0 7px;font-size:calc(12px * var(--ui-scale));font-weight:700}
 .hv-tag.dead{background:#E0F2FE;color:#075985}.hv-tag.live{background:var(--ob);color:var(--ok)}.hv-tag.miss{background:var(--wb);color:var(--w)}
-.hv-card .mid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:6px;text-align:center;font-size:calc(12.5px * var(--ui-scale))}
+.hv-card .mid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:6px;text-align:center;font-size:calc(12.5px * var(--ui-scale))}
 .hv-card .mid b{display:block;font-size:calc(15px * var(--ui-scale))}
 .hv-card .gr,.hv-card .nt{font-size:calc(12.5px * var(--ui-scale));margin-top:4px}
 .hv-card .bot{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:6px}
@@ -1956,7 +1956,7 @@ table.exy-t td,table.exy-t th{font-variant-numeric:tabular-nums}
 .hv-card .act{display:flex;gap:6px}
 .hv-card .act button{border:1.5px solid var(--bd);background:var(--sf);color:var(--tx);border-radius:9px;min-height:36px;padding:0 12px;font-family:inherit;font-size:calc(13px * var(--ui-scale));cursor:pointer}
 .hv-card .act button.del{color:var(--d)}
-.hv-csum{display:flex;justify-content:space-between;gap:8px;font-weight:700;border-top:2px solid var(--bd);padding-top:8px;font-size:calc(14px * var(--ui-scale))}
+.hv-csum{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font-weight:700;border-top:2px solid var(--bd);padding-top:8px;font-size:calc(14px * var(--ui-scale))}
 @media (max-width:640px){.hv-tbl-wrap{display:none}.hv-cards{display:block}}
 .crx-reason{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:11px 12px;margin-bottom:12px}
 .crx-rh{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:calc(15px * var(--ui-scale));margin-bottom:8px}.crx-rh small{font-weight:600;font-size:calc(12.5px * var(--ui-scale))}
@@ -4973,6 +4973,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
         <div id="hv-left-prev" style="grid-column:1/-1"></div>
 <div id="hv-ref" style="grid-column:1/-1"></div>
         <div class="fg"><label class="fl" for="hv-price">ราคากุ้งปกติ (บาท/กก.)</label><input type="number" class="fi" id="hv-price" placeholder="120" step="0.5" oninput="hvCalcSum()"><span class="hint">ใช้เป็นตัวช่วยบวกเฉยๆ — ยอดจริงกรอกในช่องด้านล่าง</span></div>
+        <div class="fg"><label class="fl" for="hv-soft">กุ้งนิ่ม (%)</label><input type="number" class="fi" id="hv-soft" placeholder="1.5" step="0.01" min="0" max="100" inputmode="decimal"></div>
         <div id="hv-cmp" style="grid-column:1/-1"></div>
       </div>
       <div style="margin-top:12px">
@@ -8115,6 +8116,14 @@ function gradeKg(r){return((r&&r.grades)||[]).reduce((s,g)=>s+(parseFloat(g&&g.k
 function gradeBaht(r){return((r&&r.grades)||[]).reduce((s,g)=>s+((parseFloat(g&&g.kg)||0)*(parseFloat(g&&g.pr)||0)),0);}
 // ── น้ำหนักรวมของการจับ 1 ครั้ง = กุ้งปกติ + เกรดพิเศษทุกแถว ──
 function harvestRowKg(r){return(parseFloat(r&&r.weight)||0)+gradeKg(r);}
+// #514 %กุ้งนิ่ม — ช่องแยก r.soft (พาเชียล) / pendingHarvest.soft / harvestResult.softPct (ปิดบ่อ)
+//   ข้อมูลเก่าเขียนไว้ในหมายเหตุ "นิ่ม 1.42%" → อ่านจากหมายเหตุแทน ไม่ต้องกรอกใหม่
+const HV_SOFT_RE=/(?:กุ้ง)?นิ่ม\s*([\d.]+)\s*%/;
+function harvestSoftPct(v,notes){if(v!=null&&v!==''&&!isNaN(+v))return +v;const m=String(notes||'').match(HV_SOFT_RE);return m?+m[1]:null;}
+function stripSoftNote(t){return String(t||'').replace(HV_SOFT_RE,'').replace(/\s*·\s*·\s*/g,' · ').replace(/^[\s·,|/-]+|[\s·,|/-]+$/g,'').trim();}
+function softPctTxt(v){return v==null?'-':(Math.round(v*100)/100)+'%';}
+// เฉลี่ยถ่วงน้ำหนัก กก. — ต้องมีค่าครบทุกครั้ง ไม่งั้นไม่โชว์ (เฉลี่ยจากบางครั้งจะดูเหมือนทั้งรอบ)
+function softWeighted(list){let w=0,t=0,miss=false;list.forEach(x=>{if(!(x.kg>0))return;if(x.soft==null){miss=true;return;}w+=x.kg;t+=x.kg*x.soft;});return !miss&&w>0?t/w:null;}
 // ── ยอดเงินของการจับ 1 ครั้ง: ใช้ "ยอดที่กรอกเอง" (amount) เป็นตัวจริงเสมอ
 //    เพราะแต่ละครั้งมีหลายราคาปนกัน (นิ่ม/เสีย/ผอม) คูณน้ำหนัก×ราคาเดียวไม่ได้
 //    ถ้าไม่มี amount = รายการเก่าก่อนมีช่องนี้ → fallback ไปสูตรเดิม (กุ้งปกติ×ราคา + เกรดพิเศษ) เพื่อไม่ให้ประวัติเก่าเป็น 0 ──
@@ -21851,10 +21860,10 @@ function getCloseSummary(p,cropIdx){
   const harvestResult=lastCrop?cropHarvestResult(lastCrop):null;   // นับพาเชียลรวมแล้ว (fcr/อัตรารอด/รายได้)
   const notesCrop=lastCrop?lastCrop.notes:'';
   // ติด type/date ให้ครบ — ตาราง "รายละเอียดการจับแต่ละครั้ง" ใน PDF ใช้ทั้งสอง field แยกสี badge และเรียงลำดับ
-  const partialRows=((lastCrop?lastCrop.partialHarvests:(p.partialHarvests||[]))||[]).map(r=>({...r,type:'พาเชียล',weight:harvestRowKg(r),_baht:harvestRowBaht(r)}));
+  const partialRows=((lastCrop?lastCrop.partialHarvests:(p.partialHarvests||[]))||[]).map(r=>({...r,type:'พาเชียล',weight:harvestRowKg(r),_baht:harvestRowBaht(r),_soft:harvestSoftPct(r.soft,r.notes)}));
   // ⚠️ แถวนี้ต้องรวม "เกรดพิเศษ" ด้วย — harvestResult.totalWeight เก็บเฉพาะกุ้งปกติ
   //    ถ้าไม่บวก น้ำหนักรวมใน PDF ปิดบ่อจะหายไปเท่าเกรดพิเศษ — _baht คิดแยกราคาต่อเกรด ไม่ใช้ราคากุ้งปกติคูณรวด
-  const closeRows=harvestResult?[{type:'ปิดบ่อ',date:closeDate||'',weight:(parseFloat(harvestResult.totalWeight)||0)+gradeKg(harvestResult),price:harvestResult.price,size:harvestResult.size,buyer:harvestResult.buyer||'',_baht:(parseFloat(harvestResult.totalWeight)||0)*(parseFloat(harvestResult.price)||0)+gradeBaht(harvestResult)}]:[];
+  const closeRows=harvestResult?[{type:'ปิดบ่อ',date:closeDate||'',weight:(parseFloat(harvestResult.totalWeight)||0)+gradeKg(harvestResult),price:harvestResult.price,size:harvestResult.size,buyer:harvestResult.buyer||'',_baht:(parseFloat(harvestResult.totalWeight)||0)*(parseFloat(harvestResult.price)||0)+gradeBaht(harvestResult),_soft:harvestSoftPct(harvestResult.softPct,notesCrop)}]:[];
   const rows=[...partialRows,...closeRows];
   const totalWeight=rows.reduce((s,r)=>s+(r.weight||0),0)||(harvestResult?harvestResult.totalWeight:null);
   const totalBaht=rows.reduce((s,r)=>s+(r._baht!=null?r._baht:(r.weight&&r.price?r.weight*r.price:0)),0);
@@ -22906,18 +22915,20 @@ function chHarvestRowsHtml(s,hr,isAdmin){
       +td(num(r.weight),'right','font-variant-numeric:tabular-nums')
       +(isAdmin?td(r.price?Math.round(r.price).toLocaleString():'-','right','font-variant-numeric:tabular-nums'):'')
       +(isAdmin?td(num(baht),'right','font-variant-numeric:tabular-nums;color:var(--ok)'):'')
+      +td(r._soft!=null?softPctTxt(r._soft):'-','right')
       +'</tr>';
   });
   return'<div style="font-weight:700;font-size:calc(13px * var(--ui-scale));margin-bottom:8px;color:var(--in)">🦐 การจับกุ้งรอบนี้ — '
       +rows.length+' ครั้ง <span style="font-weight:400;color:var(--tx3)">(พาเชียล '+nPh+' · ปิดบ่อ '+nCl+')</span></div>'
     +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:calc(12px * var(--ui-scale))">'
     +'<thead><tr style="border-bottom:1px solid var(--bd)">'+th('#','center')+th('ประเภท')+th('วันที่','center')+th('แพ')+th('ไซส์','right')+th('น้ำหนัก(กก.)','right')
-    +(isAdmin?th('ราคา/กก.','right'):'')+(isAdmin?th('เป็นเงิน(บาท)','right'):'')+'</tr></thead>'
+    +(isAdmin?th('ราคา/กก.','right'):'')+(isAdmin?th('เป็นเงิน(บาท)','right'):'')+th('กุ้งนิ่ม','right')+'</tr></thead>'
     +'<tbody>'+body
     +'<tr style="font-weight:800;color:var(--p)">'+td('','center')+td('รวมทั้งรอบ')+td('','center')+td('')+td('','right')
       +td(num(kgAll),'right','font-variant-numeric:tabular-nums')
       +(isAdmin?td(kgAll>0?Math.round(bahtAll/kgAll).toLocaleString():'-','right','font-variant-numeric:tabular-nums'):'')
       +(isAdmin?td(num(bahtAll),'right','font-variant-numeric:tabular-nums'):'')
+      +td((()=>{const w=softWeighted(rows.map(r=>({kg:r.weight||0,soft:r._soft})));return w!=null?softPctTxt(w):'-';})(),'right')
     +'</tr></tbody></table></div>'
     +(isAdmin&&rev!=null&&Math.abs(diff)>=1
       ?'<div style="font-size:var(--fs10);color:var(--tx3);margin-top:5px">รายได้ที่บันทึกไว้ตอนปิดรอบ ฿'+Math.round(rev).toLocaleString()
@@ -23692,6 +23703,7 @@ function confirmCloseCrop(){
     // ⚠️ เช่นเดียวกับ revenue: ช่อง "ตัวที่จับได้" ถูก calcCropEcon() คำนวณเป็นยอดรวมทั้งรอบ (ปิดบ่อ + พาเชียล) มาให้แล้ว
     //    ถ้าไม่ติดธง cropHarvestResult() จะบวกจำนวนตัวพาเชียลซ้ำ → อัตรารอดพุ่งเกินจริง (เจอ 99% ทั้งที่จริง 61.5%)
     caughtIncludesPartial:true,
+    softPct:(p.pendingHarvest&&p.pendingHarvest.soft!=null)?p.pendingHarvest.soft:null,   // #514 %กุ้งนิ่มตอนจับปิดบ่อ
     survivalRate:parseFloat(document.getElementById('cm-survival').value)||null,
     survivalRateOrder:parseFloat(document.getElementById('cm-survival-order')?.value)||null,   // ชุดเทียบ: หารด้วยยอดสั่งซื้ออย่างเดียว (ฐานเดียวกับสมุดจดมือ)
     fcr:parseFloat(document.getElementById('cm-fcr').value)||null,
@@ -24088,7 +24100,11 @@ function savePartialHarvest(){
   const size=document.getElementById('hv-size').value?parseInt(document.getElementById('hv-size').value):null;
   const weight=document.getElementById('hv-weight').value?parseFloat(document.getElementById('hv-weight').value):null;
   const price=document.getElementById('hv-price').value?parseFloat(document.getElementById('hv-price').value):null;
-  const notes=document.getElementById('hv-notes').value.trim();
+  const softRaw=(document.getElementById('hv-soft')||{}).value||'';
+  const soft=softRaw.trim()!==''?parseFloat(softRaw):null;
+  if(soft!=null&&(isNaN(soft)||soft<0||soft>100)){showMsg('hv-msg','warn','⚠️ กุ้งนิ่มต้องอยู่ระหว่าง 0–100%');return;}
+  let notes=document.getElementById('hv-notes').value.trim();
+  if(soft!=null)notes=stripSoftNote(notes);   // #514 มีช่องแล้ว ไม่เก็บซ้ำในหมายเหตุ
   const amtRaw=document.getElementById('hv-amount')?document.getElementById('hv-amount').value:'';
   const amount=(amtRaw&&amtRaw.trim())?parseFloat(amtRaw):null;
   const grades=hvCleanGrades();
@@ -24132,19 +24148,19 @@ function savePartialHarvest(){
   if(_phEditId){
     const old=p.partialHarvests.find(x=>x.id===_phEditId);
     if(!old){showMsg('hv-msg','warn','ไม่พบรายการที่กำลังแก้ไข (อาจถูกลบไปแล้ว)');_phEditId=null;return;}
-    Object.assign(old,{date,buyer,live,size,weight,price,notes,grades,amount});
+    Object.assign(old,{date,buyer,live,size,weight,price,soft,notes,grades,amount});
     msg=`✅ อัปเดตรายการพาเชียลบ่อ ${p.name} แล้ว`;
     _phEditId=null;
     const btn=document.getElementById('hv-save-btn');if(btn)btn.textContent='💾 บันทึกพาเชียล';
     const cx=document.getElementById('hv-cancel-edit');if(cx)cx.style.display='none';
   }else{
-    p.partialHarvests.push({id:'PH'+Date.now(),date,buyer,live,size,weight,price,notes,grades,amount});
+    p.partialHarvests.push({id:'PH'+Date.now(),date,buyer,live,size,weight,price,soft,notes,grades,amount});
     msg=`✅ บันทึกพาเชียลบ่อ ${p.name} สำเร็จ`;
   }
   p.partialHarvests.sort((a,b)=>b.date.localeCompare(a.date));
   save();fbSave();
   showMsg('hv-msg','ok',msg);
-  ['hv-buyer','hv-live','hv-size','hv-weight','hv-price','hv-notes','hv-amount'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['hv-buyer','hv-live','hv-size','hv-weight','hv-price','hv-soft','hv-notes','hv-amount'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   _hvGrades=[];hvRenderGrades();
   renderPartialList();renderHvRoundStrip();renderOv();
 }
@@ -24168,7 +24184,11 @@ function saveCloseHarvest(){
   const size=gvs('hv-size')?parseInt(gvs('hv-size')):null;
   const weight=gvs('hv-weight')?parseFloat(gvs('hv-weight')):null;
   const price=gvs('hv-price')?parseFloat(gvs('hv-price')):null;
-  const notes=gvs('hv-notes').trim();
+  const softRaw=gvs('hv-soft');
+  const soft=softRaw.trim()!==''?parseFloat(softRaw):null;
+  if(soft!=null&&(isNaN(soft)||soft<0||soft>100)){showMsg('hv-msg','warn','⚠️ กุ้งนิ่มต้องอยู่ระหว่าง 0–100%');return;}
+  let notes=gvs('hv-notes').trim();
+  if(soft!=null)notes=stripSoftNote(notes);   // #514
   const amtRaw=gvs('hv-amount');
   const amount=(amtRaw&&amtRaw.trim())?parseFloat(amtRaw):null;
   const grades=hvCleanGrades();
@@ -24198,15 +24218,17 @@ function saveCloseHarvest(){
     'cm-price':price!=null?String(price):'',
     'cm-buyer':buyer,
     'cm-revenue':revenueAll?String(Math.round(revenueAll)):'',
-    'cm-notes':notes
+    'cm-notes':notes,
+    'cm-soft':soft!=null?String(soft):''
   };
   p.harvestDate=date;
   p.pendingHarvest={savedAt:today(),fields,grades:JSON.parse(JSON.stringify(grades)),calcAllAtSave:calcAll,src:'harvestPage',
     closeAmount:(amount!=null?amount:null),   // ยอดของการจับปิดบ่อครั้งนี้ล้วนๆ (entry #261)
-    live};                                     // เก็บลักษณะการจับด้วย ให้แก้ไขย้อนหลังแล้วได้ค่าเดิมครบ
+    live,                                      // เก็บลักษณะการจับด้วย ให้แก้ไขย้อนหลังแล้วได้ค่าเดิมครบ
+    soft};                                     // #514 %กุ้งนิ่มของการจับปิดบ่อ
   save();fbSave();
   showMsg('hv-msg','ok','🏁 บันทึกผลจับปิดบ่อ '+p.name+' แล้ว — บ่อขึ้นสถานะ "รอทำสรุป"');
-  ['hv-buyer','hv-live','hv-size','hv-weight','hv-price','hv-notes','hv-amount'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['hv-buyer','hv-live','hv-size','hv-weight','hv-price','hv-soft','hv-notes','hv-amount'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   _hvGrades=[];hvRenderGrades();
   populateAll();renderOv();renderManage();renderPartialList();renderHvRoundStrip();
   hvApplyMode(true);
@@ -24226,7 +24248,8 @@ function editPartialHarvest(pid,id){
   if(tp&&tp.value!=='พาเชียล'){tp.value='พาเชียล';onHvTypeChange();}
   const set=(id2,v)=>{const e=document.getElementById(id2);if(e)e.value=v==null?'':v;};
   set('hv-date',r.date);set('hv-buyer',r.buyer);set('hv-live',r.live);
-  set('hv-size',r.size);set('hv-weight',r.weight);set('hv-price',r.price);set('hv-notes',r.notes);set('hv-amount',r.amount);
+  set('hv-size',r.size);set('hv-weight',r.weight);set('hv-price',r.price);set('hv-amount',r.amount);
+  {const sp=harvestSoftPct(r.soft,r.notes);set('hv-soft',sp);set('hv-notes',(r.soft==null&&sp!=null)?stripSoftNote(r.notes):r.notes);}   // #514 ข้อมูลเก่า: ย้ายจากหมายเหตุขึ้นช่อง
   _hvGrades=((r.grades)||[]).map(g=>({n:g.n,kg:g.kg,pr:g.pr}));hvRenderGrades();
   syncDateHint(document.getElementById('hv-date'));
   _phEditId=id;
@@ -24250,7 +24273,7 @@ function editCloseHarvest(pid){
   set('hv-date',f['cm-close-date']||p.harvestDate||'');
   set('hv-buyer',f['cm-buyer']);set('hv-live',p.pendingHarvest.live||'');
   set('hv-size',f['cm-size']);set('hv-weight',f['cm-weight']);set('hv-price',f['cm-price']);
-  set('hv-notes',f['cm-notes']);
+  {const sp=harvestSoftPct(p.pendingHarvest.soft,f['cm-notes']);set('hv-soft',sp);set('hv-notes',(p.pendingHarvest.soft==null&&sp!=null)?stripSoftNote(f['cm-notes']):f['cm-notes']);}   // #514
   set('hv-amount',p.pendingHarvest.closeAmount!=null?p.pendingHarvest.closeAmount:'');
   _hvGrades=((p.pendingHarvest.grades)||[]).map(g=>({n:g.n,kg:g.kg,pr:g.pr}));hvRenderGrades();
   syncDateHint(document.getElementById('hv-date'));
@@ -24263,7 +24286,7 @@ function editCloseHarvest(pid){
 }
 function cancelEditPartial(){
   _phEditId=null;
-  ['hv-buyer','hv-live','hv-size','hv-weight','hv-price','hv-notes','hv-amount'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['hv-buyer','hv-live','hv-size','hv-weight','hv-price','hv-soft','hv-notes','hv-amount'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   _hvGrades=[];hvRenderGrades();
   // ⚠️ ปุ่มต้องกลับเป็นข้อความของ "โหมดที่ยืนอยู่" ไม่ใช่ 'บันทึกพาเชียล' ตายตัว
   //    ไม่งั้นยกเลิกการแก้ผลจับปิดบ่อแล้ว ปุ่มจะกลายเป็น "บันทึกพาเชียล" ทั้งที่ยังอยู่โหมดปิดรอบ (entry #261)
@@ -24296,7 +24319,7 @@ function renderPartialList(){
     isClose:true,date:p.harvestDate,buyer:_phF['cm-buyer']||'',live:_ph.live||'',
     size:parseFloat(_phF['cm-size'])||null,weight:parseFloat(_phF['cm-weight'])||null,
     price:parseFloat(_phF['cm-price'])||null,notes:_phF['cm-notes']||'',
-    grades:_ph.grades||[],amount:_ph.closeAmount!=null?parseFloat(_ph.closeAmount):null
+    grades:_ph.grades||[],amount:_ph.closeAmount!=null?parseFloat(_ph.closeAmount):null,soft:_ph.soft
   }:null;
   if(closeRow)rows.unshift(closeRow);   // จับปิดบ่อเป็นครั้งล่าสุดเสมอ อยู่บนสุด
   if(!rows.length){listEl.innerHTML='<p style="color:var(--tx3);text-align:center;padding:20px;font-style:italic">ยังไม่มีรายการจับกุ้งในรอบนี้ — บันทึกได้จากฟอร์มด้านบน</p>';return;}
@@ -24308,6 +24331,7 @@ function renderPartialList(){
     <th style="text-align:right;padding:8px 10px;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">น้ำหนัก (กก.)</th>
     <th style="text-align:right;padding:8px 10px;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">ราคา/กก.</th>
     <th style="text-align:right;padding:8px 10px;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">รวม (บาท)</th>
+    <th style="text-align:right;padding:8px 10px;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">กุ้งนิ่ม</th>
     <th style="text-align:left;padding:8px 10px;font-size:calc(12px * var(--ui-scale));color:var(--tx2)">หมายเหตุ</th>
     <th style="padding:8px 6px"></th>
   </tr></thead><tbody>${rows.map(r=>{
@@ -24325,19 +24349,34 @@ function renderPartialList(){
       <td style="padding:8px 10px;text-align:right;font-weight:700">${totKg?Math.round(totKg).toLocaleString():'-'}${grList.length?`<div class="hv-gr-sub">${grList.map(g=>mpEsc(g.n)+' '+g.kg).join(' · ')}</div>`:''}</td>
       <td style="padding:8px 10px;text-align:right">${r.price?r.price.toLocaleString():'-'}</td>
       <td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--ok)">${total?total.toLocaleString():'-'}</td>
-      <td style="padding:8px 10px;color:var(--tx3);font-size:calc(12px * var(--ui-scale))">${r.notes||''}</td>
+      <td style="padding:8px 10px;text-align:right">${softPctTxt(harvestSoftPct(r.soft,r.notes))}</td>
+      <td style="padding:8px 10px;color:var(--tx3);font-size:calc(12px * var(--ui-scale))">${r.soft==null&&harvestSoftPct(null,r.notes)!=null?stripSoftNote(r.notes):(r.notes||'')}</td>
       <td style="padding:8px 6px;text-align:center;white-space:nowrap">${r.isClose
         ?`<button onclick="editCloseHarvest('${pid}')" style="background:none;border:none;cursor:pointer;font-size:calc(14px * var(--ui-scale))" title="แก้ไขผลจับปิดบ่อ">✏️</button><button onclick="cancelHarvestPending('${pid}')" style="background:none;border:none;cursor:pointer;color:var(--d);font-size:calc(14px * var(--ui-scale))" title="ยกเลิกการจับปิดบ่อ — บ่อกลับไปเป็นกำลังเลี้ยง">🗑️</button>`
         :`<button onclick="editPartialHarvest('${pid}','${r.id}')" style="background:none;border:none;cursor:pointer;font-size:calc(14px * var(--ui-scale))" title="แก้ไข">✏️</button><button onclick="deletePartialHarvest('${pid}','${r.id}')" style="background:none;border:none;cursor:pointer;color:var(--d);font-size:calc(14px * var(--ui-scale))" title="ลบ">🗑️</button>`}</td>
     </tr>`;
-  }).join('')}</tbody></table></div>`+hvPartialCards(rows,pid);
+  }).join('')}${hvPartialTotalRow(rows)}</tbody></table></div>`+hvPartialCards(rows,pid);
+}
+// #514 แถวรวมท้ายตาราง (คอม) — น้ำหนัก · ยอดขาย · กุ้งนิ่มเฉลี่ยถ่วงน้ำหนัก
+function hvPartialTotalRow(rows){
+  if(rows.length<2)return'';
+  const kg=rows.reduce((a,r)=>a+harvestRowKg(r),0),baht=rows.reduce((a,r)=>a+(Math.round(harvestRowBaht(r))||0),0);
+  const sw=softWeighted(rows.map(r=>({kg:harvestRowKg(r),soft:harvestSoftPct(r.soft,r.notes)})));
+  const c='padding:9px 10px;font-weight:800;border-top:2px solid var(--bd)';
+  return '<tr style="background:var(--sf2)"><td style="'+c+'" colspan="4">รวม '+rows.length+' ครั้ง</td>'
+    +'<td style="'+c+';text-align:right">'+Math.round(kg).toLocaleString()+'</td>'
+    +'<td style="'+c+';text-align:right">'+(kg>0&&baht>0?Math.round(baht/kg).toLocaleString():'-')+'</td>'
+    +'<td style="'+c+';text-align:right;color:var(--ok)">'+(baht>0?baht.toLocaleString():'-')+'</td>'
+    +'<td style="'+c+';text-align:right">'+(sw!=null?softPctTxt(sw):'-')+'</td><td style="'+c+'" colspan="2"></td></tr>';
 }
 // ── ① มือถือ: รายการจับเป็นการ์ดทีละครั้ง (entry #401) — ตาราง 9 ช่องล้นจอต้องเลื่อนข้าง · คอมยังเป็นตารางเดิม (CSS .hv-tbl-wrap/.hv-cards สลับกัน)
 function hvPartialCards(rows,pid){
   const q=String.fromCharCode(39);
-  let sk=0,sb=0;
+  let sk=0,sb=0;const _sl=[];
   const cards=rows.map(r=>{
     const kg=harvestRowKg(r),baht=Math.round(harvestRowBaht(r))||0;sk+=kg;sb+=baht;
+    const sp=harvestSoftPct(r.soft,r.notes);_sl.push({kg,soft:sp});
+    const nt=r.soft==null&&sp!=null?stripSoftNote(r.notes):(r.notes||'');
     const gr=(r.grades||[]).filter(g=>(g.kg||0)>0);
     const tag=r.live==='กุ้งตาย'?'<span class="hv-tag dead">❄️ กุ้งตาย</span>':r.live==='กุ้งเป็น'?'<span class="hv-tag live">🦐 กุ้งเป็น</span>':'<span class="hv-tag miss">เป็น/ตาย ?</span>';
     const act=r.isClose
@@ -24347,13 +24386,14 @@ function hvPartialCards(rows,pid){
     return '<div class="hv-card'+(r.isClose?' close':bad?' bad':'')+'">'
       +'<div class="top"><b>'+fD(r.date)+(r.buyer?' · '+mpEsc(r.buyer):'')+'</b>'+tag+'</div>'
       +(r.isClose?'<div class="cl">🏁 จับปิดบ่อ</div>':'')
-      +'<div class="mid"><div><b>'+(r.size||'-')+'</b>ตัว/กก.</div><div><b>'+(kg?Math.round(kg).toLocaleString():'-')+'</b>กก.</div><div><b>'+(r.price?'฿'+r.price.toLocaleString():'-')+'</b>/กก.</div></div>'
+      +'<div class="mid"><div><b>'+(r.size||'-')+'</b>ตัว/กก.</div><div><b>'+(kg?Math.round(kg).toLocaleString():'-')+'</b>กก.</div><div><b>'+(r.price?'฿'+r.price.toLocaleString():'-')+'</b>/กก.</div><div><b>'+softPctTxt(sp)+'</b>นิ่ม</div></div>'
       +(gr.length?'<div class="gr">'+gr.map(g=>mpEsc(g.n)+' '+g.kg+' กก.').join(' · ')+'</div>':'')
       +'<div class="bot"><span class="baht">'+(baht?'฿'+baht.toLocaleString():'ยังไม่กรอกยอดเงิน')+'</span><span class="act">'+act+'</span></div>'
-      +(r.notes?'<div class="nt">'+mpEsc(r.notes)+'</div>':'')
+      +(nt?'<div class="nt">'+mpEsc(nt)+'</div>':'')
       +'</div>';
   }).join('');
-  return '<div class="hv-cards">'+cards+(rows.length>1?'<div class="hv-csum"><span>รวม '+rows.length+' ครั้ง</span><span>'+Math.round(sk).toLocaleString()+' กก.'+(sb>0?' · ฿'+(sb/1e6).toFixed(2)+' ล.':'')+'</span></div>':'')+'</div>';
+  const _sw=softWeighted(_sl);
+  return '<div class="hv-cards">'+cards+(rows.length>1?'<div class="hv-csum"><span>รวม '+rows.length+' ครั้ง</span><span>'+Math.round(sk).toLocaleString()+' กก.'+(sb>0?' · ฿'+sb.toLocaleString():'')+(_sw!=null?' · นิ่ม '+softPctTxt(_sw):'')+'</span></div>':'')+'</div>';
 }
 // ===== ต้นทุนสะสมรายบ่อ (ใช้ร่วมกันระหว่าง Overview KPI bar / หน้ารายละเอียดบ่อ admin / หน้าสต็อก — เดิมสร้างไว้เป็นส่วนหนึ่งของ CEO Dashboard ที่ลบไปแล้ว) =====
 const ceoMoney=v=>'฿'+Math.round(v||0).toLocaleString('th-TH');
