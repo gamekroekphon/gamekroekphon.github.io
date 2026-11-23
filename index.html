@@ -9899,10 +9899,10 @@ function renderPondDetail(id){
   const pdKpi=pdNoKpi?'':IS_VIP?pdVipKpi(p,{sizeCount,lat,biomass,pdYr,latFeed,fcr}):`<div class="pd-k4">
     <div class="pd-k"><div class="l">ไซส์</div><div class="v">${sizeCount??'—'}${sizeCount?' <small>ตัว/กก.</small>':''}</div>
       <div class="s">${prevSizeCount?'จาก '+prevSizeCount:''}${pdFgLast&&pdFgLast.adg>0?(prevSizeCount?' · ':'')+'โต <b class="'+(pdFgLast.adgCh!=null&&pdFgLast.adgCh<0?'dn':'up')+'">'+pdFgLast.adg.toFixed(2)+' ก./วัน '+(pdFgLast.adgCh!=null&&pdFgLast.adgCh<0?'▼':'▲')+'</b>':''}${lat&&lat.date?' · สุ่ม '+fD(lat.date).replace(/\s\d{2}$/,''):''}</div></div>
-    <div class="pd-k${pdYrHit?' good':''}"><div class="l">กุ้งในบ่อ</div><div class="v">${biomass?pdT(biomass):'—'}</div>
+    <div class="pd-k${pdYrHit?' good':''}"><div class="l">น้ำหนักกุ้งปัจจุบัน</div><div class="v">${biomass?pdT(biomass):'—'}</div>
       <div class="s">${pdYr!=null?Math.round(pdYr).toLocaleString()+' กก./ไร่ · '+(pdYrHit?'<b>✓ ถึงเกณฑ์พาเชียล</b>':'เกณฑ์พาเชียล '+_phTarget.toLocaleString()):''}</div></div>
-    <div class="pd-k${pdOverRel?' warn':''}"><div class="l">รอด${pdSC&&pdSC.hasPartial?' (สะสม)':''}</div><div class="v">${lat&&lat.survivalRate!=null?lat.survivalRate+'<small>%</small>':'—'}</div>
-      <div class="s">${pdOverRel?'<b>⚠️ เกินยอดปล่อย</b> · ':''}${pdSC?Math.round(pdSC.inPond).toLocaleString()+' ตัวในบ่อ':''}${pdSC&&pdSC.hasPartial?' · จับไป '+Math.round(pdSC.phCount).toLocaleString():''}</div></div>
+    <div class="pd-k${pdOverRel?' warn':''}"><div class="l">อัตรารอดยอดแถม</div><div class="v">${lat&&lat.survivalRate!=null?lat.survivalRate+'<small>%</small>':'—'}</div>
+      <div class="s">${pdOverRel?'<b>⚠️ เกินยอดปล่อย</b> · ':''}${pdSC?'<span class="nw">จำนวนกุ้งในบ่อ '+Math.round(pdSC.inPond).toLocaleString()+'</span>':''}${pdSC&&pdSC.hasPartial?' · <span class="nw">พาเชียลไปแล้ว '+Math.round(pdSC.phCount).toLocaleString()+'</span>':''}</div></div>
     <div class="pd-k"><div class="l">อาหารรวม</div><div class="v">${(()=>{const t=pdFeedTotal(p);return t>0?pdT(t):'—';})()}</div>
       <div class="s">${latFeed&&latFeed.totalFeed!=null?(latFeed.date?fD(latFeed.date).replace(/\s\d{2}$/,'')+' ':'')+'<span class="nw">กิน '+latFeed.totalFeed.toLocaleString()+' กก.</span>':''}${per100k!=null?' · <span class="nw">'+per100k.toFixed(1)+' กก./แสน</span>':''}${fcr!=null?' · FCR <b class="'+(pdFcrT!=null&&parseFloat(fcr)>pdFcrT+0.005?'dn':'')+'">'+fcr+'</b>':''}</div></div>
   </div>`;
