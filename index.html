@@ -18025,7 +18025,7 @@ function renderPdCropHistCard(p){
   const n=v=>v!=null?Math.round(v).toLocaleString():'-';
   el.innerHTML='<div style="overflow-x:auto"><table class="tbl" style="font-size:calc(12.5px * var(--ui-scale))"><thead><tr>'+
     '<th>รอบ</th><th>วันปิด</th><th>แหล่งลูกกุ้ง</th><th style="text-align:right">ผลผลิต (กก.)</th><th style="text-align:right">ไซส์</th>'+
-    '<th style="text-align:right">FCR</th><th style="text-align:right">อัตรารอด</th>'+
+    '<th style="text-align:right">FCR</th><th style="text-align:right">อัตรารอด (ซื้อ)</th>'+
     (isAdmin?'<th style="text-align:right">กำไร (บาท)</th>':'')+
     '</tr></thead><tbody>'+
     hist.map(c=>{
@@ -18039,7 +18039,7 @@ function renderPdCropHistCard(p){
         '<td style="text-align:right;font-weight:700">'+n(kg)+(hr._phAdj?'<div style="font-size:var(--fs10);color:var(--tx3)">รวมพาเชียล</div>':'')+'</td>'+
         '<td style="text-align:right">'+(hr.size||'-')+'</td>'+
         '<td style="text-align:right">'+(hr.fcr!=null?hr.fcr:'-')+'</td>'+
-        '<td style="text-align:right">'+(hr.survivalRate!=null?hr.survivalRate+'%':'-')+'</td>'+
+        '<td style="text-align:right">'+(survMainOf(hr)!=null?survMainOf(hr)+'%':'-')+(hr.survivalRateOrder!=null&&hr.survivalRate!=null&&+hr.survivalRateOrder!==+hr.survivalRate?'<div style="font-size:var(--fs10)">รวมแถม '+hr.survivalRate+'%</div>':'')+'</td>'+
         (isAdmin?'<td style="text-align:right;font-weight:700;color:'+(prof>=0?'var(--ok)':'var(--d)')+'">'+(prof!=null?((prof>=0?'+':'')+n(prof)):'-')+'</td>':'')+
       '</tr>';
     }).join('')+'</tbody></table></div>'+
@@ -21772,8 +21772,8 @@ function closeSummaryHtml(p,s,opt){
     ${row('จำนวนปล่อย (ตัว)',s.stock?s.stock.toLocaleString():null)}
     ${row('ไซส์ปิดบ่อ (ตัว/กก.)',s.closeSize)}
     ${row('น้ำหนักรวม (กก.)',s.totalWeight?s.totalWeight.toLocaleString():null)}
-    ${row('อัตรารอด — ยอดปล่อยจริง (%)',s.survivalRate)}
     ${row('อัตรารอด — ยอดสั่งซื้อ (%)',s.survivalRateOrder)}
+    ${row('อัตรารอด — รวมแถม (%)',s.survivalRate)}
     ${row('FCR (อัตราแลกเนื้อ)',s.fcr)}
     ${row('ADG/อัตราการเติบโต (กรัม/วัน)',s.adg)}
     ${row('Yield/ผลผลิตต่อไร่ (กก./ไร่)',s.yieldPerRai)}
@@ -21948,7 +21948,7 @@ function pdxCropPage(p,s,admin){
   const buyers=[...new Set((s.rows||[]).map(r=>r.buyer).filter(Boolean))],main=s.buyer||buyers[buyers.length-1]||'',others=buyers.filter(x=>x!==main);   // แพที่ปิดบ่อ = ตัวหลัก
   const pc=(k,v,chip,bad)=>'<div class="pdx-pfc'+(bad?' bad':'')+'"><div class="k">'+k+'</div><div class="v">'+v+'</div>'+(chip?'<span class="c'+(bad?' r':'')+'">'+chip+'</span>':'')+'</div>';
   h+='<div class="pdx-perf">'+pc('FCR',fcr>0?fcr:'-',tgt?'เกณฑ์ '+tgt:'',fcrBad)
-    +pc('อัตรารอด',s.survivalRate!=null?s.survivalRate+'%':'-',s.survivalRateOrder!=null?'ตามสั่ง '+s.survivalRateOrder+'%':'')
+    +pc(s.survivalRateOrder!=null?'อัตรารอด (ยอดซื้อ)':'อัตรารอด',survMainOf(s)!=null?survMainOf(s)+'%':'-',s.survivalRateOrder!=null&&s.survivalRate!=null&&+s.survivalRateOrder!==+s.survivalRate?'รวมแถม '+s.survivalRate+'%':'')
     +pc('ไซส์ปิดบ่อ',s.closeSize||'-',s.closeSize?'ตัว/กก.':'')+pc('ADG',s.adg!=null?s.adg:'-',s.adg!=null?'ก./วัน':'')
     +pc('ขายให้','<span style="font-size:17px">'+pdxE(main||'-')+'</span>',others.length?'+ '+pdxE(others.join(', ')):'')+'</div>';
   if(admin)h+=pdxIns(closeInsights(p,s),'ข้อสรุป');
@@ -21971,9 +21971,9 @@ function pdxCropPage(p,s,admin){
   const hist=(p.cropHistory||[]).filter(x=>x&&x.harvestResult);
   if(hist.length>=2){
     const ci=hist.indexOf(s._crop),end=ci<0?hist.length:ci+1,sl=hist.slice(Math.max(0,end-5),end);
-    right+='<div class="pdx-h">เทียบรอบก่อนของบ่อนี้</div><table class="pdx-tb"><tr><th>รอบ</th><th>ผลผลิต</th><th>FCR</th><th>รอด</th><th>กำไร</th></tr>'
+    right+='<div class="pdx-h">เทียบรอบก่อนของบ่อนี้</div><table class="pdx-tb"><tr><th>รอบ</th><th>ผลผลิต</th><th>FCR</th><th>รอด (ซื้อ)</th><th>กำไร</th></tr>'
       +sl.map(x=>{const r=cropHarvestResult(x)||x.harvestResult,kg=r.totalWeightAll!=null?r.totalWeightAll:r.totalWeight,np=r.netProfit;
-        return '<tr'+(x===s._crop?' class="me"':'')+'><td>'+cropLbl(p,x)+'</td><td>'+pdxN(kg)+'</td><td>'+(r.fcr!=null?(+r.fcr).toFixed(2):'-')+'</td><td>'+(r.survivalRate!=null?Math.round(r.survivalRate)+'%':'-')+'</td>'
+        return '<tr'+(x===s._crop?' class="me"':'')+'><td>'+cropLbl(p,x)+'</td><td>'+pdxN(kg)+'</td><td>'+(r.fcr!=null?(+r.fcr).toFixed(2):'-')+'</td><td>'+(survMainOf(r)!=null?Math.round(survMainOf(r))+'%':'-')+'</td>'
           +'<td class="'+(np<0?'neg':'pos')+'">'+(np!=null?(np<0?'−':'+')+EX_M(Math.abs(np))+' ล.':'-')+'</td></tr>';}).join('')+'</table>';
   }
   if(cost||right)h+=cost&&right?'<div class="pdx-two">'+cost+'<div>'+right+'</div></div>':(cost||right);
@@ -22838,6 +22838,8 @@ function chCostBlockHtml(p,s){
 //    ⚠️ ต้นทุน/กก. ของค่าเฉลี่ยต้องถ่วงน้ำหนักด้วย กก. (Σต้นทุน ÷ Σกก.) — เฉลี่ยตรงๆ รอบเล็กจะดึงค่าเพี้ยน
 //       FCR/อัตรารอด ใช้ค่าเฉลี่ยตรงๆ ของรอบที่มีตัวเลข (เป็นอัตราส่วนอยู่แล้ว)
 //    ⚠️ ปีของรอบใช้ histRecYear() เท่านั้น (entry #266)
+// #516 อัตรารอดหลัก = ยอดซื้อ (พี่เก็บประวัติตามเงินที่จ่าย) · ไม่มียอดซื้อแยก → ใช้ซื้อ+แถม
+function survMainOf(r){if(!r)return null;const o=r.survivalRateOrder,a=r.survivalRate;return o!=null&&o!==''&&!isNaN(+o)?+o:(a!=null&&a!==''&&!isNaN(+a)?+a:null);}
 function chBenchHtml(p,c,s){
   const yr=histRecYear(c);
   const prev=(p.cropHistory||[]).filter(x=>x!==c&&x.closeDate&&c.closeDate&&x.closeDate<c.closeDate)
@@ -22852,7 +22854,7 @@ function chBenchHtml(p,c,s){
     const tc=(()=>{const st=getCloseSummary(q,i);return st&&st.hasCostData?st.totalCost:null;})();
     if(tc!=null&&kg>0){cSum+=tc;kgSum+=kg;}
     if(hx.fcr>0)fcrArr.push(hx.fcr);
-    if(hx.survivalRate>0)survArr.push(hx.survivalRate);
+    {const sv=survMainOf(hx);if(sv>0)survArr.push(sv);}
     n++;
   }));
   const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
@@ -22877,7 +22879,7 @@ function chBenchHtml(p,c,s){
   };
   const b1=(APP_ROLE==='admin')?mk('ต้นทุน/กก.',s.costPerKg,prevS&&prevS.hasCostData?prevS.costPerKg:null,farm.costPerKg,true,v=>'฿'+(Math.round(v*10)/10).toLocaleString()):'';
   const b2=mk('FCR',s.fcr,prevS?prevS.fcr:null,farm.fcr,true,v=>(Math.round(v*100)/100).toLocaleString());
-  const b3=mk('อัตรารอด (%)',s.survivalRate,prevS?prevS.survivalRate:null,farm.surv,false,v=>(Math.round(v*10)/10)+'%');
+  const b3=mk('อัตรารอด ยอดซื้อ (%)',survMainOf(s),prevS?survMainOf(prevS):null,farm.surv,false,v=>(Math.round(v*10)/10)+'%');
   if(!b1&&!b2&&!b3)return'';
   return'<div style="background:var(--sf2);border-radius:var(--r);padding:12px;margin-bottom:16px">'
     +'<div style="font-weight:700;font-size:calc(13px * var(--ui-scale));margin-bottom:6px;color:var(--p)">📐 รอบนี้เทียบกับที่ผ่านมา</div>'
@@ -22963,7 +22965,7 @@ function renderClosedDetail(){
     ${chCropInfoHtml(p,c)}
     <div class="g5" style="margin-bottom:16px">
       <div class="metric-card metric-card-accent"><div class="mv">${s.totalWeight?s.totalWeight.toLocaleString():'-'}</div><div class="ml">ผลผลิตรวม (กก.)</div></div>
-      <div class="metric-card metric-card-accent"><div class="mv">${s.survivalRate!=null?s.survivalRate.toFixed(1)+'%':'-'}</div><div class="ml">อัตรารอด${s.survivalRateOrder!=null?`<div style="font-size:var(--fs10);color:var(--tx3)">ยอดสั่งซื้อ ${s.survivalRateOrder.toFixed(1)}%</div>`:''}</div></div>
+      <div class="metric-card metric-card-accent"><div class="mv">${s.survivalRateOrder!=null?s.survivalRateOrder.toFixed(1)+'%':(s.survivalRate!=null?s.survivalRate.toFixed(1)+'%':'-')}</div><div class="ml">อัตรารอด${s.survivalRateOrder!=null?' (ยอดซื้อ)'+(s.survivalRate!=null&&+s.survivalRate!==+s.survivalRateOrder?`<div style="font-size:var(--fs10)">รวมแถม ${s.survivalRate.toFixed(1)}%</div>`:''):''}</div></div>
       <div class="metric-card metric-card-accent"><div class="mv">${s.fcr||'-'}</div><div class="ml">FCR</div></div>
       <div class="metric-card metric-card-accent"><div class="mv">${s.ageDays||'-'} วัน</div><div class="ml">ระยะเลี้ยง</div></div>
       ${isAdminCh?`<div class="metric-card metric-card-accent"><div class="mv" style="color:var(--ok)">${netSales!=null?Math.round(netSales).toLocaleString():'-'}</div><div class="ml">ยอดขายสุทธิ (บาท)</div></div>`:''}
