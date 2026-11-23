@@ -9903,8 +9903,8 @@ function renderPondDetail(id){
       <div class="s">${pdYr!=null?Math.round(pdYr).toLocaleString()+' กก./ไร่ · '+(pdYrHit?'<b>✓ ถึงเกณฑ์พาเชียล</b>':'เกณฑ์พาเชียล '+_phTarget.toLocaleString()):''}</div></div>
     <div class="pd-k${pdOverRel?' warn':''}"><div class="l">รอด${pdSC&&pdSC.hasPartial?' (สะสม)':''}</div><div class="v">${lat&&lat.survivalRate!=null?lat.survivalRate+'<small>%</small>':'—'}</div>
       <div class="s">${pdOverRel?'<b>⚠️ เกินยอดปล่อย</b> · ':''}${pdSC?Math.round(pdSC.inPond).toLocaleString()+' ตัวในบ่อ':''}${pdSC&&pdSC.hasPartial?' · จับไป '+Math.round(pdSC.phCount).toLocaleString():''}</div></div>
-    <div class="pd-k"><div class="l">อาหารล่าสุด${latFeed&&latFeed.date&&latFeed.date!==today()?' · '+fD(latFeed.date).replace(/\s\d{2}$/,''):''}</div><div class="v">${latFeed&&latFeed.totalFeed!=null?latFeed.totalFeed.toLocaleString()+' <small>กก.</small>':'—'}</div>
-      <div class="s">${per100k!=null?per100k.toFixed(1)+' กก./แสน':''}${latFeed&&pdFeedBrandOf(latFeed)?' · '+pdE(pdFeedBrandOf(latFeed)):''}${fcr!=null?' · FCR <b class="'+(pdFcrT!=null&&parseFloat(fcr)>pdFcrT+0.005?'dn':'')+'">'+fcr+'</b>':''}</div></div>
+    <div class="pd-k"><div class="l">อาหารรวม</div><div class="v">${(()=>{const t=pdFeedTotal(p);return t>0?pdT(t):'—';})()}</div>
+      <div class="s">${latFeed&&latFeed.totalFeed!=null?(latFeed.date?fD(latFeed.date).replace(/\s\d{2}$/,'')+' ':'')+'<span class="nw">กิน '+latFeed.totalFeed.toLocaleString()+' กก.</span>':''}${per100k!=null?' · <span class="nw">'+per100k.toFixed(1)+' กก./แสน</span>':''}${fcr!=null?' · FCR <b class="'+(pdFcrT!=null&&parseFloat(fcr)>pdFcrT+0.005?'dn':'')+'">'+fcr+'</b>':''}</div></div>
   </div>`;
   // ── ค่าน้ำแถวเดียว (แทนเกจ 4 อัน) · แดง/ส้มเฉพาะตัวที่ผิด · ไม่มีค่าไม่โชว์
   const pdWqItems=last?[['pH','phM','phA'],['DO','doM','doA'],['ALK','alk',null],['อุณหภูมิ','tM','tA'],['NO₂','no2',null],['NH₄','nh4',null]]
@@ -10101,6 +10101,8 @@ function pdRelBox(p){   // #492 กล่องวันปล่อย (เด�
     +(rel?'<br>'+rel.toLocaleString()+' ตัว'+(bn?' (ซื้อ '+st.toLocaleString()+' + แถม '+bn.toLocaleString()+')':''):'')
     +(p.cropNote?'<br>📝 '+mpEsc(String(p.cropNote).split('\n')[0]):'')+'</div>';
 }
+// #515 อาหารรวมของรอบปัจจุบัน (กก.) — การ์ดหน้ารายละเอียดบ่อ
+function pdFeedTotal(p){return (p.feedLog||[]).filter(r=>r&&r.date&&(!p.startDate||r.date>=p.startDate)).reduce((a,r)=>a+(parseFloat(r.totalFeed)||0),0);}
 function pdVipKpi(p,o){
   const plw=parseFloat(p.plWeight)||0,rel=pRelease(p),st=parseFloat(p.stock)||0,bn=parseFloat(p.stockBonus)||0;
   const pt=partialTotals(p.partialHarvests),n=(p.partialHarvests||[]).filter(r=>harvestRowKg(r)>0).length;
@@ -10111,7 +10113,7 @@ function pdVipKpi(p,o){
     +'<div class="pd-k"><div class="l">ไซส์'+(o.lat&&o.lat.date?' ณ สุ่ม '+ds(o.lat.date):'')+'</div><div class="v">'+(o.sizeCount??'—')+(o.sizeCount?' <small>ตัว/กก.</small>':'')+'</div><div class="s">'+(o.lat&&o.lat.abw?'ABW '+o.lat.abw+' ก.':'')+'</div></div>'
     +'<div class="pd-k"><div class="l">น้ำหนักกุ้งในบ่อ</div><div class="v">'+(o.biomass?T(o.biomass):'—')+'</div><div class="s">'+(o.pdYr!=null?Math.round(o.pdYr).toLocaleString()+' กก./ไร่':'')+'</div></div>'
     +'<div class="pd-k"><div class="l">จับไปแล้ว</div><div class="v">'+(pt.kg>0?T(pt.kg):'—')+'</div><div class="s">'+(n?n+' ครั้ง':'ยังไม่จับ')+'</div></div>'
-    +'<div class="pd-k"><div class="l">อาหารล่าสุด'+(o.latFeed&&o.latFeed.date?' · '+ds(o.latFeed.date):'')+'</div><div class="v">'+(o.latFeed&&o.latFeed.totalFeed!=null?o.latFeed.totalFeed.toLocaleString()+' <small>กก.</small>':'—')+'</div><div class="s">'+[o.fcr!=null?'FCR '+o.fcr:'',o.latFeed?mpEsc(pdFeedBrandOf(o.latFeed)||''):''].filter(Boolean).join(' · ')+'</div></div>'
+    +(()=>{const t=pdFeedTotal(p);return '<div class="pd-k"><div class="l">อาหารรวม</div><div class="v">'+(t>0?T(t):'—')+'</div><div class="s">'+[o.latFeed&&o.latFeed.totalFeed!=null?(o.latFeed.date?ds(o.latFeed.date)+' ':'')+'กิน '+o.latFeed.totalFeed.toLocaleString()+' กก.':'',o.fcr!=null?'FCR '+o.fcr:''].filter(Boolean).join(' · ')+'</div></div>';})()
     +'</div>';
 }
 function pdCard(key,title,bodyHtml,extraCls,sumHtml){
