@@ -8851,8 +8851,10 @@ function hsRenderTable(rs,yr){
   const _ht=r=>r.type==='พาเชียล'&&_hn[_hk(r)]?'พาเชียล ครั้งที่ '+_hn[_hk(r)]:r.type;
   let h='<table class="hsy-t hsy-mt"><thead><tr><th>บ่อ</th><th>วัน</th><th>จับ</th><th class="num">อายุ</th><th class="num">ไซส์</th><th class="num">ราคา</th><th>แพ</th><th class="num">จำนวนเงิน</th><th class="num">กก.</th></tr></thead><tbody>';
   const lastM=Math.max(...rs.map(r=>r.m));
-  for(let m=1;m<=lastM;m++){
-    const mr=rs.filter(r=>r.m===m);
+  // #518 พี่สั่ง: ล่าสุดอยู่บนสุด (เดือนล่าสุดก่อน · ในเดือนวันล่าสุดก่อน)
+  const _desc=a=>a.slice().sort((x,y)=>y.date.localeCompare(x.date));
+  for(let m=lastM;m>=1;m--){
+    const mr=_desc(rs.filter(r=>r.m===m));
     h+=`<tr class="mh"><td colspan="9">${HV_MONTHS_L[m-1]}</td></tr>`;
     if(!mr.length){h+='<tr class="none"><td colspan="9">ไม่มีการจับ</td></tr>';continue;}
     mr.forEach(r=>{
@@ -8871,8 +8873,8 @@ function hsRenderTable(rs,yr){
   // มือถือ (#417): การ์ดรายครั้ง — ตัวเลขชุดเดียวกับตาราง · แตะ = hsOpen (ประวัติรอบนั้น / หน้าบ่อ)
   const go=r=>`hsOpen('${hsEsc(r.pondId)}',${r.ci==null?'null':r.ci})`;
   let cd='<div class="hsy-cards">';
-  for(let m=1;m<=lastM;m++){
-    const mr=rs.filter(r=>r.m===m);if(!mr.length)continue;
+  for(let m=lastM;m>=1;m--){
+    const mr=_desc(rs.filter(r=>r.m===m));if(!mr.length)continue;
     cd+=`<div class="hsy-cmh">${HV_MONTHS_L[m-1]}</div>`;
     mr.forEach(r=>{
       if(IS_VIP){cd+=`<div class="hsy-hc" role="button" tabindex="0" onclick="${go(r)}" onkeydown="if(event.key==='Enter')${go(r)}">`
