@@ -4665,7 +4665,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   <div class="hat-note"><b>ทำไมต้องกรองวันเลี้ยง</b> — กำไรขึ้นกับ "เลี้ยงกี่วัน" มากกว่าขึ้นกับโรงเพาะฟัก
     ถ้าเทียบค่าเฉลี่ยดิบ โรงที่บ่อถูกจับเร็วจะดูแย่เกินจริง · กดเลือกช่วงวันเลี้ยงเพื่อเทียบกุ้งที่เลี้ยงใกล้เคียงกัน</div>
   <div class="card">
-    <div class="card-t" style="justify-content:space-between"><span>📊 ผลต่อโรงเพาะฟัก</span>
+    <div class="card-t" style="justify-content:space-between"><span>📊 ข้อมูลโรงเพาะฟัก</span>
       <span style="font-weight:400;font-size:var(--fs11);color:var(--tx3)" id="hat-cnt"></span></div>
     <div class="hat-ctl">
       <select class="fi" id="hat-year" onchange="renderHatchery()"></select>
@@ -4677,7 +4677,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
       </div>
     </div>
     <div class="tbl-wrap hat-tw"><table class="tbl hat-tbl">
-      <thead><tr><th>โรงเพาะฟัก</th><th>รอบ</th><th>ยอดแถมเฉลี่ย</th><th>รอด (ปิดบ่อ)</th><th>รอด (กำลังเลี้ยง)</th><th>กำลังเลี้ยง</th><th>FCR</th><th>ผลผลิต/รอบ</th><th>วันเลี้ยง</th><th>ต้นทุน/กก.</th><th>ราคาขาย/กก.</th><th>กำไร/รอบ</th></tr></thead>
+      <thead><tr><th>โรงเพาะฟัก</th><th>รอบ</th><th>ยอดแถมเฉลี่ย</th><th>อัตรารอดซื้อ<small class="hat-sm" style="display:block">ปิดบ่อ</small></th><th>อัตรารอดแถม<small class="hat-sm" style="display:block">กำลังเลี้ยง</small></th><th>FCR</th><th>ผลผลิต/รอบ</th><th>วันเลี้ยง</th><th>ต้นทุน/กก.</th><th>กำไร/รอบ</th></tr></thead>
       <tbody id="hat-tb"></tbody></table></div>
     <div class="hat-cards" id="hat-cards"></div>
     <div class="hat-foot">เขียว = ดีที่สุด (โรงที่มี 5 รอบขึ้นไป) · แถวจาง = ไม่ถึง 5 รอบ · (วงเล็บ) = จำนวนรอบที่มียอดสั่งซื้อ</div>
@@ -20454,7 +20454,7 @@ function hatStats(list){
   const g={};list.forEach(r=>{(g[r.h]=g[r.h]||[]).push(r);});
   const avg=a=>a.length?a.reduce((x,v)=>x+v,0)/a.length:null;
   return Object.entries(g).map(([h,l])=>{
-    const sv=l.filter(r=>r.surv!=null).map(r=>r.surv), fc=l.filter(r=>r.fcr).map(r=>r.fcr);
+    const sv=l.filter(r=>r.survO!=null).map(r=>r.survO), fc=l.filter(r=>r.fcr).map(r=>r.fcr);   // #522 อัตรารอดซื้อ (ยอดสั่งซื้อ)
     const kg=l.reduce((x,r)=>x+r.kg,0), c=l.reduce((x,r)=>x+r.cost,0), rv=l.reduce((x,r)=>x+r.rev,0);
     return{h,n:l.length,surv:avg(sv),sn:sv.length,fcr:avg(fc),kg:kg/l.length,d:avg(l.map(r=>r.d)),
       ck:kg?c/kg:null,pk:kg?rv/kg:null,pr:(rv-c)/l.length};
@@ -20490,20 +20490,20 @@ function renderHatchery(){
   if(tb)tb.innerHTML=st.length?st.map(x=>{const few=x.n<5,sDim=x.sn<3&&x.surv!=null;
     const td=(k,v,txt,extra)=>'<td class="'+(isBest(k,v,few||(k==='surv'&&x.sn<3))?'hat-best':'')+(extra||'')+'"'+(k==='surv'&&sDim?' style="color:var(--tx3)"':'')+'>'+txt+'</td>';
     return '<tr class="'+(few?'hat-few':'')+'"><td style="font-weight:800">'+mpEsc(x.h)+(few?'<span class="hat-tag">น้อยกว่า 5 รอบ</span>':'')+'</td>'
-      +'<td>'+x.n+'</td><td>'+bonTxt(x)+'</td>'+td('surv',x.surv,survTxt(x))+'<td>'+livTxt(x)+'</td><td>'+livN(x)+'</td>'+td('fcr',x.fcr,x.fcr?x.fcr.toFixed(2):'-')
+      +'<td>'+x.n+'</td><td>'+bonTxt(x)+'</td>'+td('surv',x.surv,survTxt(x))+'<td>'+livTxt(x)+'</td>'+td('fcr',x.fcr,x.fcr?x.fcr.toFixed(2):'-')
       +'<td>'+fmt(x.kg)+' กก.</td><td>'+Math.round(x.d)+' วัน</td>'
-      +td('ck',x.ck,x.ck!=null?'฿'+fmt(x.ck):'-')+'<td>'+(x.pk!=null?'฿'+fmt(x.pk):'-')+'</td>'
+      +td('ck',x.ck,x.ck!=null?'฿'+fmt(x.ck):'-')
       +td('pr',x.pr,hatMoney(x.pr),x.pr<0?' hat-low':'')+'</tr>';}).join('')
-    :'<tr><td colspan="12">'+empty+'</td></tr>';
+    :'<tr><td colspan="10">'+empty+'</td></tr>';
   const cards=document.getElementById('hat-cards');
   if(cards)cards.innerHTML=st.length?st.map(x=>{const few=x.n<5,sDim=x.sn<3&&x.surv!=null;
     const b=(k,v,txt,extra)=>'<b class="'+(isBest(k,v,few||(k==='surv'&&x.sn<3))?'hat-best':'')+(extra||'')+'"'+(k==='surv'&&sDim?' style="color:var(--tx3)"':'')+'>'+txt+'</b>';
     return '<div class="hat-hc'+(few?' hat-few':'')+'"><div class="h"><b>'+mpEsc(x.h)+'</b><span style="font-size:var(--fs11);color:var(--tx3)">'+x.n+' รอบ'+(few?' · ยังตัดสินไม่ได้':'')+'</span></div>'
-      +'<div class="g"><div><span>ยอดแถมเฉลี่ย</span><b>'+bonTxt(x)+'</b></div><div><span>กำลังเลี้ยง</span><b>'+livN(x)+'</b></div>'
-      +'<div><span>รอด (ปิดบ่อ)</span>'+b('surv',x.surv,survTxt(x))+'</div><div><span>รอด (กำลังเลี้ยง)</span><b>'+livTxt(x)+'</b></div>'
+      +'<div class="g"><div style="grid-column:1/-1"><span>ยอดแถมเฉลี่ย</span><b>'+bonTxt(x)+'</b></div>'
+      +'<div style="grid-column:1/-1"><span>อัตรารอดซื้อ (ปิดบ่อ)</span>'+b('surv',x.surv,survTxt(x))+'</div><div style="grid-column:1/-1"><span>อัตรารอดแถม (กำลังเลี้ยง)</span><b>'+livTxt(x)+'</b></div>'
       +'<div><span>FCR</span>'+b('fcr',x.fcr,x.fcr?x.fcr.toFixed(2):'-')+'</div>'
       +'<div><span>ผลผลิต/รอบ</span><b>'+fmt(x.kg)+'</b></div><div><span>วันเลี้ยง</span><b>'+Math.round(x.d)+'</b></div>'
-      +'<div><span>ต้นทุน/กก.</span>'+b('ck',x.ck,x.ck!=null?'฿'+fmt(x.ck):'-')+'</div><div><span>ราคาขาย/กก.</span><b>'+(x.pk!=null?'฿'+fmt(x.pk):'-')+'</b></div>'
+      +'<div><span>ต้นทุน/กก.</span>'+b('ck',x.ck,x.ck!=null?'฿'+fmt(x.ck):'-')+'</div>'
       +'<div style="grid-column:1/-1"><span>กำไร/รอบ</span>'+b('pr',x.pr,hatMoney(x.pr),x.pr<0?' hat-low':'')+'</div></div></div>';}).join('')
     :empty;
   // ── รายรอบ: ยอดสั่ง · แถม · ปล่อยรวม · รอด 2 ฐาน — กลุ่มตามโรง (โรงที่มีบ่อเลี้ยงอยู่มากสุดกางไว้) · ตามปีที่เลือก ไม่ขึ้นกับปุ่มช่วงวัน ──
@@ -20514,8 +20514,8 @@ function renderHatchery(){
     const ord=Object.entries(G).sort((a,b)=>b[1].filter(r=>r.live).length-a[1].filter(r=>r.live).length||b[1].length-a[1].length);
     rd.innerHTML=ord.map(([hn,L],gi)=>{
       const lv=L.filter(r=>r.live).sort((a,b)=>b.age-a.age),cl=L.filter(r=>!r.live&&r.stock>0).sort((a,b)=>String(b.start).localeCompare(String(a.start))),noSt=L.filter(r=>!r.live&&!(r.stock>0)).length;
-      const ba=bon[hn],sv=L.filter(r=>!r.live&&r.surv!=null).map(r=>r.surv);
-      const sub=[ba&&ba.length?'แถมเฉลี่ย '+avgA(ba).toFixed(1)+'%':'ไม่ได้บันทึกยอดแถม',sv.length?'รอดปิดบ่อ '+avgA(sv).toFixed(0)+'%':'',lv.length?'กำลังเลี้ยง '+lv.length+' บ่อ':''].filter(Boolean).join(' · ');
+      const ba=bon[hn],sv=L.filter(r=>!r.live&&r.survO!=null).map(r=>r.survO);   // #522 ยอดซื้อ
+      const sub=[ba&&ba.length?'แถมเฉลี่ย '+avgA(ba).toFixed(1)+'%':'ไม่ได้บันทึกยอดแถม',sv.length?'อัตรารอดซื้อ (ปิดบ่อ) '+avgA(sv).toFixed(0)+'%':'',lv.length?'กำลังเลี้ยง '+lv.length+' บ่อ':''].filter(Boolean).join(' · ');
       const row=r=>'<tr><td><b>'+mpEsc(r.pond)+'</b></td><td>'+(r.start?fD(r.start):'-')+'</td>'
         +'<td>'+(r.live?'<span class="hat-live">เลี้ยงอยู่ '+r.age+' วัน</span>':'ปิด '+(r.close?fD(r.close):'-')+' · '+r.d+' วัน')+'</td>'
         +'<td>'+(r.stock>0?fN(r.stock):'-')+'</td><td>'+(r.stock>0&&r.bonus>0?fN(r.bonus)+' <small class="hat-sm">'+(r.bonus/r.stock*100).toFixed(1)+'%</small>':'<span class="hat-na hat-dash" title="ไม่ได้บันทึก">–</span>')+'</td>'
