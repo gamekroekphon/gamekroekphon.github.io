@@ -8839,7 +8839,7 @@ function hsRenderKpi(rs,all,yr){
     <div class="hsy-kpi"><small>ยอดขายรวม</small><b>฿${hsFmt(bt)}</b><span>${(bt/1e6).toFixed(2)} ล้านบาท</span>${hsYoy(bt,pb,suf)}</div>
     <div class="hsy-kpi"><small>น้ำหนักรวม</small><b>${hsFmt(kg)} กก.</b><span>${(kg/1000).toFixed(1)} ตัน</span>${hsYoy(kg,pk,suf)}</div>
     <div class="hsy-kpi"><small>ราคาเฉลี่ย</small><b>฿${kg?(bt/kg).toFixed(2):'-'}</b><span>บาท/กก. (ถ่วงตามน้ำหนัก)</span>${kg&&pk?hsYoy(bt/kg,pb/pk,suf):''}</div>
-    <div class="hsy-kpi"><small>ปิดบ่อทั้งหมด</small><b>${nClose} บ่อ</b>${nWait?'<span class="hsy-waitn">รอปิดรอบ '+nWait+' บ่อ</span>':''}${hsYoy(nClose,pn,suf)}</div>${note?'<div class="hsy-yoyn">'+note+'</div>':''}`;
+    <div class="hsy-kpi"><small>ปิดบ่อทั้งหมด</small><b>${nClose} บ่อ</b>${hsYoy(nClose,pn,suf)}</div>${note?'<div class="hsy-yoyn">'+note+'</div>':''}`;
 }
 function hsRenderTable(rs,yr){
   const el=document.getElementById('hs-table');if(!el)return;
