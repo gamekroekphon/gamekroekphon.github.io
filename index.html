@@ -3076,6 +3076,14 @@ table.hat-tbl tbody tr.hat-few td{color:var(--tx3)}
 .hat-rt td{white-space:nowrap}
 .hat-foot{font-size:var(--fs10);color:var(--tx3);margin-top:10px;line-height:1.7}
 @media(max-width:640px){.hat-tw{display:none}.hat-cards{display:flex}}
+/* #523 ตารางรายรอบบนมือถือ = การ์ดทีละบ่อ (ตาราง 8 คอลัมน์ต้องเลื่อนข้าง) */
+.hat-rc{display:none}
+@media(max-width:640px){.hat-bt th,.hat-bt td{padding-left:5px;padding-right:5px}.tbl.hat-bt td:last-child{min-width:0}}   /* #523 ตารางวันเลี้ยงกับกำไร ให้พอดีจอ */
+.hat-rc .r{border-bottom:1px solid var(--sf2);padding:8px 2px;font-size:calc(13px * var(--ui-scale))}
+.hat-rc .r:last-child{border-bottom:none}
+.hat-rc .t{display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:3px}
+.hat-rc .s{display:flex;flex-wrap:wrap;gap:2px 12px}
+@media(max-width:640px){.hat-grp .tbl-wrap{display:none}.hat-rc{display:block}}
 /* ── สุ่มตัวอย่าง: ทุกบ่อในหน้าเดียว (entry #314) ── */
 /* กราฟวาดทันทีที่เปิดหน้าแล้ว — ต้องปล่อยให้คอลัมน์หดได้ ไม่งั้น canvas ดันหน้าจอกว้าง */
 #sec-sample .g2>*{min-width:0}
@@ -4690,7 +4698,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   <div class="card">
     <div class="card-t" style="justify-content:space-between"><span>📅 วันเลี้ยงกับกำไร</span>
       <span style="font-weight:400;font-size:var(--fs11);color:var(--tx3)">ทุกโรงรวมกัน · เหตุผลที่ต้องกรอง</span></div>
-    <div class="tbl-wrap"><table class="tbl hat-tbl"><thead><tr><th>วันเลี้ยง</th><th>รอบ</th><th>กำไร/รอบ</th><th>ราคาขาย/กก.</th><th>รอบที่กำไร</th></tr></thead>
+    <div class="tbl-wrap"><table class="tbl hat-tbl hat-bt"><thead><tr><th>วันเลี้ยง</th><th>รอบ</th><th>กำไร/รอบ</th><th>ราคา/กก.</th><th>กำไร</th></tr></thead>
       <tbody id="hat-band"></tbody></table></div>
   </div>
   <div class="card">
@@ -20515,15 +20523,18 @@ function renderHatchery(){
     rd.innerHTML=ord.map(([hn,L],gi)=>{
       const lv=L.filter(r=>r.live).sort((a,b)=>b.age-a.age),cl=L.filter(r=>!r.live&&r.stock>0).sort((a,b)=>String(b.start).localeCompare(String(a.start))),noSt=L.filter(r=>!r.live&&!(r.stock>0)).length;
       const ba=bon[hn],sv=L.filter(r=>!r.live&&r.survO!=null).map(r=>r.survO);   // #522 ยอดซื้อ
-      const sub=[ba&&ba.length?'แถมเฉลี่ย '+avgA(ba).toFixed(1)+'%':'ไม่ได้บันทึกยอดแถม',sv.length?'อัตรารอดซื้อ (ปิดบ่อ) '+avgA(sv).toFixed(0)+'%':'',lv.length?'กำลังเลี้ยง '+lv.length+' บ่อ':''].filter(Boolean).join(' · ');
+      const sub=[ba&&ba.length?'แถมเฉลี่ย '+avgA(ba).toFixed(1)+'%':'ไม่ได้บันทึกยอดแถม',sv.length?'อัตรารอดซื้อ (ปิดบ่อ) '+avgA(sv).toFixed(0)+'%':'',lv.length?'กำลังเลี้ยง '+lv.length+' บ่อ':''].filter(Boolean).map(t=>'<span class="nw">'+t+'</span>').join(' · ');
       const row=r=>'<tr><td><b>'+mpEsc(r.pond)+'</b></td><td>'+(r.start?fD(r.start):'-')+'</td>'
         +'<td>'+(r.live?'<span class="hat-live">เลี้ยงอยู่ '+r.age+' วัน</span>':'ปิด '+(r.close?fD(r.close):'-')+' · '+r.d+' วัน')+'</td>'
         +'<td>'+(r.stock>0?fN(r.stock):'-')+'</td><td>'+(r.stock>0&&r.bonus>0?fN(r.bonus)+' <small class="hat-sm">'+(r.bonus/r.stock*100).toFixed(1)+'%</small>':'<span class="hat-na hat-dash" title="ไม่ได้บันทึก">–</span>')+'</td>'
         +'<td>'+(r.stock>0?fN(r.stock+r.bonus):'-')+'</td>'
         +'<td>'+(r.surv!=null?'<span class="'+hatSurvCls(r.surv)+'">'+pc(r.surv)+'</span>'+(r.live&&r.sdate?' <small class="hat-sm">สุ่ม '+fD(r.sdate)+'</small>':''):(r.live?'ยังไม่สุ่ม':'-'))+'</td>'
         +'<td>'+(r.survO!=null&&r.bonus>0?pc(r.survO):'-')+'</td></tr>';
+      const card=r=>'<div class="r"><div class="t"><b>'+mpEsc(r.pond)+'</b>'+(r.live?'<span class="hat-live">เลี้ยงอยู่ '+r.age+' วัน</span>':'<span>ปิด '+(r.close?fD(r.close):'-')+' · '+r.d+' วัน</span>')+'</div>'
+        +'<div class="s"><span class="nw">ลง '+(r.start?fD(r.start):'-')+'</span>'+(r.stock>0?'<span class="nw">สั่ง '+fN(r.stock)+'</span>':'')+(r.stock>0&&r.bonus>0?'<span class="nw">แถม '+fN(r.bonus)+' ('+(r.bonus/r.stock*100).toFixed(1)+'%)</span>':'')+'</div>'
+        +'<div class="s">'+(r.surv!=null?'<span class="nw">อัตรารอดแถม <b class="'+hatSurvCls(r.surv)+'">'+pc(r.surv)+'</b></span>':(r.live?'<span>ยังไม่สุ่ม</span>':''))+(r.survO!=null&&r.bonus>0?'<span class="nw">อัตรารอดซื้อ <b>'+pc(r.survO)+'</b></span>':'')+(r.live&&r.sdate?'<span class="nw hat-sm">สุ่ม '+fD(r.sdate)+'</span>':'')+'</div></div>';
       return'<details class="hat-grp"'+(gi===0?' open':'')+'><summary><span>'+mpEsc(hn)+'</span><small>'+sub+'</small></summary>'
-        +(lv.length||cl.length?'<div class="tbl-wrap"><table class="tbl hat-tbl hat-rt"><thead><tr><th>บ่อ</th><th>ลงกุ้ง</th><th>สถานะ</th><th>ยอดสั่ง</th><th>แถม</th><th>ปล่อยรวม</th><th>รอด (สั่ง+แถม)</th><th>รอด (ฐานสั่ง)</th></tr></thead><tbody>'+lv.map(row).join('')+cl.map(row).join('')+'</tbody></table></div>':'')
+        +(lv.length||cl.length?'<div class="tbl-wrap"><table class="tbl hat-tbl hat-rt"><thead><tr><th>บ่อ</th><th>ลงกุ้ง</th><th>สถานะ</th><th>ยอดสั่ง</th><th>แถม</th><th>ปล่อยรวม</th><th>อัตรารอดแถม</th><th>อัตรารอดซื้อ</th></tr></thead><tbody>'+lv.map(row).join('')+cl.map(row).join('')+'</tbody></table></div><div class="hat-rc">'+lv.map(card).join('')+cl.map(card).join('')+'</div>':'')
         +(noSt?'<div class="hat-sm" style="padding:6px 2px">+ อีก '+noSt+' รอบเก่าไม่มียอดสั่ง</div>':'')+'</details>';
     }).join('')||empty;
   }
