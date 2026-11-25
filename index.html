@@ -9899,13 +9899,13 @@ function renderPondDetail(id){
   const pdFg=pdFeedGrowthRows(p),pdFgLast=pdFg.length?pdFg[pdFg.length-1]:null;
   const pdT=v=>v>=1000?(Math.round(v/100)/10).toLocaleString()+' <small>ตัน</small>':Math.round(v).toLocaleString()+' <small>กก.</small>';
   const pdNoKpi=cls==='prep';
-  const pdKpi=pdNoKpi?'':IS_VIP?pdVipKpi(p,{sizeCount,lat,biomass,pdYr,latFeed,fcr}):`<div class="pd-k4">
+  const pdKpi=pdNoKpi?'':IS_VIP?pdVipKpi(p,{sizeCount,lat,biomass,pdYr,latFeed,fcr,prevSizeCount,pdFgLast}):`<div class="pd-k4">
     <div class="pd-k"><div class="l">ไซส์</div><div class="v">${sizeCount??'—'}${sizeCount?' <small>ตัว/กก.</small>':''}</div>
-      <div class="s">${prevSizeCount?'จาก '+prevSizeCount:''}${pdFgLast&&pdFgLast.adg>0?(prevSizeCount?' · ':'')+'โต <b class="'+(pdFgLast.adgCh!=null&&pdFgLast.adgCh<0?'dn':'up')+'">'+pdFgLast.adg.toFixed(2)+' ก./วัน '+(pdFgLast.adgCh!=null&&pdFgLast.adgCh<0?'▼':'▲')+'</b>':''}${lat&&lat.date?' · สุ่ม '+fD(lat.date).replace(/\s\d{2}$/,''):''}</div></div>
+      <div class="s">${prevSizeCount?'จาก '+prevSizeCount:''}${pdFgLast&&pdFgLast.adg>0?(prevSizeCount?' · ':'')+'โต <b class="'+(pdFgLast.adgCh!=null&&pdFgLast.adgCh<0?'dn':'up')+'">'+pdFgLast.adg.toFixed(2)+' G/วัน '+(pdFgLast.adgCh!=null&&pdFgLast.adgCh<0?'▼':'▲')+'</b>':''}${lat&&lat.date?' · สุ่ม '+fD(lat.date).replace(/\s\d{2}$/,''):''}</div></div>
     <div class="pd-k${pdYrHit?' good':''}"><div class="l">น้ำหนักกุ้งปัจจุบัน</div><div class="v">${biomass?pdT(biomass):'—'}</div>
-      <div class="s">${pdYr!=null?Math.round(pdYr).toLocaleString()+' กก./ไร่ · '+(pdYrHit?'<b>✓ ถึงเกณฑ์พาเชียล</b>':'เกณฑ์พาเชียล '+_phTarget.toLocaleString()):''}</div></div>
+      <div class="s">${(()=>{const ph=partialTotals(p.partialHarvests).kg||0,tx=v=>v>=1000?(Math.round(v/100)/10).toLocaleString()+' ตัน':Math.round(v).toLocaleString()+' กก.';return [pdYr!=null?'<span class="nw">'+Math.round(pdYr).toLocaleString()+' กก./ไร่</span>':'',ph>0?'<span class="nw">พาเชียลไปแล้ว '+tx(ph)+'</span>':''].filter(Boolean).join(' · ');})()}</div></div>
     <div class="pd-k${pdOverRel?' warn':''}"><div class="l">อัตรารอดยอดแถม</div><div class="v">${lat&&lat.survivalRate!=null?lat.survivalRate+'<small>%</small>':'—'}</div>
-      <div class="s">${pdOverRel?'<b>⚠️ เกินยอดปล่อย</b> · ':''}${pdSC?'<span class="nw">จำนวนกุ้งในบ่อ '+Math.round(pdSC.inPond).toLocaleString()+'</span>':''}${pdSC&&pdSC.hasPartial?' · <span class="nw">พาเชียลไปแล้ว '+Math.round(pdSC.phCount).toLocaleString()+'</span>':''}</div></div>
+      <div class="s">${pdOverRel?'<b>⚠️ เกินยอดปล่อย</b> · ':''}${(()=>{const st=parseFloat(p.stock)||0,rel=pRelease(p),sv=lat&&lat.survivalRate!=null?+lat.survivalRate:null;return sv!=null&&st>0&&rel>st?'<span class="nw">อัตรารอดยอดซื้อ <b>'+(Math.round(sv*rel/st*10)/10)+'%</b></span>':'';})()}</div></div>
     <div class="pd-k"><div class="l">อาหารรวม</div><div class="v">${(()=>{const t=pdFeedTotal(p);return t>0?pdT(t):'—';})()}</div>
       <div class="s">${latFeed&&latFeed.totalFeed!=null?(latFeed.date?fD(latFeed.date).replace(/\s\d{2}$/,'')+' ':'')+'<span class="nw">กิน '+latFeed.totalFeed.toLocaleString()+' กก.</span>':''}${per100k!=null?' · <span class="nw">'+per100k.toFixed(1)+' กก./แสน</span>':''}${fcr!=null?' · FCR <b class="'+(pdFcrT!=null&&parseFloat(fcr)>pdFcrT+0.005?'dn':'')+'">'+fcr+'</b>':''}</div></div>
   </div>`;
@@ -10113,9 +10113,10 @@ function pdVipKpi(p,o){
   const ds=d=>fD(d).replace(/\s\d{2}$/,'');
   return pdRelBox(p)
     +'<div class="pd-k4">'
-    +'<div class="pd-k"><div class="l">ไซส์'+(o.lat&&o.lat.date?' ณ สุ่ม '+ds(o.lat.date):'')+'</div><div class="v">'+(o.sizeCount??'—')+(o.sizeCount?' <small>ตัว/กก.</small>':'')+'</div><div class="s">'+(o.lat&&o.lat.abw?'ABW '+o.lat.abw+' ก.':'')+'</div></div>'
-    +'<div class="pd-k"><div class="l">น้ำหนักกุ้งในบ่อ</div><div class="v">'+(o.biomass?T(o.biomass):'—')+'</div><div class="s">'+(o.pdYr!=null?Math.round(o.pdYr).toLocaleString()+' กก./ไร่':'')+'</div></div>'
-    +'<div class="pd-k"><div class="l">จับไปแล้ว</div><div class="v">'+(pt.kg>0?T(pt.kg):'—')+'</div><div class="s">'+(n?n+' ครั้ง':'ยังไม่จับ')+'</div></div>'
+    // #521 ให้ตรงกับหน้า admin/staff: ไซส์ (โต G/วัน) · น้ำหนักกุ้งปัจจุบัน (+พาเชียลไปแล้ว) · อัตรารอดยอดแถม (+ยอดซื้อ)
+    +(()=>{const g=o.pdFgLast,dn=g&&g.adgCh!=null&&g.adgCh<0;return '<div class="pd-k"><div class="l">ไซส์</div><div class="v">'+(o.sizeCount??'—')+(o.sizeCount?' <small>ตัว/กก.</small>':'')+'</div><div class="s">'+[o.prevSizeCount?'จาก '+o.prevSizeCount:'',g&&g.adg>0?'โต <b class="'+(dn?'dn':'up')+'">'+g.adg.toFixed(2)+' G/วัน '+(dn?'▼':'▲')+'</b>':'',o.lat&&o.lat.date?'สุ่ม '+ds(o.lat.date):''].filter(Boolean).join(' · ')+'</div></div>';})()
+    +'<div class="pd-k"><div class="l">น้ำหนักกุ้งปัจจุบัน</div><div class="v">'+(o.biomass?T(o.biomass):'—')+'</div><div class="s">'+[o.pdYr!=null?'<span class="nw">'+Math.round(o.pdYr).toLocaleString()+' กก./ไร่</span>':'',pt.kg>0?'<span class="nw">พาเชียลไปแล้ว '+(pt.kg>=1000?(Math.round(pt.kg/100)/10).toLocaleString()+' ตัน':Math.round(pt.kg).toLocaleString()+' กก.')+'</span>':''].filter(Boolean).join(' · ')+'</div></div>'
+    +(()=>{const sv=o.lat&&o.lat.survivalRate!=null?+o.lat.survivalRate:null;return '<div class="pd-k"><div class="l">อัตรารอดยอดแถม</div><div class="v">'+(sv!=null?sv+'<small>%</small>':'—')+'</div><div class="s">'+(sv!=null&&st>0&&rel>st?'<span class="nw">อัตรารอดยอดซื้อ <b>'+(Math.round(sv*rel/st*10)/10)+'%</b></span>':'')+'</div></div>';})()
     +(()=>{const t=pdFeedTotal(p);return '<div class="pd-k"><div class="l">อาหารรวม</div><div class="v">'+(t>0?T(t):'—')+'</div><div class="s">'+[o.latFeed&&o.latFeed.totalFeed!=null?(o.latFeed.date?ds(o.latFeed.date)+' ':'')+'กิน '+o.latFeed.totalFeed.toLocaleString()+' กก.':'',o.fcr!=null?'FCR '+o.fcr:''].filter(Boolean).join(' · ')+'</div></div>';})()
     +'</div>';
 }
