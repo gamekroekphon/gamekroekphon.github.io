@@ -2376,6 +2376,7 @@ input.sk-cart-price{width:90px!important;text-align:center;font-size:calc(13px *
   button:not(.uisize-seg button):not(.bnav-btn):not(.mob-sheet-close){min-height:44px;min-width:44px}
   .lbl-std,.hint{font-size:var(--fs115)}
   .btn{width:100%;justify-content:center}
+  td .btn,th .btn{width:auto}   /* #520 ปุ่ม ✏️🗑️ ในตาราง — กฎ 100% ทำให้ปุ่มล้นทับคอลัมน์ถัดไป */
   .btn.btn-sm{width:auto;min-height:36px}
   .modal{width:100%;max-width:100vw;padding:18px;border-radius:0;max-height:100vh;height:100%}
   .modal-bg{align-items:flex-end}
@@ -15408,9 +15409,9 @@ function fcCalc(){
     +[50,40,30,25].map(t=>'<button type="button" class="fcx-chip'+(t===tgt?' on':'')+'" onclick="fcSetTgt('+t+')">'+t+'</button>').join('')
     +'</div><div class="fcx-ans">'+ans+'</div></div>';
   // ── ทุกสัปดาห์ 4 สัปดาห์ข้างหน้า — แตะแถว = ดูวันนั้น
-  h+='<div class="card fcx-card"><div class="card-t">📅 ทุกสัปดาห์</div><div style="overflow-x:auto"><table class="fcx-tbl"><thead><tr><th>วันที่</th><th>DOC</th><th>ตัว/กก.</th><th>ตัน</th><th class="fcx-fm">ตัน<br>(ฟาร์ม)</th><th>กก./ไร่</th><th>FCR</th></tr></thead><tbody>'
+  h+='<div class="card fcx-card"><div class="card-t">📅 ทุกสัปดาห์</div><div style="overflow-x:auto"><table class="fcx-tbl"><thead><tr><th>วันที่</th><th>DOC</th><th>ไซส์</th><th>ตัน</th><th class="fcx-fm">ตัน<br>(ฟาร์ม)</th><th>กก./ไร่</th><th>FCR</th></tr></thead><tbody>'
     +FC_DAYS.map(n=>{const d=dNow+n,s=fcSnap(d,0),r=fcrAt(d),dt=addDays(today(),n);
-      return '<tr'+(dt===_fcPickVal?' class="sel"':'')+' onclick="fcQuick('+n+')"><td>'+(n?fD(dt):'วันนี้'+(dNow>0?'<small class="fcx-at">คาดจาก'+atSmpTxt(fcAnchor()).replace('ณ ','')+'</small>':''))+'</td><td>'+(DOC0+d)+'</td>'
+      return '<tr'+(dt===_fcPickVal?' class="sel"':'')+' onclick="fcQuick('+n+')"><td>'+(n?fD(dt):'วันนี้'+(dNow>0?'<small class="fcx-at">คาดจาก<span class="nw">'+atSmpTxt(fcAnchor()).replace('ณ ','').replace(/^สุ่ม /,'สุ่ม</span> <span class="nw">')+'</span></small>':''))+'</td><td>'+(DOC0+d)+'</td>'
         +'<td class="'+(s.size>0&&s.size<=tgt?'hit':'')+'">'+(s.size>0?Math.round(s.size):'—')+'</td><td>'+ton(s.bio)+'</td><td class="fcx-fm">'+((fm=>fm?'<b>'+ton(fm.bio)+'</b>':'—')(farmAt(d)))+'</td><td>'+kg(s.yr)+(s.yr>=ytgt?' ✓':'')+'</td>'
         +'<td class="'+(r?(r.ok?'hit':'over'):'')+'">'+(r?r.f.toFixed(2):'—')+'</td></tr>';}).join('')
     +'</tbody></table></div></div>';
