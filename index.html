@@ -2290,6 +2290,11 @@ body:not(.role-admin) #sec-stock:has(#skp-tx.sko-on:not(.sko-pick):not(.skx)) :i
 .badge-sale{background:#f3e8ff;color:#7c3aed}
 .month-pill{border:1px solid var(--bd);background:var(--sf);border-radius:16px;padding:6px 14px;font-size:calc(12px * var(--ui-scale));cursor:pointer;color:var(--tx2);font-family:inherit}
 .month-pill.on{background:#7c3aed;border-color:#7c3aed;color:#fff;font-weight:600}
+/* #526 ยอดขายลูกค้า: แยกหน้าร้าน/ฟาร์ม */
+.sksr-src{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.sksr-src button{min-height:48px;border:2px solid var(--bd);background:var(--sf);border-radius:10px;font-family:inherit;font-size:calc(14px * var(--ui-scale));font-weight:700;color:var(--tx);cursor:pointer}
+.sksr-src button.on.s{border-color:var(--in);background:var(--in);color:#fff}
+.sksr-src button.on.f{border-color:var(--ok);background:var(--ok);color:#fff}
 .sk-drop-item{padding:9px 12px;font-size:calc(13px * var(--ui-scale));cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--sf2)}
 .sk-drop-item:last-child{border-bottom:none}
 .sk-drop-item:hover,.sk-drop-item:active{background:var(--sf2)}
@@ -5570,6 +5575,7 @@ body.owner-mode .ai-wrap.busy #ai-send{background:radial-gradient(circle at 35% 
   <div class="stock-pane" id="skp-sale">
     <div class="card">
       <div style="font-weight:700;color:var(--tx);margin-bottom:10px">📊 ยอดขายลูกค้าภายนอก</div>
+      <div class="sksr-src" id="sksr-src"></div>
       <div style="font-size:var(--fs11);color:var(--tx3);margin-bottom:6px;font-weight:600">แบ่งรายเดือน</div>
       <div id="sksr-months" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px"></div>
       <div class="g4" id="sksr-kpi"></div>
@@ -13295,7 +13301,7 @@ function navMapGo(id){const e=navEntries().find(x=>x.id===id);if(!e)return;navUs
 //   ทั้ง 2 ไม่เข้าต้นทุนบ่อ · จดราคาทุน ณ วันขาย (unitCost) · saleId ผูกหลายรายการเป็นบิลเดียว · ลบบิล = คืนยอด
 //   staff = ขายจากฟาร์มอย่างเดียว · ห้ามเห็นทุน/กำไร · เห็นยอดขายของตัวเอง · ลูกค้า: ฟาร์มบังคับ · บุญชูไม่บังคับ (ลูกค้าทั่วไป)
 //   ⚠️ เปลี่ยนจากที่พี่ตัดสิน 29 ก.ย. 69 "ขายหน้าร้านไม่ตัดสต็อก" → ตัด (เพื่อให้นับบุญชูแม่น)
-let _sl={src:'shop',cart:[],cust:''};
+let _sl={src:'shop',cart:[],cust:'',date:''};   // #527 date = วันที่ขาย (ว่าง = วันนี้) · กรอกย้อนหลังได้ถ้าลืม
 function slCanShop(){return APP_ROLE==='admin';}
 function slSrcQty(it){return _sl.src==='shop'?shopQ(it):(parseFloat(it.qty)||0);}
 function openSale(){
@@ -13306,7 +13312,7 @@ function openSale(){
 }
 function closeSale(){
   if(_sl.cart.length&&!confirm('ปิดโดยไม่บันทึก? รายการในบิลนี้จะหาย'))return;
-  _sl.cart=[];_sl.cust='';document.getElementById('saleModal').classList.remove('on');
+  _sl.cart=[];_sl.cust='';_sl.date='';document.getElementById('saleModal').classList.remove('on');
 }
 function slSetSrc(src){
   if(src==='shop'&&!slCanShop())return;
@@ -13352,10 +13358,12 @@ function renderSale(){
       +'<input type="number" inputmode="decimal" min="0" step="any" value="'+mpEsc(c.price)+'" placeholder="ราคา" oninput="slPriceSet(\''+c.id+'\',this.value)" aria-label="ราคาขาย '+mpEsc(it.name)+'"></span>'
       +'<span class="sl-sum" id="sl-sum-'+c.id+'"></span><button type="button" class="sl-x" onclick="slDel(\''+c.id+'\')" aria-label="เอาออก">✕</button></div></div>';}).join('');
   document.getElementById('sl-list').innerHTML=(rows||'<p style="padding:18px 6px;text-align:center;font-weight:600">พิมพ์ชื่อของในช่องค้นหา แล้วแตะเพื่อใส่ในบิล</p>')
+    +'<div class="fg" style="margin-top:6px"><label class="fl" for="sl-date">วันที่ขาย</label><input class="fi" id="sl-date" type="date" max="'+today()+'" value="'+(_sl.date||today())+'" oninput="_sl.date=this.value;syncDateHint(this)" onchange="_sl.date=this.value;syncDateHint(this)"></div>'
     +'<div class="fg" style="margin-top:6px"><label class="fl" for="sl-cust">ลูกค้า'+(_sl.src==='farm'?' <b style="color:var(--d)">*</b>':' (ไม่ใส่ = ลูกค้าทั่วไป)')+'</label>'
     +'<input class="fi" id="sl-cust" list="sl-cust-list" value="'+mpEsc(_sl.cust)+'" placeholder="'+(_sl.src==='farm'?'ชื่อลูกค้า / ร้าน':'ลูกค้าทั่วไป')+'" oninput="_sl.cust=this.value"><datalist id="sl-cust-list">'
     +[...new Set(saleLogs().map(l=>l.custName).filter(n=>n&&n!=='ลูกค้าทั่วไป'))].sort((a,b)=>a.localeCompare(b,'th')).map(n=>'<option value="'+mpEsc(n)+'">').join('')+'</datalist></div>';
   _sl.cart.forEach(c=>slLine(c.id));slFoot();
+  {const de=document.getElementById('sl-date');if(de)syncDateHint(de);}
 }
 function slFoot(){
   const n=_sl.cart.filter(c=>(+c.qty||0)>0).length,tot=_sl.cart.reduce((a,c)=>a+slLineTot(c),0);
@@ -13377,18 +13385,20 @@ function saveSale(){
   const noP=L.find(c=>!(+c.price>0));if(noP){alert('ใส่ราคาขาย "'+items[noP.id].name+'" ก่อน');return;}
   const over=L.filter(c=>+c.qty>slSrcQty(items[c.id]));
   if(over.length&&!confirm('ขายเกินยอดที่มีในระบบ '+over.length+' รายการ ('+over.map(c=>items[c.id].name).join(', ')+')\nบันทึกต่อไหม? ยอดจะเหลือ 0'))return;
-  const src=APP_ROLE==='admin'?_sl.src:'farm',d=today(),by=curUserLabel(),saleId='sa'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  const d=_sl.date&&_sl.date<=today()?_sl.date:today();
+  if(d!==today()&&!confirm('บันทึกขายย้อนหลัง วันที่ '+fD(d)+' ?'))return;
+  const src=APP_ROLE==='admin'?_sl.src:'farm',by=curUserLabel(),saleId='sa'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
   L.forEach(c=>{
     const it=items[c.id],q=Math.round((+c.qty)*100)/100,base={itemId:it.id,itemName:it.name,type:'sale',qty:q,date:d,unit:it.unit||'',by,custName:cust,sellPrice:+c.price,unitCost:parseFloat(it.unitPrice)||0,saleId};
     if(src==='shop'){it.shopQty=Math.round(Math.max(0,shopQ(it)-q)*100)/100;shopLogArr().push({id:'sh'+Date.now()+'_'+Math.random().toString(36).slice(2,6),...base,balanceAfter:it.shopQty});}
     else{it.qty=Math.round(Math.max(0,(parseFloat(it.qty)||0)-q)*100)/100;(D.inventoryLog=D.inventoryLog||[]).push({id:'sl'+Date.now()+'_'+Math.random().toString(36).slice(2,6),...base,note:'',pondId:'',balanceAfter:it.qty});}
   });
   const tot=L.reduce((a,c)=>a+slLineTot(c),0);
-  _sl.cart=[];_sl.cust='';
+  _sl.cart=[];_sl.cust='';_sl.date='';
   if(typeof tickMemoClear==='function')tickMemoClear();
   save();
   document.getElementById('saleModal').classList.remove('on');
-  showToast('บันทึกขายแล้ว',(src==='shop'?'บุญชู':'ฟาร์ม')+' · '+L.length+' รายการ · ฿'+Math.round(tot).toLocaleString());
+  showToast('บันทึกขายแล้ว',(d!==today()?fD(d)+' · ':'')+(src==='shop'?'บุญชู':'ฟาร์ม')+' · '+L.length+' รายการ · ฿'+Math.round(tot).toLocaleString());
   try{renderShop();}catch(e){}try{renderStockKPI();renderStockItems();}catch(e){}try{if(document.getElementById('skp-sale')?.classList.contains('on')){initSaleMonthPills();renderSalesReport();}}catch(e){}
 }
 // บิล = รวมรายการที่ saleId เดียวกัน (ข้อมูลก่อน #434 ไม่มี saleId = บิลละรายการ)
@@ -13398,10 +13408,10 @@ function slBills(rows){
     b.lines.push(l);b.total+=(+l.sellPrice||0)*(+l.qty||0);b.cost+=(+l.unitCost||0)*(+l.qty||0);m.set(k,b);});
   return[...m.values()].sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.key).localeCompare(String(a.key)));
 }
-function slBillHtml(b){
+function slBillHtml(b,noTag){   // noTag: หน้ายอดขายแยกหน้าร้าน/ฟาร์มแล้ว ไม่ต้องติดป้ายซ้ำ (#526)
   const adm=APP_ROLE==='admin',Q=String.fromCharCode(39);
   return'<div class="sl-bill"><div class="a"><span>'+fD(b.date)+' · '+mpEsc(b.cust)+'</span><span>฿'+Math.round(b.total).toLocaleString()+'</span></div>'
-    +'<div class="b"><span><span class="sl-tag '+(b.src==='shop'?'s':'f')+'">'+(b.src==='shop'?'บุญชู':'ฟาร์ม')+'</span> '+mpEsc(b.lines.map(l=>l.itemName+' '+skcN(+l.qty||0)).join(' · '))+'</span>'
+    +'<div class="b"><span>'+(noTag?'':'<span class="sl-tag '+(b.src==='shop'?'s':'f')+'">'+(b.src==='shop'?'บุญชู':'ฟาร์ม')+'</span> ')+mpEsc(b.lines.map(l=>l.itemName+' '+skcN(+l.qty||0)).join(' · '))+'</span>'
     +'<span>'+mpEsc(b.by)+(adm?' · กำไร '+(b.total-b.cost>=0?'+':'')+Math.round(b.total-b.cost).toLocaleString()+' <button type="button" class="btn-sm btn-del" onclick="slDelBill('+Q+b.key+Q+')" aria-label="ลบบิล">🗑️</button>':'')+'</span></div></div>';
 }
 function slTodayHtml(){
@@ -14919,14 +14929,21 @@ function showStockMsg(area,msg,type){
   el._mfT2=setTimeout(()=>{el.innerHTML='';},4000);
 }
 // ── ยอดขายลูกค้าภายนอก: รายงานแบ่งรายเดือน + ซ่อนต้นทุน/กำไรจาก staff ─────────
-let _saleMonth='all';
+let _saleMonth='all',_saleSrc='shop';   // #526 แยกดู หน้าร้าน (บุญชู) / ฟาร์ม
+function saleSrcRows(){return saleLogs().filter(l=>l.src===_saleSrc);}
+function renderSaleSrc(){
+  const el=document.getElementById('sksr-src');if(!el)return;
+  el.innerHTML=[['shop','s','🏪 ขายหน้าร้าน'],['farm','f','🏠 ขายที่ฟาร์ม']].map(([k,c,t])=>'<button type="button" class="'+c+(k===_saleSrc?' on':'')+'" onclick="selectSaleSrc(&quot;'+k+'&quot;)">'+t+'</button>').join('');
+}
+function selectSaleSrc(k){_saleSrc=k;renderSaleSrc();initSaleMonthPills();renderSalesReport();}
 function saleLogs(){   // #434 ขาย 2 ที่: ฟาร์ม = inventoryLog 'sale' · บุญชู = shopLog 'sale' (ห้ามปนกัน)
   return (D.inventoryLog||[]).filter(l=>l&&l.type==='sale').map(l=>({...l,src:'farm'}))
     .concat(shopLogArr().filter(l=>l&&l.type==='sale').map(l=>({...l,src:'shop'})));
 }
 function initSaleMonthPills(){
   const wrap=document.getElementById('sksr-months');if(!wrap)return;
-  const months=[...new Set(saleLogs().map(l=>(l.date||'').slice(0,7)))].filter(Boolean).sort().reverse();
+  renderSaleSrc();
+  const months=[...new Set(saleSrcRows().map(l=>(l.date||'').slice(0,7)))].filter(Boolean).sort().reverse();
   if(_saleMonth!=='all'&&!months.includes(_saleMonth))_saleMonth='all';
   wrap.innerHTML=['all',...months].map(m=>{
     const label=m==='all'?'ทั้งหมด':`${HV_MONTHS_S[+m.slice(5,7)-1]||m.slice(5,7)} ${yearBE(+m.slice(0,4))}`;
@@ -14943,19 +14960,20 @@ function renderSalesReport(){
   const kpiEl=document.getElementById('sksr-kpi'),tblEl=document.getElementById('sksr-table');
   if(!kpiEl||!tblEl)return;
   const isMoney=APP_ROLE==='admin';
-  const rows=saleLogs().filter(l=>_saleMonth==='all'||(l.date||'').slice(0,7)===_saleMonth);
+  const rows=saleSrcRows().filter(l=>_saleMonth==='all'||(l.date||'').slice(0,7)===_saleMonth);
   const staffNote=document.getElementById('sksr-staffnote');if(staffNote)staffNote.style.display=isMoney?'none':'';
   const B=slBills(rows),amt=src=>B.filter(b=>b.src===src).reduce((a,b)=>a+b.total,0),cnt=src=>B.filter(b=>b.src===src).length;
-  const cost=rows.reduce((a,l)=>a+(+l.unitCost||0)*(+l.qty||0),0),sales=amt('shop')+amt('farm'),profit=sales-cost;
-  kpiEl.innerHTML='<div class="kpi-card"><div class="kpi-lbl">🏪 บุญชู</div><div class="kpi-val" style="color:var(--in)">'+(amt('shop')?amt('shop').toLocaleString():'-')+'</div><div class="kpi-sub">บาท · '+cnt('shop')+' บิล</div></div>'
-    +'<div class="kpi-card"><div class="kpi-lbl">🏠 ฟาร์ม</div><div class="kpi-val" style="color:var(--ok)">'+(amt('farm')?amt('farm').toLocaleString():'-')+'</div><div class="kpi-sub">บาท · '+cnt('farm')+' บิล</div></div>'
+  const cost=rows.reduce((a,l)=>a+(+l.unitCost||0)*(+l.qty||0),0),sales=amt(_saleSrc),profit=sales-cost;
+  const cust=new Set(B.map(b=>b.cust).filter(Boolean)).size;
+  kpiEl.innerHTML='<div class="kpi-card"><div class="kpi-lbl">ยอดขาย</div><div class="kpi-val" style="color:'+(_saleSrc==='shop'?'var(--in)':'var(--ok)')+'">'+(sales?Math.round(sales).toLocaleString():'-')+'</div><div class="kpi-sub">บาท</div></div>'
+    +'<div class="kpi-card"><div class="kpi-lbl">บิล</div><div class="kpi-val">'+cnt(_saleSrc)+'</div><div class="kpi-sub">ลูกค้า '+cust+' ราย</div></div>'
     +(isMoney?'<div class="kpi-card"><div class="kpi-lbl">ต้นทุน</div><div class="kpi-val">'+(cost?Math.round(cost).toLocaleString():'-')+'</div><div class="kpi-sub">บาท</div></div>'
       +'<div class="kpi-card"><div class="kpi-lbl">กำไร</div><div class="kpi-val" style="color:'+(profit>=0?'var(--ok)':'var(--d)')+'">'+(profit>=0?'+':'')+Math.round(profit).toLocaleString()+'</div><div class="kpi-sub">บาท</div></div>':'');
   if(!B.length){tblEl.innerHTML='<p style="padding:20px;text-align:center;font-weight:600">ไม่มีรายการขายในช่วงที่เลือก</p>';return;}
-  tblEl.innerHTML=B.map(slBillHtml).join('');
+  tblEl.innerHTML=B.map(b=>slBillHtml(b,1)).join('');
 }
 function exportSaleCSV(){
-  const rows=saleLogs().filter(l=>_saleMonth==='all'||(l.date||'').slice(0,7)===_saleMonth)
+  const rows=saleSrcRows().filter(l=>_saleMonth==='all'||(l.date||'').slice(0,7)===_saleMonth)
     .sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   if(!rows.length){alert('ไม่มีข้อมูลสำหรับ export');return;}
   const hdr='วันที่,ขายจาก,ลูกค้า,สินค้า,จำนวน,หน่วย,ราคาขาย,ยอดขาย,ต้นทุน,กำไร,ผู้บันทึก';
@@ -14965,7 +14983,7 @@ function exportSaleCSV(){
     return [l.date,l.src==='shop'?'บุญชู':'ฟาร์ม',l.custName||'',l.itemName||'',l.qty,l.unit||'',l.sellPrice||0,sales,cost,sales-cost,l.by||''].join(',');
   }).join('\n');
   const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='TawanFarm_ขายลูกค้า_'+(_saleMonth==='all'?'all':_saleMonth)+'.csv';a.click();URL.revokeObjectURL(url);
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='TawanFarm_ขาย'+(_saleSrc==='shop'?'หน้าร้าน':'ฟาร์ม')+'_'+(_saleMonth==='all'?'all':_saleMonth)+'.csv';a.click();URL.revokeObjectURL(url);
 }
 // ── รายรับ-รายจ่ายเงินสด (เสมียน) — เบิกเงินจากส่วนกลางมาเติม (รายรับ) / ค่าใช้จ่ายเบ็ดเตล็ดในฟาร์ม (รายจ่าย) ── เก็บเป็นตัวเลขลอยๆ ไม่ผูกกับ D.inventoryLog/ต้นทุนบ่อ/P&L เลย ให้ staff เห็นข้อมูลทั้งหมด (ไม่จำกัดเฉพาะรายการที่ตัวเองบันทึก) เพราะ staff เป็นผู้กรอกข้อมูลและถือเงินสดส่วนนี้จริง ──
 let _cashMode='in';
