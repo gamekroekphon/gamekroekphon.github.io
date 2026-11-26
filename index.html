@@ -7149,6 +7149,16 @@ function healClosedHeader(p){
   console.warn('[#448] ล้างหัวบ่อค้างรอบที่ปิดแล้ว',p.name,c.startDate,'→',c.closeDate);
   return true;
 }
+// ══ #525 หัวบ่อ (วันลง/ยอดลง/โรงเพาะฟัก/…) เดิม merge แบบ local ชนะทั้งก้อน
+//    เครื่องที่ยังไม่ได้ดึงของใหม่ (เช่น เครื่องเบี้ยเบิกของ) กดบันทึก → ส่งหัวบ่อเก่าทับ
+//    (A.1 A.2 พี่แก้วันลง 25/26 พ.ย. 2 รอบ เด้งกลับเป็น 7 ธ.ค. ทุกครั้ง → ค่าน้ำ/ของที่เบิกก่อนวันลงหายจากหน้ารอบ)
+//    กติกา: ฝั่งที่ hdrAt ใหม่กว่าชนะ · ไม่มี hdrAt = 0 (ข้อมูลเก่า) ──
+const POND_HDR_KEYS=['name','stock','stockBonus','size','startDate','hatchery','plType','plWeight','costFry','costTransport','cropNote','zone','cropNum','cropYear','hdrAt'];
+function mergePondHeader(p,rp){
+  if(!p||!rp||!((+rp.hdrAt||0)>(+p.hdrAt||0)))return false;
+  POND_HDR_KEYS.forEach(k=>{if(rp[k]===undefined)delete p[k];else p[k]=rp[k];});
+  return true;
+}
 function mergeRemote(local, remote) {
   rescueDeadIds(local); rescueDeadIds(remote);   // #439 ต้องก่อน union deletedIds — ใช้ tombstone ของแต่ละฝั่งเอง
   const merged = cln(local);
@@ -7167,6 +7177,7 @@ function mergeRemote(local, remote) {
     const rp = remotePonds[p.id];
     if (!rp) return;
     LOG_KEYS.forEach(k => { p[k] = sortLogArr(k, dropDead(mergeArr(p[k], rp[k]))); });
+    mergePondHeader(p, rp);   // #525 หัวบ่อ: ใครแก้ทีหลังชนะ
     healClosedHeader(p);   // #448 หัวบ่อจากเครื่องค้างส่งทับการปิดรอบ
     dropArchivedDupes(p);   // เครื่องค้างหน้าเก่าดันข้อมูลรอบที่ปิดแล้วกลับมา — ตัดสำเนาทิ้ง (entry #299)
     // ── เช็คลิสต์เตรียมบ่อ: เคารพ tombstone ก่อน merge — ถ้าฝั่งใดถูกล้างไปแล้ว (id อยู่ใน deletedIds) ห้ามให้อีกฝั่งดันกลับมา ──
@@ -22249,7 +22260,7 @@ function savePond(){
   if(id){
     const p=pond(id);
     const wasIdle=!p.startDate; // ลงลูกกุ้งรอบใหม่ (เดิมว่างจากการปิดรอบ) — ไม่ใช่แค่แก้ไขข้อมูลรอบเดิม
-    Object.assign(p,{name,stock:stock||0,stockBonus,size,startDate,hatchery,plType,plWeight,costFry,costTransport,cropNote,zone});
+    Object.assign(p,{name,stock:stock||0,stockBonus,size,startDate,hatchery,plType,plWeight,costFry,costTransport,cropNote,zone,hdrAt:Date.now()});   // #525 hdrAt = เวลาแก้หัวบ่อ
     if(wasIdle&&startDate){   // ⚠️ ต้องมีวันลงกุ้งจริงถึงจะนับเป็นรอบใหม่ — ล้างวันที่ทิ้งไม่ใช่การเริ่มรอบ
       const nxt=computeNextCrop(p,startDate);
       p.cropNum=nxt.cropNum;p.cropYear=nxt.cropYear;
@@ -22261,7 +22272,7 @@ function savePond(){
     }
   }
   else{
-    const np={id:'P'+Date.now(),name,stock:stock||0,stockBonus,size,startDate,hatchery,plType,plWeight,costFry,costTransport,cropNote,zone,records:[],feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[]};
+    const np={id:'P'+Date.now(),name,stock:stock||0,stockBonus,size,startDate,hatchery,plType,plWeight,costFry,costTransport,cropNote,zone,hdrAt:Date.now(),records:[],feedLog:[],samples:[],waterLog:[],chemLog:[],labResults:[],partialHarvests:[]};
     if(startDate){const nxt=computeNextCrop(np,startDate);np.cropNum=nxt.cropNum;np.cropYear=nxt.cropYear;}
     else{np.cropNum=1;np.cropYear=new Date().getFullYear();}
     D.ponds.push(np);
@@ -23804,6 +23815,7 @@ function confirmCloseCrop(){
   //    ถ้าไม่ล้าง รอบใหม่จะยืมตัวเลขรอบเก่าไปโผลในต้นทุนสะสม/ฟอร์มปิดบ่อครั้งหน้า โดยดูเหมือนเลขจริง
   p.costFry=null;p.costTransport=null;p.cropNote=null;
   p.harvestDate=null;p.pendingHarvest=null;   // ล้างสถานะ "ล้างบ่อ" ถ้ามาจากการปิด 2 ขั้นตอน
+  p.hdrAt=Date.now();   // #525 หัวบ่อเปลี่ยน — เครื่องอื่นที่ค้างหัวเก่าห้ามส่งทับ
   p.records=[];p.feedLog=[];p.samples=[];
   p.waterLog=[];p.chemLog=[];p.labResults=[];p.partialHarvests=[];p.mortalityLog=[];
   p.prepChecklist=null;
